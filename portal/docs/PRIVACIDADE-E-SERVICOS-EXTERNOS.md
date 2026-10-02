@@ -79,3 +79,7 @@ Em caso de suspeita de vazamento ou acesso indevido:
 2. Trocar as chaves do Supabase (**Project Settings → API Keys**) e atualizar a variável `SUPABASE_SECRET_KEY` na Vercel.
 3. Consultar a **Auditoria** para entender o que foi acessado.
 4. Avaliar a comunicação à ANPD e aos titulares afetados no prazo definido pela autoridade (atualmente, 3 dias úteis).
+
+## 10. Obrigações e prazos
+
+A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no banco do portal. A tabela de municípios (IBGE) e os feriados foram carregados na instalação, com a fonte de cada um; nenhum dado de cliente é enviado a serviços externos para calcular prazos. As fontes oficiais citadas nas regras são apenas links para consulta da equipe.

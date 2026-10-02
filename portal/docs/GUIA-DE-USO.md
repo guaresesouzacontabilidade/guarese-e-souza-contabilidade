@@ -102,6 +102,27 @@ O menu **Escritório** mostra a carteira inteira; ao escolher uma empresa no sel
 
 Os quadros **Financeiro**, **Conciliação**, **Fechamentos** e **Relatórios** do menu Escritório mostram em que ponto está cada empresa da carteira.
 
+### Obrigações e prazos (camada interna da equipe)
+
+O menu **Obrigações e prazos** é só do escritório: o cliente não vê nada dele. Ele usa os documentos do portal (guias, recibos e comprovantes) e mostra, para cada empresa, o que precisa ser apurado, entregue e pago, com prazo e responsável.
+
+**Antes de começar (uma vez, administrador)**
+1. **Atualizações normativas** — o portal já vem com as regras das principais obrigações federais (Simples Nacional, PIS/Cofins, IRPJ/CSLL, DCTFWeb, eSocial, FGTS, EFD-Contribuições, EFD-Reinf, ECD, ECF e a transição para CBS/IBS), cada uma com a fonte oficial. Elas chegam como **propostas**: abra a fonte, confira e clique em **Validar** e depois em **Aplicar**. Sem isso, nenhum prazo é calculado.
+2. **Catálogo** — ICMS, ISS e EFD ICMS/IPI dependem da lei de cada estado e município: abra a obrigação e use **Propor regra** para cadastrar o prazo do Tocantins e de cada município atendido, com a lei e o link oficial. Antes de enviar, use **Simular prazos** para conferir as datas.
+3. **Feriados** — os nacionais e os do Tocantins (8/9 e 5/10) já estão cadastrados. Cadastre os feriados municipais (ex.: Porto Nacional) com a lei ou decreto.
+4. **Empresas** (do menu Obrigações) — em cada empresa, confira o município, marque se é contribuinte do ICMS/ISS, se tem empregados e pró-labore, e o histórico de regimes (Simples Nacional, Lucro Presumido, Lucro Real — trimestral ou anual — e Lucro Arbitrado). Se a empresa mudou de regime, use **Registrar mudança de regime** a partir da competência certa: as competências antigas continuam com o regime da época.
+
+**No dia a dia**
+- **Painel**: atrasadas, o que vence em 7 dias, o que depende do cliente, o que está em revisão e a carga de cada pessoa.
+- **Tarefas**: cada obrigação vira até três tarefas por competência — **apuração**, **entrega** e **pagamento** — com prazo interno (antes do legal) e prazo legal. Abra a tarefa, mude a situação (iniciar, aguardando cliente, enviar para revisão, dispensar com motivo) e, para concluir entrega ou pagamento, escolha o recibo ou comprovante que está no portal ou envie o arquivo ali mesmo. Sem o documento, o portal não deixa marcar como transmitido ou pago.
+- **Revisão**: quando a tarefa tem revisor, quem executa envia para revisão e quem revisa aprova (conclui) ou devolve com o ajuste.
+- **Agenda**: o mês em calendário, pelo prazo interno ou pelo legal, com os feriados.
+- **Tabela operacional (Empresas)**: todas as empresas em ordem de razão social; dá para ordenar por nome fantasia ou por urgência de prazo.
+- Guias publicadas pelo escritório em **Guias de impostos** entram sozinhas na tarefa de pagamento quando só há uma tarefa possível; nas demais, publique a guia pela própria tarefa.
+
+**Quando uma norma muda**
+Abra a obrigação no **Catálogo** e use **Propor alteração** (ou **Propor encerramento**) com a fonte e a data da consulta. Depois que o administrador valida e aplica, a regra antiga é encerrada no mês anterior, as tarefas abertas são recalculadas e as competências anteriores ficam como estavam. Tudo fica na auditoria.
+
 ### Cadastrar uma empresa nova (administrador)
 1. **Empresas → Nova empresa**: CNPJ (ou CPF), razão social, regime tributário, contador responsável e serviços contratados. O plano de contas gerencial e o checklist padrão são criados sozinhos.
 2. Na empresa: **Contas bancárias** (contas, saldos iniciais, cartões) e **Checklist mensal** (ajuste os documentos e prazos).
@@ -134,6 +155,12 @@ Ela sugere dados (CNPJ, datas, valores) e sempre passa por conferência de uma p
 
 **O que acontece quando alguém sai do escritório?**
 Em **Equipe e permissões**, abra a pessoa e use **Desativar acesso**: o login é bloqueado na hora e as sessões abertas são encerradas. O histórico continua na auditoria.
+
+**O portal calcula os prazos sozinho?**
+Só a partir de regras validadas, com fonte oficial. Sem regra validada, a obrigação aparece como “sem regra” ou “aguardando validação” e nenhuma data é inventada. Os prazos consideram fins de semana e feriados (nacionais para as obrigações federais; estaduais e municipais quando a regra pede).
+
+**O portal transmite declarações ou paga guias?**
+Não. As declarações e os pagamentos continuam nos sistemas oficiais; o portal registra o andamento, guarda o recibo ou comprovante e só marca a tarefa como concluída com esse documento.
 
 **Os lembretes por WhatsApp funcionam?**
 Somente depois de configurada a integração oficial do WhatsApp Business (veja `CONFIGURACAO.md`). Enquanto isso, a integração aparece como desconectada e nada é enviado por WhatsApp.

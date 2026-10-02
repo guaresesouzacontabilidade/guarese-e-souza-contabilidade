@@ -130,6 +130,7 @@ Quando o escritório decidir usar com clientes de verdade:
 6. **Equipe e permissões**: convidar a equipe e vincular cada pessoa às empresas que atende.
 7. **Empresas → Nova empresa**: cadastrar as empresas, as contas bancárias e convidar o empresário de cada uma.
 8. Conferir em **Configurações → Integrações** se “Rotinas automáticas” aparece como “Funcionando” depois de alguns minutos.
+9. **Obrigações e prazos → Atualizações normativas**: conferir a fonte de cada regra do catálogo inicial, **validar** e **aplicar** (sem isso, nenhum prazo é calculado). Depois, cadastrar em **Catálogo** as regras de ICMS/ISS do estado e dos municípios atendidos e, em **Feriados**, os feriados municipais — sempre com a lei de origem.
 
 ## 7. Atualizações
 

@@ -92,7 +92,7 @@ Duas rotinas mantêm o portal em dia:
 | Rotina | Frequência | O que faz |
 | --- | --- | --- |
 | Fila de tarefas (`/api/cron/processar`) | a cada 5 minutos | lê documentos enviados (XML, OCR), envia e-mails e WhatsApp, gera sugestões de conciliação, remove arquivos eliminados |
-| Rotina diária (`/api/cron/diario`) | 6h05 (Brasília) | gera o checklist do mês, os lançamentos recorrentes e os lembretes; limpa envios incompletos |
+| Rotina diária (`/api/cron/diario`) | 6h05 (Brasília) | gera o checklist do mês, os lançamentos recorrentes e os lembretes; limpa envios incompletos; gera as tarefas das obrigações (sem duplicar) e os alertas de prazo para a equipe |
 
 Na publicação padrão, o **próprio banco (Supabase, extensões `pg_cron` e `pg_net`)** chama essas rotas com o `CRON_SECRET`, guardado no cofre do Supabase (Vault). A situação aparece em **Configurações → Integrações → Rotinas automáticas**.
 
@@ -136,3 +136,25 @@ No Supabase Pro, o script também limita a sessão a 24 horas e encerra após 8 
 ## 10. Logomarca
 
 A logomarca oficial (ON com a seta, “Guarese’s” e “CONTABILIDADE”) foi vetorizada a partir da arte enviada pelo escritório (`docs/marca/logo-original.jpg`) e está em três versões em `public/marca/`: vertical (tela de entrada), horizontal (menu) e símbolo (ícone do navegador, em `src/app/icon.svg`). Nos relatórios em PDF ela vem de `src/lib/marca/logo.ts`. A cor acompanha o tema: marrom no fundo claro e clara no menu e no modo escuro.
+
+## 11. Obrigações e prazos (camada operacional)
+
+Fica em **Obrigações e prazos** (somente equipe). Configurações necessárias depois de publicar:
+
+1. **Endereço do escritório** (Configurações → Escritório): a cidade e a UF definem o calendário de dias úteis usado nos **prazos internos** da equipe.
+2. **Regras do catálogo**: chegam como propostas, com a fonte oficial e a data da consulta. Um administrador confere, **valida** e **aplica** em Obrigações → Atualizações normativas. Nenhum prazo é calculado sem regra validada.
+3. **ICMS, ISS e EFD ICMS/IPI**: sem regra padrão — cada estado e município define o prazo. Proponha a regra por UF ou município, com a lei e o link oficial.
+4. **Feriados municipais**: cadastre em Obrigações → Feriados, com a fonte. Os nacionais e os do Tocantins (2024–2030) já vêm cadastrados; o Carnaval e o Corpus Christi contam só para regras que dependem de expediente bancário.
+5. **Empresas**: município (código do IBGE), ICMS/ISS, empregados e pró-labore, histórico de regimes (no Lucro Real, trimestral ou anual) e, se preciso, inclusões ou exclusões por vigência, responsável, revisor e prazo interno próprio.
+
+Como funciona:
+
+- Cada regra informa aplicabilidade (regimes, local, exigências do cadastro), periodicidade, regra de vencimento (dia fixo, n-ésimo dia útil ou último dia útil), o que fazer quando não é dia útil (antecipar, adiar ou manter), quais feriados contam e a fonte oficial.
+- O prazo de entrega, o vencimento do pagamento e o prazo interno são separados. O prazo interno é contado em dias úteis do escritório antes do prazo legal.
+- A reforma tributária é tratada por competência: PIS/Cofins até 12/2026, CBS e IBS a partir de 01/2027 (com prazo a regulamentar até a publicação do regulamento) e o destaque de teste em 2026. ICMS e ISS seguem até que uma atualização normativa encerre a regra; o histórico das competências anteriores é mantido.
+- Regra validada não é alterada: mudanças entram como atualização normativa (proposta → validação → aplicação). Na aplicação, a regra anterior é encerrada no mês anterior à vigência nova e as tarefas abertas são recalculadas.
+- As tarefas são geradas pela rotina diária para os últimos 12 meses (sem criar atrasos de períodos anteriores ao uso do sistema) e pelo botão **Gerar tarefas**. Não há duplicidade: cada empresa, obrigação, competência e etapa tem uma única tarefa.
+- Entrega e pagamento só são concluídos com recibo ou comprovante que esteja no portal. Tarefas com revisor só são concluídas por quem revisa (ou por um administrador).
+- Todas as mudanças ficam na Auditoria (filtro “Obrigações, prazos e normas”) e no histórico de cada tarefa.
+
+Os dados de municípios vêm da tabela oficial do IBGE (5.571 municípios) e foram carregados no próprio banco: o portal não consulta serviços externos para calcular prazos.
