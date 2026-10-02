@@ -76,6 +76,7 @@ describe("NF-e de entrada", () => {
     expect(n.relacionado_empresa).toBe(false);
     expect(n.operacao).toBe("nao_relacionada");
     expect(n.sugestao).toBeNull();
+    expect(categoriaDoXml(n)).toBeNull();
   });
 });
 

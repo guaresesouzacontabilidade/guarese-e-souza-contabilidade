@@ -183,7 +183,7 @@ async function processarXml(admin: ClienteAdmin, doc: Documento, bytes: Uint8Arr
   const categoria = categoriaDoXml(lido.dados);
   const comp = competenciaDe(lido.dados.tipo === "evento" ? lido.dados.data_evento : lido.dados.data_emissao);
   const sugestao: Record<string, unknown> = {};
-  if (doc.direcao === "cliente" && categoria !== doc.categoria_codigo) sugestao.categoria = categoria;
+  if (doc.direcao === "cliente" && categoria && categoria !== doc.categoria_codigo) sugestao.categoria = categoria;
   if (comp && comp !== doc.competencia) sugestao.competencia = comp;
   const nota = lido.dados.tipo === "nota" ? lido.dados : null;
   await admin
@@ -224,7 +224,8 @@ async function processarZip(admin: ClienteAdmin, doc: Documento, bytes: Uint8Arr
     }
     const texto = decodificarTexto(a.bytes);
     const lido = lerXmlFiscal(texto, referencia);
-    const categoria = lido.sucesso ? categoriaDoXml(lido.dados) : doc.categoria_codigo === "zip_xml" ? "outros" : doc.categoria_codigo;
+    // Sem indicação segura pelo conteúdo, o XML herda a categoria escolhida para o ZIP.
+    const categoria = (lido.sucesso ? categoriaDoXml(lido.dados) : null) ?? doc.categoria_codigo;
     const comp =
       (lido.sucesso && competenciaDe(lido.dados.tipo === "evento" ? lido.dados.data_evento : lido.dados.data_emissao)) || doc.competencia;
     const filhoId = randomUUID();

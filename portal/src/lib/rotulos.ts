@@ -124,3 +124,36 @@ export const STATUS_ENVIO: Record<string, { rotulo: string; tom: "neutro" | "inf
   nao_configurado: { rotulo: "Não enviado (canal não configurado)", tom: "alerta" },
   desativado: { rotulo: "Desativado", tom: "neutro" },
 };
+
+export const ACAO_HISTORICO_DOCUMENTO: Record<string, string> = {
+  recebido: "Recebido pelo escritório",
+  publicado: "Disponibilizado ao cliente",
+  substituido: "Arquivo substituído (nova versão)",
+  status: "Situação alterada",
+  reclassificado: "Classificação alterada",
+  excluido: "Excluído",
+  avaliado_apos_fechamento: "Avaliado (recebido após o fechamento)",
+  bloqueado: "Recusado pela verificação de segurança",
+};
+
+export const ORIGEM_DOCUMENTO: Record<string, string> = {
+  upload: "Envio de arquivo",
+  camera: "Foto pela câmera",
+  zip: "Extraído de arquivo ZIP",
+  escritorio: "Publicado pelo escritório",
+  sistema: "Sistema",
+};
+
+export const VERIFICACAO: Record<string, { rotulo: string; tom: "neutro" | "info" | "sucesso" | "alerta" | "perigo" }> = {
+  pendente: { rotulo: "Verificação pendente", tom: "neutro" },
+  ok: { rotulo: "Verificado", tom: "sucesso" },
+  bloqueado: { rotulo: "Bloqueado", tom: "perigo" },
+  erro: { rotulo: "Falha na verificação", tom: "alerta" },
+};
+
+export const SITUACAO_ARQUIVO_FISCAL: Record<string, string> = {
+  protocolo_autorizacao_no_arquivo: "O arquivo contém protocolo de autorização",
+  protocolo_nao_autorizado_no_arquivo: "O arquivo contém protocolo sem autorização",
+  sem_protocolo: "Arquivo sem protocolo de autorização",
+  nao_aplicavel: "Não se aplica",
+};

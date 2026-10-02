@@ -132,3 +132,17 @@ export async function exigirPermissao(empresaId: string, permissao: Permissao) {
   }
   return ctx;
 }
+
+/**
+ * Para rotas de API: devolve a sessão somente se estiver válida (ativa, não
+ * revogada, com 2FA quando exigido e termos aceitos). Não redireciona.
+ */
+export async function sessaoApi() {
+  const s = await obterSessao();
+  if (!s?.perfil) return null;
+  const e = s.estado;
+  if (e.ativo === false || e.sessao_valida === false) return null;
+  if ((e.tem_fator_verificado || e.exige_2fa) && e.aal !== "aal2") return null;
+  if (!e.aceite_termos_versao) return null;
+  return s as Sessao & { perfil: Perfil };
+}

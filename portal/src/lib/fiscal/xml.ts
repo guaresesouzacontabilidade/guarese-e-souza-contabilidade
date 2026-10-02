@@ -761,9 +761,16 @@ function lerNfseAbrasf(corpo: unknown, raiz: string, doc: string): ResultadoLeit
 }
 
 /** Categoria do documento sugerida a partir do XML lido. */
-export function categoriaDoXml(dados: NotaLida | EventoLido): string {
+/**
+ * Categoria sugerida pelo conteúdo. Para notas que não citam a empresa (nem
+ * como emitente nem como destinatária) não há como saber se é entrada ou
+ * saída: retorna null e a classificação fica com quem enviou/conferiu.
+ */
+export function categoriaDoXml(dados: NotaLida | EventoLido): string | null {
   if (dados.tipo === "evento") return "eventos_fiscais";
   if (dados.modelo.startsWith("nfse")) return "nfse";
   if (dados.modelo === "57" || dados.modelo === "67") return "cte_xml";
-  return dados.operacao === "saida" ? "nfe_saida_xml" : "nfe_entrada_xml";
+  if (dados.operacao === "saida") return "nfe_saida_xml";
+  if (dados.operacao === "entrada") return "nfe_entrada_xml";
+  return null;
 }

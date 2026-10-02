@@ -24,7 +24,7 @@ export interface LinhaInvalida {
 export function normalizarDescricao(t: string) {
   return t
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim()
     .toUpperCase()

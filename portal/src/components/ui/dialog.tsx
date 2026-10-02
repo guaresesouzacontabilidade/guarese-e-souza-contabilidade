@@ -102,7 +102,8 @@ export function Confirmacao({
   descricao?: React.ReactNode;
   textoConfirmar?: string;
   variante?: "primario" | "perigo";
-  aoConfirmar?: () => void | Promise<void>;
+  /** Retorne `false` para manter o diálogo aberto (ex.: campo obrigatório vazio). */
+  aoConfirmar?: () => void | boolean | Promise<void | boolean>;
   children?: React.ReactNode;
 }) {
   const [aberto, setAberto] = React.useState(false);
@@ -127,8 +128,8 @@ export function Confirmacao({
                 onClick={async () => {
                   setOcupado(true);
                   try {
-                    await aoConfirmar();
-                    setAberto(false);
+                    const r = await aoConfirmar();
+                    if (r !== false) setAberto(false);
                   } finally {
                     setOcupado(false);
                   }
