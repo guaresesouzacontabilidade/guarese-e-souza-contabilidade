@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Building2, CalendarCheck, FileInput, ListChecks, MessagesSquare } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, CalendarCheck, CalendarClock, FileInput, ListChecks, MessagesSquare } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progresso } from "@/components/ui/feedback";
-import { competenciaAtual, hojeISO, somarMeses } from "@/lib/competencia";
+import { competenciaAtual, hojeISO, somarDias, somarMeses } from "@/lib/competencia";
 import { formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { STATUS_COMPETENCIA } from "@/lib/rotulos";
 import { buscarTudo } from "@/lib/supabase/paginar";
@@ -46,6 +46,15 @@ export default async function VisaoGeralEscritorio() {
       .order("ultima_mensagem_em")
       .limit(6),
     s.supabase.from("competencias").select("empresa_id, status").eq("competencia", comp),
+  ]);
+  const abertas = ["pendente", "em_andamento", "aguardando_cliente", "em_revisao"];
+  const [tarefasAtrasadas, tarefasSemana] = await Promise.all([
+    s.supabase
+      .from("tarefas")
+      .select("id", { count: "exact", head: true })
+      .in("status", abertas)
+      .or(`prazo_legal.lt.${hoje},and(prazo_legal.is.null,prazo_interno.lt.${hoje})`),
+    s.supabase.from("tarefas").select("id", { count: "exact", head: true }).in("status", abertas).gte("prazo_interno", hoje).lte("prazo_interno", somarDias(hoje, 7)),
   ]);
 
   const nomes = new Map(empresas.map((e) => [e.id, e.nome_fantasia ?? e.razao_social]));
@@ -98,6 +107,27 @@ export default async function VisaoGeralEscritorio() {
           href="/escritorio/documentos?situacao=todas&fechamento=1"
         />
       </div>
+
+      <Link
+        href="/escritorio/obrigacoes"
+        className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-gradient-to-r from-bege/70 to-card p-4 shadow-sm transition-colors hover:border-primary/40"
+      >
+        <span className="flex items-center gap-3">
+          <span className="rounded-full bg-primary p-2 text-primary-foreground">
+            <CalendarClock className="size-5" />
+          </span>
+          <span>
+            <span className="block font-semibold text-titulo">Obrigações e prazos</span>
+            <span className="block text-sm text-muted-foreground">
+              {tarefasAtrasadas.count ? `${tarefasAtrasadas.count} tarefa(s) atrasada(s)` : "Nenhuma tarefa atrasada"} ·{" "}
+              {tarefasSemana.count ?? 0} vencem nos próximos 7 dias
+            </span>
+          </span>
+        </span>
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+          Abrir painel <ArrowRight className="size-4" />
+        </span>
+      </Link>
 
       <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
         <Card>

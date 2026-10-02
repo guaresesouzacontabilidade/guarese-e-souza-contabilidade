@@ -16,6 +16,7 @@ export const GRUPOS_EVENTO = {
   documentos: "Documentos e checklist",
   financeiro: "Financeiro e conciliação",
   fechamento: "Fechamento e relatórios",
+  obrigacoes: "Obrigações, prazos e normas",
 } as const;
 export type GrupoEvento = keyof typeof GRUPOS_EVENTO;
 
@@ -24,6 +25,7 @@ const ENTIDADES: Record<Exclude<GrupoEvento, "seguranca">, string[]> = {
   documentos: ["documentos", "checklist_itens", "checklist_modelos"],
   financeiro: ["lancamentos", "baixas", "categorias_financeiras", "contas_financeiras", "transferencias", "conciliacoes", "importacoes", "estoques"],
   fechamento: ["competencias", "relatorios", "relatorios_publicados"],
+  obrigacoes: ["tarefas", "obrigacoes", "obrigacao_regras", "empresa_obrigacoes", "empresa_regimes", "feriados", "atualizacoes_normativas"],
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;

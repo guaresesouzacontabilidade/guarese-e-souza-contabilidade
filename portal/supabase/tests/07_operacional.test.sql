@@ -133,7 +133,11 @@ select set_config('t.prop_das', public.propor_regra(pg_temp.obr('T_DAS'), 'DAS �
   'Resolução CGSN nº 140/2018, art. 40', 'https://normas.receita.fazenda.gov.br/', null, '2026-10-02')::text, true);
 select is((select situacao from public.calendario_empresa(current_setting('testes.empresa_a')::uuid, '2026-10-01') where codigo = 'T_DAS'),
           'aguardando_validacao', 'regra proposta não gera prazo: aparece como aguardando validação');
-select is(public.gerar_tarefas('2026-10-01', current_setting('testes.empresa_a')::uuid), 0, 'sem regra validada nenhuma tarefa é criada');
+select public.gerar_tarefas('2026-10-01', current_setting('testes.empresa_a')::uuid);
+reset role;
+select is(pg_temp.qtd_tarefas('testes.empresa_a', 'T_DAS', '2026-10-01'), 0, 'sem regra validada nenhuma tarefa é criada');
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+set local role authenticated;
 select throws_ok(format($$select public.validar_atualizacao_normativa(%L)$$, current_setting('t.prop_das')), '42501', null,
                  'equipe não valida atualização normativa');
 select throws_ok(format($$select public.aplicar_atualizacao_normativa(%L)$$, current_setting('t.prop_das')), '42501', null,
@@ -145,7 +149,11 @@ set local role authenticated;
 select throws_like(format($$select public.aplicar_atualizacao_normativa(%L)$$, current_setting('t.prop_das')), '%Valide%',
                    'aplicação exige validação prévia');
 select lives_ok(format($$select public.validar_atualizacao_normativa(%L, 'Fonte conferida.')$$, current_setting('t.prop_das')), 'administrador valida a fonte');
-select is(public.gerar_tarefas('2026-10-01', current_setting('testes.empresa_a')::uuid), 0, 'validada mas ainda não aplicada: nada muda');
+select public.gerar_tarefas('2026-10-01', current_setting('testes.empresa_a')::uuid);
+reset role;
+select is(pg_temp.qtd_tarefas('testes.empresa_a', 'T_DAS', '2026-10-01'), 0, 'validada mas ainda não aplicada: nada muda');
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+set local role authenticated;
 select lives_ok(format($$select public.aplicar_atualizacao_normativa(%L)$$, current_setting('t.prop_das')), 'administrador aplica');
 reset role;
 select is((select status from public.atualizacoes_normativas where id = current_setting('t.prop_das')::uuid), 'aplicada', 'atualização registrada como aplicada');
@@ -273,7 +281,9 @@ select throws_like(format($$select public.atualizar_tarefa(%L, 'pendente')$$, cu
 reset role;
 select ok((select count(*) >= 3 from public.tarefa_historico where tarefa_id = current_setting('t.pag')::uuid), 'histórico da tarefa registrado');
 
--- Guia publicada pelo escritório é ligada à tarefa de pagamento (sem marcar como paga)
+-- Guia publicada pelo escritório é ligada à tarefa de pagamento (sem marcar como paga).
+-- Só quando há exatamente uma tarefa de pagamento candidata: isola as obrigações do teste.
+update public.obrigacoes set categorias_documento = '{}' where codigo not like 'T\_%';
 select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
 set local role authenticated;
 select public.gerar_tarefas('2026-11-01', current_setting('testes.empresa_a')::uuid);
@@ -344,7 +354,8 @@ select is((select prazo_pagamento from public.simular_regra('{"prazo_pagamento":
 reset role;
 select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
 set local role authenticated;
-select is((select count(*)::int from public.operacional_empresas()), 2, 'administrador vê todas as empresas');
+select is((select count(*)::int from public.operacional_empresas() where empresa_id in (current_setting('testes.empresa_a')::uuid, current_setting('testes.empresa_b')::uuid)), 2,
+          'administrador vê todas as empresas');
 reset role;
 
 -- -------------------------------------------------------------- cliente não acessa a camada operacional

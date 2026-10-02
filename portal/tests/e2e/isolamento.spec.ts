@@ -69,7 +69,17 @@ test("cliente de uma empresa não acessa dados de outra", async ({ browser }) =>
   const rel = await p2.request.get(`/api/relatorios/exportar?empresa=${empresa1}&tipo=dre&formato=pdf`);
   expect([400, 403, 404]).toContain(rel.status());
   // Áreas do escritório e exportações administrativas ficam fora do alcance do cliente
-  for (const rota of ["/escritorio", "/escritorio/equipe", "/escritorio/configuracoes", "/escritorio/auditoria"]) {
+  for (const rota of [
+    "/escritorio",
+    "/escritorio/equipe",
+    "/escritorio/configuracoes",
+    "/escritorio/auditoria",
+    "/escritorio/obrigacoes",
+    "/escritorio/obrigacoes/tarefas",
+    "/escritorio/obrigacoes/empresas",
+    "/escritorio/obrigacoes/catalogo",
+    "/escritorio/obrigacoes/normas",
+  ]) {
     await p2.goto(rota);
     expect(new URL(p2.url()).pathname, `cliente não deve permanecer em ${rota}`).not.toBe(rota);
   }
