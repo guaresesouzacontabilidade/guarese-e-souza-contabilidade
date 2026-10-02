@@ -5,7 +5,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(24);
+select plan(25);
 
 \ir 00_setup.sql.inc
 
@@ -93,6 +93,11 @@ values
   ('00000000-0000-0000-0000-00000000f001', current_setting('testes.empresa_a')::uuid, 2, '5405', 500, '{}'),
   ('00000000-0000-0000-0000-00000000f001', current_setting('testes.empresa_a')::uuid, 3, '5949', 300, '{}'),
   ('00000000-0000-0000-0000-00000000f002', current_setting('testes.empresa_a')::uuid, 1, '1202', 100, '{"icms": "18.00"}'),
+  -- Notas de terceiros: venda do fornecedor (compra), devolução feita pelo cliente, transferência e bonificação
+  ('00000000-0000-0000-0000-00000000f002', current_setting('testes.empresa_a')::uuid, 2, '5102', 400, '{"icms": "48.00"}'),
+  ('00000000-0000-0000-0000-00000000f002', current_setting('testes.empresa_a')::uuid, 3, '6202', 50, '{}'),
+  ('00000000-0000-0000-0000-00000000f002', current_setting('testes.empresa_a')::uuid, 4, '5152', 70, '{}'),
+  ('00000000-0000-0000-0000-00000000f002', current_setting('testes.empresa_a')::uuid, 5, '5910', 30, '{}'),
   ('00000000-0000-0000-0000-00000000f004', current_setting('testes.empresa_a')::uuid, 1, '5102', 9999, '{}');
 insert into public.checklist_itens (empresa_id, competencia, categoria_codigo, titulo, prazo, obrigatorio, status)
 values (current_setting('testes.empresa_a')::uuid, '2026-09-01', 'esc_outros', 'Extrato bancário', '2026-10-10', true, 'pendente');
@@ -105,7 +110,8 @@ create temp table prev as
   select m from jsonb_array_elements(current_setting('testes.prev')::jsonb -> 'meses') m where m ->> 'competencia' = '2026-09-01';
 select is((select (m ->> 'vendas')::numeric from prev), 1500::numeric, 'vendas: só CFOP de venda e sem a nota cancelada');
 select is((select (m ->> 'vendas_st')::numeric from prev), 500::numeric, 'vendas com ICMS-ST separadas');
-select is((select (m ->> 'devolucoes')::numeric from prev), 100::numeric, 'devolução de venda reduz a receita');
+select is((select (m ->> 'devolucoes')::numeric from prev), 150::numeric, 'devolução de venda reduz a receita (nota própria 1.202 e nota do cliente 6.202)');
+select is((select (m ->> 'compras')::numeric from prev), 400::numeric, 'compra na nota do fornecedor (5.102) conta; transferência e bonificação não');
 select is((select (m ->> 'servicos_retido')::numeric from prev), 2000::numeric, 'serviços com ISS retido identificados');
 select is((select jsonb_array_length(current_setting('testes.prev')::jsonb -> 'checklist' -> 'faltantes')), 1, 'documento obrigatório faltando aparece');
 select is((select (m -> 'informado' ->> 'receita_mercadorias')::numeric from jsonb_array_elements(current_setting('testes.prev')::jsonb -> 'meses') m

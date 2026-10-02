@@ -1,6 +1,8 @@
 /**
  * Grupos de CFOP usados pelo auditor (mesmas regras das funções app.cfop_*
- * do banco, usadas na previsão de impostos).
+ * do banco, usadas na previsão de impostos; no banco, app.cfop_compra e
+ * app.cfop_devolucao_venda já incluem as notas de terceiros, como as funções
+ * "NaEntrada" daqui).
  */
 const t = (c: string | null | undefined) => (c ?? "").trim();
 
@@ -26,20 +28,23 @@ export function cfopCompra(c: string | null | undefined) {
 
 /**
  * Compra registrada numa nota de entrada: na nota do fornecedor o CFOP é o
- * da venda dele (5.102, 6.102, 5.405...); na nota de entrada emitida pela
- * própria empresa, o de compra (1.102, 2.102...).
+ * da venda dele (5.102, 6.102, 5.405...), sem as transferências entre
+ * estabelecimentos (x.15x); na nota de entrada emitida pela própria empresa,
+ * o de compra (1.102, 2.102...). Igual a app.cfop_compra no banco.
  */
 export function cfopCompraNaEntrada(c: string | null | undefined) {
-  return cfopCompra(c) || cfopVenda(c);
+  const v = t(c);
+  return cfopCompra(v) || (cfopVenda(v) && !/^[567]15\d$/.test(v));
 }
 
 /**
  * Devolução de venda numa nota de entrada: emitida pela própria empresa
- * (1.202, 2.202...) ou pelo cliente que devolveu (5.202, 6.202...).
+ * (1.202, 2.202...) ou pelo cliente que devolveu (5.202, 6.202, 5.411...).
+ * Igual a app.cfop_devolucao_venda no banco.
  */
 export function cfopDevolucaoNaEntrada(c: string | null | undefined) {
   const v = t(c);
-  return cfopDevolucaoVenda(v) || /^[56]20[1-4]$/.test(v) || /^[56]41[01]$/.test(v);
+  return cfopDevolucaoVenda(v) || /^[56]20[12]$/.test(v) || /^[56]210$/.test(v) || /^[56]41[0-3]$/.test(v) || /^[56]55[36]$/.test(v) || /^[56]66[0-2]$/.test(v);
 }
 
 /** Venda de produção do próprio estabelecimento (indústria): fora da revenda à alíquota zero. */
