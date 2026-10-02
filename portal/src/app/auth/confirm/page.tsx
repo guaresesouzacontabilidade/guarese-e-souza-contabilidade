@@ -25,7 +25,7 @@ export default async function PaginaConfirmar({ searchParams }: PageProps<"/auth
     <div className="flex min-h-dvh items-center justify-center bg-muted/60 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="items-center text-center">
-          <Logo className="mb-2 h-12" />
+          <Logo versao="vertical" className="mb-2 h-20" />
           <CardTitle className="text-lg">{info.titulo}</CardTitle>
           <CardDescription>{info.texto}</CardDescription>
         </CardHeader>

@@ -33,7 +33,7 @@ O modelo completo está em `.env.example`.
 
 | Aba | O que se configura |
 | --- | --- |
-| Escritório | nome, razão social, CNPJ, endereço, contatos, textos da tela de entrada e logomarca (PNG ou JPG, até 2 MB) |
+| Escritório | nome, razão social, CNPJ, endereço, contatos, textos da tela de entrada e, se quiser substituir a logomarca oficial, outra imagem (PNG ou JPG, até 2 MB) |
 | Segurança | verificação em duas etapas obrigatória (equipe / clientes) e limites de envio de arquivos (tamanho por arquivo, arquivos por ZIP, tamanho do ZIP) |
 | Lembretes | dias de aviso em relação ao prazo (ex.: `-5, -2, 0, +2, +5`), envio por e-mail e por WhatsApp, dados do WhatsApp Business |
 | Integrações | situação de cada serviço (conectado / desconectado), envio de e-mail de teste, última execução das rotinas automáticas |
@@ -132,3 +132,7 @@ No Supabase Pro, o script também limita a sessão a 24 horas e encerra após 8 
 2. Executar a publicação com `--dominio portal.seudominio.com.br` (veja `IMPLANTACAO.md`).
 3. No Registro.br, criar um registro **CNAME** de `portal` para `cname.vercel-dns.com`.
 4. Aguardar a propagação (minutos a algumas horas). A Vercel emite o certificado HTTPS sozinha.
+
+## 10. Logomarca
+
+A logomarca oficial (ON com a seta, “Guarese’s” e “CONTABILIDADE”) foi vetorizada a partir da arte enviada pelo escritório (`docs/marca/logo-original.jpg`) e está em três versões em `public/marca/`: vertical (tela de entrada), horizontal (menu) e símbolo (ícone do navegador, em `src/app/icon.svg`). Nos relatórios em PDF ela vem de `src/lib/marca/logo.ts`. A cor acompanha o tema: marrom no fundo claro e clara no menu e no modo escuro.

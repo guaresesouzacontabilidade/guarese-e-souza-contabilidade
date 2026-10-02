@@ -184,7 +184,7 @@ export async function removerLogo(): Promise<ResultadoAcao> {
   if (error) return falha(mensagemErro(error));
   if (anterior?.logo_path) await s.supabase.storage.from("marca").remove([anterior.logo_path]);
   revalidarTudo();
-  return sucesso("Logomarca removida. O portal volta a usar a logomarca provisória.");
+  return sucesso("Logomarca removida. O portal volta a usar a logomarca oficial padrão.");
 }
 
 /** Envia um e-mail real de teste para o próprio administrador (somente com SMTP configurado). */

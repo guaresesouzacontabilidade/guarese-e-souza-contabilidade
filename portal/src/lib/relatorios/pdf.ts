@@ -1,5 +1,6 @@
 import "server-only";
 import { join, resolve } from "node:path";
+import { logoHorizontalSvg } from "@/lib/marca/logo";
 import type { Content, ContentTable, TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarCnpj, formatarData, formatarDataHora } from "@/lib/formatos";
@@ -14,7 +15,6 @@ import { rotuloMesCurto } from "./periodo";
  */
 const COR = { marrom: "#4a2c1d", bege: "#f1e8dc", begeForte: "#e6d6c2", cinza: "#6b625b", verde: "#15803d", vermelho: "#b91c1c", amarelo: "#a16207" };
 
-const SIMBOLO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#4a2c1d"/><circle cx="22" cy="36" r="11" fill="none" stroke="#f1e8dc" stroke-width="5"/><path d="M38 47V25l12 16V25" fill="none" stroke="#f1e8dc" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 8l7 8h-4.5v6h-5v-6H43z" fill="#d9b892"/></svg>`;
 
 export interface Cabecalho {
   titulo: string;
@@ -55,7 +55,7 @@ export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buf
   const pm = await pdfmake();
   const marca: Content = cab.logo
     ? { image: cab.logo.dados, fit: [140, 40] }
-    : { columns: [{ svg: SIMBOLO, width: 30 }, { stack: [{ text: cab.escritorio.nome, bold: true, color: COR.marrom, fontSize: 11 }, { text: "Contabilidade", fontSize: 7, color: COR.cinza }], margin: [6, 3, 0, 0] }], columnGap: 0 };
+    : { svg: logoHorizontalSvg(COR.marrom), width: 132 };
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
     pageMargins: [40, 78, 40, 56],

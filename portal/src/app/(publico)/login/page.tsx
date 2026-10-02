@@ -24,7 +24,7 @@ export default async function PaginaLogin({ searchParams }: PageProps<"/login">)
     <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-lg md:grid-cols-2">
       <section className="flex flex-col justify-between gap-8 bg-bege p-6 sm:p-10 dark:bg-muted">
         <div className="space-y-6">
-          <Logo logoUrl={esc.logoUrl} className="h-14" />
+          <Logo logoUrl={esc.logoUrl} versao="vertical" className={esc.logoUrl ? "h-14" : "h-24"} />
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{esc.nome_sistema}</h1>
             <p className="text-sm text-muted-foreground">{esc.descricao_sistema}</p>

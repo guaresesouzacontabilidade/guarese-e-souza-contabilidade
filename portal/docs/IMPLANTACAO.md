@@ -124,7 +124,7 @@ Quando o escritório decidir usar com clientes de verdade:
 
 1. Abrir o link, criar a senha e entrar.
 2. **Minha conta → Verificação em duas etapas → Ativar agora** (use Google Authenticator ou Microsoft Authenticator).
-3. **Configurações → Escritório**: conferir os dados e enviar a logomarca.
+3. **Configurações → Escritório**: conferir os dados (a logomarca oficial já vem aplicada).
 4. **Configurações → Segurança**: marcar “verificação em duas etapas obrigatória para a equipe”.
 5. **Configurações → Integrações**: configurar o e-mail (SMTP) e usar “Enviar e-mail de teste para mim”. Configurar o mesmo SMTP no Supabase (**Authentication → Emails → SMTP Settings**) para que “Esqueci minha senha” chegue a qualquer pessoa.
 6. **Equipe e permissões**: convidar a equipe e vincular cada pessoa às empresas que atende.

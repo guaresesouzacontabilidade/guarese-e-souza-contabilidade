@@ -10,6 +10,7 @@ import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Confirmacao } from "@/components/ui/dialog";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
+import { Logo } from "@/components/marca/logo";
 import { formatarCep, formatarCnpj, formatarCompetencia, formatarData, formatarTelefone } from "@/lib/formatos";
 import {
   enviarLogo,
@@ -144,11 +145,11 @@ export function FormLogo({ logoUrl }: { logoUrl: string | null }) {
               onError={() => setPrevia(null)}
             />
           ) : (
-            <span className="text-xs text-muted-foreground">Usando a logomarca provisória</span>
+            <Logo versao="vertical" className="h-16" />
           )}
         </div>
         {logoUrl && !previa ? (
-          <BotaoAcao variante="fantasma" tamanho="sm" acao={() => removerLogo()} confirmar={{ titulo: "Remover a logomarca?", descricao: "O portal volta a usar a logomarca provisória.", textoConfirmar: "Remover" }}>
+          <BotaoAcao variante="fantasma" tamanho="sm" acao={() => removerLogo()} confirmar={{ titulo: "Remover a logomarca?", descricao: "O portal volta a usar a logomarca oficial padrão.", textoConfirmar: "Remover" }}>
             <Trash2 /> Remover
           </BotaoAcao>
         ) : null}

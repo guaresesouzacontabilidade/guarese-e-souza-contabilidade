@@ -111,7 +111,7 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Logomarca</CardTitle>
-            <CardDescription>Usada no menu, na tela de entrada e nos relatórios em PDF.</CardDescription>
+            <CardDescription>A logomarca oficial do escritório já vem aplicada no menu, na tela de entrada e nos relatórios em PDF. Envie outra imagem só se quiser substituí-la.</CardDescription>
           </CardHeader>
           <CardContent>
             <FormLogo logoUrl={publico.logoUrl} />
