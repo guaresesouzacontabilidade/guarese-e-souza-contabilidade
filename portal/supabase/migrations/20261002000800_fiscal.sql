@@ -162,7 +162,7 @@ begin
     end if;
 
     -- Cancelamento homologado no arquivo (cStat 135/136/155) marca a nota.
-    if p_dados ->> 'tipo_evento' = '110111' and coalesce(p_dados ->> 'cstat', '') in ('135', '136', '155') then
+    if p_dados ->> 'tipo_evento' in ('110111', '110112') and coalesce(p_dados ->> 'cstat', '') in ('135', '136', '155') then
       update public.documentos_fiscais
          set cancelada_evento = true
        where empresa_id = v_doc.empresa_id and chave_acesso = p_dados ->> 'chave_acesso';
@@ -243,7 +243,7 @@ begin
   if p_dados ->> 'chave_acesso' is not null and exists (
     select 1 from public.documento_fiscal_eventos e
      where e.empresa_id = v_doc.empresa_id and e.chave_acesso = p_dados ->> 'chave_acesso'
-       and e.tipo_evento = '110111' and coalesce(e.cstat, '') in ('135', '136', '155')
+       and e.tipo_evento in ('110111', '110112') and coalesce(e.cstat, '') in ('135', '136', '155')
   ) then
     update public.documentos_fiscais set cancelada_evento = true where id = v_df_id;
     return jsonb_build_object('situacao', 'registrado', 'documento_fiscal_id', v_df_id, 'lancamentos_sugeridos', 0, 'cancelada', true);

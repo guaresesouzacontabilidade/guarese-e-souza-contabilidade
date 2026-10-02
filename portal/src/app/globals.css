@@ -1,0 +1,194 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+/* Modo escuro controlado pela classe .dark (next-themes) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =============================================================================
+   Identidade visual — Portal Guarese's ON
+   Fundo branco, marrom-escuro (títulos, menus, botões), cinza-claro e bege
+   (fundos secundários e divisórias), verde/amarelo/vermelho para indicadores.
+   ============================================================================= */
+:root {
+  --background: #ffffff;
+  --foreground: #1f1a17;
+  --card: #ffffff;
+  --card-foreground: #1f1a17;
+  --muted: #f5f3f0;
+  --muted-foreground: #6b625b;
+  --bege: #f1e8dc;
+  --bege-forte: #e6d6c2;
+  --border: #e7e2dc;
+  --input: #d9d1c7;
+  --primary: #4a2c1d;
+  --primary-hover: #3a2216;
+  --primary-foreground: #ffffff;
+  --secondary: #f3ece3;
+  --secondary-hover: #ebe0d2;
+  --secondary-foreground: #4a2c1d;
+  --ring: #8b5e3c;
+  --titulo: #4a2c1d;
+
+  --sidebar: #3d2518;
+  --sidebar-foreground: #f3e9dd;
+  --sidebar-muted: #c9b5a2;
+  --sidebar-ativo: #5b3a28;
+  --sidebar-borda: #523424;
+
+  --sucesso: #15803d;
+  --sucesso-bg: #e8f6ec;
+  --sucesso-fg: #14532d;
+  --alerta: #a16207;
+  --alerta-bg: #fef6d8;
+  --alerta-fg: #713f12;
+  --perigo: #b91c1c;
+  --perigo-bg: #fdecec;
+  --perigo-fg: #7f1d1d;
+  --info: #1d4ed8;
+  --info-bg: #e8effd;
+  --info-fg: #1e3a8a;
+
+  --grafico-1: #6b3f26;
+  --grafico-2: #c08a5b;
+  --grafico-3: #15803d;
+  --grafico-4: #b91c1c;
+  --grafico-5: #a16207;
+  --grafico-6: #475569;
+
+  --radius: 0.625rem;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #141110;
+  --foreground: #f3eee8;
+  --card: #1b1714;
+  --card-foreground: #f3eee8;
+  --muted: #211c19;
+  --muted-foreground: #b3a99f;
+  --bege: #2a231e;
+  --bege-forte: #3a3029;
+  --border: #352e29;
+  --input: #463c35;
+  --primary: #d9b892;
+  --primary-hover: #e6caa8;
+  --primary-foreground: #1b120d;
+  --secondary: #2a231e;
+  --secondary-hover: #342b25;
+  --secondary-foreground: #f0e2d0;
+  --ring: #d9b892;
+  --titulo: #ecd6bd;
+
+  --sidebar: #181311;
+  --sidebar-foreground: #f0e6da;
+  --sidebar-muted: #a8998b;
+  --sidebar-ativo: #2f241e;
+  --sidebar-borda: #2a211c;
+
+  --sucesso: #4ade80;
+  --sucesso-bg: #0f2a19;
+  --sucesso-fg: #bbf7d0;
+  --alerta: #facc15;
+  --alerta-bg: #2d260b;
+  --alerta-fg: #fde68a;
+  --perigo: #f87171;
+  --perigo-bg: #331313;
+  --perigo-fg: #fecaca;
+  --info: #93c5fd;
+  --info-bg: #0f1d33;
+  --info-fg: #bfdbfe;
+
+  --grafico-1: #d9b892;
+  --grafico-2: #8c6a4c;
+  --grafico-3: #4ade80;
+  --grafico-4: #f87171;
+  --grafico-5: #facc15;
+  --grafico-6: #94a3b8;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-bege: var(--bege);
+  --color-bege-forte: var(--bege-forte);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-ring: var(--ring);
+  --color-titulo: var(--titulo);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-ativo: var(--sidebar-ativo);
+  --color-sidebar-borda: var(--sidebar-borda);
+  --color-sucesso: var(--sucesso);
+  --color-sucesso-bg: var(--sucesso-bg);
+  --color-sucesso-fg: var(--sucesso-fg);
+  --color-alerta: var(--alerta);
+  --color-alerta-bg: var(--alerta-bg);
+  --color-alerta-fg: var(--alerta-fg);
+  --color-perigo: var(--perigo);
+  --color-perigo-bg: var(--perigo-bg);
+  --color-perigo-fg: var(--perigo-fg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-fg: var(--info-fg);
+  --font-sans: "Inter Variable", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 0;
+  }
+  h1,
+  h2,
+  h3 {
+    color: var(--titulo);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Números tabulares em valores monetários */
+  .numero {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .nao-imprimir {
+    display: none !important;
+  }
+}

@@ -1,0 +1,264 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { exigirAdmin, exigirSessao, obterContextoEmpresa } from "@/lib/auth/sessao";
+import { emailConfigurado, enviarEmail } from "@/lib/email/enviar";
+import { envPublico } from "@/lib/env";
+import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
+import { PERMISSOES_EXCLUSIVAS_EQUIPE, TODAS_PERMISSOES, type Permissao } from "@/lib/permissoes";
+import { dadosRequisicao } from "@/lib/requisicao";
+
+const esquemaConvite = z.object({
+  email: z.string().trim().toLowerCase().email("Informe um e-mail válido."),
+  nome: z.string().trim().min(2, "Informe o nome."),
+  empresa_id: z.string().uuid().nullable(),
+  papel: z.enum(["equipe", "cliente_titular", "cliente_colaborador"]).nullable(),
+  tipo_usuario: z.enum(["admin", "equipe", "cliente"]),
+  permissoes: z.array(z.enum(TODAS_PERMISSOES)),
+});
+
+export interface DadosConvite {
+  link?: string;
+  emailEnviado?: boolean;
+  usuarioExistente?: boolean;
+}
+
+async function gerarLinkAcesso(email: string, nome?: string) {
+  const admin = criarClienteAdmin();
+  const site = envPublico.siteUrl();
+  const convite = await admin.auth.admin.generateLink({ type: "invite", email, options: { data: nome ? { nome } : undefined } });
+  if (!convite.error && convite.data?.properties?.hashed_token) {
+    return {
+      userId: convite.data.user.id,
+      link: `${site}/auth/confirm?token_hash=${encodeURIComponent(convite.data.properties.hashed_token)}&type=invite&next=/definir-senha`,
+      tipo: "invite" as const,
+    };
+  }
+  // Usuário já confirmado: envia link de redefinição de senha.
+  const rec = await admin.auth.admin.generateLink({ type: "recovery", email });
+  if (rec.error || !rec.data?.properties?.hashed_token) throw new Error(rec.error?.message ?? convite.error?.message ?? "Falha ao gerar link.");
+  return {
+    userId: rec.data.user.id,
+    link: `${site}/auth/confirm?token_hash=${encodeURIComponent(rec.data.properties.hashed_token)}&type=recovery&next=/redefinir-senha`,
+    tipo: "recovery" as const,
+  };
+}
+
+async function enviarConviteEmail(email: string, nome: string, link: string, empresaNome: string | null, convidante: string) {
+  if (!emailConfigurado()) return { status: "email_nao_configurado" as const, erro: null };
+  const r = await enviarEmail(email, "Convite para o Portal Guarese's ON", {
+    titulo: `Olá, ${nome.split(" ")[0]}!`,
+    paragrafos: [
+      `${convidante} convidou você para acessar o Portal Guarese's ON${empresaNome ? ` da empresa ${empresaNome}` : ""}.`,
+      "No portal você envia documentos, acompanha as pendências do mês e consulta os relatórios da sua empresa.",
+      "Clique no botão abaixo para definir sua senha e ativar o acesso.",
+    ],
+    botao: { texto: "Ativar meu acesso", url: link },
+    aviso: "Este link é pessoal e de uso único. Se você não esperava este convite, ignore esta mensagem.",
+  });
+  return r.enviado ? { status: "enviado" as const, erro: null } : { status: "falhou" as const, erro: r.motivo === "falhou" ? r.erro ?? null : null };
+}
+
+/** Convida um usuário (cliente ou equipe) e vincula à empresa, quando informada. */
+export async function convidarUsuario(_anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao<DadosConvite>> {
+  const sessao = await exigirSessao();
+  const empresaId = (fd.get("empresa_id") as string) || null;
+  const dados = esquemaConvite.safeParse({
+    email: fd.get("email") ?? "",
+    nome: fd.get("nome") ?? "",
+    empresa_id: empresaId,
+    papel: (fd.get("papel") as string) || null,
+    tipo_usuario: (fd.get("tipo_usuario") as string) || "cliente",
+    permissoes: fd.getAll("permissoes").map(String),
+  });
+  if (!dados.success) return falhaValidacao(dados.error);
+  const d = dados.data;
+  let empresaNome: string | null = null;
+
+  // Autorização no servidor (o banco valida novamente).
+  if (!d.empresa_id) {
+    if (sessao.perfil.tipo !== "admin") return falha("Somente administradores convidam pessoas da equipe.");
+    if (d.tipo_usuario === "cliente") return falha("Clientes devem ser convidados a partir da empresa.");
+  } else {
+    const ctx = await obterContextoEmpresa(d.empresa_id);
+    if (!ctx.pode("usuarios.gerenciar")) return falha("Você não tem permissão para convidar usuários nesta empresa.");
+    empresaNome = ctx.acesso.nome_fantasia ?? ctx.acesso.razao_social;
+    if (!d.papel || d.papel === "equipe") return falha("Selecione o papel do cliente.");
+    if (d.permissoes.some((p) => PERMISSOES_EXCLUSIVAS_EQUIPE.includes(p))) return falha("Permissões exclusivas da equipe não podem ser concedidas a clientes.");
+    if (ctx.acesso.papel === "cliente_titular" && d.papel !== "cliente_colaborador") return falha("Você só pode convidar colaboradores.");
+  }
+
+  const admin = criarClienteAdmin();
+  const { data: existente } = await admin.from("perfis").select("id, tipo, nome, ativo").ilike("email", d.email).maybeSingle();
+
+  let usuarioId: string;
+  let link: string | undefined;
+  let envioStatus: "enviado" | "falhou" | "email_nao_configurado" | "link_copiado" = "enviado";
+  let envioErro: string | null = null;
+
+  if (existente) {
+    if (d.empresa_id && existente.tipo !== "cliente") return falha("Este e-mail pertence a um usuário da equipe. Vincule-o em Equipe e permissões.");
+    if (!d.empresa_id) return falha("Já existe um usuário com este e-mail.");
+    if (!existente.ativo) return falha("Este usuário está desativado. Reative-o antes de conceder acesso.");
+    usuarioId = existente.id;
+  } else {
+    try {
+      const gerado = await gerarLinkAcesso(d.email, d.nome);
+      usuarioId = gerado.userId;
+      link = gerado.link;
+    } catch (e) {
+      return falha(`Não foi possível criar o convite: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    if (d.tipo_usuario !== "cliente") {
+      await admin.auth.admin.updateUserById(usuarioId, { app_metadata: { tipo: d.tipo_usuario } });
+      await admin.from("perfis").update({ tipo: d.tipo_usuario, nome: d.nome }).eq("id", usuarioId);
+    } else {
+      await admin.from("perfis").update({ nome: d.nome }).eq("id", usuarioId);
+    }
+  }
+
+  if (d.empresa_id && d.papel) {
+    const { error } = await sessao.supabase.rpc("vincular_membro", {
+      p_empresa_id: d.empresa_id,
+      p_user_id: usuarioId,
+      p_papel: d.papel,
+      p_permissoes: d.permissoes.length ? d.permissoes : undefined,
+    });
+    if (error) return falha(mensagemErro(error));
+  }
+
+  if (link) {
+    const r = await enviarConviteEmail(d.email, d.nome, link, empresaNome, sessao.perfil.nome);
+    envioStatus = r.status;
+    envioErro = r.erro;
+  } else if (existente && emailConfigurado()) {
+    await enviarEmail(d.email, "Novo acesso liberado — Portal Guarese's ON", {
+      titulo: "Novo acesso liberado",
+      paragrafos: [`Você recebeu acesso à empresa ${empresaNome} no Portal Guarese's ON. Use o seletor de empresas no topo do portal.`],
+      botao: { texto: "Abrir o portal", url: `${envPublico.siteUrl()}/painel` },
+    });
+  }
+
+  await sessao.supabase.rpc("registrar_convite", {
+    p_email: d.email,
+    p_nome: d.nome,
+    p_user_id: usuarioId,
+    p_tipo_usuario: existente ? (existente.tipo as string) : d.tipo_usuario,
+    p_empresa_id: d.empresa_id as unknown as string,
+    p_papel: d.papel as unknown as string,
+    p_permissoes: d.permissoes,
+    p_envio_status: existente ? "enviado" : envioStatus,
+    p_envio_erro: envioErro ?? undefined,
+  });
+
+  if (d.empresa_id) revalidatePath(`/escritorio/empresas/${d.empresa_id}`);
+  revalidatePath("/escritorio/equipe");
+
+  if (existente) return sucesso("O usuário já tinha cadastro: o acesso à empresa foi liberado.", { usuarioExistente: true });
+  if (envioStatus === "enviado") return sucesso(`Convite enviado para ${d.email}.`, { link, emailEnviado: true });
+  return sucesso(
+    envioStatus === "email_nao_configurado"
+      ? "Convite criado. O envio de e-mail não está configurado: copie o link e envie ao convidado."
+      : "Convite criado, mas o e-mail falhou. Copie o link e envie ao convidado.",
+    { link, emailEnviado: false },
+  );
+}
+
+/** Gera um novo link de acesso (convite ou redefinição) para um usuário. */
+export async function reenviarAcesso(usuarioId: string, empresaId: string | null): Promise<ResultadoAcao<DadosConvite>> {
+  const sessao = await exigirSessao();
+  if (empresaId) {
+    const ctx = await obterContextoEmpresa(empresaId);
+    if (!ctx.pode("usuarios.gerenciar")) return falha("Sem permissão.");
+    const { data: membro } = await ctx.supabase.from("empresa_membros").select("id").eq("empresa_id", empresaId).eq("user_id", usuarioId).maybeSingle();
+    if (!membro) return falha("Usuário não vinculado a esta empresa.");
+  } else if (sessao.perfil.tipo !== "admin") {
+    return falha("Sem permissão.");
+  }
+  const admin = criarClienteAdmin();
+  const { data: perfil } = await admin.from("perfis").select("email, nome").eq("id", usuarioId).single();
+  if (!perfil) return falha("Usuário não encontrado.");
+  try {
+    const gerado = await gerarLinkAcesso(perfil.email, perfil.nome);
+    const r = await enviarConviteEmail(perfil.email, perfil.nome, gerado.link, null, sessao.perfil.nome);
+    const { ip, userAgent } = await dadosRequisicao();
+    await sessao.supabase.rpc("registrar_evento", {
+      p_acao: "convite_reenviado",
+      p_entidade: "perfis",
+      p_entidade_id: usuarioId,
+      p_empresa_id: empresaId ?? undefined,
+      p_detalhes: { envio: r.status },
+      p_ip: ip ?? undefined,
+      p_user_agent: userAgent ?? undefined,
+    });
+    if (r.status === "enviado") return sucesso(`Novo link enviado para ${perfil.email}.`, { link: gerado.link, emailEnviado: true });
+    return sucesso("Link gerado. Copie e envie ao usuário (e-mail não enviado).", { link: gerado.link, emailEnviado: false });
+  } catch (e) {
+    return falha(e instanceof Error ? e.message : "Falha ao gerar o link.");
+  }
+}
+
+export async function atualizarPermissoesMembro(
+  empresaId: string,
+  membroId: string,
+  _anterior: ResultadoAcao,
+  fd: FormData,
+): Promise<ResultadoAcao> {
+  const ctx = await obterContextoEmpresa(empresaId);
+  if (!ctx.pode("usuarios.gerenciar")) return falha("Sem permissão.");
+  const papel = String(fd.get("papel") ?? "");
+  const permissoes = fd.getAll("permissoes").map(String) as Permissao[];
+  const { error } = await ctx.supabase.rpc("atualizar_membro", { p_membro_id: membroId, p_papel: papel, p_permissoes: permissoes });
+  if (error) return falha(mensagemErro(error));
+  revalidatePath(`/escritorio/empresas/${empresaId}`);
+  revalidatePath(`/e/${empresaId}/configuracoes`);
+  return sucesso("Permissões atualizadas.");
+}
+
+export async function revogarMembro(empresaId: string, membroId: string, motivo: string): Promise<ResultadoAcao> {
+  const ctx = await obterContextoEmpresa(empresaId);
+  if (!ctx.pode("usuarios.gerenciar")) return falha("Sem permissão.");
+  const { error } = await ctx.supabase.rpc("revogar_membro", { p_membro_id: membroId, p_motivo: motivo });
+  if (error) return falha(mensagemErro(error));
+  revalidatePath(`/escritorio/empresas/${empresaId}`);
+  revalidatePath(`/e/${empresaId}/configuracoes`);
+  return sucesso("Acesso revogado. O usuário perdeu o acesso imediatamente.");
+}
+
+export async function vincularMembroExistente(_anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  await exigirAdmin();
+  const sessao = await exigirSessao();
+  const empresaId = String(fd.get("empresa_id") ?? "");
+  const usuarioId = String(fd.get("user_id") ?? "");
+  const papel = String(fd.get("papel") ?? "equipe");
+  if (!empresaId || !usuarioId) return falha("Selecione a empresa e o usuário.");
+  const { error } = await sessao.supabase.rpc("vincular_membro", { p_empresa_id: empresaId, p_user_id: usuarioId, p_papel: papel });
+  if (error) return falha(mensagemErro(error));
+  revalidatePath("/escritorio/equipe");
+  revalidatePath(`/escritorio/empresas/${empresaId}`);
+  return sucesso("Vínculo criado.");
+}
+
+/** Administrador: altera tipo/ativação de um usuário (e bloqueia o login quando inativo). */
+export async function administrarUsuario(usuarioId: string, tipo: "admin" | "equipe" | "cliente", ativo: boolean, cargo?: string): Promise<ResultadoAcao> {
+  const sessao = await exigirAdmin();
+  const { error } = await sessao.supabase.rpc("administrar_usuario", { p_user_id: usuarioId, p_tipo: tipo, p_ativo: ativo, p_cargo: cargo });
+  if (error) return falha(mensagemErro(error));
+  const admin = criarClienteAdmin();
+  await admin.auth.admin.updateUserById(usuarioId, {
+    app_metadata: { tipo },
+    ban_duration: ativo ? "none" : "876000h",
+  });
+  revalidatePath("/escritorio/equipe");
+  return sucesso(ativo ? "Usuário atualizado." : "Usuário desativado: o acesso e as sessões foram encerrados.");
+}
+
+export async function encerrarSessoesUsuario(usuarioId: string): Promise<ResultadoAcao> {
+  const sessao = await exigirSessao();
+  if (sessao.perfil.tipo !== "admin" && usuarioId !== sessao.usuarioId) return falha("Sem permissão.");
+  const { data, error } = await sessao.supabase.rpc("encerrar_sessoes_usuario", { p_user_id: usuarioId });
+  if (error) return falha(mensagemErro(error));
+  return sucesso(`${data ?? 0} sessão(ões) encerrada(s).`);
+}
