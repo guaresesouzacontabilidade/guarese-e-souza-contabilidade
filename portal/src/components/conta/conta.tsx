@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LogOut, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Campo, Input, Select, Textarea } from "@/components/ui/form";
+import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Confirmacao } from "@/components/ui/dialog";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { criarClienteNavegador } from "@/lib/supabase/client";
 import { formatarTelefone } from "@/lib/formatos";
-import { alterarSenha, encerrarOutrasSessoes, encerrarSessao, registrarMfaRemovido, salvarPerfil, solicitarLgpd } from "@/lib/conta/acoes";
+import { alterarSenha, encerrarOutrasSessoes, encerrarSessao, registrarMfaRemovido, salvarPerfil, salvarPreferencias, solicitarLgpd } from "@/lib/conta/acoes";
 
 export function FormPerfil({ nome, telefone }: { nome: string; telefone: string | null }) {
   return (
@@ -24,6 +24,27 @@ export function FormPerfil({ nome, telefone }: { nome: string; telefone: string 
             <Input id="pf-tel" name="telefone" defaultValue={telefone ? formatarTelefone(telefone) : ""} autoComplete="tel" inputMode="tel" />
           </Campo>
           <div className="sm:col-span-2 flex justify-end">
+            <BotaoEnviar pendente={pendente}>Salvar</BotaoEnviar>
+          </div>
+        </>
+      )}
+    </FormularioAcao>
+  );
+}
+
+export function FormAvisos({ email }: { email: boolean }) {
+  return (
+    <FormularioAcao acao={salvarPreferencias} className="space-y-3">
+      {({ pendente }) => (
+        <>
+          <label className="flex items-start gap-2 text-sm">
+            <Checkbox name="email_notificacoes" defaultChecked={email} className="mt-0.5" />
+            <span>
+              <span className="font-medium">Receber avisos por e-mail</span>
+              <span className="block text-xs text-muted-foreground">Novos documentos do escritório, pedidos de correção, respostas e relatórios publicados.</span>
+            </span>
+          </label>
+          <div className="flex justify-end">
             <BotaoEnviar pendente={pendente}>Salvar</BotaoEnviar>
           </div>
         </>

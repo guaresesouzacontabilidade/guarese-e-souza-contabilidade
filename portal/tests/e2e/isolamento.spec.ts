@@ -39,7 +39,22 @@ test("cliente de uma empresa não acessa dados de outra", async ({ browser }) =>
   const empresa2 = await entrar(p2, `cliente2@${DOMINIO}`);
   expect(empresa2).not.toBe(empresa1);
 
-  for (const rota of ["", "/documentos", "/pendencias", "/financeiro", "/financeiro/lancamentos", "/conciliacao", "/conciliacao?aba=saldos", "/mensagens", "/enviar"]) {
+  for (const rota of [
+    "",
+    "/documentos",
+    "/pendencias",
+    "/financeiro",
+    "/financeiro/lancamentos",
+    "/conciliacao",
+    "/conciliacao?aba=saldos",
+    "/fechamento",
+    "/relatorios",
+    "/relatorios/publicados",
+    "/mensagens",
+    "/enviar",
+    "/configuracoes",
+    "/configuracoes?aba=usuarios",
+  ]) {
     const r = await p2.goto(`/e/${empresa1}${rota}`);
     expect(r?.status(), `rota ${rota || "/"} deve responder 404`).toBe(404);
   }
@@ -51,6 +66,14 @@ test("cliente de uma empresa não acessa dados de outra", async ({ browser }) =>
   }
   const exp = await p2.request.get(`/api/financeiro/exportar?empresa=${empresa1}&formato=csv`);
   expect(exp.status()).toBe(403);
+  const rel = await p2.request.get(`/api/relatorios/exportar?empresa=${empresa1}&tipo=dre&formato=pdf`);
+  expect([400, 403, 404]).toContain(rel.status());
+  // Áreas do escritório e exportações administrativas ficam fora do alcance do cliente
+  for (const rota of ["/escritorio", "/escritorio/equipe", "/escritorio/configuracoes", "/escritorio/auditoria"]) {
+    await p2.goto(rota);
+    expect(new URL(p2.url()).pathname, `cliente não deve permanecer em ${rota}`).not.toBe(rota);
+  }
+  expect((await p2.request.get("/api/auditoria/exportar")).status()).toBe(403);
   // Cliente sem permissão de conciliar vê a conciliação da própria empresa só para consulta
   await p2.goto(`/e/${empresa2}/conciliacao?aba=pendentes`);
   await expect(p2.getByRole("heading", { name: "Conciliação bancária" })).toBeVisible();
@@ -59,4 +82,13 @@ test("cliente de uma empresa não acessa dados de outra", async ({ browser }) =>
   await p2.goto(`/e/${empresa2}`);
   await expect(p2.getByText("Padaria Pão Dourado")).toHaveCount(0);
   await ctx2.close();
+});
+
+test("visitante sem login não acessa áreas internas nem exportações", async ({ request }) => {
+  for (const rota of ["/api/auditoria/exportar", "/api/conta/meus-dados", "/api/financeiro/exportar?formato=csv"]) {
+    const r = await request.get(rota, { maxRedirects: 0 });
+    expect([302, 303, 307, 401, 403], `rota ${rota}`).toContain(r.status());
+  }
+  const cron = await request.get("/api/cron/processar");
+  expect(cron.status()).toBe(401);
 });

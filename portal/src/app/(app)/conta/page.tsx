@@ -6,7 +6,7 @@ import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BotaoEncerrarOutras, BotaoEncerrarSessao, FormLgpd, FormPerfil, FormSenha, RemoverMfa } from "@/components/conta/conta";
+import { BotaoEncerrarOutras, BotaoEncerrarSessao, FormAvisos, FormLgpd, FormPerfil, FormSenha, RemoverMfa } from "@/components/conta/conta";
 import { formatarDataHora } from "@/lib/formatos";
 
 export const metadata: Metadata = { title: "Minha conta" };
@@ -83,6 +83,16 @@ export default async function MinhaConta() {
                 </Button>
               </>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Avisos</CardTitle>
+            <CardDescription>Os avisos sempre aparecem no sino do portal. Aqui você escolhe se também quer recebê-los por e-mail.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormAvisos email={(s.perfil.preferencias as Record<string, unknown> | null)?.email_notificacoes !== false} />
           </CardContent>
         </Card>
 

@@ -7,6 +7,7 @@ import { exigirSessao } from "@/lib/auth/sessao";
 import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { envPublico } from "@/lib/env";
 import { dadosRequisicao } from "@/lib/requisicao";
+import { booleano } from "@/lib/validacao";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -138,4 +139,21 @@ export async function registrarMfaRemovido(): Promise<void> {
   const { ip, userAgent } = await dadosRequisicao();
   await s.supabase.rpc("registrar_evento", { p_acao: "mfa_removido", p_entidade: "perfis", p_entidade_id: s.usuarioId, p_ip: ip ?? undefined, p_user_agent: userAgent ?? undefined });
   revalidatePath("/conta");
+}
+
+/** Preferências de avisos (os avisos continuam aparecendo no sino do portal). */
+export async function salvarPreferencias(_anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  try {
+    const s = await exigirSessao();
+    const atuais = (s.perfil.preferencias ?? {}) as Record<string, unknown>;
+    const { error } = await s.supabase
+      .from("perfis")
+      .update({ preferencias: { ...atuais, email_notificacoes: booleano(fd, "email_notificacoes") } })
+      .eq("id", s.usuarioId);
+    if (error) return falha(mensagemErro(error));
+    revalidatePath("/conta");
+    return sucesso("Preferências salvas.");
+  } catch (e) {
+    return falha(mensagemErro(e));
+  }
 }
