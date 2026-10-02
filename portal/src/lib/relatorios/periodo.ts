@@ -1,12 +1,12 @@
 import { competenciaDe, somarMeses, ultimoDiaDoMes } from "@/lib/competencia";
 import { formatarCompetencia, nomeMes } from "@/lib/formatos";
 
-/** Períodos dos relatórios: mês, trimestre, ano ou últimos 12 meses. */
-export type TipoPeriodo = "mes" | "trimestre" | "ano" | "12m";
+/** Períodos dos relatórios: mês, trimestre, ano, últimos 12 meses ou de um mês até outro. */
+export type TipoPeriodo = "mes" | "trimestre" | "ano" | "12m" | "intervalo";
 
 export interface Periodo {
   tipo: TipoPeriodo;
-  /** Valor do seletor (ex.: "2026-09", "2026-T3", "2026", "12m-2026-09"). */
+  /** Valor do seletor (ex.: "2026-09", "2026-T3", "2026", "12m-2026-09", "2026-04_2026-08"). */
   chave: string;
   inicio: string;
   fim: string;
@@ -19,6 +19,33 @@ const MES = /^(\d{4})-(\d{2})$/;
 const TRI = /^(\d{4})-T([1-4])$/;
 const ANO = /^(\d{4})$/;
 const DOZE = /^12m-(\d{4})-(\d{2})$/;
+const INTERVALO = /^(\d{4})-(\d{2})_(\d{4})-(\d{2})$/;
+/** Maior intervalo aceito (meses). */
+export const MAXIMO_MESES_INTERVALO = 36;
+
+/** "abril a agosto de 2026" ou "novembro de 2025 a março de 2026". */
+export function rotuloIntervalo(inicio: string, fim: string) {
+  if (inicio.slice(0, 4) === fim.slice(0, 4)) return `${nomeMes(Number(inicio.slice(5, 7)))} a ${formatarCompetencia(fim, true)}`;
+  return `${formatarCompetencia(inicio, true)} a ${formatarCompetencia(fim, true)}`;
+}
+
+/** Chave do período "de um mês até outro" (AAAA-MM_AAAA-MM). */
+export function chaveIntervalo(de: string, ate: string) {
+  return `${de.slice(0, 7)}_${ate.slice(0, 7)}`;
+}
+
+/** Lê "AAAA-MM_AAAA-MM" → { de, ate } (primeiro dia de cada mês), ou null. */
+export function lerIntervalo(valor: string | null | undefined): { de: string; ate: string } | null {
+  const m = INTERVALO.exec((valor ?? "").trim());
+  if (!m) return null;
+  const [m1, m2] = [Number(m[2]), Number(m[4])];
+  if (m1 < 1 || m1 > 12 || m2 < 1 || m2 > 12) return null;
+  let de = `${m[1]}-${m[2]}-01`;
+  let ate = `${m[3]}-${m[4]}-01`;
+  if (de > ate) [de, ate] = [ate, de];
+  if (somarMeses(de, MAXIMO_MESES_INTERVALO - 1) < ate) de = somarMeses(ate, -(MAXIMO_MESES_INTERVALO - 1));
+  return { de, ate };
+}
 
 function listaMeses(inicio: string, fim: string) {
   const r: string[] = [];
@@ -75,6 +102,19 @@ export function lerPeriodo(valor: string | undefined | null, hoje: string): Peri
       rotulo: ano === anoAtual ? `${ano - 1} (mesmo período)` : String(ano - 1),
     });
   }
+  const intervalo = lerIntervalo(v);
+  if (intervalo) {
+    const { de, ate } = intervalo;
+    if (de === ate) return periodoMes(de);
+    const n = listaMeses(de, ultimoDiaDoMes(ate)).length;
+    const antInicio = somarMeses(de, -n);
+    const antFimMes = somarMeses(de, -1);
+    return montar("intervalo", chaveIntervalo(de, ate), de, ultimoDiaDoMes(ate), rotuloIntervalo(de, ate), {
+      inicio: antInicio,
+      fim: ultimoDiaDoMes(antFimMes),
+      rotulo: rotuloIntervalo(antInicio, antFimMes),
+    });
+  }
   m = DOZE.exec(v);
   const ref = m ? `${m[1]}-${m[2]}-01` : somarMeses(competenciaDe(hoje), -1);
   if (m || v === "12m") {
@@ -112,6 +152,11 @@ export function opcoesPeriodo(hoje: string) {
     trimestres,
     anos: [ano, ano - 1, ano - 2].map((a) => ({ valor: String(a), rotulo: a === ano ? `${a} (até agora)` : String(a) })),
     doze: { valor: "12m", rotulo: "Últimos 12 meses" },
+    /** Meses para o período personalizado ("de ... até ..."), do mais recente ao mais antigo. */
+    intervalo: Array.from({ length: MAXIMO_MESES_INTERVALO + 12 }, (_, i) => somarMeses(atual, -i)).map((c) => ({
+      valor: c.slice(0, 7),
+      rotulo: formatarCompetencia(c),
+    })),
   };
 }
 

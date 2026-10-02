@@ -3,11 +3,10 @@
 import { useRouter } from "next/navigation";
 import { RefreshCw, Send, Trash2 } from "lucide-react";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
-import { Campo, Input, Select, Textarea } from "@/components/ui/form";
+import { Campo, Input, Textarea } from "@/components/ui/form";
+import { CampoPeriodo, type OpcoesPeriodo } from "@/components/relatorios/seletor-periodo";
 import { atualizarNumeros, criarRascunho, excluirRascunho, publicarRelatorio, salvarTextos } from "@/lib/relatorios/acoes";
 import { cn } from "@/lib/utils";
-
-type Opcao = { valor: string; rotulo: string };
 
 export function FormNovoRelatorio({
   empresaId,
@@ -17,7 +16,7 @@ export function FormNovoRelatorio({
 }: {
   empresaId: string;
   tipos: { valor: string; rotulo: string; descricao: string }[];
-  opcoes: { meses: Opcao[]; trimestres: Opcao[]; anos: Opcao[]; doze: Opcao };
+  opcoes: OpcoesPeriodo;
   periodoInicial: string;
 }) {
   return (
@@ -41,32 +40,7 @@ export function FormNovoRelatorio({
           </fieldset>
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo rotulo="Período" htmlFor="rel-periodo" erro={estado.erros?.periodo} obrigatorio>
-              <Select id="rel-periodo" name="periodo" defaultValue={periodoInicial.startsWith("12m") ? "12m" : periodoInicial}>
-                <optgroup label="Mês">
-                  {opcoes.meses.map((o) => (
-                    <option key={o.valor} value={o.valor}>
-                      {o.rotulo}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Trimestre">
-                  {opcoes.trimestres.map((o) => (
-                    <option key={o.valor} value={o.valor}>
-                      {o.rotulo}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Ano">
-                  {opcoes.anos.map((o) => (
-                    <option key={o.valor} value={o.valor}>
-                      {o.rotulo}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Outros">
-                  <option value={opcoes.doze.valor}>{opcoes.doze.rotulo}</option>
-                </optgroup>
-              </Select>
+              <CampoPeriodo id="rel-periodo" name="periodo" valorInicial={periodoInicial} opcoes={opcoes} />
             </Campo>
             <Campo rotulo="Título (opcional)" htmlFor="rel-titulo" ajuda="Se ficar em branco, usamos o tipo e o período." erro={estado.erros?.titulo}>
               <Input id="rel-titulo" name="titulo" maxLength={160} />

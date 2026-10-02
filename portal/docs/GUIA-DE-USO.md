@@ -80,7 +80,8 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
 - **DRE**: receitas, custos, despesas e resultado (lucro ou prejuízo) por mês, trimestre ou ano. Clique em uma linha para ver os lançamentos.
 - **Fluxo de caixa**: entradas e saídas realizadas e a projeção dos próximos meses.
 - **Publicados**: o pacote mensal preparado e revisado pelo escritório (pode ser **preliminar** ou **revisado**).
-- Todos podem ser baixados em **PDF** ou **Excel**.
+- **Período**: escolha um mês, um trimestre, o ano, os últimos 12 meses ou **De um mês até outro…** (qualquer intervalo de até 36 meses, por exemplo de 04/2026 até 08/2026). O relatório mostra cada mês e o total, comparado com o mesmo número de meses imediatamente anteriores.
+- Todos podem ser baixados em **PDF** ou **Excel**, no período escolhido.
 
 Os relatórios são gerenciais e dependem dos documentos e lançamentos disponíveis; quando faltam dados, o portal avisa que o resultado é parcial.
 

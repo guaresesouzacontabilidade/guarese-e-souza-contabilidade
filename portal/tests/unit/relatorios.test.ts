@@ -160,4 +160,20 @@ describe("períodos", () => {
     expect(ano.fim).toBe("2026-10-31");
     expect(ano.anterior.fim).toBe("2025-10-31");
   });
+  it("aceita um período personalizado de um mês até outro", () => {
+    const p = lerPeriodo("2026-04_2026-08", "2026-10-02");
+    expect(p).toMatchObject({ tipo: "intervalo", chave: "2026-04_2026-08", inicio: "2026-04-01", fim: "2026-08-31", rotulo: "abril a agosto de 2026" });
+    expect(p.meses).toHaveLength(5);
+    // Comparação com os 5 meses imediatamente anteriores
+    expect(p.anterior).toMatchObject({ inicio: "2025-11-01", fim: "2026-03-31", rotulo: "novembro de 2025 a março de 2026" });
+    // Ordem invertida é corrigida; um mês só vira o período mensal
+    expect(lerPeriodo("2026-08_2026-04", "2026-10-02").chave).toBe("2026-04_2026-08");
+    expect(lerPeriodo("2026-06_2026-06", "2026-10-02").tipo).toBe("mes");
+    // Limite de 36 meses (mantém o fim)
+    const longo = lerPeriodo("2020-01_2026-08", "2026-10-02");
+    expect(longo.meses).toHaveLength(36);
+    expect(longo.fim).toBe("2026-08-31");
+    // Mês inválido volta ao padrão
+    expect(lerPeriodo("2026-13_2026-08", "2026-10-02").tipo).toBe("mes");
+  });
 });
