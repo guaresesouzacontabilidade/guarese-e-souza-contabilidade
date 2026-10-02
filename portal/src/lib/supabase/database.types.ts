@@ -1572,6 +1572,19 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"rotinas_status": {
+                  Row: {
+                    "erro": string | null,"ok": boolean,"resultado": Json | null,"rotina": string,"ultima_execucao": string
+                  }
+                  Insert: {
+                    "erro"?: string | null,"ok"?: boolean,"resultado"?: Json | null,"rotina": string,"ultima_execucao"?: string
+                  }
+                  Update: {
+                    "erro"?: string | null,"ok"?: boolean,"resultado"?: Json | null,"rotina"?: string,"ultima_execucao"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"solicitacoes_titular": {
                   Row: {
                     "created_at": string,"descricao": string | null,"email": string | null,"id": string,"respondida_em": string | null,"respondida_por": string | null,"resposta": string | null,"status": string,"tipo": string,"user_id": string | null

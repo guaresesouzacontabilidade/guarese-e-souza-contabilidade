@@ -55,3 +55,14 @@ export async function processarFila({
   }
   return { processados, falhas };
 }
+
+/** Guarda a última execução de uma rotina agendada (exibida em Configurações → Integrações). */
+export async function registrarRotina(
+  admin: ClienteAdmin,
+  rotina: "fila" | "diaria",
+  r: { ok: boolean; resultado?: unknown; erro?: string },
+) {
+  await admin
+    .from("rotinas_status")
+    .upsert({ rotina, ultima_execucao: new Date().toISOString(), ok: r.ok, resultado: (r.resultado ?? null) as never, erro: r.erro ?? null });
+}

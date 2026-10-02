@@ -127,7 +127,7 @@ export default async function MinhaConta() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-2">
+        <Card className="scroll-mt-24 xl:col-span-2" id="privacidade">
           <CardHeader>
             <CardTitle className="text-base">Privacidade e seus dados (LGPD)</CardTitle>
             <CardDescription>
