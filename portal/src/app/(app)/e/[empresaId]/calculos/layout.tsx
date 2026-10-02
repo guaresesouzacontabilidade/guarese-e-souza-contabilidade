@@ -2,7 +2,7 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { Alerta } from "@/components/ui/feedback";
 import { SubNavegacao } from "@/components/ui/subnav";
 
-/** Área de cálculos: previsão de impostos, rescisão, colaboradores e (equipe) configuração. */
+/** Área de cálculos: previsão de impostos, rescisão, colaboradores e (equipe) comparativo de regimes e configuração. */
 export default async function LayoutCalculos({ children, params }: LayoutProps<"/e/[empresaId]/calculos">) {
   const { empresaId } = await params;
   const ctx = await obterContextoEmpresa(empresaId);
@@ -12,7 +12,12 @@ export default async function LayoutCalculos({ children, params }: LayoutProps<"
     { rotulo: "Previsão de impostos", href: b, exato: true },
     { rotulo: "Simulação de rescisão", href: `${b}/rescisao` },
     { rotulo: "Colaboradores", href: `${b}/colaboradores` },
-    ...(ctx.pode("calculos.gerenciar") ? [{ rotulo: "Configuração", href: `${b}/configuracao` }] : []),
+    ...(ctx.pode("calculos.gerenciar")
+      ? [
+          { rotulo: "Comparativo de regimes", href: `${b}/comparativo` },
+          { rotulo: "Configuração", href: `${b}/configuracao` },
+        ]
+      : []),
   ];
   return (
     <>

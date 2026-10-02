@@ -158,7 +158,7 @@ function pctNum(valor: Num, casas = 2): string {
 
 const moeda = (v: Decimal) => formatarMoeda(v);
 
-interface ReceitaMes {
+export interface ReceitaMes {
   mercadorias: Decimal;
   servicos: Decimal;
   total: Decimal;
@@ -169,7 +169,7 @@ interface ReceitaMes {
   notas: number;
 }
 
-function receitaDoMes(m: MesDados | undefined): ReceitaMes {
+export function receitaDoMes(m: MesDados | undefined): ReceitaMes {
   const zero = new Decimal(0);
   if (!m) return { mercadorias: zero, servicos: zero, total: zero, fonte: "sem_dados", vendasSt: zero, servicosRetido: zero, icmsVendas: zero, notas: 0 };
   const notasMerc = Decimal.max(0, dec(m.vendas).minus(dec(m.devolucoes)));
@@ -211,7 +211,7 @@ interface Remuneracao {
   colaborador: ColaboradorFolha;
 }
 
-function folhaDoMes(dados: DadosPrevisao, comp: string): { remuneracoes: Remuneracao[]; total: Decimal } {
+export function folhaDoMes(dados: DadosPrevisao, comp: string): { remuneracoes: Remuneracao[]; total: Decimal } {
   const remuneracoes: Remuneracao[] = [];
   for (const c of dados.colaboradores) {
     const dias = diasTrabalhadosNoMes(comp, c.admissao, c.desligamento);
@@ -222,7 +222,7 @@ function folhaDoMes(dados: DadosPrevisao, comp: string): { remuneracoes: Remuner
   return { remuneracoes, total: remuneracoes.reduce((s, r) => s.plus(r.valor), new Decimal(0)) };
 }
 
-function proLabores(p: ParametrosCalculo): Decimal[] {
+export function proLabores(p: ParametrosCalculo): Decimal[] {
   const total = dec(p.pro_labore);
   if (total.lte(0)) return [];
   const n = Math.max(1, p.socios_pro_labore || 1);
@@ -450,17 +450,46 @@ function calcularSimples(ctx: Ctx) {
   return anexoServ;
 }
 
+/**
+ * DAS de uma competência pelo mesmo cálculo da previsão (usado no comparativo
+ * de regimes, que precisa do DAS de cada mês com a RBT12 daquele mês).
+ */
+export function dasSimples(dados: DadosPrevisao, competencia: string) {
+  const comp = `${competencia.slice(0, 7)}-01`;
+  const porMes = new Map(dados.meses.map((m) => [`${String(m.competencia).slice(0, 7)}-01`, m]));
+  const ctx: Ctx = {
+    dados,
+    p: dados.parametros as ParametrosCalculo,
+    comp,
+    mes: (c) => porMes.get(c),
+    receita: receitaDoMes(porMes.get(comp)),
+    linhas: [],
+    avisos: [],
+    memoria: [],
+    fontes: [],
+  };
+  const r12 = receita12Meses(ctx);
+  const anexoServicos = calcularSimples(ctx);
+  return {
+    valor: ctx.linhas.find((l) => l.chave === "das")?.valor ?? new Decimal(0),
+    anexoServicos,
+    rbt12: centavos(r12.rbt12),
+    mesesSemDados: r12.semDados,
+    folhaEstimada: r12.folhaEstimada,
+  };
+}
+
 // -----------------------------------------------------------------------------
 // Lucro Presumido e Lucro Real
 // -----------------------------------------------------------------------------
-function basesPresuncao(p: ParametrosCalculo, merc: Decimal, serv: Decimal) {
+export function basesPresuncao(p: ParametrosCalculo, merc: Decimal, serv: Decimal) {
   return {
     irpj: merc.times(dec(p.presuncao_irpj_mercadorias)).plus(serv.times(dec(p.presuncao_irpj_servicos))).div(CEM),
     csll: merc.times(dec(p.presuncao_csll_mercadorias)).plus(serv.times(dec(p.presuncao_csll_servicos))).div(CEM),
   };
 }
 
-function irpjSobre(base: Decimal, meses: number) {
+export function irpjSobre(base: Decimal, meses: number) {
   const normal = base.times(IRPJ_CSLL.irpj).div(CEM);
   const adicional = Decimal.max(0, base.minus(dec(IRPJ_CSLL.adicionalLimiteMensal).times(meses))).times(IRPJ_CSLL.adicional).div(CEM);
   return { normal, adicional, total: normal.plus(adicional) };

@@ -197,6 +197,15 @@ Para cada empresa, em **Cálculos → Configuração** (só a equipe vê esta ab
 
 A previsão usa os **XML das notas** enviados (vendas pelo CFOP, devoluções, vendas com ICMS-ST, serviços com ISS retido) e o cadastro de colaboradores. O vencimento de cada guia vem das tarefas de **Obrigações e prazos**, e o valor da guia aparece quando a tarefa de pagamento tem a guia publicada. A equipe vê a previsão sempre; o cliente, só depois de enviar todos os documentos obrigatórios do mês. As tabelas oficiais (Simples, INSS, IRRF, salário mínimo) ficam no código do portal com fonte e vigência; quando mudarem (todo janeiro), precisam ser atualizadas.
 
+#### Comparativo de regimes (planejamento tributário)
+Em **Cálculos → Comparativo de regimes** (só a equipe vê), o portal mostra quanto a empresa teria pago no **Simples Nacional**, no **Lucro Presumido** e no **Lucro Real** nos 12 meses escolhidos, com os mesmos dados da previsão (notas, receita informada, colaboradores e pró-labore):
+
+1. Escolha o **período** (12 meses até a competência).
+2. Preencha as **premissas** que as notas não informam: a **margem de lucro** para o Lucro Real (lucro antes do IRPJ e da CSLL, em % da receita — se a empresa usa o Financeiro, o portal sugere a margem do resultado do período), a **alíquota média do ICMS** nas vendas fora do Simples (quando as notas já destacam ICMS, a média delas é usada) e a **alíquota do ISS** (vem da configuração). Os créditos de PIS/Cofins do Lucro Real são calculados sobre as compras das notas de entrada.
+3. Clique em **Recalcular**. Aparecem o total de cada regime, a carga em % da receita, o regime de **menor custo estimado**, a **economia** em relação ao regime atual, a tabela por tributo, o mês a mês, as premissas usadas, os avisos e as fontes.
+
+Regras do cálculo: o DAS de cada mês usa a receita dos 12 meses anteriores a ele (por isso o portal busca 24 meses; meses sem receita viram aviso); o Presumido calcula o IRPJ e a CSLL por trimestre, com o adicional e o acréscimo da LC 224/2025; o Real usa a margem informada com o adicional anual; ICMS (débito menos os créditos das notas de entrada) e ISS entram só fora do Simples; a contribuição patronal (com 13º e 1/3 de férias) entra fora do Simples e no Anexo IV. Um regime sem alguma premissa aparece como **incompleto** e só fica fora da escolha se ainda puder sair mais barato. FGTS e descontos dos empregados são iguais em todos os regimes e não entram. O regime vale para o ano todo e só muda no começo do ano, e a reforma tributária troca o PIS/Cofins pela CBS a partir de 2027 — o comparativo é um apoio para a análise do escritório, não uma decisão automática.
+
 ### Cadastrar uma empresa nova (administrador)
 1. **Empresas → Nova empresa**: CNPJ (ou CPF), razão social, regime tributário, contador responsável e serviços contratados. O plano de contas gerencial e o checklist padrão são criados sozinhos.
 2. Na empresa: **Contas bancárias** (contas, saldos iniciais, cartões) e **Checklist mensal** (ajuste os documentos e prazos).

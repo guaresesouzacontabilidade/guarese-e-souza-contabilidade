@@ -87,3 +87,30 @@ test("colaborador do cliente sem acesso não vê os cálculos", async ({ page })
   await expect(page.getByText("Seu acesso não inclui os cálculos desta empresa.")).toBeVisible();
   await expect(page.getByText("Ana Souza (DEMO)")).toHaveCount(0);
 });
+
+test("escritório compara os regimes com as premissas; cliente não acessa o comparativo", async ({ page, browser }) => {
+  const cliente = await browser.newContext({ baseURL: BASE, locale: "pt-BR" });
+  const pc = await cliente.newPage();
+  await entrar(pc, `cliente@${DOMINIO}`);
+  await pc.waitForURL(/\/e\/[0-9a-f-]{36}/, { timeout: 90_000 });
+  const empresa = pc.url().match(/\/e\/[0-9a-f-]{36}/)![0];
+  await pc.goto(`${empresa}/calculos/comparativo`);
+  await expect(pc.getByText("Somente a equipe do escritório usa o comparativo de regimes.")).toBeVisible();
+  await expect(pc.getByRole("link", { name: "Comparativo de regimes" })).toHaveCount(0);
+  await cliente.close();
+
+  await entrar(page, `contador@${DOMINIO}`);
+  await page.goto(`${empresa}/calculos/comparativo`);
+  await expect(page.getByRole("heading", { name: "Comparativo de regimes" })).toBeVisible();
+  await expect(page.getByText("Regime atual", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Falta informar a margem de lucro/)).toBeVisible();
+
+  await page.fill("#cmp-margem", "10");
+  await page.fill("#cmp-icms", "18");
+  await page.getByRole("button", { name: "Recalcular" }).click();
+  await page.waitForURL(/margem=10/, { timeout: 60_000 });
+  await expect(page.getByText("Menor custo estimado", { exact: true })).toBeVisible();
+  await expect(page.getByText("falta premissa")).toHaveCount(0);
+  await expect(page.getByText("Tributos por regime")).toBeVisible();
+  await expect(page.getByText("Mês a mês", { exact: true })).toBeVisible();
+});

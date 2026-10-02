@@ -2371,7 +2371,7 @@ isOneToOne: false
 { Args: { "p_descricao": string,"p_tipo": string }; Returns: string
                            },
 "dados_previsao_impostos":
-{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_meses"?: number }; Returns: Json
                            },
 "definir_logo_escritorio":
 { Args: { "p_path": string }; Returns: undefined
