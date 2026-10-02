@@ -76,8 +76,9 @@ async function main() {
   // Usuários fictícios
   await garantirUsuario(admin, `admin@${DOMINIO}`, "Administrador Demonstração", "admin", senha);
   const idEquipe = await garantirUsuario(admin, `contador@${DOMINIO}`, "Contadora Demonstração", "equipe", senha);
-  const idCliente = await garantirUsuario(admin, `cliente@${DOMINIO}`, "Cliente Demonstração", "cliente", senha);
-  const idColab = await garantirUsuario(admin, `colaborador@${DOMINIO}`, "Colaborador Demonstração", "cliente", senha);
+  const idCliente = await garantirUsuario(admin, `cliente@${DOMINIO}`, "Cliente da Padaria (Demonstração)", "cliente", senha);
+  const idCliente2 = await garantirUsuario(admin, `cliente2@${DOMINIO}`, "Cliente da Oficina (Demonstração)", "cliente", senha);
+  const idColab = await garantirUsuario(admin, `colaborador@${DOMINIO}`, "Colaborador da Padaria (Demonstração)", "cliente", senha);
 
   // As empresas são criadas pelas mesmas funções usadas no portal (como administrador)
   const comoAdmin = createClient(url, publica, { auth: { persistSession: false } });
@@ -137,10 +138,13 @@ async function main() {
   // Vínculos dos clientes fictícios
   const titular = ["empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar", "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar"];
   const colaborador = ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"];
-  for (const [i, empresaId] of ids.entries()) {
-    await admin.from("empresa_membros").upsert({ empresa_id: empresaId, user_id: idCliente, papel: "cliente_titular", permissoes: titular, ativo: true }, { onConflict: "empresa_id,user_id" });
-    if (i === 0) await admin.from("empresa_membros").upsert({ empresa_id: empresaId, user_id: idColab, papel: "cliente_colaborador", permissoes: colaborador, ativo: true }, { onConflict: "empresa_id,user_id" });
-  }
+  // Cada cliente fictício acessa SOMENTE a própria empresa (demonstra o isolamento dos dados).
+  const [padaria, oficina] = ids;
+  await admin.from("empresa_membros").upsert({ empresa_id: padaria, user_id: idCliente, papel: "cliente_titular", permissoes: titular, ativo: true }, { onConflict: "empresa_id,user_id" });
+  await admin.from("empresa_membros").upsert({ empresa_id: padaria, user_id: idColab, papel: "cliente_colaborador", permissoes: colaborador, ativo: true }, { onConflict: "empresa_id,user_id" });
+  await admin.from("empresa_membros").upsert({ empresa_id: oficina, user_id: idCliente2, papel: "cliente_titular", permissoes: titular, ativo: true }, { onConflict: "empresa_id,user_id" });
+  // Versões anteriores deste script davam ao primeiro cliente acesso às duas empresas: remove.
+  await admin.from("empresa_membros").delete().eq("empresa_id", oficina).eq("user_id", idCliente);
 
   // Contas financeiras fictícias (somente se a empresa ainda não tiver contas)
   const inicio = `${new Date().getUTCFullYear() - 1}-12-31`;
@@ -167,8 +171,9 @@ async function main() {
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);
   console.log(`  Equipe:         contador@${DOMINIO}`);
-  console.log(`  Cliente:        cliente@${DOMINIO}`);
-  console.log(`  Colaborador:    colaborador@${DOMINIO}`);
+  console.log(`  Cliente 1:      cliente@${DOMINIO}  (somente Padaria)`);
+  console.log(`  Cliente 2:      cliente2@${DOMINIO} (somente Oficina)`);
+  console.log(`  Colaborador:    colaborador@${DOMINIO} (Padaria, acesso restrito)`);
   console.log(`  Senha de todos: ${senha}`);
   console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}\n`);
 }
