@@ -401,18 +401,20 @@ async function publicarVercel(projetoId: string, orgId: string): Promise<string>
   const inicio = Date.now();
   let saida: string;
   try {
-    saida = execFileSync("npx", ["--yes", "vercel@latest", "deploy", "--prod", "--yes", `--token=${tokenVercel}`], {
+    // A chave vai pela variável de ambiente (nunca na linha de comando, que aparece em mensagens de erro).
+    saida = execFileSync("npx", ["--yes", "vercel@latest", "deploy", "--prod", "--yes"], {
       cwd: RAIZ,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "inherit"],
       maxBuffer: 50 * 1024 * 1024,
+      env: { ...process.env, VERCEL_TOKEN: tokenVercel },
     });
-  } catch (erro) {
+  } catch {
     // A conexão que acompanha a compilação pode cair (rede instável) sem que a
     // publicação falhe na Vercel: confere o resultado direto por lá.
     aviso("A conexão com a Vercel caiu durante a publicação; conferindo o resultado direto na Vercel...");
     const url = await aguardarPublicacao(projetoId, inicio);
-    if (!url) throw erro;
+    if (!url) throw new Error("A publicação na Vercel não foi concluída (conexão interrompida). Rode o comando de novo.");
     ok(`Publicado: ${url}`);
     return url;
   }
@@ -558,7 +560,14 @@ async function main() {
   console.log(`=====================================================================\n`);
 }
 
+/** Nenhuma chave aparece em mensagens de erro. */
+function semSegredos(texto: string) {
+  let t = texto;
+  for (const segredo of [tokenVercel, tokenSupabase]) if (segredo) t = t.split(segredo).join("[oculto]");
+  return t.replace(/--token=\S+/g, "--token=[oculto]").replace(/\b(vcp|sbp|sb_secret)_[A-Za-z0-9_-]+/g, "[oculto]");
+}
+
 main().catch((e) => {
-  console.error(`\n✖ Falha na publicação: ${e instanceof Error ? e.message : String(e)}`);
+  console.error(`\n✖ Falha na publicação: ${semSegredos(e instanceof Error ? e.message : String(e))}`);
   process.exit(1);
 });
