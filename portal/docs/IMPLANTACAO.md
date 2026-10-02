@@ -27,7 +27,8 @@ Cliente / equipe (navegador ou celular)
 | Para quê | mostrar e testar | atender os clientes de verdade |
 | Dados | **fictícios** (empresas “DEMO”, e-mails `.test`) | **reais** |
 | Aviso no topo | faixa “Ambiente de demonstração” | sem faixa |
-| Projetos | `portal-guareses-on-demo` (Supabase e Vercel) | `portal-guareses-on` (Supabase e Vercel) |
+| Site (Vercel) | `portal-guareses-on` → https://portal-guareses-on.vercel.app | `portal-guareses-on-producao` (ou domínio próprio) |
+| Banco (Supabase) | `portal-guareses-on-demo` | `portal-guareses-on-producao` |
 | Comando | `publicar.ts` | `publicar.ts --producao` |
 
 Os dados fictícios **nunca** são criados no ambiente de produção: o script de dados de demonstração se recusa a rodar quando o ambiente é de produção.
@@ -90,7 +91,9 @@ NODE_USE_ENV_PROXY=1 npx tsx scripts/publicar.ts
 5. Agenda as rotinas automáticas no banco: fila de tarefas a cada 5 minutos e rotina diária às 6h05.
 6. Cria os dados fictícios e confere se o site está no ar.
 
-No final aparecem o endereço do site e a senha dos usuários de teste (`admin@`, `contador@`, `cliente@`, `cliente2@` e `colaborador@demo.guareses.test`). O script pode ser executado de novo sem problemas: ele reaproveita o que já existe.
+No final aparecem o endereço do site e a senha dos usuários de teste (`admin@`, `contador@`, `cliente@`, `cliente2@` e `colaborador@demo.guareses.test`). O script pode ser executado de novo sem problemas: ele reaproveita o que já existe, aplica só as mudanças novas do banco e **mantém as senhas dos usuários de teste** que já existem (para trocar, use `--senha-demo "NovaSenha"`).
+
+Se a chave do Supabase não listar as organizações da conta (acontece com alguns tipos de chave), o script usa a organização de um projeto existente; para escolher outra, informe a variável `SUPABASE_ORG_ID`.
 
 ### 5.3 Depois de publicar
 

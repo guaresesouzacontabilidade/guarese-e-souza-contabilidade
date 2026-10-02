@@ -4,11 +4,11 @@
  *
  * Dois ambientes, sempre em projetos SEPARADOS (dados fictícios nunca convivem
  * com dados reais):
- *   - demonstração (padrão): projetos "portal-guareses-on-demo", com dados
- *     FICTÍCIOS e faixa de aviso no topo;
- *   - produção (--producao): projetos "portal-guareses-on", vazio, para os
- *     dados reais; cria o primeiro administrador e mostra o link para ele
- *     definir a senha.
+ *   - demonstração (padrão): site "portal-guareses-on" e banco
+ *     "portal-guareses-on-demo", com dados FICTÍCIOS e faixa de aviso no topo;
+ *   - produção (--producao): site e banco "portal-guareses-on-producao",
+ *     vazio, para os dados reais; cria o primeiro administrador e mostra o
+ *     link para ele definir a senha.
  *
  * O que o script faz (pode ser executado de novo com segurança — reaproveita
  * o que já existe):
@@ -43,8 +43,8 @@ function argumento(nome: string, padrao: string) {
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : padrao;
 }
 const PRODUCAO = process.argv.includes("--producao");
-const NOME = argumento("nome", PRODUCAO ? "portal-guareses-on" : "portal-guareses-on-demo");
-const NOME_SUPABASE = argumento("nome-supabase", NOME);
+const NOME = argumento("nome", PRODUCAO ? "portal-guareses-on-producao" : "portal-guareses-on");
+const NOME_SUPABASE = argumento("nome-supabase", PRODUCAO ? "portal-guareses-on-producao" : "portal-guareses-on-demo");
 const ADMIN_EMAIL = argumento("admin-email", "guaresesouzacontabilidade@gmail.com").trim().toLowerCase();
 const ADMIN_NOME = argumento("admin-nome", "Administrador Guarese's ON");
 // Domínio próprio (ex.: portal.guaresesoncontabilidade.com.br). O DNS precisa apontar para a Vercel.
@@ -112,8 +112,10 @@ async function projetoSupabase(): Promise<{ ref: string; novo: boolean; senhaBan
     return { ref: existente.id, novo: false, senhaBanco: null };
   }
   const orgs = await sb<{ id: string; name: string }[]>("/organizations");
-  if (!orgs.length) throw new Error("Nenhuma organização encontrada na conta do Supabase.");
-  const org = orgs[0];
+  // alguns tokens não listam organizações; usa SUPABASE_ORG_ID ou a organização de um projeto existente
+  const idOrg = process.env.SUPABASE_ORG_ID ?? projetos[0]?.organization_id;
+  const org = orgs.find((o) => o.id === idOrg) ?? orgs[0] ?? (idOrg ? { id: idOrg, name: idOrg } : null);
+  if (!org) throw new Error("Nenhuma organização encontrada na conta do Supabase (defina SUPABASE_ORG_ID).");
   const senhaBanco = randomBytes(18).toString("base64url");
   const criado = await sb<ProjetoSb>("/projects", {
     method: "POST",
@@ -387,8 +389,18 @@ async function main() {
     ok(linkAdmin ? `Administrador ${ADMIN_EMAIL} convidado.` : saida.trim());
   } else {
     passo("Dados fictícios de demonstração");
-    senhaDemo = estado.senhaDemo ?? `Demo-${randomBytes(5).toString("base64url")}9!`;
-    execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
+    senhaDemo = argumento("senha-demo", "") || process.env.DEMO_SENHA || estado.senhaDemo || null;
+    const [{ n: usuariosDemo }] = await sql<{ n: number }[]>(ref, "select count(*)::int as n from public.perfis where email like '%@demo.guareses.test'");
+    if (senhaDemo) {
+      execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
+    } else if (usuariosDemo > 0) {
+      // Usuários de demonstração já existem: as senhas atuais são mantidas.
+      execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--manter-senhas"], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
+      ok("Senhas dos usuários de demonstração mantidas (as mesmas informadas na publicação anterior).");
+    } else {
+      senhaDemo = `Demo-${randomBytes(5).toString("base64url")}9!`;
+      execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
+    }
   }
 
   passo("Verificação do site");
@@ -410,7 +422,7 @@ async function main() {
     console.log(` Portal publicado (DEMONSTRAÇÃO, dados fictícios): ${site}`);
     console.log(` Supabase: projeto ${ref} (região São Paulo, plano gratuito)`);
     console.log(` Usuários de teste: admin@, contador@, cliente@, cliente2@, colaborador@ demo.guareses.test`);
-    console.log(` Senha de teste: ${senhaDemo}`);
+    console.log(senhaDemo ? ` Senha de teste: ${senhaDemo}` : " Senha de teste: a mesma da publicação anterior (mantida).");
   }
   console.log(`=====================================================================\n`);
 }

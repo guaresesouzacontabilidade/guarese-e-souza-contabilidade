@@ -2,7 +2,7 @@
  * Dados FICTÍCIOS para o ambiente de DEMONSTRAÇÃO (ou desenvolvimento local).
  *
  * Uso:
- *   npm run seed:demo -- --confirmar [--senha "SenhaDemo123!"]
+ *   npm run seed:demo -- --confirmar [--senha "SenhaDemo123!"] [--manter-senhas]
  *
  * Regras de segurança:
  *  - Recusa executar quando NEXT_PUBLIC_AMBIENTE=producao.
@@ -43,10 +43,12 @@ function competencia(deslocamentoMeses: number) {
   return d.toISOString().slice(0, 8) + "01";
 }
 
+const MANTER_SENHAS = process.argv.includes("--manter-senhas");
+
 async function garantirUsuario(admin: SupabaseClient, email: string, nome: string, tipo: "admin" | "equipe" | "cliente", senha: string) {
   const { data: existente } = await admin.from("perfis").select("id").eq("email", email).maybeSingle();
   if (existente) {
-    await admin.auth.admin.updateUserById(existente.id, { password: senha, app_metadata: { tipo } });
+    await admin.auth.admin.updateUserById(existente.id, MANTER_SENHAS ? { app_metadata: { tipo } } : { password: senha, app_metadata: { tipo } });
     await admin.from("perfis").update({ tipo, nome, ativo: true }).eq("id", existente.id);
     return existente.id as string;
   }
@@ -82,8 +84,11 @@ async function main() {
   const idColab = await garantirUsuario(admin, `colaborador@${DOMINIO}`, "Colaborador da Padaria (Demonstração)", "cliente", senha);
 
   // As empresas são criadas pelas mesmas funções usadas no portal (como administrador)
+  // Sessão do administrador fictício por link de uso único (não depende de conhecer a senha atual)
   const comoAdmin = createClient(url, publica, { auth: { persistSession: false } });
-  const { error: eLogin } = await comoAdmin.auth.signInWithPassword({ email: `admin@${DOMINIO}`, password: senha });
+  const { data: link, error: eLink } = await admin.auth.admin.generateLink({ type: "magiclink", email: `admin@${DOMINIO}` });
+  if (eLink || !link.properties?.hashed_token) throw new Error(`Falha ao preparar o acesso do administrador de demonstração: ${eLink?.message ?? "sem token"}`);
+  const { error: eLogin } = await comoAdmin.auth.verifyOtp({ token_hash: link.properties.hashed_token, type: "magiclink" });
   if (eLogin) throw new Error(`Falha ao entrar como administrador de demonstração: ${eLogin.message}`);
 
   const empresas = [
@@ -181,7 +186,7 @@ async function main() {
   console.log(`  Cliente 1:      cliente@${DOMINIO}  (somente Padaria)`);
   console.log(`  Cliente 2:      cliente2@${DOMINIO} (somente Oficina)`);
   console.log(`  Colaborador:    colaborador@${DOMINIO} (Padaria, acesso restrito)`);
-  console.log(`  Senha de todos: ${senha}`);
+  console.log(MANTER_SENHAS ? "  Senhas: mantidas (não foram alteradas)" : `  Senha de todos: ${senha}`);
   console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}\n`);
 }
 
