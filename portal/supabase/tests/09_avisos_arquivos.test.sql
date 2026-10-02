@@ -69,8 +69,10 @@ select ok((pg_temp.ultimo_aviso('00000000-0000-0000-0000-0000000000a1')).corpo l
           'texto com arquivo, competência e quem enviou');
 select is((pg_temp.ultimo_aviso('00000000-0000-0000-0000-0000000000a1')).link,
           '/e/' || current_setting('testes.a') || '/documentos/' || current_setting('testes.doc1'), 'link abre o documento');
-select is((select count(*)::int from public.envios where tipo = 'arquivo_cliente'), 0, 'sem e-mail quando a pessoa não pediu');
-select is((select count(*)::int from public.jobs where tipo = 'enviar_push'), 0, 'sem aparelho ativado, nada é enfileirado para notificação no aparelho');
+select is((select count(*)::int from public.envios where tipo = 'arquivo_cliente' and user_id in ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-0000000000a3', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000b2', '00000000-0000-0000-0000-0000000000b3', '00000000-0000-0000-0000-0000000000c1')), 0, 'sem e-mail quando a pessoa não pediu');
+select is((select count(*)::int from public.jobs where tipo = 'enviar_push'
+            and payload ->> 'notificacao_id' in (select id::text from public.notificacoes where user_id in ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-0000000000a3', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000b2', '00000000-0000-0000-0000-0000000000b3', '00000000-0000-0000-0000-0000000000c1'))),
+          0, 'sem aparelho ativado, nada é enfileirado para notificação no aparelho');
 
 -- 2. Envios seguidos viram um aviso só
 select pg_temp.enviar('00000000-0000-0000-0000-0000000000b1', current_setting('testes.a')::uuid, 'extrato-2.pdf');
@@ -94,7 +96,8 @@ select is(pg_temp.avisos('00000000-0000-0000-0000-0000000000a2'), 1, 'cada pesso
 -- 4. Outra empresa: só quem a acompanha
 select pg_temp.enviar('00000000-0000-0000-0000-0000000000c1', current_setting('testes.b')::uuid, 'nota-b.pdf');
 select is(pg_temp.avisos('00000000-0000-0000-0000-0000000000a1', current_setting('testes.b')::uuid), 1, 'administrador avisado da Empresa B');
-select is((pg_temp.ultimo_aviso('00000000-0000-0000-0000-0000000000a1')).titulo, 'Novo arquivo de Empresa B Serviços Ltda',
+select is((select titulo from public.notificacoes where user_id = '00000000-0000-0000-0000-0000000000a1' and tipo = 'arquivo_cliente'
+             and empresa_id = current_setting('testes.b')::uuid and lida_em is null), 'Novo arquivo de Empresa B Serviços Ltda',
           'sem nome fantasia, usa a razão social');
 select is(pg_temp.avisos('00000000-0000-0000-0000-0000000000a2', current_setting('testes.b')::uuid), 0, 'contador de outra empresa não é avisado');
 
@@ -147,7 +150,7 @@ select is((select count(*)::int from public.envios where tipo = 'arquivo_cliente
           'e-mail registrado para quem pediu');
 select ok((select j.executar_apos > now() + interval '9 minutes' from public.jobs j
             join public.envios e on j.payload ->> 'envio_id' = e.id::text
-           where e.tipo = 'arquivo_cliente'), 'e-mail agendado para 10 minutos depois');
+           where e.tipo = 'arquivo_cliente' and e.user_id = '00000000-0000-0000-0000-0000000000a1'), 'e-mail agendado para 10 minutos depois');
 select pg_temp.enviar('00000000-0000-0000-0000-0000000000b1', current_setting('testes.a')::uuid, 'extrato-8.pdf');
 select is((select assunto from public.envios where tipo = 'arquivo_cliente' and user_id = '00000000-0000-0000-0000-0000000000a1'),
           'Empresa A enviou 2 arquivos', 'e-mail pendente passa a resumir o conjunto');
@@ -173,9 +176,9 @@ select throws_ok($$select chave_auth from public.push_aparelhos$$, '42501', null
 select throws_ok($$select * from public.sistema_push_destinos(gen_random_uuid())$$, '42501', null,
                  'somente o servidor consulta os destinos de entrega');
 reset role;
-select is((select descricao from public.push_aparelhos), 'Chrome no Android', 'descrição mantida ao renovar sem informar outra');
-select is((select chave_auth from public.push_aparelhos), repeat('b', 22), 'chaves renovadas');
-select is((select count(*)::int from public.auditoria where acao = 'notificacoes_aparelho_ativadas'), 1, 'ativação registrada uma vez na auditoria');
+select is((select descricao from public.push_aparelhos where user_id = '00000000-0000-0000-0000-0000000000a1'), 'Chrome no Android', 'descrição mantida ao renovar sem informar outra');
+select is((select chave_auth from public.push_aparelhos where user_id = '00000000-0000-0000-0000-0000000000a1'), repeat('b', 22), 'chaves renovadas');
+select is((select count(*)::int from public.auditoria where acao = 'notificacoes_aparelho_ativadas' and user_id = '00000000-0000-0000-0000-0000000000a1'), 1, 'ativação registrada uma vez na auditoria');
 
 select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
 set local role authenticated;
@@ -192,7 +195,7 @@ select pg_temp.enviar('00000000-0000-0000-0000-0000000000b1', current_setting('t
 select is((select count(*)::int from public.jobs where tipo = 'enviar_push' and payload ->> 'notificacao_id' = current_setting('testes.aviso_a1')),
           1, 'envio pendente é reaproveitado (lê o texto atualizado)');
 select is((select count(*)::int from public.jobs where tipo = 'enviar_push'
-            and payload ->> 'notificacao_id' in (select id::text from public.notificacoes where user_id <> '00000000-0000-0000-0000-0000000000a1')),
+            and payload ->> 'notificacao_id' in (select id::text from public.notificacoes where user_id in ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-0000000000a3', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000b2', '00000000-0000-0000-0000-0000000000b3', '00000000-0000-0000-0000-0000000000c1') and user_id <> '00000000-0000-0000-0000-0000000000a1')),
           0, 'nada é enfileirado para quem não ativou aparelho');
 
 set local role service_role;
@@ -205,7 +208,7 @@ select is((select count(*)::int from public.sistema_push_destinos(current_settin
 select lives_ok(format($$select public.sistema_push_resultado(%L::uuid, false, true)$$, current_setting('testes.aparelho')),
                 'endereço expirado é removido pelo servidor');
 reset role;
-select is((select count(*)::int from public.push_aparelhos), 0, 'aparelho expirado removido');
+select is((select count(*)::int from public.push_aparelhos where user_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'aparelho expirado removido');
 
 -- Aviso de teste (com limite)
 insert into auth.sessions (id, user_id, created_at, updated_at, aal)

@@ -2,7 +2,7 @@
 
 Registro, em linguagem simples, de **quais serviços de fora participam do funcionamento do portal, quais dados cada um recebe e como estão configurados** — base para a política de privacidade e para o atendimento à LGPD (Lei nº 13.709/2018).
 
-Controladora dos dados: **GUARESE'S ON SOLUCOES EMPRESARIAIS LTDA** (CNPJ 62.935.399/0001-50), Praça do Centenário, nº 713, Centro, Porto Nacional – TO, CEP 77.500-000 — contato: guaresesouzacontabilidade@gmail.com.
+Controladora dos dados: **GUARESE'S ON SOLUCOES EMPRESARIAIS LTDA** (CNPJ 62.935.399/0001-50), Praça do Centenário, nº 713, Centro, Porto Nacional – TO, CEP 77.500-000 — contato: onguaresescontato@gmail.com.
 
 ## 1. Resumo
 

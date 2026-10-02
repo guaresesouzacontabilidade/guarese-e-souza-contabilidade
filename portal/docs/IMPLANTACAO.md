@@ -113,7 +113,7 @@ Quando o escritório decidir usar com clientes de verdade:
 
    ```bash
    cd portal
-   NODE_USE_ENV_PROXY=1 npx tsx scripts/publicar.ts --producao --admin-email guaresesouzacontabilidade@gmail.com --admin-nome "Nome do administrador"
+   NODE_USE_ENV_PROXY=1 npx tsx scripts/publicar.ts --producao --admin-email onguaresescontato@gmail.com --admin-nome "Nome do administrador"
    ```
 
    Com domínio próprio, acrescente `--dominio portal.seudominio.com.br` e, no Registro.br, crie um registro **CNAME** apontando para `cname.vercel-dns.com`.

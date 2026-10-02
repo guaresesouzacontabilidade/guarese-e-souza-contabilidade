@@ -46,7 +46,7 @@ function argumento(nome: string, padrao: string) {
 const PRODUCAO = process.argv.includes("--producao");
 const NOME = argumento("nome", PRODUCAO ? "portal-guareses-on-producao" : "portal-guareses-on");
 const NOME_SUPABASE = argumento("nome-supabase", PRODUCAO ? "portal-guareses-on-producao" : "portal-guareses-on-demo");
-const ADMIN_EMAIL = argumento("admin-email", "guaresesouzacontabilidade@gmail.com").trim().toLowerCase();
+const ADMIN_EMAIL = argumento("admin-email", "onguaresescontato@gmail.com").trim().toLowerCase();
 const ADMIN_NOME = argumento("admin-nome", "Administrador Guarese's ON");
 // Domínio próprio (ex.: portal.guaresesoncontabilidade.com.br). O DNS precisa apontar para a Vercel.
 const DOMINIO = argumento("dominio", "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
@@ -189,7 +189,7 @@ function configuracaoEmail() {
   if (!PRODUCAO) return null;
   const senha = process.env.SMTP_PASS?.replace(/\s+/g, "");
   if (!senha) return null;
-  const usuario = (process.env.SMTP_USER ?? "guaresesouzacontabilidade@gmail.com").trim();
+  const usuario = (process.env.SMTP_USER ?? "onguaresescontato@gmail.com").trim();
   const host = process.env.SMTP_HOST?.trim() || (/@gmail\.com$/i.test(usuario) ? "smtp.gmail.com" : "");
   if (!host) {
     aviso("SMTP_PASS informado, mas falta SMTP_HOST (servidor de e-mail) — e-mail não configurado.");

@@ -48,11 +48,11 @@ export function PoliticaPrivacidade() {
       <p>
         Você pode solicitar confirmação de tratamento, acesso, correção, anonimização, portabilidade, eliminação de dados
         desnecessários e informações sobre compartilhamento, além de revogar consentimentos, pela página “Minha conta → Privacidade”
-        do portal ou pelo e-mail guaresesouzacontabilidade@gmail.com. Alguns dados precisam ser mantidos para cumprimento de
+        do portal ou pelo e-mail onguaresescontato@gmail.com. Alguns dados precisam ser mantidos para cumprimento de
         obrigações legais.
       </p>
       <h3>7. Encarregado e contato</h3>
-      <p>Contato do encarregado pelo tratamento de dados: guaresesouzacontabilidade@gmail.com — Praça do Centenário, nº 713, Centro, Porto Nacional – TO, CEP 77.500-000.</p>
+      <p>Contato do encarregado pelo tratamento de dados: onguaresescontato@gmail.com — Praça do Centenário, nº 713, Centro, Porto Nacional – TO, CEP 77.500-000.</p>
     </div>
   );
 }

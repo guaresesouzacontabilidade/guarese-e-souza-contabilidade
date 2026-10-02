@@ -36,7 +36,7 @@ const PADRAO: EscritorioPublico = {
   cidade: "Porto Nacional",
   uf: "TO",
   cep: "77500000",
-  email: "guaresesouzacontabilidade@gmail.com",
+  email: "onguaresescontato@gmail.com",
   telefone: null,
   whatsapp: null,
   site: null,
