@@ -219,7 +219,9 @@ export function LeituraDocumento({
             {campos.map((c, i) => (
               <div key={i} className={c.confianca === "baixa" ? "rounded-md bg-alerta-bg/60 px-2" : undefined}>
                 <Linha rotulo={c.rotulo}>
-                  <span className="numero">{c.valor}</span>{" "}
+                  <span className="numero">
+                    {c.campo === "valor" ? formatarMoeda(c.valor) : /^\d{4}-\d{2}-\d{2}$/.test(c.valor) ? formatarData(c.valor) : c.valor}
+                  </span>{" "}
                   <Badge variante={c.confianca === "alta" ? "sucesso" : c.confianca === "media" ? "info" : "alerta"}>
                     confiança {c.confianca === "alta" ? "alta" : c.confianca === "media" ? "média" : "baixa"}
                   </Badge>

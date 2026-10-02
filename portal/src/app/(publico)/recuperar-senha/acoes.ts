@@ -35,7 +35,7 @@ export async function solicitarRecuperacao(_anterior: ResultadoAcao, formData: F
     } else {
       // Sem SMTP próprio: usa o envio de e-mails do Supabase Auth (modelos configurados no projeto).
       const supabase = await criarClienteServidor();
-      await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${site}/redefinir-senha` });
+      await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${site}/auth/callback?next=/redefinir-senha` });
     }
   } catch {
     // Resposta sempre genérica: não revela se o e-mail existe.
