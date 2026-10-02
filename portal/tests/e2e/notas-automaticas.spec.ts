@@ -1,0 +1,109 @@
+import { test, expect, type Page } from "@playwright/test";
+import forge from "node-forge";
+import { generateKeyPairSync, randomBytes } from "node:crypto";
+
+/**
+ * Notas automáticas: o empresário cadastra o certificado A1 (gerado na hora,
+ * fictício, com o CNPJ da Padaria de demonstração), vê a situação e remove.
+ * Neste ambiente as consultas fiscais ficam desligadas
+ * (NOTAS_AUTOMATICAS_SEM_REDE=1): nada é enviado à SEFAZ.
+ */
+const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
+const DOMINIO = "demo.guareses.test";
+const BASE = process.env.PORTAL_URL ?? "http://localhost:3000";
+
+async function entrar(page: Page, email: string) {
+  await page.goto("/login");
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="senha"]', SENHA);
+  await page.click('button[type="submit"]');
+  await page.waitForURL((u) => /^\/(aceite|e\/|escritorio|conta)/.test(u.pathname), { timeout: 90_000 });
+  if (page.url().includes("/aceite")) {
+    for (const b of await page.locator('input[type="checkbox"]').all()) await b.check();
+    await page.click('button[type="submit"]');
+    await page.waitForURL((u) => !u.pathname.startsWith("/aceite"), { timeout: 90_000 });
+  }
+}
+
+function pfx(cn: string, senha: string) {
+  const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const chave = forge.pki.privateKeyFromPem(privateKey.export({ type: "pkcs8", format: "pem" }).toString()) as forge.pki.rsa.PrivateKey;
+  const c = forge.pki.createCertificate();
+  c.publicKey = forge.pki.setRsaPublicKey(chave.n, chave.e);
+  c.serialNumber = "01" + randomBytes(6).toString("hex");
+  c.validity.notBefore = new Date(Date.now() - 86_400_000);
+  c.validity.notAfter = new Date(Date.now() + 365 * 86_400_000);
+  c.setSubject([{ name: "commonName", value: cn }]);
+  c.setIssuer([{ name: "commonName", value: "AC DE TESTE (FICTICIA)" }]);
+  c.sign(chave, forge.md.sha256.create());
+  const der = forge.asn1.toDer(forge.pkcs12.toPkcs12Asn1(chave, [c], senha, { algorithm: "3des" })).getBytes();
+  return Buffer.from(der, "binary");
+}
+
+test("empresário cadastra o certificado A1, vê a situação e remove", async ({ page, browser }) => {
+  await entrar(page, `cliente@${DOMINIO}`);
+  await page.waitForURL(/\/e\/[0-9a-f-]{36}/, { timeout: 90_000 });
+  const empresa = page.url().match(/\/e\/[0-9a-f-]{36}/)![0];
+  await page.goto(`${empresa}/notas-automaticas`);
+  await expect(page.getByRole("heading", { name: "Notas automáticas" })).toBeVisible();
+  await expect(page.getByText("Consultas desligadas neste ambiente")).toBeVisible();
+  // Sobra de uma execução interrompida: remove antes de começar
+  if (await page.getByRole("button", { name: "Remover certificado" }).isVisible()) {
+    await page.getByRole("button", { name: "Remover certificado" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Remover certificado" }).click();
+    await expect(page.getByText(/Certificado removido/)).toBeVisible({ timeout: 30_000 });
+  }
+  await expect(page.getByText("Desconectada", { exact: true })).toBeVisible();
+
+  const enviar = async (arquivo: Buffer, senha: string) => {
+    await page.setInputFiles("#cert-arquivo", { name: "certificado.pfx", mimeType: "application/x-pkcs12", buffer: arquivo });
+    await page.fill("#cert-senha", senha);
+    await page.getByRole("button", { name: "Cadastrar certificado" }).click();
+  };
+
+  // Sem autorização, senha errada e CNPJ de outra empresa são recusados
+  const certo = pfx("PADARIA PAO DOURADO (DEMO):11222333000181", "senha-certa");
+  await enviar(certo, "senha-certa");
+  await expect(page.getByText("Confirme a autorização para usar o certificado.")).toBeVisible();
+  await page.locator('input[name="autorizacao"]').check();
+  await enviar(certo, "senha-errada");
+  await expect(page.getByText("Senha do certificado incorreta.").first()).toBeVisible({ timeout: 30_000 });
+  await page.locator('input[name="autorizacao"]').check();
+  await enviar(pfx("OUTRA EMPRESA:98765432000110", "x"), "x");
+  await expect(page.getByText("Este certificado é de outro CNPJ. Use o certificado da própria empresa.").first()).toBeVisible({ timeout: 30_000 });
+
+  // Certificado da própria empresa
+  await page.locator('input[name="autorizacao"]').check();
+  await enviar(certo, "senha-certa");
+  await expect(page.getByText("Certificado cadastrado. A primeira busca começa em instantes.")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("PADARIA PAO DOURADO (DEMO):11222333000181")).toBeVisible();
+  await expect(page.getByText(/autorizado pelo cliente no portal/)).toBeVisible();
+  // A busca roda, mas aqui não consulta a SEFAZ (e diz isso)
+  await expect(async () => {
+    await page.reload();
+    await expect(page.getByText(/Nenhuma consulta foi feita/)).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000 });
+
+  // O escritório vê a empresa no painel da carteira e o certificado em Vencimentos
+  const ctx = await browser.newContext({ baseURL: BASE, locale: "pt-BR" });
+  const escritorio = await ctx.newPage();
+  await entrar(escritorio, `contador@${DOMINIO}`);
+  await escritorio.goto("/escritorio/notas-automaticas");
+  await expect(escritorio.getByRole("link", { name: "Padaria Pão Dourado (DEMO)" })).toBeVisible();
+  await escritorio.goto(`${empresa}/vencimentos`);
+  await expect(escritorio.getByText("Certificado digital A1 (notas automáticas)").first()).toBeVisible();
+
+  // Empresário remove: a busca é desligada
+  await page.getByRole("button", { name: "Remover certificado" }).click();
+  await page.fill("#cert-motivo", "Teste automático concluído.");
+  await page.getByRole("dialog").getByRole("button", { name: "Remover certificado" }).click();
+  await expect(page.getByText(/Certificado removido/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Desconectada", { exact: true })).toBeVisible();
+
+  // Limpeza: o escritório exclui o vencimento criado pelo teste
+  await escritorio.reload();
+  await escritorio.getByRole("button", { name: "Ações para Certificado digital A1 (notas automáticas)" }).first().click();
+  await escritorio.getByRole("menuitem", { name: "Excluir" }).click();
+  await escritorio.getByRole("dialog").getByRole("button", { name: "Excluir" }).click();
+  await ctx.close();
+});

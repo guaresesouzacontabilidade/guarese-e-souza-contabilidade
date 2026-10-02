@@ -150,7 +150,7 @@ async function main() {
   // Vínculos dos clientes fictícios
   const titular = [
     "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar", "financeiro.ver", "financeiro.editar",
-    "financeiro.importar", "relatorios.ver", "mensagens.usar", "calculos.ver", "colaboradores.gerenciar",
+    "financeiro.importar", "relatorios.ver", "mensagens.usar", "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar",
   ];
   const colaborador = ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"];
   // Cada cliente fictício acessa SOMENTE a própria empresa (demonstra o isolamento dos dados).

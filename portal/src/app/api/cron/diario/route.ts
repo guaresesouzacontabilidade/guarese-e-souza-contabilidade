@@ -10,7 +10,8 @@ export const maxDuration = 60;
  * lembretes automáticos de pendências e limpa envios incompletos; na camada
  * operacional, gera as tarefas das obrigações (sem duplicar) e os alertas
  * de prazos para a equipe; avisa os vencimentos de certificados, alvarás,
- * licenças e certidões (30, 15 e 5 dias antes e no vencimento).
+ * licenças e certidões (30, 15 e 5 dias antes e no vencimento); garante a
+ * próxima busca das notas automáticas das empresas com certificado.
  */
 async function executar(req: Request) {
   if (!cronAutorizado(req)) return new NextResponse("Não autorizado.", { status: 401 });
@@ -26,10 +27,12 @@ async function executar(req: Request) {
     return NextResponse.json({ ok: false, rotina: data, erro: operacional.error.message }, { status: 500 });
   }
   const vencimentos = await admin.rpc("rotina_vencimentos");
+  const notas = await admin.rpc("rotina_notas_automaticas");
   const resultado = {
     ...(data as Record<string, unknown>),
     obrigacoes: operacional.data,
     vencimentos: vencimentos.error ? { erro: vencimentos.error.message } : vencimentos.data,
+    notas_automaticas: notas.error ? { erro: notas.error.message } : notas.data,
   };
   await registrarRotina(admin, "diaria", { ok: true, resultado });
   const fila = await processarFila({ limite: 50, tempoMaximoMs: 30_000 });

@@ -1,0 +1,325 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { CloudDownload, KeyRound, ShieldCheck } from "lucide-react";
+import { obterContextoEmpresa } from "@/lib/auth/sessao";
+import { CabecalhoPagina } from "@/components/ui/pagina";
+import { Alerta, EstadoVazio } from "@/components/ui/feedback";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
+import { BotaoBuscarAgora, FormCertificado, PreferenciasNotas, RemoverCertificado } from "@/components/notas-automaticas/notas-automaticas";
+import {
+  AUTORIZACAO_CLIENTE,
+  AUTORIZACAO_ESCRITORIO,
+  RESULTADO_EXECUCAO,
+  SERVICO_EXECUCAO,
+  SITUACAO_NOTAS,
+  situacaoNotas,
+} from "@/lib/notas-automaticas/rotulos";
+import { envServidor } from "@/lib/env-servidor";
+import { formatarMoeda } from "@/lib/dinheiro";
+import { formatarCnpj, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
+import { diasEntre, hojeISO } from "@/lib/competencia";
+
+export const metadata: Metadata = { title: "Notas automáticas" };
+
+export default async function NotasAutomaticas({ params }: PageProps<"/e/[empresaId]/notas-automaticas">) {
+  const { empresaId } = await params;
+  const ctx = await obterContextoEmpresa(empresaId);
+  const gerenciar = ctx.pode("certificado.gerenciar");
+  const verDocumentos = ctx.pode("documentos.ver");
+  if (!gerenciar && !verDocumentos) return <Alerta tom="alerta">Seu acesso não inclui as notas automáticas desta empresa.</Alerta>;
+  const base = `/e/${empresaId}`;
+
+  const [{ data: certificado }, { data: config }, { data: execucoes }, { data: resumos }] = await Promise.all([
+    gerenciar
+      ? ctx.supabase
+          .from("certificados_digitais")
+          .select("id, titular, documento, emissor, numero_serie, impressao_digital, valido_de, valido_ate, autorizacao, created_at, cadastrado:perfis!certificados_digitais_cadastrado_por_fkey(nome)")
+          .eq("empresa_id", empresaId)
+          .is("revogado_em", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    ctx.supabase.from("notas_automaticas").select("*").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase
+      .from("notas_automaticas_execucoes")
+      .select("id, servico, iniciado_em, resultado, documentos, resumos, codigo, mensagem")
+      .eq("empresa_id", empresaId)
+      .order("iniciado_em", { ascending: false })
+      .limit(15),
+    verDocumentos
+      ? ctx.supabase
+          .from("nfe_resumos")
+          .select("id, chave, emitente_documento, emitente_nome, data_emissao, tipo_operacao, valor, situacao, ciencia_em, ciencia_retorno, documento_id")
+          .eq("empresa_id", empresaId)
+          .order("data_emissao", { ascending: false, nullsFirst: false })
+          .limit(50)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const situacao = situacaoNotas(config?.certificado_valido_ate ? { valido_ate: config.certificado_valido_ate } : null, config);
+  const s = SITUACAO_NOTAS[situacao];
+  const chaveServidor = Boolean(envServidor.certificadosChave());
+  const diasValidade = certificado ? diasEntre(hojeISO(), certificado.valido_ate.slice(0, 10)) : null;
+  const cadastradoPor = (certificado?.cadastrado as unknown as { nome: string } | null)?.nome ?? null;
+  const semXml = (resumos ?? []).filter((r) => !r.documento_id && r.situacao === "autorizada").length;
+
+  return (
+    <>
+      <CabecalhoPagina
+        titulo="Notas automáticas"
+        descricao="Busca das notas fiscais da empresa direto nos serviços oficiais (SEFAZ – Ambiente Nacional da NF-e e Ambiente Nacional da NFS-e) com o certificado digital A1. As notas chegam em Documentos sem ninguém precisar enviar."
+        acoes={gerenciar && certificado && situacao !== "vencido" ? <BotaoBuscarAgora empresaId={empresaId} /> : undefined}
+      />
+
+      {envServidor.notasSemRede() ? (
+        <Alerta tom="info" className="mb-4" titulo="Consultas desligadas neste ambiente">
+          Este é um ambiente de demonstração ou de teste: o portal não consulta a SEFAZ nem o Ambiente Nacional daqui. No portal oficial, a busca funciona
+          com o certificado da empresa.
+        </Alerta>
+      ) : null}
+      <div className="mb-4 grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Situação <Badge variante={s.tom}>{s.rotulo}</Badge>
+            </CardTitle>
+            <CardDescription>
+              {situacao === "desconectada"
+                ? "Desligada até o cadastro do certificado digital A1 da empresa. Nenhuma consulta é feita sem ele."
+                : situacao === "vencido"
+                  ? "O certificado venceu. Cadastre o certificado renovado para voltar a buscar as notas."
+                  : situacao === "pausada"
+                    ? "A busca está pausada ou sem nenhum serviço marcado."
+                    : "O portal consulta os serviços oficiais de hora em hora."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {config?.ultima_execucao ? (
+              <p>
+                <span className="text-muted-foreground">Última busca:</span> {formatarRelativo(config.ultima_execucao)}
+              </p>
+            ) : null}
+            {config?.ultimo_sucesso ? (
+              <p>
+                <span className="text-muted-foreground">Última busca sem erro:</span> {formatarDataHora(config.ultimo_sucesso)}
+              </p>
+            ) : null}
+            {situacao === "ativa" || situacao === "erro" ? (
+              <>
+                {config?.nfe_ativa && config.nfe_proxima ? (
+                  <p>
+                    <span className="text-muted-foreground">Próxima consulta da NF-e:</span> {formatarDataHora(config.nfe_proxima)}
+                  </p>
+                ) : null}
+                {config?.nfse_ativa && config.nfse_proxima ? (
+                  <p>
+                    <span className="text-muted-foreground">Próxima consulta da NFS-e:</span> {formatarDataHora(config.nfse_proxima)}
+                  </p>
+                ) : null}
+              </>
+            ) : null}
+            {config?.ultimo_erro && situacao !== "desconectada" ? (
+              <Alerta tom="perigo" titulo="Último erro">
+                {config.ultimo_erro}
+              </Alerta>
+            ) : null}
+            {verDocumentos && semXml > 0 ? (
+              <p className="text-alerta-fg">
+                {semXml === 1 ? "1 NF-e recebida só em resumo" : `${semXml} NF-e recebidas só em resumo`} (sem o XML completo).
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        {gerenciar ? (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <KeyRound className="size-4" /> Certificado digital A1
+              </CardTitle>
+              <CardDescription>
+                O portal não guarda a senha do certificado: o arquivo é aberto uma vez, no cadastro, e a chave fica guardada cifrada, usada só pelo servidor
+                para falar com a SEFAZ e o Ambiente Nacional. Ninguém consegue baixá-la pelo portal. Você pode removê-la a qualquer momento.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!chaveServidor ? (
+                <Alerta tom="alerta" titulo="Cadastro ainda indisponível">
+                  {ctx.equipe
+                    ? "Falta configurar no servidor a chave de criptografia dos certificados (CERTIFICADOS_CHAVE). Sem ela, nenhum certificado é aceito."
+                    : "O escritório ainda está ativando esta função. Tente de novo mais tarde ou fale com o escritório."}
+                </Alerta>
+              ) : null}
+              {certificado ? (
+                <>
+                  <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-muted-foreground">Titular</dt>
+                      <dd className="font-medium break-words">{certificado.titular}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">CNPJ</dt>
+                      <dd>{certificado.documento ? formatarCnpj(certificado.documento) : "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Validade</dt>
+                      <dd className={diasValidade !== null && diasValidade <= 30 ? "font-medium text-perigo" : ""}>
+                        {formatarData(certificado.valido_de.slice(0, 10))} a {formatarData(certificado.valido_ate.slice(0, 10))}
+                        {diasValidade !== null ? (diasValidade < 0 ? " (vencido)" : ` (${diasValidade} ${diasValidade === 1 ? "dia" : "dias"})`) : ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Emitido por</dt>
+                      <dd className="break-words">{certificado.emissor ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Cadastrado</dt>
+                      <dd>
+                        {formatarDataHora(certificado.created_at)}
+                        {cadastradoPor ? ` por ${cadastradoPor}` : ""} ·{" "}
+                        {certificado.autorizacao === "cliente_no_portal" ? "autorizado pelo cliente no portal" : "com autorização escrita do cliente"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Impressão digital (SHA-256)</dt>
+                      <dd className="font-mono text-xs break-all">{certificado.impressao_digital.match(/.{1,2}/g)?.slice(0, 8).join(":")}…</dd>
+                    </div>
+                  </dl>
+                  <div className="flex flex-wrap gap-2">
+                    {chaveServidor ? <FormCertificado empresaId={empresaId} textoAutorizacao={ctx.equipe ? AUTORIZACAO_ESCRITORIO : AUTORIZACAO_CLIENTE} troca /> : null}
+                    <RemoverCertificado empresaId={empresaId} />
+                  </div>
+                </>
+              ) : chaveServidor ? (
+                <FormCertificado empresaId={empresaId} textoAutorizacao={ctx.equipe ? AUTORIZACAO_ESCRITORIO : AUTORIZACAO_CLIENTE} />
+              ) : null}
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
+
+      {gerenciar && certificado && config ? (
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>O que buscar</CardTitle>
+            <CardDescription>A SEFAZ permite uma consulta por hora quando não há documentos novos; o portal segue essa regra.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PreferenciasNotas empresaId={empresaId} nfe={config.nfe_ativa} nfse={config.nfse_ativa} ciencia={config.ciencia_automatica} pausada={config.pausada} />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {verDocumentos ? (
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>NF-e recebidas</CardTitle>
+            <CardDescription>
+              Resumos que a SEFAZ entregou para a empresa. Quando o XML completo chega (ou já tinha sido enviado), ele fica em{" "}
+              <Link href={`${base}/documentos`} className="text-primary hover:underline">
+                Documentos
+              </Link>
+              .
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-0 pt-0 sm:px-0">
+            {resumos?.length ? (
+              <Table>
+                <THead>
+                  <Tr>
+                    <Th>Fornecedor</Th>
+                    <Th className="hidden sm:table-cell">Emissão</Th>
+                    <Th className="text-right">Valor</Th>
+                    <Th>XML</Th>
+                  </Tr>
+                </THead>
+                <TBody>
+                  {resumos.map((r) => (
+                    <Tr key={r.id}>
+                      <Td>
+                        <span className="block font-medium">{r.emitente_nome ?? "—"}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {r.emitente_documento ? formatarCnpj(r.emitente_documento) : ""}
+                          {r.tipo_operacao === "saida" ? " · nota de entrada do emitente (ex.: devolução)" : ""}
+                          <span className="sm:hidden"> · {r.data_emissao ? formatarData(r.data_emissao.slice(0, 10)) : ""}</span>
+                        </span>
+                        {r.situacao !== "autorizada" ? <Badge variante="perigo">{r.situacao === "cancelada" ? "Cancelada" : "Denegada"}</Badge> : null}
+                      </Td>
+                      <Td className="hidden sm:table-cell">{r.data_emissao ? formatarData(r.data_emissao.slice(0, 10)) : "—"}</Td>
+                      <Td className="numero text-right">{r.valor != null ? formatarMoeda(r.valor) : "—"}</Td>
+                      <Td className="text-sm">
+                        {r.documento_id ? (
+                          <Link href={`${base}/documentos/${r.documento_id}`} className="text-primary hover:underline">
+                            Abrir
+                          </Link>
+                        ) : r.ciencia_em ? (
+                          <span className="text-muted-foreground">ciência registrada; XML a caminho</span>
+                        ) : r.ciencia_retorno ? (
+                          <span className="text-perigo" title={r.ciencia_retorno}>
+                            ciência recusada
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">só resumo</span>
+                        )}
+                      </Td>
+                    </Tr>
+                  ))}
+                </TBody>
+              </Table>
+            ) : (
+              <div className="px-4 sm:px-6">
+                <EstadoVazio icone={CloudDownload} titulo="Nenhuma NF-e recebida pela busca automática" descricao="As notas aparecem aqui depois da primeira busca com o certificado." />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {execucoes?.length ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck className="size-4" /> Histórico das buscas
+            </CardTitle>
+            <CardDescription>As 15 últimas consultas, com a resposta de cada serviço.</CardDescription>
+          </CardHeader>
+          <CardContent className="px-0 pt-0 sm:px-0">
+            <Table>
+              <THead>
+                <Tr>
+                  <Th>Quando</Th>
+                  <Th>Serviço</Th>
+                  <Th>Resultado</Th>
+                  <Th className="hidden md:table-cell">Resposta</Th>
+                </Tr>
+              </THead>
+              <TBody>
+                {execucoes.map((e) => {
+                  const r = RESULTADO_EXECUCAO[e.resultado] ?? { rotulo: e.resultado, tom: "neutro" as const };
+                  return (
+                    <Tr key={e.id}>
+                      <Td className="text-sm">{formatarDataHora(e.iniciado_em)}</Td>
+                      <Td className="text-sm">{SERVICO_EXECUCAO[e.servico] ?? e.servico}</Td>
+                      <Td>
+                        <Badge variante={r.tom}>{r.rotulo}</Badge>
+                        {e.documentos || e.resumos ? (
+                          <span className="block text-xs text-muted-foreground">
+                            {e.documentos ? `${e.documentos} XML` : ""}
+                            {e.documentos && e.resumos ? " · " : ""}
+                            {e.resumos ? `${e.resumos} ${e.servico === "ciencia" ? "ciência(s)" : "resumo(s)"}` : ""}
+                          </span>
+                        ) : null}
+                        <span className="block text-xs text-muted-foreground md:hidden">{e.mensagem}</span>
+                      </Td>
+                      <Td className="hidden text-xs text-muted-foreground md:table-cell">{e.mensagem ?? e.codigo ?? "—"}</Td>
+                    </Tr>
+                  );
+                })}
+              </TBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : null}
+    </>
+  );
+}

@@ -301,7 +301,7 @@ export default async function PrevisaoImpostos({ params, searchParams }: PagePro
 
           <p className="text-xs text-muted-foreground">
             Estimativa calculada pelo portal com as notas fiscais e os dados disponíveis em {formatarData(new Date().toISOString())}. Não substitui a apuração do
-            escritório: os valores oficiais são os das guias publicadas. Nenhuma informação é enviada à Receita, à SEFAZ ou à prefeitura.
+            escritório: os valores oficiais são os das guias publicadas. O cálculo não envia nenhuma informação à Receita, à SEFAZ ou à prefeitura.
           </p>
         </div>
       ) : null}

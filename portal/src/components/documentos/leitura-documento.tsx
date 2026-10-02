@@ -174,7 +174,7 @@ export function LeituraDocumento({
               <Linha rotulo="Valor total">{d.valor_total != null ? formatarMoeda(d.valor_total as string) : "—"}</Linha>
               <Linha rotulo="Protocolo">
                 {SITUACAO_ARQUIVO_FISCAL[String(d.situacao_arquivo)] ?? "—"}
-                <span className="block text-xs text-muted-foreground">Informação lida do próprio arquivo; o portal não consulta a SEFAZ.</span>
+                <span className="block text-xs text-muted-foreground">Informação lida do próprio arquivo; o portal não confere a nota na SEFAZ.</span>
               </Linha>
             </>
           )}

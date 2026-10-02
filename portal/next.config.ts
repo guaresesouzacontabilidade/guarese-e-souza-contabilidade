@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
   // Bibliotecas de servidor carregadas pelo Node (PDF, planilhas, OCR, e-mail, notificações).
-  serverExternalPackages: ["pdfmake", "exceljs", "tesseract.js", "nodemailer", "web-push", "unpdf", "@napi-rs/canvas"],
+  serverExternalPackages: ["pdfmake", "exceljs", "tesseract.js", "nodemailer", "web-push", "unpdf", "@napi-rs/canvas", "node-forge"],
   // Fontes usadas na geração de PDFs e, para o OCR, o código da "worker
   // thread" e o núcleo WebAssembly do Tesseract — carregados dinamicamente,
   // a análise automática não os encontra. O OCR roda nas rotas da fila e

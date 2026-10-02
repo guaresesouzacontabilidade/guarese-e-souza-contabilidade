@@ -42,6 +42,23 @@ export const envServidor = {
     if (!host) return null;
     return { host, porta: Number(process.env.CLAMAV_PORT ?? 3310) };
   },
+  /**
+   * Chave (32 bytes em base64) que cifra os certificados digitais A1 guardados
+   * para as notas automáticas. Sem ela, o cadastro de certificados fica desligado.
+   * Se for trocada ou perdida, os certificados precisam ser cadastrados de novo.
+   */
+  certificadosChave: (): Buffer | null => {
+    const v = process.env.CERTIFICADOS_CHAVE?.trim();
+    if (!v) return null;
+    const chave = Buffer.from(v, "base64");
+    return chave.length === 32 ? chave : null;
+  },
+  /**
+   * Trava das notas automáticas para demonstração e testes: com
+   * NOTAS_AUTOMATICAS_SEM_REDE=1, o portal não consulta a SEFAZ nem o Ambiente
+   * Nacional (nenhuma consulta fiscal sai deste ambiente) e avisa na tela.
+   */
+  notasSemRede: (): boolean => process.env.NOTAS_AUTOMATICAS_SEM_REDE === "1",
   ocrAtivo: (): boolean => process.env.OCR_ATIVO !== "false",
   ocrCaminhoIdiomas: (): string | undefined => process.env.OCR_CAMINHO_IDIOMAS || undefined,
 };

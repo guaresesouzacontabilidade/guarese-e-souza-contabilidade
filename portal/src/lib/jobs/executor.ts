@@ -12,6 +12,7 @@ const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
   processar_documento: async () => (await import("@/lib/documentos/processar")).processarDocumento,
   sugerir_conciliacao: async () => (await import("@/lib/conciliacao/motor")).executarSugestoes,
   remover_arquivos: async () => (await import("@/lib/documentos/processar")).removerArquivos,
+  notas_automaticas: async () => (await import("@/lib/notas-automaticas/sincronizar")).executarNotasAutomaticas,
 };
 
 function espera(tentativas: number) {

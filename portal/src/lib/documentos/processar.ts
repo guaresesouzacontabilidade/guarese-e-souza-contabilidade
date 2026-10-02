@@ -131,13 +131,13 @@ export async function processarDocumento(admin: ClienteAdmin, job: Job) {
   }
 }
 
-async function registrarXml(admin: ClienteAdmin, documentoId: string, dados: NotaLida | EventoLido) {
+export async function registrarXml(admin: ClienteAdmin, documentoId: string, dados: NotaLida | EventoLido) {
   const { data, error } = await admin.rpc("registrar_xml_fiscal", { p_documento_id: documentoId, p_dados: dados as never });
   if (error) throw new Error(`Falha ao registrar o XML: ${error.message}`);
   return data as { situacao: string; documento_original_id?: string; lancamentos_sugeridos?: number };
 }
 
-function resumoXml(dados: NotaLida | EventoLido) {
+export function resumoXml(dados: NotaLida | EventoLido) {
   if (dados.tipo === "evento") {
     return {
       tipo: "evento",

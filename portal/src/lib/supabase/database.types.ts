@@ -285,6 +285,62 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"certificados_digitais": {
+                  Row: {
+                    "autorizacao": string,"autorizacao_texto": string,"cadastrado_por": string | null,"created_at": string,"documento": string | null,"emissor": string | null,"empresa_id": string,"id": string,"impressao_digital": string,"motivo_revogacao": string | null,"numero_serie": string | null,"revogado_em": string | null,"revogado_por": string | null,"titular": string,"valido_ate": string,"valido_de": string,"vencimento_id": string | null
+                  }
+                  Insert: {
+                    "autorizacao": string,"autorizacao_texto": string,"cadastrado_por"?: string | null,"created_at"?: string,"documento"?: string | null,"emissor"?: string | null,"empresa_id": string,"id"?: string,"impressao_digital": string,"motivo_revogacao"?: string | null,"numero_serie"?: string | null,"revogado_em"?: string | null,"revogado_por"?: string | null,"titular": string,"valido_ate": string,"valido_de": string,"vencimento_id"?: string | null
+                  }
+                  Update: {
+                    "autorizacao"?: string,"autorizacao_texto"?: string,"cadastrado_por"?: string | null,"created_at"?: string,"documento"?: string | null,"emissor"?: string | null,"empresa_id"?: string,"id"?: string,"impressao_digital"?: string,"motivo_revogacao"?: string | null,"numero_serie"?: string | null,"revogado_em"?: string | null,"revogado_por"?: string | null,"titular"?: string,"valido_ate"?: string,"valido_de"?: string,"vencimento_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "certificados_digitais_cadastrado_por_fkey"
+      columns: ["cadastrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificados_digitais_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificados_digitais_revogado_por_fkey"
+      columns: ["revogado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificados_digitais_vencimento_id_fkey"
+      columns: ["vencimento_id"]
+isOneToOne: false
+      referencedRelation: "vencimentos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"certificados_segredos": {
+                  Row: {
+                    "certificado_id": string,"conteudo_cifrado": string,"created_at": string
+                  }
+                  Insert: {
+                    "certificado_id": string,"conteudo_cifrado": string,"created_at"?: string
+                  }
+                  Update: {
+                    "certificado_id"?: string,"conteudo_cifrado"?: string,"created_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "certificados_segredos_certificado_id_fkey"
+      columns: ["certificado_id"]
+isOneToOne: true
+      referencedRelation: "certificados_digitais"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"checklist_historico": {
                   Row: {
                     "acao": string,"alterado_em": string,"alterado_por": string | null,"empresa_id": string,"id": number,"item_id": string,"motivo": string | null,"status_anterior": string | null,"status_novo": string | null
@@ -1695,6 +1751,100 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"nfe_resumos": {
+                  Row: {
+                    "chave": string,"ciencia_em": string | null,"ciencia_retorno": string | null,"data_emissao": string | null,"documento_id": string | null,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"empresa_id": string,"id": string,"nsu": string | null,"protocolo": string | null,"recebido_em": string,"situacao": string,"tipo_operacao": string | null,"valor": number | null
+                  }
+                  Insert: {
+                    "chave": string,"ciencia_em"?: string | null,"ciencia_retorno"?: string | null,"data_emissao"?: string | null,"documento_id"?: string | null,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"empresa_id": string,"id"?: string,"nsu"?: string | null,"protocolo"?: string | null,"recebido_em"?: string,"situacao"?: string,"tipo_operacao"?: string | null,"valor"?: number | null
+                  }
+                  Update: {
+                    "chave"?: string,"ciencia_em"?: string | null,"ciencia_retorno"?: string | null,"data_emissao"?: string | null,"documento_id"?: string | null,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"empresa_id"?: string,"id"?: string,"nsu"?: string | null,"protocolo"?: string | null,"recebido_em"?: string,"situacao"?: string,"tipo_operacao"?: string | null,"valor"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_resumos_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "nfe_resumos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notas_automaticas": {
+                  Row: {
+                    "atualizado_por": string | null,"certificado_valido_ate": string | null,"ciencia_automatica": boolean,"empresa_id": string,"erros_seguidos": number,"executando_ate": string | null,"nfe_ativa": boolean,"nfe_max_nsu": string | null,"nfe_proxima": string | null,"nfe_ult_nsu": string,"nfse_ativa": boolean,"nfse_proxima": string | null,"nfse_ult_nsu": number,"pausada": boolean,"ultima_execucao": string | null,"ultimo_erro": string | null,"ultimo_sucesso": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"certificado_valido_ate"?: string | null,"ciencia_automatica"?: boolean,"empresa_id": string,"erros_seguidos"?: number,"executando_ate"?: string | null,"nfe_ativa"?: boolean,"nfe_max_nsu"?: string | null,"nfe_proxima"?: string | null,"nfe_ult_nsu"?: string,"nfse_ativa"?: boolean,"nfse_proxima"?: string | null,"nfse_ult_nsu"?: number,"pausada"?: boolean,"ultima_execucao"?: string | null,"ultimo_erro"?: string | null,"ultimo_sucesso"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"certificado_valido_ate"?: string | null,"ciencia_automatica"?: boolean,"empresa_id"?: string,"erros_seguidos"?: number,"executando_ate"?: string | null,"nfe_ativa"?: boolean,"nfe_max_nsu"?: string | null,"nfe_proxima"?: string | null,"nfe_ult_nsu"?: string,"nfse_ativa"?: boolean,"nfse_proxima"?: string | null,"nfse_ult_nsu"?: number,"pausada"?: boolean,"ultima_execucao"?: string | null,"ultimo_erro"?: string | null,"ultimo_sucesso"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notas_automaticas_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notas_automaticas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notas_automaticas_execucoes": {
+                  Row: {
+                    "codigo": string | null,"concluido_em": string | null,"documentos": number,"empresa_id": string,"id": number,"iniciado_em": string,"mensagem": string | null,"resultado": string,"resumos": number,"servico": string
+                  }
+                  Insert: {
+                    "codigo"?: string | null,"concluido_em"?: string | null,"documentos"?: number,"empresa_id": string,"id"?: never,"iniciado_em"?: string,"mensagem"?: string | null,"resultado": string,"resumos"?: number,"servico": string
+                  }
+                  Update: {
+                    "codigo"?: string | null,"concluido_em"?: string | null,"documentos"?: number,"empresa_id"?: string,"id"?: never,"iniciado_em"?: string,"mensagem"?: string | null,"resultado"?: string,"resumos"?: number,"servico"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notas_automaticas_execucoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notas_automaticas_nsu": {
+                  Row: {
+                    "chave": string | null,"documento_id": string | null,"empresa_id": string,"nsu": string,"recebido_em": string,"servico": string,"tipo": string | null
+                  }
+                  Insert: {
+                    "chave"?: string | null,"documento_id"?: string | null,"empresa_id": string,"nsu": string,"recebido_em"?: string,"servico": string,"tipo"?: string | null
+                  }
+                  Update: {
+                    "chave"?: string | null,"documento_id"?: string | null,"empresa_id"?: string,"nsu"?: string,"recebido_em"?: string,"servico"?: string,"tipo"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notas_automaticas_nsu_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notas_nsu_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
                 },"notificacoes": {
                   Row: {
                     "corpo": string | null,"created_at": string,"empresa_id": string | null,"id": string,"lida_em": string | null,"link": string | null,"quantidade": number,"tipo": string,"titulo": string,"user_id": string
@@ -2327,6 +2477,9 @@ isOneToOne: false
 "avaliar_documento_apos_fechamento":
 { Args: { "p_documento_id": string,"p_parecer": string }; Returns: undefined
                            },
+"buscar_notas_agora":
+{ Args: { "p_empresa_id": string }; Returns: undefined
+                           },
 "calendario_empresa":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: {
               "area": string,"codigo": string,"config_id": string,"esfera": string,"etapas": (string)[],"fonte": string,"fonte_url": string,"modo": string,"motivo": string,"nome": string,"obrigacao_id": string,"periodicidade": string,"prazo_entrega": string,"prazo_interno_dias_uteis": number,"prazo_pagamento": string,"regra_id": string,"responsavel_id": string,"revisor_id": string,"situacao": string,"tributos": (string)[]
@@ -2579,6 +2732,12 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"notas_agendar":
+{ Args: { "p_empresa_id": string,"p_quando": string }; Returns: undefined
+                           },
+"notas_reservar":
+{ Args: { "p_empresa_id": string,"p_segundos"?: number }; Returns: boolean
+                           },
 "operacional_empresas":
 { Args: Record<PropertyKey, never>; Returns: {
               "abertas": number,"aguardando_cliente": number,"atrasadas": number,"documento": string,"em_revisao": number,"empresa_id": string,"municipio": string,"nome_fantasia": string,"proximo_prazo": string,"razao_social": string,"regime": string,"responsavel": string,"uf": string,"vencendo_7d": number
@@ -2616,6 +2775,9 @@ isOneToOne: false
                            },
 "registrar_aparelho_push":
 { Args: { "p_auth": string,"p_descricao"?: string,"p_endpoint": string,"p_p256dh": string }; Returns: string
+                           },
+"registrar_certificado":
+{ Args: { "p_autorizacao_texto": string,"p_conteudo_cifrado": string,"p_documento": string,"p_emissor": string,"p_empresa_id": string,"p_impressao_digital": string,"p_numero_serie": string,"p_titular": string,"p_valido_ate": string,"p_valido_de": string }; Returns: string
                            },
 "registrar_compra_cartao":
 { Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_conta_cartao_id": string,"p_contraparte_id"?: string,"p_data_compra": string,"p_descricao": string,"p_empresa_id": string,"p_parcelas"?: number,"p_projeto_id"?: string,"p_valor": number }; Returns: string
@@ -2701,10 +2863,16 @@ isOneToOne: false
 "revisar_nao_aplica":
 { Args: { "p_aprovar": boolean,"p_item_id": string,"p_resposta"?: string }; Returns: undefined
                            },
+"revogar_certificado":
+{ Args: { "p_empresa_id": string,"p_motivo"?: string }; Returns: undefined
+                           },
 "revogar_membro":
 { Args: { "p_membro_id": string,"p_motivo": string }; Returns: undefined
                            },
 "rotina_diaria":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_notas_automaticas":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_operacional":
@@ -2720,6 +2888,9 @@ isOneToOne: false
 { Args: { "p_data": string,"p_empresa_id": string }; Returns: {
               "compoe_saldo_disponivel": boolean,"conciliado_ate": string,"conta_id": string,"movimentos_pendentes": number,"nome": string,"saldo_extrato": number,"saldo_extrato_data": string,"saldo_sistema": number,"tipo": string,"ultimo_movimento_data": string
             }[]
+                           },
+"salvar_notas_automaticas":
+{ Args: { "p_ciencia": boolean,"p_empresa_id": string,"p_nfe": boolean,"p_nfse": boolean,"p_pausada": boolean }; Returns: undefined
                            },
 "salvar_rascunho_relatorio":
 { Args: { "p_comentarios": string,"p_competencia": string,"p_dados": Json,"p_empresa_id": string,"p_fim": string,"p_id": string,"p_inicio": string,"p_limitacoes": Json,"p_resumo": string,"p_tipo": string,"p_titulo": string }; Returns: string

@@ -359,6 +359,22 @@ async function chavesNotificacao(projetoId: string): Promise<Record<string, { va
 }
 
 /**
+ * Chave que cifra os certificados A1 das notas automáticas: criada uma única
+ * vez e mantida (trocá-la obrigaria a cadastrar de novo todos os certificados).
+ * Na demonstração, as consultas fiscais ficam desligadas (NOTAS_AUTOMATICAS_SEM_REDE).
+ */
+async function chaveCertificados(projetoId: string): Promise<Record<string, { valor: string; segredo?: boolean }>> {
+  const existentes = await vc<{ envs: { key: string }[] }>(`/v10/projects/${projetoId}/env`);
+  const demonstracao: Record<string, { valor: string; segredo?: boolean }> = PRODUCAO ? {} : { NOTAS_AUTOMATICAS_SEM_REDE: { valor: "1" } };
+  if (existentes.envs.some((e) => e.key === "CERTIFICADOS_CHAVE")) {
+    ok("Certificados das notas automáticas: chave mantida");
+    return demonstracao;
+  }
+  ok("Certificados das notas automáticas: chave criada");
+  return { ...demonstracao, CERTIFICADOS_CHAVE: { valor: randomBytes(32).toString("base64"), segredo: true } };
+}
+
+/**
  * Confere na própria Vercel o resultado da publicação iniciada em `desde`
  * (usado quando a conexão que acompanha a compilação cai no meio do caminho).
  */
@@ -456,8 +472,10 @@ async function main() {
   const siteInicial = DOMINIO ? `https://${DOMINIO}` : (estado.site ?? `https://${NOME}.vercel.app`);
   const segredoCron = estado.segredoCron ?? randomBytes(32).toString("hex");
   const notificacoes = await chavesNotificacao(projeto.id);
+  const certificados = await chaveCertificados(projeto.id);
   const variaveis = (site: string) => ({
     ...notificacoes,
+    ...certificados,
     ...variaveisEmail(),
     NEXT_PUBLIC_SUPABASE_URL: { valor: chaves.url },
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: { valor: chaves.publica },

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, Bot, Clock, FileSearch, HardDrive, Mail, MessageCircle, ShieldAlert } from "lucide-react";
+import { BellRing, Bot, Clock, CloudDownload, FileSearch, HardDrive, Mail, MessageCircle, ShieldAlert } from "lucide-react";
 import { exigirAdmin } from "@/lib/auth/sessao";
 import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
 import { envServidor } from "@/lib/env-servidor";
@@ -187,11 +187,14 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
     const clamav = envServidor.clamav();
     const cron = Boolean(envServidor.cronSecret());
     const seteDias = diasAtras(7);
-    const [{ data: rotinas }, { count: pendentes }, { count: falhas }] = await Promise.all([
+    const [{ data: rotinas }, { count: pendentes }, { count: falhas }, { count: comCertificado }] = await Promise.all([
       s.supabase.from("rotinas_status").select("rotina, ultima_execucao, ok, erro"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "pendente"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "falhou").gte("created_at", seteDias),
+      s.supabase.from("notas_automaticas").select("empresa_id", { count: "exact", head: true }).gt("certificado_valido_ate", new Date().toISOString()),
     ]);
+    const chaveCertificados = Boolean(envServidor.certificadosChave());
+    const semRede = envServidor.notasSemRede();
     const fila = rotinas?.find((r) => r.rotina === "fila");
     const diaria = rotinas?.find((r) => r.rotina === "diaria");
     const filaAtrasada = idadeMs(fila?.ultima_execucao) > 30 * 60_000;
@@ -287,6 +290,35 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
                   Tarefas aguardando: {pendentes ?? 0} · com falha nos últimos 7 dias: {falhas ?? 0}
                 </li>
               </ul>
+            )}
+          </Integracao>
+
+          <Integracao
+            icone={CloudDownload}
+            titulo="Notas automáticas (SEFAZ e NFS-e Nacional)"
+            situacao={
+              <Situacao
+                ok={semRede ? null : chaveCertificados && Boolean(comCertificado)}
+                texto={semRede ? "Desligada neste ambiente" : !chaveCertificados ? "Desconectada" : comCertificado ? `Ativa em ${comCertificado} empresa(s)` : "Aguardando certificados"}
+              />
+            }
+          >
+            <p>
+              Busca as NF-e recebidas (SEFAZ – Ambiente Nacional) e as NFS-e (Ambiente Nacional da NFS-e) de cada empresa com o certificado digital A1 dela, cadastrado em
+              Notas automáticas pelo cliente ou pela equipe (com a autorização do cliente). Sem certificado, nenhuma consulta é feita.
+            </p>
+            {semRede ? (
+              <p className="mt-2">Este ambiente é de demonstração ou teste (NOTAS_AUTOMATICAS_SEM_REDE): nenhuma consulta fiscal sai daqui.</p>
+            ) : !chaveCertificados ? (
+              <p className="mt-2">
+                Desconectada até a ativação: falta a chave de criptografia dos certificados (variável CERTIFICADOS_CHAVE na hospedagem). Sem ela, nenhum certificado é aceito.
+              </p>
+            ) : (
+              <p className="mt-2">
+                <Link href="/escritorio/notas-automaticas" className="text-primary hover:underline">
+                  Ver a situação de cada empresa
+                </Link>
+              </p>
             )}
           </Integracao>
 

@@ -30,6 +30,11 @@ export function PoliticaPrivacidade() {
         </li>
         <li>Provedor de e-mail configurado pelo escritório, somente para envio de notificações e convites.</li>
         <li>WhatsApp Business Platform (Meta), somente se o escritório ativar os lembretes por WhatsApp — são enviados apenas o número do contato e o texto do lembrete.</li>
+        <li>
+          SEFAZ (Ambiente Nacional da NF-e) e Ambiente de Dados Nacional da NFS-e, somente se a empresa cadastrar o certificado digital e autorizar a busca
+          automática de notas: o portal apresenta o certificado da empresa na conexão e informa o CNPJ e o número da última nota recebida; se a empresa ativar,
+          registra a ciência da emissão das notas recebidas. A senha do certificado não é guardada e a chave fica cifrada, usada só pelo servidor.
+        </li>
         <li>Órgãos públicos, quando exigido por lei, no contexto dos serviços contábeis.</li>
       </ul>
       <h3>4. Inteligência artificial</h3>
@@ -71,7 +76,11 @@ export function TermosUso() {
         <li>O cliente é responsável pela veracidade, integridade e envio tempestivo dos documentos.</li>
         <li>A “aprovação” de um documento significa apenas a conferência interna pelo escritório e não representa validação fiscal junto aos órgãos públicos.</li>
         <li>Informações extraídas automaticamente de arquivos (XML, OCR) são sugestões sujeitas a conferência humana.</li>
-        <li>O portal não consulta a SEFAZ nem outros órgãos: a presença de protocolo no XML não comprova a regularidade da nota.</li>
+        <li>A presença de protocolo no XML não comprova a regularidade da nota: o portal não confere a situação das notas nos órgãos públicos.</li>
+        <li>
+          A busca automática de notas só acontece quando a empresa cadastra o certificado digital A1 e autoriza; ela traz apenas os documentos fiscais da própria
+          empresa e pode ser desligada a qualquer momento.
+        </li>
       </ul>
       <h3>3. Informações financeiras e relatórios</h3>
       <ul>

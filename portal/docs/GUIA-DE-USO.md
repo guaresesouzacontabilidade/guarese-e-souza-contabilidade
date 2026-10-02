@@ -69,6 +69,14 @@ Certificado digital, alvará de funcionamento, licenças (sanitária, bombeiros,
 - **Renovar**: informe a nova validade; os avisos recomeçam pela nova data.
 - **Arquivar**: quando o documento não é mais necessário (para de avisar). Excluir é só com o escritório.
 
+### Notas automáticas
+Com o **certificado digital A1 (e-CNPJ)** da empresa, o portal busca sozinho as notas fiscais nos serviços oficiais — as NF-e que a empresa recebe (SEFAZ) e as NFS-e emitidas e tomadas (Ambiente Nacional da NFS-e) — e as coloca em **Meus documentos**, sem ninguém precisar enviar.
+- Para ativar (empresário titular): **Notas automáticas → Certificado digital A1**, escolha o arquivo `.pfx` ou `.p12`, digite a senha e marque a autorização. O portal confere se o certificado é da empresa e se está válido. **A senha não é guardada**: o arquivo é aberto só nesse momento, e a chave fica guardada cifrada, usada apenas pelo servidor.
+- Sem certificado, a busca fica **desconectada** e nenhuma consulta é feita. O escritório também pode cadastrar o certificado, com a sua autorização por escrito — você é avisado.
+- **O que buscar**: marque NF-e, NFS-e e, se quiser, a **ciência da emissão automática** — sem ela, a SEFAZ entrega só o resumo das notas recebidas (fornecedor, valor e data); a ciência apenas informa que a empresa tomou conhecimento da nota (não confirma nem recusa a operação) e libera o XML completo.
+- A tela mostra a situação (ativa, pausada, com erro, certificado vencido), as NF-e recebidas (com o link para o XML quando ele chega) e o histórico das buscas. A validade do certificado também aparece em **Vencimentos**, com os avisos de renovação.
+- Para desligar, use **Remover certificado**: a busca para e o certificado é apagado do portal. As notas já trazidas continuam em Documentos.
+
 ### Meus documentos
 Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, folha, relatórios). Cada documento mostra a situação, o histórico e as versões. Baixar ou visualizar fica registrado.
 
@@ -179,6 +187,9 @@ Os avisos podem chegar como notificação do aparelho, **mesmo com o portal fech
 ### Pagamentos informados pelos clientes
 Quando o cliente toca em **Paguei** numa guia, a equipe recebe o aviso "Pagamento informado" e o registro entra no histórico da tarefa de pagamento (Obrigações e prazos). A tarefa **não** é concluída sozinha: abra-a, confira e escolha o comprovante enviado pelo cliente para concluir. Na página da guia aparece a data, o valor e o link do comprovante.
 
+### Notas automáticas da carteira
+O menu **Notas automáticas** do escritório mostra cada empresa com a situação da busca (ativa, com erro, pausada, certificado vencido, desconectada), a validade do certificado, a última busca e quantos XML chegaram nos últimos 30 dias, com contadores de busca ativa, erros e certificados vencendo. Clique na empresa para cadastrar ou trocar o certificado (declarando a autorização escrita do cliente), ajustar o que buscar ou **Buscar agora**. A SEFAZ permite uma consulta por hora quando não há documentos novos; o portal respeita essa regra (veja o guia de configuração, seção 13).
+
 ### Vencimentos da carteira
 O menu **Vencimentos** do escritório lista certificados, alvarás, licenças e certidões de todas as empresas pela validade, com filtros (vencidos, próximos 30 ou 60 dias, tipo) e contadores. Os avisos saem sozinhos pela rotina diária (30, 15 e 5 dias antes e no vencimento), para a equipe da empresa e para o cliente. Cadastre em cada empresa → **Vencimentos**; ao renovar, informe a nova validade.
 
@@ -233,7 +244,7 @@ Quem fez o quê e quando: entradas, alterações de cadastro e de permissões, l
 Não. Cada pessoa só vê as empresas às quais foi vinculada, e o banco de dados bloqueia qualquer tentativa de acesso indevido.
 
 **O portal envia algo para a Receita, SEFAZ ou prefeitura?**
-Não. O portal organiza documentos e informações; obrigações e consultas oficiais continuam sendo feitas pelo escritório nos sistemas próprios. A presença de protocolo em um XML não comprova a regularidade da nota.
+Só na busca automática de notas, quando a empresa cadastra o certificado digital e autoriza: o portal consulta a SEFAZ e o Ambiente Nacional da NFS-e para trazer as notas da própria empresa e, se ela ativar, registra a ciência da emissão das NF-e recebidas. Fora isso, nada é enviado: declarações, guias e demais obrigações continuam sendo feitas pelo escritório nos sistemas próprios. A presença de protocolo em um XML não comprova a regularidade da nota.
 
 **A leitura automática de documentos é confiável?**
 Ela sugere dados (CNPJ, datas, valores) e sempre passa por conferência de uma pessoa antes de virar lançamento.

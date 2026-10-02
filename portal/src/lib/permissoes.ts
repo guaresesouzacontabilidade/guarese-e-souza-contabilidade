@@ -21,6 +21,7 @@ export const TODAS_PERMISSOES = [
   "calculos.ver",
   "calculos.gerenciar",
   "colaboradores.gerenciar",
+  "certificado.gerenciar",
 ] as const;
 
 export type Permissao = (typeof TODAS_PERMISSOES)[number];
@@ -42,6 +43,11 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
       { chave: "empresa.ver", rotulo: "Visualizar", descricao: "Ver o cadastro da empresa." },
       { chave: "empresa.editar", rotulo: "Editar cadastro", descricao: "Alterar dados cadastrais e contatos." },
       { chave: "usuarios.gerenciar", rotulo: "Gerenciar usuários", descricao: "Convidar e revogar acessos." },
+      {
+        chave: "certificado.gerenciar",
+        rotulo: "Certificado e notas automáticas",
+        descricao: "Cadastrar ou remover o certificado digital A1 e configurar a busca automática de notas.",
+      },
     ],
   },
   {
@@ -92,7 +98,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
   cliente_titular: [
     "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar",
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
-    "calculos.ver", "colaboradores.gerenciar",
+    "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
 };

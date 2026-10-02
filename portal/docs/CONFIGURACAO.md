@@ -22,6 +22,8 @@ O script de publicação (`scripts/publicar.ts`) cadastra automaticamente as var
 | `WHATSAPP_TOKEN`, `WHATSAPP_API_VERSION` | | WhatsApp Business Platform (seção 4) |
 | `CLAMAV_HOST`, `CLAMAV_PORT` | | antivírus ClamAV (seção 6) |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | ✔ (as duas chaves) | notificações no aparelho (seção 12); a chave privada é **somente servidor** |
+| `CERTIFICADOS_CHAVE` | ✔ | chave que cifra os certificados A1 das notas automáticas (seção 13) — **somente servidor**, criada uma vez e mantida |
+| `NOTAS_AUTOMATICAS_SEM_REDE` | | `1` desliga as consultas à SEFAZ e ao Ambiente Nacional (demonstração e testes; seção 13) |
 | `PORTAL_URL`, `WORKER_INTERVALO_SEGUNDOS`, `WORKER_ROTINA_DIARIA` | | processador contínuo opcional (seção 5) |
 
 Depois de alterar variáveis na Vercel, é preciso publicar de novo (**Deployments → ⋯ → Redeploy**) para que passem a valer.
@@ -115,7 +117,7 @@ Duas rotinas mantêm o portal em dia:
 
 | Rotina | Frequência | O que faz |
 | --- | --- | --- |
-| Fila de tarefas (`/api/cron/processar`) | a cada 5 minutos | lê documentos enviados (XML, OCR), envia e-mails e WhatsApp, gera sugestões de conciliação, remove arquivos eliminados |
+| Fila de tarefas (`/api/cron/processar`) | a cada 5 minutos | lê documentos enviados (XML, OCR), envia e-mails e WhatsApp, gera sugestões de conciliação, remove arquivos eliminados, faz a busca das notas automáticas das empresas com certificado |
 | Rotina diária (`/api/cron/diario`) | 6h05 (Brasília) | gera o checklist do mês, os lançamentos recorrentes e os lembretes; limpa envios incompletos; gera as tarefas das obrigações (sem duplicar) e os alertas de prazo para a equipe; avisa os vencimentos de certificados, alvarás, licenças e certidões |
 
 Na publicação padrão, o **próprio banco (Supabase, extensões `pg_cron` e `pg_net`)** chama essas rotas com o `CRON_SECRET`, guardado no cofre do Supabase (Vault). A situação aparece em **Configurações → Integrações → Rotinas automáticas**.
@@ -192,4 +194,34 @@ Os avisos do portal (por exemplo, “Padaria enviou 3 arquivos”) também podem
 - **Para gerar manualmente** (servidor próprio): `npx web-push generate-vapid-keys` e cadastre `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY`. `VAPID_SUBJECT` é opcional (padrão: o endereço do portal).
 - **Entrega**: a fila de tarefas envia o aviso logo depois da ação que o gerou (ex.: o envio de arquivos pelo cliente) e, nos demais casos, na rotina de 5 minutos. Aparelhos cuja permissão foi retirada são removidos automaticamente; o aviso só vai para aparelhos com a sessão ativa.
 - **Instalação na tela inicial**: o portal tem manifesto e ícones próprios. No iPhone/iPad, as notificações só funcionam com o portal instalado na Tela de Início (iOS 16.4 ou mais recente).
+
+## 13. Notas automáticas (SEFAZ e NFS-e Nacional)
+
+A busca automática traz as notas fiscais de cada empresa direto dos serviços oficiais, com o certificado digital A1 (e-CNPJ) da própria empresa:
+
+| Serviço | Endereço | O que traz |
+| --- | --- | --- |
+| NF-e — Distribuição de DF-e (Ambiente Nacional, NT 2014.002) | `www1.nfe.fazenda.gov.br` | resumos e XML completos das NF-e em que a empresa é destinatária ou autorizada, e os eventos delas (cancelamento, carta de correção) |
+| NF-e — Recepção de evento (Ambiente Nacional) | `www.nfe.fazenda.gov.br` | registra a **ciência da emissão** (evento 210210), quando a empresa ativa essa opção |
+| NFS-e — Ambiente de Dados Nacional (ADN) | `adn.nfse.gov.br` | NFS-e emitidas e tomadas pela empresa, dos municípios ligados ao padrão nacional |
+
+**Como ativar**
+
+1. A variável `CERTIFICADOS_CHAVE` precisa existir na hospedagem (o script de publicação cria). Sem ela, a tela avisa que o cadastro está indisponível.
+2. Em cada empresa, **Notas automáticas → Certificado digital A1**: o cliente (empresário titular) ou a equipe envia o arquivo `.pfx`/`.p12` e a senha e marca a autorização. A equipe declara que tem a autorização escrita do cliente; o cliente é avisado do cadastro.
+3. O portal confere a senha, a validade e o CNPJ (a raiz precisa ser a da empresa), guarda **só a chave e o certificado, cifrados** (a senha é descartada) e agenda a primeira busca. A validade também entra em **Vencimentos**, com os avisos de renovação.
+
+**Regras da busca**
+
+- Roda pela fila de tarefas, de hora em hora por empresa. A SEFAZ exige 1 hora de espera depois de uma consulta sem documentos novos (código 137) ou ao chegar ao último NSU; com o código 656 (consumo indevido) a SEFAZ bloqueia por 1 hora — o portal respeita as duas regras.
+- Cada documento é guardado uma vez (controle por NSU e pela chave). Notas e eventos que já estavam no portal (enviados pelo cliente) não são duplicados; o resumo fica ligado ao XML existente.
+- As manifestações da própria empresa (ciência, confirmação) não viram documento.
+- Erros (certificado recusado, serviço fora do ar) ficam no histórico da empresa e a próxima tentativa é espaçada (15 minutos, 30 minutos, 1 hora... até 6 horas). Nada é inventado quando um serviço falha.
+- Certificado vencido: a busca para e a tela pede o certificado renovado.
+
+**Demonstração e testes**: com `NOTAS_AUTOMATICAS_SEM_REDE=1` (ligado pela publicação da demonstração e no ambiente de desenvolvimento), nenhuma consulta fiscal sai do ambiente; a tela mostra o aviso “Consultas desligadas neste ambiente”.
+
+**Se a chave `CERTIFICADOS_CHAVE` for perdida ou trocada**, os certificados guardados não podem mais ser abertos (a tela da empresa mostra o erro): basta cadastrar os certificados de novo. A chave nunca aparece no portal nem no navegador.
+
+**O que foi conferido e o que depende da ativação**: os endereços oficiais respondem e exigem o certificado da empresa na conexão (conferido em 02/10/2026); o certificado TLS desses servidores é emitido por autoridades públicas reconhecidas pelo Node (GlobalSign e Let's Encrypt), sem exceções de segurança. A leitura das respostas, a assinatura da ciência (verificada por um verificador independente) e a conexão com certificado foram testadas contra um servidor local. A primeira busca real só acontece com o certificado de uma empresa cadastrada no portal oficial — acompanhe o resultado no histórico da empresa.
 

@@ -9,6 +9,7 @@ Controladora dos dados: **GUARESE'S ON SOLUCOES EMPRESARIAIS LTDA** (CNPJ 62.935
 - Os dados ficam no **Supabase**, na região de **São Paulo**, com criptografia em trânsito e em repouso.
 - O site roda na **Vercel**, também na região de **São Paulo**.
 - E-mail e WhatsApp só funcionam quando o escritório os configura; enquanto isso ficam **desconectados** e nada é enviado.
+- A busca automática de notas (SEFAZ e Ambiente Nacional da NFS-e) só acontece nas empresas que cadastraram o certificado digital A1, com autorização registrada; a senha do certificado não é guardada e a chave fica cifrada no servidor (seção 12).
 - **Nenhum dado ou documento de cliente é enviado a serviços de inteligência artificial**, nem usado para treinar modelos. A leitura de imagens (OCR) acontece dentro do próprio servidor do portal.
 - O navegador dos usuários só se comunica com o endereço do portal e com o Supabase (a política de segurança de conteúdo do site bloqueia qualquer outro destino). As fontes e ícones são servidos pelo próprio portal.
 
@@ -24,7 +25,8 @@ Controladora dos dados: **GUARESE'S ON SOLUCOES EMPRESARIAIS LTDA** (CNPJ 62.935
 | **jsDelivr** (rede de distribuição) | — | download do modelo público do idioma português usado pelo OCR | **nenhum dado de cliente** (apenas o servidor baixa um arquivo público) | global | pode ser evitado informando `OCR_CAMINHO_IDIOMAS` |
 | **GitHub** | — | guarda o código-fonte do portal | **nenhum dado de cliente** | — | repositório do escritório; segredos nunca vão para o repositório |
 | **ClamAV** (opcional, servidor do escritório) | — | varredura antivírus dos arquivos enviados | o arquivo, para verificação, sem armazenamento | servidor indicado pelo escritório | desconectado até ser configurado |
-| **Órgãos públicos** | — | obrigações legais dos serviços contábeis | conforme a legislação | — | o portal **não** consulta nem envia nada à SEFAZ ou a outros órgãos |
+| **SEFAZ — Ambiente Nacional da NF-e** e **Ambiente de Dados Nacional da NFS-e** (Receita Federal / SERPRO) | — (órgãos públicos; os documentos são da própria empresa) | **notas automáticas**: buscar as notas fiscais da empresa e, se ela ativar, registrar a ciência da emissão das NF-e recebidas | o CNPJ e a UF da empresa e o número da última nota recebida (NSU); o **certificado digital da empresa é apresentado na conexão** (autenticação TLS — a chave privada nunca é enviada); na ciência, o evento assinado com a chave da nota, o CNPJ e a data e hora | Brasil (serviços nacionais) | desligado em cada empresa até o certificado ser cadastrado, com a autorização do cliente registrada; consultas limitadas às regras da SEFAZ; nenhum outro dado é enviado; na demonstração as consultas ficam desligadas |
+| **Outros órgãos públicos** | — | obrigações legais dos serviços contábeis | conforme a legislação | — | fora as notas automáticas, o portal não consulta nem envia nada a órgãos públicos |
 
 ## 3. Inteligência artificial
 
@@ -91,4 +93,14 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - As notificações no aparelho seguem o padrão Web Push: o conteúdo é cifrado no servidor do portal com chaves do próprio aparelho (RFC 8291), e o serviço do navegador só repassa a mensagem. Não há anúncios, perfil de uso nem uso dos dados para treinar inteligência artificial.
 - O texto mostrado tem o mínimo necessário para identificar o aviso; o conteúdo dos documentos nunca é enviado. Os avisos aparecem na tela do aparelho: quem divide o celular ou deixa a tela visível pode ocultar o conteúdo das notificações na tela bloqueada nas configurações do aparelho.
 - A ativação e a desativação ficam registradas na auditoria. Ao sair do portal num aparelho, ele deixa de receber os avisos até a pessoa entrar de novo.
+
+## 12. Certificado digital e notas automáticas
+
+- **Autorização**: o certificado A1 só é cadastrado pelo empresário titular (que autoriza no próprio portal) ou pela equipe, que declara ter a autorização escrita do cliente; o cliente é avisado e pode remover a qualquer momento. O texto da autorização, quem cadastrou e quando ficam registrados (auditoria).
+- **A senha do certificado não é guardada.** O arquivo é aberto uma vez, no cadastro; o portal guarda apenas a chave privada e o certificado, **cifrados (AES-256-GCM)** com uma chave que existe só na hospedagem (`CERTIFICADOS_CHAVE`). A tabela com o conteúdo cifrado não é acessível pela API do banco: só o processador da fila a lê, e decifra o conteúdo apenas na memória, durante a consulta. Ninguém consegue baixar o certificado pelo portal.
+- **Remoção**: ao remover ou trocar o certificado, o conteúdo cifrado é apagado do banco e a busca é desligada.
+- **O que chega**: as notas e eventos fiscais da própria empresa, que passam a ficar em Documentos como os XML enviados pelo cliente. Os resumos de NF-e (fornecedor, valor, data, situação) ficam visíveis para quem acessa os documentos da empresa.
+- **Ciência da emissão**: só com a opção ativada pela empresa. Ela apenas informa à SEFAZ que a empresa tomou conhecimento da nota (não confirma nem recusa a operação) e libera o XML completo.
+- **Sem inteligência artificial**: os XML são lidos por regras dentro do portal, como os enviados pelo cliente.
+- **Bibliotecas**: o arquivo `.pfx` é aberto pela biblioteca node-forge (só no cadastro, no servidor). O alerta de segurança conhecido dessa biblioteca (GHSA-86w9-cpqp-85rv) trata da verificação de assinaturas RSA, função que o portal não usa; a conexão segura e a assinatura da ciência usam as funções nativas do Node.
 

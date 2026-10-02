@@ -70,7 +70,7 @@ export default async function NotasFiscais({ params, searchParams }: PageProps<"
         descricao="NF-e, NFC-e, CT-e e NFS-e registradas a partir dos arquivos enviados. Cada nota (pela chave de acesso) é registrada uma única vez."
       />
       <Alerta tom="info" className="mb-4">
-        Os dados vêm do conteúdo dos arquivos. O portal não consulta a SEFAZ nem atesta a regularidade fiscal das notas. Lançamentos criados a partir de notas ficam
+        Os dados vêm do conteúdo dos arquivos. O portal não confere as notas na SEFAZ nem atesta a regularidade fiscal delas. Lançamentos criados a partir de notas ficam
         como “sugeridos” até a revisão.
       </Alerta>
       <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]" role="search">
