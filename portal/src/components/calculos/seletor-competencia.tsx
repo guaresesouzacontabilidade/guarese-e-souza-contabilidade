@@ -19,7 +19,7 @@ export function SeletorCompetencia({ valor, opcoes, rotulo = "Competência" }: {
       <Select
         id="competencia"
         value={valor}
-        className="w-full sm:w-80"
+        className="w-full sm:w-96"
         onChange={(e) => {
           const p = new URLSearchParams(busca.toString());
           p.set("competencia", e.target.value);
