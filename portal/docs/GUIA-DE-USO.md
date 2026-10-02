@@ -99,6 +99,14 @@ Os relatórios são gerenciais e dependem dos documentos e lançamentos disponí
 - **Simulação de rescisão**: escolha um colaborador, vários ou **todos**, o tipo de desligamento (sem justa causa, pedido de demissão, acordo, justa causa, fim do contrato de experiência) e a data. O portal mostra as verbas, o FGTS, a multa e o **custo total para a empresa**. Também dá para simular sem cadastro (**Simulação avulsa**).
 - **Colaboradores**: cadastro simples (nome, cargo, admissão, salário). Ele alimenta a folha da previsão e a simulação de rescisão. Quando alguém sair, informe a **data de saída**.
 
+### Solicitações
+Peça um serviço ao escritório sem precisar ligar: **Solicitações → Nova solicitação**. Escolha o serviço (alteração contratual, abertura de filial, encerramento, admissão, férias, demissão, declaração de faturamento, DECORE, Imposto de Renda dos sócios, certidões, parcelamento, ajuda com nota fiscal ou outro), escreva um resumo e os detalhes e marque **É urgente** se for o caso. O portal mostra o prazo estimado e o que costuma ser preciso enviar.
+- Cada solicitação tem um número, a situação (**Aberta**, **Em andamento**, **Aguardando a empresa**, **Concluída** ou **Cancelada**), o prazo, o responsável no escritório e o histórico de tudo o que aconteceu.
+- Anexos e conversa ficam na própria solicitação (é uma conversa das **Mensagens**), com respostas na hora.
+- Quando o escritório pedir algo, a situação muda para **Aguardando a empresa** e o pedido aparece no histórico. Envie o que foi pedido na conversa e toque em **Já enviei o que foi pedido** para devolver ao escritório.
+- Você é avisado de cada mudança (sino, e-mail e — se autorizou — WhatsApp). Enquanto a solicitação estiver aberta ou aguardando você, dá para **cancelar** informando o motivo.
+- Quem tem acesso às **Mensagens** da empresa vê e abre solicitações.
+
 ### Mensagens
 Converse com o escritório por assunto, com anexos. Com a conversa aberta, as respostas aparecem **na hora**, sem atualizar a página. Fora dela, chegam no sino de avisos, por e-mail (se você deixou ativado) e por WhatsApp (se você autorizou). Para não encher sua caixa, o e-mail e o WhatsApp esperam 2 minutos e não são enviados se você já leu a resposta no portal; vários avisos seguidos chegam numa única mensagem.
 
@@ -173,6 +181,11 @@ Quando o cliente toca em **Paguei** numa guia, a equipe recebe o aviso "Pagament
 
 ### Vencimentos da carteira
 O menu **Vencimentos** do escritório lista certificados, alvarás, licenças e certidões de todas as empresas pela validade, com filtros (vencidos, próximos 30 ou 60 dias, tipo) e contadores. Os avisos saem sozinhos pela rotina diária (30, 15 e 5 dias antes e no vencimento), para a equipe da empresa e para o cliente. Cadastre em cada empresa → **Vencimentos**; ao renovar, informe a nova validade.
+
+### Solicitações da carteira
+O menu **Solicitações** do escritório lista os pedidos de todas as empresas pelo prazo, com filtros (em aberto, minhas, aguardando o cliente, atrasadas, todas) e contadores de **sem responsável**, **atrasadas** e **aguardando o cliente**. A equipe da empresa é avisada de cada solicitação nova e de cada resposta do cliente.
+
+Na solicitação, use **Andamento** para mudar a situação, escolher o responsável e ajustar o prazo (o padrão vem do catálogo de serviços). Para pedir algo à empresa, escolha **Aguardando a empresa** e escreva no comentário o que falta (o comentário é obrigatório nesse caso e ao cancelar). O cliente vê a mudança na hora e recebe o aviso. Arquivos e conversa ficam na conversa da solicitação. Só a equipe conclui; o cliente pode cancelar ou devolver ao escritório depois de enviar o que foi pedido.
 
 ### Cálculos das empresas (previsão de impostos)
 

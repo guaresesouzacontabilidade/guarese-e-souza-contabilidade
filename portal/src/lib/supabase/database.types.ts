@@ -1976,6 +1976,93 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"servicos_catalogo": {
+                  Row: {
+                    "area": string,"ativo": boolean,"codigo": string,"descricao": string | null,"documentos_necessarios": string | null,"nome": string,"ordem": number,"prazo_dias": number
+                  }
+                  Insert: {
+                    "area": string,"ativo"?: boolean,"codigo": string,"descricao"?: string | null,"documentos_necessarios"?: string | null,"nome": string,"ordem"?: number,"prazo_dias"?: number
+                  }
+                  Update: {
+                    "area"?: string,"ativo"?: boolean,"codigo"?: string,"descricao"?: string | null,"documentos_necessarios"?: string | null,"nome"?: string,"ordem"?: number,"prazo_dias"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"solicitacao_eventos": {
+                  Row: {
+                    "comentario": string | null,"empresa_id": string,"id": number,"ocorrido_em": string,"solicitacao_id": string,"status_anterior": string | null,"status_novo": string | null,"tipo": string,"usuario_id": string | null
+                  }
+                  Insert: {
+                    "comentario"?: string | null,"empresa_id": string,"id"?: never,"ocorrido_em"?: string,"solicitacao_id": string,"status_anterior"?: string | null,"status_novo"?: string | null,"tipo": string,"usuario_id"?: string | null
+                  }
+                  Update: {
+                    "comentario"?: string | null,"empresa_id"?: string,"id"?: never,"ocorrido_em"?: string,"solicitacao_id"?: string,"status_anterior"?: string | null,"status_novo"?: string | null,"tipo"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "solicitacao_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacao_eventos_solicitacao_id_fkey"
+      columns: ["solicitacao_id"]
+isOneToOne: false
+      referencedRelation: "solicitacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacao_eventos_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"solicitacoes": {
+                  Row: {
+                    "concluida_em": string | null,"conversa_id": string | null,"created_at": string,"descricao": string | null,"empresa_id": string,"id": string,"numero": number,"prazo": string | null,"prioridade": string,"responsavel_id": string | null,"servico_codigo": string,"solicitado_por": string | null,"status": string,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "concluida_em"?: string | null,"conversa_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"empresa_id": string,"id"?: string,"numero"?: never,"prazo"?: string | null,"prioridade"?: string,"responsavel_id"?: string | null,"servico_codigo": string,"solicitado_por"?: string | null,"status"?: string,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "concluida_em"?: string | null,"conversa_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"empresa_id"?: string,"id"?: string,"numero"?: never,"prazo"?: string | null,"prioridade"?: string,"responsavel_id"?: string | null,"servico_codigo"?: string,"solicitado_por"?: string | null,"status"?: string,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "solicitacoes_conversa_id_fkey"
+      columns: ["conversa_id"]
+isOneToOne: false
+      referencedRelation: "conversas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacoes_responsavel_id_fkey"
+      columns: ["responsavel_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacoes_servico_codigo_fkey"
+      columns: ["servico_codigo"]
+isOneToOne: false
+      referencedRelation: "servicos_catalogo"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "solicitacoes_solicitado_por_fkey"
+      columns: ["solicitado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"solicitacoes_titular": {
                   Row: {
                     "created_at": string,"descricao": string | null,"email": string | null,"id": string,"respondida_em": string | null,"respondida_por": string | null,"resposta": string | null,"status": string,"tipo": string,"user_id": string | null
@@ -2192,7 +2279,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "adicionar_item_checklist":
+            "abrir_solicitacao":
+{ Args: { "p_descricao"?: string,"p_documento_ids"?: (string)[],"p_empresa_id": string,"p_prioridade"?: string,"p_servico": string,"p_titulo": string }; Returns: string
+                           },
+"adicionar_item_checklist":
 { Args: { "p_categoria": string,"p_competencia": string,"p_descricao": string,"p_empresa_id": string,"p_obrigatorio"?: boolean,"p_prazo": string,"p_quantidade_minima"?: number,"p_responsavel_cliente_id"?: string,"p_responsavel_equipe_id"?: string,"p_titulo": string }; Returns: string
                            },
 "administrar_usuario":
@@ -2227,6 +2317,9 @@ isOneToOne: false
                            },
 "atualizar_membro":
 { Args: { "p_membro_id": string,"p_papel": string,"p_permissoes": (string)[] }; Returns: undefined
+                           },
+"atualizar_solicitacao":
+{ Args: { "p_comentario"?: string,"p_id": string,"p_prazo"?: string,"p_responsavel"?: string,"p_status"?: string }; Returns: undefined
                            },
 "atualizar_tarefa":
 { Args: { "p_comentario"?: string,"p_comprovante_documento_id"?: string,"p_dispensa_motivo"?: string,"p_guia_documento_id"?: string,"p_protocolo"?: string,"p_responsavel_id"?: string,"p_revisor_id"?: string,"p_status"?: string,"p_tarefa_id": string,"p_valor"?: number }; Returns: undefined

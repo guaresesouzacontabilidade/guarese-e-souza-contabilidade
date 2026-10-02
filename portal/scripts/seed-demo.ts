@@ -20,6 +20,7 @@ import { semearObrigacoes } from "./demo-obrigacoes";
 import { semearCalculos } from "./demo-calculos";
 import { semearVencimentos } from "./demo-vencimentos";
 import { semearAgenda } from "./demo-agenda";
+import { semearSolicitacoes } from "./demo-solicitacoes";
 
 carregarEnv();
 
@@ -212,6 +213,12 @@ async function main() {
   if (await semearVencimentos(admin, { padaria: ids[0], oficina: ids[1] })) console.log("  Vencimentos de demonstração criados");
   const pagas = await semearAgenda(admin, ids);
   if (pagas) console.log(`  Agenda de pagamentos: ${pagas} guia(s) de demonstração marcada(s) como paga(s)`);
+  const solicitacoes = await semearSolicitacoes(admin, { url, publica }, { padaria: ids[0], oficina: ids[1] }, {
+    cliente: `cliente@${DOMINIO}`,
+    cliente2: `cliente2@${DOMINIO}`,
+    equipe: `contador@${DOMINIO}`,
+  });
+  if (solicitacoes) console.log("  Solicitações de serviço de demonstração criadas");
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);

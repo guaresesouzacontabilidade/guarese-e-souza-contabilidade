@@ -18,6 +18,7 @@ import {
   Calculator,
   CalendarX2,
   CalendarDays,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -51,6 +52,7 @@ export function menuEscritorio(admin: boolean): ItemMenu[] {
     { rotulo: "Fechamentos", href: "/escritorio/fechamentos", icone: CalendarCheck },
     { rotulo: "Relatórios", href: "/escritorio/relatorios", icone: FileBarChart },
     { rotulo: "Mensagens", href: "/escritorio/mensagens", icone: MessagesSquare },
+    { rotulo: "Solicitações", href: "/escritorio/solicitacoes", icone: ClipboardList },
     { rotulo: "Equipe e permissões", href: "/escritorio/equipe", icone: Users },
   ];
   if (admin) {
@@ -76,7 +78,10 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   if (p.has("fechamento.gerenciar")) itens.push({ rotulo: "Fechamento", href: `${base}/fechamento`, icone: CalendarCheck });
   if (p.has("relatorios.ver")) itens.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });
   if (p.has("calculos.ver")) itens.push({ rotulo: "Cálculos", href: `${base}/calculos`, icone: Calculator });
-  if (p.has("mensagens.usar")) itens.push({ rotulo: "Mensagens", href: `${base}/mensagens`, icone: MessagesSquare });
+  if (p.has("mensagens.usar")) {
+    itens.push({ rotulo: "Solicitações", href: `${base}/solicitacoes`, icone: ClipboardList });
+    itens.push({ rotulo: "Mensagens", href: `${base}/mensagens`, icone: MessagesSquare });
+  }
   itens.push({ rotulo: "Configurações", href: `${base}/configuracoes`, icone: Settings });
   return itens;
 }

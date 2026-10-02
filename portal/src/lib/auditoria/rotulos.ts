@@ -28,6 +28,7 @@ export const ROTULO_ACAO: Record<string, string> = {
   whatsapp_avisos_definido: "Cadastrou o WhatsApp de um cliente para avisos",
   pagamento_guia_informado: "Informou o pagamento de uma guia",
   pagamento_guia_desfeito: "Desfez o pagamento informado de uma guia",
+  solicitacao_aberta: "Abriu uma solicitação de serviço",
 };
 
 export const ROTULO_ENTIDADE: Record<string, string> = {
