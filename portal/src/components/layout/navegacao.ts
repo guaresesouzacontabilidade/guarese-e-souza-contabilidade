@@ -35,20 +35,7 @@ export interface EmpresaMenu {
 }
 
 /** Telas ainda não construídas: ficam fora do menu até ficarem prontas. */
-const EM_CONSTRUCAO = [
-  "/escritorio/financeiro",
-  "/escritorio/conciliacao",
-  "/escritorio/fechamentos",
-  "/escritorio/relatorios",
-  "/escritorio/equipe",
-  "/escritorio/configuracoes",
-  "/escritorio/auditoria",
-  "/conciliacao",
-  "/fechamento",
-  "/relatorios",
-  "/configuracoes",
-  "/conta",
-];
+const EM_CONSTRUCAO: string[] = [];
 export const telaPronta = (href: string) =>
   !EM_CONSTRUCAO.some((r) =>
     r.startsWith("/escritorio") || r === "/conta" ? href === r : /^\/e\/[^/]+/.test(href) && href.endsWith(r),
