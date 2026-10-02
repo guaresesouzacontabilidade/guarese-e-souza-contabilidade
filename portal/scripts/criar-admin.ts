@@ -21,10 +21,11 @@ function argumento(nome: string) {
 
 type ClienteAdmin = SupabaseClient;
 
-async function marcarAdmin(admin: ClienteAdmin, id: string, nome: string) {
+async function marcarAdmin(admin: ClienteAdmin, id: string, nome: string | null) {
   await admin.auth.admin.updateUserById(id, { app_metadata: { tipo: "admin" } });
   // O perfil é criado por gatilho; o tipo é definido explicitamente aqui.
-  await admin.from("perfis").update({ tipo: "admin", ativo: true, nome }).eq("id", id);
+  // Sem nome (pessoa que já usa o portal), o nome escolhido por ela é mantido.
+  await admin.from("perfis").update({ tipo: "admin", ativo: true, ...(nome ? { nome } : {}) }).eq("id", id);
 }
 
 /**
@@ -80,8 +81,9 @@ async function main() {
       await entregarAcesso(admin, email, nome, site, true, porEmail);
       return;
     }
-    await marcarAdmin(admin, existente.id, nome);
-    console.log(`Usuário ${email} promovido a administrador.`);
+    // Já usa o portal: mantém o nome que a pessoa definiu
+    await marcarAdmin(admin, existente.id, existente.tipo === "admin" ? null : nome);
+    console.log(existente.tipo === "admin" ? `Administrador ${email} já cadastrado (nada alterado).` : `Usuário ${email} promovido a administrador.`);
     return;
   }
 
