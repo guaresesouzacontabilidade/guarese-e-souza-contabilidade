@@ -530,7 +530,7 @@ async function main() {
     console.log(` Supabase: projeto ${ref} (região São Paulo)`);
     if (conviteEnviado) console.log(` Convite para o administrador definir a senha enviado para ${ADMIN_EMAIL} (vale 24 h; confira também o spam).`);
     else if (linkAdmin) console.log(` Link para o administrador definir a senha (uso único, vale 24 h):\n ${linkAdmin}`);
-    console.log(` Próximos passos: ative a verificação em duas etapas, configure o e-mail (SMTP) e cadastre as empresas.`);
+    console.log(` Próximos passos: ative a verificação em duas etapas${configuracaoEmail() ? "" : ", configure o e-mail (SMTP)"} e cadastre as empresas.`);
   } else {
     console.log(` Portal publicado (DEMONSTRAÇÃO, dados fictícios): ${site}`);
     console.log(` Supabase: projeto ${ref} (região São Paulo, plano gratuito)`);
