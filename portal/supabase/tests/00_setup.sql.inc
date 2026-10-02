@@ -42,7 +42,7 @@ select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
 set local role authenticated;
 select set_config('testes.empresa_a', public.criar_empresa(jsonb_build_object(
   'razao_social', 'Empresa A Comércio Ltda', 'nome_fantasia', 'Empresa A', 'tipo_pessoa', 'PJ',
-  'documento', '11.222.333/0001-81', 'regime_tributario', 'simples_nacional',
+  'documento', '11.444.777/0001-61', 'regime_tributario', 'simples_nacional',
   'servicos', jsonb_build_array('contabil', 'fiscal', 'folha'), 'controla_estoque', true,
   'contador_responsavel_id', '00000000-0000-0000-0000-0000000000a2'))::text, true);
 select set_config('testes.empresa_b', public.criar_empresa(jsonb_build_object(

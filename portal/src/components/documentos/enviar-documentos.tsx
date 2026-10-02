@@ -112,7 +112,9 @@ export function EnviarDocumentos({
   const [executando, setExecutando] = useState(false);
   const controles = useRef(new Map<string, AbortController>());
   const listaRef = useRef(lista);
-  listaRef.current = lista;
+  useEffect(() => {
+    listaRef.current = lista;
+  }, [lista]);
   const entradaArquivos = useRef<HTMLInputElement>(null);
   const entradaCamera = useRef<HTMLInputElement>(null);
 

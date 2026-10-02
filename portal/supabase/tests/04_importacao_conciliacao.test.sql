@@ -42,7 +42,7 @@ create or replace function pg_temp.nfe(p_chave text, p_numero text, p_valor nume
   select jsonb_build_object(
     'tipo', 'nota', 'modelo', '55', 'tipo_documento', 'NF-e', 'chave_acesso', p_chave, 'identificador', p_chave,
     'numero', p_numero, 'serie', '1', 'data_emissao', '2026-09-15T10:00:00-03:00',
-    'emitente_documento', '11222333000181', 'emitente_nome', 'Empresa A Comércio Ltda',
+    'emitente_documento', '11444777000161', 'emitente_nome', 'Empresa A Comércio Ltda',
     'destinatario_documento', '98765432000198', 'destinatario_nome', 'Cliente X Ltda',
     'tp_nf', '1', 'operacao', 'saida', 'valor_total', p_valor, 'situacao_arquivo', 'protocolo_autorizacao_no_arquivo',
     'relacionado_empresa', true,
@@ -52,11 +52,11 @@ create or replace function pg_temp.nfe(p_chave text, p_numero text, p_valor nume
        'parcelas', jsonb_build_array(jsonb_build_object('numero', 1, 'vencimento', '2026-09-30', 'valor', p_valor))));
 $$;
 
-select is(public.registrar_xml_fiscal(current_setting('testes.xml1')::uuid, pg_temp.nfe('29260911222333000181550010000001231000001230', '123', 1500)) ->> 'situacao',
+select is(public.registrar_xml_fiscal(current_setting('testes.xml1')::uuid, pg_temp.nfe('29260911444777000161550010000001231000001230', '123', 1500)) ->> 'situacao',
           'registrado', 'NF-e registrada a partir do XML');
-select is(public.registrar_xml_fiscal(current_setting('testes.xml2')::uuid, pg_temp.nfe('29260911222333000181550010000001231000001230', '123', 1500)) ->> 'situacao',
+select is(public.registrar_xml_fiscal(current_setting('testes.xml2')::uuid, pg_temp.nfe('29260911444777000161550010000001231000001230', '123', 1500)) ->> 'situacao',
           'duplicado', 'mesma chave de acesso detectada como duplicada');
-select is((select count(*)::int from public.documentos_fiscais where chave_acesso = '29260911222333000181550010000001231000001230'), 1,
+select is((select count(*)::int from public.documentos_fiscais where chave_acesso = '29260911444777000161550010000001231000001230'), 1,
           'nota duplicada não é registrada duas vezes');
 select is((select status_revisao from public.lancamentos where documento_fiscal_id is not null and numero_documento = '123'), 'sugerido',
           'XML gera apenas lançamento SUGERIDO (não definitivo)');
@@ -64,17 +64,17 @@ select is((select count(*)::int from public.lancamentos where numero_documento =
 select is(pg_temp.dre('receita_operacional'), 0::numeric, 'sugestão não entra no resultado');
 
 -- Evento de cancelamento de outra nota
-select public.registrar_xml_fiscal(current_setting('testes.xml3')::uuid, pg_temp.nfe('29260911222333000181550010000001241000001240', '124', 300));
+select public.registrar_xml_fiscal(current_setting('testes.xml3')::uuid, pg_temp.nfe('29260911444777000161550010000001241000001240', '124', 300));
 select is(public.registrar_xml_fiscal(current_setting('testes.xml_evt')::uuid, jsonb_build_object(
-  'tipo', 'evento', 'chave_acesso', '29260911222333000181550010000001241000001240', 'modelo', '55', 'tipo_evento', '110111',
+  'tipo', 'evento', 'chave_acesso', '29260911444777000161550010000001241000001240', 'modelo', '55', 'tipo_evento', '110111',
   'descricao_evento', 'Cancelamento', 'sequencia', 1, 'data_evento', '2026-09-16T09:00:00-03:00', 'cstat', '135',
-  'identificador', 'ID1101112926091122233300018155001000000124100000124001', 'justificativa', 'Erro de digitação')) ->> 'situacao',
+  'identificador', 'ID1101112926091144477700016155001000000124100000124001', 'justificativa', 'Erro de digitação')) ->> 'situacao',
   'evento_registrado', 'evento de cancelamento registrado');
 select ok((select cancelada_evento from public.documentos_fiscais where numero = '124'), 'nota marcada como cancelada pelo evento do arquivo');
 select is((select situacao from public.lancamentos where numero_documento = '124'), 'cancelado', 'sugestão da nota cancelada é cancelada');
 select is(public.registrar_xml_fiscal(current_setting('testes.xml_evt')::uuid, jsonb_build_object(
-  'tipo', 'evento', 'chave_acesso', '29260911222333000181550010000001241000001240', 'tipo_evento', '110111', 'cstat', '135',
-  'identificador', 'ID1101112926091122233300018155001000000124100000124001')) ->> 'situacao',
+  'tipo', 'evento', 'chave_acesso', '29260911444777000161550010000001241000001240', 'tipo_evento', '110111', 'cstat', '135',
+  'identificador', 'ID1101112926091144477700016155001000000124100000124001')) ->> 'situacao',
   'evento_duplicado', 'evento repetido detectado pelo identificador');
 
 -- Cliente confirma a sugestão da NF 123

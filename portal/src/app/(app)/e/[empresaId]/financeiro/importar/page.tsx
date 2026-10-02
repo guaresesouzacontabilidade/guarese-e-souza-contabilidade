@@ -34,7 +34,8 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
   const { data: contas } = await ctx.supabase.from("contas_financeiras").select("id, nome, tipo, numero").eq("empresa_id", empresaId).eq("ativa", true).order("nome");
 
   if (documentoId) {
-    let conteudo: React.ReactNode;
+    let leitura: { arq: Awaited<ReturnType<typeof lerDocumentoParaImportacao>>; analise: Awaited<ReturnType<typeof analisarArquivo>>; contaSugerida: string | null; previa: PreviaExtrato | null } | null = null;
+    let erroLeitura = "";
     try {
       const arq = await lerDocumentoParaImportacao(ctx, empresaId, documentoId);
       const analise = await analisarArquivo(arq);
@@ -50,6 +51,14 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
         contaSugerida = conta?.id ?? null;
         previa = (await prepararExtrato(ctx, analise, null, contaSugerida)).previa;
       }
+      leitura = { arq, analise, contaSugerida, previa };
+    } catch (e) {
+      erroLeitura = e instanceof Error ? e.message : "Não foi possível ler o arquivo.";
+    }
+    let conteudo: React.ReactNode;
+    if (!leitura) conteudo = <Alerta tom="perigo">{erroLeitura}</Alerta>;
+    else {
+      const { arq, analise, contaSugerida, previa } = leitura;
       conteudo = (
         <AssistenteImportacao
           empresaId={empresaId}
@@ -64,8 +73,6 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
           previaInicial={previa}
         />
       );
-    } catch (e) {
-      conteudo = <Alerta tom="perigo">{e instanceof Error ? e.message : "Não foi possível ler o arquivo."}</Alerta>;
     }
     return (
       <>

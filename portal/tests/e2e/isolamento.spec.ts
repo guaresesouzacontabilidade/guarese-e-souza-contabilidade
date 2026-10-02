@@ -39,7 +39,7 @@ test("cliente de uma empresa não acessa dados de outra", async ({ browser }) =>
   const empresa2 = await entrar(p2, `cliente2@${DOMINIO}`);
   expect(empresa2).not.toBe(empresa1);
 
-  for (const rota of ["", "/documentos", "/pendencias", "/financeiro", "/financeiro/lancamentos", "/mensagens", "/enviar"]) {
+  for (const rota of ["", "/documentos", "/pendencias", "/financeiro", "/financeiro/lancamentos", "/conciliacao", "/conciliacao?aba=saldos", "/mensagens", "/enviar"]) {
     const r = await p2.goto(`/e/${empresa1}${rota}`);
     expect(r?.status(), `rota ${rota || "/"} deve responder 404`).toBe(404);
   }
@@ -51,6 +51,10 @@ test("cliente de uma empresa não acessa dados de outra", async ({ browser }) =>
   }
   const exp = await p2.request.get(`/api/financeiro/exportar?empresa=${empresa1}&formato=csv`);
   expect(exp.status()).toBe(403);
+  // Cliente sem permissão de conciliar vê a conciliação da própria empresa só para consulta
+  await p2.goto(`/e/${empresa2}/conciliacao?aba=pendentes`);
+  await expect(p2.getByRole("heading", { name: "Conciliação bancária" })).toBeVisible();
+  await expect(p2.getByRole("button", { name: "Conciliar" })).toHaveCount(0);
   // O seletor de empresas não lista a empresa do outro cliente
   await p2.goto(`/e/${empresa2}`);
   await expect(p2.getByText("Padaria Pão Dourado")).toHaveCount(0);

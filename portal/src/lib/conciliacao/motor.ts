@@ -1,4 +1,5 @@
-import "server-only";
+// Sem "server-only": também é usado pelo script de dados de demonstração.
+// Recebe o cliente administrativo de quem chama (rotinas do servidor).
 import type { ClienteAdmin } from "@/lib/supabase/admin";
 import type { Job } from "@/lib/jobs/executor";
 import { dec } from "@/lib/dinheiro";

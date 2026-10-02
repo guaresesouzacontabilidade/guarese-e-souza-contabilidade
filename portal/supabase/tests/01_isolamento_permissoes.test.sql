@@ -108,10 +108,12 @@ reset role;
 select pg_temp.como('00000000-0000-0000-0000-0000000000a3');
 set local role authenticated;
 select is((select count(*)::int from public.empresas), 0, 'equipe sem vínculo não vê empresas');
+create or replace function pg_temp.todas_empresas() returns setof uuid language sql security definer as $$ select id from public.empresas $$;
 reset role;
 select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
 set local role authenticated;
-select is((select count(*)::int from public.empresas), 2, 'administrador vê todas as empresas');
+select is((select count(*)::int from public.empresas), (select count(*)::int from pg_temp.todas_empresas()),
+          'administrador vê todas as empresas');
 reset role;
 
 -- ------------------------------------------------------------------ arquivos (Storage)

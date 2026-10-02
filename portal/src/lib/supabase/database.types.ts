@@ -1988,6 +1988,11 @@ isOneToOne: false
 "resumo_checklist":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
                            },
+"resumo_conciliacao_carteira":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "conciliadas_30d": number,"empresa_id": string,"entradas_pendentes": number,"pendente_mais_antiga": string,"pendentes": number,"saidas_pendentes": number,"sugestoes": number,"ultima_importacao": string
+            }[]
+                           },
 "revisar_nao_aplica":
 { Args: { "p_aprovar": boolean,"p_item_id": string,"p_resposta"?: string }; Returns: undefined
                            },

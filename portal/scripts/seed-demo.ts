@@ -14,6 +14,7 @@
 import { randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { carregarEnv } from "./util-env";
+import { semearFinanceiro } from "./demo-financeiro";
 
 carregarEnv();
 
@@ -166,6 +167,12 @@ async function main() {
   // Checklist das últimas competências
   for (const empresaId of ids) {
     for (const d of [-2, -1, 0]) await comoAdmin.rpc("gerar_checklist_competencia", { p_empresa_id: empresaId, p_competencia: competencia(d) });
+  }
+
+  // Movimento financeiro fictício (vendas, despesas, extratos e conciliações)
+  for (const [i, empresaId] of ids.entries()) {
+    const criado = await semearFinanceiro(admin, comoAdmin, empresaId, i === 0 ? "padaria" : "oficina");
+    if (criado) console.log(`  Financeiro de demonstração criado: ${empresas[i].nome_fantasia}`);
   }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");

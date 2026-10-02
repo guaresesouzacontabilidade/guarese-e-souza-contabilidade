@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -38,6 +38,10 @@ interface Props {
 
 const RE_EMPRESA = /^\/e\/([0-9a-f-]{36})/i;
 
+const semInscricao = () => () => {};
+const noNavegador = () => true;
+const noServidor = () => false;
+
 function lerCookieEmpresa() {
   if (typeof document === "undefined") return null;
   const m = document.cookie.match(/(?:^|; )empresa_atual=([^;]+)/);
@@ -49,11 +53,8 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, children }: Pro
   const [menuAberto, setMenuAberto] = useState(false);
   const equipe = usuario.tipo !== "cliente";
   const idNaUrl = RE_EMPRESA.exec(caminho)?.[1] ?? null;
-  const [idCookie, setIdCookie] = useState<string | null>(null);
-
-  useEffect(() => {
-    setIdCookie(lerCookieEmpresa());
-  }, []);
+  // Lido apenas no navegador (no servidor não há cookie de seleção local).
+  const idCookie = useSyncExternalStore(semInscricao, lerCookieEmpresa, () => null);
 
   useEffect(() => {
     if (idNaUrl) {
@@ -61,7 +62,12 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, children }: Pro
     }
   }, [idNaUrl]);
 
-  useEffect(() => setMenuAberto(false), [caminho]);
+  // Fecha o menu móvel ao trocar de página.
+  const [caminhoAnterior, setCaminhoAnterior] = useState(caminho);
+  if (caminho !== caminhoAnterior) {
+    setCaminhoAnterior(caminho);
+    setMenuAberto(false);
+  }
 
   const empresaAtual = useMemo(() => {
     const id = idNaUrl ?? (equipe ? null : idCookie);
@@ -295,8 +301,12 @@ function SinoNotificacoes({ naoLidasIniciais }: { naoLidasIniciais: number }) {
   const [aberto, setAberto] = useState(false);
   const [itens, setItens] = useState<NotificacaoResumo[] | null>(null);
   const [naoLidas, setNaoLidas] = useState(naoLidasIniciais);
-
-  useEffect(() => setNaoLidas(naoLidasIniciais), [naoLidasIniciais]);
+  // Quando a página é recarregada pelo servidor, o contador recebido prevalece.
+  const [iniciaisAnteriores, setIniciaisAnteriores] = useState(naoLidasIniciais);
+  if (naoLidasIniciais !== iniciaisAnteriores) {
+    setIniciaisAnteriores(naoLidasIniciais);
+    setNaoLidas(naoLidasIniciais);
+  }
 
   useEffect(() => {
     // Atualiza o contador periodicamente (sem recarregar a página).
@@ -376,8 +386,7 @@ function SinoNotificacoes({ naoLidasIniciais }: { naoLidasIniciais: number }) {
 
 function AlternarTema() {
   const { theme, setTheme } = useTheme();
-  const [montado, setMontado] = useState(false);
-  useEffect(() => setMontado(true), []);
+  const montado = useSyncExternalStore(semInscricao, noNavegador, noServidor);
   return (
     <Menu>
       <MenuGatilho asChild>
