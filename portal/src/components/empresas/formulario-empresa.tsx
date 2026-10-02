@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Save } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Loader2, Save, Search } from "lucide-react";
+import { toast } from "sonner";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
+import { Button } from "@/components/ui/button";
+import { PainelReceita } from "@/components/empresas/dados-receita";
 import type { ResultadoAcao } from "@/lib/acoes";
+import type { DadosReceita } from "@/lib/empresas/receita";
+import { buscarDadosReceita } from "@/app/(app)/escritorio/empresas/acoes";
 import { REGIMES, SERVICOS } from "@/lib/rotulos";
 import { formatarCnpj, formatarCpf, somenteDigitos } from "@/lib/formatos";
 
@@ -51,6 +56,43 @@ export function FormularioEmpresa({
   const [tipo, setTipo] = useState(inicial?.tipo_pessoa ?? "PJ");
   const [doc, setDoc] = useState(inicial?.documento ? (inicial.tipo_pessoa === "PF" ? formatarCpf(inicial.documento) : formatarCnpj(inicial.documento)) : "");
   const servicos = new Set(inicial?.servicos ?? ["contabil", "fiscal"]);
+  const [receita, setReceita] = useState<DadosReceita | null>(null);
+  const [buscando, iniciarBusca] = useTransition();
+
+  /** Consulta o CNPJ na Receita e preenche o formulário (a equipe confere antes de salvar). */
+  function buscarNaReceita(form: HTMLFormElement | null) {
+    if (!form) return;
+    iniciarBusca(async () => {
+      const r = await buscarDadosReceita(doc);
+      if (!r.ok || !r.dados) {
+        toast.error(r.mensagem ?? "Não foi possível consultar a Receita agora.");
+        return;
+      }
+      const { receita: d, regime } = r.dados;
+      const definir = (nome: string, valor: string | null | undefined) => {
+        const campo = form.elements.namedItem(nome);
+        if (valor && (campo instanceof HTMLInputElement || campo instanceof HTMLSelectElement)) campo.value = valor;
+      };
+      definir("razao_social", d.razaoSocial);
+      definir("nome_fantasia", d.nomeFantasia);
+      definir("cnae", d.cnaePrincipal?.codigo);
+      definir("atividade_principal", d.cnaePrincipal?.descricao);
+      definir("logradouro", d.endereco.logradouro);
+      definir("numero", d.endereco.numero);
+      definir("complemento", d.endereco.complemento);
+      definir("bairro", d.endereco.bairro);
+      definir("cidade", d.endereco.municipio);
+      definir("uf", d.endereco.uf);
+      definir("cep", d.endereco.cep);
+      definir("email", d.email);
+      definir("telefone", d.telefones[0]);
+      // Regime: sugerido pela Receita; na edição, só preenche se estiver em branco
+      const regimeAtual = form.elements.namedItem("regime_tributario");
+      if (regime && regimeAtual instanceof HTMLSelectElement && (!edicao || !regimeAtual.value)) regimeAtual.value = regime;
+      setReceita(d);
+      toast.success(r.mensagem ?? "Dados da Receita preenchidos.");
+    });
+  }
 
   return (
     <FormularioAcao acao={acao} className="space-y-6">
@@ -64,20 +106,41 @@ export function FormularioEmpresa({
               </Select>
               {edicao ? <input type="hidden" name="tipo_pessoa" value={tipo} /> : null}
             </Campo>
-            <Campo rotulo={tipo === "PJ" ? "CNPJ" : "CPF"} htmlFor="documento" obrigatorio erro={estado.erros?.documento}>
-              <Input
-                id="documento"
-                name="documento"
-                inputMode="numeric"
-                value={doc}
-                readOnly={edicao}
-                onChange={(e) => {
-                  const d = somenteDigitos(e.target.value).slice(0, tipo === "PJ" ? 14 : 11);
-                  setDoc(d.length === 14 ? formatarCnpj(d) : d.length === 11 && tipo === "PF" ? formatarCpf(d) : d);
-                }}
-                placeholder={tipo === "PJ" ? "00.000.000/0000-00" : "000.000.000-00"}
-                aria-invalid={Boolean(estado.erros?.documento)}
-              />
+            <Campo
+              rotulo={tipo === "PJ" ? "CNPJ" : "CPF"}
+              htmlFor="documento"
+              obrigatorio
+              erro={estado.erros?.documento}
+              ajuda={tipo === "PJ" && !somenteLeitura ? "Digite o CNPJ e clique na lupa para buscar os dados na Receita." : undefined}
+            >
+              <div className="flex gap-2">
+                <Input
+                  id="documento"
+                  name="documento"
+                  inputMode="numeric"
+                  value={doc}
+                  readOnly={edicao}
+                  onChange={(e) => {
+                    const d = somenteDigitos(e.target.value).slice(0, tipo === "PJ" ? 14 : 11);
+                    setDoc(d.length === 14 ? formatarCnpj(d) : d.length === 11 && tipo === "PF" ? formatarCpf(d) : d);
+                  }}
+                  placeholder={tipo === "PJ" ? "00.000.000/0000-00" : "000.000.000-00"}
+                  aria-invalid={Boolean(estado.erros?.documento)}
+                />
+                {tipo === "PJ" && !somenteLeitura ? (
+                  <Button
+                    type="button"
+                    variante="contorno"
+                    tamanho="icone"
+                    aria-label="Buscar dados na Receita"
+                    title="Buscar dados na Receita"
+                    disabled={buscando || somenteDigitos(doc).length !== 14}
+                    onClick={(e) => buscarNaReceita(e.currentTarget.form)}
+                  >
+                    {buscando ? <Loader2 className="animate-spin" /> : <Search />}
+                  </Button>
+                ) : null}
+              </div>
             </Campo>
             <Campo rotulo="Regime tributário" htmlFor="regime_tributario" obrigatorio erro={estado.erros?.regime_tributario}>
               <Select id="regime_tributario" name="regime_tributario" defaultValue={inicial?.regime_tributario ?? ""}>
@@ -110,6 +173,20 @@ export function FormularioEmpresa({
               <Input id="atividade_principal" name="atividade_principal" defaultValue={inicial?.atividade_principal ?? ""} />
             </Campo>
           </section>
+
+          {receita ? (
+            <section className="space-y-2">
+              <PainelReceita dados={receita} />
+              <input type="hidden" name="dados_receita" value={JSON.stringify(receita)} />
+              {!edicao && receita.socios.length ? (
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox name="cadastrar_socios" defaultChecked />
+                  Cadastrar {receita.socios.length === 1 ? "o sócio" : `os ${receita.socios.length} sócios`} como contatos da empresa (sem e-mail e telefone; não recebem
+                  lembretes)
+                </label>
+              ) : null}
+            </section>
+          ) : null}
 
           <section className="space-y-3">
             <h3 className="text-sm font-semibold">Endereço e contato</h3>

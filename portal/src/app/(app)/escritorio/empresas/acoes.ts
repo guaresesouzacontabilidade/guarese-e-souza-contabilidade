@@ -3,9 +3,43 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { exigirAdmin, obterContextoEmpresa } from "@/lib/auth/sessao";
+import { exigirAdmin, exigirEquipe, obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { somenteDigitos, validarCnpj, validarCpf } from "@/lib/formatos";
+import { ErroConsultaCnpj, consultarCnpjReceita, funcaoDoSocio, regimeSugerido, DadosReceitaSchema, type DadosReceita } from "@/lib/empresas/receita";
+
+/** Consulta o CNPJ nos dados abertos da Receita (só a equipe); a tela preenche o formulário com o resultado. */
+export async function buscarDadosReceita(cnpj: string): Promise<ResultadoAcao<{ receita: DadosReceita; regime: string | null }>> {
+  await exigirEquipe();
+  try {
+    const receita = await consultarCnpjReceita(cnpj);
+    return sucesso("Dados da Receita preenchidos. Confira antes de salvar.", { receita, regime: regimeSugerido(receita) });
+  } catch (e) {
+    return falha(e instanceof ErroConsultaCnpj ? e.message : "Não foi possível consultar a Receita agora. Preencha os dados à mão.");
+  }
+}
+
+/** Retrato da consulta enviado junto com o formulário (só vale se for do mesmo CNPJ). */
+function lerDadosReceita(fd: FormData, documento: string): DadosReceita | null {
+  const bruto = String(fd.get("dados_receita") ?? "");
+  if (!bruto || bruto.length > 150_000) return null;
+  try {
+    const r = DadosReceitaSchema.safeParse(JSON.parse(bruto));
+    return r.success && r.data.cnpj === somenteDigitos(documento) ? r.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Guarda o retrato da Receita e, se o município existir na tabela do IBGE, o código dele (prazos municipais). */
+async function aplicarDadosReceita(supabase: Awaited<ReturnType<typeof obterContextoEmpresa>>["supabase"], empresaId: string, receita: DadosReceita) {
+  const ibge = receita.endereco.codigoIbge;
+  const { data: municipio } = ibge ? await supabase.from("municipios").select("ibge").eq("ibge", ibge).maybeSingle() : { data: null };
+  await supabase
+    .from("empresas")
+    .update({ dados_receita: receita as never, dados_receita_em: receita.consultadoEm, ...(municipio ? { municipio_ibge: municipio.ibge } : {}) })
+    .eq("id", empresaId);
+}
 
 const opcional = z
   .string()
@@ -97,6 +131,23 @@ export async function criarEmpresa(_anterior: ResultadoAcao, fd: FormData): Prom
     p_dados: { ...dados.data, documento: somenteDigitos(dados.data.documento), cep: somenteDigitos(dados.data.cep ?? "") },
   });
   if (error) return falha(mensagemErro(error));
+  const receita = lerDadosReceita(fd, dados.data.documento);
+  if (receita) {
+    await aplicarDadosReceita(s.supabase, id as string, receita);
+    // Sócios do quadro societário da Receita como contatos (sem e-mail nem telefone; não recebem lembretes)
+    if (fd.get("cadastrar_socios") === "on" && receita.socios.length) {
+      await s.supabase.from("empresa_contatos").insert(
+        receita.socios.slice(0, 30).map((socio) => ({
+          empresa_id: id as string,
+          nome: socio.nome.slice(0, 200),
+          funcao: funcaoDoSocio(socio.qualificacao),
+          principal: false,
+          recebe_lembretes: false,
+          observacoes: `Do quadro de sócios da Receita${socio.qualificacao ? ` (${socio.qualificacao})` : ""}${socio.desde ? `, desde ${socio.desde.split("-").reverse().join("/")}` : ""}.`,
+        })),
+      );
+    }
+  }
   revalidatePath("/escritorio/empresas");
   redirect(`/escritorio/empresas/${id}?criada=1`);
 }
@@ -114,6 +165,8 @@ export async function atualizarEmpresa(empresaId: string, _anterior: ResultadoAc
     .update({ ...campos, cep: somenteDigitos(campos.cep ?? "") || null })
     .eq("id", empresaId);
   if (error) return falha(mensagemErro(error));
+  const receita = lerDadosReceita(fd, dados.data.documento);
+  if (receita) await aplicarDadosReceita(ctx.supabase, empresaId, receita);
   revalidatePath(`/escritorio/empresas/${empresaId}`);
   return sucesso("Dados da empresa atualizados.");
 }

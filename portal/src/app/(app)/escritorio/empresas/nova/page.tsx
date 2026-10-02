@@ -14,7 +14,7 @@ export default async function PaginaNovaEmpresa() {
     <>
       <CabecalhoPagina
         titulo="Nova empresa"
-        descricao="Ao cadastrar, o portal cria o plano de contas gerencial e o checklist mensal padrão conforme o regime e os serviços."
+        descricao="Digite o CNPJ e clique na lupa para trazer os dados da Receita Federal (confira antes de salvar). Ao cadastrar, o portal cria o plano de contas gerencial e o checklist mensal padrão conforme o regime e os serviços."
         voltar={{ href: "/escritorio/empresas", rotulo: "Empresas" }}
       />
       <Card>

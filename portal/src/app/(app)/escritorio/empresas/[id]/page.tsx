@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Alerta } from "@/components/ui/feedback";
 import { BotaoAcao } from "@/components/ui/acao";
 import { FormularioEmpresa } from "@/components/empresas/formulario-empresa";
+import { PainelReceita } from "@/components/empresas/dados-receita";
+import { DadosReceitaSchema } from "@/lib/empresas/receita";
 import { ContatosEmpresa } from "@/components/empresas/contatos";
 import { ConvidarUsuario } from "@/components/usuarios/convite";
 import { ListaMembros, type MembroLista } from "@/components/usuarios/lista-membros";
@@ -106,9 +108,11 @@ export default async function PaginaEmpresa({ params, searchParams }: PageProps<
       />
     );
   } else {
+    const receita = empresa.dados_receita ? DadosReceitaSchema.safeParse(empresa.dados_receita) : null;
     conteudo = (
       <Card>
-        <CardContent className="pt-5">
+        <CardContent className="space-y-5 pt-5">
+          {receita?.success ? <PainelReceita dados={receita.data} /> : null}
           <FormularioEmpresa
             acao={atualizarEmpresa.bind(null, id)}
             inicial={empresa}
