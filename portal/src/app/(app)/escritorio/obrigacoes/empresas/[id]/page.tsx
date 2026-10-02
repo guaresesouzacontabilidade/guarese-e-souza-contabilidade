@@ -190,7 +190,7 @@ export default async function EmpresaOperacional({ params, searchParams }: PageP
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] [&>*]:min-w-0">
         <Card>
           <CardHeader>
             <CardTitle>Cadastro operacional</CardTitle>

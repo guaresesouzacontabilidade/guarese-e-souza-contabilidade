@@ -88,7 +88,7 @@ export default async function ObrigacaoDetalhe({ params }: PageProps<"/escritori
       />
       {o.descricao ? <p className="-mt-2 mb-5 max-w-3xl text-sm text-muted-foreground">{o.descricao}</p> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] [&>*]:min-w-0">
         <div className="space-y-4">
           <Card>
             <CardHeader>

@@ -149,7 +149,7 @@ export function FormRegra({
   const [inicio, setInicio] = useState((r.vigencia_inicio ?? hoje).slice(0, 7));
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] [&>*]:min-w-0">
       <FormularioAcao acao={acao} aoSucesso={() => router.push(destino)} atualizarAoSucesso={false}>
         {({ estado, pendente }) => (
           <div className="space-y-5">

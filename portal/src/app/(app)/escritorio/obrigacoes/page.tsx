@@ -128,7 +128,7 @@ export default async function PainelObrigacoes() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] [&>*]:min-w-0">
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <div className="space-y-1">

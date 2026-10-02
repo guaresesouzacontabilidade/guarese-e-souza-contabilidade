@@ -126,7 +126,7 @@ export default async function DetalheTarefa({ params }: PageProps<"/escritorio/o
         })}
       </ol>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] [&>*]:min-w-0">
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
