@@ -482,6 +482,7 @@ async function main() {
 
   let senhaDemo: string | null = null;
   let linkAdmin: string | null = null;
+  let conviteEnviado = false;
   const ambienteScripts = {
     ...process.env,
     NEXT_PUBLIC_SUPABASE_URL: chaves.url,
@@ -492,13 +493,12 @@ async function main() {
   };
   if (PRODUCAO) {
     passo("Primeiro administrador do escritório");
-    const saida = execFileSync("npx", ["tsx", "scripts/criar-admin.ts", "--email", ADMIN_EMAIL, "--nome", ADMIN_NOME], {
-      cwd: RAIZ,
-      encoding: "utf8",
-      env: ambienteScripts,
-    });
+    // Com o e-mail configurado, o convite vai direto para a caixa de entrada do administrador.
+    const argumentos = ["tsx", "scripts/criar-admin.ts", "--email", ADMIN_EMAIL, "--nome", ADMIN_NOME, ...(configuracaoEmail() ? ["--enviar-email"] : [])];
+    const saida = execFileSync("npx", argumentos, { cwd: RAIZ, encoding: "utf8", env: ambienteScripts });
     linkAdmin = /https:\/\/\S+\/auth\/confirm\S+/.exec(saida)?.[0] ?? null;
-    ok(linkAdmin ? `Administrador ${ADMIN_EMAIL} convidado.` : saida.trim());
+    conviteEnviado = saida.includes("Convite enviado por e-mail");
+    ok(conviteEnviado ? `Convite enviado por e-mail para ${ADMIN_EMAIL}.` : linkAdmin ? `Administrador ${ADMIN_EMAIL} convidado.` : saida.trim());
   } else {
     passo("Dados fictícios de demonstração");
     senhaDemo = argumento("senha-demo", "") || process.env.DEMO_SENHA || estado.senhaDemo || null;
@@ -528,7 +528,8 @@ async function main() {
   if (PRODUCAO) {
     console.log(` Portal publicado (PRODUÇÃO — dados reais): ${site}`);
     console.log(` Supabase: projeto ${ref} (região São Paulo)`);
-    if (linkAdmin) console.log(` Link para o administrador definir a senha (uso único, vale 24 h):\n ${linkAdmin}`);
+    if (conviteEnviado) console.log(` Convite para o administrador definir a senha enviado para ${ADMIN_EMAIL} (vale 24 h; confira também o spam).`);
+    else if (linkAdmin) console.log(` Link para o administrador definir a senha (uso único, vale 24 h):\n ${linkAdmin}`);
     console.log(` Próximos passos: ative a verificação em duas etapas, configure o e-mail (SMTP) e cadastre as empresas.`);
   } else {
     console.log(` Portal publicado (DEMONSTRAÇÃO, dados fictícios): ${site}`);
