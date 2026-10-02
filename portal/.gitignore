@@ -46,4 +46,4 @@ next-env.d.ts
 /playwright-report/
 
 # publicação (contém senha de demonstração e segredos)
-/.publicacao.json
+/.publicacao*.json

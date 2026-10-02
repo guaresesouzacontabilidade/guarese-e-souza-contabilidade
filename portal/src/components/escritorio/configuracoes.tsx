@@ -273,7 +273,7 @@ export function FormLembretes({
             <Campo rotulo="Identificador do número (Phone Number ID)" htmlFor="es-wid" erro={estado.erros?.whatsapp_phone_number_id}>
               <Input id="es-wid" name="whatsapp_phone_number_id" defaultValue={esc.whatsapp_phone_number_id ?? ""} inputMode="numeric" />
             </Campo>
-            <Campo rotulo="Nome do modelo aprovado" htmlFor="es-wtpl" erro={estado.erros?.whatsapp_template_lembrete} ajuda="Modelo com 3 variáveis: nome, empresa e pendência.">
+            <Campo rotulo="Nome do modelo aprovado" htmlFor="es-wtpl" erro={estado.erros?.whatsapp_template_lembrete} ajuda="Modelo com 4 variáveis: {{1}} empresa, {{2}} mês, {{3}} quantidade de documentos pendentes e {{4}} link do portal.">
               <Input id="es-wtpl" name="whatsapp_template_lembrete" defaultValue={esc.whatsapp_template_lembrete ?? ""} />
             </Campo>
             <Campo rotulo="Idioma do modelo" htmlFor="es-widioma" erro={estado.erros?.whatsapp_template_idioma}>

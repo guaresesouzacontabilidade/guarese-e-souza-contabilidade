@@ -1,7 +1,14 @@
 /**
- * Publica o Portal Guarese's ON em AMBIENTE DE DEMONSTRAÇÃO (gratuito):
- *   - Supabase (plano Free, região São Paulo): banco, login e arquivos;
- *   - Vercel (plano Hobby, região São Paulo): o site.
+ * Publica o Portal Guarese's ON no Supabase (banco, login e arquivos — região
+ * São Paulo) e na Vercel (o site — região São Paulo).
+ *
+ * Dois ambientes, sempre em projetos SEPARADOS (dados fictícios nunca convivem
+ * com dados reais):
+ *   - demonstração (padrão): projetos "portal-guareses-on-demo", com dados
+ *     FICTÍCIOS e faixa de aviso no topo;
+ *   - produção (--producao): projetos "portal-guareses-on", vazio, para os
+ *     dados reais; cria o primeiro administrador e mostra o link para ele
+ *     definir a senha.
  *
  * O que o script faz (pode ser executado de novo com segurança — reaproveita
  * o que já existe):
@@ -11,13 +18,15 @@
  *      endereços permitidos e modelos de e-mail em português);
  *   4. cria (ou encontra) o projeto na Vercel, cadastra as variáveis e publica;
  *   5. agenda as rotinas (fila de tarefas a cada 5 min e rotina diária);
- *   6. cria os dados FICTÍCIOS de demonstração e verifica o site.
+ *   6. demonstração: cria os dados fictícios; produção: cria o administrador;
+ *   7. verifica o site.
  *
  * Requer: SUPABASE_ACCESS_TOKEN e VERCEL_TOKEN (variáveis de ambiente).
- * Uso:    NODE_USE_ENV_PROXY=1 npx tsx scripts/publicar.ts [--nome portal-guareses-on]
+ * Uso:    NODE_USE_ENV_PROXY=1 npx tsx scripts/publicar.ts
+ *         NODE_USE_ENV_PROXY=1 npx tsx scripts/publicar.ts --producao [--admin-email email] [--admin-nome "Nome"] [--dominio portal.exemplo.com.br]
  *
  * Segurança: nenhuma chave é gravada no repositório. O resumo (com a senha
- * dos usuários de demonstração) fica em .publicacao.json, ignorado pelo Git.
+ * dos usuários de demonstração) fica em .publicacao*.json, ignorado pelo Git.
  */
 import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -33,8 +42,13 @@ function argumento(nome: string, padrao: string) {
   const i = process.argv.indexOf(`--${nome}`);
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : padrao;
 }
-const NOME = argumento("nome", "portal-guareses-on");
-const NOME_SUPABASE = argumento("nome-supabase", `${NOME}-demo`);
+const PRODUCAO = process.argv.includes("--producao");
+const NOME = argumento("nome", PRODUCAO ? "portal-guareses-on" : "portal-guareses-on-demo");
+const NOME_SUPABASE = argumento("nome-supabase", NOME);
+const ADMIN_EMAIL = argumento("admin-email", "guaresesouzacontabilidade@gmail.com").trim().toLowerCase();
+const ADMIN_NOME = argumento("admin-nome", "Administrador Guarese's ON");
+// Domínio próprio (ex.: portal.guaresesoncontabilidade.com.br). O DNS precisa apontar para a Vercel.
+const DOMINIO = argumento("dominio", "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
 
 const tokenSupabase = process.env.SUPABASE_ACCESS_TOKEN;
 const tokenVercel = process.env.VERCEL_TOKEN;
@@ -281,7 +295,27 @@ function publicarVercel(projetoId: string, orgId: string): string {
   return url;
 }
 
+async function adicionarDominio(projetoId: string, dominio: string) {
+  passo(`Vercel: domínio próprio ${dominio}`);
+  try {
+    await vc(`/v10/projects/${projetoId}/domains`, { method: "POST", body: JSON.stringify({ name: dominio }) });
+    ok("Domínio adicionado ao projeto.");
+  } catch (e) {
+    if ((e as { status?: number }).status === 409) ok("Domínio já estava no projeto.");
+    else throw e;
+  }
+  try {
+    const cfg = await vc<{ misconfigured?: boolean }>(`/v6/domains/${encodeURIComponent(dominio)}/config`);
+    if (cfg.misconfigured) {
+      aviso(`O DNS de ${dominio} ainda não aponta para a Vercel. No Registro.br (ou onde o domínio foi registrado), crie um registro CNAME para "cname.vercel-dns.com" (ou A para 76.76.21.21 no domínio raiz). Pode levar algumas horas.`);
+    } else ok("DNS configurado corretamente.");
+  } catch {
+    aviso("Não foi possível conferir o DNS agora; confira em Vercel → Project → Settings → Domains.");
+  }
+}
+
 async function dominioProducao(projetoId: string, padrao: string) {
+  if (DOMINIO) return `https://${DOMINIO}`;
   try {
     const d = await vc<{ domains: { name: string }[] }>(`/v9/projects/${projetoId}/domains`);
     const nome = d.domains.map((x) => x.name).find((n) => n.endsWith(".vercel.app")) ?? d.domains[0]?.name;
@@ -297,7 +331,7 @@ async function main() {
     console.error("Faltam SUPABASE_ACCESS_TOKEN e/ou VERCEL_TOKEN nas variáveis de ambiente.");
     process.exit(1);
   }
-  const estadoArq = join(RAIZ, ".publicacao.json");
+  const estadoArq = join(RAIZ, PRODUCAO ? ".publicacao-producao.json" : ".publicacao.json");
   const estado = existsSync(estadoArq) ? (JSON.parse(readFileSync(estadoArq, "utf8")) as Record<string, string>) : {};
 
   const { ref } = await projetoSupabase();
@@ -307,14 +341,15 @@ async function main() {
   ok(`Endereço do Supabase: ${chaves.url}`);
 
   const { projeto, usuario } = await projetoVercel();
-  const siteInicial = estado.site ?? `https://${NOME}.vercel.app`;
+  if (DOMINIO) await adicionarDominio(projeto.id, DOMINIO);
+  const siteInicial = DOMINIO ? `https://${DOMINIO}` : (estado.site ?? `https://${NOME}.vercel.app`);
   const segredoCron = estado.segredoCron ?? randomBytes(32).toString("hex");
   const variaveis = (site: string) => ({
     NEXT_PUBLIC_SUPABASE_URL: { valor: chaves.url },
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: { valor: chaves.publica },
     SUPABASE_SECRET_KEY: { valor: chaves.secreta, segredo: true },
     NEXT_PUBLIC_SITE_URL: { valor: site },
-    NEXT_PUBLIC_AMBIENTE: { valor: "demonstracao" },
+    NEXT_PUBLIC_AMBIENTE: { valor: PRODUCAO ? "producao" : "demonstracao" },
     CRON_SECRET: { valor: segredoCron, segredo: true },
     OCR_ATIVO: { valor: "true" },
   });
@@ -331,32 +366,52 @@ async function main() {
   }
   await agendarRotinas(ref, site, segredoCron);
 
-  passo("Dados fictícios de demonstração");
-  const senhaDemo = estado.senhaDemo ?? `Demo-${randomBytes(5).toString("base64url")}9!`;
-  execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], {
-    cwd: RAIZ,
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      NEXT_PUBLIC_SUPABASE_URL: chaves.url,
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: chaves.publica,
-      SUPABASE_SECRET_KEY: chaves.secreta,
-      NEXT_PUBLIC_SITE_URL: site,
-      NEXT_PUBLIC_AMBIENTE: "demonstracao",
-    },
-  });
+  let senhaDemo: string | null = null;
+  let linkAdmin: string | null = null;
+  const ambienteScripts = {
+    ...process.env,
+    NEXT_PUBLIC_SUPABASE_URL: chaves.url,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: chaves.publica,
+    SUPABASE_SECRET_KEY: chaves.secreta,
+    NEXT_PUBLIC_SITE_URL: site,
+    NEXT_PUBLIC_AMBIENTE: PRODUCAO ? "producao" : "demonstracao",
+  };
+  if (PRODUCAO) {
+    passo("Primeiro administrador do escritório");
+    const saida = execFileSync("npx", ["tsx", "scripts/criar-admin.ts", "--email", ADMIN_EMAIL, "--nome", ADMIN_NOME], {
+      cwd: RAIZ,
+      encoding: "utf8",
+      env: ambienteScripts,
+    });
+    linkAdmin = /https:\/\/\S+\/auth\/confirm\S+/.exec(saida)?.[0] ?? null;
+    ok(linkAdmin ? `Administrador ${ADMIN_EMAIL} convidado.` : saida.trim());
+  } else {
+    passo("Dados fictícios de demonstração");
+    senhaDemo = estado.senhaDemo ?? `Demo-${randomBytes(5).toString("base64url")}9!`;
+    execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
+  }
 
   passo("Verificação do site");
   const saude = await fetch(`${site}/api/saude`).then((r) => r.json()).catch(() => null);
   if (saude?.ok) ok("Site no ar e conectado ao banco de dados.");
   else aviso(`Verificação de saúde não respondeu como esperado: ${JSON.stringify(saude)}`);
 
-  writeFileSync(estadoArq, JSON.stringify({ site, supabaseRef: ref, segredoCron, senhaDemo, publicadoEm: new Date().toISOString() }, null, 2));
+  writeFileSync(
+    estadoArq,
+    JSON.stringify({ site, supabaseRef: ref, segredoCron, ...(senhaDemo ? { senhaDemo } : {}), ambiente: PRODUCAO ? "producao" : "demonstracao", publicadoEm: new Date().toISOString() }, null, 2),
+  );
   console.log(`\n=====================================================================`);
-  console.log(` Portal publicado (DEMONSTRAÇÃO, dados fictícios): ${site}`);
-  console.log(` Supabase: projeto ${ref} (região São Paulo, plano gratuito)`);
-  console.log(` Usuários de teste: admin@, contador@, cliente@, cliente2@, colaborador@ demo.guareses.test`);
-  console.log(` Senha de teste: ${senhaDemo}`);
+  if (PRODUCAO) {
+    console.log(` Portal publicado (PRODUÇÃO — dados reais): ${site}`);
+    console.log(` Supabase: projeto ${ref} (região São Paulo)`);
+    if (linkAdmin) console.log(` Link para o administrador definir a senha (uso único, vale 24 h):\n ${linkAdmin}`);
+    console.log(` Próximos passos: ative a verificação em duas etapas, configure o e-mail (SMTP) e cadastre as empresas.`);
+  } else {
+    console.log(` Portal publicado (DEMONSTRAÇÃO, dados fictícios): ${site}`);
+    console.log(` Supabase: projeto ${ref} (região São Paulo, plano gratuito)`);
+    console.log(` Usuários de teste: admin@, contador@, cliente@, cliente2@, colaborador@ demo.guareses.test`);
+    console.log(` Senha de teste: ${senhaDemo}`);
+  }
   console.log(`=====================================================================\n`);
 }
 

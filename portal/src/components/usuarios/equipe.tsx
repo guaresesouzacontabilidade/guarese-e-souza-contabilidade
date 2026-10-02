@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { KeyRound, LogOut, MoreVertical, Power, PowerOff, Search, ShieldOff, SlidersHorizontal, UserX } from "lucide-react";
+import { KeyRound, LogOut, MoreVertical, Power, PowerOff, Search, ShieldOff, SlidersHorizontal, Smartphone, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
@@ -19,6 +19,7 @@ import {
   anonimizarUsuario,
   editarUsuario,
   encerrarSessoesUsuario,
+  redefinirDuasEtapas,
   reenviarAcesso,
   revogarMembro,
   vincularEquipeEmpresas,
@@ -68,12 +69,14 @@ export function AcoesUsuario({
   ativo,
   anonimizado,
   proprio,
+  tem2fa = false,
 }: {
   usuarioId: string;
   nome: string;
   ativo: boolean;
   anonimizado: boolean;
   proprio: boolean;
+  tem2fa?: boolean;
 }) {
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
@@ -110,6 +113,20 @@ export function AcoesUsuario({
           confirmar={{ titulo: `Encerrar as sessões de ${nome}?`, descricao: "Todos os dispositivos conectados precisarão entrar de novo.", textoConfirmar: "Encerrar sessões" }}
         >
           <LogOut /> Encerrar sessões
+        </BotaoAcao>
+      ) : null}
+      {ativo && tem2fa && !proprio ? (
+        <BotaoAcao
+          tamanho="sm"
+          variante="contorno"
+          acao={() => redefinirDuasEtapas(usuarioId)}
+          confirmar={{
+            titulo: `Redefinir a verificação em duas etapas de ${nome}?`,
+            descricao: "Use quando a pessoa perdeu ou trocou o celular. O autenticador atual deixa de valer, as sessões são encerradas e, no próximo acesso, ela cadastra o autenticador de novo.",
+            textoConfirmar: "Redefinir",
+          }}
+        >
+          <Smartphone /> Redefinir duas etapas
         </BotaoAcao>
       ) : null}
       {!proprio ? (

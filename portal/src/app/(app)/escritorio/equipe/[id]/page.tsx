@@ -100,7 +100,7 @@ export default async function PaginaUsuario({ params }: PageProps<"/escritorio/e
             </CardHeader>
             <CardContent className="space-y-5">
               {!anonimizado ? <FormEditarUsuario usuarioId={p.id} tipo={p.tipo} cargo={p.cargo} proprio={proprio} /> : null}
-              <AcoesUsuario usuarioId={p.id} nome={p.nome} ativo={p.ativo} anonimizado={anonimizado} proprio={proprio} />
+              <AcoesUsuario usuarioId={p.id} nome={p.nome} ativo={p.ativo} anonimizado={anonimizado} proprio={proprio} tem2fa={Boolean(seg?.tem_2fa)} />
             </CardContent>
           </Card>
 

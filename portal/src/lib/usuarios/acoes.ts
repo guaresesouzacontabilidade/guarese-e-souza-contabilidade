@@ -347,3 +347,30 @@ export async function anonimizarUsuario(usuarioId: string, motivo: string): Prom
   if (erroAuth) return sucesso("Dados anonimizados no portal. Atenção: não foi possível atualizar o cadastro de login; o acesso continua bloqueado.");
   return sucesso("Dados pessoais anonimizados e acesso bloqueado definitivamente.");
 }
+
+/** Administrador: remove a verificação em duas etapas de quem perdeu o celular (e encerra as sessões). */
+export async function redefinirDuasEtapas(usuarioId: string): Promise<ResultadoAcao> {
+  const s = await exigirAdmin();
+  if (!UUID.test(usuarioId)) return falha("Usuário inválido.");
+  if (usuarioId === s.usuarioId) return falha("Para o seu próprio usuário, use Minha conta.");
+  const admin = criarClienteAdmin();
+  const { data, error } = await admin.auth.admin.mfa.listFactors({ userId: usuarioId });
+  if (error) return falha("Não foi possível consultar a verificação em duas etapas desta pessoa.");
+  const fatores = data?.factors ?? [];
+  if (!fatores.length) return falha("Esta pessoa não tem verificação em duas etapas cadastrada.");
+  for (const f of fatores) {
+    const { error: e } = await admin.auth.admin.mfa.deleteFactor({ id: f.id, userId: usuarioId });
+    if (e) return falha("Não foi possível remover a verificação em duas etapas. Tente novamente.");
+  }
+  await s.supabase.rpc("encerrar_sessoes_usuario", { p_user_id: usuarioId });
+  const { ip, userAgent } = await dadosRequisicao();
+  await s.supabase.rpc("registrar_evento", {
+    p_acao: "mfa_redefinido",
+    p_entidade: "perfis",
+    p_entidade_id: usuarioId,
+    p_ip: ip ?? undefined,
+    p_user_agent: userAgent ?? undefined,
+  });
+  await revalidarEquipe(usuarioId);
+  return sucesso("Verificação em duas etapas removida e sessões encerradas. No próximo acesso a pessoa cadastra o autenticador de novo.");
+}

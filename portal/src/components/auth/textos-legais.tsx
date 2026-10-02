@@ -23,7 +23,11 @@ export function PoliticaPrivacidade() {
       </ul>
       <h3>3. Compartilhamento e operadores</h3>
       <ul>
-        <li>Supabase (banco de dados, autenticação e armazenamento de arquivos), contratado como operador, com criptografia em trânsito e em repouso.</li>
+        <li>Supabase (banco de dados, autenticação e armazenamento de arquivos, na região de São Paulo), contratado como operador, com criptografia em trânsito e em repouso.</li>
+        <li>
+          Vercel (hospedagem do site, na região de São Paulo), contratada como operadora: executa o portal e processa temporariamente os arquivos durante a leitura
+          automática e a geração de relatórios, sem guardá-los; mantém registros técnicos de acesso (como endereço IP) por período limitado.
+        </li>
         <li>Provedor de e-mail configurado pelo escritório, somente para envio de notificações e convites.</li>
         <li>WhatsApp Business Platform (Meta), somente se o escritório ativar os lembretes por WhatsApp — são enviados apenas o número do contato e o texto do lembrete.</li>
         <li>Órgãos públicos, quando exigido por lei, no contexto dos serviços contábeis.</li>
