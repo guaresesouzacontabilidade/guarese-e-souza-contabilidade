@@ -98,8 +98,10 @@ async function projetoSupabase(): Promise<{ ref: string; novo: boolean; senhaBan
     return { ref: existente.id, novo: false, senhaBanco: null };
   }
   const orgs = await sb<{ id: string; name: string }[]>("/organizations");
-  if (!orgs.length) throw new Error("Nenhuma organização encontrada na conta do Supabase.");
-  const org = orgs[0];
+  // alguns tokens não listam organizações; usa SUPABASE_ORG_ID ou a organização de um projeto existente
+  const idOrg = process.env.SUPABASE_ORG_ID ?? projetos[0]?.organization_id;
+  const org = orgs.find((o) => o.id === idOrg) ?? orgs[0] ?? (idOrg ? { id: idOrg, name: idOrg } : null);
+  if (!org) throw new Error("Nenhuma organização encontrada na conta do Supabase (defina SUPABASE_ORG_ID).");
   const senhaBanco = randomBytes(18).toString("base64url");
   const criado = await sb<ProjetoSb>("/projects", {
     method: "POST",
