@@ -24,6 +24,61 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"atualizacoes_normativas": {
+                  Row: {
+                    "aplicada_em": string | null,"aplicada_por": string | null,"fonte_consultada_em": string,"fonte_publicada_em": string | null,"fonte_titulo": string,"fonte_url": string | null,"id": string,"motivo_rejeicao": string | null,"obrigacao_id": string,"proposta_em": string,"proposta_por": string | null,"regra_anterior_id": string | null,"regra_proposta_id": string | null,"rejeitada_em": string | null,"rejeitada_por": string | null,"resultado": Json | null,"resumo": string | null,"status": string,"tipo": string,"titulo": string,"validacao_observacao": string | null,"validada_em": string | null,"validada_por": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "aplicada_em"?: string | null,"aplicada_por"?: string | null,"fonte_consultada_em": string,"fonte_publicada_em"?: string | null,"fonte_titulo": string,"fonte_url"?: string | null,"id"?: string,"motivo_rejeicao"?: string | null,"obrigacao_id": string,"proposta_em"?: string,"proposta_por"?: string | null,"regra_anterior_id"?: string | null,"regra_proposta_id"?: string | null,"rejeitada_em"?: string | null,"rejeitada_por"?: string | null,"resultado"?: Json | null,"resumo"?: string | null,"status"?: string,"tipo": string,"titulo": string,"validacao_observacao"?: string | null,"validada_em"?: string | null,"validada_por"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "aplicada_em"?: string | null,"aplicada_por"?: string | null,"fonte_consultada_em"?: string,"fonte_publicada_em"?: string | null,"fonte_titulo"?: string,"fonte_url"?: string | null,"id"?: string,"motivo_rejeicao"?: string | null,"obrigacao_id"?: string,"proposta_em"?: string,"proposta_por"?: string | null,"regra_anterior_id"?: string | null,"regra_proposta_id"?: string | null,"rejeitada_em"?: string | null,"rejeitada_por"?: string | null,"resultado"?: Json | null,"resumo"?: string | null,"status"?: string,"tipo"?: string,"titulo"?: string,"validacao_observacao"?: string | null,"validada_em"?: string | null,"validada_por"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "atualizacoes_normativas_aplicada_por_fkey"
+      columns: ["aplicada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_obrigacao_id_fkey"
+      columns: ["obrigacao_id"]
+isOneToOne: false
+      referencedRelation: "obrigacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_proposta_por_fkey"
+      columns: ["proposta_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_regra_anterior_id_fkey"
+      columns: ["regra_anterior_id"]
+isOneToOne: false
+      referencedRelation: "obrigacao_regras"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_regra_proposta_id_fkey"
+      columns: ["regra_proposta_id"]
+isOneToOne: false
+      referencedRelation: "obrigacao_regras"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_rejeitada_por_fkey"
+      columns: ["rejeitada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_validada_por_fkey"
+      columns: ["validada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"auditoria": {
                   Row: {
                     "acao": string,"dados_antes": Json | null,"dados_depois": Json | null,"detalhes": Json | null,"empresa_id": string | null,"entidade": string,"entidade_id": string | null,"id": number,"ip": string | null,"ocorrido_em": string,"user_agent": string | null,"user_email": string | null,"user_id": string | null
@@ -891,15 +946,83 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"empresas": {
+                },"empresa_obrigacoes": {
                   Row: {
-                    "ativa": boolean,"atividade_principal": string | null,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnae": string | null,"complemento": string | null,"contador_responsavel_id": string | null,"controla_estoque": boolean,"created_at": string,"criado_por": string | null,"data_inicio_atendimento": string | null,"demonstracao": boolean,"documento": string,"email": string | null,"id": string,"inscricao_estadual": string | null,"inscricao_municipal": string | null,"logradouro": string | null,"nome_fantasia": string | null,"numero": string | null,"observacoes": string | null,"razao_social": string,"regime_tributario": string,"servicos": (string)[],"sugerir_lancamentos_xml": boolean,"telefone": string | null,"tipo_pessoa": string,"uf": string | null,"updated_at": string
+                    "created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"modo": string,"motivo": string | null,"obrigacao_id": string,"prazo_interno_dias_uteis": number | null,"responsavel_id": string | null,"revisor_id": string | null,"updated_at": string,"vigencia_fim": string | null,"vigencia_inicio": string
                   }
                   Insert: {
-                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento": string,"email"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logradouro"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social": string,"regime_tributario": string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"modo"?: string,"motivo"?: string | null,"obrigacao_id": string,"prazo_interno_dias_uteis"?: number | null,"responsavel_id"?: string | null,"revisor_id"?: string | null,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio": string
                   }
                   Update: {
-                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento"?: string,"email"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logradouro"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social"?: string,"regime_tributario"?: string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"modo"?: string,"motivo"?: string | null,"obrigacao_id"?: string,"prazo_interno_dias_uteis"?: number | null,"responsavel_id"?: string | null,"revisor_id"?: string | null,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "empresa_obrigacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_obrigacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_obrigacoes_obrigacao_id_fkey"
+      columns: ["obrigacao_id"]
+isOneToOne: false
+      referencedRelation: "obrigacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_obrigacoes_responsavel_id_fkey"
+      columns: ["responsavel_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_obrigacoes_revisor_id_fkey"
+      columns: ["revisor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"empresa_regimes": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"empresa_id": string,"fim": string | null,"id": string,"inicio": string,"observacao": string | null,"regime": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"fim"?: string | null,"id"?: string,"inicio": string,"observacao"?: string | null,"regime": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"fim"?: string | null,"id"?: string,"inicio"?: string,"observacao"?: string | null,"regime"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "empresa_regimes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_regimes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"empresas": {
+                  Row: {
+                    "ativa": boolean,"atividade_principal": string | null,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnae": string | null,"complemento": string | null,"contador_responsavel_id": string | null,"contribuinte_icms": boolean,"contribuinte_iss": boolean,"controla_estoque": boolean,"created_at": string,"criado_por": string | null,"data_inicio_atendimento": string | null,"demonstracao": boolean,"documento": string,"email": string | null,"id": string,"inscricao_estadual": string | null,"inscricao_municipal": string | null,"logradouro": string | null,"municipio_ibge": string | null,"nome_fantasia": string | null,"numero": string | null,"observacoes": string | null,"razao_social": string,"regime_tributario": string,"servicos": (string)[],"sugerir_lancamentos_xml": boolean,"telefone": string | null,"tem_empregados": boolean,"tipo_pessoa": string,"uf": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"contribuinte_icms"?: boolean,"contribuinte_iss"?: boolean,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento": string,"email"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social": string,"regime_tributario": string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tem_empregados"?: boolean,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"contribuinte_icms"?: boolean,"contribuinte_iss"?: boolean,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento"?: string,"email"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social"?: string,"regime_tributario"?: string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tem_empregados"?: boolean,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -914,6 +1037,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "perfis"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresas_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
     }
                   ]
                 },"envios": {
@@ -1100,6 +1229,31 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "perfis"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"feriados": {
+                  Row: {
+                    "abrangencia": string,"created_at": string,"criado_por": string | null,"data": string,"fonte": string,"id": string,"municipio_ibge": string | null,"nome": string,"tipo": string,"uf": string | null
+                  }
+                  Insert: {
+                    "abrangencia": string,"created_at"?: string,"criado_por"?: string | null,"data": string,"fonte": string,"id"?: string,"municipio_ibge"?: string | null,"nome": string,"tipo"?: string,"uf"?: string | null
+                  }
+                  Update: {
+                    "abrangencia"?: string,"created_at"?: string,"criado_por"?: string | null,"data"?: string,"fonte"?: string,"id"?: string,"municipio_ibge"?: string | null,"nome"?: string,"tipo"?: string,"uf"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feriados_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "feriados_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
     }
                   ]
                 },"importacoes": {
@@ -1373,6 +1527,19 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"municipios": {
+                  Row: {
+                    "ibge": string,"nome": string,"uf": string
+                  }
+                  Insert: {
+                    "ibge": string,"nome": string,"uf": string
+                  }
+                  Update: {
+                    "ibge"?: string,"nome"?: string,"uf"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"notificacoes": {
                   Row: {
                     "corpo": string | null,"created_at": string,"empresa_id": string | null,"id": string,"lida_em": string | null,"link": string | null,"tipo": string,"titulo": string,"user_id": string
@@ -1397,6 +1564,56 @@ isOneToOne: false
       referencedRelation: "perfis"
       referencedColumns: ["id"]
     }
+                  ]
+                },"obrigacao_regras": {
+                  Row: {
+                    "created_at": string,"criada_por": string | null,"empresa_id": string | null,"exige_empregados": boolean,"exige_icms": boolean,"exige_iss": boolean,"fonte_consultada_em": string,"fonte_titulo": string,"fonte_url": string | null,"id": string,"municipios": (string)[] | null,"obrigacao_id": string,"observacao": string | null,"prazo_apuracao": Json | null,"prazo_entrega": Json | null,"prazo_interno_dias_uteis": number,"prazo_pagamento": Json | null,"regimes": (string)[],"servico": string | null,"status": string,"ufs": (string)[] | null,"updated_at": string,"validada_em": string | null,"validada_por": string | null,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criada_por"?: string | null,"empresa_id"?: string | null,"exige_empregados"?: boolean,"exige_icms"?: boolean,"exige_iss"?: boolean,"fonte_consultada_em": string,"fonte_titulo": string,"fonte_url"?: string | null,"id"?: string,"municipios"?: (string)[] | null,"obrigacao_id": string,"observacao"?: string | null,"prazo_apuracao"?: Json | null,"prazo_entrega"?: Json | null,"prazo_interno_dias_uteis"?: number,"prazo_pagamento"?: Json | null,"regimes": (string)[],"servico"?: string | null,"status"?: string,"ufs"?: (string)[] | null,"updated_at"?: string,"validada_em"?: string | null,"validada_por"?: string | null,"vigencia_fim"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criada_por"?: string | null,"empresa_id"?: string | null,"exige_empregados"?: boolean,"exige_icms"?: boolean,"exige_iss"?: boolean,"fonte_consultada_em"?: string,"fonte_titulo"?: string,"fonte_url"?: string | null,"id"?: string,"municipios"?: (string)[] | null,"obrigacao_id"?: string,"observacao"?: string | null,"prazo_apuracao"?: Json | null,"prazo_entrega"?: Json | null,"prazo_interno_dias_uteis"?: number,"prazo_pagamento"?: Json | null,"regimes"?: (string)[],"servico"?: string | null,"status"?: string,"ufs"?: (string)[] | null,"updated_at"?: string,"validada_em"?: string | null,"validada_por"?: string | null,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "obrigacao_regras_criada_por_fkey"
+      columns: ["criada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "obrigacao_regras_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "obrigacao_regras_obrigacao_id_fkey"
+      columns: ["obrigacao_id"]
+isOneToOne: false
+      referencedRelation: "obrigacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "obrigacao_regras_validada_por_fkey"
+      columns: ["validada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"obrigacoes": {
+                  Row: {
+                    "area": string,"ativa": boolean,"categorias_documento": (string)[],"codigo": string,"created_at": string,"descricao": string | null,"esfera": string,"etapas": (string)[],"id": string,"nome": string,"observacao": string | null,"periodicidade": string,"tributos": (string)[],"updated_at": string
+                  }
+                  Insert: {
+                    "area": string,"ativa"?: boolean,"categorias_documento"?: (string)[],"codigo": string,"created_at"?: string,"descricao"?: string | null,"esfera": string,"etapas": (string)[],"id"?: string,"nome": string,"observacao"?: string | null,"periodicidade": string,"tributos"?: (string)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "area"?: string,"ativa"?: boolean,"categorias_documento"?: (string)[],"codigo"?: string,"created_at"?: string,"descricao"?: string | null,"esfera"?: string,"etapas"?: (string)[],"id"?: string,"nome"?: string,"observacao"?: string | null,"periodicidade"?: string,"tributos"?: (string)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"perfis": {
                   Row: {
@@ -1610,6 +1827,98 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"tarefa_historico": {
+                  Row: {
+                    "acao": string,"comentario": string | null,"detalhes": Json | null,"empresa_id": string,"id": number,"ocorrido_em": string,"status_anterior": string | null,"status_novo": string | null,"tarefa_id": string,"usuario_id": string | null
+                  }
+                  Insert: {
+                    "acao": string,"comentario"?: string | null,"detalhes"?: Json | null,"empresa_id": string,"id"?: never,"ocorrido_em"?: string,"status_anterior"?: string | null,"status_novo"?: string | null,"tarefa_id": string,"usuario_id"?: string | null
+                  }
+                  Update: {
+                    "acao"?: string,"comentario"?: string | null,"detalhes"?: Json | null,"empresa_id"?: string,"id"?: never,"ocorrido_em"?: string,"status_anterior"?: string | null,"status_novo"?: string | null,"tarefa_id"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tarefa_historico_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefa_historico_tarefa_id_fkey"
+      columns: ["tarefa_id"]
+isOneToOne: false
+      referencedRelation: "tarefas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"tarefas": {
+                  Row: {
+                    "competencia": string,"comprovante_documento_id": string | null,"concluida_em": string | null,"concluida_por": string | null,"created_at": string,"dispensa_motivo": string | null,"empresa_id": string,"enviada_revisao_em": string | null,"etapa": string,"guia_documento_id": string | null,"id": string,"obrigacao_id": string,"observacao": string | null,"prazo_interno": string,"prazo_legal": string | null,"protocolo": string | null,"regra_id": string | null,"responsavel_id": string | null,"revisada_em": string | null,"revisada_por": string | null,"revisor_id": string | null,"status": string,"updated_at": string,"valor": number | null
+                  }
+                  Insert: {
+                    "competencia": string,"comprovante_documento_id"?: string | null,"concluida_em"?: string | null,"concluida_por"?: string | null,"created_at"?: string,"dispensa_motivo"?: string | null,"empresa_id": string,"enviada_revisao_em"?: string | null,"etapa": string,"guia_documento_id"?: string | null,"id"?: string,"obrigacao_id": string,"observacao"?: string | null,"prazo_interno": string,"prazo_legal"?: string | null,"protocolo"?: string | null,"regra_id"?: string | null,"responsavel_id"?: string | null,"revisada_em"?: string | null,"revisada_por"?: string | null,"revisor_id"?: string | null,"status"?: string,"updated_at"?: string,"valor"?: number | null
+                  }
+                  Update: {
+                    "competencia"?: string,"comprovante_documento_id"?: string | null,"concluida_em"?: string | null,"concluida_por"?: string | null,"created_at"?: string,"dispensa_motivo"?: string | null,"empresa_id"?: string,"enviada_revisao_em"?: string | null,"etapa"?: string,"guia_documento_id"?: string | null,"id"?: string,"obrigacao_id"?: string,"observacao"?: string | null,"prazo_interno"?: string,"prazo_legal"?: string | null,"protocolo"?: string | null,"regra_id"?: string | null,"responsavel_id"?: string | null,"revisada_em"?: string | null,"revisada_por"?: string | null,"revisor_id"?: string | null,"status"?: string,"updated_at"?: string,"valor"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tarefas_comprovante_documento_id_fkey"
+      columns: ["comprovante_documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_concluida_por_fkey"
+      columns: ["concluida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_guia_documento_id_fkey"
+      columns: ["guia_documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_obrigacao_id_fkey"
+      columns: ["obrigacao_id"]
+isOneToOne: false
+      referencedRelation: "obrigacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_regra_id_fkey"
+      columns: ["regra_id"]
+isOneToOne: false
+      referencedRelation: "obrigacao_regras"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_responsavel_id_fkey"
+      columns: ["responsavel_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_revisada_por_fkey"
+      columns: ["revisada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_revisor_id_fkey"
+      columns: ["revisor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"transferencias": {
                   Row: {
                     "conciliacao_id": string | null,"conta_destino_id": string,"conta_origem_id": string,"created_at": string,"criado_por": string | null,"data": string,"descricao": string | null,"empresa_id": string,"id": string,"origem": string,"tipo": string,"valor": number
@@ -1674,8 +1983,14 @@ isOneToOne: false
 "anonimizar_usuario":
 { Args: { "p_motivo": string,"p_user_id": string }; Returns: undefined
                            },
+"aplicar_atualizacao_normativa":
+{ Args: { "p_id": string }; Returns: Json
+                           },
 "aplicar_checklist_padrao":
 { Args: { "p_empresa_id": string }; Returns: number
+                           },
+"atribuir_tarefas":
+{ Args: { "p_ids": (string)[],"p_limpar_revisor"?: boolean,"p_responsavel_id"?: string,"p_revisor_id"?: string }; Returns: number
                            },
 "atualizar_documento":
 { Args: { "p_categoria": string,"p_checklist_item_id"?: string,"p_competencia": string,"p_documento_id": string,"p_observacao"?: string,"p_titulo"?: string,"p_valor"?: number,"p_vencimento"?: string }; Returns: undefined
@@ -1689,8 +2004,16 @@ isOneToOne: false
 "atualizar_membro":
 { Args: { "p_membro_id": string,"p_papel": string,"p_permissoes": (string)[] }; Returns: undefined
                            },
+"atualizar_tarefa":
+{ Args: { "p_comentario"?: string,"p_comprovante_documento_id"?: string,"p_dispensa_motivo"?: string,"p_guia_documento_id"?: string,"p_protocolo"?: string,"p_responsavel_id"?: string,"p_revisor_id"?: string,"p_status"?: string,"p_tarefa_id": string,"p_valor"?: number }; Returns: undefined
+                           },
 "avaliar_documento_apos_fechamento":
 { Args: { "p_documento_id": string,"p_parecer": string }; Returns: undefined
+                           },
+"calendario_empresa":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: {
+              "area": string,"codigo": string,"config_id": string,"esfera": string,"etapas": (string)[],"fonte": string,"fonte_url": string,"modo": string,"motivo": string,"nome": string,"obrigacao_id": string,"periodicidade": string,"prazo_entrega": string,"prazo_interno_dias_uteis": number,"prazo_pagamento": string,"regra_id": string,"responsavel_id": string,"revisor_id": string,"situacao": string,"tributos": (string)[]
+            }[]
                            },
 "classificar_movimento":
 { Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_contraparte_id"?: string,"p_data_competencia"?: string,"p_descricao"?: string,"p_documento_ids"?: (string)[],"p_movimento_id": string,"p_projeto_id"?: string }; Returns: Json
@@ -1840,6 +2163,9 @@ isOneToOne: false
 "gerar_recorrencias_empresa":
 { Args: { "p_empresa_id": string }; Returns: number
                            },
+"gerar_tarefas":
+{ Args: { "p_competencia": string,"p_empresa_id"?: string }; Returns: number
+                           },
 "ignorar_movimento":
 { Args: { "p_ignorar": boolean,"p_motivo"?: string,"p_movimento_id": string }; Returns: undefined
                            },
@@ -1918,6 +2244,17 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"operacional_empresas":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "abertas": number,"aguardando_cliente": number,"atrasadas": number,"documento": string,"em_revisao": number,"empresa_id": string,"municipio": string,"nome_fantasia": string,"proximo_prazo": string,"razao_social": string,"regime": string,"responsavel": string,"uf": string,"vencendo_7d": number
+            }[]
+                           },
+"propor_regra":
+{ Args: { "p_fonte_consultada_em": string,"p_fonte_publicada_em": string,"p_fonte_titulo": string,"p_fonte_url": string,"p_obrigacao_id": string,"p_regra": Json,"p_regra_anterior_id"?: string,"p_resumo": string,"p_titulo": string }; Returns: string
+                           },
+"propor_revogacao":
+{ Args: { "p_fonte_consultada_em": string,"p_fonte_publicada_em": string,"p_fonte_titulo": string,"p_fonte_url": string,"p_regra_id": string,"p_resumo": string,"p_titulo": string,"p_vigencia_inicio": string }; Returns: string
+                           },
 "publicar_relatorio":
 { Args: { "p_id": string }; Returns: Json
                            },
@@ -1965,6 +2302,9 @@ isOneToOne: false
                            },
 "registrar_xml_fiscal":
 { Args: { "p_dados": Json,"p_documento_id": string }; Returns: Json
+                           },
+"rejeitar_atualizacao_normativa":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
                            },
 "rejeitar_sugestao_conciliacao":
 { Args: { "p_conciliacao_id": string,"p_motivo"?: string }; Returns: undefined
@@ -2020,6 +2360,9 @@ isOneToOne: false
 "rotina_diaria":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"rotina_operacional":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "saldo_conta":
 { Args: { "p_conta_id": string,"p_data": string }; Returns: number
                            },
@@ -2034,6 +2377,11 @@ isOneToOne: false
 "seguranca_usuarios":
 { Args: Record<PropertyKey, never>; Returns: {
               "sessoes": number,"tem_2fa": boolean,"ultima_atividade": string,"user_id": string
+            }[]
+                           },
+"simular_regra":
+{ Args: { "p_empresa_id"?: string,"p_inicio": string,"p_meses"?: number,"p_municipio"?: string,"p_periodicidade": string,"p_regra": Json,"p_uf"?: string }; Returns: {
+              "competencia": string,"prazo_apuracao": string,"prazo_entrega": string,"prazo_pagamento": string
             }[]
                            },
 "sistema_bloquear_documento":
@@ -2053,6 +2401,9 @@ isOneToOne: false
                            },
 "substituir_documento":
 { Args: { "p_documento_id": string,"p_mime": string,"p_motivo": string,"p_nome_arquivo": string,"p_sha256": string,"p_tamanho": number }; Returns: Json
+                           },
+"validar_atualizacao_normativa":
+{ Args: { "p_id": string,"p_observacao"?: string }; Returns: undefined
                            },
 "vincular_membro":
 { Args: { "p_empresa_id": string,"p_papel": string,"p_permissoes"?: (string)[],"p_user_id": string }; Returns: string

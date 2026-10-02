@@ -7,7 +7,9 @@ export const maxDuration = 60;
 
 /**
  * Rotina diária: gera o checklist do mês, lançamentos recorrentes,
- * lembretes automáticos de pendências e limpa envios incompletos.
+ * lembretes automáticos de pendências e limpa envios incompletos; na camada
+ * operacional, gera as tarefas das obrigações (sem duplicar) e os alertas
+ * de prazos para a equipe.
  */
 async function executar(req: Request) {
   if (!cronAutorizado(req)) return new NextResponse("Não autorizado.", { status: 401 });
@@ -17,9 +19,15 @@ async function executar(req: Request) {
     await registrarRotina(admin, "diaria", { ok: false, erro: error.message });
     return NextResponse.json({ ok: false, erro: error.message }, { status: 500 });
   }
-  await registrarRotina(admin, "diaria", { ok: true, resultado: data });
+  const operacional = await admin.rpc("rotina_operacional");
+  if (operacional.error) {
+    await registrarRotina(admin, "diaria", { ok: false, resultado: data, erro: `Obrigações: ${operacional.error.message}` });
+    return NextResponse.json({ ok: false, rotina: data, erro: operacional.error.message }, { status: 500 });
+  }
+  const resultado = { ...(data as Record<string, unknown>), obrigacoes: operacional.data };
+  await registrarRotina(admin, "diaria", { ok: true, resultado });
   const fila = await processarFila({ limite: 50, tempoMaximoMs: 30_000 });
-  return NextResponse.json({ ok: true, rotina: data, fila });
+  return NextResponse.json({ ok: true, rotina: resultado, fila });
 }
 
 export const GET = executar;

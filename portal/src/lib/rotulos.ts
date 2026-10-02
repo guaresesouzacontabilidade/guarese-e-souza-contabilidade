@@ -5,6 +5,7 @@ export const REGIMES: Record<string, string> = {
   simples_nacional: "Simples Nacional",
   lucro_presumido: "Lucro Presumido",
   lucro_real: "Lucro Real",
+  lucro_arbitrado: "Lucro Arbitrado",
   imune_isenta: "Imune / Isenta",
   produtor_rural: "Produtor rural",
   pessoa_fisica: "Pessoa física",
