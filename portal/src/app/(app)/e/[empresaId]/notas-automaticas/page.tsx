@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CloudDownload, KeyRound, ShieldCheck } from "lucide-react";
+import { CloudDownload, FileArchive, KeyRound, ShieldCheck } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
@@ -8,6 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { BotaoBuscarAgora, FormCertificado, PreferenciasNotas, RemoverCertificado } from "@/components/notas-automaticas/notas-automaticas";
+import { FormLoteXml } from "@/components/lotes-xml/form-lote";
+import { TabelaLotes, emPreparo, type LoteXml } from "@/components/lotes-xml/tabela-lotes";
+import { AtualizarEnquanto } from "@/components/ui/atualizar-enquanto";
+import { pedirLoteXml } from "@/lib/lotes-xml/acoes";
+import { mesesDoLote } from "@/lib/lotes-xml/rotulos";
 import {
   AUTORIZACAO_CLIENTE,
   AUTORIZACAO_ESCRITORIO,
@@ -19,7 +24,7 @@ import {
 import { envServidor } from "@/lib/env-servidor";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarCnpj, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
-import { diasEntre, hojeISO } from "@/lib/competencia";
+import { competenciaAtual, diasEntre, hojeISO } from "@/lib/competencia";
 
 export const metadata: Metadata = { title: "Notas automáticas" };
 
@@ -28,10 +33,11 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
   const ctx = await obterContextoEmpresa(empresaId);
   const gerenciar = ctx.pode("certificado.gerenciar");
   const verDocumentos = ctx.pode("documentos.ver");
+  const baixar = ctx.pode("documentos.baixar");
   if (!gerenciar && !verDocumentos) return <Alerta tom="alerta">Seu acesso não inclui as notas automáticas desta empresa.</Alerta>;
   const base = `/e/${empresaId}`;
 
-  const [{ data: certificado }, { data: config }, { data: execucoes }, { data: resumos }] = await Promise.all([
+  const [{ data: certificado }, { data: config }, { data: execucoes }, { data: resumos }, { data: lotes }] = await Promise.all([
     gerenciar
       ? ctx.supabase
           .from("certificados_digitais")
@@ -55,7 +61,17 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
           .order("data_emissao", { ascending: false, nullsFirst: false })
           .limit(50)
       : Promise.resolve({ data: [] }),
+    baixar
+      ? ctx.supabase
+          .from("xml_lotes")
+          .select("id, empresa_id, competencia, tipos, situacao, partes, total_arquivos, resumo, erro, criado_em, expira_em")
+          .eq("empresa_id", empresaId)
+          .order("criado_em", { ascending: false })
+          .limit(10)
+      : Promise.resolve({ data: [] }),
   ]);
+  const listaLotes = (lotes ?? []) as LoteXml[];
+  const { meses, padrao } = mesesDoLote(competenciaAtual());
   const situacao = situacaoNotas(config?.certificado_valido_ate ? { valido_ate: config.certificado_valido_ate } : null, config);
   const s = SITUACAO_NOTAS[situacao];
   const chaveServidor = Boolean(envServidor.certificadosChave());
@@ -206,6 +222,30 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
           </CardHeader>
           <CardContent>
             <PreferenciasNotas empresaId={empresaId} nfe={config.nfe_ativa} nfse={config.nfse_ativa} ciencia={config.ciencia_automatica} pausada={config.pausada} />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {baixar ? (
+        <Card className="mb-4 scroll-mt-20" id="lotes-xml">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileArchive className="size-4" /> XML do mês em lote
+            </CardTitle>
+            <CardDescription>
+              Um arquivo ZIP com todos os XML do mês de emissão escolhido, separados em pastas por tipo (entradas, saídas, NFC-e, CT-e, NFS-e e
+              eventos), com uma planilha da relação das notas. Inclui as notas buscadas com o certificado e as enviadas em Documentos. O arquivo fica
+              disponível por 7 dias.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormLoteXml acao={pedirLoteXml.bind(null, empresaId)} meses={meses} padrao={padrao} textoBotao="Gerar arquivo do mês" />
+            {listaLotes.length ? (
+              <div className="-mx-4 sm:-mx-6">
+                <TabelaLotes lotes={listaLotes} />
+              </div>
+            ) : null}
+            <AtualizarEnquanto ativo={listaLotes.some(emPreparo)} limiteMs={600_000} />
           </CardContent>
         </Card>
       ) : null}

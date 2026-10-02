@@ -235,3 +235,13 @@ Não precisa de configuração nem de chaves: roda pela fila de tarefas (`audito
 - **Simples Nacional**: a faixa e a alíquota efetiva de cada mês usam a mesma receita de 12 meses da previsão de impostos (receita informada em **Cálculos** ou a das notas) e o anexo das vendas configurado; sem configuração, presume o Anexo I e marca confiança média. A partilha do DAS (PIS, Cofins e ICMS por faixa) segue os Anexos I e II da LC 123/2006.
 - **Atualização das regras**: a lista de NCM monofásicos fica na tabela `auditor_ncm_monofasico` (com fonte e vigência); as regras e tabelas, em `src/lib/auditor-fiscal/`. Revise quando a legislação mudar (por exemplo, com o fim do PIS/Cofins em 2027, na reforma tributária).
 
+
+## 15. XML em lote por competência
+
+Também não precisa de configuração: roda pela fila de tarefas (`gerar_lote_xml`) e usa o armazenamento privado `documentos`.
+
+- **Pedido**: em **Notas automáticas** (da empresa ou da carteira), escolhendo o mês de emissão e os tipos. A competência é a data de emissão escrita no XML (horário de quem emitiu), não a data em UTC.
+- **Montagem**: a primeira tarefa escolhe os arquivos (`preparar_lote_xml`); cada tarefa seguinte grava uma parte do ZIP (até cerca de 30 segundos de trabalho, 30 MB ou 20 mil arquivos por parte) em `<empresa>/lotes-xml/<lote>/parte-N.zip`; a última parte leva a planilha e o LEIA-ME. Partes ficam abaixo do limite de 50 MB por arquivo do plano gratuito do Supabase.
+- **Download**: `/api/lotes-xml/<lote>/<parte>` confere a permissão no banco (`baixar_lote_xml`), registra o acesso a cada documento e só então gera um link de 1 minuto. Os arquivos dos lotes não têm leitura direta pela API.
+- **Limpeza**: a rotina diária (`rotina_lotes_xml`) apaga os arquivos dos lotes com mais de 7 dias e marca como erro pedidos que não andaram em 2 dias; o histórico some depois de 90 dias.
+- **Limites**: 30 lotes por hora por pessoa e 5 pedidos de carteira por hora.

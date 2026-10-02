@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Check, EyeOff, HandCoins, RotateCcw, ScanSearch, Send, X } from "lucide-react";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Button } from "@/components/ui/button";
@@ -15,21 +14,6 @@ export function BotaoAnalisar({ empresaId, emAndamento }: { empresaId: string; e
       <ScanSearch /> {emAndamento ? "Analisando..." : "Analisar agora"}
     </BotaoAcao>
   );
-}
-
-/** Atualiza a tela a cada poucos segundos enquanto uma análise está na fila (até 3 minutos). */
-export function AtualizarEnquanto({ ativo }: { ativo: boolean }) {
-  const router = useRouter();
-  React.useEffect(() => {
-    if (!ativo) return;
-    const inicio = Date.now();
-    const id = window.setInterval(() => {
-      if (Date.now() - inicio > 180_000) return window.clearInterval(id);
-      router.refresh();
-    }, 5000);
-    return () => window.clearInterval(id);
-  }, [ativo, router]);
-  return null;
 }
 
 function DialogoRevisao({

@@ -89,7 +89,8 @@ test("empresário cadastra o certificado A1, vê a situação e remove", async (
   const escritorio = await ctx.newPage();
   await entrar(escritorio, `contador@${DOMINIO}`);
   await escritorio.goto("/escritorio/notas-automaticas");
-  await expect(escritorio.getByRole("link", { name: "Padaria Pão Dourado (DEMO)" })).toBeVisible();
+  // A empresa na tabela da carteira (os lotes de XML também têm links com o nome)
+  await expect(escritorio.locator('a[href$="/notas-automaticas"]').filter({ hasText: "Padaria Pão Dourado (DEMO)" })).toBeVisible();
   await escritorio.goto(`${empresa}/vencimentos`);
   await expect(escritorio.getByText("Certificado digital A1 (notas automáticas)").first()).toBeVisible();
 

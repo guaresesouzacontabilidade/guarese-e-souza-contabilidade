@@ -36,11 +36,15 @@ export const ROTULO_ACAO: Record<string, string> = {
   auditor_resolver: "Concluiu um achado do auditor fiscal",
   auditor_reabrir: "Reabriu um achado do auditor fiscal",
   auditor_pedido_cliente: "Pediu ao escritório que cuide de uma oportunidade de economia",
+  lote_xml_solicitado: "Pediu o XML do mês em lote",
+  lote_xml_carteira: "Pediu o XML do mês em lote para a carteira",
+  download_lote_xml: "Baixou um lote de XML",
 };
 
 export const ROTULO_ENTIDADE: Record<string, string> = {
   auditor_achados: "achado do auditor fiscal",
   auditor_ncm_monofasico: "catálogo de produtos monofásicos",
+  xml_lotes: "lote de XML",
   baixas: "pagamento/recebimento",
   categorias_financeiras: "categoria financeira",
   checklist_itens: "item do checklist",

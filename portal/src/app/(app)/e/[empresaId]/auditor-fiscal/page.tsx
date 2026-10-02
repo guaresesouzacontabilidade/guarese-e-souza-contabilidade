@@ -7,7 +7,8 @@ import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { AcoesAchado, AtualizarEnquanto, BotaoAnalisar, BotaoPedirAjuda } from "@/components/auditor-fiscal/auditor-fiscal";
+import { AcoesAchado, BotaoAnalisar, BotaoPedirAjuda } from "@/components/auditor-fiscal/auditor-fiscal";
+import { AtualizarEnquanto } from "@/components/ui/atualizar-enquanto";
 import {
   CONFIANCA,
   FILTROS_SITUACAO,

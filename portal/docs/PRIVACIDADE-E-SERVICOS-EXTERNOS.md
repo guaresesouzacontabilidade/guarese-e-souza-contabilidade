@@ -103,6 +103,7 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **O que chega**: as notas e eventos fiscais da própria empresa, que passam a ficar em Documentos como os XML enviados pelo cliente. Os resumos de NF-e (fornecedor, valor, data, situação) ficam visíveis para quem acessa os documentos da empresa.
 - **Ciência da emissão**: só com a opção ativada pela empresa. Ela apenas informa à SEFAZ que a empresa tomou conhecimento da nota (não confirma nem recusa a operação) e libera o XML completo.
 - **Sem inteligência artificial**: os XML são lidos por regras dentro do portal, como os enviados pelo cliente.
+- **XML em lote**: o ZIP do mês é montado no próprio portal, a partir dos arquivos já guardados, e fica no armazenamento privado por **7 dias** (depois é apagado pela rotina diária). Só quem tem a permissão de baixar os documentos da empresa pede e baixa; o arquivo não tem link direto — cada download passa pela conferência de permissão, gera um link de 1 minuto e registra o acesso a cada documento do lote. Lotes pedidos pela equipe ficam só com a equipe. Se algum documento for excluído depois, o lote deixa de ser entregue.
 - **Bibliotecas**: o arquivo `.pfx` é aberto pela biblioteca node-forge (só no cadastro, no servidor). O alerta de segurança conhecido dessa biblioteca (GHSA-86w9-cpqp-85rv) trata da verificação de assinaturas RSA, função que o portal não usa; a conexão segura e a assinatura da ciência usam as funções nativas do Node.
 
 ## 13. Auditor fiscal

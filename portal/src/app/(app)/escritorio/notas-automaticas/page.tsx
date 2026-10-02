@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CloudDownload } from "lucide-react";
+import { CloudDownload, FileArchive } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormLoteXml } from "@/components/lotes-xml/form-lote";
+import { TabelaLotes, emPreparo, tiposTexto, type LoteXml } from "@/components/lotes-xml/tabela-lotes";
+import { AtualizarEnquanto } from "@/components/ui/atualizar-enquanto";
+import { pedirLotesXmlCarteira } from "@/lib/lotes-xml/acoes";
+import { mesesDoLote } from "@/lib/lotes-xml/rotulos";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { buscarTudo } from "@/lib/supabase/paginar";
 import { SITUACAO_NOTAS, situacaoNotas } from "@/lib/notas-automaticas/rotulos";
 import { envServidor } from "@/lib/env-servidor";
-import { diasEntre, hojeISO, somarDias } from "@/lib/competencia";
-import { formatarCnpj, formatarData, formatarRelativo } from "@/lib/formatos";
+import { competenciaAtual, diasEntre, hojeISO, somarDias } from "@/lib/competencia";
+import { formatarCnpj, formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { mensagemErro } from "@/lib/acoes";
 
 export const metadata: Metadata = { title: "Notas automáticas" };
@@ -47,6 +52,20 @@ export default async function NotasAutomaticasCarteira() {
   const vencendo = linhas.filter((l) => l.dias !== null && l.dias >= 0 && l.dias <= 30).length;
   const chaveServidor = Boolean(envServidor.certificadosChave());
 
+  // Lotes de XML pedidos para a carteira nos últimos 8 dias, agrupados por pedido
+  const { data: lotesCarteira } = await s.supabase
+    .from("xml_lotes")
+    .select("id, empresa_id, competencia, tipos, situacao, partes, total_arquivos, resumo, erro, criado_em, expira_em, pedido_id, empresa:empresas(razao_social, nome_fantasia)")
+    .not("pedido_id", "is", null)
+    .gte("criado_em", `${somarDias(hoje, -8)}T00:00:00Z`)
+    .order("criado_em", { ascending: false })
+    .limit(500);
+  const pedidos = new Map<string, LoteXml[]>();
+  for (const l of (lotesCarteira ?? []) as unknown as (LoteXml & { pedido_id: string })[]) {
+    pedidos.set(l.pedido_id, [...(pedidos.get(l.pedido_id) ?? []), l]);
+  }
+  const { meses, padrao } = mesesDoLote(competenciaAtual());
+
   return (
     <>
       <CabecalhoPagina
@@ -70,6 +89,44 @@ export default async function NotasAutomaticasCarteira() {
         <Indicador rotulo="Com erro ou vencido" valor={comErro} tom={comErro ? "perigo" : "neutro"} />
         <Indicador rotulo="Certificado vence em 30 dias" valor={vencendo} tom={vencendo ? "alerta" : "neutro"} />
       </div>
+      <Card className="mb-4 scroll-mt-20" id="lotes-xml">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileArchive className="size-4" /> XML da carteira em lote
+          </CardTitle>
+          <CardDescription>
+            Gera, de uma vez, o ZIP com os XML do mês de cada empresa que tem notas dos tipos escolhidos (um arquivo por empresa, com pastas por tipo
+            e a planilha da relação das notas). Você recebe um aviso quando todos ficarem prontos; os arquivos ficam disponíveis por 7 dias.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FormLoteXml acao={pedirLotesXmlCarteira} meses={meses} padrao={padrao} textoBotao="Gerar para a carteira" />
+          {[...pedidos.values()].map((lotes) => {
+            const prontos = lotes.filter((l) => l.situacao === "pronto").length;
+            const preparo = lotes.filter(emPreparo).length;
+            const ordenados = [...lotes].sort((a, b) =>
+              (a.empresa?.nome_fantasia ?? a.empresa?.razao_social ?? "").localeCompare(b.empresa?.nome_fantasia ?? b.empresa?.razao_social ?? "", "pt-BR"),
+            );
+            return (
+              <div key={lotes[0].id} className="rounded-md border border-border">
+                <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border px-4 py-2">
+                  <p className="text-sm font-medium">
+                    {formatarCompetencia(lotes[0].competencia)} · {tiposTexto(lotes[0].tipos)}
+                    <span className="block text-xs font-normal text-muted-foreground">pedido em {formatarDataHora(lotes[0].criado_em)}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {prontos} de {lotes.length} {lotes.length === 1 ? "empresa pronta" : "empresas prontas"}
+                    {preparo ? ` · ${preparo} em preparo` : ""}
+                  </p>
+                </div>
+                <TabelaLotes lotes={ordenados} mostrarEmpresa />
+              </div>
+            );
+          })}
+          <AtualizarEnquanto ativo={(lotesCarteira ?? []).some(emPreparo)} limiteMs={900_000} intervaloMs={8000} />
+        </CardContent>
+      </Card>
+
       {linhas.length ? (
         <Card>
           <CardContent className="px-0 pt-2 sm:px-0">

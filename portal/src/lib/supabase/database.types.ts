@@ -2504,6 +2504,50 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"xml_lote_itens": {
+                  Row: {
+                    "arquivo": string,"caminho": string | null,"dados": NonNullable<Json>,"documento_id": string | null,"lote_id": string,"ordem": number,"parte": number | null
+                  }
+                  Insert: {
+                    "arquivo": string,"caminho"?: string | null,"dados"?: NonNullable<Json>,"documento_id"?: string | null,"lote_id": string,"ordem": number,"parte"?: number | null
+                  }
+                  Update: {
+                    "arquivo"?: string,"caminho"?: string | null,"dados"?: NonNullable<Json>,"documento_id"?: string | null,"lote_id"?: string,"ordem"?: number,"parte"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "xml_lote_itens_lote_id_fkey"
+      columns: ["lote_id"]
+isOneToOne: false
+      referencedRelation: "xml_lotes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"xml_lotes": {
+                  Row: {
+                    "competencia": string,"concluido_em": string | null,"criado_em": string,"empresa_id": string,"equipe": boolean,"erro": string | null,"expira_em": string | null,"id": string,"partes": NonNullable<Json>,"pedido_id": string | null,"resumo": Json | null,"situacao": string,"solicitado_por": string | null,"tipos": (string)[],"total_arquivos": number | null,"total_bytes": number | null
+                  }
+                  Insert: {
+                    "competencia": string,"concluido_em"?: string | null,"criado_em"?: string,"empresa_id": string,"equipe"?: boolean,"erro"?: string | null,"expira_em"?: string | null,"id"?: string,"partes"?: NonNullable<Json>,"pedido_id"?: string | null,"resumo"?: Json | null,"situacao"?: string,"solicitado_por"?: string | null,"tipos": (string)[],"total_arquivos"?: number | null,"total_bytes"?: number | null
+                  }
+                  Update: {
+                    "competencia"?: string,"concluido_em"?: string | null,"criado_em"?: string,"empresa_id"?: string,"equipe"?: boolean,"erro"?: string | null,"expira_em"?: string | null,"id"?: string,"partes"?: NonNullable<Json>,"pedido_id"?: string | null,"resumo"?: Json | null,"situacao"?: string,"solicitado_por"?: string | null,"tipos"?: (string)[],"total_arquivos"?: number | null,"total_bytes"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "xml_lotes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "xml_lotes_solicitado_por_fkey"
+      columns: ["solicitado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -2579,6 +2623,9 @@ isOneToOne: false
 "avaliar_documento_apos_fechamento":
 { Args: { "p_documento_id": string,"p_parecer": string }; Returns: undefined
                            },
+"baixar_lote_xml":
+{ Args: { "p_ip"?: string,"p_lote_id": string,"p_parte": number,"p_user_agent"?: string }; Returns: Json
+                           },
 "buscar_notas_agora":
 { Args: { "p_empresa_id": string }; Returns: undefined
                            },
@@ -2595,6 +2642,9 @@ isOneToOne: false
                            },
 "concluir_item_checklist":
 { Args: { "p_item_id": string,"p_observacao"?: string }; Returns: undefined
+                           },
+"concluir_lote_xml":
+{ Args: { "p_erro"?: string,"p_lote_id": string,"p_partes"?: Json,"p_situacao": string,"p_total_bytes"?: number }; Returns: undefined
                            },
 "conferencia_saldos":
 { Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
@@ -2845,6 +2895,9 @@ isOneToOne: false
               "abertas": number,"aguardando_cliente": number,"atrasadas": number,"documento": string,"em_revisao": number,"empresa_id": string,"municipio": string,"nome_fantasia": string,"proximo_prazo": string,"razao_social": string,"regime": string,"responsavel": string,"uf": string,"vencendo_7d": number
             }[]
                            },
+"preparar_lote_xml":
+{ Args: { "p_lote_id": string }; Returns: Json
+                           },
 "propor_regra":
 { Args: { "p_fonte_consultada_em": string,"p_fonte_publicada_em": string,"p_fonte_titulo": string,"p_fonte_url": string,"p_obrigacao_id": string,"p_regra": Json,"p_regra_anterior_id"?: string,"p_resumo": string,"p_titulo": string }; Returns: string
                            },
@@ -2895,6 +2948,9 @@ isOneToOne: false
                            },
 "registrar_parcela_emprestimo":
 { Args: { "p_conta_id": string,"p_contraparte_id"?: string,"p_data_vencimento": string,"p_descricao": string,"p_empresa_id": string,"p_pago_em"?: string,"p_valor_juros": number,"p_valor_principal": number }; Returns: Json
+                           },
+"registrar_parte_lote_xml":
+{ Args: { "p_ate_ordem": number,"p_falhos": (number)[],"p_lote_id": string,"p_parte": Json }; Returns: undefined
                            },
 "registrar_pendencia_fechamento":
 { Args: { "p_competencia_id": string,"p_descricao": string,"p_etapa": string,"p_impeditiva"?: boolean,"p_visivel_cliente"?: boolean }; Returns: string
@@ -2977,6 +3033,9 @@ isOneToOne: false
 "rotina_diaria":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"rotina_lotes_xml":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "rotina_notas_automaticas":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -3032,6 +3091,12 @@ isOneToOne: false
                            },
 "solicitar_correcao_item":
 { Args: { "p_item_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"solicitar_lote_xml":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_tipos": (string)[] }; Returns: string
+                           },
+"solicitar_lotes_xml_carteira":
+{ Args: { "p_competencia": string,"p_tipos": (string)[] }; Returns: Json
                            },
 "solicitar_nao_aplica":
 { Args: { "p_item_id": string,"p_justificativa": string }; Returns: undefined

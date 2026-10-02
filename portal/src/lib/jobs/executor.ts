@@ -3,7 +3,11 @@ import { criarClienteAdmin, type ClienteAdmin } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type Job = Database["public"]["Tables"]["jobs"]["Row"];
-type Manipulador = (admin: ClienteAdmin, job: Job) => Promise<unknown>;
+/** Até quando (Date.now()) a tarefa pode trabalhar antes de devolver a vez (tarefas longas se dividem). */
+export interface ContextoTarefa {
+  prazo: number;
+}
+type Manipulador = (admin: ClienteAdmin, job: Job, contexto: ContextoTarefa) => Promise<unknown>;
 
 /** Registro dos tipos de tarefa (carregados sob demanda). */
 const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
@@ -12,8 +16,15 @@ const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
   processar_documento: async () => (await import("@/lib/documentos/processar")).processarDocumento,
   sugerir_conciliacao: async () => (await import("@/lib/conciliacao/motor")).executarSugestoes,
   remover_arquivos: async () => (await import("@/lib/documentos/processar")).removerArquivos,
-  notas_automaticas: async () => (await import("@/lib/notas-automaticas/sincronizar")).executarNotasAutomaticas,
+  notas_automaticas: async () => {
+    const { executarNotasAutomaticas } = await import("@/lib/notas-automaticas/sincronizar");
+    return (admin, job) => executarNotasAutomaticas(admin, job);
+  },
   auditor_fiscal: async () => (await import("@/lib/auditor-fiscal/executar")).executarAuditorFiscal,
+  gerar_lote_xml: async () => {
+    const { gerarLoteXml } = await import("@/lib/lotes-xml/gerar");
+    return (admin, job, contexto) => gerarLoteXml(admin, job, contexto);
+  },
 };
 
 function espera(tentativas: number) {
@@ -41,7 +52,7 @@ export async function processarFila({
       try {
         if (!carregar) throw new Error(`Tipo de tarefa desconhecido: ${job.tipo}`);
         const manipulador = await carregar();
-        const resultado = await manipulador(admin, job);
+        const resultado = await manipulador(admin, job, { prazo: inicio + tempoMaximoMs });
         await admin.rpc("jobs_concluir", { p_id: job.id, p_resultado: (resultado ?? null) as never });
       } catch (e) {
         falhas++;
