@@ -291,7 +291,7 @@ function publicarVercel(projetoId: string, orgId: string): string {
     stdio: ["ignore", "pipe", "inherit"],
     maxBuffer: 50 * 1024 * 1024,
   });
-  const url = saida.trim().split(/\s+/).reverse().find((t) => /^https:\/\/\S+\.vercel\.app/.test(t));
+  const url = saida.match(/https:\/\/[\w.-]+\.vercel\.app/g)?.pop();
   if (!url) throw new Error(`Não foi possível identificar o endereço publicado. Saída: ${saida.slice(-500)}`);
   ok(`Publicado: ${url}`);
   return url;
