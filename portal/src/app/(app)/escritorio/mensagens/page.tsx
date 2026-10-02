@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { exigirEquipe, obterEmpresasDoUsuario } from "@/lib/auth/sessao";
 import { CabecalhoPagina, urlCom } from "@/components/ui/pagina";
 import { AbasLink } from "@/components/ui/abas";
+import { AtualizarAoVivo } from "@/components/tempo-real/atualizar-ao-vivo";
 import { Select } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { ListaConversas, type LinhaConversa } from "@/components/mensagens/lista";
@@ -68,6 +69,7 @@ export default async function CentralMensagens({ searchParams }: PageProps<"/esc
         ]}
       />
       <ListaConversas conversas={conversas} lado="escritorio" mostrarEmpresa />
+      <AtualizarAoVivo canal="central-mensagens" assinaturas={[{ tabela: "conversas" }]} />
     </>
   );
 }

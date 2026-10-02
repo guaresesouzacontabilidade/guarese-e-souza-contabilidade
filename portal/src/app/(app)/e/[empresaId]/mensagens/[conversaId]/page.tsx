@@ -7,6 +7,7 @@ import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
 import { Alerta } from "@/components/ui/feedback";
 import { ResponderConversa } from "@/components/mensagens/conversa";
+import { AtualizarAoVivo, RolarAoChegar } from "@/components/tempo-real/atualizar-ao-vivo";
 import { cn } from "@/lib/utils";
 import { competenciaAtual, somarMeses } from "@/lib/competencia";
 import { formatarCompetencia, formatarDataHora } from "@/lib/formatos";
@@ -98,6 +99,15 @@ export default async function PaginaConversa({ params }: PageProps<"/e/[empresaI
           );
         })}
       </ol>
+      <RolarAoChegar quantidade={mensagens?.length ?? 0} />
+      {/* Mensagens novas e mudanças de situação aparecem sem atualizar a página. */}
+      <AtualizarAoVivo
+        canal={`conversa-${conversaId}`}
+        assinaturas={[
+          { tabela: "mensagens", filtro: `conversa_id=eq.${conversaId}`, evento: "INSERT" },
+          { tabela: "conversas", filtro: `id=eq.${conversaId}`, evento: "UPDATE" },
+        ]}
+      />
       <ResponderConversa
         empresaId={empresaId}
         conversaId={conversaId}

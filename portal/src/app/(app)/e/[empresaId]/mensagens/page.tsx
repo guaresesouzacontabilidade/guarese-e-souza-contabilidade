@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, urlCom } from "@/components/ui/pagina";
+import { AtualizarAoVivo } from "@/components/tempo-real/atualizar-ao-vivo";
 import { AbasLink } from "@/components/ui/abas";
 import { Alerta } from "@/components/ui/feedback";
 import { ListaConversas, type LinhaConversa } from "@/components/mensagens/lista";
@@ -65,6 +66,7 @@ export default async function MensagensEmpresa({ params, searchParams }: PagePro
         ]}
       />
       <ListaConversas conversas={conversas} lado={ctx.equipe ? "escritorio" : "cliente"} />
+      <AtualizarAoVivo canal={`mensagens-${empresaId}`} assinaturas={[{ tabela: "conversas", filtro: `empresa_id=eq.${empresaId}` }]} />
     </>
   );
 }
