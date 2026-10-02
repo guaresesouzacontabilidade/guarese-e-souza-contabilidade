@@ -32,7 +32,7 @@ Controladora dos dados: **GUARESE'S ON SOLUCOES EMPRESARIAIS LTDA** (CNPJ 62.935
 ## 3. Inteligência artificial
 
 - O portal **não usa** serviços de inteligência artificial externos.
-- Sugestões de conciliação, classificação de lançamentos, leitura de XML e os resumos em texto dos relatórios são calculados por **regras fixas** dentro do próprio portal.
+- Sugestões de conciliação, classificação de lançamentos, leitura de XML, os resumos em texto dos relatórios e o **auditor fiscal** são calculados por **regras fixas** dentro do próprio portal.
 - O OCR (Tesseract) roda **no servidor do portal**; nenhuma imagem ou PDF sai dele para ser lido.
 - O assistente de programação usado para construir o portal não faz parte do sistema publicado: nenhum dado do portal é enviado a ele. As chaves temporárias usadas na publicação devem ser apagadas logo após o uso (veja `IMPLANTACAO.md`).
 
@@ -104,4 +104,11 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **Ciência da emissão**: só com a opção ativada pela empresa. Ela apenas informa à SEFAZ que a empresa tomou conhecimento da nota (não confirma nem recusa a operação) e libera o XML completo.
 - **Sem inteligência artificial**: os XML são lidos por regras dentro do portal, como os enviados pelo cliente.
 - **Bibliotecas**: o arquivo `.pfx` é aberto pela biblioteca node-forge (só no cadastro, no servidor). O alerta de segurança conhecido dessa biblioteca (GHSA-86w9-cpqp-85rv) trata da verificação de assinaturas RSA, função que o portal não usa; a conexão segura e a assinatura da ciência usam as funções nativas do Node.
+
+## 13. Auditor fiscal
+
+- **Onde roda**: dentro do portal (processador da fila), sobre as notas que já estão em Documentos. **Nada é enviado** a órgãos públicos, a serviços externos ou a inteligência artificial; o auditor não consulta nem altera o PGDAS-D.
+- **O que guarda**: os achados (mês, regra, valor estimado, memória de cálculo, até 15 notas de exemplo com descrição e valor do item, base legal), quem revisou, descartou ou publicou, e o motivo.
+- **Quem vê**: a equipe com a permissão "Conduzir o auditor" vê tudo; o cliente (permissão "Economia de impostos") vê só o que a equipe publicou da própria empresa — a mensagem, o mês, o valor estimado e o prazo —, nunca a memória interna. As ações de revisão ficam no registro de atividades.
+- **Catálogo de produtos monofásicos**: lista pública por NCM, montada a partir do texto vigente das leis (Leis 10.147/2000, 10.485/2002, 13.097/2015, 9.718/1998 e outras), visível para a equipe e alterável só pelo administrador.
 

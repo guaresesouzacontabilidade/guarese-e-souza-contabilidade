@@ -40,7 +40,8 @@ export function PoliticaPrivacidade() {
       <h3>4. Inteligência artificial</h3>
       <p>
         Os dados e documentos dos clientes <strong>não são utilizados para treinamento de inteligência artificial</strong>. A leitura
-        de textos de imagens e PDFs (OCR) é feita no próprio servidor do portal, sem envio dos documentos a serviços externos.
+        de textos de imagens e PDFs (OCR) é feita no próprio servidor do portal, sem envio dos documentos a serviços externos. A conferência
+        das notas fiscais pelo auditor fiscal (imposto possivelmente pago a mais e riscos) usa regras fixas da legislação, dentro do portal.
       </p>
       <h3>5. Armazenamento, segurança e retenção</h3>
       <p>
@@ -87,6 +88,10 @@ export function TermosUso() {
         <li>Os relatórios são gerenciais e dependem dos documentos e lançamentos disponíveis. Relatórios preliminares podem mudar.</li>
         <li>Quando faltarem dados, o portal sinaliza que o resultado é parcial.</li>
         <li>A visualização de guias e documentos no portal não comprova pagamento.</li>
+        <li>
+          Os valores de economia de impostos mostrados pelo escritório são estimativas a partir das notas fiscais disponíveis no portal; o valor
+          efetivamente recuperável depende da análise da apuração e dos pedidos aos órgãos competentes.
+        </li>
       </ul>
       <h3>4. Registros</h3>
       <p>Acessos, envios, downloads, alterações e exclusões são registrados para segurança e auditoria.</p>

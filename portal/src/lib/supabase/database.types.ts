@@ -97,6 +97,87 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"auditor_achados": {
+                  Row: {
+                    "atualizado_em": string,"chave": string,"competencia": string,"confianca": string,"detectado_em": string,"empresa_id": string,"execucao_id": string | null,"fontes": NonNullable<Json>,"id": string,"memoria": NonNullable<Json>,"motivo": string | null,"publicado_em": string | null,"publicado_por": string | null,"referencias": NonNullable<Json>,"regra": string,"resumo": string,"revisado_em": string | null,"revisado_por": string | null,"situacao": string,"solicitacao_id": string | null,"texto_cliente": string | null,"tipo": string,"titulo": string,"valor_base": number | null,"valor_estimado": number | null,"valores_alterados_em": string | null
+                  }
+                  Insert: {
+                    "atualizado_em"?: string,"chave": string,"competencia": string,"confianca": string,"detectado_em"?: string,"empresa_id": string,"execucao_id"?: string | null,"fontes"?: NonNullable<Json>,"id"?: string,"memoria"?: NonNullable<Json>,"motivo"?: string | null,"publicado_em"?: string | null,"publicado_por"?: string | null,"referencias"?: NonNullable<Json>,"regra": string,"resumo": string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"solicitacao_id"?: string | null,"texto_cliente"?: string | null,"tipo": string,"titulo": string,"valor_base"?: number | null,"valor_estimado"?: number | null,"valores_alterados_em"?: string | null
+                  }
+                  Update: {
+                    "atualizado_em"?: string,"chave"?: string,"competencia"?: string,"confianca"?: string,"detectado_em"?: string,"empresa_id"?: string,"execucao_id"?: string | null,"fontes"?: NonNullable<Json>,"id"?: string,"memoria"?: NonNullable<Json>,"motivo"?: string | null,"publicado_em"?: string | null,"publicado_por"?: string | null,"referencias"?: NonNullable<Json>,"regra"?: string,"resumo"?: string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"solicitacao_id"?: string | null,"texto_cliente"?: string | null,"tipo"?: string,"titulo"?: string,"valor_base"?: number | null,"valor_estimado"?: number | null,"valores_alterados_em"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "auditor_achados_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_achados_execucao_id_fkey"
+      columns: ["execucao_id"]
+isOneToOne: false
+      referencedRelation: "auditor_execucoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_achados_publicado_por_fkey"
+      columns: ["publicado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_achados_revisado_por_fkey"
+      columns: ["revisado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_achados_solicitacao_id_fkey"
+      columns: ["solicitacao_id"]
+isOneToOne: false
+      referencedRelation: "solicitacoes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"auditor_execucoes": {
+                  Row: {
+                    "achados_atualizados": number | null,"achados_novos": number | null,"concluida_em": string | null,"criada_em": string,"empresa_id": string,"erro": string | null,"id": string,"iniciada_em": string | null,"itens_analisados": number | null,"notas_analisadas": number | null,"notas_relidas": number | null,"origem": string,"periodo_fim": string | null,"periodo_inicio": string | null,"resumo": Json | null,"situacao": string,"solicitada_por": string | null
+                  }
+                  Insert: {
+                    "achados_atualizados"?: number | null,"achados_novos"?: number | null,"concluida_em"?: string | null,"criada_em"?: string,"empresa_id": string,"erro"?: string | null,"id"?: string,"iniciada_em"?: string | null,"itens_analisados"?: number | null,"notas_analisadas"?: number | null,"notas_relidas"?: number | null,"origem"?: string,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"resumo"?: Json | null,"situacao"?: string,"solicitada_por"?: string | null
+                  }
+                  Update: {
+                    "achados_atualizados"?: number | null,"achados_novos"?: number | null,"concluida_em"?: string | null,"criada_em"?: string,"empresa_id"?: string,"erro"?: string | null,"id"?: string,"iniciada_em"?: string | null,"itens_analisados"?: number | null,"notas_analisadas"?: number | null,"notas_relidas"?: number | null,"origem"?: string,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"resumo"?: Json | null,"situacao"?: string,"solicitada_por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "auditor_execucoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_execucoes_solicitada_por_fkey"
+      columns: ["solicitada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"auditor_ncm_monofasico": {
+                  Row: {
+                    "ativo": boolean,"condicao": string | null,"confianca": string,"created_at": string,"descricao": string,"ex_tipi": string | null,"excecao": boolean,"fonte_titulo": string,"fonte_url": string | null,"grupo": string,"id": string,"ncm_prefixo": string,"somente_varejo": boolean,"updated_at": string,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"condicao"?: string | null,"confianca"?: string,"created_at"?: string,"descricao": string,"ex_tipi"?: string | null,"excecao"?: boolean,"fonte_titulo": string,"fonte_url"?: string | null,"grupo": string,"id"?: string,"ncm_prefixo": string,"somente_varejo"?: boolean,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"condicao"?: string | null,"confianca"?: string,"created_at"?: string,"descricao"?: string,"ex_tipi"?: string | null,"excecao"?: boolean,"fonte_titulo"?: string,"fonte_url"?: string | null,"grupo"?: string,"id"?: string,"ncm_prefixo"?: string,"somente_varejo"?: boolean,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"auditoria": {
                   Row: {
                     "acao": string,"dados_antes": Json | null,"dados_depois": Json | null,"detalhes": Json | null,"empresa_id": string | null,"entidade": string,"entidade_id": string | null,"id": number,"ip": string | null,"ocorrido_em": string,"user_agent": string | null,"user_email": string | null,"user_id": string | null
@@ -887,13 +968,13 @@ isOneToOne: false
                   ]
                 },"documento_fiscal_itens": {
                   Row: {
-                    "cfop": string | null,"codigo": string | null,"descricao": string | null,"documento_fiscal_id": string,"empresa_id": string,"id": string,"ncm": string | null,"numero_item": number,"quantidade": number | null,"tributos": NonNullable<Json>,"unidade": string | null,"valor_desconto": number | null,"valor_total": number | null,"valor_unitario": number | null
+                    "cest": string | null,"cfop": string | null,"codigo": string | null,"descricao": string | null,"documento_fiscal_id": string,"empresa_id": string,"ex_tipi": string | null,"gtin": string | null,"id": string,"ncm": string | null,"numero_item": number,"quantidade": number | null,"tributos": NonNullable<Json>,"unidade": string | null,"valor_desconto": number | null,"valor_total": number | null,"valor_unitario": number | null
                   }
                   Insert: {
-                    "cfop"?: string | null,"codigo"?: string | null,"descricao"?: string | null,"documento_fiscal_id": string,"empresa_id": string,"id"?: string,"ncm"?: string | null,"numero_item": number,"quantidade"?: number | null,"tributos"?: NonNullable<Json>,"unidade"?: string | null,"valor_desconto"?: number | null,"valor_total"?: number | null,"valor_unitario"?: number | null
+                    "cest"?: string | null,"cfop"?: string | null,"codigo"?: string | null,"descricao"?: string | null,"documento_fiscal_id": string,"empresa_id": string,"ex_tipi"?: string | null,"gtin"?: string | null,"id"?: string,"ncm"?: string | null,"numero_item": number,"quantidade"?: number | null,"tributos"?: NonNullable<Json>,"unidade"?: string | null,"valor_desconto"?: number | null,"valor_total"?: number | null,"valor_unitario"?: number | null
                   }
                   Update: {
-                    "cfop"?: string | null,"codigo"?: string | null,"descricao"?: string | null,"documento_fiscal_id"?: string,"empresa_id"?: string,"id"?: string,"ncm"?: string | null,"numero_item"?: number,"quantidade"?: number | null,"tributos"?: NonNullable<Json>,"unidade"?: string | null,"valor_desconto"?: number | null,"valor_total"?: number | null,"valor_unitario"?: number | null
+                    "cest"?: string | null,"cfop"?: string | null,"codigo"?: string | null,"descricao"?: string | null,"documento_fiscal_id"?: string,"empresa_id"?: string,"ex_tipi"?: string | null,"gtin"?: string | null,"id"?: string,"ncm"?: string | null,"numero_item"?: number,"quantidade"?: number | null,"tributos"?: NonNullable<Json>,"unidade"?: string | null,"valor_desconto"?: number | null,"valor_total"?: number | null,"valor_unitario"?: number | null
                   }
                   Relationships: [
                     {
@@ -1041,13 +1122,13 @@ isOneToOne: false
                   ]
                 },"documentos_fiscais": {
                   Row: {
-                    "avisos": NonNullable<Json>,"cancelada_evento": boolean,"cfops": (string)[],"chave_acesso": string | null,"competencia": string,"created_at": string,"data_emissao": string | null,"destinatario_documento": string | null,"destinatario_nome": string | null,"destinatario_uf": string | null,"documento_id": string,"duplicatas": NonNullable<Json>,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"emitente_uf": string | null,"empresa_id": string,"finalidade": string | null,"id": string,"identificador": string,"modelo": string,"natureza_operacao": string | null,"numero": string | null,"operacao": string,"pagamentos": NonNullable<Json>,"protocolo": Json | null,"relacionado_empresa": boolean,"serie": string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf": string | null,"tributos": NonNullable<Json>,"updated_at": string,"valor_desconto": number | null,"valor_frete": number | null,"valor_outros": number | null,"valor_produtos": number | null,"valor_servicos": number | null,"valor_total": number | null
+                    "avisos": NonNullable<Json>,"cancelada_evento": boolean,"cfops": (string)[],"chave_acesso": string | null,"competencia": string,"consumidor_final": boolean | null,"created_at": string,"crt_emitente": string | null,"data_emissao": string | null,"destinatario_documento": string | null,"destinatario_nome": string | null,"destinatario_uf": string | null,"documento_id": string,"duplicatas": NonNullable<Json>,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"emitente_uf": string | null,"empresa_id": string,"finalidade": string | null,"id": string,"id_destino": string | null,"identificador": string,"ind_ie_dest": string | null,"leitura_versao": number,"modelo": string,"natureza_operacao": string | null,"numero": string | null,"operacao": string,"pagamentos": NonNullable<Json>,"protocolo": Json | null,"relacionado_empresa": boolean,"serie": string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf": string | null,"tributos": NonNullable<Json>,"updated_at": string,"valor_desconto": number | null,"valor_frete": number | null,"valor_outros": number | null,"valor_produtos": number | null,"valor_servicos": number | null,"valor_total": number | null
                   }
                   Insert: {
-                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia": string,"created_at"?: string,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id": string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id": string,"finalidade"?: string | null,"id"?: string,"identificador": string,"modelo": string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao": string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
+                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia": string,"consumidor_final"?: boolean | null,"created_at"?: string,"crt_emitente"?: string | null,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id": string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id": string,"finalidade"?: string | null,"id"?: string,"id_destino"?: string | null,"identificador": string,"ind_ie_dest"?: string | null,"leitura_versao"?: number,"modelo": string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao": string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
                   }
                   Update: {
-                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia"?: string,"created_at"?: string,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id"?: string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id"?: string,"finalidade"?: string | null,"id"?: string,"identificador"?: string,"modelo"?: string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao"?: string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo"?: string,"tipo_documento"?: string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
+                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia"?: string,"consumidor_final"?: boolean | null,"created_at"?: string,"crt_emitente"?: string | null,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id"?: string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id"?: string,"finalidade"?: string | null,"id"?: string,"id_destino"?: string | null,"identificador"?: string,"ind_ie_dest"?: string | null,"leitura_versao"?: number,"modelo"?: string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao"?: string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo"?: string,"tipo_documento"?: string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
                   }
                   Relationships: [
                     {
@@ -2465,6 +2546,9 @@ isOneToOne: false
 "atualizar_item_checklist":
 { Args: { "p_descricao": string,"p_item_id": string,"p_obrigatorio": boolean,"p_observacao_equipe"?: string,"p_prazo": string,"p_quantidade_minima": number,"p_responsavel_cliente_id": string,"p_responsavel_equipe_id": string,"p_titulo": string }; Returns: undefined
                            },
+"atualizar_leitura_xml_fiscal":
+{ Args: { "p_dados": Json,"p_documento_fiscal_id": string }; Returns: undefined
+                           },
 "atualizar_membro":
 { Args: { "p_membro_id": string,"p_papel": string,"p_permissoes": (string)[] }; Returns: undefined
                            },
@@ -2473,6 +2557,24 @@ isOneToOne: false
                            },
 "atualizar_tarefa":
 { Args: { "p_comentario"?: string,"p_comprovante_documento_id"?: string,"p_dispensa_motivo"?: string,"p_guia_documento_id"?: string,"p_protocolo"?: string,"p_responsavel_id"?: string,"p_revisor_id"?: string,"p_status"?: string,"p_tarefa_id": string,"p_valor"?: number }; Returns: undefined
+                           },
+"auditor_analisar":
+{ Args: { "p_empresa_id": string }; Returns: string
+                           },
+"auditor_dados":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"auditor_itens_agrupados":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"auditor_pedir_ajuda":
+{ Args: { "p_id": string }; Returns: string
+                           },
+"auditor_registrar_resultado":
+{ Args: { "p_achados": Json,"p_execucao_id": string,"p_resumo": Json }; Returns: Json
+                           },
+"auditor_revisar":
+{ Args: { "p_acao": string,"p_id": string,"p_motivo"?: string,"p_texto_cliente"?: string }; Returns: undefined
                            },
 "avaliar_documento_apos_fechamento":
 { Args: { "p_documento_id": string,"p_parecer": string }; Returns: undefined
@@ -2868,6 +2970,9 @@ isOneToOne: false
                            },
 "revogar_membro":
 { Args: { "p_membro_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"rotina_auditor_fiscal":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_diaria":
 { Args: Record<PropertyKey, never>; Returns: Json

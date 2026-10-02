@@ -225,3 +225,13 @@ A busca automática traz as notas fiscais de cada empresa direto dos serviços o
 
 **O que foi conferido e o que depende da ativação**: os endereços oficiais respondem e exigem o certificado da empresa na conexão (conferido em 02/10/2026); o certificado TLS desses servidores é emitido por autoridades públicas reconhecidas pelo Node (GlobalSign e Let's Encrypt), sem exceções de segurança. A leitura das respostas, a assinatura da ciência (verificada por um verificador independente) e a conexão com certificado foram testadas contra um servidor local. A primeira busca real só acontece com o certificado de uma empresa cadastrada no portal oficial — acompanhe o resultado no histórico da empresa.
 
+## 14. Auditor fiscal
+
+Não precisa de configuração nem de chaves: roda pela fila de tarefas (`auditor_fiscal`).
+
+- **Quando roda**: alguns minutos depois que chegam notas de uma empresa (uma análise por janela de 10 minutos, juntando os envios), quando a equipe clica em **Analisar agora** e, todo dia 2, para todas as empresas com notas nos últimos 5 anos (rotina diária: `rotina_auditor_fiscal`).
+- **Período**: as competências ainda dentro do prazo de restituição (5 anos contados do pagamento, no dia 20 do mês seguinte).
+- **Notas antigas**: as notas lidas antes da versão 2 da leitura (sem os códigos fiscais de cada item) são relidas do arquivo guardado, em lotes de 120 por tarefa, antes da análise.
+- **Simples Nacional**: a faixa e a alíquota efetiva de cada mês usam a mesma receita de 12 meses da previsão de impostos (receita informada em **Cálculos** ou a das notas) e o anexo das vendas configurado; sem configuração, presume o Anexo I e marca confiança média. A partilha do DAS (PIS, Cofins e ICMS por faixa) segue os Anexos I e II da LC 123/2006.
+- **Atualização das regras**: a lista de NCM monofásicos fica na tabela `auditor_ncm_monofasico` (com fonte e vigência); as regras e tabelas, em `src/lib/auditor-fiscal/`. Revise quando a legislação mudar (por exemplo, com o fim do PIS/Cofins em 2027, na reforma tributária).
+

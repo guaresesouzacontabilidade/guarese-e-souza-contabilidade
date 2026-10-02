@@ -13,6 +13,13 @@ import { chaveValida, MODELOS } from "./chave";
 
 export type Operacao = "entrada" | "saida" | "nao_relacionada";
 
+/**
+ * Versão da leitura gravada com cada nota. A versão 2 passou a guardar os
+ * códigos fiscais de cada item (CST/CSOSN, ST, PIS/Cofins, IBS/CBS, GTIN,
+ * CEST): notas lidas antes são relidas pelo auditor fiscal.
+ */
+export const VERSAO_LEITURA = 2;
+
 export interface ItemNota {
   numero_item: number;
   codigo: string | null;
@@ -24,6 +31,15 @@ export interface ItemNota {
   valor_unitario: string | null;
   valor_total: string | null;
   valor_desconto: string | null;
+  /** Código de barras (GTIN/EAN), quando informado. */
+  gtin: string | null;
+  cest: string | null;
+  ex_tipi: string | null;
+  /**
+   * Valores e códigos fiscais do item. Valores: icms, ipi, pis, cofins,
+   * icms_st, icms_st_retido, cbs, ibs_uf, ibs_mun, ibs... Códigos: orig,
+   * cst_icms, csosn, cst_pis, cst_cofins, cst_ipi, cst_ibscbs, cclasstrib...
+   */
   tributos: Record<string, string>;
 }
 
@@ -55,6 +71,15 @@ export interface NotaLida {
   operacao: Operacao;
   natureza_operacao: string | null;
   finalidade: string | null;
+  /** Regime do emitente na NF-e/NFC-e (CRT): 1 Simples, 2 Simples com excesso de sublimite, 3 normal, 4 MEI. */
+  crt_emitente: string | null;
+  /** Operação com consumidor final (indFinal). */
+  consumidor_final: boolean | null;
+  /** Destino da operação (idDest): 1 interna, 2 interestadual, 3 exterior. */
+  id_destino: string | null;
+  /** Indicador de IE do destinatário (indIEDest): 1 contribuinte, 2 isento, 9 não contribuinte. */
+  ind_ie_dest: string | null;
+  leitura_versao: number;
   cfops: string[];
   valor_total: string | null;
   valor_produtos: string | null;
@@ -180,6 +205,96 @@ function dataISO(v: unknown): string | null {
 }
 function mesmaRaizCnpj(a: string | null, b: string) {
   return Boolean(a && a.length === 14 && b.length === 14 && a.slice(0, 8) === b.slice(0, 8));
+}
+/** Código curto (CST, CSOSN, cClassTrib, CRT...). */
+function codigo(v: unknown): string | null {
+  const t = txt(v);
+  return t && /^[0-9A-Za-z]{1,10}$/.test(t) ? t : null;
+}
+function gtin(v: unknown): string | null {
+  const t = txt(v);
+  return t && /^(\d{8}|\d{12,14})$/.test(t) ? t : null;
+}
+/** Primeiro subgrupo de um grupo de imposto (ex.: ICMS → ICMS00, ICMSSN102; PIS → PISAliq). */
+function subgrupo(v: unknown): No | null {
+  const n = no(v);
+  if (!n) return null;
+  for (const [k, filho] of Object.entries(n)) {
+    if (k.startsWith("@_")) continue;
+    const f = no(filho);
+    if (f) return f;
+  }
+  return null;
+}
+
+/** Valores e códigos fiscais de um item de NF-e/NFC-e. */
+function tributosDoItem(imposto: unknown): Record<string, string> {
+  const t: Record<string, string> = {};
+  const por = (chave: string, valor: string | null) => {
+    if (valor !== null) t[chave] = valor;
+  };
+  const icms = subgrupo(caminho(imposto, "ICMS"));
+  if (icms) {
+    por("orig", codigo(icms.orig));
+    por("cst_icms", codigo(icms.CST));
+    por("csosn", codigo(icms.CSOSN));
+    por("bc_icms", decimal(icms.vBC));
+    por("p_icms", decimal(icms.pICMS));
+    por("icms", decimal(icms.vICMS));
+    por("icms_desonerado", decimal(icms.vICMSDeson));
+    por("bc_icms_st", decimal(icms.vBCST));
+    por("p_icms_st", decimal(icms.pICMSST));
+    por("icms_st", decimal(icms.vICMSST));
+    por("fcp_st", decimal(icms.vFCPST));
+    por("bc_icms_st_retido", decimal(icms.vBCSTRet));
+    por("icms_st_retido", decimal(icms.vICMSSTRet));
+    por("icms_substituto", decimal(icms.vICMSSubstituto));
+  }
+  const ipiGrupo = no(caminho(imposto, "IPI"));
+  const ipi = no(ipiGrupo?.IPITrib) ?? no(ipiGrupo?.IPINT);
+  if (ipi) {
+    por("cst_ipi", codigo(ipi.CST));
+    por("p_ipi", decimal(ipi.pIPI));
+    por("ipi", decimal(ipi.vIPI));
+  }
+  for (const [grupo, sufixo] of [["PIS", "pis"], ["COFINS", "cofins"]] as const) {
+    const g = subgrupo(caminho(imposto, grupo));
+    if (g) {
+      por(`cst_${sufixo}`, codigo(g.CST));
+      por(`bc_${sufixo}`, decimal(g.vBC));
+      por(`p_${sufixo}`, decimal(g[grupo === "PIS" ? "pPIS" : "pCOFINS"]));
+      por(sufixo, decimal(g[grupo === "PIS" ? "vPIS" : "vCOFINS"]));
+    }
+    const st = no(caminho(imposto, `${grupo}ST`));
+    if (st) por(`${sufixo}_st`, decimal(st[grupo === "PIS" ? "vPIS" : "vCOFINS"]));
+  }
+  // Reforma tributária (NT 2025.002): IBS e CBS por item
+  const ibscbs = no(caminho(imposto, "IBSCBS"));
+  if (ibscbs) {
+    por("cst_ibscbs", codigo(ibscbs.CST));
+    por("cclasstrib", codigo(ibscbs.cClassTrib));
+    const g = no(ibscbs.gIBSCBS) ?? no(ibscbs.gIBSCBSMono) ?? ibscbs;
+    por("bc_ibscbs", decimal(g.vBC));
+    const uf = caminho(g, "gIBSUF");
+    const mun = caminho(g, "gIBSMun");
+    const cbs = caminho(g, "gCBS");
+    por("p_ibs_uf", decimal(caminho(uf, "pIBSUF")));
+    por("ibs_uf", decimal(caminho(uf, "vIBSUF")));
+    por("p_ibs_mun", decimal(caminho(mun, "pIBSMun")));
+    por("ibs_mun", decimal(caminho(mun, "vIBSMun")));
+    por("ibs", decimal(g.vIBS));
+    por("p_cbs", decimal(caminho(cbs, "pCBS")));
+    por("cbs", decimal(caminho(cbs, "vCBS")));
+    por("p_red_ibs", decimal(caminho(uf, "gRed", "pRedAliq")));
+    por("p_red_cbs", decimal(caminho(cbs, "gRed", "pRedAliq")));
+  }
+  const is = no(caminho(imposto, "IS"));
+  if (is) {
+    por("cst_is", codigo(is.CSTIS));
+    por("cclasstrib_is", codigo(is.cClassTribIS));
+    por("is", decimal(is.vIS));
+  }
+  return t;
 }
 
 const CFOP_VENDA = new Set([
@@ -321,16 +436,6 @@ function lerNfe(nfe: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
 
   const itens: ItemNota[] = lista(caminho(inf, "det")).map((d, i) => {
     const prod = caminho(d, "prod");
-    const imposto = caminho(d, "imposto");
-    const tributos: Record<string, string> = {};
-    const vICMS = decimal(buscar(caminho(imposto, "ICMS"), "vICMS"));
-    const vIPI = decimal(buscar(caminho(imposto, "IPI"), "vIPI"));
-    const vPIS = decimal(buscar(caminho(imposto, "PIS"), "vPIS"));
-    const vCOFINS = decimal(buscar(caminho(imposto, "COFINS"), "vCOFINS"));
-    if (vICMS) tributos.icms = vICMS;
-    if (vIPI) tributos.ipi = vIPI;
-    if (vPIS) tributos.pis = vPIS;
-    if (vCOFINS) tributos.cofins = vCOFINS;
     return {
       numero_item: Number(txt(caminho(d, "@_nItem")) ?? i + 1),
       codigo: txt(caminho(prod, "cProd")),
@@ -342,7 +447,10 @@ function lerNfe(nfe: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
       valor_unitario: decimal(caminho(prod, "vUnCom")),
       valor_total: decimal(caminho(prod, "vProd")),
       valor_desconto: decimal(caminho(prod, "vDesc")),
-      tributos,
+      gtin: gtin(caminho(prod, "cEAN")) ?? gtin(caminho(prod, "cEANTrib")),
+      cest: digitos(caminho(prod, "CEST"))?.slice(0, 7) ?? null,
+      ex_tipi: codigo(caminho(prod, "EXTIPI")),
+      tributos: tributosDoItem(caminho(d, "imposto")),
     };
   });
   const cfops = [...new Set(itens.map((i) => i.cfop).filter(Boolean) as string[])];
@@ -354,6 +462,17 @@ function lerNfe(nfe: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
   ] as const) {
     const v = decimal(caminho(tot, campo));
     if (v && v !== "0.00" && v !== "0") tributos[nome] = v;
+  }
+  // Totais da reforma tributária (IBS, CBS e Imposto Seletivo)
+  const totIbsCbs = caminho(inf, "total", "IBSCBSTot");
+  for (const [valor, nome] of [
+    [caminho(totIbsCbs, "vBCIBSCBS"), "base_ibscbs"],
+    [caminho(totIbsCbs, "gIBS", "vIBS"), "ibs"],
+    [caminho(totIbsCbs, "gCBS", "vCBS"), "cbs"],
+    [caminho(inf, "total", "ISTot", "vIS"), "is"],
+  ] as const) {
+    const v = decimal(valor);
+    if (v && Number(v) !== 0) tributos[nome] = v;
   }
 
   const duplicatas = lista(caminho(inf, "cobr", "dup")).map((d) => ({
@@ -389,6 +508,11 @@ function lerNfe(nfe: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
     operacao,
     natureza_operacao: txt(caminho(ide, "natOp")),
     finalidade: finNFe,
+    crt_emitente: codigo(caminho(emit, "CRT")),
+    consumidor_final: txt(caminho(ide, "indFinal")) === "1" ? true : txt(caminho(ide, "indFinal")) === "0" ? false : null,
+    id_destino: codigo(caminho(ide, "idDest")),
+    ind_ie_dest: codigo(caminho(dest, "indIEDest")),
+    leitura_versao: VERSAO_LEITURA,
     cfops,
     valor_total: valorTotal,
     valor_produtos: decimal(caminho(tot, "vProd")),
@@ -517,6 +641,11 @@ function lerCte(cte: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
     operacao,
     natureza_operacao: txt(caminho(ide, "natOp")),
     finalidade: txt(caminho(ide, "tpCTe")),
+    crt_emitente: codigo(caminho(emit, "CRT")),
+    consumidor_final: null,
+    id_destino: null,
+    ind_ie_dest: null,
+    leitura_versao: VERSAO_LEITURA,
     cfops: cfop ? [cfop] : [],
     valor_total: valorTotal,
     valor_produtos: null,
@@ -645,6 +774,11 @@ function lerNfseNacional(nfse: unknown, doc: string): ResultadoLeituraXml {
     operacao,
     natureza_operacao: txt(caminho(infDps, "serv", "cServ", "xDescServ")),
     finalidade: null,
+    crt_emitente: null,
+    consumidor_final: null,
+    id_destino: null,
+    ind_ie_dest: null,
+    leitura_versao: VERSAO_LEITURA,
     cfops: [],
     valor_total: valorLiq,
     valor_produtos: null,
@@ -731,6 +865,11 @@ function lerNfseAbrasf(corpo: unknown, raiz: string, doc: string): ResultadoLeit
     operacao,
     natureza_operacao: txt(buscar(infNfse, "Discriminacao"))?.slice(0, 300) ?? null,
     finalidade: null,
+    crt_emitente: null,
+    consumidor_final: null,
+    id_destino: null,
+    ind_ie_dest: null,
+    leitura_versao: VERSAO_LEITURA,
     cfops: [],
     valor_total: valorLiq,
     valor_produtos: null,

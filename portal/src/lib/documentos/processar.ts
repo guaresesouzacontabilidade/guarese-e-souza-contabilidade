@@ -134,7 +134,17 @@ export async function processarDocumento(admin: ClienteAdmin, job: Job) {
 export async function registrarXml(admin: ClienteAdmin, documentoId: string, dados: NotaLida | EventoLido) {
   const { data, error } = await admin.rpc("registrar_xml_fiscal", { p_documento_id: documentoId, p_dados: dados as never });
   if (error) throw new Error(`Falha ao registrar o XML: ${error.message}`);
-  return data as { situacao: string; documento_original_id?: string; lancamentos_sugeridos?: number };
+  const registro = data as { situacao: string; documento_fiscal_id?: string; documento_original_id?: string; lancamentos_sugeridos?: number };
+  // Códigos fiscais completos da nota (regime do emitente, GTIN, CEST...) para o auditor fiscal.
+  // Se falhar, a nota fica na leitura antiga e o auditor a relê depois.
+  if (dados.tipo === "nota" && registro.situacao === "registrado" && registro.documento_fiscal_id) {
+    const { error: erroLeitura } = await admin.rpc("atualizar_leitura_xml_fiscal", {
+      p_documento_fiscal_id: registro.documento_fiscal_id,
+      p_dados: dados as never,
+    });
+    if (erroLeitura) console.error(`[xml] leitura completa não gravada (${registro.documento_fiscal_id}):`, erroLeitura.message);
+  }
+  return registro;
 }
 
 export function resumoXml(dados: NotaLida | EventoLido) {

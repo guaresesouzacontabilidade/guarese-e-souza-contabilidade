@@ -29,9 +29,18 @@ export const ROTULO_ACAO: Record<string, string> = {
   pagamento_guia_informado: "Informou o pagamento de uma guia",
   pagamento_guia_desfeito: "Desfez o pagamento informado de uma guia",
   solicitacao_aberta: "Abriu uma solicitação de serviço",
+  auditor_confirmar: "Confirmou um achado do auditor fiscal",
+  auditor_descartar: "Descartou um achado do auditor fiscal",
+  auditor_publicar: "Publicou ao cliente um achado do auditor fiscal",
+  auditor_retirar: "Retirou do cliente um achado do auditor fiscal",
+  auditor_resolver: "Concluiu um achado do auditor fiscal",
+  auditor_reabrir: "Reabriu um achado do auditor fiscal",
+  auditor_pedido_cliente: "Pediu ao escritório que cuide de uma oportunidade de economia",
 };
 
 export const ROTULO_ENTIDADE: Record<string, string> = {
+  auditor_achados: "achado do auditor fiscal",
+  auditor_ncm_monofasico: "catálogo de produtos monofásicos",
   baixas: "pagamento/recebimento",
   categorias_financeiras: "categoria financeira",
   checklist_itens: "item do checklist",

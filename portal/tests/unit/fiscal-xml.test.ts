@@ -145,3 +145,48 @@ describe("segurança e formatos não suportados", () => {
     expect(r.sucesso).toBe(false);
   });
 });
+
+describe("códigos fiscais de cada item (leitura versão 2)", () => {
+  const FARMACIA = { documento: "11222333000181" };
+  it("compra: CST, ST, PIS/Cofins monofásico, GTIN, CEST e IBS/CBS por item", () => {
+    const r = lerXmlFiscal(fixture("nfe-compra-farmacia.xml"), FARMACIA);
+    expect(r.sucesso).toBe(true);
+    const n = (r as { dados: NotaLida }).dados;
+    expect(n.avisos).toEqual([]);
+    expect(n.operacao).toBe("entrada");
+    expect(n.leitura_versao).toBe(2);
+    expect(n).toMatchObject({ crt_emitente: "3", consumidor_final: false, id_destino: "1", ind_ie_dest: "1" });
+    expect(n.tributos).toMatchObject({ icms_st: "108.00", ibs: "1.00", cbs: "9.00", base_ibscbs: "1000.00" });
+    const [remedio, shampoo, biscoito] = n.itens;
+    expect(remedio).toMatchObject({ ncm: "30049099", gtin: "7891234567895", cest: "1300100", cfop: "5405" });
+    expect(remedio.tributos).toEqual({
+      orig: "0", cst_icms: "10", bc_icms: "500.00", p_icms: "20.00", icms: "100.00", bc_icms_st: "800.00", p_icms_st: "20.00", icms_st: "60.00",
+      cst_pis: "04", cst_cofins: "04",
+      cst_ibscbs: "000", cclasstrib: "000001", bc_ibscbs: "500.00", p_ibs_uf: "0.1000", ibs_uf: "0.50", p_ibs_mun: "0.0000", ibs_mun: "0.00",
+      ibs: "0.50", p_cbs: "0.9000", cbs: "4.50",
+    });
+    // "SEM GTIN" não é código de barras
+    expect(shampoo.gtin).toBeNull();
+    expect(shampoo.tributos).toMatchObject({ cst_pis: "04", icms_st: "48.00" });
+    expect(biscoito.tributos).toMatchObject({ cst_icms: "00", cst_pis: "01", p_pis: "1.65", pis: "1.65", cst_cofins: "01", cofins: "7.60" });
+  });
+
+  it("NFC-e do Simples: CSOSN, consumidor final e sem grupo de IBS/CBS", () => {
+    const n = (lerXmlFiscal(fixture("nfce-venda-farmacia.xml"), FARMACIA) as { dados: NotaLida }).dados;
+    expect(n.modelo).toBe("65");
+    expect(n.operacao).toBe("saida");
+    expect(n).toMatchObject({ crt_emitente: "1", consumidor_final: true, ind_ie_dest: null });
+    expect(n.itens.map((i) => [i.ncm, i.cfop, i.tributos.csosn, i.tributos.cst_pis])).toEqual([
+      ["30049099", "5102", "102", "49"],
+      ["33051000", "5405", "500", "49"],
+      ["19053100", "5102", "102", "49"],
+    ]);
+    expect(n.itens.some((i) => "cst_ibscbs" in i.tributos)).toBe(false);
+  });
+
+  it("autopeças do regime normal: PIS/Cofins cobrados no item", () => {
+    const n = (lerXmlFiscal(fixture("nfe-venda-autopecas.xml"), { documento: "55666777000190" }) as { dados: NotaLida }).dados;
+    expect(n.crt_emitente).toBe("3");
+    expect(n.itens[0].tributos).toMatchObject({ cst_pis: "01", p_pis: "0.65", pis: "7.80", cst_cofins: "01", cofins: "36.00" });
+  });
+});

@@ -20,6 +20,8 @@ import {
   CalendarDays,
   ClipboardList,
   CloudDownload,
+  ScanSearch,
+  PiggyBank,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -49,6 +51,7 @@ export function menuEscritorio(admin: boolean): ItemMenu[] {
     { rotulo: "Pendências", href: "/escritorio/pendencias", icone: ListChecks },
     { rotulo: "Vencimentos", href: "/escritorio/vencimentos", icone: CalendarX2 },
     { rotulo: "Notas automáticas", href: "/escritorio/notas-automaticas", icone: CloudDownload },
+    { rotulo: "Auditor fiscal", href: "/escritorio/auditor-fiscal", icone: ScanSearch },
     { rotulo: "Financeiro", href: "/escritorio/financeiro", icone: Wallet },
     { rotulo: "Conciliação", href: "/escritorio/conciliacao", icone: GitCompareArrows },
     { rotulo: "Fechamentos", href: "/escritorio/fechamentos", icone: CalendarCheck },
@@ -83,6 +86,8 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   if (p.has("fechamento.gerenciar")) itens.push({ rotulo: "Fechamento", href: `${base}/fechamento`, icone: CalendarCheck });
   if (p.has("relatorios.ver")) itens.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });
   if (p.has("calculos.ver")) itens.push({ rotulo: "Cálculos", href: `${base}/calculos`, icone: Calculator });
+  if (p.has("auditor.gerenciar")) itens.push({ rotulo: "Auditor fiscal", href: `${base}/auditor-fiscal`, icone: ScanSearch });
+  else if (p.has("auditor.ver")) itens.push({ rotulo: "Economia de impostos", href: `${base}/auditor-fiscal`, icone: PiggyBank });
   if (p.has("mensagens.usar")) {
     itens.push({ rotulo: "Solicitações", href: `${base}/solicitacoes`, icone: ClipboardList });
     itens.push({ rotulo: "Mensagens", href: `${base}/mensagens`, icone: MessagesSquare });

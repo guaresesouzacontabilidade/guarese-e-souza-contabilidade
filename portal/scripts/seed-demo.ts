@@ -21,6 +21,7 @@ import { semearCalculos } from "./demo-calculos";
 import { semearVencimentos } from "./demo-vencimentos";
 import { semearAgenda } from "./demo-agenda";
 import { semearSolicitacoes } from "./demo-solicitacoes";
+import { semearAuditor } from "./demo-auditor";
 
 carregarEnv();
 
@@ -150,7 +151,7 @@ async function main() {
   // Vínculos dos clientes fictícios
   const titular = [
     "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar", "financeiro.ver", "financeiro.editar",
-    "financeiro.importar", "relatorios.ver", "mensagens.usar", "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar",
+    "financeiro.importar", "relatorios.ver", "mensagens.usar", "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
   ];
   const colaborador = ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"];
   // Cada cliente fictício acessa SOMENTE a própria empresa (demonstra o isolamento dos dados).
@@ -219,6 +220,11 @@ async function main() {
     equipe: `contador@${DOMINIO}`,
   });
   if (solicitacoes) console.log("  Solicitações de serviço de demonstração criadas");
+  const auditor = await semearAuditor(admin, { url, publica }, { padaria: ids[0], oficina: ids[1] }, {
+    cliente: `cliente@${DOMINIO}`,
+    cliente2: `cliente2@${DOMINIO}`,
+  });
+  if (auditor) console.log("  Notas de demonstração do auditor fiscal enviadas (a análise roda na fila)");
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);

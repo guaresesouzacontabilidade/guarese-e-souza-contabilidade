@@ -451,6 +451,31 @@ function calcularSimples(ctx: Ctx) {
 }
 
 /**
+ * Receita bruta dos 12 meses anteriores (RBT12) pelo mesmo critério da
+ * previsão: receita informada pelo escritório quando houver, senão a das
+ * notas; empresa com menos de 12 meses usa a média × 12. Usada pelo auditor
+ * fiscal para achar a faixa e a alíquota efetiva do Simples de cada mês.
+ */
+export function receitaBruta12Meses(dados: DadosPrevisao, competencia: string) {
+  const comp = `${competencia.slice(0, 7)}-01`;
+  const porMes = new Map(dados.meses.map((m) => [`${String(m.competencia).slice(0, 7)}-01`, m]));
+  const p = (dados.parametros ?? { inicio_atividade: null, pro_labore: null }) as ParametrosCalculo;
+  const ctx: Ctx = {
+    dados,
+    p,
+    comp,
+    mes: (c) => porMes.get(c),
+    receita: receitaDoMes(porMes.get(comp)),
+    linhas: [],
+    avisos: [],
+    memoria: [],
+    fontes: [],
+  };
+  const r = receita12Meses(ctx);
+  return { rbt12: centavos(r.rbt12), mesesSemDados: r.semDados, observacao: r.observacao };
+}
+
+/**
  * DAS de uma competência pelo mesmo cálculo da previsão (usado no comparativo
  * de regimes, que precisa do DAS de cada mês com a RBT12 daquele mês).
  */

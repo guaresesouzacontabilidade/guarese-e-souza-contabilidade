@@ -22,6 +22,8 @@ export const TODAS_PERMISSOES = [
   "calculos.gerenciar",
   "colaboradores.gerenciar",
   "certificado.gerenciar",
+  "auditor.ver",
+  "auditor.gerenciar",
 ] as const;
 
 export type Permissao = (typeof TODAS_PERMISSOES)[number];
@@ -34,6 +36,7 @@ export const PERMISSOES_EXCLUSIVAS_EQUIPE: Permissao[] = [
   "fechamento.gerenciar",
   "fechamento.reabrir",
   "calculos.gerenciar",
+  "auditor.gerenciar",
 ];
 
 export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotulo: string; descricao: string }[] }[] = [
@@ -88,6 +91,13 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
     ],
   },
   {
+    grupo: "Auditor fiscal",
+    itens: [
+      { chave: "auditor.ver", rotulo: "Economia de impostos", descricao: "Ver as oportunidades de economia que o escritório publicou e pedir que ele cuide delas." },
+      { chave: "auditor.gerenciar", rotulo: "Conduzir o auditor", descricao: "Analisar as notas, revisar os achados e publicar ao cliente." },
+    ],
+  },
+  {
     grupo: "Comunicação",
     itens: [{ chave: "mensagens.usar", rotulo: "Mensagens", descricao: "Usar a central de mensagens." }],
   },
@@ -98,7 +108,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
   cliente_titular: [
     "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar",
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
-    "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar",
+    "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
 };
