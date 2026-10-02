@@ -25,6 +25,7 @@ export const ROTULO_ACAO: Record<string, string> = {
   aplicar_norma: "Aplicou uma atualização normativa",
   notificacoes_aparelho_ativadas: "Ativou os avisos num aparelho",
   notificacoes_aparelho_desativadas: "Desativou os avisos num aparelho",
+  whatsapp_avisos_definido: "Cadastrou o WhatsApp de um cliente para avisos",
 };
 
 export const ROTULO_ENTIDADE: Record<string, string> = {

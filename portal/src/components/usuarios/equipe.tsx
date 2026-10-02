@@ -233,6 +233,9 @@ export function VinculosUsuario({
     nome: `${usuario.nome} — ${v.empresa_nome}`,
     email: usuario.email,
     ultimo_acesso_em: usuario.ultimo_acesso_em,
+    // (usado só para editar permissões; o WhatsApp é cadastrado na página da empresa)
+    telefone: null,
+    whatsapp_avisos: false,
   });
 
   return (

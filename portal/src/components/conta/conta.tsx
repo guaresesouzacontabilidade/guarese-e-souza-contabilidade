@@ -38,7 +38,16 @@ export interface PreferenciasArquivos {
   arquivosEmail: boolean;
 }
 
-export function FormAvisos({ email, escritorio }: { email: boolean; escritorio?: PreferenciasArquivos }) {
+export function FormAvisos({
+  email,
+  escritorio,
+  whatsapp,
+}: {
+  email: boolean;
+  escritorio?: PreferenciasArquivos;
+  /** Somente clientes: avisos do escritório também por WhatsApp. */
+  whatsapp?: { ativo: boolean; telefone: string | null };
+}) {
   return (
     <FormularioAcao acao={salvarPreferencias} className="space-y-4">
       {({ pendente }) => (
@@ -66,6 +75,18 @@ export function FormAvisos({ email, escritorio }: { email: boolean; escritorio?:
                 </span>
               </label>
             </div>
+          ) : null}
+          {whatsapp ? (
+            <label className="flex items-start gap-2 text-sm">
+              <Checkbox name="whatsapp_avisos" defaultChecked={whatsapp.ativo} className="mt-0.5" />
+              <span>
+                <span className="font-medium">Receber avisos por WhatsApp</span>
+                <span className="block text-xs text-muted-foreground">
+                  {whatsapp.telefone ? `No número ${formatarTelefone(whatsapp.telefone)}` : "Informe seu WhatsApp em “Seus dados” para ativar"}: novos documentos, mensagens e
+                  solicitações do escritório. Vários avisos seguidos chegam numa única mensagem.
+                </span>
+              </span>
+            </label>
           ) : null}
           <label className="flex items-start gap-2 text-sm">
             <Checkbox name="email_notificacoes" defaultChecked={email} className="mt-0.5" />

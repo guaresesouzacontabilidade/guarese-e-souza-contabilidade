@@ -129,6 +129,8 @@ export async function salvarLembretes(_anterior: ResultadoAcao, fd: FormData): P
   const phone = String(fd.get("whatsapp_phone_number_id") ?? "").trim();
   const modelo = String(fd.get("whatsapp_template_lembrete") ?? "").trim();
   const idioma = String(fd.get("whatsapp_template_idioma") ?? "pt_BR").trim() || "pt_BR";
+  const modeloAviso = String(fd.get("whatsapp_template_aviso") ?? "").trim();
+  if (modeloAviso && !/^[a-z0-9_]{1,512}$/.test(modeloAviso)) return falha("Revise a integração do WhatsApp.", { whatsapp_template_aviso: ["Use o nome exato do modelo aprovado (letras minúsculas, números e _)."] });
   if (phone && !/^\d{5,30}$/.test(phone)) return falha("Revise a integração do WhatsApp.", { whatsapp_phone_number_id: ["O identificador do número tem apenas dígitos (Phone Number ID da Meta)."] });
   if (modelo && !/^[a-z0-9_]{1,512}$/.test(modelo)) return falha("Revise a integração do WhatsApp.", { whatsapp_template_lembrete: ["Use o nome exato do modelo aprovado (letras minúsculas, números e _)."] });
   if (!/^[a-z]{2}(_[A-Z]{2})?$/.test(idioma)) return falha("Revise a integração do WhatsApp.", { whatsapp_template_idioma: ["Ex.: pt_BR"] });
@@ -141,12 +143,14 @@ export async function salvarLembretes(_anterior: ResultadoAcao, fd: FormData): P
       whatsapp_phone_number_id: phone || null,
       whatsapp_template_lembrete: modelo || null,
       whatsapp_template_idioma: idioma,
+      avisos_whatsapp_ativo: booleano(fd, "avisos_whatsapp_ativo"),
+      whatsapp_template_aviso: modeloAviso || null,
       updated_by: s.usuarioId,
     })
     .eq("id", 1);
   if (error) return falha(mensagemErro(error));
   revalidatePath("/escritorio/configuracoes");
-  return sucesso("Lembretes salvos.");
+  return sucesso("Lembretes e avisos salvos.");
 }
 
 const TIPOS_LOGO: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg" };

@@ -241,7 +241,12 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
 
           <Integracao icone={MessageCircle} titulo="WhatsApp Business (Meta)" situacao={<Situacao ok={wpp} texto={wpp ? "Conectado" : "Desconectado"} />}>
             {wpp ? (
-              <p>Lembretes por WhatsApp usam o modelo “{esc.whatsapp_template_lembrete}”. {esc.lembretes_whatsapp_ativo ? "Envio ativado." : "O envio está desligado na aba Lembretes."}</p>
+              <p>
+                Lembretes por WhatsApp usam o modelo “{esc.whatsapp_template_lembrete}”. {esc.lembretes_whatsapp_ativo ? "Envio ativado." : "O envio está desligado na aba Lembretes."}{" "}
+                {esc.avisos_whatsapp_ativo && esc.whatsapp_template_aviso
+                  ? `Avisos de documentos, mensagens e solicitações usam o modelo “${esc.whatsapp_template_aviso}”.`
+                  : "Avisos de documentos, mensagens e solicitações por WhatsApp: desligados (aba Lembretes)."}
+              </p>
             ) : (
               <p>Desconectado até a ativação. Falta: {faltaWpp.join("; ")}. Nenhuma mensagem é enviada por WhatsApp enquanto isso.</p>
             )}

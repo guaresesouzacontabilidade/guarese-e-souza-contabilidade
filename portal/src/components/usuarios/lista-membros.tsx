@@ -2,19 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, MoreVertical, ShieldOff, SlidersHorizontal } from "lucide-react";
+import { KeyRound, MessageCircle, MoreVertical, ShieldOff, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Campo, Select, Textarea } from "@/components/ui/form";
+import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Menu, MenuConteudo, MenuGatilho, MenuItem } from "@/components/ui/menu";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { EstadoVazio } from "@/components/ui/feedback";
-import { formatarDataHora, formatarRelativo } from "@/lib/formatos";
+import { formatarDataHora, formatarRelativo, formatarTelefone } from "@/lib/formatos";
 import { ROTULO_PAPEL, type Permissao } from "@/lib/permissoes";
-import { atualizarPermissoesMembro, reenviarAcesso, revogarMembro } from "@/lib/usuarios/acoes";
+import { atualizarPermissoesMembro, definirWhatsappMembro, reenviarAcesso, revogarMembro } from "@/lib/usuarios/acoes";
 import { LinkCompartilhavel } from "./convite";
 import { SeletorPermissoes } from "./seletor-permissoes";
 
@@ -30,6 +30,8 @@ export interface MembroLista {
   nome: string;
   email: string;
   ultimo_acesso_em: string | null;
+  telefone: string | null;
+  whatsapp_avisos: boolean;
 }
 
 export function ListaMembros({
@@ -47,6 +49,7 @@ export function ListaMembros({
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState<MembroLista | null>(null);
+  const [whatsapp, setWhatsapp] = useState<MembroLista | null>(null);
   const [revogando, setRevogando] = useState<MembroLista | null>(null);
   const [motivo, setMotivo] = useState("");
   const [link, setLink] = useState<{ link: string; nome: string } | null>(null);
@@ -83,6 +86,12 @@ export function ListaMembros({
                 <Td>
                   <p className="font-medium">{m.nome}</p>
                   <p className="text-xs text-muted-foreground">{m.email}</p>
+                  {m.papel !== "equipe" ? (
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                      <MessageCircle className="size-3" aria-hidden />
+                      {m.telefone ? `${formatarTelefone(m.telefone)} · ${m.whatsapp_avisos ? "recebe avisos" : "sem autorização para avisos"}` : "WhatsApp não cadastrado"}
+                    </p>
+                  ) : null}
                 </Td>
                 <Td className="whitespace-nowrap text-sm">{ROTULO_PAPEL[m.papel] ?? m.papel}</Td>
                 <Td className="hidden md:table-cell">
@@ -113,6 +122,11 @@ export function ListaMembros({
                           <MenuItem onSelect={() => setEditando(m)}>
                             <SlidersHorizontal /> Editar permissões
                           </MenuItem>
+                          {m.papel !== "equipe" ? (
+                            <MenuItem onSelect={() => setWhatsapp(m)}>
+                              <MessageCircle /> WhatsApp para avisos
+                            </MenuItem>
+                          ) : null}
                           <MenuItem
                             disabled={pendente}
                             onSelect={() =>
@@ -146,6 +160,7 @@ export function ListaMembros({
       {editando ? (
         <DialogPermissoes empresaId={empresaId} membro={editando} ehCliente={ehCliente} aoFechar={() => setEditando(null)} />
       ) : null}
+      {whatsapp ? <DialogWhatsapp empresaId={empresaId} membro={whatsapp} aoFechar={() => setWhatsapp(null)} /> : null}
 
       <Dialog open={Boolean(revogando)} onOpenChange={(v) => !v && setRevogando(null)}>
         {revogando ? (
@@ -234,3 +249,55 @@ export function DialogPermissoes({
     </Dialog>
   );
 }
+
+/** WhatsApp do cliente para os avisos do portal, com a autorização dele. */
+function DialogWhatsapp({ empresaId, membro, aoFechar }: { empresaId: string; membro: MembroLista; aoFechar: () => void }) {
+  const router = useRouter();
+  const [numero, setNumero] = useState(membro.telefone ? formatarTelefone(membro.telefone) : "");
+  const [autorizado, setAutorizado] = useState(membro.whatsapp_avisos);
+  const [pendente, iniciar] = useTransition();
+  return (
+    <Dialog open onOpenChange={(v) => !v && aoFechar()}>
+      <DialogContent
+        titulo={`WhatsApp de ${membro.nome}`}
+        descricao="Usado para avisar sobre novos documentos, mensagens e solicitações do escritório. Vários avisos seguidos chegam numa única mensagem."
+      >
+        <div className="space-y-4">
+          <Campo rotulo="WhatsApp (com DDD)" htmlFor="wa-numero">
+            <Input id="wa-numero" value={numero} onChange={(e) => setNumero(e.target.value)} inputMode="tel" placeholder="(63) 99999-0000" />
+          </Campo>
+          <label className="flex items-start gap-2 text-sm">
+            <Checkbox checked={autorizado} onChange={(e) => setAutorizado(e.target.checked)} className="mt-0.5" />
+            <span>
+              O cliente autorizou receber avisos por WhatsApp
+              <span className="block text-xs text-muted-foreground">Ele pode desligar a qualquer momento em Minha conta → Avisos.</span>
+            </span>
+          </label>
+          <div className="flex justify-end gap-2">
+            <Button variante="fantasma" onClick={aoFechar}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={pendente}
+              onClick={() =>
+                iniciar(async () => {
+                  const r = await definirWhatsappMembro(empresaId, membro.user_id, numero, autorizado);
+                  if (!r.ok) {
+                    toast.error(r.mensagem ?? "Não foi possível salvar.");
+                    return;
+                  }
+                  toast.success(r.mensagem);
+                  aoFechar();
+                  router.refresh();
+                })
+              }
+            >
+              Salvar
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

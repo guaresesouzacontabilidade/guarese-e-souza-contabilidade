@@ -50,12 +50,20 @@ export default async function PaginaEmpresa({ params, searchParams }: PageProps<
   } else if (aba === "usuarios") {
     const { data } = await ctx.supabase
       .from("empresa_membros")
-      .select("id, user_id, papel, permissoes, ativo, convidado_em, revogado_em, motivo_revogacao, perfil:perfis!empresa_membros_user_id_fkey(nome, email, ultimo_acesso_em)")
+      .select("id, user_id, papel, permissoes, ativo, convidado_em, revogado_em, motivo_revogacao, perfil:perfis!empresa_membros_user_id_fkey(nome, email, ultimo_acesso_em, telefone, preferencias)")
       .eq("empresa_id", id)
       .order("ativo", { ascending: false });
     const membros: MembroLista[] = (data ?? []).map((m) => {
-      const p = m.perfil as unknown as { nome: string; email: string; ultimo_acesso_em: string | null };
-      return { ...m, permissoes: m.permissoes as Permissao[], nome: p?.nome ?? "—", email: p?.email ?? "", ultimo_acesso_em: p?.ultimo_acesso_em ?? null };
+      const p = m.perfil as unknown as { nome: string; email: string; ultimo_acesso_em: string | null; telefone: string | null; preferencias: Record<string, unknown> | null };
+      return {
+        ...m,
+        permissoes: m.permissoes as Permissao[],
+        nome: p?.nome ?? "—",
+        email: p?.email ?? "",
+        ultimo_acesso_em: p?.ultimo_acesso_em ?? null,
+        telefone: p?.telefone ?? null,
+        whatsapp_avisos: p?.preferencias?.whatsapp_avisos === true,
+      };
     });
     conteudo = (
       <div className="space-y-4">

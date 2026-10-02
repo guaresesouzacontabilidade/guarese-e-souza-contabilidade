@@ -19,7 +19,7 @@ No canto superior direito (iniciais do nome) → **Minha conta**:
 
 - **Seus dados**: nome e telefone (o e-mail só o escritório altera).
 - **Verificação em duas etapas**: ativar ou desativar.
-- **Avisos**: no sino do portal eles sempre aparecem, na hora. Aqui você pode **ativar os avisos no celular ou no computador** (chegam mesmo com o portal fechado), enviar um **aviso de teste** e escolher o que também chega por e-mail. A equipe do escritório escolhe ainda de quais empresas quer ser avisada quando um cliente enviar arquivos (veja a seção 3).
+- **Avisos**: no sino do portal eles sempre aparecem, na hora. Aqui você pode **ativar os avisos no celular ou no computador** (chegam mesmo com o portal fechado), enviar um **aviso de teste** e escolher o que também chega por e-mail. Clientes podem ainda **receber avisos por WhatsApp** (novos documentos, mensagens e solicitações do escritório) no número informado em “Seus dados”, quando o escritório tiver ativado o WhatsApp. A equipe do escritório escolhe de quais empresas quer ser avisada quando um cliente enviar arquivos (veja a seção 3).
 - **Trocar senha**: ao trocar, os outros aparelhos conectados precisam entrar de novo.
 - **Dispositivos conectados**: onde a conta está aberta; dá para encerrar um aparelho ou todos os outros.
 - **Privacidade e seus dados (LGPD)**: baixar uma cópia dos seus dados e fazer pedidos ao escritório (correção, exclusão etc.).
@@ -78,7 +78,7 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
 Os relatórios são gerenciais e dependem dos documentos e lançamentos disponíveis; quando faltam dados, o portal avisa que o resultado é parcial.
 
 ### Mensagens
-Converse com o escritório por assunto, com anexos. As respostas chegam no sino de avisos (e por e-mail, se você deixou ativado).
+Converse com o escritório por assunto, com anexos. Com a conversa aberta, as respostas aparecem **na hora**, sem atualizar a página. Fora dela, chegam no sino de avisos, por e-mail (se você deixou ativado) e por WhatsApp (se você autorizou). Para não encher sua caixa, o e-mail e o WhatsApp esperam 2 minutos e não são enviados se você já leu a resposta no portal; vários avisos seguidos chegam numa única mensagem.
 
 ### Configurações (da empresa)
 - **Dados da empresa**: cadastro, contador responsável e contatos do escritório. Para corrigir algo, mande uma mensagem.
@@ -149,7 +149,7 @@ Os avisos podem chegar como notificação do aparelho, **mesmo com o portal fech
 ### Cadastrar uma empresa nova (administrador)
 1. **Empresas → Nova empresa**: CNPJ (ou CPF), razão social, regime tributário, contador responsável e serviços contratados. O plano de contas gerencial e o checklist padrão são criados sozinhos.
 2. Na empresa: **Contas bancárias** (contas, saldos iniciais, cartões) e **Checklist mensal** (ajuste os documentos e prazos).
-3. **Usuários e permissões → Convidar usuário**: convide o empresário como **Cliente empresário (titular)**. Sem e-mail configurado, o portal mostra o link para copiar e enviar pelo WhatsApp.
+3. **Usuários e permissões → Convidar usuário**: convide o empresário como **Cliente empresário (titular)**. Sem e-mail configurado, o portal mostra o link para copiar e enviar pelo WhatsApp. Se o cliente autorizar, informe o **WhatsApp** dele no convite para que receba os avisos de documentos, mensagens e solicitações (depois, pelo menu da pessoa → **WhatsApp para avisos**).
 4. **Responsáveis e contatos**: cadastre quem recebe os lembretes.
 
 ### Equipe e permissões (administrador)
@@ -187,5 +187,5 @@ Só a partir de regras validadas, com fonte oficial. Sem regra validada, a obrig
 **O portal transmite declarações ou paga guias?**
 Não. As declarações e os pagamentos continuam nos sistemas oficiais; o portal registra o andamento, guarda o recibo ou comprovante e só marca a tarefa como concluída com esse documento.
 
-**Os lembretes por WhatsApp funcionam?**
-Somente depois de configurada a integração oficial do WhatsApp Business (veja `CONFIGURACAO.md`). Enquanto isso, a integração aparece como desconectada e nada é enviado por WhatsApp.
+**Os lembretes e avisos por WhatsApp funcionam?**
+Somente depois de configurada a integração oficial do WhatsApp Business (veja `CONFIGURACAO.md`). Enquanto isso, a integração aparece como desconectada e nada é enviado por WhatsApp. Depois de ativada, os avisos só vão para clientes que autorizaram, e cada um pode desligar em **Minha conta → Avisos**.

@@ -147,6 +147,14 @@ export async function salvarPreferencias(_anterior: ResultadoAcao, fd: FormData)
     const s = await exigirSessao();
     const atuais = (s.perfil.preferencias ?? {}) as Record<string, unknown>;
     const novas: Record<string, unknown> = { ...atuais, email_notificacoes: booleano(fd, "email_notificacoes") };
+    // Avisos do escritório também por WhatsApp (somente clientes, no número cadastrado).
+    if (s.perfil.tipo === "cliente") {
+      const whatsapp = booleano(fd, "whatsapp_avisos");
+      if (whatsapp && (s.perfil.telefone ?? "").replace(/\D/g, "").length < 10) {
+        return falha("Informe seu WhatsApp (com DDD) em “Seus dados” para receber os avisos por lá.");
+      }
+      novas.whatsapp_avisos = whatsapp;
+    }
     // Avisos de arquivos enviados pelos clientes (somente para o escritório).
     if (s.perfil.tipo === "admin" || s.perfil.tipo === "equipe") {
       const escolha = String(fd.get("aviso_arquivos") ?? "todas");

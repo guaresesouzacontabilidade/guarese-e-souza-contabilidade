@@ -76,6 +76,10 @@ export async function convidarUsuario(_anterior: ResultadoAcao, fd: FormData): P
   if (!dados.success) return falhaValidacao(dados.error);
   const d = dados.data;
   let empresaNome: string | null = null;
+  const whatsapp = String(fd.get("whatsapp") ?? "").replace(/\D/g, "");
+  if (whatsapp && (whatsapp.length < 10 || whatsapp.length > 13)) {
+    return falha("Revise o WhatsApp.", { whatsapp: ["Use DDD + número (ex.: 63 99999-0000)."] });
+  }
 
   // Autorização no servidor (o banco valida novamente).
   if (!d.empresa_id) {
@@ -129,6 +133,18 @@ export async function convidarUsuario(_anterior: ResultadoAcao, fd: FormData): P
     if (error) return falha(mensagemErro(error));
   }
 
+  // WhatsApp para os avisos do portal, com a autorização registrada pelo escritório.
+  let avisoWhatsapp = "";
+  if (d.empresa_id && whatsapp) {
+    const { error } = await sessao.supabase.rpc("definir_whatsapp_membro", {
+      p_empresa_id: d.empresa_id,
+      p_user_id: usuarioId,
+      p_telefone: whatsapp,
+      p_autorizado: fd.get("whatsapp_autorizado") === "on",
+    });
+    avisoWhatsapp = error ? ` O WhatsApp não foi salvo (${mensagemErro(error)}).` : "";
+  }
+
   if (link) {
     const r = await enviarConviteEmail(d.email, d.nome, link, empresaNome, sessao.perfil.nome);
     envioStatus = r.status;
@@ -156,12 +172,12 @@ export async function convidarUsuario(_anterior: ResultadoAcao, fd: FormData): P
   if (d.empresa_id) revalidatePath(`/escritorio/empresas/${d.empresa_id}`);
   revalidatePath("/escritorio/equipe");
 
-  if (existente) return sucesso("O usuário já tinha cadastro: o acesso à empresa foi liberado.", { usuarioExistente: true });
-  if (envioStatus === "enviado") return sucesso(`Convite enviado para ${d.email}.`, { link, emailEnviado: true });
+  if (existente) return sucesso(`O usuário já tinha cadastro: o acesso à empresa foi liberado.${avisoWhatsapp}`, { usuarioExistente: true });
+  if (envioStatus === "enviado") return sucesso(`Convite enviado para ${d.email}.${avisoWhatsapp}`, { link, emailEnviado: true });
   return sucesso(
-    envioStatus === "email_nao_configurado"
+    (envioStatus === "email_nao_configurado"
       ? "Convite criado. O envio de e-mail não está configurado: copie o link e envie ao convidado."
-      : "Convite criado, mas o e-mail falhou. Copie o link e envie ao convidado.",
+      : "Convite criado, mas o e-mail falhou. Copie o link e envie ao convidado.") + avisoWhatsapp,
     { link, emailEnviado: false },
   );
 }
@@ -374,3 +390,23 @@ export async function redefinirDuasEtapas(usuarioId: string): Promise<ResultadoA
   await revalidarEquipe(usuarioId);
   return sucesso("Verificação em duas etapas removida e sessões encerradas. No próximo acesso a pessoa cadastra o autenticador de novo.");
 }
+
+/** Cadastra (ou remove) o WhatsApp de um cliente da empresa e a autorização para avisos. */
+export async function definirWhatsappMembro(empresaId: string, usuarioId: string, telefone: string, autorizado: boolean): Promise<ResultadoAcao> {
+  const ctx = await obterContextoEmpresa(empresaId);
+  if (!ctx.pode("usuarios.gerenciar")) return falha("Você não tem permissão para alterar os usuários desta empresa.");
+  if (!UUID.test(usuarioId)) return falha("Usuário inválido.");
+  const numero = telefone.replace(/\D/g, "");
+  if (numero && (numero.length < 10 || numero.length > 13)) return falha("WhatsApp inválido. Use DDD + número.");
+  const { error } = await ctx.supabase.rpc("definir_whatsapp_membro", {
+    p_empresa_id: empresaId,
+    p_user_id: usuarioId,
+    p_telefone: numero,
+    p_autorizado: autorizado,
+  });
+  if (error) return falha(mensagemErro(error));
+  revalidatePath(`/escritorio/empresas/${empresaId}`);
+  revalidatePath(`/e/${empresaId}/configuracoes`);
+  return sucesso(autorizado && numero ? "WhatsApp salvo: o cliente passa a receber os avisos por lá." : "WhatsApp atualizado.");
+}
+

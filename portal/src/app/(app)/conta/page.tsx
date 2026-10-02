@@ -113,6 +113,7 @@ export default async function MinhaConta() {
                     }
                   : undefined
               }
+              whatsapp={s.perfil.tipo === "cliente" ? { ativo: preferencias.whatsapp_avisos === true, telefone: s.perfil.telefone } : undefined}
             />
           </CardContent>
         </Card>

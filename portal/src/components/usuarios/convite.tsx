@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Copy, MessageCircle, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Campo, Input, Select } from "@/components/ui/form";
+import { Campo, Checkbox, Input, Select } from "@/components/ui/form";
 import { Alerta } from "@/components/ui/feedback";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
@@ -135,6 +135,20 @@ export function ConvidarUsuario({
                     </>
                   )}
                 </div>
+                {!ehEquipe ? (
+                  <div className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-2">
+                    <Campo rotulo="WhatsApp (opcional)" htmlFor="convite-whatsapp" erro={estado.erros?.whatsapp} ajuda="Com DDD. Usado para os avisos do portal.">
+                      <Input id="convite-whatsapp" name="whatsapp" inputMode="tel" autoComplete="off" placeholder="(63) 99999-0000" />
+                    </Campo>
+                    <label className="flex items-start gap-2 self-center text-sm">
+                      <Checkbox name="whatsapp_autorizado" className="mt-0.5" />
+                      <span>
+                        O cliente autorizou receber avisos por WhatsApp
+                        <span className="block text-xs text-muted-foreground">Novos documentos, mensagens e solicitações do escritório. Ele pode desligar quando quiser.</span>
+                      </span>
+                    </label>
+                  </div>
+                ) : null}
                 {!ehEquipe ? (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Permissões nesta empresa</p>

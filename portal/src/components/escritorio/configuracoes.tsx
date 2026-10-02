@@ -238,6 +238,8 @@ export function FormLembretes({
     whatsapp_phone_number_id: string | null;
     whatsapp_template_lembrete: string | null;
     whatsapp_template_idioma: string;
+    avisos_whatsapp_ativo: boolean;
+    whatsapp_template_aviso: string | null;
   };
   whatsappToken: boolean;
 }) {
@@ -266,6 +268,27 @@ export function FormLembretes({
             </label>
             <p className="text-xs text-muted-foreground">Os lembretes também aparecem no sino de avisos do portal. Clientes que desativarem os avisos nas preferências não recebem.</p>
           </fieldset>
+          <fieldset className="space-y-3">
+            <legend className="mb-2 text-sm font-semibold text-titulo">Avisos ao cliente por WhatsApp</legend>
+            <label className="flex items-start gap-2 text-sm">
+              <Checkbox name="avisos_whatsapp_ativo" defaultChecked={esc.avisos_whatsapp_ativo} className="mt-0.5" />
+              <span>
+                Avisar por WhatsApp quando o escritório publicar documentos, mandar mensagens ou fizer solicitações (quando a integração estiver conectada)
+                <span className="block text-xs text-muted-foreground">
+                  Só recebe quem autorizou (o próprio cliente em Minha conta, ou o escritório ao cadastrar o número). Avisos seguidos viram uma única mensagem, enviada 2
+                  minutos depois; se o cliente já viu no portal, nada é enviado.
+                </span>
+              </span>
+            </label>
+            <Campo
+              rotulo="Nome do modelo de aviso aprovado"
+              htmlFor="es-waviso"
+              erro={estado.erros?.whatsapp_template_aviso}
+              ajuda="Modelo da categoria Utilidade com 3 variáveis. Sugestão de texto: “Olá! Há novidades no Portal Guarese's ON para {{1}}: {{2}}. Acesse: {{3}}”."
+            >
+              <Input id="es-waviso" name="whatsapp_template_aviso" defaultValue={esc.whatsapp_template_aviso ?? ""} className="max-w-sm" />
+            </Campo>
+          </fieldset>
           <fieldset className="grid gap-4 sm:grid-cols-3">
             <legend className="mb-2 text-sm font-semibold text-titulo">
               WhatsApp Business (API oficial da Meta){" "}
@@ -282,7 +305,7 @@ export function FormLembretes({
             </Campo>
           </fieldset>
           <div className="flex justify-end">
-            <BotaoEnviar pendente={pendente}>Salvar lembretes</BotaoEnviar>
+            <BotaoEnviar pendente={pendente}>Salvar lembretes e avisos</BotaoEnviar>
           </div>
         </>
       )}

@@ -86,6 +86,27 @@ Fica **desconectado** até que três coisas estejam prontas; enquanto isso nenhu
 4. No portal, em **Configurações → Lembretes**, informar o **identificador do número** (Phone Number ID), o **nome do modelo** e o idioma (`pt_BR`), e marcar “Enviar lembretes por WhatsApp”.
 5. Em cada empresa, cadastrar os contatos com WhatsApp e marcar “recebe lembretes”.
 
+### Avisos ao cliente por WhatsApp (documentos, mensagens e solicitações)
+
+Além dos lembretes de pendências, o cliente pode receber no WhatsApp um aviso quando o escritório **publica um documento ou relatório**, **manda uma mensagem** ou **faz uma solicitação** (item novo no checklist, pedido de correção, pendência do fechamento). Usa a mesma integração acima e também fica **desligado** até ser ativado.
+
+1. Criar e aprovar na Meta um segundo modelo (categoria “Utilidade”), em português, com **3 variáveis**:
+
+   > Olá! Há novidades no Portal Guarese's ON para {{1}}: {{2}}. Acesse: {{3}}
+
+   `{{1}}` recebe o nome da empresa, `{{2}}` o resumo do aviso (ex.: “Novo documento disponível: Guia DAS 09/2026”) e `{{3}}` o link do portal.
+2. Em **Configurações → Lembretes → Avisos ao cliente por WhatsApp**, informar o **nome do modelo de aviso aprovado** e marcar a opção de avisar por WhatsApp.
+3. Cadastrar o WhatsApp de quem vai receber, **com a autorização da pessoa**:
+   - pelo escritório: na empresa → **Usuários e permissões** → menu da pessoa → **WhatsApp para avisos** (ou já no convite, nos campos “WhatsApp” e “O cliente autorizou receber avisos por WhatsApp”);
+   - pelo próprio cliente: **Minha conta** → informar o telefone em “Seus dados” e marcar **Receber avisos por WhatsApp** em “Avisos”. O cliente pode desligar quando quiser.
+
+Como o portal evita excesso de mensagens:
+
+- Avisos seguidos viram **uma única mensagem**, enviada **2 minutos** depois do primeiro (ex.: “3 novidades. A mais recente: …”).
+- Se a pessoa já viu os avisos no portal nesse intervalo (por exemplo, estava no bate-papo), **nada é enviado**. O e-mail de mensagem também espera 2 minutos e é dispensado se a conversa já foi lida.
+- Só clientes recebem; a equipe do escritório usa o sino e os avisos no aparelho.
+- Nenhum documento é enviado pelo WhatsApp: a mensagem só avisa e traz o link do portal, onde é preciso entrar com e-mail e senha.
+
 A Meta cobra por conversa iniciada pela empresa conforme a tabela vigente dela.
 
 ## 5. Rotinas automáticas
