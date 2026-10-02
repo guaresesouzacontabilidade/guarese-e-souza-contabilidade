@@ -3,7 +3,25 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type Database = {
   
-  "public": {
+  "graphql_public": {
+          Tables: {
+            [_ in never]: never
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "graphql":
+{ Args: { "extensions"?: Json,"operationName"?: string,"query"?: string,"variables"?: Json }; Returns: Json
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        },"public": {
           Tables: {
             "aceites_termos": {
                   Row: {
@@ -133,6 +151,81 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "lancamentos"
       referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"calculo_ajustes": {
+                  Row: {
+                    "competencia": string,"created_at": string,"criado_por": string | null,"descricao": string,"empresa_id": string,"id": string,"observacao": string | null,"valor": number
+                  }
+                  Insert: {
+                    "competencia": string,"created_at"?: string,"criado_por"?: string | null,"descricao": string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"valor": number
+                  }
+                  Update: {
+                    "competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "calculo_ajustes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calculo_ajustes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"calculo_meses": {
+                  Row: {
+                    "atualizado_por": string | null,"competencia": string,"empresa_id": string,"folha_fator_r": number | null,"observacao": string | null,"receita_mercadorias": number | null,"receita_servicos": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"competencia": string,"empresa_id": string,"folha_fator_r"?: number | null,"observacao"?: string | null,"receita_mercadorias"?: number | null,"receita_servicos"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"competencia"?: string,"empresa_id"?: string,"folha_fator_r"?: number | null,"observacao"?: string | null,"receita_mercadorias"?: number | null,"receita_servicos"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "calculo_meses_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calculo_meses_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"calculo_parametros": {
+                  Row: {
+                    "acrescimo_lc224": boolean,"aliquota_iss": number | null,"anexo_mercadorias": string,"anexo_servicos": string,"atualizado_por": string | null,"calcular_icms": boolean,"calcular_ipi": boolean,"created_at": string,"creditos_pis_cofins": boolean,"empresa_id": string,"fap": number,"fator_r": boolean,"inicio_atividade": string | null,"mei_atividade": string | null,"presuncao_csll_mercadorias": number,"presuncao_csll_servicos": number,"presuncao_irpj_mercadorias": number,"presuncao_irpj_servicos": number,"pro_labore": number,"rat": number,"socios_pro_labore": number,"terceiros": number,"updated_at": string
+                  }
+                  Insert: {
+                    "acrescimo_lc224"?: boolean,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id": string,"fap"?: number,"fator_r"?: boolean,"inicio_atividade"?: string | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "acrescimo_lc224"?: boolean,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id"?: string,"fap"?: number,"fator_r"?: boolean,"inicio_atividade"?: string | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "calculo_parametros_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calculo_parametros_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
     }
                   ]
                 },"categorias_documento": {
@@ -336,6 +429,31 @@ isOneToOne: false
       columns: ["responsavel_equipe_id"]
 isOneToOne: false
       referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"colaboradores": {
+                  Row: {
+                    "adicionais": number,"admissao": string,"cargo": string | null,"contrato": string,"created_at": string,"criado_por": string | null,"dependentes_ir": number,"desligamento": string | null,"empresa_id": string,"ferias_vencidas": number,"fim_contrato": string | null,"id": string,"nome": string,"observacao": string | null,"salario": number,"saldo_fgts": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "adicionais"?: number,"admissao": string,"cargo"?: string | null,"contrato"?: string,"created_at"?: string,"criado_por"?: string | null,"dependentes_ir"?: number,"desligamento"?: string | null,"empresa_id": string,"ferias_vencidas"?: number,"fim_contrato"?: string | null,"id"?: string,"nome": string,"observacao"?: string | null,"salario": number,"saldo_fgts"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "adicionais"?: number,"admissao"?: string,"cargo"?: string | null,"contrato"?: string,"created_at"?: string,"criado_por"?: string | null,"dependentes_ir"?: number,"desligamento"?: string | null,"empresa_id"?: string,"ferias_vencidas"?: number,"fim_contrato"?: string | null,"id"?: string,"nome"?: string,"observacao"?: string | null,"salario"?: number,"saldo_fgts"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "colaboradores_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "colaboradores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
       referencedColumns: ["id"]
     }
                   ]
@@ -2072,6 +2190,9 @@ isOneToOne: false
 "criar_solicitacao_titular":
 { Args: { "p_descricao": string,"p_tipo": string }; Returns: string
                            },
+"dados_previsao_impostos":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
+                           },
 "definir_logo_escritorio":
 { Args: { "p_path": string }; Returns: undefined
                            },
@@ -2575,7 +2696,11 @@ export type CompositeTypes<
   : never
 
 export const Constants = {
-  "public": {
+  "graphql_public": {
+          Enums: {
+            
+          }
+        },"public": {
           Enums: {
             
           }

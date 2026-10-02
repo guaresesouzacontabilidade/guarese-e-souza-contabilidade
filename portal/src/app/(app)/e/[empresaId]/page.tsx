@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Building2, CalendarClock, FileCheck2, FolderOpen, ListChecks, MessagesSquare, Upload } from "lucide-react";
+import { ArrowRight, Building2, Calculator, CalendarClock, FileCheck2, FolderOpen, ListChecks, MessagesSquare, Upload } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { competenciaAtual, hojeISO, somarMeses } from "@/lib/competencia";
 import { formatarCompetencia, formatarData, formatarDataHora, formatarDocumento } from "@/lib/formatos";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { STATUS_CHECKLIST, STATUS_DOCUMENTO } from "@/lib/rotulos";
+import { calcularPrevisao, type DadosPrevisao } from "@/lib/calculos/previsao";
 
 export const metadata: Metadata = { title: "Visão geral" };
 
@@ -21,7 +22,7 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
   const comp = somarMeses(competenciaAtual(), -1);
   const verDocs = ctx.pode("documentos.ver");
 
-  const [resumo, itens, recebidos, doEscritorio, conversas] = await Promise.all([
+  const [resumo, itens, recebidos, doEscritorio, conversas, dadosPrevisao] = await Promise.all([
     verDocs ? ctx.supabase.rpc("resumo_checklist", { p_empresa_id: empresaId, p_competencia: comp }) : Promise.resolve({ data: null }),
     verDocs
       ? ctx.supabase
@@ -58,7 +59,10 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
     ctx.pode("mensagens.usar")
       ? ctx.supabase.from("conversas").select("id, assunto, aguardando, ultima_mensagem_em").eq("empresa_id", empresaId).eq("status", "aberta").order("ultima_mensagem_em", { ascending: false }).limit(4)
       : Promise.resolve({ data: [] }),
+    ctx.pode("calculos.ver") ? ctx.supabase.rpc("dados_previsao_impostos", { p_empresa_id: empresaId, p_competencia: comp }) : Promise.resolve({ data: null }),
   ]);
+  const previsao = dadosPrevisao.data ? calcularPrevisao(dadosPrevisao.data as unknown as DadosPrevisao) : null;
+  const previsaoVisivel = previsao && previsao.situacao !== "sem_parametros" && previsao.situacao !== "competencia_nao_suportada";
 
   const r = resumo.data as { total: number; percentual: number | null; pendentes: number; atrasados: number; correcao: number; enviados: number; concluidos: number } | null;
   const primeiroNome = sessao.perfil.nome.split(" ")[0];
@@ -94,6 +98,47 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
       </section>
 
       <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
+        {previsao && previsaoVisivel ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="size-4" /> Previsão de impostos
+              </CardTitle>
+              <CardDescription>
+                Impostos de {formatarCompetencia(previsao.competencia, true)}, a pagar em {formatarCompetencia(previsao.mesPagamento, true)} (estimativa).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {previsao.checklist.faltantes.length && !ctx.equipe ? (
+                <p className="text-sm text-muted-foreground">
+                  A previsão aparece assim que os documentos do mês forem enviados.{" "}
+                  {previsao.checklist.faltantes.length === 1 ? "Falta 1 documento." : `Faltam ${previsao.checklist.faltantes.length} documentos.`}
+                </p>
+              ) : (
+                <>
+                  <p className="numero text-2xl font-bold text-titulo">{formatarMoeda(previsao.totalPagar)}</p>
+                  <ul className="divide-y divide-border text-sm">
+                    {previsao.linhas
+                      .filter((l) => l.grupo === "pagar")
+                      .slice(0, 5)
+                      .map((l) => (
+                        <li key={l.chave} className="flex justify-between gap-3 py-1.5">
+                          <span className="min-w-0 truncate">{l.tributo}</span>
+                          <span className="numero shrink-0">{formatarMoeda(l.valor)}</span>
+                        </li>
+                      ))}
+                  </ul>
+                  {ctx.equipe && previsao.checklist.faltantes.length ? (
+                    <p className="text-xs text-alerta-fg">O cliente ainda não vê: faltam documentos do mês.</p>
+                  ) : null}
+                </>
+              )}
+              <Link href={`/e/${empresaId}/calculos`} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                Ver previsão e cálculos <ArrowRight className="size-4" />
+              </Link>
+            </CardContent>
+          </Card>
+        ) : null}
         {verDocs ? (
           <Card>
             <CardHeader>

@@ -15,6 +15,7 @@ import {
   Home,
   ShieldCheck,
   CalendarClock,
+  Calculator,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -69,6 +70,7 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   if (p.has("conciliacao.executar")) itens.push({ rotulo: "Conciliação", href: `${base}/conciliacao`, icone: GitCompareArrows });
   if (p.has("fechamento.gerenciar")) itens.push({ rotulo: "Fechamento", href: `${base}/fechamento`, icone: CalendarCheck });
   if (p.has("relatorios.ver")) itens.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });
+  if (p.has("calculos.ver")) itens.push({ rotulo: "Cálculos", href: `${base}/calculos`, icone: Calculator });
   if (p.has("mensagens.usar")) itens.push({ rotulo: "Mensagens", href: `${base}/mensagens`, icone: MessagesSquare });
   itens.push({ rotulo: "Configurações", href: `${base}/configuracoes`, icone: Settings });
   return itens;

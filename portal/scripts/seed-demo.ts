@@ -17,6 +17,7 @@ import { carregarEnv } from "./util-env";
 import { semearFinanceiro } from "./demo-financeiro";
 import { semearDocumentos } from "./demo-documentos";
 import { semearObrigacoes } from "./demo-obrigacoes";
+import { semearCalculos } from "./demo-calculos";
 
 carregarEnv();
 
@@ -144,7 +145,10 @@ async function main() {
   }
 
   // Vínculos dos clientes fictícios
-  const titular = ["empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar", "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar"];
+  const titular = [
+    "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar", "financeiro.ver", "financeiro.editar",
+    "financeiro.importar", "relatorios.ver", "mensagens.usar", "calculos.ver", "colaboradores.gerenciar",
+  ];
   const colaborador = ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"];
   // Cada cliente fictício acessa SOMENTE a própria empresa (demonstra o isolamento dos dados).
   const [padaria, oficina] = ids;
@@ -200,6 +204,9 @@ async function main() {
     emails: { admin: `admin@${DOMINIO}`, equipe: `contador@${DOMINIO}`, cliente: `cliente@${DOMINIO}`, cliente2: `cliente2@${DOMINIO}` },
   });
   if (criadasObrigacoes) console.log("  Obrigações e tarefas de demonstração criadas");
+
+  // Cálculos: parâmetros, receita informada e colaboradores fictícios
+  if (await semearCalculos(admin, { padaria: ids[0], oficina: ids[1] })) console.log("  Cálculos e colaboradores de demonstração criados");
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);

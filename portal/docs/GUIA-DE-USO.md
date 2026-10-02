@@ -77,6 +77,12 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
 
 Os relatórios são gerenciais e dependem dos documentos e lançamentos disponíveis; quando faltam dados, o portal avisa que o resultado é parcial.
 
+### Cálculos (previsão de impostos e rescisão)
+- **Previsão de impostos**: quando todos os documentos obrigatórios do mês forem enviados, aparece a estimativa dos impostos que vencem no mês seguinte, pelo regime da empresa (MEI, Simples Nacional, Lucro Presumido ou Lucro Real): DAS, PIS, Cofins, IRPJ, CSLL, ISS, ICMS e os encargos da folha (INSS, IRRF e FGTS), com o vencimento de cada guia. Toque em **ver cálculo** para ver a conta. Enquanto faltar algum documento, a tela mostra o que falta e um atalho para enviar.
+- É sempre uma **estimativa**: os valores oficiais são os das guias publicadas pelo escritório em **Meus documentos**. Quando a guia já foi emitida, o valor dela aparece ao lado.
+- **Simulação de rescisão**: escolha um colaborador, vários ou **todos**, o tipo de desligamento (sem justa causa, pedido de demissão, acordo, justa causa, fim do contrato de experiência) e a data. O portal mostra as verbas, o FGTS, a multa e o **custo total para a empresa**. Também dá para simular sem cadastro (**Simulação avulsa**).
+- **Colaboradores**: cadastro simples (nome, cargo, admissão, salário). Ele alimenta a folha da previsão e a simulação de rescisão. Quando alguém sair, informe a **data de saída**.
+
 ### Mensagens
 Converse com o escritório por assunto, com anexos. Com a conversa aberta, as respostas aparecem **na hora**, sem atualizar a página. Fora dela, chegam no sino de avisos, por e-mail (se você deixou ativado) e por WhatsApp (se você autorizou). Para não encher sua caixa, o e-mail e o WhatsApp esperam 2 minutos e não são enviados se você já leu a resposta no portal; vários avisos seguidos chegam numa única mensagem.
 
@@ -146,6 +152,16 @@ Os avisos podem chegar como notificação do aparelho, **mesmo com o portal fech
 - Ao **sair do portal** num aparelho, ele para de receber os avisos até você entrar de novo. Em **Minha conta → Avisos** aparece a lista dos aparelhos que recebem seus avisos; dá para remover qualquer um.
 - Os avisos mostram o nome da empresa e do arquivo. Se outras pessoas veem a tela do seu celular, ajuste nas configurações do aparelho para **ocultar o conteúdo das notificações na tela bloqueada**.
 
+### Cálculos das empresas (previsão de impostos)
+
+Para cada empresa, em **Cálculos → Configuração** (só a equipe vê esta aba):
+
+1. Confira o **regime** (vem de **Obrigações e prazos → Empresas**, com o histórico) e preencha os parâmetros: atividade do MEI; anexo das vendas e dos serviços e Fator R (Simples); percentuais de presunção (Presumido e estimativa do Real, já com os padrões 8%/12% e 32%) e o acréscimo da LC 224/2025 (desmarque se a empresa tiver decisão judicial); alíquota do ISS; cálculo do ICMS e do IPI pelas notas; pró-labore, RAT, FAP e terceiros. Clique em **Salvar configuração**.
+2. Em **Receita e folha mês a mês**, informe a receita dos meses anteriores ao uso do portal (o Simples precisa dos últimos 12 meses) ou de meses em que as notas enviadas não representam todo o faturamento. A receita informada substitui a das notas naquele mês.
+3. Em **Valores lançados**, inclua o que o cálculo automático não cobre (ICMS-ST, DIFAL, parcelamentos, IRPJ por balancete). Valor negativo reduz a previsão.
+
+A previsão usa os **XML das notas** enviados (vendas pelo CFOP, devoluções, vendas com ICMS-ST, serviços com ISS retido) e o cadastro de colaboradores. O vencimento de cada guia vem das tarefas de **Obrigações e prazos**, e o valor da guia aparece quando a tarefa de pagamento tem a guia publicada. A equipe vê a previsão sempre; o cliente, só depois de enviar todos os documentos obrigatórios do mês. As tabelas oficiais (Simples, INSS, IRRF, salário mínimo) ficam no código do portal com fonte e vigência; quando mudarem (todo janeiro), precisam ser atualizadas.
+
 ### Cadastrar uma empresa nova (administrador)
 1. **Empresas → Nova empresa**: CNPJ (ou CPF), razão social, regime tributário, contador responsável e serviços contratados. O plano de contas gerencial e o checklist padrão são criados sozinhos.
 2. Na empresa: **Contas bancárias** (contas, saldos iniciais, cartões) e **Checklist mensal** (ajuste os documentos e prazos).
@@ -186,6 +202,9 @@ Só a partir de regras validadas, com fonte oficial. Sem regra validada, a obrig
 
 **O portal transmite declarações ou paga guias?**
 Não. As declarações e os pagamentos continuam nos sistemas oficiais; o portal registra o andamento, guarda o recibo ou comprovante e só marca a tarefa como concluída com esse documento.
+
+**A previsão de impostos é o valor que vou pagar?**
+É uma estimativa feita com os documentos enviados e as tabelas oficiais. O valor oficial é o da guia emitida pelo escritório: retenções, monofásicos, substituição tributária, créditos e outros ajustes podem mudar o resultado.
 
 **Os lembretes e avisos por WhatsApp funcionam?**
 Somente depois de configurada a integração oficial do WhatsApp Business (veja `CONFIGURACAO.md`). Enquanto isso, a integração aparece como desconectada e nada é enviado por WhatsApp. Depois de ativada, os avisos só vão para clientes que autorizaram, e cada um pode desligar em **Minha conta → Avisos**.

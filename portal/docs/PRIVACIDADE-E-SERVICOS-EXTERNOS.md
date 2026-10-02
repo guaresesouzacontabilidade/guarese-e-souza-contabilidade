@@ -43,12 +43,13 @@ Se um dia algum recurso de IA externa for adotado, ele deverá ser documentado a
 | Documentos das empresas | notas fiscais, extratos, comprovantes, folha, contratos — podem conter dados de sócios, empregados, clientes e fornecedores | execução de contrato; cumprimento de obrigação legal |
 | Dados financeiros e contábeis | lançamentos, contas, conciliações, relatórios | execução de contrato; obrigação legal |
 | Comunicação | mensagens e anexos trocados com o escritório | execução de contrato |
+| Colaboradores das empresas (área Cálculos) | nome, cargo, data de admissão e saída, salário, adicionais fixos, número de dependentes para o IR, férias vencidas e saldo do FGTS informado — **sem CPF nem documentos pessoais** | execução de contrato (o cliente é o controlador dos dados dos seus empregados; o escritório atua como operador); cumprimento de obrigação legal |
 | Auditoria | quem fez o quê e quando | obrigação legal; legítimo interesse |
 
 ## 5. Medidas de segurança
 
 - **Isolamento por empresa** no banco (Row Level Security) e verificação de permissão no servidor e na interface; testes automáticos garantem que um cliente não acessa dados de outro.
-- **Permissões por empresa e por operação** (ver, enviar, baixar, aprovar, editar o financeiro, publicar relatórios…).
+- **Permissões por empresa e por operação** (ver, enviar, baixar, aprovar, editar o financeiro, publicar relatórios…). Os dados de colaboradores e a previsão de impostos só aparecem para quem tem a permissão de cálculos da empresa (por padrão, o empresário titular e o escritório).
 - **Senhas** fortes guardadas somente pelo Supabase Auth; **verificação em duas etapas** disponível para todos e que pode ser exigida pelo escritório.
 - **Sessões** revogáveis: cada pessoa vê e encerra os próprios dispositivos; o administrador encerra sessões e desativa acessos na hora.
 - **Arquivos**: armazenamento privado, links temporários, conferência do tipo pelo conteúdo real, verificação de integridade (SHA-256), limites contra “bombas” de ZIP e antivírus opcional.
