@@ -9,4 +9,4 @@ playwright-report
 coverage
 supabase/.temp
 supabase/.branches
-.publicacao.json
+.publicacao*.json
