@@ -6,8 +6,6 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 import { falha, falhaValidacao, type ResultadoAcao } from "@/lib/acoes";
 import { dadosRequisicao } from "@/lib/requisicao";
 
-export const REGRA_SENHA = "Mínimo de 10 caracteres, com letras maiúsculas, minúsculas e números.";
-
 const esquema = z
   .object({
     senha: z
