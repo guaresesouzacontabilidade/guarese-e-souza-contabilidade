@@ -246,3 +246,13 @@ Também não precisa de configuração: roda pela fila de tarefas (`gerar_lote_x
 - **Download**: `/api/lotes-xml/<lote>/<parte>` confere a permissão no banco (`baixar_lote_xml`), registra o acesso a cada documento e só então gera um link de 1 minuto. Os arquivos dos lotes não têm leitura direta pela API.
 - **Limpeza**: a rotina diária (`rotina_lotes_xml`) apaga os arquivos dos lotes com mais de 7 dias e marca como erro pedidos que não andaram em 2 dias; o histórico some depois de 90 dias.
 - **Limites**: 30 lotes por hora por pessoa e 5 pedidos de carteira por hora.
+
+## 16. Maquininhas (conferência das taxas)
+
+Não precisa de configuração nem de chaves: roda pela fila de tarefas. O relatório enviado na categoria **Relatórios de maquininhas** é lido pela tarefa `processar_documento`, que registra o formato (`maquininha_registrar_relatorio`); se o formato já é conhecido, a tarefa `importar_maquininha` grava as vendas e confere as taxas na mesma rodada.
+
+- **Leitura**: CSV (separador ";" ou "," detectado sozinho; UTF-8 ou Windows-1252) e Excel (.xlsx), até 50 mil linhas; o cabeçalho é procurado nas 40 primeiras linhas (relatórios com linhas de título funcionam). O formato é identificado pelos nomes das colunas (`maquininha_layouts`; empresa nula = vale para o escritório todo). Excel antigo (.xls) e PDF não são lidos.
+- **Sem duplicar**: a chave de cada venda é adquirente + data + NSU (ou código de autorização) + valor; sem esses códigos, data + valor + parcelas + bandeira + modalidade + terminal e a ordem entre vendas iguais. A mesma venda em outro relatório fica com a leitura mais recente.
+- **Conferência** (`app.maquininha_auditar`): contrato ativo vigente na data da venda; taxa da mesma modalidade com o número de parcelas dentro da faixa; a da bandeira vale mais que a de "todas"; entre faixas, a mais estreita. Esperado = valor × taxa ÷ 100 + tarifa por venda, arredondado em centavos; tolerância de R$ 0,02. A tela e o aviso mostram só as vendas aprovadas (canceladas e estornos ficam fora).
+- **Catálogo**: tabela `maquininha_adquirentes` (cartão, frota, benefícios e convênios), alterável só pelo administrador.
+- **Conexão direta com as adquirentes: desconectada.** Cada adquirente tem o seu serviço de arquivos de conciliação (EDI) ou API, que exige credenciamento próprio e a autorização da empresa para o CNPJ. Até essa ativação, o portal não consulta nenhuma adquirente e trabalha só com os relatórios enviados.

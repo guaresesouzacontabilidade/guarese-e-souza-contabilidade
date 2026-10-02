@@ -38,6 +38,7 @@ export default async function PaginaEnviar({ params, searchParams }: PageProps<"
   ]);
   const todos = (itens ?? []) as ItemPendente[];
   const itemFixo = itemId ? todos.find((i) => i.id === itemId) ?? null : null;
+  const categoriaInicial = typeof sp.categoria === "string" && (categorias ?? []).some((c) => c.codigo === sp.categoria) ? sp.categoria : undefined;
   const abertos = todos.filter((i) => !["concluido", "nao_se_aplica"].includes(i.status));
   const doMes = todos.filter((i) => i.competencia === padrao);
 
@@ -59,6 +60,7 @@ export default async function PaginaEnviar({ params, searchParams }: PageProps<"
           competenciaPadrao={padrao.slice(0, 7)}
           limiteMb={escritorio?.upload_tamanho_maximo_mb ?? 50}
           itemFixo={itemFixo}
+          categoriaInicial={categoriaInicial}
           baseDocumentos={`/e/${empresaId}/documentos`}
         />
         <aside className="space-y-4">

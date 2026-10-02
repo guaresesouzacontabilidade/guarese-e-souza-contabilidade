@@ -113,6 +113,15 @@ O escritório confere as suas notas fiscais de compra e de venda e as notas de s
 - Toque em **Quero que o escritório cuide disso** para pedir que o escritório confira a apuração e faça o pedido de restituição. O pedido vira uma **Solicitação**, onde você acompanha tudo.
 - O valor é uma estimativa feita com regras fixas da lei, conferida pela equipe; o valor final depende da análise do escritório.
 
+### Maquininhas (taxas das vendas no cartão, frota, convênio e benefícios)
+Confira se cada venda foi cobrada com a taxa combinada no contrato. Vale para cartões de crédito e débito (Cielo, Rede, Getnet, Stone, PagBank, Mercado Pago e outras), frota e combustível (Ticket Log, Valecard, Goodcard...), convênios e vales-refeição/alimentação (Alelo, Pluxee, Ticket, VR...).
+1. **Contratos e taxas**: cadastre a maquininha de cada adquirente com as taxas combinadas — débito, crédito à vista, parcelado (por faixa de parcelas), Pix, voucher ou frota. Se alguma bandeira tem taxa diferente (Amex, Elo...), inclua uma linha só para ela. Se a antecipação dos recebimentos é automática, informe a taxa total (venda + antecipação).
+2. Todo mês, baixe o **relatório de vendas** no site ou no aplicativo da adquirente, em **CSV ou Excel** (PDF não é lido), e envie em **Maquininhas → Enviar relatório** (ou em **Enviar documentos**, no tipo "Relatórios de maquininhas").
+3. Na primeira vez que um formato de relatório chega, alguém confere as colunas (data, valor da venda, valor líquido...). O escritório faz isso por você; depois, os relatórios iguais entram sozinhos.
+4. A tela do mês mostra o total vendido, as taxas cobradas, **quanto foi cobrado acima do contrato** e a lista das vendas com diferença (data, NSU, valor cobrado e o do contrato). Você recebe um aviso quando há cobrança acima do combinado. Use **Baixar planilha** para pedir a devolução à adquirente.
+- A mesma venda em dois relatórios (semanal e mensal, por exemplo) conta uma vez só; vendas canceladas ficam fora da conta.
+- A **conexão direta com as adquirentes** (sem precisar baixar o relatório) aparece como **desconectada**: depende de cada adquirente liberar o acesso para o CNPJ da empresa.
+
 ### Solicitações
 Peça um serviço ao escritório sem precisar ligar: **Solicitações → Nova solicitação**. Escolha o serviço (alteração contratual, abertura de filial, encerramento, admissão, férias, demissão, declaração de faturamento, DECORE, Imposto de Renda dos sócios, certidões, parcelamento, ajuda com nota fiscal ou outro), escreva um resumo e os detalhes e marque **É urgente** se for o caso. O portal mostra o prazo estimado e o que costuma ser preciso enviar.
 - Cada solicitação tem um número, a situação (**Aberta**, **Em andamento**, **Aguardando a empresa**, **Concluída** ou **Cancelada**), o prazo, o responsável no escritório e o histórico de tudo o que aconteceu.
@@ -246,6 +255,14 @@ O menu **Auditor fiscal** do escritório mostra, para a carteira toda, a **poss�
 
 Para a conta do Simples ficar exata, preencha em **Cálculos → Configuração** o anexo das vendas e o dos serviços (com o Fator R, se for o caso) e, em **Receita e folha mês a mês**, a receita e a folha dos meses anteriores ao portal (sem isso o achado aparece com confiança média). O auditor não vê o PGDAS-D: ele mostra quanto foi cobrado a mais caso a separação não tenha sido feita — confira a apuração antes de publicar. A lista de produtos monofásicos usada (com a lei de cada linha) fica no fim da página do auditor da carteira.
 
+### Maquininhas da carteira
+O menu **Maquininhas** do escritório mostra, no mês escolhido, quanto cada empresa teve cobrado acima do contrato, as vendas sem taxa cadastrada e os relatórios que esperam a conferência das colunas. Em cada empresa → **Maquininhas**:
+- **Formato novo**: quando chega um relatório que o portal ainda não conhece, a equipe recebe um aviso. Abra o relatório, confira a adquirente (sugerida pelo nome do arquivo) e qual coluna é cada informação — o portal sugere e mostra na hora como vai ler as primeiras vendas. Com **Lembrar este formato** marcado, os próximos relatórios iguais **de qualquer empresa** entram sozinhos (quando quem confere é o cliente, o formato vale só para a empresa dele).
+- **Como a conta é feita**: taxa cobrada = valor da venda − valor líquido (ou a coluna da taxa, quando não há líquido). Cada venda usa o contrato vigente na data dela e a taxa da modalidade e do número de parcelas; a taxa de uma bandeira específica vale mais que a de "todas as bandeiras". Esperado = valor × taxa + tarifa por venda; diferenças de até R$ 0,02 são arredondamento.
+- Mudou um contrato ou uma taxa? As vendas são conferidas de novo na hora.
+- Em cada relatório: **Corrigir as colunas**, **Importar de novo** ou **Excluir** (tira da conferência as vendas daquele relatório; o arquivo continua em Documentos).
+- O catálogo traz mais de 60 adquirentes de cartão, frota, benefícios e convênios; uma adquirente fora da lista entra como "Outra".
+
 ### Cadastrar uma empresa nova (administrador)
 1. **Empresas → Nova empresa**: digite o **CNPJ** e clique na **lupa** ao lado. O portal busca os dados abertos da Receita Federal e preenche razão social, nome fantasia, CNAE e atividade principal, endereço, telefone e e-mail; sugere o **regime** (MEI ou Simples pela opção registrada na Receita; Presumido ou Real pela última tributação declarada) e mostra a situação cadastral (aviso em vermelho se não estiver ATIVA), abertura, natureza jurídica, porte, atividades secundárias e o quadro de sócios. Marque se quer **cadastrar os sócios como contatos**. Confira, complete o que faltar (inscrições, contador responsável, serviços contratados) e salve. O município do IBGE (usado nos prazos municipais) é preenchido sozinho. Na edição da empresa, a lupa atualiza os dados (o regime só é preenchido se estiver em branco). O plano de contas gerencial e o checklist padrão são criados sozinhos. A base da Receita é atualizada uma vez por mês: empresas abertas há poucas semanas podem ainda não aparecer — aí é só preencher à mão.
 2. Na empresa: **Contas bancárias** (contas, saldos iniciais, cartões) e **Checklist mensal** (ajuste os documentos e prazos).
@@ -274,6 +291,9 @@ Não. Cada pessoa só vê as empresas às quais foi vinculada, e o banco de dado
 
 **O portal envia algo para a Receita, SEFAZ ou prefeitura?**
 Só na busca automática de notas, quando a empresa cadastra o certificado digital e autoriza: o portal consulta a SEFAZ e o Ambiente Nacional da NFS-e para trazer as notas da própria empresa e, se ela ativar, registra a ciência da emissão das NF-e recebidas. Fora isso, nada é enviado: declarações, guias e demais obrigações continuam sendo feitas pelo escritório nos sistemas próprios. A presença de protocolo em um XML não comprova a regularidade da nota.
+
+**A conferência das maquininhas consulta a adquirente?**
+Não. Ela usa só os relatórios de vendas enviados (CSV ou Excel) e os contratos cadastrados. A conexão direta com as adquirentes fica desconectada até cada uma liberar o acesso.
 
 **A leitura automática de documentos é confiável?**
 Ela sugere dados (CNPJ, datas, valores) e sempre passa por conferência de uma pessoa antes de virar lançamento.

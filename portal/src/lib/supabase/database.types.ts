@@ -1751,6 +1751,180 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"maquininha_adquirentes": {
+                  Row: {
+                    "ativo": boolean,"codigo": string,"nome": string,"observacao": string | null,"ordem": number,"tipo": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"codigo": string,"nome": string,"observacao"?: string | null,"ordem"?: number,"tipo": string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"codigo"?: string,"nome"?: string,"observacao"?: string | null,"ordem"?: number,"tipo"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"maquininha_contratos": {
+                  Row: {
+                    "adquirente_chave": string | null,"adquirente_codigo": string | null,"adquirente_nome": string,"aluguel_mensal": number | null,"apelido": string | null,"ativo": boolean,"codigo_estabelecimento": string | null,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"observacao": string | null,"tipo": string,"updated_at": string,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "adquirente_chave"?: never,"adquirente_codigo"?: string | null,"adquirente_nome": string,"aluguel_mensal"?: number | null,"apelido"?: string | null,"ativo"?: boolean,"codigo_estabelecimento"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"observacao"?: string | null,"tipo": string,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "adquirente_chave"?: never,"adquirente_codigo"?: string | null,"adquirente_nome"?: string,"aluguel_mensal"?: number | null,"apelido"?: string | null,"ativo"?: boolean,"codigo_estabelecimento"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"tipo"?: string,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_contratos_adquirente_codigo_fkey"
+      columns: ["adquirente_codigo"]
+isOneToOne: false
+      referencedRelation: "maquininha_adquirentes"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "maquininha_contratos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_contratos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_importacoes": {
+                  Row: {
+                    "adquirente_chave": string | null,"adquirente_codigo": string | null,"adquirente_nome": string | null,"amostra": Json | null,"assinatura": string | null,"cabecalho": Json | null,"canceladas": number | null,"concluida_em": string | null,"created_at": string,"criado_por": string | null,"documento_id": string | null,"duplicadas": number | null,"empresa_id": string,"erro": string | null,"erros": Json | null,"id": string,"invalidas": number | null,"linhas": number | null,"mapeamento": Json | null,"nome_arquivo": string | null,"periodo_fim": string | null,"periodo_inicio": string | null,"situacao": string,"tipo": string | null,"total_acima": number | null,"total_bruto": number | null,"total_taxas": number | null,"vendas": number | null,"versao": number | null
+                  }
+                  Insert: {
+                    "adquirente_chave"?: string | null,"adquirente_codigo"?: string | null,"adquirente_nome"?: string | null,"amostra"?: Json | null,"assinatura"?: string | null,"cabecalho"?: Json | null,"canceladas"?: number | null,"concluida_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento_id"?: string | null,"duplicadas"?: number | null,"empresa_id": string,"erro"?: string | null,"erros"?: Json | null,"id"?: string,"invalidas"?: number | null,"linhas"?: number | null,"mapeamento"?: Json | null,"nome_arquivo"?: string | null,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"situacao"?: string,"tipo"?: string | null,"total_acima"?: number | null,"total_bruto"?: number | null,"total_taxas"?: number | null,"vendas"?: number | null,"versao"?: number | null
+                  }
+                  Update: {
+                    "adquirente_chave"?: string | null,"adquirente_codigo"?: string | null,"adquirente_nome"?: string | null,"amostra"?: Json | null,"assinatura"?: string | null,"cabecalho"?: Json | null,"canceladas"?: number | null,"concluida_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento_id"?: string | null,"duplicadas"?: number | null,"empresa_id"?: string,"erro"?: string | null,"erros"?: Json | null,"id"?: string,"invalidas"?: number | null,"linhas"?: number | null,"mapeamento"?: Json | null,"nome_arquivo"?: string | null,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"situacao"?: string,"tipo"?: string | null,"total_acima"?: number | null,"total_bruto"?: number | null,"total_taxas"?: number | null,"vendas"?: number | null,"versao"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_importacoes_adquirente_codigo_fkey"
+      columns: ["adquirente_codigo"]
+isOneToOne: false
+      referencedRelation: "maquininha_adquirentes"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "maquininha_importacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_importacoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_importacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_layouts": {
+                  Row: {
+                    "adquirente_codigo": string | null,"adquirente_nome": string,"assinatura": string,"criado_por": string | null,"empresa_id": string | null,"id": string,"mapeamento": NonNullable<Json>,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "adquirente_codigo"?: string | null,"adquirente_nome": string,"assinatura": string,"criado_por"?: string | null,"empresa_id"?: string | null,"id"?: string,"mapeamento": NonNullable<Json>,"tipo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "adquirente_codigo"?: string | null,"adquirente_nome"?: string,"assinatura"?: string,"criado_por"?: string | null,"empresa_id"?: string | null,"id"?: string,"mapeamento"?: NonNullable<Json>,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_layouts_adquirente_codigo_fkey"
+      columns: ["adquirente_codigo"]
+isOneToOne: false
+      referencedRelation: "maquininha_adquirentes"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "maquininha_layouts_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_layouts_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_taxas": {
+                  Row: {
+                    "bandeira": string | null,"contrato_id": string,"empresa_id": string,"id": string,"modalidade": string,"observacao": string | null,"parcelas_ate": number,"parcelas_de": number,"prazo_dias": number | null,"tarifa_fixa": number,"taxa_percentual": number
+                  }
+                  Insert: {
+                    "bandeira"?: string | null,"contrato_id": string,"empresa_id": string,"id"?: string,"modalidade": string,"observacao"?: string | null,"parcelas_ate"?: number,"parcelas_de"?: number,"prazo_dias"?: number | null,"tarifa_fixa"?: number,"taxa_percentual": number
+                  }
+                  Update: {
+                    "bandeira"?: string | null,"contrato_id"?: string,"empresa_id"?: string,"id"?: string,"modalidade"?: string,"observacao"?: string | null,"parcelas_ate"?: number,"parcelas_de"?: number,"prazo_dias"?: number | null,"tarifa_fixa"?: number,"taxa_percentual"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_taxas_contrato_id_fkey"
+      columns: ["contrato_id"]
+isOneToOne: false
+      referencedRelation: "maquininha_contratos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_taxas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_vendas": {
+                  Row: {
+                    "adquirente_chave": string,"autorizacao": string | null,"bandeira": string | null,"chave_unica": string,"conferencia": string,"contrato_id": string | null,"data_prevista": string | null,"data_venda": string,"diferenca": number | null,"empresa_id": string,"id": number,"importacao_id": string,"linha": number | null,"modalidade": string,"nsu": string | null,"parcelas": number,"situacao": string,"tarifa_contratada": number | null,"taxa_contratada": number | null,"taxa_id": string | null,"terminal": string | null,"valor_bruto": number,"valor_esperado": number | null,"valor_liquido": number | null,"valor_taxa": number
+                  }
+                  Insert: {
+                    "adquirente_chave": string,"autorizacao"?: string | null,"bandeira"?: string | null,"chave_unica": string,"conferencia"?: string,"contrato_id"?: string | null,"data_prevista"?: string | null,"data_venda": string,"diferenca"?: number | null,"empresa_id": string,"id"?: never,"importacao_id": string,"linha"?: number | null,"modalidade": string,"nsu"?: string | null,"parcelas"?: number,"situacao"?: string,"tarifa_contratada"?: number | null,"taxa_contratada"?: number | null,"taxa_id"?: string | null,"terminal"?: string | null,"valor_bruto": number,"valor_esperado"?: number | null,"valor_liquido"?: number | null,"valor_taxa": number
+                  }
+                  Update: {
+                    "adquirente_chave"?: string,"autorizacao"?: string | null,"bandeira"?: string | null,"chave_unica"?: string,"conferencia"?: string,"contrato_id"?: string | null,"data_prevista"?: string | null,"data_venda"?: string,"diferenca"?: number | null,"empresa_id"?: string,"id"?: never,"importacao_id"?: string,"linha"?: number | null,"modalidade"?: string,"nsu"?: string | null,"parcelas"?: number,"situacao"?: string,"tarifa_contratada"?: number | null,"taxa_contratada"?: number | null,"taxa_id"?: string | null,"terminal"?: string | null,"valor_bruto"?: number,"valor_esperado"?: number | null,"valor_liquido"?: number | null,"valor_taxa"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_vendas_contrato_id_fkey"
+      columns: ["contrato_id"]
+isOneToOne: false
+      referencedRelation: "maquininha_contratos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_vendas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_vendas_importacao_id_fkey"
+      columns: ["importacao_id"]
+isOneToOne: false
+      referencedRelation: "maquininha_importacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_vendas_taxa_id_fkey"
+      columns: ["taxa_id"]
+isOneToOne: false
+      referencedRelation: "maquininha_taxas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"mensagens": {
                   Row: {
                     "autor_id": string | null,"conversa_id": string,"corpo": string,"created_at": string,"documento_ids": (string)[],"empresa_id": string,"id": string,"interna": boolean
@@ -2853,6 +3027,30 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"maquininha_carteira":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"maquininha_concluir_importacao":
+{ Args: { "p_importacao_id": string,"p_resumo": Json }; Returns: Json
+                           },
+"maquininha_confirmar_mapeamento":
+{ Args: { "p_adquirente_codigo"?: string,"p_adquirente_nome"?: string,"p_importacao_id": string,"p_lembrar"?: boolean,"p_mapeamento": Json }; Returns: string
+                           },
+"maquininha_excluir_importacao":
+{ Args: { "p_importacao_id": string }; Returns: undefined
+                           },
+"maquininha_gravar_vendas":
+{ Args: { "p_importacao_id": string,"p_vendas": Json }; Returns: Json
+                           },
+"maquininha_reconferir":
+{ Args: { "p_empresa_id": string,"p_fim"?: string,"p_inicio"?: string }; Returns: number
+                           },
+"maquininha_registrar_relatorio":
+{ Args: { "p_amostra": Json,"p_assinatura": string,"p_cabecalho": Json,"p_documento_id": string,"p_linhas": number,"p_nome": string,"p_versao": number }; Returns: Json
+                           },
+"maquininha_resumo":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
 "marcar_conversa_lida":
 { Args: { "p_conversa_id": string }; Returns: undefined
                            },

@@ -39,12 +39,20 @@ export const ROTULO_ACAO: Record<string, string> = {
   lote_xml_solicitado: "Pediu o XML do mês em lote",
   lote_xml_carteira: "Pediu o XML do mês em lote para a carteira",
   download_lote_xml: "Baixou um lote de XML",
+  maquininha_mapeamento: "Conferiu as colunas de um relatório de maquininha",
+  maquininha_excluir_relatorio: "Excluiu um relatório de maquininha da conferência",
+  maquininha_importacao: "Importou um relatório de vendas de maquininha",
 };
 
 export const ROTULO_ENTIDADE: Record<string, string> = {
   auditor_achados: "achado do auditor fiscal",
   auditor_ncm_monofasico: "catálogo de produtos monofásicos",
   xml_lotes: "lote de XML",
+  maquininha_adquirentes: "catálogo de adquirentes",
+  maquininha_contratos: "contrato de maquininha",
+  maquininha_taxas: "taxa do contrato de maquininha",
+  maquininha_importacoes: "relatório de maquininha",
+  maquininha_vendas: "conferência das maquininhas",
   baixas: "pagamento/recebimento",
   categorias_financeiras: "categoria financeira",
   checklist_itens: "item do checklist",

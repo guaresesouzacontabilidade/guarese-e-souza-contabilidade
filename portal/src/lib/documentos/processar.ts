@@ -114,7 +114,10 @@ export async function processarDocumento(admin: ClienteAdmin, job: Job) {
     if (ext === "zip") return await processarZip(admin, doc, bytes, referencia, p.zip_inicio ?? 0);
     if (ext === "xml") return await processarXml(admin, doc, bytes, referencia);
     if (ext === "ofx" || (ext === "txt" && ehOfx(new TextDecoder("latin1").decode(bytes.slice(0, 2000))))) return await processarOfx(admin, doc, bytes);
-    if (["csv", "xlsx"].includes(ext) && ["extrato_bancario", "extrato_cartao", "relatorio_maquininha"].includes(doc.categoria_codigo)) {
+    if (["csv", "xlsx"].includes(ext) && doc.categoria_codigo === "relatorio_maquininha") {
+      return await processarRelatorioMaquininha(admin, doc, versao.versao, bytes, versao.nome_original);
+    }
+    if (["csv", "xlsx"].includes(ext) && ["extrato_bancario", "extrato_cartao"].includes(doc.categoria_codigo)) {
       return await processarPlanilha(admin, doc, bytes, versao.nome_original);
     }
     if (["pdf", "jpg", "jpeg", "png", "webp"].includes(ext)) return await processarImagemOuPdf(admin, doc, bytes, ext);
@@ -413,6 +416,20 @@ async function processarPlanilha(admin: ClienteAdmin, doc: Documento, bytes: Uin
     })
     .eq("id", doc.id);
   return { transacoes: r.transacoes.length };
+}
+
+/** Relatório de vendas da maquininha: o módulo Maquininhas confere as taxas com o contrato. */
+async function processarRelatorioMaquininha(admin: ClienteAdmin, doc: Documento, versao: number, bytes: Uint8Array, nome: string) {
+  const { registrarRelatorio } = await import("@/lib/maquininhas/importar");
+  const r = await registrarRelatorio(admin, doc, versao, bytes, nome);
+  await admin
+    .from("documentos")
+    .update({
+      processamento_status: "concluido",
+      processamento_detalhes: { tipo: "maquininha", importacao_id: r.importacao_id, situacao: r.situacao, linhas: r.linhas },
+    })
+    .eq("id", doc.id);
+  return { maquininha: r.situacao };
 }
 
 async function processarImagemOuPdf(admin: ClienteAdmin, doc: Documento, bytes: Uint8Array, ext: string) {

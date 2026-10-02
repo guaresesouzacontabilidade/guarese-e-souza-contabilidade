@@ -22,6 +22,7 @@ import {
   CloudDownload,
   ScanSearch,
   PiggyBank,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -52,6 +53,7 @@ export function menuEscritorio(admin: boolean): ItemMenu[] {
     { rotulo: "Vencimentos", href: "/escritorio/vencimentos", icone: CalendarX2 },
     { rotulo: "Notas automáticas", href: "/escritorio/notas-automaticas", icone: CloudDownload },
     { rotulo: "Auditor fiscal", href: "/escritorio/auditor-fiscal", icone: ScanSearch },
+    { rotulo: "Maquininhas", href: "/escritorio/maquininhas", icone: CreditCard },
     { rotulo: "Financeiro", href: "/escritorio/financeiro", icone: Wallet },
     { rotulo: "Conciliação", href: "/escritorio/conciliacao", icone: GitCompareArrows },
     { rotulo: "Fechamentos", href: "/escritorio/fechamentos", icone: CalendarCheck },
@@ -82,6 +84,7 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
     itens.push({ rotulo: "Notas automáticas", href: `${base}/notas-automaticas`, icone: CloudDownload });
   }
   if (p.has("financeiro.ver")) itens.push({ rotulo: "Financeiro", href: `${base}/financeiro`, icone: Wallet });
+  if (p.has("maquininhas.ver")) itens.push({ rotulo: "Maquininhas", href: `${base}/maquininhas`, icone: CreditCard });
   if (p.has("conciliacao.executar")) itens.push({ rotulo: "Conciliação", href: `${base}/conciliacao`, icone: GitCompareArrows });
   if (p.has("fechamento.gerenciar")) itens.push({ rotulo: "Fechamento", href: `${base}/fechamento`, icone: CalendarCheck });
   if (p.has("relatorios.ver")) itens.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });

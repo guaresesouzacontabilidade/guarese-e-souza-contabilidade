@@ -56,8 +56,20 @@ export async function lerArquivoPlanilha(bytes: Uint8Array, nome: string): Promi
     throw new Error("O formato .xls (Excel 97-2003) não é suportado. Abra o arquivo e salve como .xlsx ou .csv.");
   }
   const texto = decodificarTexto(bytes);
-  const r = Papa.parse<string[]>(texto, { skipEmptyLines: "greedy", delimiter: "" });
+  const r = Papa.parse<string[]>(texto, { skipEmptyLines: "greedy", delimiter: detectarDelimitador(texto) });
   return (r.data as string[][]).map((l) => l.map((c) => String(c ?? "").trim())).slice(0, 50000);
+}
+
+/**
+ * No padrão brasileiro o separador é ";" e a vírgula é a casa decimal: a
+ * detecção automática poderia escolher a vírgula ("154,85" vira duas colunas).
+ * Se ao menos metade das primeiras linhas tem ";" (ou tabulação), usa esse.
+ */
+export function detectarDelimitador(texto: string): string {
+  const linhas = texto.split(/\r?\n/).filter((l) => l.trim()).slice(0, 30);
+  const minimo = Math.max(1, Math.ceil(linhas.length / 2));
+  for (const d of [";", "\t"]) if (linhas.filter((l) => l.includes(d)).length >= minimo) return d;
+  return "";
 }
 
 function numeroParaTexto(v: number) {

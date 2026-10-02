@@ -24,6 +24,8 @@ export const TODAS_PERMISSOES = [
   "certificado.gerenciar",
   "auditor.ver",
   "auditor.gerenciar",
+  "maquininhas.ver",
+  "maquininhas.gerenciar",
 ] as const;
 
 export type Permissao = (typeof TODAS_PERMISSOES)[number];
@@ -98,6 +100,17 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
     ],
   },
   {
+    grupo: "Maquininhas",
+    itens: [
+      { chave: "maquininhas.ver", rotulo: "Conferência das taxas", descricao: "Ver as vendas das maquininhas e as taxas cobradas acima do contrato." },
+      {
+        chave: "maquininhas.gerenciar",
+        rotulo: "Contratos e relatórios",
+        descricao: "Cadastrar os contratos com as taxas combinadas e conferir as colunas dos relatórios de vendas.",
+      },
+    ],
+  },
+  {
     grupo: "Comunicação",
     itens: [{ chave: "mensagens.usar", rotulo: "Mensagens", descricao: "Usar a central de mensagens." }],
   },
@@ -109,6 +122,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
     "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar",
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
+    "maquininhas.ver", "maquininhas.gerenciar",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
 };

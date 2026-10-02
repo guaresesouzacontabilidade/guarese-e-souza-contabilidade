@@ -80,6 +80,8 @@ interface Props {
   competenciaPadrao: string;
   limiteMb: number;
   itemFixo?: ItemPendente | null;
+  /** Tipo de documento já escolhido ao abrir (ex.: vindo da página das maquininhas). */
+  categoriaInicial?: string;
   modo?: "cliente" | "escritorio";
   baseDocumentos: string;
 }
@@ -100,12 +102,13 @@ export function EnviarDocumentos({
   competenciaPadrao,
   limiteMb,
   itemFixo,
+  categoriaInicial,
   modo = "cliente",
   baseDocumentos,
 }: Props) {
   const router = useRouter();
   const [lista, setLista] = useState<ItemArquivo[]>([]);
-  const [categoriaPadrao, setCategoriaPadrao] = useState(itemFixo?.categoria_codigo ?? "");
+  const [categoriaPadrao, setCategoriaPadrao] = useState(itemFixo?.categoria_codigo ?? categoriaInicial ?? "");
   const [competencia, setCompetencia] = useState(itemFixo ? itemFixo.competencia.slice(0, 7) : competenciaPadrao);
   const [observacao, setObservacao] = useState("");
   const [arrastando, setArrastando] = useState(false);

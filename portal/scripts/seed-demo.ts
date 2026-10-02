@@ -22,6 +22,8 @@ import { semearVencimentos } from "./demo-vencimentos";
 import { semearAgenda } from "./demo-agenda";
 import { semearSolicitacoes } from "./demo-solicitacoes";
 import { semearAuditor, semearServicosAuditor } from "./demo-auditor";
+import { semearMaquininhas } from "./demo-maquininhas";
+import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
 
@@ -149,11 +151,9 @@ async function main() {
   }
 
   // Vínculos dos clientes fictícios
-  const titular = [
-    "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar", "financeiro.ver", "financeiro.editar",
-    "financeiro.importar", "relatorios.ver", "mensagens.usar", "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
-  ];
-  const colaborador = ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"];
+  // Mesmas permissões padrão que o escritório concede ao convidar (cliente empresário e colaborador)
+  const titular = PERMISSOES_PADRAO.cliente_titular;
+  const colaborador = PERMISSOES_PADRAO.cliente_colaborador;
   // Cada cliente fictício acessa SOMENTE a própria empresa (demonstra o isolamento dos dados).
   const [padaria, oficina] = ids;
   await admin.from("empresa_membros").upsert({ empresa_id: padaria, user_id: idCliente, papel: "cliente_titular", permissoes: titular, ativo: true }, { onConflict: "empresa_id,user_id" });
@@ -227,6 +227,9 @@ async function main() {
   if (auditor) console.log("  Notas de demonstração do auditor fiscal enviadas (a análise roda na fila)");
   if (await semearServicosAuditor(admin, { url, publica }, ids[0], `cliente@${DOMINIO}`)) {
     console.log("  Notas de serviço de demonstração do auditor enviadas (a análise roda na fila)");
+  }
+  if (await semearMaquininhas(admin, { url, publica }, ids[0], `cliente@${DOMINIO}`)) {
+    console.log("  Maquininhas de demonstração: contratos Cielo e Alelo e relatórios de vendas enviados (a importação roda na fila)");
   }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");

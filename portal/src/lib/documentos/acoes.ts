@@ -119,7 +119,8 @@ export async function concluirEnvio(
   const { data, error } = await ctx.supabase.rpc("confirmar_upload", { p_versao_id: versaoId });
   if (error) return falha(mensagemErro(error));
   const r = data as unknown as { documento_id: string; recebido_apos_fechamento?: boolean };
-  processarFilaDepois({ tipos: ["processar_documento", "enviar_envio"] });
+  // Relatório de maquininha em formato conhecido: a importação entra na fila durante a leitura e sai na mesma rodada
+  processarFilaDepois({ tipos: ["processar_documento", "importar_maquininha", "enviar_envio"] });
   revalidar(empresaId);
   return sucesso(undefined, { documentoId: r.documento_id, recebidoAposFechamento: Boolean(r.recebido_apos_fechamento) });
 }
@@ -274,7 +275,7 @@ export async function reprocessarDocumento(empresaId: string, documentoId: strin
   const ctx = await obterContextoEmpresa(empresaId);
   const { error } = await ctx.supabase.rpc("reprocessar_documento", { p_documento_id: documentoId });
   if (error) return falha(mensagemErro(error));
-  processarFilaDepois({ tipos: ["processar_documento"] });
+  processarFilaDepois({ tipos: ["processar_documento", "importar_maquininha"] });
   revalidar(empresaId);
   return sucesso("Leitura do documento agendada novamente.");
 }
