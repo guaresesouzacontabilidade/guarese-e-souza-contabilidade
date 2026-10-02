@@ -47,6 +47,7 @@ export default async function Tarefas({ searchParams }: PageProps<"/escritorio/o
   const obrigacao = parametro(sp, "obrigacao");
   const etapa = parametro(sp, "etapa", Object.keys(ETAPAS));
   const responsavel = parametro(sp, "responsavel");
+  const status = parametro(sp, "status", Object.keys(STATUS_TAREFA));
   const comp = lerCompetencia(parametro(sp, "competencia"));
   const pagina = Math.max(1, Number(parametro(sp, "pagina")) || 1);
   const hoje = hojeISO();
@@ -68,6 +69,7 @@ export default async function Tarefas({ searchParams }: PageProps<"/escritorio/o
     if (etapa) r = r.eq("etapa", etapa);
     if (UUID.test(responsavel)) r = r.eq("responsavel_id", responsavel);
     if (comp) r = r.eq("competencia", comp);
+    if (status) r = r.eq("status", status);
     return r;
   };
 
@@ -163,6 +165,7 @@ export default async function Tarefas({ searchParams }: PageProps<"/escritorio/o
       </nav>
       <form className="mb-4 flex flex-wrap items-end gap-2" role="search">
         {filtro !== "abertas" ? <input type="hidden" name="filtro" value={filtro} /> : null}
+        {status ? <input type="hidden" name="status" value={status} /> : null}
         <Select name="empresa" defaultValue={empresa} aria-label="Empresa" className="w-full sm:w-64">
           <option value="">Todas as empresas</option>
           {(empresas ?? []).map((e) => (
