@@ -5,7 +5,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(28);
+select plan(29);
 
 \ir 00_setup.sql.inc
 
@@ -81,6 +81,14 @@ select ok((select count(*) = 0 from public.certificados_segredos s join public.c
           and (select certificado_valido_ate is null from public.notas_automaticas where empresa_id = current_setting('testes.empresa_a')::uuid)
           and not exists (select 1 from public.jobs where tipo = 'notas_automaticas' and empresa_id = current_setting('testes.empresa_a')::uuid and status = 'pendente'),
           'nada fica guardado e nenhuma busca fica agendada');
+
+-- 5. Cadastro de novo logo em seguida (mesmo minuto da busca cancelada): a busca volta para a fila
+select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
+set local role authenticated;
+select pg_temp.cadastrar('11444777000161');
+reset role;
+select is((select count(*)::int from public.jobs where tipo = 'notas_automaticas' and empresa_id = current_setting('testes.empresa_a')::uuid and status = 'pendente'), 1,
+          'certificado cadastrado de novo no mesmo minuto agenda uma nova busca');
 
 select * from finish();
 rollback;
