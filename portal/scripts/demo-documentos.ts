@@ -62,6 +62,13 @@ function dia(deslocamentoMeses: number, d: number) {
 function brData(iso: string) {
   return iso.split("-").reverse().join("/");
 }
+const FERIADOS_FIXOS = ["01-01", "04-21", "05-01", "09-07", "10-12", "11-02", "11-15", "11-20", "12-25"];
+/** Próximo (ou anterior) dia útil, considerando fins de semana e feriados nacionais de data fixa. */
+function diaUtil(iso: string, sentido: 1 | -1) {
+  const d = new Date(`${iso}T12:00:00Z`);
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6 || FERIADOS_FIXOS.includes(d.toISOString().slice(5, 10))) d.setUTCDate(d.getUTCDate() + sentido);
+  return d.toISOString().slice(0, 10);
+}
 
 // ------------------------------------------------------------------ arquivos
 
@@ -92,7 +99,7 @@ async function pdfmake() {
   return pm;
 }
 
-async function pdfFicticio(titulo: string, empresa: string, linhas: [string, string][]): Promise<Buffer> {
+export async function pdfFicticio(titulo: string, empresa: string, linhas: [string, string][]): Promise<Buffer> {
   const pm = await pdfmake();
   const corpo: Content[] = [
     { text: "DOCUMENTO FICTÍCIO — AMBIENTE DE DEMONSTRAÇÃO", color: "#b42318", bold: true, fontSize: 9, margin: [0, 0, 0, 10] },
@@ -154,7 +161,7 @@ function xmlNfeFicticia(cnpjEmitente: string, nNF: number, dataEmissao: string, 
 
 // ------------------------------------------------------------------ sessões e envio
 
-async function sessao(admin: SupabaseClient, url: string, publica: string, email: string): Promise<SupabaseClient> {
+export async function sessao(admin: SupabaseClient, url: string, publica: string, email: string): Promise<SupabaseClient> {
   const cliente = createClient(url, publica, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email });
   if (error || !data.properties?.hashed_token) throw new Error(`Falha ao preparar o acesso de ${email}: ${error?.message ?? "sem token"}`);
@@ -168,7 +175,7 @@ async function itemChecklist(admin: SupabaseClient, empresaId: string, comp: str
   return (data?.id as string | undefined) ?? null;
 }
 
-async function enviar(
+export async function enviar(
   quem: SupabaseClient,
   admin: SupabaseClient,
   empresaId: string,
@@ -325,27 +332,33 @@ function enviosOficina(): EnvioDemo[] {
     { mes: -2, categoria: "extrato_cartao", nome: `Fatura cartao - ${r(-2)}.pdf`, titulo: `Fatura do cartão de crédito — ${r(-2)}`, linhas: [["Distribuidora de peças", "R$ 3.870,00"], ["Ferramentas", "R$ 689,90"], ["Total", "R$ 4.559,90"]], status: "aprovado" },
     { mes: -2, categoria: "relatorio_maquininha", nome: `Relatorio maquininha - ${r(-2)}.pdf`, titulo: `Relatório da maquininha — ${r(-2)}`, linhas: [["Vendas no crédito", "R$ 11.240,00"], ["Taxas", "- R$ 398,15"], ["Líquido", "R$ 10.841,85"]], status: "aprovado" },
     { mes: -2, categoria: "comprovante", nome: `Comprovantes - ${r(-2)}.pdf`, titulo: `Comprovantes de pagamentos — ${r(-2)}`, linhas: [["Aluguel do galpão", "R$ 3.500,00"], ["Peças (boleto)", "R$ 5.120,00"]], status: "aprovado" },
-    { mes: -2, categoria: "guia_imposto", nome: `Comprovante DAS - ${mmaaaa(-3)}.pdf`, titulo: `Comprovante de pagamento do DAS — ${mmaaaa(-3)}`, linhas: [["Valor pago", "R$ 1.215,80"]], status: "aprovado" },
+    { mes: -2, categoria: "guia_imposto", nome: `Comprovante DARF PIS e Cofins - ${mmaaaa(-3)}.pdf`, titulo: `Comprovante de pagamento do DARF de PIS/Cofins — ${mmaaaa(-3)}`, linhas: [["Valor pago", "R$ 1.215,80"]], status: "aprovado" },
     { mes: -1, categoria: "extrato_bancario", nome: `Extrato Banco do Brasil - ${r(-1)}.pdf`, titulo: `Extrato da conta corrente — ${r(-1)}`, linhas: [["Saldo anterior", "R$ 7.235,32"], ["Serviços recebidos", "R$ 19.870,00"], ["Peças e fornecedores", "- R$ 21.430,60"], ["Saldo final", "R$ 5.674,72"]], status: "aprovado" },
     { mes: -1, categoria: "relatorio_maquininha", nome: `Relatorio maquininha - ${r(-1)}.pdf`, titulo: `Relatório da maquininha — ${r(-1)}`, linhas: [["Vendas no crédito", "R$ 9.430,00"], ["Taxas", "- R$ 334,02"]], status: "recebido" },
   ];
 }
 
 function publicacoes(perfil: PerfilDemo): PublicacaoDemo[] {
-  const das = perfil === "padaria" ? ["1.842,37", "1.967,15"] : ["1.215,80", "1.098,44"];
-  const lista: PublicacaoDemo[] = [-2, -1].map((m, i) => ({
-    mes: m,
-    categoria: "esc_guia" as const,
-    nome: `DAS Simples Nacional - ${mmaaaa(m)}.pdf`,
-    titulo: `DAS — Simples Nacional — ${mmaaaa(m)}`,
-    linhas: [
-      ["Documento de arrecadação do Simples Nacional", `Competência ${mmaaaa(m)}`],
-      ["Vencimento", brData(dia(m + 1, 20))],
-      ["Valor", `R$ ${das[i]}`],
-    ],
-    vencimento: dia(m + 1, 20),
-    valor: das[i],
-  }));
+  // Padaria (Simples Nacional): DAS até o dia 20, adiado para o dia útil seguinte.
+  // Oficina (Lucro Presumido): DARF de PIS/Cofins até o dia 25, antecipado para o dia útil anterior.
+  const valores = perfil === "padaria" ? ["1.842,37", "1.967,15"] : ["1.215,80", "1.098,44"];
+  const lista: PublicacaoDemo[] = [-2, -1].map((m, i) => {
+    const vencimento = perfil === "padaria" ? diaUtil(dia(m + 1, 20), 1) : diaUtil(dia(m + 1, 25), -1);
+    const nome = perfil === "padaria" ? "DAS Simples Nacional" : "DARF PIS e Cofins";
+    return {
+      mes: m,
+      categoria: "esc_guia" as const,
+      nome: `${nome} - ${mmaaaa(m)}.pdf`,
+      titulo: `${perfil === "padaria" ? "DAS — Simples Nacional" : "DARF — PIS/Pasep e Cofins"} — ${mmaaaa(m)}`,
+      linhas: [
+        [perfil === "padaria" ? "Documento de arrecadação do Simples Nacional" : "Documento de arrecadação de receitas federais", `Competência ${mmaaaa(m)}`],
+        ["Vencimento", brData(vencimento)],
+        ["Valor", `R$ ${valores[i]}`],
+      ],
+      vencimento,
+      valor: valores[i],
+    };
+  });
   if (perfil === "padaria") {
     for (const m of [-2, -1]) {
       lista.push({
@@ -366,8 +379,8 @@ function publicacoes(perfil: PerfilDemo): PublicacaoDemo[] {
       categoria: "esc_guia",
       nome: `FGTS Digital - ${mmaaaa(-1)}.pdf`,
       titulo: `FGTS — ${mmaaaa(-1)}`,
-      linhas: [["Guia do FGTS Digital", `Competência ${mmaaaa(-1)}`], ["Vencimento", brData(dia(0, 20))], ["Valor", "R$ 913,60"]],
-      vencimento: dia(0, 20),
+      linhas: [["Guia do FGTS Digital", `Competência ${mmaaaa(-1)}`], ["Vencimento", brData(diaUtil(dia(0, 20), -1))], ["Valor", "R$ 913,60"]],
+      vencimento: diaUtil(dia(0, 20), -1),
       valor: "913,60",
     });
   }

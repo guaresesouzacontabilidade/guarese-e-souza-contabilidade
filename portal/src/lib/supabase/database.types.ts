@@ -2270,6 +2270,9 @@ isOneToOne: false
 "reabrir_item_checklist":
 { Args: { "p_item_id": string,"p_motivo": string }; Returns: undefined
                            },
+"recalcular_tarefas_abertas":
+{ Args: { "p_motivo"?: string }; Returns: number
+                           },
 "registrar_aceite_termos":
 { Args: { "p_ip"?: string,"p_user_agent"?: string,"p_versao": string }; Returns: undefined
                            },
@@ -2296,6 +2299,9 @@ isOneToOne: false
                            },
 "registrar_pendencia_fechamento":
 { Args: { "p_competencia_id": string,"p_descricao": string,"p_etapa": string,"p_impeditiva"?: boolean,"p_visivel_cliente"?: boolean }; Returns: string
+                           },
+"registrar_regime":
+{ Args: { "p_empresa_id": string,"p_inicio": string,"p_lucro_real_apuracao"?: string,"p_observacao"?: string,"p_regime": string }; Returns: string
                            },
 "registrar_sugestoes_conciliacao":
 { Args: { "p_empresa_id": string,"p_sugestoes": Json }; Returns: number
@@ -2386,6 +2392,9 @@ isOneToOne: false
 { Args: { "p_empresa_id"?: string,"p_inicio": string,"p_meses"?: number,"p_municipio"?: string,"p_periodicidade": string,"p_regra": Json,"p_uf"?: string }; Returns: {
               "competencia": string,"prazo_apuracao": string,"prazo_entrega": string,"prazo_pagamento": string
             }[]
+                           },
+"sincronizar_tarefas_empresa":
+{ Args: { "p_empresa_id": string,"p_motivo"?: string }; Returns: Json
                            },
 "sistema_bloquear_documento":
 { Args: { "p_documento_id": string,"p_motivo": string,"p_versao_id": string }; Returns: undefined

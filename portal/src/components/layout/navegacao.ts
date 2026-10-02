@@ -14,6 +14,7 @@ import {
   Upload,
   Home,
   ShieldCheck,
+  CalendarClock,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -37,6 +38,7 @@ export interface EmpresaMenu {
 export function menuEscritorio(admin: boolean): ItemMenu[] {
   const itens: ItemMenu[] = [
     { rotulo: "Visão geral da carteira", href: "/escritorio", icone: LayoutDashboard, exato: true },
+    { rotulo: "Obrigações e prazos", href: "/escritorio/obrigacoes", icone: CalendarClock },
     { rotulo: "Empresas", href: "/escritorio/empresas", icone: Building2 },
     { rotulo: "Documentos recebidos", href: "/escritorio/documentos", icone: FileInput },
     { rotulo: "Pendências", href: "/escritorio/pendencias", icone: ListChecks },

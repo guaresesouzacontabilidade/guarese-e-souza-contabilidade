@@ -16,6 +16,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { carregarEnv } from "./util-env";
 import { semearFinanceiro } from "./demo-financeiro";
 import { semearDocumentos } from "./demo-documentos";
+import { semearObrigacoes } from "./demo-obrigacoes";
 
 carregarEnv();
 
@@ -189,6 +190,16 @@ async function main() {
     });
     if (criado) console.log(`  Documentos de demonstração criados: ${empresas[i].nome_fantasia}`);
   }
+
+  // Camada operacional: regimes, regras do catálogo aplicadas pelo administrador fictício e tarefas
+  const criadasObrigacoes = await semearObrigacoes({
+    admin,
+    conexao: { url, publica },
+    padaria: ids[0],
+    oficina: ids[1],
+    emails: { admin: `admin@${DOMINIO}`, equipe: `contador@${DOMINIO}`, cliente: `cliente@${DOMINIO}`, cliente2: `cliente2@${DOMINIO}` },
+  });
+  if (criadasObrigacoes) console.log("  Obrigações e tarefas de demonstração criadas");
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);

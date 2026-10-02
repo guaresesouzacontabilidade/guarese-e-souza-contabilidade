@@ -22,7 +22,7 @@ const esquemaEmpresa = z
     nome_fantasia: opcional,
     inscricao_estadual: opcional,
     inscricao_municipal: opcional,
-    regime_tributario: z.enum(["mei", "simples_nacional", "lucro_presumido", "lucro_real", "imune_isenta", "produtor_rural", "pessoa_fisica", "outro"], {
+    regime_tributario: z.enum(["mei", "simples_nacional", "lucro_presumido", "lucro_real", "lucro_arbitrado", "imune_isenta", "produtor_rural", "pessoa_fisica", "outro"], {
       error: "Selecione o regime tributário.",
     }),
     atividade_principal: opcional,
