@@ -1,5 +1,5 @@
 import "server-only";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { Content, ContentTable, TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarCnpj, formatarData, formatarDataHora } from "@/lib/formatos";
@@ -40,11 +40,14 @@ async function pdfmake() {
     },
   });
   pm.setUrlAccessPolicy(() => false);
+  // Arquivos locais: somente as fontes do próprio pdfmake
+  pm.setLocalAccessPolicy((caminho) => resolve(caminho).startsWith(pasta));
   return pm;
 }
 interface PdfMake {
   setFonts(f: Record<string, Record<string, string>>): void;
   setUrlAccessPolicy(fn: (url: string) => boolean): void;
+  setLocalAccessPolicy(fn: (caminho: string) => boolean): void;
   createPdf(doc: TDocumentDefinitions): { getBuffer(): Promise<Buffer> };
 }
 

@@ -15,6 +15,7 @@ import { randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { carregarEnv } from "./util-env";
 import { semearFinanceiro } from "./demo-financeiro";
+import { semearDocumentos } from "./demo-documentos";
 
 carregarEnv();
 
@@ -178,6 +179,15 @@ async function main() {
   for (const [i, empresaId] of ids.entries()) {
     const criado = await semearFinanceiro(admin, comoAdmin, empresaId, i === 0 ? "padaria" : "oficina");
     if (criado) console.log(`  Financeiro de demonstração criado: ${empresas[i].nome_fantasia}`);
+  }
+
+  // Documentos, conversas e fechamento fictícios
+  for (const [i, empresaId] of ids.entries()) {
+    const criado = await semearDocumentos(admin, { url, publica }, empresaId, i === 0 ? "padaria" : "oficina", {
+      cliente: i === 0 ? `cliente@${DOMINIO}` : `cliente2@${DOMINIO}`,
+      equipe: `contador@${DOMINIO}`,
+    });
+    if (criado) console.log(`  Documentos de demonstração criados: ${empresas[i].nome_fantasia}`);
   }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");

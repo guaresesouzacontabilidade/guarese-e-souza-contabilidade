@@ -392,14 +392,14 @@ async function main() {
     senhaDemo = argumento("senha-demo", "") || process.env.DEMO_SENHA || estado.senhaDemo || null;
     const [{ n: usuariosDemo }] = await sql<{ n: number }[]>(ref, "select count(*)::int as n from public.perfis where email like '%@demo.guareses.test'");
     if (senhaDemo) {
-      execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
+      execFileSync("npx", ["tsx", "--conditions=react-server", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
     } else if (usuariosDemo > 0) {
       // Usuários de demonstração já existem: as senhas atuais são mantidas.
-      execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--manter-senhas"], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
+      execFileSync("npx", ["tsx", "--conditions=react-server", "scripts/seed-demo.ts", "--confirmar", "--manter-senhas"], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
       ok("Senhas dos usuários de demonstração mantidas (as mesmas informadas na publicação anterior).");
     } else {
       senhaDemo = `Demo-${randomBytes(5).toString("base64url")}9!`;
-      execFileSync("npx", ["tsx", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
+      execFileSync("npx", ["tsx", "--conditions=react-server", "scripts/seed-demo.ts", "--confirmar", "--senha", senhaDemo], { cwd: RAIZ, stdio: "inherit", env: ambienteScripts });
     }
   }
 

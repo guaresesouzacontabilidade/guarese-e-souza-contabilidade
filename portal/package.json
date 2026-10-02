@@ -13,7 +13,7 @@
     "test:e2e": "playwright test",
     "db:tipos": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts",
     "criar-admin": "tsx scripts/criar-admin.ts",
-    "seed:demo": "tsx scripts/seed-demo.ts",
+    "seed:demo": "tsx --conditions=react-server scripts/seed-demo.ts",
     "worker": "tsx scripts/worker.ts"
   },
   "dependencies": {
