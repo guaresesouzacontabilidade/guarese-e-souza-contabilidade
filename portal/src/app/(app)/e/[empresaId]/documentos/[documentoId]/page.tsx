@@ -161,7 +161,7 @@ export default async function PaginaDocumento({ params }: PageProps<"/e/[empresa
         </Alerta>
       ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] [&>*]:min-w-0">
         <div className="space-y-5">
           {podeBaixar && visualizavel ? (
             <Card>

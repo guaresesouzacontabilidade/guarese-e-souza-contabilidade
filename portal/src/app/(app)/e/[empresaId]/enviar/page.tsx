@@ -49,7 +49,7 @@ export default async function PaginaEnviar({ params, searchParams }: PageProps<"
         voltar={itemFixo ? { href: `/e/${empresaId}/pendencias?competencia=${itemFixo.competencia.slice(0, 7)}`, rotulo: "Voltar às pendências" } : undefined}
       />
       {itemId && !itemFixo ? <Alerta tom="alerta" className="mb-4">A pendência indicada não foi encontrada. Escolha o tipo de documento abaixo.</Alerta> : null}
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] [&>*]:min-w-0">
         <EnviarDocumentos
           empresaId={empresaId}
           documentoEmpresa={ctx.acesso.documento}

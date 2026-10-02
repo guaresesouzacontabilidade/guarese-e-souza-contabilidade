@@ -204,3 +204,25 @@ export async function enviarLembrete(empresaId: string, competencia: string, men
   revalidar(empresaId);
   return sucesso("Lembrete enviado aos responsáveis da empresa (portal e e-mail).");
 }
+
+/** Lembrete para várias empresas de uma vez (quadro de pendências do escritório). */
+export async function enviarLembretesEmLote(empresaIds: string[], competencia: string, mensagem: string): Promise<ResultadoAcao> {
+  const { exigirEquipe } = await import("@/lib/auth/sessao");
+  const s = await exigirEquipe();
+  const comp = lerCompetencia(competencia);
+  if (!comp) return falha("Competência inválida.");
+  const ids = [...new Set(empresaIds)].filter((id) => /^[0-9a-f-]{36}$/i.test(id)).slice(0, 300);
+  if (!ids.length) return falha("Selecione ao menos uma empresa.");
+  let enviados = 0;
+  const erros: string[] = [];
+  for (const id of ids) {
+    const { data, error } = await s.supabase.rpc("enviar_lembrete_manual", { p_empresa_id: id, p_competencia: comp, p_mensagem: mensagem || undefined });
+    if (error) erros.push(mensagemErro(error));
+    else if (data) enviados++;
+  }
+  const { processarFilaDepois } = await import("@/lib/jobs/disparo");
+  processarFilaDepois();
+  revalidatePath("/escritorio/pendencias");
+  if (!enviados) return falha(erros[0] ?? "Nenhum lembrete enviado (sem pendências nas empresas selecionadas).");
+  return sucesso(`Lembrete enviado para ${enviados} empresa(s).${erros.length ? ` ${erros.length} sem pendências ou sem permissão.` : ""}`);
+}

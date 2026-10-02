@@ -33,3 +33,9 @@ export async function marcarNotificacoesLidas(ids?: string[]) {
   await q;
   revalidatePath("/", "layout");
 }
+
+/** Marca todas as notificações do usuário como lidas (página de notificações). */
+export async function marcarTodasLidas(): Promise<{ ok: boolean; mensagem?: string }> {
+  await marcarNotificacoesLidas();
+  return { ok: true, mensagem: "Todas as notificações foram marcadas como lidas." };
+}

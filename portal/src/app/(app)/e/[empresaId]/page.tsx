@@ -93,14 +93,14 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
         </div>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
         {verDocs ? (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ListChecks className="size-4" /> Pendências de {formatarCompetencia(comp, true)}
+                <ListChecks className="size-4" /> Pendências
               </CardTitle>
-              <CardDescription>Documentos que o escritório precisa receber para fechar o mês.</CardDescription>
+              <CardDescription>Documentos que o escritório precisa receber. Progresso de {formatarCompetencia(comp, true)}:</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {r && r.total > 0 ? (
@@ -125,6 +125,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
                 <p className="text-sm text-muted-foreground">Nenhuma pendência cadastrada para este mês.</p>
               )}
               {itens.data?.length ? (
+                <>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Em aberto, pelo prazo</p>
                 <ul className="divide-y divide-border text-sm">
                   {itens.data.map((i) => (
                     <li key={i.id} className="flex items-center justify-between gap-3 py-2">
@@ -146,6 +148,7 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
                     </li>
                   ))}
                 </ul>
+                </>
               ) : r && r.total > 0 ? (
                 <p className="flex items-center gap-2 text-sm text-sucesso-fg">
                   <FileCheck2 className="size-4" /> Nenhum documento faltando no momento.

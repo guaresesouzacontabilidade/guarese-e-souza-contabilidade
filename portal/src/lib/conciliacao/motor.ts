@@ -2,22 +2,8 @@ import "server-only";
 import type { ClienteAdmin } from "@/lib/supabase/admin";
 import type { Job } from "@/lib/jobs/executor";
 import { dec } from "@/lib/dinheiro";
+import { buscarTudo } from "@/lib/supabase/paginar";
 import { calcularSugestoes, type BaixaC, type LancamentoC, type MovimentoC } from "./sugestoes";
-
-const PAGINA = 1000;
-const MAXIMO = 20_000;
-
-/** Lê todas as linhas de uma consulta em páginas (o PostgREST limita cada resposta). */
-async function buscarTudo<T>(consulta: (de: number, ate: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
-  const linhas: T[] = [];
-  for (let de = 0; de < MAXIMO; de += PAGINA) {
-    const { data, error } = await consulta(de, de + PAGINA - 1);
-    if (error) throw new Error(error.message);
-    linhas.push(...(data ?? []));
-    if (!data || data.length < PAGINA) break;
-  }
-  return linhas;
-}
 
 /**
  * Gera sugestões de conciliação para uma empresa. As sugestões ficam com
