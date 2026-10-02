@@ -299,16 +299,48 @@ async function chavesNotificacao(projetoId: string): Promise<Record<string, { va
   return { VAPID_PUBLIC_KEY: { valor: k.publicKey }, VAPID_PRIVATE_KEY: { valor: k.privateKey, segredo: true } };
 }
 
-function publicarVercel(projetoId: string, orgId: string): string {
+/**
+ * Confere na própria Vercel o resultado da publicação iniciada em `desde`
+ * (usado quando a conexão que acompanha a compilação cai no meio do caminho).
+ */
+async function aguardarPublicacao(projetoId: string, desde: number): Promise<string | null> {
+  for (let tentativa = 0; tentativa < 90; tentativa++) {
+    const { deployments } = await vc<{ deployments: { url: string; created: number; state?: string; readyState?: string }[] }>(
+      `/v6/deployments?projectId=${projetoId}&target=production&limit=5`,
+    );
+    const atual = deployments.find((d) => d.created >= desde - 60_000);
+    const situacao = atual?.state ?? atual?.readyState;
+    if (atual && situacao === "READY") return `https://${atual.url}`;
+    if (atual && (situacao === "ERROR" || situacao === "CANCELED")) return null;
+    // Nenhuma publicação nova depois de 2 minutos: o envio nem começou.
+    if (!atual && tentativa >= 12) return null;
+    await new Promise((r) => setTimeout(r, 10_000));
+  }
+  return null;
+}
+
+async function publicarVercel(projetoId: string, orgId: string): Promise<string> {
   passo("Vercel: publicando o site (compilação na nuvem, alguns minutos)");
   mkdirSync(join(RAIZ, ".vercel"), { recursive: true });
   writeFileSync(join(RAIZ, ".vercel", "project.json"), JSON.stringify({ projectId: projetoId, orgId }));
-  const saida = execFileSync("npx", ["--yes", "vercel@latest", "deploy", "--prod", "--yes", `--token=${tokenVercel}`], {
-    cwd: RAIZ,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "inherit"],
-    maxBuffer: 50 * 1024 * 1024,
-  });
+  const inicio = Date.now();
+  let saida: string;
+  try {
+    saida = execFileSync("npx", ["--yes", "vercel@latest", "deploy", "--prod", "--yes", `--token=${tokenVercel}`], {
+      cwd: RAIZ,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "inherit"],
+      maxBuffer: 50 * 1024 * 1024,
+    });
+  } catch (erro) {
+    // A conexão que acompanha a compilação pode cair (rede instável) sem que a
+    // publicação falhe na Vercel: confere o resultado direto por lá.
+    aviso("A conexão com a Vercel caiu durante a publicação; conferindo o resultado direto na Vercel...");
+    const url = await aguardarPublicacao(projetoId, inicio);
+    if (!url) throw erro;
+    ok(`Publicado: ${url}`);
+    return url;
+  }
   const url = saida.match(/https:\/\/[\w.-]+\.vercel\.app/g)?.pop();
   if (!url) throw new Error(`Não foi possível identificar o endereço publicado. Saída: ${saida.slice(-500)}`);
   ok(`Publicado: ${url}`);
@@ -377,13 +409,13 @@ async function main() {
   });
   await definirVariaveis(projeto.id, variaveis(siteInicial));
   await configurarLogin(ref, siteInicial);
-  publicarVercel(projeto.id, equipeVercel ?? usuario.id);
+  await publicarVercel(projeto.id, equipeVercel ?? usuario.id);
   let site = await dominioProducao(projeto.id, siteInicial);
   if (site !== siteInicial) {
     aviso(`O endereço definitivo é ${site}. Atualizando configurações e publicando novamente...`);
     await definirVariaveis(projeto.id, variaveis(site));
     await configurarLogin(ref, site);
-    publicarVercel(projeto.id, equipeVercel ?? usuario.id);
+    await publicarVercel(projeto.id, equipeVercel ?? usuario.id);
     site = await dominioProducao(projeto.id, site);
   }
   await agendarRotinas(ref, site, segredoCron);
