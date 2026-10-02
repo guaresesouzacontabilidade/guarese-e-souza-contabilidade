@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Ativar verificação em duas etapas"
 export default async function PaginaCadastrarMfa({ searchParams }: PageProps<"/mfa/cadastrar">) {
   const sp = await searchParams;
   const obrigatorio = sp.obrigatorio === "1";
-  const proximo = destinoSeguro(typeof sp.proximo === "string" ? sp.proximo : null, obrigatorio ? "/painel" : "/conta");
+  const proximo = destinoSeguro(typeof sp.proximo === "string" ? sp.proximo : null, "/painel");
   return (
     <Card className="w-full max-w-md">
       <CardHeader>

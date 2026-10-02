@@ -10,6 +10,7 @@ import { competenciaAtual, hojeISO, somarMeses } from "@/lib/competencia";
 import { formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { STATUS_COMPETENCIA } from "@/lib/rotulos";
 import { buscarTudo } from "@/lib/supabase/paginar";
+import { telaPronta } from "@/components/layout/navegacao";
 
 export const metadata: Metadata = { title: "Visão geral da carteira" };
 
@@ -236,9 +237,11 @@ export default async function VisaoGeralEscritorio() {
             ) : (
               <p className="text-sm text-muted-foreground">Nenhuma empresa tem você como responsável. Defina o responsável no cadastro da empresa.</p>
             )}
-            <Link href="/escritorio/fechamentos" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-              Acompanhar fechamentos <ArrowRight className="size-4" />
-            </Link>
+            {telaPronta("/escritorio/fechamentos") ? (
+              <Link href="/escritorio/fechamentos" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                Acompanhar fechamentos <ArrowRight className="size-4" />
+              </Link>
+            ) : null}
             <p className="text-xs text-muted-foreground">Atualizado em {formatarData(hoje)}.</p>
           </CardContent>
         </Card>

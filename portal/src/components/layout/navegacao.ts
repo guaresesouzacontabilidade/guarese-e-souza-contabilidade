@@ -34,6 +34,27 @@ export interface EmpresaMenu {
   demonstracao: boolean;
 }
 
+/** Telas ainda não construídas: ficam fora do menu até ficarem prontas. */
+const EM_CONSTRUCAO = [
+  "/escritorio/financeiro",
+  "/escritorio/conciliacao",
+  "/escritorio/fechamentos",
+  "/escritorio/relatorios",
+  "/escritorio/equipe",
+  "/escritorio/configuracoes",
+  "/escritorio/auditoria",
+  "/conciliacao",
+  "/fechamento",
+  "/relatorios",
+  "/configuracoes",
+  "/conta",
+];
+export const telaPronta = (href: string) =>
+  !EM_CONSTRUCAO.some((r) =>
+    r.startsWith("/escritorio") || r === "/conta" ? href === r : /^\/e\/[^/]+/.test(href) && href.endsWith(r),
+  );
+const disponivel = (item: ItemMenu) => telaPronta(item.href);
+
 export function menuEscritorio(admin: boolean): ItemMenu[] {
   const itens: ItemMenu[] = [
     { rotulo: "Visão geral da carteira", href: "/escritorio", icone: LayoutDashboard, exato: true },
@@ -51,7 +72,7 @@ export function menuEscritorio(admin: boolean): ItemMenu[] {
     itens.push({ rotulo: "Configurações", href: "/escritorio/configuracoes", icone: Settings });
     itens.push({ rotulo: "Auditoria", href: "/escritorio/auditoria", icone: ShieldCheck });
   }
-  return itens;
+  return itens.filter(disponivel);
 }
 
 export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
@@ -69,7 +90,7 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   if (p.has("relatorios.ver")) itens.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });
   if (p.has("mensagens.usar")) itens.push({ rotulo: "Mensagens", href: `${base}/mensagens`, icone: MessagesSquare });
   itens.push({ rotulo: "Configurações", href: `${base}/configuracoes`, icone: Settings });
-  return itens;
+  return itens.filter(disponivel);
 }
 
 export function itemAtivo(caminho: string, item: ItemMenu) {

@@ -25,7 +25,7 @@ import { Gaveta } from "@/components/ui/dialog";
 import { Menu, MenuConteudo, MenuGatilho, MenuItem, MenuRotulo, MenuSeparador, Popover, PopoverConteudo, PopoverGatilho } from "@/components/ui/menu";
 import { formatarDocumento, formatarRelativo } from "@/lib/formatos";
 import { ROTULO_PAPEL } from "@/lib/permissoes";
-import { itemAtivo, menuEmpresa, menuEscritorio, type EmpresaMenu, type ItemMenu } from "./navegacao";
+import { itemAtivo, menuEmpresa, menuEscritorio, telaPronta, type EmpresaMenu, type ItemMenu } from "./navegacao";
 import { listarNotificacoes, marcarNotificacoesLidas, type NotificacaoResumo } from "./acoes-layout";
 
 interface Props {
@@ -422,11 +422,13 @@ function MenuUsuario({ usuario }: { usuario: Props["usuario"] }) {
           <p className="mt-0.5 text-xs text-muted-foreground">{ROTULO_PAPEL[usuario.tipo]}</p>
         </div>
         <MenuSeparador />
-        <MenuItem asChild>
-          <Link href="/conta">
-            <UserCircle /> Minha conta e segurança
-          </Link>
-        </MenuItem>
+        {telaPronta("/conta") ? (
+          <MenuItem asChild>
+            <Link href="/conta">
+              <UserCircle /> Minha conta e segurança
+            </Link>
+          </MenuItem>
+        ) : null}
         <MenuItem asChild>
           <Link href="/notificacoes">
             <Bell /> Notificações

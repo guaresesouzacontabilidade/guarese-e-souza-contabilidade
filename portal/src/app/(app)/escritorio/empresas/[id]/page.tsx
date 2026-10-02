@@ -19,6 +19,7 @@ import { formatarDocumento } from "@/lib/formatos";
 import { REGIMES } from "@/lib/rotulos";
 import type { Permissao } from "@/lib/permissoes";
 import { alterarSituacaoEmpresa, atualizarEmpresa } from "../acoes";
+import { telaPronta } from "@/components/layout/navegacao";
 
 export const metadata: Metadata = { title: "Empresa" };
 
@@ -66,7 +67,7 @@ export default async function PaginaEmpresa({ params, searchParams }: PageProps<
           {ctx.pode("usuarios.gerenciar") ? <ConvidarUsuario empresaId={id} /> : null}
         </div>
         <ListaMembros empresaId={id} membros={membros} podeGerenciar={ctx.pode("usuarios.gerenciar")} usuarioAtualId={s.usuarioId} ehCliente={false} />
-        {s.perfil.tipo === "admin" ? (
+        {s.perfil.tipo === "admin" && telaPronta("/escritorio/equipe") ? (
           <p className="text-xs text-muted-foreground">
             Para dar acesso a alguém da equipe, use <Link href="/escritorio/equipe" className="underline">Equipe e permissões</Link>.
           </p>

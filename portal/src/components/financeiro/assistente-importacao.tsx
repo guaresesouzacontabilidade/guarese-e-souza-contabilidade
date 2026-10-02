@@ -16,6 +16,7 @@ import { formatarMoeda } from "@/lib/dinheiro";
 import type { Mapeamento } from "@/lib/extratos/planilha";
 import type { MapeamentoLancamentos, PreviaExtrato, LinhaLancamentoImportada } from "@/lib/financeiro/importacao";
 import { confirmarImportacaoExtrato, confirmarImportacaoLancamentos, previaExtrato, previaLancamentos } from "@/lib/financeiro/acoes-importacao";
+import { telaPronta } from "@/components/layout/navegacao";
 
 interface Props {
   empresaId: string;
@@ -122,7 +123,7 @@ export function AssistenteImportacao(p: Props) {
         tom="sucesso"
         titulo="Importação concluída"
         acao={
-          modo === "extrato" ? (
+          modo === "extrato" && telaPronta(`/e/${p.empresaId}/conciliacao`) ? (
             <Button asChild tamanho="sm">
               <Link href={`/e/${p.empresaId}/conciliacao`}>
                 <GitCompareArrows /> Conciliar
