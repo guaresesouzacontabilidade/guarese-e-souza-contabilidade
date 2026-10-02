@@ -51,7 +51,9 @@ Outras configurações:
 
 Sem SMTP, o portal **não finge** que enviou: convites mostram um link para copiar (e enviar por WhatsApp, por exemplo), avisos aparecem só no sino do portal e o histórico registra “não configurado”.
 
-Para ativar, cadastre na Vercel:
+**Jeito mais simples (Gmail do escritório, produção):** crie a senha de app do Gmail (abaixo) e guarde-a na variável `SMTP_PASS` nas configurações do ambiente do Claude Code (nunca no chat). Ao publicar a produção, o script cadastra sozinho o envio na Vercel (`smtp.gmail.com`, porta 465, remetente “Guarese's ON <guaresesouzacontabilidade@gmail.com>”) e no login do Supabase (convites e “Esqueci minha senha”). Para outro Gmail, informe também `SMTP_USER`. A demonstração nunca envia e-mails reais.
+
+Para ativar manualmente, cadastre na Vercel:
 
 ```
 SMTP_HOST=servidor SMTP do provedor

@@ -106,9 +106,10 @@ Se a chave do Supabase não listar as organizações da conta (acontece com algu
 
 Quando o escritório decidir usar com clientes de verdade:
 
-1. (Recomendado) Assinar o Supabase Pro e o Vercel Pro — seção 4.
+1. Assinar o **Vercel Pro** (exigido para uso comercial) e, de preferência, o **Supabase Pro** (cópias de segurança diárias e espaço para os documentos) — seção 4. O Supabase gratuito serve para um teste inicial com poucos clientes.
 2. Gerar novamente as duas chaves (seção 5.1).
-3. Executar:
+3. (E-mail) Criar a senha de app do Gmail do escritório e guardá-la na variável `SMTP_PASS` do ambiente — o script configura o envio sozinho (`CONFIGURACAO.md`, seção 3).
+4. Executar:
 
    ```bash
    cd portal
@@ -117,8 +118,8 @@ Quando o escritório decidir usar com clientes de verdade:
 
    Com domínio próprio, acrescente `--dominio portal.seudominio.com.br` e, no Registro.br, crie um registro **CNAME** apontando para `cname.vercel-dns.com`.
 
-4. O script mostra um **link de uso único** (válido por 24 horas) para o administrador criar a senha.
-5. Apague as duas chaves.
+5. O script mostra um **link de uso único** (válido por 24 horas) para o administrador criar a senha.
+6. Apague as duas chaves.
 
 ### Primeiro acesso em produção — lista de conferência
 

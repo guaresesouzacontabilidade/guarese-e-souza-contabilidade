@@ -178,6 +178,48 @@ async function aplicarMigracoes(ref: string) {
   }
 }
 
+/**
+ * E-mail do portal (SMTP). Com a senha de app do Gmail do escritório guardada
+ * na variável SMTP_PASS (configurações do ambiente, nunca no chat), o script
+ * cadastra o envio na hospedagem e no login do Supabase (convites e “Esqueci
+ * minha senha”). Sem a senha, o e-mail fica desconectado.
+ */
+function configuracaoEmail() {
+  // A demonstração usa e-mails fictícios (.test): o envio real fica só na produção.
+  if (!PRODUCAO) return null;
+  const senha = process.env.SMTP_PASS?.replace(/\s+/g, "");
+  if (!senha) return null;
+  const usuario = (process.env.SMTP_USER ?? "guaresesouzacontabilidade@gmail.com").trim();
+  const host = process.env.SMTP_HOST?.trim() || (/@gmail\.com$/i.test(usuario) ? "smtp.gmail.com" : "");
+  if (!host) {
+    aviso("SMTP_PASS informado, mas falta SMTP_HOST (servidor de e-mail) — e-mail não configurado.");
+    return null;
+  }
+  const porta = Number(process.env.SMTP_PORT ?? 465);
+  return {
+    host,
+    porta,
+    seguro: (process.env.SMTP_SECURE ?? String(porta === 465)) === "true",
+    usuario,
+    senha,
+    nome: "Guarese's ON",
+    remetente: process.env.SMTP_FROM?.trim() || `Guarese's ON <${usuario}>`,
+  };
+}
+
+function variaveisEmail(): Record<string, { valor: string; segredo?: boolean }> {
+  const e = configuracaoEmail();
+  if (!e) return {};
+  return {
+    SMTP_HOST: { valor: e.host },
+    SMTP_PORT: { valor: String(e.porta) },
+    SMTP_SECURE: { valor: String(e.seguro) },
+    SMTP_USER: { valor: e.usuario },
+    SMTP_PASS: { valor: e.senha, segredo: true },
+    SMTP_FROM: { valor: e.remetente },
+  };
+}
+
 async function configurarLogin(ref: string, site: string) {
   passo("Supabase: configurando o login");
   const modelo = (arq: string) => readFileSync(join(RAIZ, "supabase", "templates", arq), "utf8");
@@ -200,6 +242,23 @@ async function configurarLogin(ref: string, site: string) {
   };
   await sb(`/projects/${ref}/config/auth`, { method: "PATCH", body: JSON.stringify(essenciais) });
   ok("Cadastro público desligado, senha mínima de 10 caracteres, 2FA habilitado, endereços do site permitidos.");
+  const email = configuracaoEmail();
+  if (email) {
+    await sb(`/projects/${ref}/config/auth`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        smtp_admin_email: email.usuario,
+        smtp_sender_name: email.nome,
+        smtp_host: email.host,
+        smtp_port: String(email.porta),
+        smtp_user: email.usuario,
+        smtp_pass: email.senha,
+        smtp_max_frequency: 60,
+        rate_limit_email_sent: 30,
+      }),
+    });
+    ok(`E-mails do login (convites e “Esqueci minha senha”) enviados por ${email.usuario}.`);
+  }
   try {
     await sb(`/projects/${ref}/config/auth`, {
       method: "PATCH",
@@ -399,6 +458,7 @@ async function main() {
   const notificacoes = await chavesNotificacao(projeto.id);
   const variaveis = (site: string) => ({
     ...notificacoes,
+    ...variaveisEmail(),
     NEXT_PUBLIC_SUPABASE_URL: { valor: chaves.url },
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: { valor: chaves.publica },
     SUPABASE_SECRET_KEY: { valor: chaves.secreta, segredo: true },
