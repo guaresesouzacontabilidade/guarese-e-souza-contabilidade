@@ -9,21 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { SeletorPeriodo } from "@/components/relatorios/seletor-periodo";
+import { TabelaDre } from "@/components/relatorios/tabelas";
 import { carregarDre } from "@/lib/relatorios/dados";
-import { lerPeriodo, opcoesPeriodo, rotuloMesCurto } from "@/lib/relatorios/periodo";
+import { lerPeriodo, opcoesPeriodo } from "@/lib/relatorios/periodo";
 import { parametro } from "@/lib/busca";
 import { hojeISO } from "@/lib/competencia";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarData } from "@/lib/formatos";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Resultado (DRE)" };
 const UUID = /^[0-9a-f-]{36}$/i;
-
-function Valor({ v, forte }: { v: string; forte?: boolean }) {
-  const d = dec(v);
-  return <span className={cn("numero whitespace-nowrap", d.isNegative() && "text-perigo", forte && "font-semibold", d.isZero() && "text-muted-foreground")}>{d.isZero() ? "—" : formatarMoeda(d)}</span>;
-}
 
 export default async function PaginaDre({ params, searchParams }: PageProps<"/e/[empresaId]/relatorios/dre">) {
   const { empresaId } = await params;
@@ -41,7 +36,6 @@ export default async function PaginaDre({ params, searchParams }: PageProps<"/e/
     ctx.supabase.from("centros_custo").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     ctx.supabase.from("projetos").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
-  const varios = dre.meses.length > 1;
   const base = `/e/${empresaId}/relatorios/dre`;
   const linhaDetalhe = detalhe ? dre.linhas.find((l) => l.chave === detalhe && l.tipo !== "total") : null;
   const composicao = linhaDetalhe
@@ -113,62 +107,7 @@ export default async function PaginaDre({ params, searchParams }: PageProps<"/e/
       {vazio ? (
         <EstadoVazio titulo="Sem receitas ou despesas confirmadas neste período" descricao="Lançamentos sugeridos (de XML ou leitura de documentos) só entram no resultado depois de confirmados." />
       ) : (
-        <Table className="min-w-[640px]">
-          <THead>
-            <tr>
-              <Th className="sticky left-0 z-10 min-w-64 bg-muted">Descrição</Th>
-              {varios
-                ? dre.meses.map((m) => (
-                    <Th key={m} className="text-right">
-                      {rotuloMesCurto(m)}
-                    </Th>
-                  ))
-                : null}
-              <Th className="text-right">{varios ? "Total" : periodo.rotulo}</Th>
-              <Th className="text-right" title="Participação sobre a receita bruta">
-                % receita
-              </Th>
-            </tr>
-          </THead>
-          <TBody>
-            {dre.linhas.map((l) => {
-              const href = l.tipo === "total" ? null : urlCom(base, sp, { detalhe: l.chave });
-              const ativo = l.chave === detalhe;
-              return (
-                <Tr key={l.chave} className={cn(l.tipo === "total" && "bg-muted/60", l.destaque && "bg-bege/70", ativo && "bg-info-bg")}>
-                  <Td
-                    className={cn(
-                      "sticky left-0 z-10",
-                      ativo ? "bg-info-bg" : l.destaque ? "bg-bege" : l.tipo === "total" ? "bg-muted" : "bg-card",
-                      l.nivel === 1 && "pl-8 text-sm",
-                      l.tipo !== "categoria" && "font-semibold",
-                      l.destaque && "text-titulo",
-                    )}
-                  >
-                    {href ? (
-                      <Link href={href} scroll={false} className="hover:underline">
-                        {l.rotulo}
-                      </Link>
-                    ) : (
-                      l.rotulo
-                    )}
-                  </Td>
-                  {varios
-                    ? dre.meses.map((m) => (
-                        <Td key={m} className="text-right text-sm">
-                          <Valor v={l.valores[m]} forte={l.tipo !== "categoria"} />
-                        </Td>
-                      ))
-                    : null}
-                  <Td className="text-right">
-                    <Valor v={l.total} forte />
-                  </Td>
-                  <Td className="text-right text-sm text-muted-foreground numero">{l.percentual === null ? "" : `${l.percentual.toFixed(1).replace(".", ",")}%`}</Td>
-                </Tr>
-              );
-            })}
-          </TBody>
-        </Table>
+        <TabelaDre dre={dre} rotuloPeriodo={periodo.rotulo} hrefLinha={(chave) => urlCom(base, sp, { detalhe: chave })} ativa={detalhe} />
       )}
 
       {linhaDetalhe ? (

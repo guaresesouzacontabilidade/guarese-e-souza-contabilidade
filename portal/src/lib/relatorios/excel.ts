@@ -76,8 +76,9 @@ export function planilhaFluxo(wb: ExcelJS.Workbook, info: InfoPlanilha, fluxo: R
   linha("Saldo no início", fluxo.meses.map((m) => m.saldoInicial), true);
   for (const g of Object.keys(GRUPOS_FLUXO)) {
     if (!fluxo.meses.some((m) => m.porGrupo[g])) continue;
-    linha(`${GRUPOS_FLUXO[g]} — entradas`, fluxo.meses.map((m) => m.porGrupo[g]?.entradas ?? 0));
-    linha(`${GRUPOS_FLUXO[g]} — saídas`, fluxo.meses.map((m) => dec(m.porGrupo[g]?.saidas ?? 0).negated().toFixed(2)));
+    if (fluxo.meses.some((m) => !dec(m.porGrupo[g]?.entradas ?? 0).isZero())) linha(`${GRUPOS_FLUXO[g]} — entradas`, fluxo.meses.map((m) => m.porGrupo[g]?.entradas ?? 0));
+    if (fluxo.meses.some((m) => !dec(m.porGrupo[g]?.saidas ?? 0).isZero()))
+      linha(`${GRUPOS_FLUXO[g]} — saídas`, fluxo.meses.map((m) => dec(m.porGrupo[g]?.saidas ?? 0).negated().toFixed(2)));
   }
   if (fluxo.meses.some((m) => !dec(m.abertura).isZero())) linha("Saldo inicial de contas cadastradas", fluxo.meses.map((m) => m.abertura));
   linha("Saldo no fim", fluxo.meses.map((m) => m.saldoFinal), true);

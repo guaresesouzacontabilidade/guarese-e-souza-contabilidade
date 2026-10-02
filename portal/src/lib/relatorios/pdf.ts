@@ -176,8 +176,8 @@ export function blocoFluxo(fluxo: ResultadoFluxo): Content[] {
     [{ text: "Saldo no início", bold: true }, ...meses.map((m) => ({ ...(moeda(m.saldoInicial, true) as object), bold: true }) as TableCell)],
   ];
   for (const g of grupos) {
-    linhas.push([{ text: `${GRUPOS_FLUXO[g]} — entradas` }, ...meses.map((m) => moeda(m.porGrupo[g]?.entradas))]);
-    linhas.push([{ text: `${GRUPOS_FLUXO[g]} — saídas` }, ...meses.map((m) => moeda(m.porGrupo[g]?.saidas))]);
+    if (meses.some((m) => !dec(m.porGrupo[g]?.entradas ?? 0).isZero())) linhas.push([{ text: `${GRUPOS_FLUXO[g]} — entradas` }, ...meses.map((m) => moeda(m.porGrupo[g]?.entradas))]);
+    if (meses.some((m) => !dec(m.porGrupo[g]?.saidas ?? 0).isZero())) linhas.push([{ text: `${GRUPOS_FLUXO[g]} — saídas` }, ...meses.map((m) => moeda(m.porGrupo[g]?.saidas))]);
   }
   if (meses.some((m) => !dec(m.abertura).isZero())) linhas.push([{ text: "Saldo inicial de contas cadastradas" }, ...meses.map((m) => moeda(m.abertura))]);
   linhas.push([{ text: "Saldo no fim", bold: true }, ...meses.map((m) => ({ ...(moeda(m.saldoFinal, true) as object), bold: true }) as TableCell)]);
@@ -226,8 +226,7 @@ export function blocoIndicadores(indicadores: Indicador[], resumo: string[]): Co
   const cor = (s: Indicador["status"]) => (s === "bom" ? COR.verde : s === "atencao" ? COR.amarelo : s === "critico" ? COR.vermelho : COR.cinza);
   const rotulo = (s: Indicador["status"]) => (s === "bom" ? "Saudável" : s === "atencao" ? "Atenção" : s === "critico" ? "Crítico" : "Sem dados");
   return [
-    { text: "Resumo do período", style: "secao" },
-    { ul: resumo.map((t) => ({ text: t, margin: [0, 0, 0, 2] })), fontSize: 9 },
+    ...(resumo.length ? ([{ text: "Resumo do período", style: "secao" }, { ul: resumo.map((t) => ({ text: t, margin: [0, 0, 0, 2] })), fontSize: 9 }] as Content[]) : []),
     { text: "Indicadores de saúde financeira", style: "secao" },
     {
       table: {
@@ -246,4 +245,12 @@ export function blocoIndicadores(indicadores: Indicador[], resumo: string[]): Co
 export function blocoTexto(titulo: string, texto: string | null | undefined): Content[] {
   if (!texto?.trim()) return [];
   return [{ text: titulo, style: "secao" }, ...texto.split(/\n{2,}/).map((p) => ({ text: p.trim(), margin: [0, 0, 0, 4] }) as Content)];
+}
+
+export function blocoLimitacoes(limitacoes: string[]): Content[] {
+  if (!limitacoes.length) return [];
+  return [
+    { text: "Limitações dos dados deste relatório", style: "secao" },
+    { ul: limitacoes.map((l) => ({ text: l, margin: [0, 0, 0, 2] })), fontSize: 8.5, color: COR.amarelo },
+  ];
 }
