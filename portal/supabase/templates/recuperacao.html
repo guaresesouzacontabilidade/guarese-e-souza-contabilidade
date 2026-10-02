@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Redefinição de senha</title></head>
+<body style="margin:0;padding:0;background:#f5f3f0;font-family:Arial,Helvetica,sans-serif;color:#1f1a17;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f3f0;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e7e2dc;border-radius:12px;">
+        <tr><td style="padding:24px 28px;border-bottom:1px solid #efe6da;">
+          <div style="font-size:20px;font-weight:bold;color:#4a2c1d;letter-spacing:.5px;">Portal Guarese&rsquo;s ON</div>
+          <div style="font-size:12px;color:#6b625b;">Documentos, contabilidade e gestão financeira em um só lugar.</div>
+        </td></tr>
+        <tr><td style="padding:28px;">
+          <h1 style="margin:0 0 12px;font-size:18px;color:#4a2c1d;">Redefinição de senha</h1>
+          <p style="line-height:1.6;">Recebemos um pedido para redefinir a senha do seu acesso ao portal.</p>
+          <p style="margin:28px 0;">
+            <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/redefinir-senha" style="display:inline-block;background:#4a2c1d;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;">Criar nova senha</a>
+          </p>
+          <p style="font-size:12px;color:#6b625b;line-height:1.5;">Se o botão não funcionar, copie e cole este endereço no navegador:<br><span style="word-break:break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/redefinir-senha</span></p>
+          <p style="font-size:12px;color:#6b625b;line-height:1.5;">Se você não pediu a redefinição, ignore esta mensagem: sua senha continua a mesma. O link expira em breve e só pode ser usado uma vez.</p>
+        </td></tr>
+        <tr><td style="padding:16px 28px;border-top:1px solid #efe6da;font-size:11px;color:#8a8079;line-height:1.5;">
+          GUARESE&rsquo;S ON CONTABILIDADE — GUARESE&rsquo;S ON SOLUCOES EMPRESARIAIS LTDA — CNPJ 62.935.399/0001-50<br>
+          Praça do Centenário, nº 713, Centro, Porto Nacional – TO — CEP 77.500-000<br>
+          guaresesouzacontabilidade@gmail.com
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cteProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/cte">
+  <CTe><infCte Id="CTe17260945612378000184570010000007891333333337" versao="4.00">
+    <ide><cUF>17</cUF><CFOP>6353</CFOP><natOp>Prestacao de servico de transporte</natOp><mod>57</mod><serie>1</serie><nCT>789</nCT><dhEmi>2026-09-18T14:00:00-03:00</dhEmi><tpCTe>0</tpCTe><toma3><toma>0</toma></toma3></ide>
+    <emit><CNPJ>45612378000184</CNPJ><IE>1111</IE><xNome>TRANSPORTADORA Z LTDA (FICTICIA)</xNome><enderEmit><UF>GO</UF></enderEmit></emit>
+    <rem><CNPJ>11222333000181</CNPJ><xNome>EMPRESA A COMERCIO LTDA (FICTICIA)</xNome></rem>
+    <dest><CNPJ>98765432000198</CNPJ><xNome>CLIENTE X LTDA (FICTICIA)</xNome></dest>
+    <vPrest><vTPrest>250.00</vTPrest><vRec>250.00</vRec></vPrest>
+    <imp><ICMS><ICMS00><CST>00</CST><vBC>250.00</vBC><pICMS>12.00</pICMS><vICMS>30.00</vICMS></ICMS00></ICMS></imp>
+  </infCte></CTe>
+  <protCTe versao="4.00"><infProt><chCTe>17260945612378000184570010000007891333333337</chCTe><dhRecbto>2026-09-18T14:01:00-03:00</dhRecbto><nProt>417260000000001</nProt><cStat>100</cStat><xMotivo>Autorizado o uso do CT-e</xMotivo></infProt></protCTe>
+</cteProc>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Símbolo ON">
+  <rect width="64" height="64" rx="14" fill="#4a2c1d"/>
+  <circle cx="22" cy="36" r="11" fill="none" stroke="#f1e8dc" stroke-width="5"/>
+  <path d="M38 47V25l12 16V25" fill="none" stroke="#f1e8dc" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50 8l7 8h-4.5v6h-5v-6H43z" fill="#d9b892"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 72" role="img" aria-label="Guarese's ON Contabilidade (logomarca provisória)">
+  <g transform="translate(4 4)">
+    <rect width="64" height="64" rx="14" fill="#f1e8dc"/>
+    <circle cx="22" cy="36" r="11" fill="none" stroke="#4a2c1d" stroke-width="5"/>
+    <path d="M38 47V25l12 16V25" fill="none" stroke="#4a2c1d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M50 8l7 8h-4.5v6h-5v-6H43z" fill="#8b5e3c"/>
+  </g>
+  <text x="82" y="40" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#f3e9dd" letter-spacing="1">GUARESE&#8217;S <tspan fill="#d9b892">ON</tspan></text>
+  <text x="84" y="60" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#c9b5a2" letter-spacing="4.2">CONTABILIDADE</text>
+</svg>

@@ -1,0 +1,12 @@
+# Arquivos que não sobem para a Vercel
+node_modules
+.next
+.env
+.env.*
+!.env.example
+test-results
+playwright-report
+coverage
+supabase/.temp
+supabase/.branches
+.publicacao.json
