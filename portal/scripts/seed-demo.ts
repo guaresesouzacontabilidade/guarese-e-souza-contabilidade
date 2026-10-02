@@ -18,6 +18,7 @@ import { semearFinanceiro } from "./demo-financeiro";
 import { semearDocumentos } from "./demo-documentos";
 import { semearObrigacoes } from "./demo-obrigacoes";
 import { semearCalculos } from "./demo-calculos";
+import { semearVencimentos } from "./demo-vencimentos";
 
 carregarEnv();
 
@@ -207,6 +208,7 @@ async function main() {
 
   // Cálculos: parâmetros, receita informada e colaboradores fictícios
   if (await semearCalculos(admin, { padaria: ids[0], oficina: ids[1] })) console.log("  Cálculos e colaboradores de demonstração criados");
+  if (await semearVencimentos(admin, { padaria: ids[0], oficina: ids[1] })) console.log("  Vencimentos de demonstração criados");
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);

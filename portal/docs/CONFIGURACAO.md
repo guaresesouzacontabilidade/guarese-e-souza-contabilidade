@@ -116,7 +116,7 @@ Duas rotinas mantêm o portal em dia:
 | Rotina | Frequência | O que faz |
 | --- | --- | --- |
 | Fila de tarefas (`/api/cron/processar`) | a cada 5 minutos | lê documentos enviados (XML, OCR), envia e-mails e WhatsApp, gera sugestões de conciliação, remove arquivos eliminados |
-| Rotina diária (`/api/cron/diario`) | 6h05 (Brasília) | gera o checklist do mês, os lançamentos recorrentes e os lembretes; limpa envios incompletos; gera as tarefas das obrigações (sem duplicar) e os alertas de prazo para a equipe |
+| Rotina diária (`/api/cron/diario`) | 6h05 (Brasília) | gera o checklist do mês, os lançamentos recorrentes e os lembretes; limpa envios incompletos; gera as tarefas das obrigações (sem duplicar) e os alertas de prazo para a equipe; avisa os vencimentos de certificados, alvarás, licenças e certidões |
 
 Na publicação padrão, o **próprio banco (Supabase, extensões `pg_cron` e `pg_net`)** chama essas rotas com o `CRON_SECRET`, guardado no cofre do Supabase (Vault). A situação aparece em **Configurações → Integrações → Rotinas automáticas**.
 

@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   CalendarClock,
   Calculator,
+  CalendarX2,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -43,6 +44,7 @@ export function menuEscritorio(admin: boolean): ItemMenu[] {
     { rotulo: "Empresas", href: "/escritorio/empresas", icone: Building2 },
     { rotulo: "Documentos recebidos", href: "/escritorio/documentos", icone: FileInput },
     { rotulo: "Pendências", href: "/escritorio/pendencias", icone: ListChecks },
+    { rotulo: "Vencimentos", href: "/escritorio/vencimentos", icone: CalendarX2 },
     { rotulo: "Financeiro", href: "/escritorio/financeiro", icone: Wallet },
     { rotulo: "Conciliação", href: "/escritorio/conciliacao", icone: GitCompareArrows },
     { rotulo: "Fechamentos", href: "/escritorio/fechamentos", icone: CalendarCheck },
@@ -65,6 +67,7 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   if (p.has("documentos.ver")) {
     itens.push({ rotulo: equipe ? "Documentos" : "Meus documentos", href: `${base}/documentos`, icone: FolderOpen });
     itens.push({ rotulo: "Pendências", href: `${base}/pendencias`, icone: ListChecks });
+    itens.push({ rotulo: "Vencimentos", href: `${base}/vencimentos`, icone: CalendarX2 });
   }
   if (p.has("financeiro.ver")) itens.push({ rotulo: "Financeiro", href: `${base}/financeiro`, icone: Wallet });
   if (p.has("conciliacao.executar")) itens.push({ rotulo: "Conciliação", href: `${base}/conciliacao`, icone: GitCompareArrows });

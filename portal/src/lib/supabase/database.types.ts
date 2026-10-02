@@ -2099,6 +2099,56 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"vencimento_avisos": {
+                  Row: {
+                    "enviado_em": string,"marco": number,"validade": string,"vencimento_id": string
+                  }
+                  Insert: {
+                    "enviado_em"?: string,"marco": number,"validade": string,"vencimento_id": string
+                  }
+                  Update: {
+                    "enviado_em"?: string,"marco"?: number,"validade"?: string,"vencimento_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vencimento_avisos_vencimento_id_fkey"
+      columns: ["vencimento_id"]
+isOneToOne: false
+      referencedRelation: "vencimentos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vencimentos": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"descricao": string,"documento_id": string | null,"emissao": string | null,"empresa_id": string,"id": string,"numero": string | null,"observacao": string | null,"orgao": string | null,"responsavel": string,"situacao": string,"tipo": string,"updated_at": string,"validade": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"descricao": string,"documento_id"?: string | null,"emissao"?: string | null,"empresa_id": string,"id"?: string,"numero"?: string | null,"observacao"?: string | null,"orgao"?: string | null,"responsavel"?: string,"situacao"?: string,"tipo": string,"updated_at"?: string,"validade": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"documento_id"?: string | null,"emissao"?: string | null,"empresa_id"?: string,"id"?: string,"numero"?: string | null,"observacao"?: string | null,"orgao"?: string | null,"responsavel"?: string,"situacao"?: string,"tipo"?: string,"updated_at"?: string,"validade"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vencimentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vencimentos_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vencimentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -2522,6 +2572,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_operacional":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_vencimentos":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "saldo_conta":

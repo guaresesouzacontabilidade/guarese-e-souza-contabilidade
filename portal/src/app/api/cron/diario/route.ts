@@ -9,7 +9,8 @@ export const maxDuration = 60;
  * Rotina diária: gera o checklist do mês, lançamentos recorrentes,
  * lembretes automáticos de pendências e limpa envios incompletos; na camada
  * operacional, gera as tarefas das obrigações (sem duplicar) e os alertas
- * de prazos para a equipe.
+ * de prazos para a equipe; avisa os vencimentos de certificados, alvarás,
+ * licenças e certidões (30, 15 e 5 dias antes e no vencimento).
  */
 async function executar(req: Request) {
   if (!cronAutorizado(req)) return new NextResponse("Não autorizado.", { status: 401 });
@@ -24,7 +25,12 @@ async function executar(req: Request) {
     await registrarRotina(admin, "diaria", { ok: false, resultado: data, erro: `Obrigações: ${operacional.error.message}` });
     return NextResponse.json({ ok: false, rotina: data, erro: operacional.error.message }, { status: 500 });
   }
-  const resultado = { ...(data as Record<string, unknown>), obrigacoes: operacional.data };
+  const vencimentos = await admin.rpc("rotina_vencimentos");
+  const resultado = {
+    ...(data as Record<string, unknown>),
+    obrigacoes: operacional.data,
+    vencimentos: vencimentos.error ? { erro: vencimentos.error.message } : vencimentos.data,
+  };
   await registrarRotina(admin, "diaria", { ok: true, resultado });
   const fila = await processarFila({ limite: 50, tempoMaximoMs: 30_000 });
   return NextResponse.json({ ok: true, rotina: resultado, fila });

@@ -5,12 +5,13 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Progresso } from "@/components/ui/feedback";
-import { competenciaAtual, hojeISO, somarMeses } from "@/lib/competencia";
+import { competenciaAtual, hojeISO, somarDias, somarMeses } from "@/lib/competencia";
 import { formatarCompetencia, formatarData, formatarDataHora, formatarDocumento } from "@/lib/formatos";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { STATUS_CHECKLIST, STATUS_DOCUMENTO } from "@/lib/rotulos";
 import { calcularPrevisao, type DadosPrevisao } from "@/lib/calculos/previsao";
+import { situacaoVencimento } from "@/lib/vencimentos/rotulos";
+import { Alerta, Progresso } from "@/components/ui/feedback";
 
 export const metadata: Metadata = { title: "Visão geral" };
 
@@ -22,7 +23,7 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
   const comp = somarMeses(competenciaAtual(), -1);
   const verDocs = ctx.pode("documentos.ver");
 
-  const [resumo, itens, recebidos, doEscritorio, conversas, dadosPrevisao] = await Promise.all([
+  const [resumo, itens, recebidos, doEscritorio, conversas, dadosPrevisao, vencendo] = await Promise.all([
     verDocs ? ctx.supabase.rpc("resumo_checklist", { p_empresa_id: empresaId, p_competencia: comp }) : Promise.resolve({ data: null }),
     verDocs
       ? ctx.supabase
@@ -60,6 +61,16 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
       ? ctx.supabase.from("conversas").select("id, assunto, aguardando, ultima_mensagem_em").eq("empresa_id", empresaId).eq("status", "aberta").order("ultima_mensagem_em", { ascending: false }).limit(4)
       : Promise.resolve({ data: [] }),
     ctx.pode("calculos.ver") ? ctx.supabase.rpc("dados_previsao_impostos", { p_empresa_id: empresaId, p_competencia: comp }) : Promise.resolve({ data: null }),
+    verDocs
+      ? ctx.supabase
+          .from("vencimentos")
+          .select("id, descricao, validade")
+          .eq("empresa_id", empresaId)
+          .eq("situacao", "ativo")
+          .lte("validade", somarDias(hoje, 30))
+          .order("validade")
+          .limit(4)
+      : Promise.resolve({ data: [] }),
   ]);
   const previsao = dadosPrevisao.data ? calcularPrevisao(dadosPrevisao.data as unknown as DadosPrevisao) : null;
   const previsaoVisivel = previsao && previsao.situacao !== "sem_parametros" && previsao.situacao !== "competencia_nao_suportada";
@@ -96,6 +107,26 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
           ) : null}
         </div>
       </section>
+
+      {vencendo.data?.length ? (
+        <Alerta
+          tom={vencendo.data.some((v) => situacaoVencimento(v.validade, hoje).tom === "perigo") ? "perigo" : "alerta"}
+          titulo="Documentos vencendo"
+          acao={
+            <Button asChild variante="contorno" tamanho="sm">
+              <Link href={`/e/${empresaId}/vencimentos`}>Ver vencimentos</Link>
+            </Button>
+          }
+        >
+          <ul className="space-y-0.5">
+            {vencendo.data.map((v) => (
+              <li key={v.id}>
+                {v.descricao}: {situacaoVencimento(v.validade, hoje).rotulo.toLowerCase()} ({formatarData(v.validade)})
+              </li>
+            ))}
+          </ul>
+        </Alerta>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
         {previsao && previsaoVisivel ? (

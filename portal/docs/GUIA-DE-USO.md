@@ -54,6 +54,13 @@ O **checklist do mês** mostra o que a empresa precisa enviar e o prazo de cada 
 
 Se um item não existir no mês, use **Não se aplica** e explique; o escritório confirma. O portal envia lembretes antes e depois do prazo.
 
+### Vencimentos
+Certificado digital, alvará de funcionamento, licenças (sanitária, bombeiros, ambiental), certidões negativas (CND federal, estadual e municipal, CRF do FGTS, CNDT), procurações e contratos com data de validade. O portal avisa **30, 15 e 5 dias antes e no dia do vencimento** — no sino, por e-mail e, se você autorizou, por WhatsApp. A Visão geral mostra o que vence nos próximos 30 dias.
+
+- **Novo vencimento**: escolha o tipo, informe a validade e quem renova (o escritório ou a empresa). Dá para ligar o arquivo do documento que já está no portal.
+- **Renovar**: informe a nova validade; os avisos recomeçam pela nova data.
+- **Arquivar**: quando o documento não é mais necessário (para de avisar). Excluir é só com o escritório.
+
 ### Meus documentos
 Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, folha, relatórios). Cada documento mostra a situação, o histórico e as versões. Baixar ou visualizar fica registrado.
 
@@ -151,6 +158,9 @@ Os avisos podem chegar como notificação do aparelho, **mesmo com o portal fech
 - O sino também mostra um atalho **Ativar** enquanto o aparelho não recebe os avisos.
 - Ao **sair do portal** num aparelho, ele para de receber os avisos até você entrar de novo. Em **Minha conta → Avisos** aparece a lista dos aparelhos que recebem seus avisos; dá para remover qualquer um.
 - Os avisos mostram o nome da empresa e do arquivo. Se outras pessoas veem a tela do seu celular, ajuste nas configurações do aparelho para **ocultar o conteúdo das notificações na tela bloqueada**.
+
+### Vencimentos da carteira
+O menu **Vencimentos** do escritório lista certificados, alvarás, licenças e certidões de todas as empresas pela validade, com filtros (vencidos, próximos 30 ou 60 dias, tipo) e contadores. Os avisos saem sozinhos pela rotina diária (30, 15 e 5 dias antes e no vencimento), para a equipe da empresa e para o cliente. Cadastre em cada empresa → **Vencimentos**; ao renovar, informe a nova validade.
 
 ### Cálculos das empresas (previsão de impostos)
 
