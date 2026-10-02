@@ -192,7 +192,7 @@ export function ListaMembros({
   );
 }
 
-function DialogPermissoes({
+export function DialogPermissoes({
   empresaId,
   membro,
   ehCliente,

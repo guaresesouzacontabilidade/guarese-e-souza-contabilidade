@@ -2018,6 +2018,11 @@ isOneToOne: false
 "salvar_rascunho_relatorio":
 { Args: { "p_comentarios": string,"p_competencia": string,"p_dados": Json,"p_empresa_id": string,"p_fim": string,"p_id": string,"p_inicio": string,"p_limitacoes": Json,"p_resumo": string,"p_tipo": string,"p_titulo": string }; Returns: string
                            },
+"seguranca_usuarios":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "sessoes": number,"tem_2fa": boolean,"ultima_atividade": string,"user_id": string
+            }[]
+                           },
 "sistema_bloquear_documento":
 { Args: { "p_documento_id": string,"p_motivo": string,"p_versao_id": string }; Returns: undefined
                            },

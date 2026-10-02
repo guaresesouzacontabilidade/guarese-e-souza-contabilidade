@@ -262,3 +262,88 @@ export async function encerrarSessoesUsuario(usuarioId: string): Promise<Resulta
   if (error) return falha(mensagemErro(error));
   return sucesso(`${data ?? 0} sessão(ões) encerrada(s).`);
 }
+
+const UUID = /^[0-9a-f-]{36}$/i;
+
+async function revalidarEquipe(usuarioId: string) {
+  revalidatePath("/escritorio/equipe");
+  revalidatePath(`/escritorio/equipe/${usuarioId}`);
+}
+
+/** Administrador: altera o perfil (administrador/equipe) e o cargo de um usuário. */
+export async function editarUsuario(usuarioId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const s = await exigirAdmin();
+  const d = z
+    .object({ tipo: z.enum(["admin", "equipe", "cliente"]), cargo: z.string().trim().max(80, "Use até 80 caracteres.") })
+    .safeParse({ tipo: fd.get("tipo"), cargo: fd.get("cargo") ?? "" });
+  if (!d.success) return falhaValidacao(d.error);
+  const { data: atual } = await s.supabase.from("perfis").select("ativo, tipo").eq("id", usuarioId).maybeSingle();
+  if (!atual) return falha("Usuário não encontrado.");
+  if ((atual.tipo === "cliente") !== (d.data.tipo === "cliente")) return falha("Não é possível transformar cliente em equipe (ou o contrário). Convide a pessoa com o perfil correto.");
+  const r = await administrarUsuario(usuarioId, d.data.tipo, atual.ativo, d.data.cargo);
+  if (!r.ok) return r;
+  await revalidarEquipe(usuarioId);
+  return sucesso("Dados atualizados.");
+}
+
+/** Administrador: desativa (bloqueia login e encerra sessões) ou reativa um usuário. */
+export async function alterarSituacaoUsuario(usuarioId: string, ativo: boolean): Promise<ResultadoAcao> {
+  const s = await exigirAdmin();
+  if (!UUID.test(usuarioId)) return falha("Usuário inválido.");
+  const { data: atual } = await s.supabase.from("perfis").select("tipo, cargo, anonimizado_em").eq("id", usuarioId).maybeSingle();
+  if (!atual) return falha("Usuário não encontrado.");
+  if (ativo && atual.anonimizado_em) return falha("Usuário anonimizado não pode ser reativado.");
+  const r = await administrarUsuario(usuarioId, atual.tipo as "admin" | "equipe" | "cliente", ativo, atual.cargo ?? undefined);
+  if (!r.ok) return r;
+  await revalidarEquipe(usuarioId);
+  return sucesso(ativo ? "Acesso reativado. Se a pessoa não lembrar a senha, gere um novo link de acesso." : "Usuário desativado: o login foi bloqueado e as sessões foram encerradas.");
+}
+
+/** Administrador: vincula uma pessoa da equipe a uma ou mais empresas. */
+export async function vincularEquipeEmpresas(usuarioId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const s = await exigirAdmin();
+  const empresas = [...new Set(fd.getAll("empresas").map(String))].filter((x) => UUID.test(x));
+  const validas = new Set<string>(TODAS_PERMISSOES);
+  const permissoes = fd.getAll("permissoes").map(String).filter((p) => validas.has(p)) as Permissao[];
+  if (!empresas.length) return falha("Selecione ao menos uma empresa.");
+  if (!permissoes.length) return falha("Selecione as permissões.");
+  const { data: alvo } = await s.supabase.from("perfis").select("tipo, ativo").eq("id", usuarioId).maybeSingle();
+  if (!alvo) return falha("Usuário não encontrado.");
+  if (alvo.tipo === "admin") return falha("Administradores já acessam todas as empresas.");
+  if (alvo.tipo !== "equipe") return falha("Clientes são convidados pela página da empresa.");
+  if (!alvo.ativo) return falha("Reative o usuário antes de vincular empresas.");
+  let feitos = 0;
+  for (const empresaId of empresas) {
+    const { error } = await s.supabase.rpc("vincular_membro", { p_empresa_id: empresaId, p_user_id: usuarioId, p_papel: "equipe", p_permissoes: permissoes });
+    if (error) {
+      await revalidarEquipe(usuarioId);
+      return falha(`${feitos ? `${feitos} empresa(s) vinculada(s) antes do erro. ` : ""}${mensagemErro(error)}`);
+    }
+    feitos++;
+  }
+  await revalidarEquipe(usuarioId);
+  return sucesso(feitos === 1 ? "Empresa vinculada." : `${feitos} empresas vinculadas.`);
+}
+
+/**
+ * Administrador: anonimiza os dados pessoais de um usuário (LGPD). O histórico
+ * contábil é preservado; nome, e-mail e telefone são removidos e o login é bloqueado.
+ */
+export async function anonimizarUsuario(usuarioId: string, motivo: string): Promise<ResultadoAcao> {
+  const s = await exigirAdmin();
+  if (!UUID.test(usuarioId)) return falha("Usuário inválido.");
+  if (motivo.trim().length < 5) return falha("Informe o motivo (por exemplo, o pedido de exclusão recebido).");
+  const { error } = await s.supabase.rpc("anonimizar_usuario", { p_user_id: usuarioId, p_motivo: motivo.trim() });
+  if (error) return falha(mensagemErro(error));
+  const admin = criarClienteAdmin();
+  const { data: p } = await admin.from("perfis").select("email").eq("id", usuarioId).single();
+  const { error: erroAuth } = await admin.auth.admin.updateUserById(usuarioId, {
+    email: p?.email,
+    email_confirm: true,
+    user_metadata: { nome: "Usuário anonimizado" },
+    ban_duration: "876000h",
+  });
+  await revalidarEquipe(usuarioId);
+  if (erroAuth) return sucesso("Dados anonimizados no portal. Atenção: não foi possível atualizar o cadastro de login; o acesso continua bloqueado.");
+  return sucesso("Dados pessoais anonimizados e acesso bloqueado definitivamente.");
+}
