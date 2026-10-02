@@ -117,6 +117,25 @@ export const STATUS_COMPETENCIA: Record<string, { rotulo: string; tom: "neutro" 
   fechada: { rotulo: "Fechada", tom: "sucesso" },
 };
 
+export const STATUS_PENDENCIA_FECHAMENTO: Record<string, { rotulo: string; tom: "neutro" | "info" | "sucesso" | "alerta" | "perigo" }> = {
+  aberta: { rotulo: "Aberta", tom: "alerta" },
+  resolvida: { rotulo: "Resolvida", tom: "sucesso" },
+  dispensada: { rotulo: "Dispensada", tom: "neutro" },
+};
+
+export const ACAO_HISTORICO_COMPETENCIA: Record<string, string> = {
+  fechamento_iniciado: "Fechamento iniciado",
+  etapa_nao_iniciada: "Etapa voltou para “não iniciada”",
+  etapa_em_andamento: "Etapa em andamento",
+  etapa_concluida: "Etapa concluída",
+  pendencia_registrada: "Pendência registrada",
+  pendencia_resolvida: "Pendência resolvida",
+  pendencia_dispensada: "Pendência dispensada",
+  pendencia_aberta: "Pendência reaberta",
+  fechada: "Competência fechada",
+  reaberta: "Competência reaberta",
+};
+
 export const STATUS_ENVIO: Record<string, { rotulo: string; tom: "neutro" | "info" | "sucesso" | "alerta" | "perigo" }> = {
   pendente: { rotulo: "Na fila", tom: "info" },
   enviado: { rotulo: "Enviado", tom: "sucesso" },
