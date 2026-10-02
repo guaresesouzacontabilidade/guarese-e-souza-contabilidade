@@ -94,7 +94,7 @@ export async function gerarSugestoes(admin: ClienteAdmin, empresaId: string) {
         numero_documento: l.numero_documento,
       };
     })
-    .filter((l) => dec(l.aberto).isPositive());
+    .filter((l) => dec(l.aberto).greaterThan(0));
 
   const bxs: BaixaC[] = baixas
     .filter((b) => !baixasConciliadas.has(b.id) && !emSugestao.has(b.id) && b.valor_total !== null)

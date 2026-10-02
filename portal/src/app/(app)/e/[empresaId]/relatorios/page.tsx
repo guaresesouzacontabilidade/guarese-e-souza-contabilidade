@@ -26,8 +26,8 @@ function Variacao({ atual, anterior, inverso = false }: { atual: string; anterio
   if (b.isZero()) return null;
   const v = a.minus(b).dividedBy(b.abs()).times(100);
   if (v.abs().lessThan(0.5)) return <span className="text-muted-foreground">estável</span>;
-  const bom = inverso ? v.isNegative() : v.isPositive();
-  const Icone = v.isPositive() ? ArrowUpRight : ArrowDownRight;
+  const bom = inverso ? v.lessThan(0) : v.greaterThan(0);
+  const Icone = v.greaterThan(0) ? ArrowUpRight : ArrowDownRight;
   return (
     <span className={bom ? "text-sucesso" : "text-perigo"}>
       <Icone className="inline size-3.5" aria-hidden /> {v.abs().toFixed(0)}%
@@ -130,9 +130,9 @@ export default async function SaudeFinanceira({ params, searchParams }: PageProp
           href={`/e/${empresaId}/relatorios/dre?periodo=${periodo.chave}`}
         />
         <Indicador
-          rotulo={resultado.isNegative() ? "Prejuízo" : "Lucro"}
+          rotulo={resultado.lessThan(0) ? "Prejuízo" : "Lucro"}
           valor={formatarMoeda(resultado)}
-          tom={resultado.isNegative() ? "perigo" : "sucesso"}
+          tom={resultado.lessThan(0) ? "perigo" : "sucesso"}
           icone={Wallet}
           detalhe={
             dec(t.receita_bruta.total).isZero() ? undefined : (
@@ -144,7 +144,7 @@ export default async function SaudeFinanceira({ params, searchParams }: PageProp
           rotulo="Saldo disponível hoje"
           valor={formatarMoeda(painel.saldoHoje)}
           icone={Landmark}
-          tom={dec(painel.saldoHoje).isNegative() ? "perigo" : "neutro"}
+          tom={dec(painel.saldoHoje).lessThan(0) ? "perigo" : "neutro"}
           detalhe={`Previsto em 30 dias: ${formatarMoeda(painel.projecao.janelas[0]?.saldo ?? painel.saldoHoje)}`}
           href={`/e/${empresaId}/relatorios/fluxo?periodo=${periodo.chave}`}
         />

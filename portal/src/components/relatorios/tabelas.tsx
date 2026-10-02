@@ -9,7 +9,7 @@ import { rotuloMesCurto } from "@/lib/relatorios/periodo";
 export function Dinheiro({ v, sinal, forte }: { v: string | number | null | undefined; sinal?: boolean; forte?: boolean }) {
   const d = dec(v ?? 0);
   return (
-    <span className={cn("numero whitespace-nowrap", d.isZero() && "text-muted-foreground", sinal && d.isNegative() && "text-perigo", forte && "font-semibold")}>
+    <span className={cn("numero whitespace-nowrap", d.isZero() && "text-muted-foreground", sinal && d.lessThan(0) && "text-perigo", forte && "font-semibold")}>
       {d.isZero() ? "—" : formatarMoeda(d)}
     </span>
   );

@@ -67,9 +67,9 @@ export function VisualizacaoRelatorio({
           <Indicador rotulo="Receitas" valor={formatarMoeda(t.receita_bruta.total)} />
           <Indicador rotulo="Custos e despesas" valor={formatarMoeda(dec(t.receita_bruta.total).minus(t.resultado_liquido.total))} />
           <Indicador
-            rotulo={dec(t.resultado_liquido.total).isNegative() ? "Prejuízo" : "Lucro"}
+            rotulo={dec(t.resultado_liquido.total).lessThan(0) ? "Prejuízo" : "Lucro"}
             valor={formatarMoeda(t.resultado_liquido.total)}
-            tom={dec(t.resultado_liquido.total).isNegative() ? "perigo" : "sucesso"}
+            tom={dec(t.resultado_liquido.total).lessThan(0) ? "perigo" : "sucesso"}
           />
           <Indicador rotulo={`Saldo disponível em ${formatarData(dados.dataBase)}`} valor={formatarMoeda(p.saldoHoje)} />
         </div>
@@ -107,10 +107,10 @@ export function VisualizacaoRelatorio({
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*]:min-w-0">
               <Indicador rotulo="Saldo na data" valor={formatarMoeda(p.saldoHoje)} />
               {p.janelas.map((j) => (
-                <Indicador key={j.dias} rotulo={`Em ${j.dias} dias`} valor={formatarMoeda(j.saldo)} tom={dec(j.saldo).isNegative() ? "perigo" : "neutro"} />
+                <Indicador key={j.dias} rotulo={`Em ${j.dias} dias`} valor={formatarMoeda(j.saldo)} tom={dec(j.saldo).lessThan(0) ? "perigo" : "neutro"} />
               ))}
             </div>
-            {p.menorSaldo && dec(p.menorSaldo.valor).isNegative() ? (
+            {p.menorSaldo && dec(p.menorSaldo.valor).lessThan(0) ? (
               <Alerta tom="perigo" titulo={`O caixa podia ficar negativo em ${formatarData(p.menorSaldo.data)}`}>
                 Menor saldo previsto: {formatarMoeda(p.menorSaldo.valor)}.
               </Alerta>

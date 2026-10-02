@@ -132,7 +132,7 @@ export async function carregarVerificacoes(supabase: ContextoEmpresa["supabase"]
   const revisao: Verificacao[] = [];
   if (dre) {
     revisao.push({
-      texto: `Resultado do mês: receitas ${formatarMoeda(dre.totais.receita_bruta.total)}, ${dec(dre.totais.resultado_liquido.total).isNegative() ? "prejuízo" : "lucro"} de ${formatarMoeda(dec(dre.totais.resultado_liquido.total).abs())}`,
+      texto: `Resultado do mês: receitas ${formatarMoeda(dre.totais.receita_bruta.total)}, ${dec(dre.totais.resultado_liquido.total).lessThan(0) ? "prejuízo" : "lucro"} de ${formatarMoeda(dec(dre.totais.resultado_liquido.total).abs())}`,
       ok: null,
       href: `${e}/relatorios/dre?periodo=${mes}`,
     });

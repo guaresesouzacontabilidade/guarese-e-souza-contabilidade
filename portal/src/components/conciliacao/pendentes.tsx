@@ -54,7 +54,7 @@ export function TabelaPendentes({
 
   const selecionados = linhas.filter((l) => sel.has(l.id));
   const contas = new Set(selecionados.map((l) => l.conta_id));
-  const sinais = new Set(selecionados.map((l) => dec(l.valor).isPositive()));
+  const sinais = new Set(selecionados.map((l) => dec(l.valor).greaterThan(0)));
   const parTransferencia =
     selecionados.length === 2 && contas.size === 2 && dec(selecionados[0].valor).plus(dec(selecionados[1].valor)).isZero();
   const selecaoValida = selecionados.length > 0 && ((contas.size === 1 && sinais.size === 1) || parTransferencia);

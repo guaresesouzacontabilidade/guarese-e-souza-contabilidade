@@ -209,8 +209,8 @@ function Conteudo({
           <Alerta tom="alerta">{bloqueio}</Alerta>
         ) : (
           <Alerta tom="info" titulo="Transferência entre contas da empresa">
-            A saída de {dados.movimentos.find((m) => dec(m.valor).isNegative())?.conta_nome} e a entrada em{" "}
-            {dados.movimentos.find((m) => dec(m.valor).isPositive())?.conta_nome} serão registradas como uma transferência. Transferências não
+            A saída de {dados.movimentos.find((m) => dec(m.valor).lessThan(0))?.conta_nome} e a entrada em{" "}
+            {dados.movimentos.find((m) => dec(m.valor).greaterThan(0))?.conta_nome} serão registradas como uma transferência. Transferências não
             entram como receita nem como despesa.
           </Alerta>
         )
@@ -368,7 +368,7 @@ function Conteudo({
                 </fieldset>
               ) : null}
               <Campo
-                rotulo={dec(dados.movimentos[0].valor).isNegative() ? "Ou registrar a transferência para a conta" : "Ou registrar a transferência vinda da conta"}
+                rotulo={dec(dados.movimentos[0].valor).lessThan(0) ? "Ou registrar a transferência para a conta" : "Ou registrar a transferência vinda da conta"}
                 htmlFor="conta-contrapartida"
                 ajuda="Use quando a outra conta não tem extrato importado (ex.: caixa físico)."
               >
@@ -410,7 +410,7 @@ function Conteudo({
           {precisaTratamento ? (
             <Campo
               rotulo={
-                resumo.diferenca.isPositive()
+                resumo.diferenca.greaterThan(0)
                   ? `${dados.tipo === "receber" ? "Entrou" : "Saiu"} ${formatarMoeda(resumo.diferenca)} a mais. O que é essa diferença?`
                   : `${dados.tipo === "receber" ? "Entrou" : "Saiu"} ${formatarMoeda(resumo.diferenca.abs())} a menos. O que é essa diferença?`
               }
@@ -503,7 +503,7 @@ function OpcaoRadio({
 }
 
 export function ValorSinal({ valor, className }: { valor: string; className?: string }) {
-  const positivo = dec(valor).isPositive();
+  const positivo = dec(valor).greaterThan(0);
   return (
     <span className={cn("shrink-0 font-semibold numero", positivo ? "text-sucesso" : "text-perigo", className)}>
       {formatarMoeda(valor, { sinal: true })}

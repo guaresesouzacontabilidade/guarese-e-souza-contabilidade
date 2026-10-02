@@ -166,7 +166,7 @@ function CartaoSugestao({
       <div className="grid gap-3 p-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
         <div className="min-w-0 space-y-1.5">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{transferencia ? "Saída" : "Extrato do banco"}</p>
-          {(transferencia ? s.movimentos.filter((m) => dec(m.valor).isNegative()) : s.movimentos).map((m) => (
+          {(transferencia ? s.movimentos.filter((m) => dec(m.valor).lessThan(0)) : s.movimentos).map((m) => (
             <LinhaItem key={m.id} titulo={m.descricao} detalhe={`${formatarData(m.data)} · ${m.conta}`} valor={<ValorSinal valor={m.valor} />} />
           ))}
         </div>
@@ -175,7 +175,7 @@ function CartaoSugestao({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{transferencia ? "Entrada" : "No sistema"}</p>
           {transferencia
             ? s.movimentos
-                .filter((m) => dec(m.valor).isPositive())
+                .filter((m) => dec(m.valor).greaterThan(0))
                 .map((m) => (
                   <LinhaItem key={m.id} titulo={m.descricao} detalhe={`${formatarData(m.data)} · ${m.conta}`} valor={<ValorSinal valor={m.valor} />} />
                 ))

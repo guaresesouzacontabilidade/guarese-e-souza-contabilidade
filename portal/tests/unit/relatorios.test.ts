@@ -47,6 +47,12 @@ describe("DRE gerencial", () => {
     expect(dre.linhas.some((l) => l.chave === "outras_receitas")).toBe(false);
   });
 
+  it("não cria a fatia “Outras” quando não sobra valor (zero não é positivo)", () => {
+    const comp = composicaoDespesas(dre, 10);
+    expect(comp.some((c) => c.nome === "Outras")).toBe(false);
+    expect(comp.every((c) => c.valor > 0)).toBe(true);
+  });
+
   it("lista as maiores despesas", () => {
     const comp = composicaoDespesas(dre, 2);
     expect(comp[0]).toEqual({ nome: "insumos", valor: 4000 });

@@ -190,7 +190,7 @@ export async function carregarCandidatos(
     if (movs.some((m) => m.status_conciliacao !== "pendente")) return falha("Uma das movimentações já foi conciliada ou ignorada. Atualize a página.");
     const nomeConta = new Map((contas ?? []).map((c) => [c.id, c.nome]));
     const conta = movs[0].conta_financeira_id;
-    const positivo = dec(movs[0].valor).isPositive();
+    const positivo = dec(movs[0].valor).greaterThan(0);
     const tipo: "receber" | "pagar" = positivo ? "receber" : "pagar";
     const movimentos = movs.map((m) => ({
       id: m.id,
@@ -214,7 +214,7 @@ export async function carregarCandidatos(
     // Duas movimentações de contas diferentes: só podem ser uma transferência entre elas.
     const mesmaConta = movs.every((m) => m.conta_financeira_id === conta);
     if (!mesmaConta) return sucesso(undefined, base);
-    if (movs.some((m) => dec(m.valor).isPositive() !== positivo)) return falha("Não misture entradas e saídas na mesma conciliação.");
+    if (movs.some((m) => dec(m.valor).greaterThan(0) !== positivo)) return falha("Não misture entradas e saídas na mesma conciliação.");
 
     const total = movs.reduce((s, m) => s.plus(dec(m.valor).abs()), dec(0));
     const dataRef = movs[0].data;
@@ -400,7 +400,7 @@ export async function classificarMovimento(empresaId: string, _anterior: Resulta
     if (!mov) return falha("Movimentação não encontrada.");
     const { data: cat } = await ctx.supabase.from("categorias_financeiras").select("natureza").eq("id", v.categoria_id).eq("empresa_id", empresaId).maybeSingle();
     if (!cat) return falha("Categoria inválida.", { categoria_id: ["Selecione a categoria."] });
-    const entrada = dec(mov.valor).isPositive();
+    const entrada = dec(mov.valor).greaterThan(0);
     if ((entrada && cat.natureza !== "receita") || (!entrada && cat.natureza !== "despesa")) {
       return falha("A categoria não combina com a movimentação.", {
         categoria_id: [entrada ? "Para uma entrada, escolha uma categoria de receita." : "Para uma saída, escolha uma categoria de despesa."],

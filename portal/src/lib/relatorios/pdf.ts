@@ -117,7 +117,7 @@ export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buf
 // ------------------------------------------------------------------ blocos
 const moeda = (v: string | number | null | undefined, sinal = false): TableCell => {
   const d = dec(v ?? 0);
-  return { text: d.isZero() ? "—" : formatarMoeda(d), alignment: "right", color: sinal && d.isNegative() ? COR.vermelho : undefined, noWrap: true };
+  return { text: d.isZero() ? "—" : formatarMoeda(d), alignment: "right", color: sinal && d.lessThan(0) ? COR.vermelho : undefined, noWrap: true };
 };
 
 function tabela(
@@ -200,7 +200,7 @@ export function blocoProjecao(p: Projecao, saldoHoje: string, proximas: { data: 
       ["*", "auto", "auto", "auto"],
     ),
   ];
-  if (p.menorSaldo && dec(p.menorSaldo.valor).isNegative()) {
+  if (p.menorSaldo && dec(p.menorSaldo.valor).lessThan(0)) {
     blocos.push({ text: `Atenção: o caixa pode ficar negativo em ${formatarData(p.menorSaldo.data)} (${formatarMoeda(p.menorSaldo.valor)}).`, color: COR.vermelho, bold: true, margin: [0, 6, 0, 0] });
   }
   if (proximas.length) {

@@ -1993,6 +1993,11 @@ isOneToOne: false
               "conciliadas_30d": number,"empresa_id": string,"entradas_pendentes": number,"pendente_mais_antiga": string,"pendentes": number,"saidas_pendentes": number,"sugestoes": number,"ultima_importacao": string
             }[]
                            },
+"resumo_financeiro_carteira":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: {
+              "contas_sem_saldo": number,"empresa_id": string,"pagar_30": number,"pagar_vencido": number,"receber_30": number,"receber_vencido": number,"receita": number,"resultado": number,"saldo_disponivel": number,"sugeridos": number
+            }[]
+                           },
 "revisar_nao_aplica":
 { Args: { "p_aprovar": boolean,"p_item_id": string,"p_resposta"?: string }; Returns: undefined
                            },

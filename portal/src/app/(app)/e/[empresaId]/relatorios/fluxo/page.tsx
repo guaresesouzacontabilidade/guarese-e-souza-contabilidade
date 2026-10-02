@@ -112,13 +112,13 @@ export default async function FluxoCaixa({ params, searchParams }: PageProps<"/e
           </Alerta>
         ) : null}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*]:min-w-0">
-          <Indicador rotulo="Saldo disponível hoje" valor={formatarMoeda(prev.saldoHoje)} tom={dec(prev.saldoHoje).isNegative() ? "perigo" : "neutro"} />
+          <Indicador rotulo="Saldo disponível hoje" valor={formatarMoeda(prev.saldoHoje)} tom={dec(prev.saldoHoje).lessThan(0) ? "perigo" : "neutro"} />
           {p.janelas.map((j) => (
             <Indicador
               key={j.dias}
               rotulo={`Previsto em ${j.dias} dias`}
               valor={formatarMoeda(j.saldo)}
-              tom={dec(j.saldo).isNegative() ? "perigo" : "neutro"}
+              tom={dec(j.saldo).lessThan(0) ? "perigo" : "neutro"}
               detalhe={
                 <>
                   +{formatarMoeda(j.entradas)} / −{formatarMoeda(j.saidas)}
@@ -127,7 +127,7 @@ export default async function FluxoCaixa({ params, searchParams }: PageProps<"/e
             />
           ))}
         </div>
-        {p.menorSaldo && dec(p.menorSaldo.valor).isNegative() ? (
+        {p.menorSaldo && dec(p.menorSaldo.valor).lessThan(0) ? (
           <Alerta tom="perigo" titulo={`O caixa pode ficar negativo em ${formatarData(p.menorSaldo.data)}`}>
             Menor saldo previsto: {formatarMoeda(p.menorSaldo.valor)}. Considere antecipar recebimentos, negociar prazos ou adiar pagamentos.
           </Alerta>

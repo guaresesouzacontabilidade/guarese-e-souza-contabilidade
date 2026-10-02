@@ -86,7 +86,7 @@ export function dividirParcelas(total: ValorEntrada, n: number): Decimal[] {
 export function formatarMoeda(v: ValorEntrada, opcoes?: { sinal?: boolean; semSimbolo?: boolean }): string {
   if (v === null || v === undefined || v === "") return "—";
   const d = centavos(v);
-  const negativo = d.isNegative() && !d.isZero();
+  const negativo = d.lessThan(0) && !d.isZero();
   const [inteiro, decimal] = d.abs().toFixed(2).split(".");
   const comMilhar = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   const corpo = `${opcoes?.semSimbolo ? "" : "R$ "}${comMilhar},${decimal}`;

@@ -83,7 +83,7 @@ function pontosData(d: number) {
 export function pontuarLancamento(m: MovimentoC, l: LancamentoC) {
   const valorMov = dec(m.valor).abs();
   const aberto = dec(l.aberto);
-  if ((dec(m.valor).isPositive() ? "receber" : "pagar") !== l.tipo) return null;
+  if ((dec(m.valor).greaterThan(0) ? "receber" : "pagar") !== l.tipo) return null;
   const diferenca = valorMov.minus(aberto);
   const tolerancia = Decimal.max(new Decimal("1.00"), aberto.times("0.02"));
   let pontos = 0;
@@ -166,11 +166,11 @@ export function calcularSugestoes(
 
   // 2) Transferências entre contas da empresa (saída e entrada de mesmo valor)
   const pendentes = movimentos.filter((m) => !movUsados.has(m.id));
-  for (const saida of pendentes.filter((m) => dec(m.valor).isNegative())) {
+  for (const saida of pendentes.filter((m) => dec(m.valor).lessThan(0))) {
     if (movUsados.has(saida.id)) continue;
     let melhor: { e: MovimentoC; pontos: number; d: number } | null = null;
     for (const entrada of pendentes) {
-      if (movUsados.has(entrada.id) || entrada.conta_id === saida.conta_id || !dec(entrada.valor).isPositive()) continue;
+      if (movUsados.has(entrada.id) || entrada.conta_id === saida.conta_id || !dec(entrada.valor).greaterThan(0)) continue;
       if (!dec(entrada.valor).equals(dec(saida.valor).abs()) || rejeitado(saida.id, entrada.id)) continue;
       const d = dias(saida.data, entrada.data);
       if (d > 3) continue;
@@ -226,7 +226,7 @@ export function calcularSugestoes(
   // 4) Uma movimentação = vários lançamentos da mesma contraparte (soma exata)
   for (const m of movimentos) {
     if (movUsados.has(m.id)) continue;
-    const tipo = dec(m.valor).isPositive() ? "receber" : "pagar";
+    const tipo = dec(m.valor).greaterThan(0) ? "receber" : "pagar";
     const alvo = dec(m.valor).abs();
     const candidatos = lancamentos
       .filter((l) => l.tipo === tipo && !alvoUsado.has(l.id) && dec(l.aberto).lessThan(alvo) && !rejeitado(m.id, l.id))

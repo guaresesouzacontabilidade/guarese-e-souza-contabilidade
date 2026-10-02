@@ -124,7 +124,7 @@ export default async function VisaoFinanceira({ params }: PageProps<"/e/[empresa
                 ? `Sem saldo inicial em ${semSaldo.map((s) => s.nome).join(", ")}`
                 : "Contas bancárias e caixa (sem cartões e maquininhas)"
           }
-          tom={saldoDisponivel ? (saldoDisponivel.isNegative() ? "perigo" : "neutro") : "neutro"}
+          tom={saldoDisponivel ? (saldoDisponivel.lessThan(0) ? "perigo" : "neutro") : "neutro"}
           icone={Landmark}
           href={`${base}/contas`}
         />
@@ -132,7 +132,7 @@ export default async function VisaoFinanceira({ params }: PageProps<"/e/[empresa
           rotulo="A receber vencido"
           valor={formatarMoeda(vencidoReceber)}
           detalhe={`Próximos 7 dias: ${formatarMoeda(receber7)}`}
-          tom={vencidoReceber.isPositive() ? "alerta" : "neutro"}
+          tom={vencidoReceber.greaterThan(0) ? "alerta" : "neutro"}
           icone={ArrowDownLeft}
           href={`${base}/lancamentos?tipo=receber&situacao=atrasado`}
         />
@@ -140,7 +140,7 @@ export default async function VisaoFinanceira({ params }: PageProps<"/e/[empresa
           rotulo="A pagar vencido"
           valor={formatarMoeda(vencidoPagar)}
           detalhe={`Próximos 7 dias: ${formatarMoeda(pagar7)}`}
-          tom={vencidoPagar.isPositive() ? "perigo" : "neutro"}
+          tom={vencidoPagar.greaterThan(0) ? "perigo" : "neutro"}
           icone={ArrowUpRight}
           href={`${base}/lancamentos?tipo=pagar&situacao=atrasado`}
         />
@@ -148,7 +148,7 @@ export default async function VisaoFinanceira({ params }: PageProps<"/e/[empresa
           rotulo="Saldo projetado em 30 dias"
           valor={saldoProjetado ? formatarMoeda(saldoProjetado) : "—"}
           detalhe={`Entradas ${formatarMoeda(entradas30)} · saídas ${formatarMoeda(saidas30)}`}
-          tom={saldoProjetado?.isNegative() ? "perigo" : "neutro"}
+          tom={saldoProjetado?.lessThan(0) ? "perigo" : "neutro"}
         />
       </div>
 
@@ -266,7 +266,7 @@ export default async function VisaoFinanceira({ params }: PageProps<"/e/[empresa
             <Link href={`${base}/lancamentos`} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
               Ver lançamentos <ArrowRight className="size-4" />
             </Link>
-            {saldoProjetado?.isNegative() ? (
+            {saldoProjetado?.lessThan(0) ? (
               <p className="flex gap-1.5 text-sm text-perigo">
                 <AlertTriangle className="size-4 shrink-0" /> Pela previsão, o caixa fica negativo em até 30 dias. Revise prazos e recebimentos.
               </p>

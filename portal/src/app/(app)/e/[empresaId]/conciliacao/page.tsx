@@ -71,8 +71,8 @@ export default async function PaginaConciliacao({ params, searchParams }: PagePr
     ignoradas: nIgn.count ?? 0,
     conciliadas30: nConc30.count ?? 0,
   };
-  const entradas = somar(valoresPend.filter((v) => dec(v.valor).isPositive()).map((v) => v.valor));
-  const saidas = somar(valoresPend.filter((v) => dec(v.valor).isNegative()).map((v) => dec(v.valor).abs()));
+  const entradas = somar(valoresPend.filter((v) => dec(v.valor).greaterThan(0)).map((v) => v.valor));
+  const saidas = somar(valoresPend.filter((v) => dec(v.valor).lessThan(0)).map((v) => dec(v.valor).abs()));
   const aba: Aba = (parametro(sp, "aba", ABAS) as Aba) || (totais.sugestoes > 0 ? "sugestoes" : "pendentes");
   const base = `/e/${empresaId}/conciliacao`;
   const hrefAba = (a: Aba) => urlCom(base, {}, { aba: a, conta: conta || null });
@@ -256,7 +256,7 @@ async function AbaSugestoes({ ctx, empresaId, conta, contas, podeExecutar }: Pro
       pontuacao: c.pontuacao,
       criterios: c.criterios ?? {},
       observacao: c.observacao,
-      sentido: movimentos[0] && dec(movimentos[0].valor).isNegative() ? "pagar" : "receber",
+      sentido: movimentos[0] && dec(movimentos[0].valor).lessThan(0) ? "pagar" : "receber",
       movimentos,
       lancamentos,
       baixas,
@@ -520,10 +520,10 @@ async function AbaConciliadas({ ctx, empresaId, conta, contas, sp, podeExecutar 
                               )}
                               <span className="block text-xs text-muted-foreground">
                                 {formatarMoeda(b.valor_total)}
-                                {dec(b.juros).isPositive() ? ` · juros ${formatarMoeda(b.juros)}` : ""}
-                                {dec(b.multa).isPositive() ? ` · multa ${formatarMoeda(b.multa)}` : ""}
-                                {dec(b.desconto).isPositive() ? ` · desconto ${formatarMoeda(b.desconto)}` : ""}
-                                {dec(b.taxas).isPositive() ? ` · taxa ${formatarMoeda(b.taxas)}` : ""}
+                                {dec(b.juros).greaterThan(0) ? ` · juros ${formatarMoeda(b.juros)}` : ""}
+                                {dec(b.multa).greaterThan(0) ? ` · multa ${formatarMoeda(b.multa)}` : ""}
+                                {dec(b.desconto).greaterThan(0) ? ` · desconto ${formatarMoeda(b.desconto)}` : ""}
+                                {dec(b.taxas).greaterThan(0) ? ` · taxa ${formatarMoeda(b.taxas)}` : ""}
                               </span>
                             </div>
                           ))

@@ -142,10 +142,10 @@ export function composicaoDespesas(dre: ResultadoDre, limite = 6) {
   const itens = dre.linhas
     .filter((l) => l.tipo === "categoria" && grupos.has(l.chave.split(":")[0]))
     .map((l) => ({ nome: l.rotulo.replace(/^[\d.]+\s/, ""), valor: dec(l.total).negated() }))
-    .filter((i) => i.valor.isPositive())
+    .filter((i) => i.valor.greaterThan(0))
     .sort((a, b) => b.valor.comparedTo(a.valor));
   const principais = itens.slice(0, limite);
   const resto = itens.slice(limite).reduce((s, i) => s.plus(i.valor), new Decimal(0));
-  if (resto.isPositive()) principais.push({ nome: "Outras", valor: resto });
+  if (resto.greaterThan(0)) principais.push({ nome: "Outras", valor: resto });
   return principais.map((i) => ({ nome: i.nome, valor: Number(i.valor.toFixed(2)) }));
 }

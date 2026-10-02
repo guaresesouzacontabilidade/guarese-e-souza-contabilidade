@@ -29,7 +29,7 @@ export function ClassificarMovimento({
   opcoes: OpcoesClassificacao;
   aoFechar: () => void;
 }) {
-  const entrada = dec(movimento.valor).isPositive();
+  const entrada = dec(movimento.valor).greaterThan(0);
   const natureza = entrada ? "receita" : "despesa";
   const categorias = opcoes.categorias.filter((c) => c.natureza === natureza);
   return (

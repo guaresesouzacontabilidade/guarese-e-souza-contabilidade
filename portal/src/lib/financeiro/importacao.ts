@@ -125,8 +125,8 @@ export async function prepararExtrato(ctx: ContextoEmpresa, analise: Analise, ma
     duplicadas: chaves.filter((c) => existentes.has(c)).length,
     invalidas: invalidas.slice(0, 100),
     ignoradas,
-    creditos: somar(transacoes.filter((t) => dec(t.valor).isPositive()).map((t) => t.valor)).toFixed(2),
-    debitos: somar(transacoes.filter((t) => dec(t.valor).isNegative()).map((t) => t.valor)).toFixed(2),
+    creditos: somar(transacoes.filter((t) => dec(t.valor).greaterThan(0)).map((t) => t.valor)).toFixed(2),
+    debitos: somar(transacoes.filter((t) => dec(t.valor).lessThan(0)).map((t) => t.valor)).toFixed(2),
     inicio: datas[0] ?? null,
     fim: datas.at(-1) ?? null,
     saldoFinal,
@@ -234,7 +234,7 @@ function lerTipo(texto: string, valor: string | null): "receber" | "pagar" | nul
   if (/^(P|D|PAGAR|DESPESA|SAIDA|DEBITO|COMPRA|CUSTO)/.test(t)) return "pagar";
   if (valor) {
     const v = lerValorBR(valor);
-    if (v) return v.isNegative() ? "pagar" : "receber";
+    if (v) return v.lessThan(0) ? "pagar" : "receber";
   }
   return null;
 }

@@ -60,14 +60,14 @@ export function calcularIndicadores(d: DadosSaude): Indicador[] {
     r.push({ chave: "resultado", titulo: "Resultado do período", valor: "—", status: "sem_dados", explicacao: "Ainda não há receitas ou despesas confirmadas neste período." });
   } else {
     const margem = receita.isZero() ? null : resultado.dividedBy(receita).times(100);
-    const status: StatusIndicador = resultado.isNegative() ? "critico" : margem && margem.greaterThanOrEqualTo(10) ? "bom" : "atencao";
+    const status: StatusIndicador = resultado.lessThan(0) ? "critico" : margem && margem.greaterThanOrEqualTo(10) ? "bom" : "atencao";
     r.push({
       chave: "resultado",
-      titulo: resultado.isNegative() ? "Prejuízo do período" : "Lucro do período",
+      titulo: resultado.lessThan(0) ? "Prejuízo do período" : "Lucro do período",
       valor: formatarMoeda(resultado),
       status,
       detalhe: margem ? `Margem de ${pct(margem, 1)}` : undefined,
-      explicacao: resultado.isNegative()
+      explicacao: resultado.lessThan(0)
         ? `As despesas superaram as receitas em ${formatarMoeda(resultado.abs())}.`
         : margem
           ? `De cada R$ 100,00 vendidos, sobraram ${formatarMoeda(margem)} depois de custos, despesas e impostos.`
@@ -82,17 +82,17 @@ export function calcularIndicadores(d: DadosSaude): Indicador[] {
     const saldo = dec(d.saldoDisponivel);
     const media = d.mediaSaidasMensais ? dec(d.mediaSaidasMensais) : null;
     if (!media || media.isZero()) {
-      r.push({ chave: "folego", titulo: "Fôlego de caixa", valor: formatarMoeda(saldo), status: saldo.isNegative() ? "critico" : "sem_dados", explicacao: "Ainda não há pagamentos suficientes para estimar quantos meses o caixa cobre." });
+      r.push({ chave: "folego", titulo: "Fôlego de caixa", valor: formatarMoeda(saldo), status: saldo.lessThan(0) ? "critico" : "sem_dados", explicacao: "Ainda não há pagamentos suficientes para estimar quantos meses o caixa cobre." });
     } else {
       const meses = saldo.dividedBy(media);
       const status: StatusIndicador = meses.greaterThanOrEqualTo(3) ? "bom" : meses.greaterThanOrEqualTo(1) ? "atencao" : "critico";
       r.push({
         chave: "folego",
         titulo: "Fôlego de caixa",
-        valor: saldo.isNegative() ? "Caixa negativo" : `${meses.toFixed(1).replace(".", ",")} ${meses.greaterThanOrEqualTo(1.95) || meses.lessThan(1) ? "meses" : "mês"}`,
-        status: saldo.isNegative() ? "critico" : status,
+        valor: saldo.lessThan(0) ? "Caixa negativo" : `${meses.toFixed(1).replace(".", ",")} ${meses.greaterThanOrEqualTo(1.95) || meses.lessThan(1) ? "meses" : "mês"}`,
+        status: saldo.lessThan(0) ? "critico" : status,
         detalhe: `Saldo disponível ${formatarMoeda(saldo)}`,
-        explicacao: saldo.isNegative()
+        explicacao: saldo.lessThan(0)
           ? "O saldo disponível está negativo: a empresa depende de limite bancário ou de novas entradas."
           : `Com o dinheiro disponível hoje, a empresa pagaria cerca de ${meses.toFixed(1).replace(".", ",")} mês(es) de despesas (média de ${formatarMoeda(media)} por mês) sem novas entradas.`,
       });
@@ -184,13 +184,13 @@ export function resumoExecutivo(d: DadosSaude): string[] {
   const v = variacao(receita, receitaAnt);
   if (receita.isZero()) p.push(`Em ${d.periodoRotulo}, não houve receitas confirmadas.`);
   else {
-    const comp = v === null ? "" : v.abs().lessThan(1) ? `, praticamente igual a ${d.anteriorRotulo}` : `, ${pct(v.abs())} ${v.isPositive() ? "acima" : "abaixo"} de ${d.anteriorRotulo}`;
+    const comp = v === null ? "" : v.abs().lessThan(1) ? `, praticamente igual a ${d.anteriorRotulo}` : `, ${pct(v.abs())} ${v.greaterThan(0) ? "acima" : "abaixo"} de ${d.anteriorRotulo}`;
     p.push(`Em ${d.periodoRotulo}, a receita bruta foi de ${formatarMoeda(receita)}${comp}.`);
   }
   if (!receita.isZero() || !resultado.isZero()) {
     const margem = receita.isZero() ? null : resultado.dividedBy(receita).times(100);
     p.push(
-      resultado.isNegative()
+      resultado.lessThan(0)
         ? `O período terminou com prejuízo de ${formatarMoeda(resultado.abs())}.`
         : `O resultado foi um lucro de ${formatarMoeda(resultado)}${margem ? ` (margem de ${pct(margem, 1)})` : ""}.`,
     );
@@ -203,7 +203,7 @@ export function resumoExecutivo(d: DadosSaude): string[] {
     const saldo = dec(d.saldoDisponivel);
     const media = d.mediaSaidasMensais ? dec(d.mediaSaidasMensais) : null;
     p.push(
-      saldo.isNegative()
+      saldo.lessThan(0)
         ? `O saldo disponível hoje está negativo em ${formatarMoeda(saldo.abs())}.`
         : `O saldo disponível hoje é de ${formatarMoeda(saldo)}${media && !media.isZero() ? `, suficiente para cerca de ${saldo.dividedBy(media).toFixed(1).replace(".", ",")} mês(es) de despesas` : ""}.`,
     );
@@ -215,7 +215,7 @@ export function resumoExecutivo(d: DadosSaude): string[] {
     if (d.saldoProjetado30 !== null) t += `; o saldo projetado é de ${formatarMoeda(d.saldoProjetado30)}`;
     p.push(`${t}.`);
   }
-  if (d.menorSaldoProjetado && dec(d.menorSaldoProjetado.valor).isNegative()) {
+  if (d.menorSaldoProjetado && dec(d.menorSaldoProjetado.valor).lessThan(0)) {
     p.push(`Atenção: pela previsão, o caixa pode ficar negativo em ${formatarData(d.menorSaldoProjetado.data)} (${formatarMoeda(d.menorSaldoProjetado.valor)}). Vale antecipar recebimentos ou renegociar vencimentos.`);
   }
   if (!dec(d.receberVencido).isZero()) p.push(`Há ${formatarMoeda(d.receberVencido)} a receber em atraso.`);

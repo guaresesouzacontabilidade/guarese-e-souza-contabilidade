@@ -46,7 +46,7 @@ export const valorMonetario = (opcoes: { obrigatorio?: boolean; positivo?: boole
         ctx.addIssue({ code: "custom", message: "Valor inválido. Use o formato 1.234,56." });
         return null;
       }
-      if (opcoes.positivo && (d.isNegative() || (!opcoes.permitirZero && d.isZero()))) {
+      if (opcoes.positivo && (d.lessThan(0) || (!opcoes.permitirZero && d.isZero()))) {
         ctx.addIssue({ code: "custom", message: opcoes.permitirZero ? "O valor não pode ser negativo." : "O valor deve ser maior que zero." });
         return null;
       }
