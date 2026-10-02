@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   // Bibliotecas de servidor carregadas pelo Node (PDF, planilhas, OCR, e-mail).
-  serverExternalPackages: ["pdfmake", "exceljs", "tesseract.js", "nodemailer", "unpdf"],
+  serverExternalPackages: ["pdfmake", "exceljs", "tesseract.js", "nodemailer", "unpdf", "@napi-rs/canvas"],
   // Fontes usadas na geração de PDFs.
   outputFileTracingIncludes: {
     "/api/relatorios/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"],
