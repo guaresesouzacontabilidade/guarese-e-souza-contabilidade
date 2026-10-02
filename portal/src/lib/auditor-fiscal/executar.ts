@@ -21,6 +21,7 @@ import { auditar, inicioPrazo, type GrupoItens, type MesSimples } from "./regras
 
 const LOTE_RELEITURA = 120;
 const TEMPO_RELEITURA_MS = 25_000;
+const RELEITURAS_SIMULTANEAS = 6;
 
 interface Payload {
   empresa_id: string;
@@ -58,7 +59,31 @@ async function iniciarExecucao(admin: ClienteAdmin, p: Payload): Promise<string>
   return data.id;
 }
 
-/** Relê do armazenamento as notas gravadas antes da leitura completa dos códigos fiscais. */
+/** Relê uma nota do arquivo guardado (versão atual do documento). */
+async function relerNota(admin: ClienteAdmin, documento: string, n: { id: string; documento_id: string }) {
+  const { data: doc } = await admin.from("documentos").select("versao_atual").eq("id", n.documento_id).maybeSingle();
+  const { data: versao } = doc
+    ? await admin.from("documento_versoes").select("storage_path").eq("documento_id", n.documento_id).eq("versao", doc.versao_atual).maybeSingle()
+    : { data: null };
+  let atualizada = false;
+  if (versao?.storage_path) {
+    const { data: arquivo } = await admin.storage.from("documentos").download(versao.storage_path);
+    if (arquivo) {
+      const bytes = new Uint8Array(await arquivo.arrayBuffer());
+      const cabecalho = new TextDecoder("latin1").decode(bytes.slice(0, 200));
+      const texto = decodificarTexto(bytes, /encoding="(iso-8859-1|windows-1252)"/i.exec(cabecalho)?.[1]);
+      const lido = lerXmlFiscal(texto, { documento });
+      if (lido.sucesso && lido.dados.tipo === "nota") {
+        const { error: e } = await admin.rpc("atualizar_leitura_xml_fiscal", { p_documento_fiscal_id: n.id, p_dados: lido.dados as never });
+        atualizada = !e;
+      }
+    }
+  }
+  // Arquivo ausente ou ilegível: marca como relida para não tentar para sempre (fica com os dados antigos).
+  if (!atualizada) await admin.from("documentos_fiscais").update({ leitura_versao: 2 }).eq("id", n.id);
+}
+
+/** Relê do armazenamento as notas gravadas antes da leitura completa dos códigos fiscais (algumas ao mesmo tempo). */
 async function relerNotasAntigas(admin: ClienteAdmin, empresa: { id: string; documento: string }, inicio: string) {
   const t0 = Date.now();
   let relidas = 0;
@@ -72,29 +97,12 @@ async function relerNotasAntigas(admin: ClienteAdmin, empresa: { id: string; doc
     .order("competencia", { ascending: false })
     .limit(LOTE_RELEITURA);
   if (error) throw new Error(`Falha ao listar notas para releitura: ${error.message}`);
-  for (const n of notas ?? []) {
+  const lista = notas ?? [];
+  for (let i = 0; i < lista.length; i += RELEITURAS_SIMULTANEAS) {
     if (Date.now() - t0 > TEMPO_RELEITURA_MS) break;
-    const { data: doc } = await admin.from("documentos").select("versao_atual").eq("id", n.documento_id).maybeSingle();
-    const { data: versao } = doc
-      ? await admin.from("documento_versoes").select("storage_path").eq("documento_id", n.documento_id).eq("versao", doc.versao_atual).maybeSingle()
-      : { data: null };
-    let atualizada = false;
-    if (versao?.storage_path) {
-      const { data: arquivo } = await admin.storage.from("documentos").download(versao.storage_path);
-      if (arquivo) {
-        const bytes = new Uint8Array(await arquivo.arrayBuffer());
-        const cabecalho = new TextDecoder("latin1").decode(bytes.slice(0, 200));
-        const texto = decodificarTexto(bytes, /encoding="(iso-8859-1|windows-1252)"/i.exec(cabecalho)?.[1]);
-        const lido = lerXmlFiscal(texto, { documento: empresa.documento });
-        if (lido.sucesso && lido.dados.tipo === "nota") {
-          const { error: e } = await admin.rpc("atualizar_leitura_xml_fiscal", { p_documento_fiscal_id: n.id, p_dados: lido.dados as never });
-          atualizada = !e;
-        }
-      }
-    }
-    // Arquivo ausente ou ilegível: marca como relida para não tentar para sempre (fica com os dados antigos).
-    if (!atualizada) await admin.from("documentos_fiscais").update({ leitura_versao: 2 }).eq("id", n.id);
-    relidas++;
+    const grupo = lista.slice(i, i + RELEITURAS_SIMULTANEAS);
+    await Promise.all(grupo.map((n) => relerNota(admin, empresa.documento, n)));
+    relidas += grupo.length;
   }
   const { count } = await admin
     .from("documentos_fiscais")
@@ -136,6 +144,14 @@ export async function executarAuditorFiscal(admin: ClienteAdmin, job: Job) {
         prioridade: 110,
       });
       return { relidas: releitura.relidas, pendentes: releitura.pendentes };
+    }
+
+    if (releitura.relidas > 0) {
+      const { data: atual } = await admin.from("auditor_execucoes").select("notas_relidas").eq("id", execucaoId).single();
+      await admin
+        .from("auditor_execucoes")
+        .update({ notas_relidas: (atual?.notas_relidas ?? 0) + releitura.relidas })
+        .eq("id", execucaoId);
     }
 
     // 2. Dados
