@@ -100,6 +100,7 @@ export const ACAO_HISTORICO_TAREFA: Record<string, string> = {
   atualizacao: "Atualização",
   atribuicao: "Responsáveis alterados",
   guia_vinculada: "Guia do portal vinculada",
+  pagamento_informado: "Pagamento informado pelo cliente",
   prazo_recalculado: "Prazo recalculado",
   dispensada_por_norma: "Dispensada por mudança normativa",
   dispensada_automaticamente: "Dispensada automaticamente",

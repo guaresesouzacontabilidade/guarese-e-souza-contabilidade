@@ -11,6 +11,7 @@ import { Alerta } from "@/components/ui/feedback";
 import { BotaoAcao } from "@/components/ui/acao";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { LeituraDocumento } from "@/components/documentos/leitura-documento";
+import { BotaoPaguei } from "@/components/agenda/paguei";
 import {
   AcoesConferencia,
   AvaliarAposFechamento,
@@ -48,6 +49,10 @@ export default async function PaginaDocumento({ params }: PageProps<"/e/[empresa
 
   const revisor = ctx.pode("documentos.revisar");
   const escritorio = doc.direcao === "escritorio";
+  const ehGuia = escritorio && doc.categoria_codigo === "esc_guia";
+  const guiaPaga = ehGuia
+    ? (await ctx.supabase.from("guia_pagamentos").select("pago_em, valor_pago, comprovante_documento_id").eq("guia_documento_id", doc.id).maybeSingle()).data
+    : null;
   const base = `/e/${empresaId}/documentos`;
 
   const [versoes, historico, acessos, categorias, itens, filhos, escritorioCfg, original] = await Promise.all([
@@ -434,6 +439,30 @@ export default async function PaginaDocumento({ params }: PageProps<"/e/[empresa
                   <div>
                     <dt className="text-xs text-muted-foreground">Valor</dt>
                     <dd>{formatarMoeda(doc.valor)}</dd>
+                  </div>
+                ) : null}
+                {guiaPaga ? (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Pagamento informado</dt>
+                    <dd>
+                      Pago em {formatarData(guiaPaga.pago_em)}
+                      {guiaPaga.valor_pago != null ? ` · ${formatarMoeda(guiaPaga.valor_pago)}` : ""}
+                      {guiaPaga.comprovante_documento_id ? (
+                        <Link className="ml-1 text-primary underline-offset-2 hover:underline" href={`${base}/${guiaPaga.comprovante_documento_id}`}>
+                          ver comprovante
+                        </Link>
+                      ) : (
+                        <span className="ml-1 text-muted-foreground">(sem comprovante)</span>
+                      )}
+                    </dd>
+                  </div>
+                ) : null}
+                {ehGuia && !guiaPaga && ctx.pode("documentos.enviar") && doc.publicado_em ? (
+                  <div className="pt-1">
+                    <BotaoPaguei
+                      empresaId={empresaId}
+                      guia={{ id: doc.id, titulo: doc.titulo ?? doc.nome_original, competencia: doc.competencia, vencimento: doc.vencimento ?? doc.competencia, valor: doc.valor == null ? null : Number(doc.valor) }}
+                    />
                   </div>
                 ) : null}
                 {doc.observacao ? (

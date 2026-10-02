@@ -26,12 +26,19 @@ export const ROTULO_ACAO: Record<string, string> = {
   notificacoes_aparelho_ativadas: "Ativou os avisos num aparelho",
   notificacoes_aparelho_desativadas: "Desativou os avisos num aparelho",
   whatsapp_avisos_definido: "Cadastrou o WhatsApp de um cliente para avisos",
+  pagamento_guia_informado: "Informou o pagamento de uma guia",
+  pagamento_guia_desfeito: "Desfez o pagamento informado de uma guia",
 };
 
 export const ROTULO_ENTIDADE: Record<string, string> = {
   baixas: "pagamento/recebimento",
   categorias_financeiras: "categoria financeira",
   checklist_itens: "item do checklist",
+  calculo_ajustes: "valor lançado na previsão de impostos",
+  calculo_meses: "receita informada (cálculos)",
+  calculo_parametros: "configuração dos cálculos",
+  colaboradores: "colaborador",
+  vencimentos: "vencimento (certificado, alvará ou certidão)",
   checklist_modelos: "modelo de checklist",
   competencias: "competência (fechamento)",
   atualizacoes_normativas: "atualização normativa",

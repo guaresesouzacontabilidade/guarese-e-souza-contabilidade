@@ -1374,6 +1374,43 @@ isOneToOne: false
       referencedColumns: ["ibge"]
     }
                   ]
+                },"guia_pagamentos": {
+                  Row: {
+                    "comprovante_documento_id": string | null,"empresa_id": string,"guia_documento_id": string,"informado_em": string,"informado_por": string | null,"observacao": string | null,"pago_em": string,"valor_pago": number | null
+                  }
+                  Insert: {
+                    "comprovante_documento_id"?: string | null,"empresa_id": string,"guia_documento_id": string,"informado_em"?: string,"informado_por"?: string | null,"observacao"?: string | null,"pago_em": string,"valor_pago"?: number | null
+                  }
+                  Update: {
+                    "comprovante_documento_id"?: string | null,"empresa_id"?: string,"guia_documento_id"?: string,"informado_em"?: string,"informado_por"?: string | null,"observacao"?: string | null,"pago_em"?: string,"valor_pago"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "guia_pagamentos_comprovante_fk"
+      columns: ["empresa_id","comprovante_documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "guia_pagamentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "guia_pagamentos_guia_fk"
+      columns: ["empresa_id","guia_documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "guia_pagamentos_informado_por_fkey"
+      columns: ["informado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"importacoes": {
                   Row: {
                     "arquivo_nome": string | null,"arquivo_sha256": string | null,"chave_idempotencia": string,"conta_financeira_id": string | null,"created_at": string,"criado_por": string | null,"data_saldo_final": string | null,"desfeita_em": string | null,"desfeita_por": string | null,"documento_id": string | null,"empresa_id": string,"erros": NonNullable<Json>,"id": string,"mapeamento": Json | null,"motivo_desfazer": string | null,"opcoes": Json | null,"periodo_fim": string | null,"periodo_inicio": string | null,"saldo_final_extrato": number | null,"soma_creditos": number,"soma_debitos": number,"status": string,"tipo": string,"total_duplicadas": number,"total_invalidas": number,"total_linhas": number,"total_novas": number,"total_periodo_fechado": number
@@ -2255,6 +2292,9 @@ isOneToOne: false
 "desfazer_importacao":
 { Args: { "p_importacao_id": string,"p_motivo": string }; Returns: Json
                            },
+"desfazer_pagamento_guia":
+{ Args: { "p_guia_id": string }; Returns: undefined
+                           },
 "documentos_retencao_vencida":
 { Args: { "p_limite"?: number }; Returns: {
               "anos_retencao": number,"categoria_codigo": string,"competencia": string,"documento_id": string,"empresa_id": string,"empresa_nome": string,"nome_original": string,"vence_em": string
@@ -2373,6 +2413,9 @@ isOneToOne: false
                            },
 "importar_lancamentos":
 { Args: { "p_arquivo_nome": string,"p_arquivo_sha256": string,"p_chave_idempotencia": string,"p_documento_id": string,"p_empresa_id": string,"p_erros"?: Json,"p_linhas": Json,"p_mapeamento": Json,"p_total_invalidas"?: number }; Returns: Json
+                           },
+"informar_pagamento_guia":
+{ Args: { "p_comprovante_id"?: string,"p_guia_id": string,"p_observacao"?: string,"p_pago_em": string,"p_valor"?: number }; Returns: undefined
                            },
 "iniciar_fechamento":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: string

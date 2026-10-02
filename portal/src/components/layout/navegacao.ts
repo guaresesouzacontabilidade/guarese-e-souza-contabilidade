@@ -17,6 +17,7 @@ import {
   CalendarClock,
   Calculator,
   CalendarX2,
+  CalendarDays,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -67,6 +68,7 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   if (p.has("documentos.ver")) {
     itens.push({ rotulo: equipe ? "Documentos" : "Meus documentos", href: `${base}/documentos`, icone: FolderOpen });
     itens.push({ rotulo: "Pendências", href: `${base}/pendencias`, icone: ListChecks });
+    itens.push({ rotulo: "Agenda de pagamentos", href: `${base}/agenda`, icone: CalendarDays });
     itens.push({ rotulo: "Vencimentos", href: `${base}/vencimentos`, icone: CalendarX2 });
   }
   if (p.has("financeiro.ver")) itens.push({ rotulo: "Financeiro", href: `${base}/financeiro`, icone: Wallet });

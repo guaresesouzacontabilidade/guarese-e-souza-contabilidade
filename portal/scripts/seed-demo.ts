@@ -19,6 +19,7 @@ import { semearDocumentos } from "./demo-documentos";
 import { semearObrigacoes } from "./demo-obrigacoes";
 import { semearCalculos } from "./demo-calculos";
 import { semearVencimentos } from "./demo-vencimentos";
+import { semearAgenda } from "./demo-agenda";
 
 carregarEnv();
 
@@ -209,6 +210,8 @@ async function main() {
   // Cálculos: parâmetros, receita informada e colaboradores fictícios
   if (await semearCalculos(admin, { padaria: ids[0], oficina: ids[1] })) console.log("  Cálculos e colaboradores de demonstração criados");
   if (await semearVencimentos(admin, { padaria: ids[0], oficina: ids[1] })) console.log("  Vencimentos de demonstração criados");
+  const pagas = await semearAgenda(admin, ids);
+  if (pagas) console.log(`  Agenda de pagamentos: ${pagas} guia(s) de demonstração marcada(s) como paga(s)`);
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);
