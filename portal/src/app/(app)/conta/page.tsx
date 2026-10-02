@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BotaoEncerrarOutras, BotaoEncerrarSessao, FormAvisos, FormLgpd, FormPerfil, FormSenha, RemoverMfa } from "@/components/conta/conta";
 import { formatarDataHora } from "@/lib/formatos";
+import { AvisosNoAparelho } from "@/components/notificacoes/avisos";
+import { envServidor } from "@/lib/env-servidor";
 
 export const metadata: Metadata = { title: "Minha conta" };
 
@@ -36,11 +38,15 @@ function navegador(ua: string | null) {
 
 export default async function MinhaConta() {
   const s = await exigirSessao();
-  const [{ data: fatores }, { data: sessoes }, { data: pedidos }] = await Promise.all([
+  const [{ data: fatores }, { data: sessoes }, { data: pedidos }, { data: aparelhos }] = await Promise.all([
     s.supabase.auth.mfa.listFactors(),
     s.supabase.rpc("minhas_sessoes"),
     s.supabase.from("solicitacoes_titular").select("id, tipo, descricao, status, resposta, created_at, respondida_em").eq("user_id", s.usuarioId).order("created_at", { ascending: false }),
+    s.supabase.from("push_aparelhos").select("id, endpoint, descricao, created_at, ultimo_envio_em").order("created_at", { ascending: false }),
   ]);
+  const preferencias = (s.perfil.preferencias ?? {}) as Record<string, unknown>;
+  const escritorio = s.perfil.tipo === "admin" || s.perfil.tipo === "equipe";
+  const escolhaArquivos = String(preferencias.aviso_arquivos ?? "todas");
   const totp = (fatores?.totp ?? []).find((f) => f.status === "verified");
   const exige2fa = Boolean(s.estado.exige_2fa);
 
@@ -86,13 +92,28 @@ export default async function MinhaConta() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-2">
+        <Card className="xl:col-span-2 scroll-mt-20" id="avisos">
           <CardHeader>
             <CardTitle className="text-base">Avisos</CardTitle>
-            <CardDescription>Os avisos sempre aparecem no sino do portal. Aqui você escolhe se também quer recebê-los por e-mail.</CardDescription>
+            <CardDescription>
+              Os avisos sempre aparecem no sino do portal, na hora. Aqui você também pode recebê-los no celular ou no computador (mesmo com o portal
+              fechado) e escolher o que chega por e-mail.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <FormAvisos email={(s.perfil.preferencias as Record<string, unknown> | null)?.email_notificacoes !== false} />
+          <CardContent className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
+            <AvisosNoAparelho usuarioId={s.usuarioId} chavePublica={envServidor.push()?.publica ?? null} aparelhos={aparelhos ?? []} />
+            <FormAvisos
+              email={preferencias.email_notificacoes !== false}
+              escritorio={
+                escritorio
+                  ? {
+                      admin: s.perfil.tipo === "admin",
+                      arquivos: escolhaArquivos === "responsavel" || escolhaArquivos === "nenhuma" ? escolhaArquivos : "todas",
+                      arquivosEmail: preferencias.aviso_arquivos_email === true,
+                    }
+                  : undefined
+              }
+            />
           </CardContent>
         </Card>
 

@@ -1542,13 +1542,13 @@ isOneToOne: false
                   ]
                 },"notificacoes": {
                   Row: {
-                    "corpo": string | null,"created_at": string,"empresa_id": string | null,"id": string,"lida_em": string | null,"link": string | null,"tipo": string,"titulo": string,"user_id": string
+                    "corpo": string | null,"created_at": string,"empresa_id": string | null,"id": string,"lida_em": string | null,"link": string | null,"quantidade": number,"tipo": string,"titulo": string,"user_id": string
                   }
                   Insert: {
-                    "corpo"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"id"?: string,"lida_em"?: string | null,"link"?: string | null,"tipo": string,"titulo": string,"user_id": string
+                    "corpo"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"id"?: string,"lida_em"?: string | null,"link"?: string | null,"quantidade"?: number,"tipo": string,"titulo": string,"user_id": string
                   }
                   Update: {
-                    "corpo"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"id"?: string,"lida_em"?: string | null,"link"?: string | null,"tipo"?: string,"titulo"?: string,"user_id"?: string
+                    "corpo"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"id"?: string,"lida_em"?: string | null,"link"?: string | null,"quantidade"?: number,"tipo"?: string,"titulo"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -1669,6 +1669,25 @@ isOneToOne: false
       columns: ["empresa_id"]
 isOneToOne: false
       referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"push_aparelhos": {
+                  Row: {
+                    "atualizado_em": string,"chave_auth": string,"chave_p256dh": string,"created_at": string,"descricao": string | null,"endpoint": string,"falhas_seguidas": number,"id": string,"sessao_id": string | null,"ultimo_envio_em": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "atualizado_em"?: string,"chave_auth": string,"chave_p256dh": string,"created_at"?: string,"descricao"?: string | null,"endpoint": string,"falhas_seguidas"?: number,"id"?: string,"sessao_id"?: string | null,"ultimo_envio_em"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "atualizado_em"?: string,"chave_auth"?: string,"chave_p256dh"?: string,"created_at"?: string,"descricao"?: string | null,"endpoint"?: string,"falhas_seguidas"?: number,"id"?: string,"sessao_id"?: string | null,"ultimo_envio_em"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_aparelhos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
       referencedColumns: ["id"]
     }
                   ]
@@ -2133,6 +2152,9 @@ isOneToOne: false
 "encerrar_sessoes_usuario":
 { Args: { "p_user_id": string }; Returns: number
                            },
+"enviar_aviso_teste":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "enviar_lembrete_manual":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_mensagem"?: string }; Returns: string
                            },
@@ -2282,6 +2304,9 @@ isOneToOne: false
 "registrar_acesso_relatorio":
 { Args: { "p_id": string,"p_tipo": string }; Returns: undefined
                            },
+"registrar_aparelho_push":
+{ Args: { "p_auth": string,"p_descricao"?: string,"p_endpoint": string,"p_p256dh": string }; Returns: string
+                           },
 "registrar_compra_cartao":
 { Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_conta_cartao_id": string,"p_contraparte_id"?: string,"p_data_compra": string,"p_descricao": string,"p_empresa_id": string,"p_parcelas"?: number,"p_projeto_id"?: string,"p_valor": number }; Returns: string
                            },
@@ -2337,6 +2362,9 @@ isOneToOne: false
 { Args: { "p_centro_custo_id"?: string,"p_contas"?: (string)[],"p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
               "categoria_id": string,"categoria_nome": string,"conta_contrapartida_disponivel": boolean,"conta_contrapartida_id": string,"conta_disponivel": boolean,"conta_id": string,"conta_nome": string,"contraparte": string,"data": string,"descricao": string,"entrada": number,"grupo": string,"lancamento_id": string,"registro": string,"registro_id": string,"saida": number,"tipo_categoria": string
             }[]
+                           },
+"remover_aparelho_push":
+{ Args: { "p_endpoint"?: string,"p_id"?: string }; Returns: number
                            },
 "reprocessar_documento":
 { Args: { "p_documento_id": string }; Returns: number
@@ -2404,6 +2432,14 @@ isOneToOne: false
                            },
 "sistema_notificar_equipe":
 { Args: { "p_corpo"?: string,"p_empresa_id": string,"p_link"?: string,"p_tipo": string,"p_titulo": string }; Returns: number
+                           },
+"sistema_push_destinos":
+{ Args: { "p_notificacao_id": string }; Returns: {
+              "aparelho_id": string,"chave_auth": string,"chave_p256dh": string,"endpoint": string
+            }[]
+                           },
+"sistema_push_resultado":
+{ Args: { "p_aparelho_id": string,"p_entregue": boolean,"p_remover"?: boolean }; Returns: undefined
                            },
 "solicitar_correcao_item":
 { Args: { "p_item_id": string,"p_motivo": string }; Returns: undefined

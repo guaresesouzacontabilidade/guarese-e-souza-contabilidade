@@ -13,6 +13,7 @@ Todo o sistema está em português do Brasil, com valores em reais (R$) e datas 
 | **Documentos** | clientes e escritório | envio de arquivos (PDF, imagens, XML, planilhas, ZIP) com checklist do mês, conferência, pedidos de correção, versões, documentos publicados pelo escritório (guias, folha, relatórios) e registro de cada download |
 | **Pendências e lembretes** | clientes e escritório | checklist mensal gerado automaticamente, prazos, pedido de “não se aplica”, lembretes antes e depois do prazo (portal, e-mail e — quando conectado — WhatsApp) |
 | **Mensagens** | clientes e escritório | conversas por empresa e por assunto, com anexos e avisos |
+| **Avisos** | todos | sino com avisos em tempo real; o escritório é avisado de cada arquivo enviado pelo cliente (envios seguidos viram um aviso só, com preferência por pessoa); notificações no celular e no computador mesmo com o portal fechado (Web Push, ativadas aparelho por aparelho; no iPhone, com o portal na Tela de Início) e resumo opcional por e-mail |
 | **Financeiro** | clientes e escritório | contas a pagar e receber, baixas, contas bancárias, cartões, transferências, recorrências, categorias, centros de custo, importação de XML de notas, extratos OFX/CSV e planilhas |
 | **Leitura automática (OCR)** | escritório | lê fotos e PDFs digitalizados no próprio servidor e sugere os dados — sempre conferidos por uma pessoa |
 | **Conciliação bancária** | escritório | sugestões de conciliação, conciliação manual, tarifas e transferências, conferência do saldo com o banco |
@@ -23,7 +24,7 @@ Todo o sistema está em português do Brasil, com valores em reais (R$) e datas 
 | **Equipe e permissões** | administrador | convites, perfis, vínculo da equipe às empresas, permissões por empresa, desativação de acesso e anonimização (LGPD) |
 | **Configurações** | administrador | dados do escritório e logomarca, verificação em duas etapas obrigatória, limites de envio, lembretes, integrações (situação de cada uma), pedidos LGPD e prazos de guarda |
 | **Auditoria** | administrador | quem fez o quê e quando (entradas, alterações, permissões, downloads), com filtros e exportação |
-| **Minha conta** | todos | dados pessoais, senha, verificação em duas etapas, dispositivos conectados, avisos por e-mail, cópia dos dados e pedidos LGPD |
+| **Minha conta** | todos | dados pessoais, senha, verificação em duas etapas, dispositivos conectados, avisos (no aparelho e por e-mail), cópia dos dados e pedidos LGPD |
 
 Cada cliente vê **somente a própria empresa**. A regra vale no navegador, no servidor e no banco de dados (Row Level Security), e é testada automaticamente.
 

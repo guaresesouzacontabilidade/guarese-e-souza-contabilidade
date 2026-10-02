@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bot, Clock, FileSearch, HardDrive, Mail, MessageCircle, ShieldAlert } from "lucide-react";
+import { BellRing, Bot, Clock, FileSearch, HardDrive, Mail, MessageCircle, ShieldAlert } from "lucide-react";
 import { exigirAdmin } from "@/lib/auth/sessao";
 import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
 import { envServidor } from "@/lib/env-servidor";
@@ -182,6 +182,7 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
     );
   } else if (aba === "integracoes") {
     const smtp = envServidor.smtp();
+    const push = Boolean(envServidor.push());
     const wpp = whatsappConectado({ phoneNumberId: esc.whatsapp_phone_number_id, modelo: esc.whatsapp_template_lembrete, idioma: esc.whatsapp_template_idioma });
     const clamav = envServidor.clamav();
     const cron = Boolean(envServidor.cronSecret());
@@ -220,6 +221,20 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
               <p>
                 Sem e-mail configurado, convites mostram um link para copiar e enviar por WhatsApp, e lembretes aparecem só dentro do portal. Para ativar, cadastre na hospedagem as
                 variáveis SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS e SMTP_FROM (veja o guia de configuração).
+              </p>
+            )}
+          </Integracao>
+
+          <Integracao icone={BellRing} titulo="Notificações no aparelho (Web Push)" situacao={<Situacao ok={push} texto={push ? "Conectado" : "Desconectado"} />}>
+            {push ? (
+              <p>
+                Cada pessoa ativa em Minha conta → Avisos, no celular ou no computador. O aviso é entregue pelo serviço de notificação do próprio navegador (Google, Apple,
+                Mozilla ou Microsoft), com o conteúdo cifrado de ponta a ponta.
+              </p>
+            ) : (
+              <p>
+                Desconectado até a ativação: faltam as chaves de notificação (variáveis VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY na hospedagem). Enquanto isso, os avisos aparecem
+                só no sino do portal.
               </p>
             )}
           </Integracao>

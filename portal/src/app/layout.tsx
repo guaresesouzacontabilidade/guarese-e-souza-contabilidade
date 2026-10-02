@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   description: "Documentos, contabilidade e gestão financeira em um só lugar.",
   applicationName: "Portal Guarese's ON",
   robots: { index: false, follow: false },
+  // Aberto pelo ícone da tela inicial, o portal ocupa a tela inteira (no iPhone,
+  // é assim que as notificações no aparelho ficam disponíveis).
+  appleWebApp: { capable: true, title: "Guarese's ON", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

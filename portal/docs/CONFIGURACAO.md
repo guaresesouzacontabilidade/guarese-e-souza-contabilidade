@@ -21,6 +21,7 @@ O script de publicação (`scripts/publicar.ts`) cadastra automaticamente as var
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | | envio de e-mails (seção 3) |
 | `WHATSAPP_TOKEN`, `WHATSAPP_API_VERSION` | | WhatsApp Business Platform (seção 4) |
 | `CLAMAV_HOST`, `CLAMAV_PORT` | | antivírus ClamAV (seção 6) |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | ✔ (as duas chaves) | notificações no aparelho (seção 12); a chave privada é **somente servidor** |
 | `PORTAL_URL`, `WORKER_INTERVALO_SEGUNDOS`, `WORKER_ROTINA_DIARIA` | | processador contínuo opcional (seção 5) |
 
 Depois de alterar variáveis na Vercel, é preciso publicar de novo (**Deployments → ⋯ → Redeploy**) para que passem a valer.
@@ -158,3 +159,14 @@ Como funciona:
 - Todas as mudanças ficam na Auditoria (filtro “Obrigações, prazos e normas”) e no histórico de cada tarefa.
 
 Os dados de municípios vêm da tabela oficial do IBGE (5.571 municípios) e foram carregados no próprio banco: o portal não consulta serviços externos para calcular prazos.
+
+## 12. Notificações no aparelho (Web Push)
+
+Os avisos do portal (por exemplo, “Padaria enviou 3 arquivos”) também podem chegar como notificação no celular ou no computador, mesmo com o portal fechado. Cada pessoa ativa em **Minha conta → Avisos → Ativar neste aparelho**; a situação geral aparece em **Configurações → Integrações**.
+
+- **Chaves**: o padrão Web Push usa um par de chaves (VAPID). O script de publicação cria o par na primeira publicação e o mantém nas seguintes — trocar as chaves desativa os avisos de todos os aparelhos, que precisariam ser ativados de novo. A chave pública vai ao navegador; a privada fica só na hospedagem (variável protegida).
+- **Sem as chaves**, a integração aparece como **desconectada**: os avisos ficam só no sino e nada é enviado aos aparelhos (o portal não simula a entrega).
+- **Para gerar manualmente** (servidor próprio): `npx web-push generate-vapid-keys` e cadastre `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY`. `VAPID_SUBJECT` é opcional (padrão: o endereço do portal).
+- **Entrega**: a fila de tarefas envia o aviso logo depois da ação que o gerou (ex.: o envio de arquivos pelo cliente) e, nos demais casos, na rotina de 5 minutos. Aparelhos cuja permissão foi retirada são removidos automaticamente; o aviso só vai para aparelhos com a sessão ativa.
+- **Instalação na tela inicial**: o portal tem manifesto e ícones próprios. No iPhone/iPad, as notificações só funcionam com o portal instalado na Tela de Início (iOS 16.4 ou mais recente).
+

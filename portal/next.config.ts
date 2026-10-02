@@ -15,8 +15,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   devIndicators: false,
-  // Bibliotecas de servidor carregadas pelo Node (PDF, planilhas, OCR, e-mail).
-  serverExternalPackages: ["pdfmake", "exceljs", "tesseract.js", "nodemailer", "unpdf", "@napi-rs/canvas"],
+  // Bibliotecas de servidor carregadas pelo Node (PDF, planilhas, OCR, e-mail, notificações).
+  serverExternalPackages: ["pdfmake", "exceljs", "tesseract.js", "nodemailer", "web-push", "unpdf", "@napi-rs/canvas"],
   // Fontes usadas na geração de PDFs e, para o OCR, o código da "worker
   // thread" e o núcleo WebAssembly do Tesseract — carregados dinamicamente,
   // a análise automática não os encontra. O OCR roda nas rotas da fila e
@@ -40,6 +40,20 @@ const nextConfig: NextConfig = {
     remotePatterns: supabaseHost
       ? [{ protocol: supabaseHost.protocol, hostname: supabaseHost.hostname, port: supabaseHost.port, pathname: "/storage/v1/object/public/**" }]
       : [],
+  },
+  // Service worker das notificações no aparelho: sempre a versão mais recente.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
+    ];
   },
   experimental: {
     serverActions: {

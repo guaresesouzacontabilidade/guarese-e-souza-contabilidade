@@ -22,6 +22,16 @@ export const envServidor = {
       remetente: process.env.SMTP_FROM ?? "Portal Guarese's ON <nao-responda@localhost>",
     };
   },
+  /** Notificações no aparelho (Web Push). Sem as chaves VAPID, fica desconectado. */
+  push: () => {
+    const publica = process.env.VAPID_PUBLIC_KEY?.trim();
+    const privada = process.env.VAPID_PRIVATE_KEY?.trim();
+    if (!publica || !privada) return null;
+    const site = process.env.NEXT_PUBLIC_SITE_URL?.trim() ?? "";
+    // Contato do remetente exigido pelos serviços de notificação (https: ou mailto:).
+    const assunto = process.env.VAPID_SUBJECT?.trim() || (site.startsWith("https://") ? site : "mailto:nao-responda@localhost");
+    return { publica, privada, assunto };
+  },
   whatsapp: () => {
     const token = process.env.WHATSAPP_TOKEN;
     if (!token) return null;

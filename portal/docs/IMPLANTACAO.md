@@ -131,6 +131,7 @@ Quando o escritório decidir usar com clientes de verdade:
 7. **Empresas → Nova empresa**: cadastrar as empresas, as contas bancárias e convidar o empresário de cada uma.
 8. Conferir em **Configurações → Integrações** se “Rotinas automáticas” aparece como “Funcionando” depois de alguns minutos.
 9. **Obrigações e prazos → Atualizações normativas**: conferir a fonte de cada regra do catálogo inicial, **validar** e **aplicar** (sem isso, nenhum prazo é calculado). Depois, cadastrar em **Catálogo** as regras de ICMS/ISS do estado e dos municípios atendidos e, em **Feriados**, os feriados municipais — sempre com a lei de origem.
+10. **Minha conta → Avisos**: escolher de quais empresas quer ser avisado quando um cliente enviar arquivos e tocar em **Ativar neste aparelho** no celular e no computador (no iPhone, antes, **Adicionar à Tela de Início** pelo Safari). Conferir com **Enviar aviso de teste**. As chaves das notificações já são criadas pelo script de publicação.
 
 ## 7. Atualizações
 

@@ -32,6 +32,7 @@ import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import webpush from "web-push";
 
 const RAIZ = resolve(__dirname, "..");
 const SB = "https://api.supabase.com/v1";
@@ -281,6 +282,23 @@ async function definirVariaveis(projetoId: string, vars: Record<string, { valor:
   }
 }
 
+/**
+ * Chaves das notificações no aparelho (Web Push): criadas uma única vez e
+ * mantidas nas publicações seguintes — trocá-las desativaria os avisos já
+ * ativados nos celulares e computadores.
+ */
+async function chavesNotificacao(projetoId: string): Promise<Record<string, { valor: string; segredo?: boolean }>> {
+  const existentes = await vc<{ envs: { key: string }[] }>(`/v10/projects/${projetoId}/env`);
+  const tem = (chave: string) => existentes.envs.some((e) => e.key === chave);
+  if (tem("VAPID_PUBLIC_KEY") && tem("VAPID_PRIVATE_KEY")) {
+    ok("Notificações no aparelho: chaves mantidas");
+    return {};
+  }
+  const k = webpush.generateVAPIDKeys();
+  ok("Notificações no aparelho: chaves criadas");
+  return { VAPID_PUBLIC_KEY: { valor: k.publicKey }, VAPID_PRIVATE_KEY: { valor: k.privateKey, segredo: true } };
+}
+
 function publicarVercel(projetoId: string, orgId: string): string {
   passo("Vercel: publicando o site (compilação na nuvem, alguns minutos)");
   mkdirSync(join(RAIZ, ".vercel"), { recursive: true });
@@ -346,7 +364,9 @@ async function main() {
   if (DOMINIO) await adicionarDominio(projeto.id, DOMINIO);
   const siteInicial = DOMINIO ? `https://${DOMINIO}` : (estado.site ?? `https://${NOME}.vercel.app`);
   const segredoCron = estado.segredoCron ?? randomBytes(32).toString("hex");
+  const notificacoes = await chavesNotificacao(projeto.id);
   const variaveis = (site: string) => ({
+    ...notificacoes,
     NEXT_PUBLIC_SUPABASE_URL: { valor: chaves.url },
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: { valor: chaves.publica },
     SUPABASE_SECRET_KEY: { valor: chaves.secreta, segredo: true },

@@ -19,7 +19,7 @@ No canto superior direito (iniciais do nome) → **Minha conta**:
 
 - **Seus dados**: nome e telefone (o e-mail só o escritório altera).
 - **Verificação em duas etapas**: ativar ou desativar.
-- **Avisos**: receber ou não os avisos também por e-mail (no sino do portal eles sempre aparecem).
+- **Avisos**: no sino do portal eles sempre aparecem, na hora. Aqui você pode **ativar os avisos no celular ou no computador** (chegam mesmo com o portal fechado), enviar um **aviso de teste** e escolher o que também chega por e-mail. A equipe do escritório escolhe ainda de quais empresas quer ser avisada quando um cliente enviar arquivos (veja a seção 3).
 - **Trocar senha**: ao trocar, os outros aparelhos conectados precisam entrar de novo.
 - **Dispositivos conectados**: onde a conta está aberta; dá para encerrar um aparelho ou todos os outros.
 - **Privacidade e seus dados (LGPD)**: baixar uma cópia dos seus dados e fazer pedidos ao escritório (correção, exclusão etc.).
@@ -123,6 +123,29 @@ O menu **Obrigações e prazos** é só do escritório: o cliente não vê nada 
 **Quando uma norma muda**
 Abra a obrigação no **Catálogo** e use **Propor alteração** (ou **Propor encerramento**) com a fonte e a data da consulta. Depois que o administrador valida e aplica, a regra antiga é encerrada no mês anterior, as tarefas abertas são recalculadas e as competências anteriores ficam como estavam. Tudo fica na auditoria.
 
+### Avisos de arquivos enviados pelos clientes
+
+Sempre que um cliente envia um arquivo (ou uma nova versão), o escritório é avisado:
+
+- **No sino do portal, na hora**: com o portal aberto, o aviso aparece no canto da tela e o número do sino aumenta sem recarregar a página. Tocar no aviso abre o documento.
+- **Vários arquivos seguidos viram um aviso só**: se a Padaria manda 8 arquivos, chega “Padaria enviou 8 arquivos”, com o último arquivo e o link para a lista de recebidos. Depois que você abre o aviso, o próximo envio gera um aviso novo.
+- **Quem recebe**: cada pessoa escolhe em **Minha conta → Avisos → Avisar quando um cliente enviar arquivos**:
+  - **De todas as empresas** (padrão; para a equipe, as empresas que ela acompanha);
+  - **Só das empresas em que sou o contador responsável**;
+  - **Não avisar**.
+- Arquivo registrado pela própria equipe em nome do cliente não gera aviso. Arquivo que chega para um mês já fechado gera o alerta “Documento recebido após o fechamento” (um aviso só por pessoa).
+- **Resumo por e-mail (opcional)**: marque “Também mandar um resumo dos arquivos por e-mail”. O e-mail sai 10 minutos depois do primeiro arquivo, já contando os que chegarem nesse intervalo. Só funciona com o servidor de e-mail configurado.
+
+#### Receber os avisos no celular ou no computador
+
+Os avisos podem chegar como notificação do aparelho, **mesmo com o portal fechado**:
+
+- **Computador (Chrome, Edge, Firefox) e Android (Chrome, Samsung Internet)**: entre no portal → **Minha conta → Avisos → Ativar neste aparelho** → toque em **Permitir** quando o navegador perguntar. Use **Enviar aviso de teste** para conferir.
+- **iPhone e iPad (iOS 16.4 ou mais recente)**: a Apple só libera notificações para sites instalados na tela inicial. No Safari, abra o portal → toque em **Compartilhar** → **Adicionar à Tela de Início**. Abra o portal pelo novo ícone, entre com seu e-mail e senha e faça o passo acima.
+- O sino também mostra um atalho **Ativar** enquanto o aparelho não recebe os avisos.
+- Ao **sair do portal** num aparelho, ele para de receber os avisos até você entrar de novo. Em **Minha conta → Avisos** aparece a lista dos aparelhos que recebem seus avisos; dá para remover qualquer um.
+- Os avisos mostram o nome da empresa e do arquivo. Se outras pessoas veem a tela do seu celular, ajuste nas configurações do aparelho para **ocultar o conteúdo das notificações na tela bloqueada**.
+
 ### Cadastrar uma empresa nova (administrador)
 1. **Empresas → Nova empresa**: CNPJ (ou CPF), razão social, regime tributário, contador responsável e serviços contratados. O plano de contas gerencial e o checklist padrão são criados sozinhos.
 2. Na empresa: **Contas bancárias** (contas, saldos iniciais, cartões) e **Checklist mensal** (ajuste os documentos e prazos).
@@ -143,6 +166,8 @@ Quem fez o quê e quando: entradas, alterações de cadastro e de permissões, l
 ---
 
 ## 4. Perguntas frequentes
+
+**Ativei os avisos, mas não chegam no celular.** Em **Minha conta → Avisos**, toque em **Enviar aviso de teste**. Se não chegar: confira se as notificações do navegador (ou do app instalado, no iPhone) estão permitidas nas configurações do celular, se o modo “Não perturbe” está desligado e se você não saiu do portal nesse aparelho (ao sair, os avisos param até entrar de novo). No computador, o navegador precisa estar aberto (pode estar minimizado).
 
 **O cliente pode ver dados de outra empresa?**
 Não. Cada pessoa só vê as empresas às quais foi vinculada, e o banco de dados bloqueia qualquer tentativa de acesso indevido.

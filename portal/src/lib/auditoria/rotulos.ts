@@ -23,6 +23,8 @@ export const ROTULO_ACAO: Record<string, string> = {
   sincronizar_tarefas: "Atualizou as tarefas de uma empresa",
   recalcular_tarefas: "Recalculou prazos de tarefas",
   aplicar_norma: "Aplicou uma atualização normativa",
+  notificacoes_aparelho_ativadas: "Ativou os avisos num aparelho",
+  notificacoes_aparelho_desativadas: "Desativou os avisos num aparelho",
 };
 
 export const ROTULO_ENTIDADE: Record<string, string> = {
@@ -49,6 +51,7 @@ export const ROTULO_ENTIDADE: Record<string, string> = {
   obrigacao_regras: "regra de obrigação",
   obrigacoes: "obrigação do catálogo",
   perfis: "usuário",
+  push_aparelhos: "aparelho com avisos",
   relatorios: "relatório",
   relatorios_publicados: "relatório publicado",
   sessoes: "sessão",
@@ -70,6 +73,8 @@ export const ACOES_SEGURANCA = [
   "desativar_usuario",
   "anonimizar_usuario",
   "exportar_dados_pessoais",
+  "notificacoes_aparelho_ativadas",
+  "notificacoes_aparelho_desativadas",
 ];
 
 export function descreverEvento(acao: string, entidade: string) {

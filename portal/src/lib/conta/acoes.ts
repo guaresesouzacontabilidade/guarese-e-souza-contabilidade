@@ -146,10 +146,14 @@ export async function salvarPreferencias(_anterior: ResultadoAcao, fd: FormData)
   try {
     const s = await exigirSessao();
     const atuais = (s.perfil.preferencias ?? {}) as Record<string, unknown>;
-    const { error } = await s.supabase
-      .from("perfis")
-      .update({ preferencias: { ...atuais, email_notificacoes: booleano(fd, "email_notificacoes") } })
-      .eq("id", s.usuarioId);
+    const novas: Record<string, unknown> = { ...atuais, email_notificacoes: booleano(fd, "email_notificacoes") };
+    // Avisos de arquivos enviados pelos clientes (somente para o escritório).
+    if (s.perfil.tipo === "admin" || s.perfil.tipo === "equipe") {
+      const escolha = String(fd.get("aviso_arquivos") ?? "todas");
+      novas.aviso_arquivos = ["todas", "responsavel", "nenhuma"].includes(escolha) ? escolha : "todas";
+      novas.aviso_arquivos_email = booleano(fd, "aviso_arquivos_email");
+    }
+    const { error } = await s.supabase.from("perfis").update({ preferencias: novas as never }).eq("id", s.usuarioId);
     if (error) return falha(mensagemErro(error));
     revalidatePath("/conta");
     return sucesso("Preferências salvas.");

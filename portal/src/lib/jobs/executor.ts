@@ -8,6 +8,7 @@ type Manipulador = (admin: ClienteAdmin, job: Job) => Promise<unknown>;
 /** Registro dos tipos de tarefa (carregados sob demanda). */
 const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
   enviar_envio: async () => (await import("@/lib/notificacoes/envio")).executarEnvio,
+  enviar_push: async () => (await import("@/lib/notificacoes/push")).executarPush,
   processar_documento: async () => (await import("@/lib/documentos/processar")).processarDocumento,
   sugerir_conciliacao: async () => (await import("@/lib/conciliacao/motor")).executarSugestoes,
   remover_arquivos: async () => (await import("@/lib/documentos/processar")).removerArquivos,

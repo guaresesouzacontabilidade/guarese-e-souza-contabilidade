@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 import {
   Bell,
   Building2,
@@ -27,12 +28,17 @@ import { formatarDocumento, formatarRelativo } from "@/lib/formatos";
 import { ROTULO_PAPEL } from "@/lib/permissoes";
 import { itemAtivo, menuEmpresa, menuEscritorio, type EmpresaMenu, type ItemMenu } from "./navegacao";
 import { listarNotificacoes, marcarNotificacoesLidas, type NotificacaoResumo } from "./acoes-layout";
+import { criarClienteNavegador } from "@/lib/supabase/client";
+import { ConviteAvisos } from "@/components/notificacoes/avisos";
+import { avisosAtivosParaUsuario, renovarAvisos } from "@/components/notificacoes/aparelho";
 
 interface Props {
-  usuario: { nome: string; email: string; tipo: "admin" | "equipe" | "cliente" };
+  usuario: { id: string; nome: string; email: string; tipo: "admin" | "equipe" | "cliente" };
   empresas: EmpresaMenu[];
   logoUrl: string | null;
   naoLidas: number;
+  /** Chave pública das notificações no aparelho (null = desconectado). */
+  chavePush: string | null;
   children: React.ReactNode;
 }
 
@@ -48,7 +54,7 @@ function lerCookieEmpresa() {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-export function AppShell({ usuario, empresas, logoUrl, naoLidas, children }: Props) {
+export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, children }: Props) {
   const caminho = usePathname();
   const [menuAberto, setMenuAberto] = useState(false);
   const equipe = usuario.tipo !== "cliente";
@@ -102,7 +108,7 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, children }: Pro
         </Button>
         <SeletorEmpresa empresas={empresas} atual={empresaAtual} equipe={equipe} caminho={caminho} />
         <div className="ml-auto flex items-center gap-1">
-          <SinoNotificacoes naoLidasIniciais={naoLidas} />
+          <SinoNotificacoes naoLidasIniciais={naoLidas} usuarioId={usuario.id} chavePush={chavePush} />
           <AlternarTema />
           <MenuUsuario usuario={usuario} />
         </div>
@@ -296,7 +302,7 @@ function SeletorEmpresa({
   );
 }
 
-function SinoNotificacoes({ naoLidasIniciais }: { naoLidasIniciais: number }) {
+function SinoNotificacoes({ naoLidasIniciais, usuarioId, chavePush }: { naoLidasIniciais: number; usuarioId: string; chavePush: string | null }) {
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
   const [itens, setItens] = useState<NotificacaoResumo[] | null>(null);
@@ -315,6 +321,55 @@ function SinoNotificacoes({ naoLidasIniciais }: { naoLidasIniciais: number }) {
     }, 60000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    // Quem ativou os avisos neste aparelho volta a recebê-los nesta sessão.
+    renovarAvisos(usuarioId, chavePush).catch(() => {});
+  }, [usuarioId, chavePush]);
+
+  useEffect(() => {
+    // Avisos em tempo real (a RLS do banco só entrega os da própria pessoa).
+    const supabase = criarClienteNavegador();
+    let canal: ReturnType<typeof supabase.channel> | null = null;
+    let ativo = true;
+
+    const aoMudar = (mudanca: { eventType: string; new: Partial<NotificacaoResumo> }) => {
+      listarNotificacoes()
+        .then((r) => {
+          setNaoLidas(r.naoLidas);
+          setItens((atuais) => (atuais === null ? null : r.itens));
+        })
+        .catch(() => {});
+      const n = mudanca.new;
+      if (mudanca.eventType === "DELETE" || !n.titulo || n.lida_em) return;
+      // Com os avisos ativos neste aparelho, o próprio sistema já mostra a notificação.
+      if (document.visibilityState !== "visible" || avisosAtivosParaUsuario(usuarioId)) return;
+      const link = n.link;
+      toast(n.titulo, {
+        id: `aviso-${n.id}`,
+        description: n.corpo ?? undefined,
+        action: link ? { label: "Abrir", onClick: () => router.push(link) } : undefined,
+      });
+    };
+
+    const assinar = async () => {
+      // O canal precisa se identificar com a sessão antes de entrar: sem isso o
+      // banco recusa a assinatura (o aviso é filtrado pelas regras de acesso).
+      await supabase.realtime.setAuth();
+      if (!ativo) return;
+      canal = supabase
+        .channel(`avisos-${usuarioId}-${crypto.randomUUID()}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "notificacoes", filter: `user_id=eq.${usuarioId}` }, (m) =>
+          aoMudar(m as unknown as { eventType: string; new: Partial<NotificacaoResumo> }),
+        )
+        .subscribe();
+    };
+    assinar().catch(() => {});
+    return () => {
+      ativo = false;
+      if (canal) supabase.removeChannel(canal);
+    };
+  }, [usuarioId, router]);
 
   async function abrir(v: boolean) {
     setAberto(v);
@@ -374,6 +429,7 @@ function SinoNotificacoes({ naoLidasIniciais }: { naoLidasIniciais: number }) {
             </li>
           ))}
         </ul>
+        <ConviteAvisos usuarioId={usuarioId} chavePublica={chavePush} aoNavegar={() => setAberto(false)} />
         <div className="border-t border-border px-3 py-2 text-center">
           <Link href="/notificacoes" onClick={() => setAberto(false)} className="text-xs text-primary hover:underline">
             Ver todas

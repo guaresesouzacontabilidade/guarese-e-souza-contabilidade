@@ -32,16 +32,50 @@ export function FormPerfil({ nome, telefone }: { nome: string; telefone: string 
   );
 }
 
-export function FormAvisos({ email }: { email: boolean }) {
+export interface PreferenciasArquivos {
+  admin: boolean;
+  arquivos: "todas" | "responsavel" | "nenhuma";
+  arquivosEmail: boolean;
+}
+
+export function FormAvisos({ email, escritorio }: { email: boolean; escritorio?: PreferenciasArquivos }) {
   return (
-    <FormularioAcao acao={salvarPreferencias} className="space-y-3">
+    <FormularioAcao acao={salvarPreferencias} className="space-y-4">
       {({ pendente }) => (
         <>
+          {escritorio ? (
+            <div className="space-y-3">
+              <Campo
+                rotulo="Avisar quando um cliente enviar arquivos"
+                htmlFor="pref-arquivos"
+                ajuda="Vários arquivos seguidos da mesma empresa viram um único aviso (“enviou 5 arquivos”)."
+              >
+                <Select id="pref-arquivos" name="aviso_arquivos" defaultValue={escritorio.arquivos}>
+                  <option value="todas">{escritorio.admin ? "De todas as empresas" : "De todas as empresas que acompanho"}</option>
+                  <option value="responsavel">Só das empresas em que sou o contador responsável</option>
+                  <option value="nenhuma">Não avisar</option>
+                </Select>
+              </Campo>
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox name="aviso_arquivos_email" defaultChecked={escritorio.arquivosEmail} className="mt-0.5" />
+                <span>
+                  <span className="font-medium">Também mandar um resumo dos arquivos por e-mail</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Enviado 10 minutos depois do primeiro arquivo, já contando os que chegarem nesse intervalo. Depende do servidor de e-mail estar configurado.
+                  </span>
+                </span>
+              </label>
+            </div>
+          ) : null}
           <label className="flex items-start gap-2 text-sm">
             <Checkbox name="email_notificacoes" defaultChecked={email} className="mt-0.5" />
             <span>
               <span className="font-medium">Receber avisos por e-mail</span>
-              <span className="block text-xs text-muted-foreground">Novos documentos do escritório, pedidos de correção, respostas e relatórios publicados.</span>
+              <span className="block text-xs text-muted-foreground">
+                {escritorio
+                  ? "Avisos importantes do portal (por exemplo, documento recebido após o fechamento). Desmarcado, nenhum e-mail de aviso é enviado."
+                  : "Novos documentos do escritório, pedidos de correção, respostas e relatórios publicados."}
+              </span>
             </span>
           </label>
           <div className="flex justify-end">
