@@ -109,7 +109,7 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 ## 13. Auditor fiscal
 
 - **Onde roda**: dentro do portal (processador da fila), sobre as notas que já estão em Documentos. **Nada é enviado** a órgãos públicos, a serviços externos ou a inteligência artificial; o auditor não consulta nem altera o PGDAS-D.
-- **O que guarda**: os achados (mês, regra, valor estimado, memória de cálculo, até 15 notas de exemplo com descrição e valor do item, base legal), quem revisou, descartou ou publicou, e o motivo.
+- **O que guarda**: os achados (mês, regra, valor estimado, memória de cálculo, até 15 notas de exemplo com descrição e valor do item — ou, nas notas de serviço, o nome do tomador —, base legal), quem revisou, descartou ou publicou, e o motivo. Para o Fator R dos serviços no Simples, usa só os valores da folha cadastrada (sem nomes).
 - **Quem vê**: a equipe com a permissão "Conduzir o auditor" vê tudo; o cliente (permissão "Economia de impostos") vê só o que a equipe publicou da própria empresa — a mensagem, o mês, o valor estimado e o prazo —, nunca a memória interna. As ações de revisão ficam no registro de atividades.
 - **Catálogo de produtos monofásicos**: lista pública por NCM, montada a partir do texto vigente das leis (Leis 10.147/2000, 10.485/2002, 13.097/2015, 9.718/1998 e outras), visível para a equipe e alterável só pelo administrador.
 

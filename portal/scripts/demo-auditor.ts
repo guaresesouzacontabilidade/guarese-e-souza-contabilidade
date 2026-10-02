@@ -246,3 +246,72 @@ export async function semearAuditor(
   }
   return n > 0;
 }
+
+const INDUSTRIA_CLIENTE = dvCnpj("778889990001");
+
+/** NFS-e (padrão nacional) fictícia de um serviço prestado pela Padaria, com retenções feitas pelo tomador. */
+function nfseDemo(o: { prestador: string; numero: number; data: string; valor: number; optanteSimples: boolean }) {
+  const iss = o.valor * 0.05;
+  const irrf = o.valor * 0.015;
+  const csrf = o.valor * 0.0465;
+  const totalRet = iss + irrf + csrf;
+  const id = `NFS1718204${o.prestador}${String(o.numero).padStart(13, "0")}${o.data.slice(2, 4)}${o.data.slice(5, 7)}0000000001`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<NFSe versao="1.01" xmlns="http://www.sped.fazenda.gov.br/nfse">
+  <infNFSe Id="${id}">
+    <xLocEmi>Porto Nacional</xLocEmi><cLocIncid>1718204</cLocIncid><nNFSe>${o.numero}</nNFSe><dhProc>${o.data}T11:00:00-03:00</dhProc>
+    <emit><CNPJ>${o.prestador}</CNPJ><xNome>PADARIA PAO DOURADO LTDA (DEMONSTRACAO - FICTICIA)</xNome></emit>
+    <valores><vBC>${dec(o.valor)}</vBC><pAliqAplic>5.00</pAliqAplic><vISSQN>${dec(iss)}</vISSQN><vTotalRet>${dec(totalRet)}</vTotalRet><vLiq>${dec(o.valor - totalRet)}</vLiq></valores>
+    <DPS versao="1.01"><infDPS Id="DPS1718204${o.prestador}00001${String(o.numero).padStart(15, "0")}">
+      <dhEmi>${o.data}T10:59:00-03:00</dhEmi><serie>1</serie><nDPS>${o.numero}</nDPS><dCompet>${o.data}</dCompet>
+      <prest><CNPJ>${o.prestador}</CNPJ><regTrib><opSimpNac>${o.optanteSimples ? "3" : "1"}</opSimpNac>${o.optanteSimples ? "<regApTribSN>1</regApTribSN>" : ""}<regEspTrib>0</regEspTrib></regTrib></prest>
+      <toma><CNPJ>${INDUSTRIA_CLIENTE}</CNPJ><xNome>INDUSTRIA DE ALIMENTOS DO TOCANTINS (FICTICIA)</xNome></toma>
+      <serv><cServ><cTribNac>080201</cTribNac><xDescServ>Curso de panificacao para funcionarios (ficticio)</xDescServ></cServ></serv>
+      <valores>
+        <vServPrest><vServ>${dec(o.valor)}</vServ></vServPrest>
+        <trib>
+          <tribMun><tribISSQN>1</tribISSQN><tpRetISSQN>2</tpRetISSQN><pAliq>5.00</pAliq></tribMun>
+          <tribFed><piscofins><CST>00</CST><tpRetPisCofins>3</tpRetPisCofins></piscofins><vRetIRRF>${dec(irrf)}</vRetIRRF><vRetCSLL>${dec(csrf)}</vRetCSLL></tribFed>
+          <totTrib><indTotTrib>0</indTotTrib></totTrib>
+        </trib>
+      </valores>
+    </infDPS></DPS>
+  </infNFSe>
+</NFSe>
+`;
+}
+
+/**
+ * Auditor de serviços na DEMONSTRAÇÃO: a Padaria (Simples) dá um curso de
+ * panificação a uma indústria fictícia, que reteve o ISS a 5% (acima da
+ * alíquota do Simples) e também IR, PIS, Cofins e CSLL (que não se retêm de
+ * empresa do Simples). Na última nota, o regime saiu como "não optante".
+ */
+export async function semearServicosAuditor(
+  admin: SupabaseClient,
+  conexao: { url: string; publica: string },
+  padariaId: string,
+  emailCliente: string,
+): Promise<boolean> {
+  const marca = `${MARCA} NFS-e`;
+  const { count } = await admin.from("documentos").select("id", { count: "exact", head: true }).eq("empresa_id", padariaId).like("nome_original", `${marca}%`);
+  if (count) return false;
+  const { data: padaria } = await admin.from("empresas").select("documento").eq("id", padariaId).single();
+  if (!padaria?.documento) throw new Error("Empresa de demonstração sem CNPJ.");
+  const cliente = await sessao(admin, conexao.url, conexao.publica, emailCliente);
+  let n = 0;
+  for (const m of [-3, -2, -1]) {
+    const data = dataNoMes(m, 18);
+    const xml = nfseDemo({ prestador: padaria.documento, numero: 40 + (m + 4), data, valor: 4800, optanteSimples: m !== -1 });
+    await enviar(cliente, admin, padariaId, {
+      comp: `${data.slice(0, 7)}-01`,
+      categoria: "nfse",
+      nome: `${marca} curso ${data.slice(0, 7)}.xml`,
+      mime: "application/xml",
+      bytes: Buffer.from(xml, "utf8"),
+      itemId: null,
+    });
+    n++;
+  }
+  return n > 0;
+}

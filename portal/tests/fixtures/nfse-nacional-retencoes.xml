@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NFSe versao="1.01" xmlns="http://www.sped.fazenda.gov.br/nfse">
+  <infNFSe Id="NFS17182042112223330001810000000000000777091234567890">
+    <xLocEmi>Porto Nacional</xLocEmi><cLocIncid>1718204</cLocIncid><nNFSe>777</nNFSe><dhProc>2026-09-15T11:00:00-03:00</dhProc>
+    <emit><CNPJ>11222333000181</CNPJ><xNome>EMPRESA A SERVICOS LTDA (FICTICIA)</xNome></emit>
+    <valores><vBC>10000.00</vBC><pAliqAplic>5.00</pAliqAplic><vISSQN>500.00</vISSQN><vTotalRet>1115.00</vTotalRet><vLiq>8885.00</vLiq></valores>
+    <DPS versao="1.01"><infDPS Id="DPS171820421122233300018100001000000000000777">
+      <dhEmi>2026-09-15T10:59:00-03:00</dhEmi><serie>1</serie><nDPS>777</nDPS><dCompet>2026-09-15</dCompet>
+      <prest><CNPJ>11222333000181</CNPJ><regTrib><opSimpNac>3</opSimpNac><regApTribSN>1</regApTribSN><regEspTrib>0</regEspTrib></regTrib></prest>
+      <toma><CNPJ>98765432000198</CNPJ><xNome>TOMADOR EXEMPLO LTDA (FICTICIO)</xNome></toma>
+      <serv><cServ><cTribNac>170101</cTribNac><xDescServ>Assessoria e consultoria (ficticia)</xDescServ></cServ></serv>
+      <valores>
+        <vServPrest><vServ>10000.00</vServ></vServPrest>
+        <trib>
+          <tribMun><tribISSQN>1</tribISSQN><tpRetISSQN>2</tpRetISSQN><pAliq>5.00</pAliq></tribMun>
+          <tribFed><piscofins><CST>00</CST><tpRetPisCofins>3</tpRetPisCofins></piscofins><vRetIRRF>150.00</vRetIRRF><vRetCSLL>465.00</vRetCSLL></tribFed>
+          <totTrib><indTotTrib>0</indTotTrib></totTrib>
+        </trib>
+      </valores>
+    </infDPS></DPS>
+  </infNFSe>
+</NFSe>

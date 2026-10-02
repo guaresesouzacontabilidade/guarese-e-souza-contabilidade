@@ -16,9 +16,11 @@ export type Operacao = "entrada" | "saida" | "nao_relacionada";
 /**
  * Versão da leitura gravada com cada nota. A versão 2 passou a guardar os
  * códigos fiscais de cada item (CST/CSOSN, ST, PIS/Cofins, IBS/CBS, GTIN,
- * CEST): notas lidas antes são relidas pelo auditor fiscal.
+ * CEST); a 3, nas NFS-e, o regime do prestador, a alíquota, a base e a
+ * retenção do ISS e as retenções federais. Notas lidas antes são relidas
+ * pelo auditor fiscal.
  */
-export const VERSAO_LEITURA = 2;
+export const VERSAO_LEITURA = 3;
 
 export interface ItemNota {
   numero_item: number;
@@ -753,6 +755,33 @@ function lerNfseNacional(nfse: unknown, doc: string): ResultadoLeituraXml {
   if (vISS) tributos.iss = vISS;
   const tpRet = txt(buscar(caminho(infDps, "valores"), "tpRetISSQN"));
   if (tpRet && tpRet !== "1") tributos.iss_retido = "sim";
+  // Leitura 3: regime do prestador, ISS (alíquota, base, retenção) e retenções federais (leiaute DPS/NFS-e 1.01 e NT 007/2026)
+  const tribMun = caminho(infDps, "valores", "trib", "tribMun");
+  const tribFed = caminho(infDps, "valores", "trib", "tribFed");
+  const pisCofins = caminho(tribFed, "piscofins");
+  const valoresNfse = caminho(inf, "valores");
+  const regTrib = caminho(prest, "regTrib");
+  const incluir = (chave: string, valor: string | null) => {
+    if (valor !== null && valor !== "") tributos[chave] = valor;
+  };
+  incluir("tp_ret_iss", codigo(caminho(tribMun, "tpRetISSQN")));
+  incluir("trib_iss", codigo(caminho(tribMun, "tribISSQN")));
+  incluir("aliq_iss", decimal(caminho(valoresNfse, "pAliqAplic")) ?? decimal(caminho(tribMun, "pAliq")));
+  incluir("base_iss", decimal(caminho(valoresNfse, "vBC")));
+  incluir("op_simp_nac", codigo(caminho(regTrib, "opSimpNac")));
+  incluir("reg_ap_trib_sn", codigo(caminho(regTrib, "regApTribSN")));
+  incluir("c_trib_nac", codigo(caminho(infDps, "serv", "cServ", "cTribNac")));
+  incluir("cst_pis_cofins", codigo(caminho(pisCofins, "CST")));
+  incluir("aliq_pis", decimal(caminho(pisCofins, "pAliqPis")));
+  incluir("aliq_cofins", decimal(caminho(pisCofins, "pAliqCofins")));
+  incluir("pis", decimal(caminho(pisCofins, "vPis")));
+  incluir("cofins", decimal(caminho(pisCofins, "vCofins")));
+  incluir("tp_ret_pis_cofins", codigo(caminho(pisCofins, "tpRetPisCofins")));
+  incluir("ret_cp", decimal(caminho(tribFed, "vRetCP")));
+  incluir("ret_irrf", decimal(caminho(tribFed, "vRetIRRF")));
+  incluir("ret_csll", decimal(caminho(tribFed, "vRetCSLL")));
+  incluir("total_ret", decimal(caminho(valoresNfse, "vTotalRet")));
+  incluir("loc_incid", codigo(caminho(inf, "cLocIncid")));
 
   const nota: NotaLida = {
     tipo: "nota",
@@ -843,6 +872,23 @@ function lerNfseAbrasf(corpo: unknown, raiz: string, doc: string): ResultadoLeit
   if (vIss) tributos.iss = vIss;
   const issRetido = txt(buscar(infNfse, "IssRetido"));
   if (issRetido === "1") tributos.iss_retido = "sim";
+  // Leitura 3: no padrão ABRASF os valores de PIS, Cofins, INSS, IR e CSLL da nota são retenções
+  const incluir = (chave: string, valor: string | null) => {
+    if (valor !== null && valor !== "" && !/^0+(\.0+)?$/.test(valor)) tributos[chave] = valor;
+  };
+  if (issRetido === "1" || issRetido === "2") tributos.tp_ret_iss = issRetido === "1" ? "2" : "1";
+  const aliquota = decimal(buscar(infNfse, "Aliquota"));
+  // Alguns municípios informam a alíquota como fração (0.05) e outros em percentual (5.00)
+  if (aliquota) tributos.aliq_iss = Number(aliquota) > 0 && Number(aliquota) < 1 ? (Number(aliquota) * 100).toFixed(4) : aliquota;
+  incluir("base_iss", decimal(buscar(infNfse, "BaseCalculo")));
+  const optante = txt(buscar(infNfse, "OptanteSimplesNacional"));
+  if (optante === "1" || optante === "2") tributos.op_simp_nac = optante === "1" ? "3" : "1";
+  incluir("item_lista", txt(buscar(infNfse, "ItemListaServico"))?.slice(0, 10) ?? null);
+  incluir("ret_pis", decimal(buscar(infNfse, "ValorPis")));
+  incluir("ret_cofins", decimal(buscar(infNfse, "ValorCofins")));
+  incluir("ret_cp", decimal(buscar(infNfse, "ValorInss")));
+  incluir("ret_irrf", decimal(buscar(infNfse, "ValorIr")));
+  incluir("ret_csll", decimal(buscar(infNfse, "ValorCsll")));
 
   const dataIso = dataEmissao && /^\d{4}-\d{2}-\d{2}/.test(dataEmissao) ? dataEmissao : competencia && /^\d{4}-\d{2}/.test(competencia) ? competencia : null;
   const nota: NotaLida = {

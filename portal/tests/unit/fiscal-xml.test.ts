@@ -126,6 +126,29 @@ describe("NFS-e", () => {
     expect(n.operacao).toBe("entrada");
     expect(n.identificador).toBe("NFSE:45612378000184:9001:1721000");
     expect(n.sugestao?.tipo).toBe("pagar");
+    expect(n.tributos).toMatchObject({ aliq_iss: "5", base_iss: "800.00", tp_ret_iss: "1" });
+  });
+  it("padrão nacional (leitura 3): regime do prestador, ISS retido e retenções federais", () => {
+    const r = lerXmlFiscal(fixture("nfse-nacional-retencoes.xml"), EMPRESA);
+    const n = (r as { dados: NotaLida }).dados;
+    expect(n.leitura_versao).toBe(3);
+    expect(n.tributos).toMatchObject({
+      iss: "500.00",
+      iss_retido: "sim",
+      tp_ret_iss: "2",
+      trib_iss: "1",
+      aliq_iss: "5.00",
+      base_iss: "10000.00",
+      op_simp_nac: "3",
+      reg_ap_trib_sn: "1",
+      c_trib_nac: "170101",
+      cst_pis_cofins: "00",
+      tp_ret_pis_cofins: "3",
+      ret_irrf: "150.00",
+      ret_csll: "465.00",
+      total_ret: "1115.00",
+      loc_incid: "1718204",
+    });
   });
 });
 
@@ -154,7 +177,7 @@ describe("códigos fiscais de cada item (leitura versão 2)", () => {
     const n = (r as { dados: NotaLida }).dados;
     expect(n.avisos).toEqual([]);
     expect(n.operacao).toBe("entrada");
-    expect(n.leitura_versao).toBe(2);
+    expect(n.leitura_versao).toBe(3);
     expect(n).toMatchObject({ crt_emitente: "3", consumidor_final: false, id_destino: "1", ind_ie_dest: "1" });
     expect(n.tributos).toMatchObject({ icms_st: "108.00", ibs: "1.00", cbs: "9.00", base_ibscbs: "1000.00" });
     const [remedio, shampoo, biscoito] = n.itens;

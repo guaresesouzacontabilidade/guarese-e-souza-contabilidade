@@ -99,7 +99,7 @@ describe.skipIf(!local)("auditor fiscal — análise de ponta a ponta (Supabase 
       .select("leitura_versao, crt_emitente, consumidor_final, itens:documento_fiscal_itens(numero_item, gtin, tributos)")
       .eq("id", fiscais["nfce-venda-farmacia.xml"])
       .single();
-    expect(venda).toMatchObject({ leitura_versao: 2, crt_emitente: "1", consumidor_final: true });
+    expect(venda).toMatchObject({ leitura_versao: 3, crt_emitente: "1", consumidor_final: true });
     const itens = (venda!.itens as { numero_item: number; gtin: string | null; tributos: Record<string, string> }[]).sort((a, b) => a.numero_item - b.numero_item);
     expect(itens[0]).toMatchObject({ gtin: "7891234567895", tributos: { csosn: "102", cst_pis: "49" } });
     const { count } = await admin.from("jobs").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("tipo", "auditor_fiscal");
@@ -126,6 +126,21 @@ describe.skipIf(!local)("auditor fiscal — análise de ponta a ponta (Supabase 
     expect(exec!.achados_novos).toBeGreaterThanOrEqual(2);
   });
 
+  it("analisa as notas de serviço: ISS retido no DAS, alíquota da retenção e retenções federais", async () => {
+    await inserirXml("nfse-nacional-retencoes.xml");
+    const { executarAuditorFiscal } = await import("@/lib/auditor-fiscal/executar");
+    const r = (await executarAuditorFiscal(admin as never, { id: 3, tipo: "auditor_fiscal", payload: { empresa_id: empresaId, origem: "manual" } } as never)) as {
+      notas_servico: number;
+    };
+    expect(r.notas_servico).toBeGreaterThanOrEqual(1);
+    const { data: achados } = await admin.from("auditor_achados").select("chave, tipo, valor_base, valor_estimado, referencias").eq("empresa_id", empresaId).like("chave", `%:${MES}`);
+    const porChave = new Map((achados ?? []).map((a) => [a.chave, a]));
+    expect(porChave.get(`iss_retido_simples:${MES}`)).toMatchObject({ tipo: "oportunidade", valor_base: 10000 });
+    expect(Number(porChave.get(`iss_retido_simples:${MES}`)!.valor_estimado)).toBeGreaterThan(0);
+    expect(porChave.get(`retencao_federal_simples:${MES}`)).toMatchObject({ tipo: "oportunidade", valor_estimado: 615 });
+    expect(porChave.get(`iss_aliquota_acima:${MES}`)).toMatchObject({ tipo: "oportunidade" });
+  });
+
   it("relê do arquivo uma nota gravada na leitura antiga e mantém a revisão feita", async () => {
     await admin.from("auditor_achados").update({ situacao: "confirmado" }).eq("empresa_id", empresaId).eq("chave", `monofasico_simples:${MES}`);
     const id = fiscais["nfce-venda-farmacia.xml"];
@@ -134,7 +149,7 @@ describe.skipIf(!local)("auditor fiscal — análise de ponta a ponta (Supabase 
     const { executarAuditorFiscal } = await import("@/lib/auditor-fiscal/executar");
     await executarAuditorFiscal(admin as never, { id: 2, tipo: "auditor_fiscal", payload: { empresa_id: empresaId, origem: "manual" } } as never);
     const { data: nota } = await admin.from("documentos_fiscais").select("leitura_versao, itens:documento_fiscal_itens(gtin)").eq("id", id).single();
-    expect(nota?.leitura_versao).toBe(2);
+    expect(nota?.leitura_versao).toBe(3);
     expect((nota!.itens as { gtin: string | null }[]).some((i) => i.gtin === "7891234567895")).toBe(true);
     const { data: mono } = await admin.from("auditor_achados").select("situacao, valores_alterados_em").eq("empresa_id", empresaId).eq("chave", `monofasico_simples:${MES}`).single();
     expect(mono).toMatchObject({ situacao: "confirmado", valores_alterados_em: null });

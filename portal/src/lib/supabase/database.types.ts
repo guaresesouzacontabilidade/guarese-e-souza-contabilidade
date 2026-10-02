@@ -2620,6 +2620,9 @@ isOneToOne: false
 "auditor_revisar":
 { Args: { "p_acao": string,"p_id": string,"p_motivo"?: string,"p_texto_cliente"?: string }; Returns: undefined
                            },
+"auditor_servicos":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
 "avaliar_documento_apos_fechamento":
 { Args: { "p_documento_id": string,"p_parecer": string }; Returns: undefined
                            },

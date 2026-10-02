@@ -69,3 +69,40 @@ export const OBRIGACAO_IBS_CBS = { regimeNormal: "2026-08-03", simples: "2027-01
 
 /** PIS/Cofins quando o item não traz o valor (estimativa pelo regime). */
 export const PIS_COFINS_ESTIMADO = { lucro_presumido: "3.65", lucro_real: "9.25", lucro_arbitrado: "3.65" } as Record<string, string>;
+
+/** Base legal das regras das notas de serviço (conferidas no texto vigente em 02/10/2026). */
+export const FONTES_SERVICOS = {
+  issRetidoSimples: {
+    titulo: "LC nº 123/2006, art. 21, § 4º, VII (o ISS retido é definitivo e sobre essa receita não há ISS a recolher no Simples)",
+    url: "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm",
+  },
+  segregacaoIss: {
+    titulo: "LC nº 123/2006, art. 18, § 4º-A, II (receita com ISS retido separada no PGDAS-D)",
+    url: "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm",
+  },
+  anexosServicos: {
+    titulo: "LC nº 123/2006, Anexos III, IV e V (partilha do ISS por faixa; parte efetiva do ISS limitada a 5%)",
+    url: "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm",
+  },
+  aliquotaRetencao: {
+    titulo: "LC nº 123/2006, art. 21, § 4º, I e VI (alíquota da retenção = ISS efetivo do mês anterior; diferença em guia do município)",
+    url: "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm",
+  },
+  irrfSimples: {
+    titulo: "Instrução Normativa RFB nº 765/2007, art. 1º (dispensa da retenção do IR para empresas do Simples Nacional)",
+    url: "https://normas.receita.fazenda.gov.br/sijut2consulta/link.action?visao=anotado&idAto=15713",
+  },
+  csrfSimples: {
+    titulo: "Lei nº 10.833/2003, arts. 30 e 32, III (PIS, Cofins e CSLL não são retidos de empresas do Simples)",
+    url: "https://www.planalto.gov.br/ccivil_03/leis/2003/l10.833.htm",
+  },
+  inssSimples: {
+    titulo: "IN RFB nº 2.110/2022, arts. 166 e 167, e Súmula 425 do STJ (no Simples, a retenção de 11% do INSS só vale para o Anexo IV)",
+    url: "https://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=126687",
+  },
+  leiauteNfse: {
+    titulo: "NFS-e Nacional — leiaute da DPS (regime do prestador: opSimpNac) e NT SE/CGNFS-e nº 007/2026",
+    url: "https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica",
+  },
+  restituicao: FONTES.restituicao,
+} satisfies Record<string, Fonte>;

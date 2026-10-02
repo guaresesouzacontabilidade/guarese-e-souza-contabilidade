@@ -21,7 +21,7 @@ import { semearCalculos } from "./demo-calculos";
 import { semearVencimentos } from "./demo-vencimentos";
 import { semearAgenda } from "./demo-agenda";
 import { semearSolicitacoes } from "./demo-solicitacoes";
-import { semearAuditor } from "./demo-auditor";
+import { semearAuditor, semearServicosAuditor } from "./demo-auditor";
 
 carregarEnv();
 
@@ -225,6 +225,9 @@ async function main() {
     cliente2: `cliente2@${DOMINIO}`,
   });
   if (auditor) console.log("  Notas de demonstração do auditor fiscal enviadas (a análise roda na fila)");
+  if (await semearServicosAuditor(admin, { url, publica }, ids[0], `cliente@${DOMINIO}`)) {
+    console.log("  Notas de serviço de demonstração do auditor enviadas (a análise roda na fila)");
+  }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);

@@ -3,20 +3,24 @@ import Decimal from "decimal.js";
 import type { ClienteAdmin } from "@/lib/supabase/admin";
 import type { Job } from "@/lib/jobs/executor";
 import { hojeISO, somarMeses } from "@/lib/competencia";
-import { lerXmlFiscal } from "@/lib/fiscal/xml";
+import { VERSAO_LEITURA, lerXmlFiscal } from "@/lib/fiscal/xml";
 import { decodificarTexto } from "@/lib/extratos/comum";
-import { receitaBruta12Meses, type DadosPrevisao, type MesDados, type ParametrosCalculo } from "@/lib/calculos/previsao";
+import { dasSimples, receitaBruta12Meses, type ColaboradorFolha, type DadosPrevisao, type MesDados, type ParametrosCalculo } from "@/lib/calculos/previsao";
 import type { LinhaCatalogo } from "./catalogo";
 import { auditar, inicioPrazo, type GrupoItens, type MesSimples } from "./regras";
+import { auditarServicos, type AnexoServicos, type MesSimplesServicos, type NotaServico } from "./servicos";
 
 /**
- * Tarefa "auditor_fiscal" da fila: analisa as NF-e/NFC-e de uma empresa nos
- * últimos 5 anos (prazo de restituição) e grava os achados.
- *  1. Relê, do arquivo guardado, as notas lidas antes da versão 2 da leitura
- *     (em lotes; o restante continua numa nova tarefa).
- *  2. Busca os itens agrupados por mês e códigos fiscais, o regime de cada mês,
- *     a receita de 12 meses do Simples e o catálogo de produtos monofásicos.
- *  3. Aplica as regras (src/lib/auditor-fiscal/regras.ts) e registra.
+ * Tarefa "auditor_fiscal" da fila: analisa as NF-e/NFC-e e as NFS-e de uma
+ * empresa nos últimos 5 anos (prazo de restituição) e grava os achados.
+ *  1. Relê, do arquivo guardado, as notas lidas antes da leitura completa
+ *     (NF-e/NFC-e antes da versão 2; NFS-e antes da 3), em lotes; o restante
+ *     continua numa nova tarefa.
+ *  2. Busca os itens agrupados por mês e códigos fiscais, as notas de serviço,
+ *     o regime de cada mês, a receita de 12 meses do Simples (e o Fator R) e o
+ *     catálogo de produtos monofásicos.
+ *  3. Aplica as regras (regras.ts para mercadorias, servicos.ts para serviços)
+ *     e registra.
  */
 
 const LOTE_RELEITURA = 120;
@@ -36,8 +40,13 @@ interface DadosAuditor {
   catalogo: LinhaCatalogo[];
   leitura_antiga: number;
   notas: number;
+  notas_servico?: number;
+  colaboradores?: ColaboradorFolha[];
   sem_ibscbs: { competencia: string; total: number; apos_normal: number }[];
 }
+
+/** Notas que ainda precisam ser relidas: NF-e/NFC-e antes da leitura 2 e NFS-e antes da 3. */
+const FILTRO_RELEITURA = "and(modelo.in.(55,65),leitura_versao.lt.2),and(modelo.like.nfse*,leitura_versao.lt.3)";
 
 async function iniciarExecucao(admin: ClienteAdmin, p: Payload): Promise<string> {
   if (p.execucao_id) {
@@ -80,7 +89,7 @@ async function relerNota(admin: ClienteAdmin, documento: string, n: { id: string
     }
   }
   // Arquivo ausente ou ilegível: marca como relida para não tentar para sempre (fica com os dados antigos).
-  if (!atualizada) await admin.from("documentos_fiscais").update({ leitura_versao: 2 }).eq("id", n.id);
+  if (!atualizada) await admin.from("documentos_fiscais").update({ leitura_versao: VERSAO_LEITURA }).eq("id", n.id);
 }
 
 /** Relê do armazenamento as notas gravadas antes da leitura completa dos códigos fiscais (algumas ao mesmo tempo). */
@@ -91,8 +100,7 @@ async function relerNotasAntigas(admin: ClienteAdmin, empresa: { id: string; doc
     .from("documentos_fiscais")
     .select("id, documento_id")
     .eq("empresa_id", empresa.id)
-    .lt("leitura_versao", 2)
-    .in("modelo", ["55", "65"])
+    .or(FILTRO_RELEITURA)
     .gte("competencia", inicio)
     .order("competencia", { ascending: false })
     .limit(LOTE_RELEITURA);
@@ -108,8 +116,7 @@ async function relerNotasAntigas(admin: ClienteAdmin, empresa: { id: string; doc
     .from("documentos_fiscais")
     .select("id", { count: "exact", head: true })
     .eq("empresa_id", empresa.id)
-    .lt("leitura_versao", 2)
-    .in("modelo", ["55", "65"])
+    .or(FILTRO_RELEITURA)
     .gte("competencia", inicio);
   return { relidas, pendentes: count ?? 0 };
 }
@@ -159,11 +166,15 @@ export async function executarAuditorFiscal(admin: ClienteAdmin, job: Job) {
     if (erroDados || !bruto) throw new Error(`Falha ao carregar os dados da empresa: ${erroDados?.message ?? "sem retorno"}`);
     const dados = bruto as unknown as DadosAuditor;
     const grupos: GrupoItens[] = [];
+    const servicos: NotaServico[] = [];
     for (let c = inicio; c <= fim; c = somarMeses(c, 12)) {
       const ate = somarMeses(c, 11) < fim ? somarMeses(c, 11) : fim;
       const { data, error } = await admin.rpc("auditor_itens_agrupados", { p_empresa_id: p.empresa_id, p_inicio: c, p_fim: ate });
       if (error) throw new Error(`Falha ao carregar as notas: ${error.message}`);
       grupos.push(...((data ?? []) as unknown as GrupoItens[]));
+      const { data: notasServico, error: erroServico } = await admin.rpc("auditor_servicos", { p_empresa_id: p.empresa_id, p_inicio: c, p_fim: ate });
+      if (erroServico) throw new Error(`Falha ao carregar as notas de serviço: ${erroServico.message}`);
+      servicos.push(...((notasServico ?? []) as unknown as NotaServico[]));
     }
 
     // 3. Regime e Simples de cada mês
@@ -183,7 +194,7 @@ export async function executarAuditorFiscal(admin: ClienteAdmin, job: Job) {
       parametros: dados.parametros,
       meses: dados.meses,
       checklist: null,
-      colaboradores: [],
+      colaboradores: dados.colaboradores ?? [],
       ajustes: [],
       vencimentos: [],
       guias_publicadas: 0,
@@ -205,18 +216,55 @@ export async function executarAuditorFiscal(admin: ClienteAdmin, job: Job) {
       return s;
     };
 
+    // Serviços no Simples: anexo (com o Fator R) e RBT12 de cada mês
+    const cacheServicos = new Map<string, MesSimplesServicos>();
+    const simplesServicos = (c: string): MesSimplesServicos | null => {
+      const chave = c.slice(0, 7);
+      const salvo = cacheServicos.get(chave);
+      if (salvo) return salvo;
+      let s: MesSimplesServicos;
+      if (dados.parametros) {
+        const r = dasSimples(previsao, c);
+        const anexo = (["III", "IV", "V"].includes(r.anexoServicos) ? r.anexoServicos : dados.parametros.anexo_servicos) as AnexoServicos;
+        s = {
+          rbt12: new Decimal(r.rbt12.toString()),
+          anexo,
+          anexoInformado: true,
+          fatorREstimado: dados.parametros.anexo_servicos === "V" && Boolean(dados.parametros.fator_r) && r.folhaEstimada,
+          mesesSemDados: r.mesesSemDados,
+          observacao: null,
+        };
+      } else {
+        const r = receitaBruta12Meses(previsao, c);
+        s = { rbt12: new Decimal(r.rbt12.toString()), anexo: "III", anexoInformado: false, fatorREstimado: false, mesesSemDados: r.mesesSemDados, observacao: r.observacao };
+      }
+      cacheServicos.set(chave, s);
+      return s;
+    };
+
     // 4. Regras
     const semIbsCbs = new Map(dados.sem_ibscbs.map((x) => [String(x.competencia).slice(0, 7), x]));
-    const achados = auditar({
-      hoje,
-      inicio,
-      fim,
-      regimeDoMes: (c) => regimes.get(c.slice(0, 7)) ?? dados.empresa.regime,
-      simples,
-      grupos,
-      catalogo: dados.catalogo,
-      semIbsCbs: (c) => semIbsCbs.get(c.slice(0, 7)) ?? null,
-    });
+    const regimeDoMes = (c: string) => regimes.get(c.slice(0, 7)) ?? dados.empresa.regime;
+    const achados = [
+      ...auditar({
+        hoje,
+        inicio,
+        fim,
+        regimeDoMes,
+        simples,
+        grupos,
+        catalogo: dados.catalogo,
+        semIbsCbs: (c) => semIbsCbs.get(c.slice(0, 7)) ?? null,
+      }),
+      ...auditarServicos({
+        inicio,
+        fim,
+        regimeDoMes,
+        simples: simplesServicos,
+        inicioAtividade: dados.parametros?.inicio_atividade ? `${String(dados.parametros.inicio_atividade).slice(0, 7)}-01` : null,
+        notas: servicos,
+      }),
+    ];
 
     // 5. Registro
     const notas = dados.notas;
@@ -226,6 +274,7 @@ export async function executarAuditorFiscal(admin: ClienteAdmin, job: Job) {
       periodo_inicio: inicio,
       periodo_fim: fim,
       notas,
+      notas_servico: servicos.length,
       itens,
       grupos: grupos.length,
       achados: achados.length,

@@ -9,6 +9,12 @@ export const ROTULO_REGRA: Record<string, string> = {
   ibscbs_ausente: "Notas sem IBS/CBS",
   ibscbs_aliquota: "Alíquota de teste do IBS/CBS",
   ncm_invalido: "NCM inválido",
+  iss_retido_simples: "ISS retido no DAS",
+  iss_aliquota_acima: "ISS retido acima do Simples",
+  iss_aliquota_abaixo: "ISS retido abaixo do devido",
+  retencao_federal_simples: "Retenções federais no Simples",
+  inss_retido_simples: "INSS retido no Simples",
+  nfse_regime_divergente: "Regime na NFS-e diferente",
 };
 
 export const TIPO_ACHADO: Record<string, { rotulo: string; tom: Tom }> = {

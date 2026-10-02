@@ -31,6 +31,7 @@ type Linha = { rotulo: string; valor: string };
 type Nome = { nome: string } | null;
 
 const soma = (lista: { valor_estimado: number | string | null }[]) => lista.reduce((t, a) => t + Number(a.valor_estimado ?? 0), 0);
+const nomeModelo = (modelo: string) => (modelo === "65" ? "NFC-e" : modelo.startsWith("nfse") ? "NFS-e" : "NF-e");
 
 /** Análise na fila ou em andamento há menos de 30 minutos (depois disso, considera-se parada). */
 function analiseEmAndamento(ultima: { situacao: string; criada_em: string } | undefined) {
@@ -93,7 +94,7 @@ async function VisaoEquipe({ empresaId, base, sp, ctx }: { empresaId: string; ba
     <>
       <CabecalhoPagina
         titulo="Auditor fiscal"
-        descricao="Confere as notas de compra e de venda dos últimos 5 anos (prazo para pedir de volta) e aponta imposto pago a mais e riscos. Os valores saem de regras fixas, com a lei citada; a equipe confere antes de mostrar ao cliente."
+        descricao="Confere as notas de compra e de venda e as notas de serviço dos últimos 5 anos (prazo para pedir de volta) e aponta imposto pago a mais e riscos. Os valores saem de regras fixas, com a lei citada; a equipe confere antes de mostrar ao cliente."
         acoes={<BotaoAnalisar empresaId={empresaId} emAndamento={emAndamento} />}
       />
       <AtualizarEnquanto ativo={emAndamento} />
@@ -198,7 +199,7 @@ async function VisaoEquipe({ empresaId, base, sp, ctx }: { empresaId: string; ba
                     {valor ? (
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">{a.tipo === "oportunidade" ? "Valor estimado" : "Em risco"}</p>
-                        <p className="numero text-xl font-bold text-sucesso">{valor}</p>
+                        <p className={`numero text-xl font-bold ${a.tipo === "oportunidade" ? "text-sucesso" : "text-alerta-fg"}`}>{valor}</p>
                       </div>
                     ) : a.valor_base != null ? (
                       <div className="text-right">
@@ -232,7 +233,7 @@ async function VisaoEquipe({ empresaId, base, sp, ctx }: { empresaId: string; ba
                             <THead>
                               <Tr>
                                 <Th>Nota</Th>
-                                <Th>Item</Th>
+                                <Th>Item ou tomador</Th>
                                 <Th className="text-right">Valor</Th>
                                 <Th className="hidden md:table-cell">Por quê</Th>
                               </Tr>
@@ -243,10 +244,10 @@ async function VisaoEquipe({ empresaId, base, sp, ctx }: { empresaId: string; ba
                                   <Td className="text-sm">
                                     {r.documento_id ? (
                                       <Link href={`${base}/documentos/${r.documento_id}`} className="text-primary hover:underline">
-                                        {r.modelo === "65" ? "NFC-e" : "NF-e"} {r.numero ?? ""}
+                                        {nomeModelo(r.modelo)} {r.numero ?? ""}
                                       </Link>
                                     ) : (
-                                      `${r.modelo === "65" ? "NFC-e" : "NF-e"} ${r.numero ?? ""}`
+                                      `${nomeModelo(r.modelo)} ${r.numero ?? ""}`
                                     )}
                                     <span className="block text-xs text-muted-foreground">{r.data ? formatarData(r.data) : ""}</span>
                                   </Td>
