@@ -24,6 +24,8 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
 
   const origem = parametro(sp, "origem", ["cliente", "escritorio"]) || "cliente";
   const competencia = lerCompetencia(parametro(sp, "competencia"));
+  // Notas trazidas pela busca automática × arquivos enviados pelas pessoas
+  const fonte = origem === "cliente" ? parametro(sp, "fonte", ["automatica", "envio"]) : "";
   const categoria = parametro(sp, "categoria");
   const status = parametro(sp, "status", Object.keys(STATUS_DOCUMENTO));
   const busca = termoBusca(sp.busca);
@@ -45,6 +47,8 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
     .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
   q = excluidos ? q.not("excluido_em", "is", null) : q.is("excluido_em", null);
   if (competencia) q = q.eq("competencia", competencia);
+  if (fonte === "automatica") q = q.eq("origem", "automatica");
+  else if (fonte === "envio") q = q.neq("origem", "automatica");
   if (categoria) q = q.eq("categoria_codigo", categoria);
   if (status && origem === "cliente") q = q.eq("status", status);
   if (busca) q = q.or(`nome_original.ilike.%${busca}%,titulo.ilike.%${busca}%`);
@@ -81,7 +85,7 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
   }));
   const base = `/e/${empresaId}/documentos`;
   const totalPaginas = Math.ceil((count ?? 0) / POR_PAGINA);
-  const filtrando = Boolean(competencia || categoria || status || busca || conferir);
+  const filtrando = Boolean(competencia || categoria || status || busca || conferir || fonte);
 
   return (
     <>
@@ -112,7 +116,7 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
           { valor: "escritorio", rotulo: "Do escritório para a empresa", href: urlCom(base, {}, { origem: "escritorio" }) },
         ]}
       />
-      <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-6" role="search">
+      <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-7" role="search">
         {origem === "escritorio" ? <input type="hidden" name="origem" value="escritorio" /> : null}
         <div className="relative lg:col-span-2">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -137,6 +141,13 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
             ))}
         </Select>
         {origem === "cliente" ? (
+          <Select name="fonte" defaultValue={fonte} aria-label="Origem do arquivo">
+            <option value="">Todos os arquivos</option>
+            <option value="envio">Enviados por pessoas</option>
+            <option value="automatica">Busca automática (SEFAZ e NFS-e)</option>
+          </Select>
+        ) : null}
+        {origem === "cliente" ? (
           <Select name="status" defaultValue={status} aria-label="Situação">
             <option value="">Todas as situações</option>
             {Object.entries(STATUS_DOCUMENTO).map(([v, s]) => (
@@ -149,7 +160,7 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
         <Button type="submit" variante="secundario">
           Filtrar
         </Button>
-        <div className="flex flex-wrap items-center gap-4 text-sm sm:col-span-2 lg:col-span-6">
+        <div className="flex flex-wrap items-center gap-4 text-sm sm:col-span-2 lg:col-span-7">
           <label className="inline-flex items-center gap-2">
             <Checkbox name="zip" value="1" defaultChecked={comZip} /> Mostrar arquivos extraídos de ZIP
           </label>

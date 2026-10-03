@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CloudDownload, FileArchive, KeyRound, ShieldCheck } from "lucide-react";
+import { CalendarRange, CloudDownload, FileArchive, KeyRound, ShieldCheck } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { BotaoBuscarAgora, FormCertificado, PreferenciasNotas, RemoverCertificado } from "@/components/notas-automaticas/notas-automaticas";
+import {
+  ApagarNotasAnteriores,
+  BotaoBuscarAgora,
+  FormCertificado,
+  MesInicialNotas,
+  PreferenciasNotas,
+  RemoverCertificado,
+} from "@/components/notas-automaticas/notas-automaticas";
 import { FormLoteXml } from "@/components/lotes-xml/form-lote";
 import { TabelaLotes, emPreparo, type LoteXml } from "@/components/lotes-xml/tabela-lotes";
 import { AtualizarEnquanto } from "@/components/ui/atualizar-enquanto";
@@ -23,7 +30,7 @@ import {
 } from "@/lib/notas-automaticas/rotulos";
 import { envServidor } from "@/lib/env-servidor";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCnpj, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
+import { formatarCnpj, formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { competenciaAtual, diasEntre, hojeISO } from "@/lib/competencia";
 
 export const metadata: Metadata = { title: "Notas automáticas" };
@@ -34,10 +41,11 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
   const gerenciar = ctx.pode("certificado.gerenciar");
   const verDocumentos = ctx.pode("documentos.ver");
   const baixar = ctx.pode("documentos.baixar");
+  const admin = ctx.acesso.papel === "admin";
   if (!gerenciar && !verDocumentos) return <Alerta tom="alerta">Seu acesso não inclui as notas automáticas desta empresa.</Alerta>;
   const base = `/e/${empresaId}`;
 
-  const [{ data: certificado }, { data: config }, { data: execucoes }, { data: resumos }, { data: lotes }] = await Promise.all([
+  const [{ data: certificado }, { data: config }, { data: execucoes }, { data: resumos }, { data: lotes }, { data: porMes }] = await Promise.all([
     gerenciar
       ? ctx.supabase
           .from("certificados_digitais")
@@ -49,7 +57,7 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
     ctx.supabase.from("notas_automaticas").select("*").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase
       .from("notas_automaticas_execucoes")
-      .select("id, servico, iniciado_em, resultado, documentos, resumos, codigo, mensagem")
+      .select("id, servico, iniciado_em, resultado, documentos, resumos, ignorados, codigo, mensagem")
       .eq("empresa_id", empresaId)
       .order("iniciado_em", { ascending: false })
       .limit(15),
@@ -69,6 +77,7 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
           .order("criado_em", { ascending: false })
           .limit(10)
       : Promise.resolve({ data: [] }),
+    verDocumentos ? ctx.supabase.rpc("notas_automaticas_por_mes", { p_empresa_id: empresaId }) : Promise.resolve({ data: [] }),
   ]);
   const listaLotes = (lotes ?? []) as LoteXml[];
   const { meses, padrao } = mesesDoLote(competenciaAtual());
@@ -78,6 +87,10 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
   const diasValidade = certificado ? diasEntre(hojeISO(), certificado.valido_ate.slice(0, 10)) : null;
   const cadastradoPor = (certificado?.cadastrado as unknown as { nome: string } | null)?.nome ?? null;
   const semXml = (resumos ?? []).filter((r) => !r.documento_id && r.situacao === "autorizada").length;
+  const meses_ = porMes ?? [];
+  const desde = config?.buscar_desde ?? null;
+  const anteriores = desde ? meses_.filter((m) => m.competencia < desde).reduce((t, m) => t + m.total, 0) : 0;
+  const rotuloDesde = desde ? formatarCompetencia(desde, true) : null;
 
   return (
     <>
@@ -207,7 +220,12 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                   </div>
                 </>
               ) : chaveServidor ? (
-                <FormCertificado empresaId={empresaId} textoAutorizacao={ctx.equipe ? AUTORIZACAO_ESCRITORIO : AUTORIZACAO_CLIENTE} />
+                <FormCertificado
+                  empresaId={empresaId}
+                  textoAutorizacao={ctx.equipe ? AUTORIZACAO_ESCRITORIO : AUTORIZACAO_CLIENTE}
+                  meses={meses}
+                  mesPadrao={desde ? desde.slice(0, 7) : padrao}
+                />
               ) : null}
             </CardContent>
           </Card>
@@ -222,6 +240,105 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
           </CardHeader>
           <CardContent>
             <PreferenciasNotas empresaId={empresaId} nfe={config.nfe_ativa} nfse={config.nfse_ativa} ciencia={config.ciencia_automatica} pausada={config.pausada} />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {verDocumentos || (gerenciar && config) ? (
+        <Card className="mb-4 scroll-mt-20" id="por-mes">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarRange className="size-4" /> Notas por mês
+            </CardTitle>
+            <CardDescription>
+              A SEFAZ e o Ambiente Nacional entregam as notas numa fila, da mais antiga para a mais nova, sem consulta por mês. O portal guarda só as
+              emitidas a partir do mês inicial e organiza tudo pelo mês de emissão.
+              {rotuloDesde ? (
+                <>
+                  {" "}
+                  Mês inicial: <strong>{rotuloDesde}</strong>.
+                </>
+              ) : config ? (
+                <>
+                  {" "}
+                  <strong>Sem mês inicial:</strong> a busca traz tudo o que os serviços ainda disponibilizam.
+                </>
+              ) : null}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {gerenciar && config ? <MesInicialNotas empresaId={empresaId} atual={desde} meses={meses} /> : null}
+            {anteriores > 0 && rotuloDesde ? (
+              <Alerta
+                tom="alerta"
+                titulo={`${anteriores === 1 ? "1 arquivo anterior" : `${anteriores} arquivos anteriores`} a ${rotuloDesde} no portal`}
+                acao={admin ? <ApagarNotasAnteriores empresaId={empresaId} quantidade={anteriores} mesInicial={rotuloDesde} /> : undefined}
+              >
+                Foram trazidos antes da escolha do mês inicial e continuam em Documentos.
+                {admin ? " O administrador pode apagá-los do portal." : " Só o administrador do escritório pode apagá-los."}
+              </Alerta>
+            ) : null}
+            {verDocumentos ? (
+              meses_.length ? (
+                <div className="-mx-4 sm:-mx-6">
+                  <Table>
+                    <THead>
+                      <Tr>
+                        <Th>Mês de emissão</Th>
+                        <Th className="hidden text-right sm:table-cell">NF-e de entrada</Th>
+                        <Th className="hidden text-right sm:table-cell">NF-e de saída</Th>
+                        <Th className="hidden text-right md:table-cell">NFS-e prestadas</Th>
+                        <Th className="hidden text-right md:table-cell">NFS-e tomadas</Th>
+                        <Th className="hidden text-right lg:table-cell">Outros</Th>
+                        <Th className="text-right">Total</Th>
+                        <Th className="w-16" />
+                      </Tr>
+                    </THead>
+                    <TBody>
+                      {meses_.map((m) => {
+                        const antes = Boolean(desde && m.competencia < desde);
+                        return (
+                          <Tr key={m.competencia}>
+                            <Td>
+                              <span className="block font-medium capitalize">{formatarCompetencia(m.competencia, true)}</span>
+                              <span className="block text-xs text-muted-foreground md:hidden">
+                                {[
+                                  m.nfe_entrada ? `${m.nfe_entrada} entrada` : null,
+                                  m.nfe_saida ? `${m.nfe_saida} saída` : null,
+                                  m.nfse_prestada ? `${m.nfse_prestada} NFS-e prestada${m.nfse_prestada === 1 ? "" : "s"}` : null,
+                                  m.nfse_tomada ? `${m.nfse_tomada} NFS-e tomada${m.nfse_tomada === 1 ? "" : "s"}` : null,
+                                  m.outros ? `${m.outros} outro${m.outros === 1 ? "" : "s"}` : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </span>
+                              {antes ? <Badge variante="alerta">Anterior ao mês inicial</Badge> : null}
+                            </Td>
+                            <Td className="numero hidden text-right sm:table-cell">{m.nfe_entrada || "—"}</Td>
+                            <Td className="numero hidden text-right sm:table-cell">{m.nfe_saida || "—"}</Td>
+                            <Td className="numero hidden text-right md:table-cell">{m.nfse_prestada || "—"}</Td>
+                            <Td className="numero hidden text-right md:table-cell">{m.nfse_tomada || "—"}</Td>
+                            <Td className="numero hidden text-right lg:table-cell">{m.outros || "—"}</Td>
+                            <Td className="numero text-right font-semibold">{m.total}</Td>
+                            <Td className="text-right text-sm">
+                              <Link
+                                href={`${base}/documentos?competencia=${m.competencia.slice(0, 7)}&fonte=automatica`}
+                                className="text-primary hover:underline"
+                                aria-label={`Ver as notas de ${formatarCompetencia(m.competencia, true)}`}
+                              >
+                                Ver
+                              </Link>
+                            </Td>
+                          </Tr>
+                        );
+                      })}
+                    </TBody>
+                  </Table>
+                </div>
+              ) : (
+                <EstadoVazio icone={CalendarRange} titulo="Nenhuma nota trazida pela busca ainda" descricao="Depois da primeira busca, as notas aparecem aqui separadas por mês." />
+              )
+            ) : null}
           </CardContent>
         </Card>
       ) : null}
@@ -342,11 +459,15 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                       <Td className="text-sm">{SERVICO_EXECUCAO[e.servico] ?? e.servico}</Td>
                       <Td>
                         <Badge variante={r.tom}>{r.rotulo}</Badge>
-                        {e.documentos || e.resumos ? (
+                        {e.documentos || e.resumos || e.ignorados ? (
                           <span className="block text-xs text-muted-foreground">
-                            {e.documentos ? `${e.documentos} XML` : ""}
-                            {e.documentos && e.resumos ? " · " : ""}
-                            {e.resumos ? `${e.resumos} ${e.servico === "ciencia" ? "ciência(s)" : "resumo(s)"}` : ""}
+                            {[
+                              e.documentos ? `${e.documentos} XML` : null,
+                              e.resumos ? `${e.resumos} ${e.servico === "ciencia" ? "ciência(s)" : "resumo(s)"}` : null,
+                              e.ignorados ? `${e.ignorados} anterior(es) ao mês inicial (ignorada(s))` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
                           </span>
                         ) : null}
                         <span className="block text-xs text-muted-foreground md:hidden">{e.mensagem}</span>

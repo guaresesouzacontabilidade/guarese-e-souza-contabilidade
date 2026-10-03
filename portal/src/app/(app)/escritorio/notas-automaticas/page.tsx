@@ -27,7 +27,7 @@ export default async function NotasAutomaticasCarteira() {
   const desde = `${somarDias(hoje, -30)}T00:00:00Z`;
   const resultado = await Promise.all([
     buscarTudo((de, ate) => s.supabase.from("empresas").select("id, razao_social, nome_fantasia, documento").order("razao_social").range(de, ate)),
-    buscarTudo((de, ate) => s.supabase.from("notas_automaticas").select("empresa_id, pausada, nfe_ativa, nfse_ativa, erros_seguidos, certificado_valido_ate, ultima_execucao, ultimo_erro").range(de, ate)),
+    buscarTudo((de, ate) => s.supabase.from("notas_automaticas").select("empresa_id, pausada, nfe_ativa, nfse_ativa, erros_seguidos, certificado_valido_ate, ultima_execucao, ultimo_erro, buscar_desde").range(de, ate)),
     buscarTudo((de, ate) => s.supabase.from("documentos").select("empresa_id").eq("origem", "automatica").gte("enviado_em", desde).range(de, ate)),
   ])
     .then(([empresas, configs, docs]) => ({ empresas, configs, docs, erro: null as string | null }))
@@ -137,6 +137,7 @@ export default async function NotasAutomaticasCarteira() {
                   <Th>Situação</Th>
                   <Th className="hidden md:table-cell">Certificado</Th>
                   <Th className="hidden md:table-cell">Última busca</Th>
+                  <Th className="hidden lg:table-cell">Notas desde</Th>
                   <Th className="hidden sm:table-cell text-right">XML em 30 dias</Th>
                 </Tr>
               </THead>
@@ -163,6 +164,7 @@ export default async function NotasAutomaticasCarteira() {
                         {l.cfg?.certificado_valido_ate ? `até ${formatarData(l.cfg.certificado_valido_ate.slice(0, 10))}` : "—"}
                       </Td>
                       <Td className="hidden text-sm md:table-cell">{l.cfg?.ultima_execucao ? formatarRelativo(l.cfg.ultima_execucao) : "—"}</Td>
+                      <Td className="hidden text-sm lg:table-cell">{!l.cfg ? "—" : l.cfg.buscar_desde ? formatarCompetencia(l.cfg.buscar_desde) : "Tudo disponível"}</Td>
                       <Td className="hidden text-right sm:table-cell">{l.notas || "—"}</Td>
                     </Tr>
                   );

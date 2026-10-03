@@ -17,6 +17,8 @@ export const ROTULO_ACAO: Record<string, string> = {
   anonimizar_usuario: "Anonimizou um usuário (LGPD)",
   exportar_dados_pessoais: "Baixou os próprios dados (LGPD)",
   expurgar_documentos: "Eliminou documentos com prazo de guarda vencido",
+  apagar_documentos: "Apagou documentos do portal de vez (com as notas lidas e os lançamentos sugeridos)",
+  notas_automaticas_mes_inicial: "Mudou o mês inicial da busca automática de notas",
   exportacao: "Exportou um relatório",
   download_lote: "Baixou documentos em lote",
   gerar_tarefas: "Gerou tarefas de obrigações",

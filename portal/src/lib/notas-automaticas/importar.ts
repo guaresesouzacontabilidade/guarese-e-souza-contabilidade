@@ -20,14 +20,17 @@ function competenciaDe(data: string | null | undefined) {
  * Guarda um XML obtido da SEFAZ ou do Ambiente Nacional como documento da
  * empresa (mesmo caminho dos XML enviados pelo cliente: leitura, registro
  * fiscal, sugestões) e devolve o documento. Se a nota ou o evento já estiver
- * no portal (enviado pelo cliente, por exemplo), não duplica.
+ * no portal (enviado pelo cliente, por exemplo), não duplica. Nota ou evento
+ * de mês anterior ao mês inicial da busca (`desde`, AAAA-MM-01) é ignorado:
+ * nada é guardado.
  */
 export async function importarXmlAutomatico(
   admin: ClienteAdmin,
-  p: { empresaId: string; documentoEmpresa: string; xml: string; nome: string; origem: OrigemAutomatica; categoriaPadrao: string },
-): Promise<{ situacao: "importado" | "ja_existia"; documentoId: string | null; chave: string | null }> {
+  p: { empresaId: string; documentoEmpresa: string; xml: string; nome: string; origem: OrigemAutomatica; categoriaPadrao: string; desde?: string | null },
+): Promise<{ situacao: "importado" | "ja_existia" | "ignorado"; documentoId: string | null; chave: string | null; competencia: string }> {
   const lido = lerXmlFiscal(p.xml, { documento: p.documentoEmpresa });
   const chave = lido.sucesso ? lido.dados.chave_acesso : null;
+  const comp = competenciaDe(lido.sucesso ? (lido.dados.tipo === "evento" ? lido.dados.data_evento : lido.dados.data_emissao) : null);
   if (lido.sucesso) {
     const tabela = lido.dados.tipo === "evento" ? "documento_fiscal_eventos" : "documentos_fiscais";
     const { data: existente } = await admin
@@ -36,12 +39,12 @@ export async function importarXmlAutomatico(
       .eq("empresa_id", p.empresaId)
       .eq("identificador", lido.dados.identificador)
       .maybeSingle();
-    if (existente) return { situacao: "ja_existia", documentoId: existente.documento_id ?? null, chave };
+    if (existente) return { situacao: "ja_existia", documentoId: existente.documento_id ?? null, chave, competencia: comp };
+    if (p.desde && comp < p.desde) return { situacao: "ignorado", documentoId: null, chave, competencia: comp };
   }
 
   const bytes = Buffer.from(p.xml, "utf8");
   const id = randomUUID();
-  const comp = competenciaDe(lido.sucesso ? (lido.dados.tipo === "evento" ? lido.dados.data_evento : lido.dados.data_emissao) : null);
   const nome = p.nome.replace(/[^A-Za-z0-9._-]+/g, "-").slice(-120);
   const caminho = `${p.empresaId}/${comp.slice(0, 7)}/${id}/v1-${nome}`;
   const hash = createHash("sha256").update(bytes).digest("hex");
@@ -94,7 +97,7 @@ export async function importarXmlAutomatico(
       .from("documentos")
       .update({ processamento_status: "concluido", processamento_detalhes: { leitura: lido.motivo, mensagem: lido.mensagem }, requer_conferencia: true })
       .eq("id", id);
-    return { situacao: "importado", documentoId: id, chave: null };
+    return { situacao: "importado", documentoId: id, chave: null, competencia: comp };
   }
   const registro = await registrarXml(admin, id, lido.dados);
   await admin
@@ -106,5 +109,5 @@ export async function importarXmlAutomatico(
       duplicado_de: registro.documento_original_id && registro.documento_original_id !== id ? registro.documento_original_id : null,
     })
     .eq("id", id);
-  return { situacao: "importado", documentoId: id, chave };
+  return { situacao: "importado", documentoId: id, chave, competencia: comp };
 }

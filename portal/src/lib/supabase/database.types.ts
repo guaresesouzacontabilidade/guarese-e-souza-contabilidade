@@ -2052,13 +2052,13 @@ isOneToOne: false
                   ]
                 },"notas_automaticas": {
                   Row: {
-                    "atualizado_por": string | null,"certificado_valido_ate": string | null,"ciencia_automatica": boolean,"empresa_id": string,"erros_seguidos": number,"executando_ate": string | null,"nfe_ativa": boolean,"nfe_max_nsu": string | null,"nfe_proxima": string | null,"nfe_ult_nsu": string,"nfse_ativa": boolean,"nfse_proxima": string | null,"nfse_ult_nsu": number,"pausada": boolean,"ultima_execucao": string | null,"ultimo_erro": string | null,"ultimo_sucesso": string | null,"updated_at": string
+                    "atualizado_por": string | null,"buscar_desde": string | null,"certificado_valido_ate": string | null,"ciencia_automatica": boolean,"empresa_id": string,"erros_seguidos": number,"executando_ate": string | null,"nfe_ativa": boolean,"nfe_max_nsu": string | null,"nfe_proxima": string | null,"nfe_ult_nsu": string,"nfse_ativa": boolean,"nfse_proxima": string | null,"nfse_ult_nsu": number,"pausada": boolean,"ultima_execucao": string | null,"ultimo_erro": string | null,"ultimo_sucesso": string | null,"updated_at": string
                   }
                   Insert: {
-                    "atualizado_por"?: string | null,"certificado_valido_ate"?: string | null,"ciencia_automatica"?: boolean,"empresa_id": string,"erros_seguidos"?: number,"executando_ate"?: string | null,"nfe_ativa"?: boolean,"nfe_max_nsu"?: string | null,"nfe_proxima"?: string | null,"nfe_ult_nsu"?: string,"nfse_ativa"?: boolean,"nfse_proxima"?: string | null,"nfse_ult_nsu"?: number,"pausada"?: boolean,"ultima_execucao"?: string | null,"ultimo_erro"?: string | null,"ultimo_sucesso"?: string | null,"updated_at"?: string
+                    "atualizado_por"?: string | null,"buscar_desde"?: string | null,"certificado_valido_ate"?: string | null,"ciencia_automatica"?: boolean,"empresa_id": string,"erros_seguidos"?: number,"executando_ate"?: string | null,"nfe_ativa"?: boolean,"nfe_max_nsu"?: string | null,"nfe_proxima"?: string | null,"nfe_ult_nsu"?: string,"nfse_ativa"?: boolean,"nfse_proxima"?: string | null,"nfse_ult_nsu"?: number,"pausada"?: boolean,"ultima_execucao"?: string | null,"ultimo_erro"?: string | null,"ultimo_sucesso"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "atualizado_por"?: string | null,"certificado_valido_ate"?: string | null,"ciencia_automatica"?: boolean,"empresa_id"?: string,"erros_seguidos"?: number,"executando_ate"?: string | null,"nfe_ativa"?: boolean,"nfe_max_nsu"?: string | null,"nfe_proxima"?: string | null,"nfe_ult_nsu"?: string,"nfse_ativa"?: boolean,"nfse_proxima"?: string | null,"nfse_ult_nsu"?: number,"pausada"?: boolean,"ultima_execucao"?: string | null,"ultimo_erro"?: string | null,"ultimo_sucesso"?: string | null,"updated_at"?: string
+                    "atualizado_por"?: string | null,"buscar_desde"?: string | null,"certificado_valido_ate"?: string | null,"ciencia_automatica"?: boolean,"empresa_id"?: string,"erros_seguidos"?: number,"executando_ate"?: string | null,"nfe_ativa"?: boolean,"nfe_max_nsu"?: string | null,"nfe_proxima"?: string | null,"nfe_ult_nsu"?: string,"nfse_ativa"?: boolean,"nfse_proxima"?: string | null,"nfse_ult_nsu"?: number,"pausada"?: boolean,"ultima_execucao"?: string | null,"ultimo_erro"?: string | null,"ultimo_sucesso"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -2077,13 +2077,13 @@ isOneToOne: true
                   ]
                 },"notas_automaticas_execucoes": {
                   Row: {
-                    "codigo": string | null,"concluido_em": string | null,"documentos": number,"empresa_id": string,"id": number,"iniciado_em": string,"mensagem": string | null,"resultado": string,"resumos": number,"servico": string
+                    "codigo": string | null,"concluido_em": string | null,"documentos": number,"empresa_id": string,"id": number,"ignorados": number,"iniciado_em": string,"mensagem": string | null,"resultado": string,"resumos": number,"servico": string
                   }
                   Insert: {
-                    "codigo"?: string | null,"concluido_em"?: string | null,"documentos"?: number,"empresa_id": string,"id"?: never,"iniciado_em"?: string,"mensagem"?: string | null,"resultado": string,"resumos"?: number,"servico": string
+                    "codigo"?: string | null,"concluido_em"?: string | null,"documentos"?: number,"empresa_id": string,"id"?: never,"ignorados"?: number,"iniciado_em"?: string,"mensagem"?: string | null,"resultado": string,"resumos"?: number,"servico": string
                   }
                   Update: {
-                    "codigo"?: string | null,"concluido_em"?: string | null,"documentos"?: number,"empresa_id"?: string,"id"?: never,"iniciado_em"?: string,"mensagem"?: string | null,"resultado"?: string,"resumos"?: number,"servico"?: string
+                    "codigo"?: string | null,"concluido_em"?: string | null,"documentos"?: number,"empresa_id"?: string,"id"?: never,"ignorados"?: number,"iniciado_em"?: string,"mensagem"?: string | null,"resultado"?: string,"resumos"?: number,"servico"?: string
                   }
                   Relationships: [
                     {
@@ -2096,13 +2096,13 @@ isOneToOne: false
                   ]
                 },"notas_automaticas_nsu": {
                   Row: {
-                    "chave": string | null,"documento_id": string | null,"empresa_id": string,"nsu": string,"recebido_em": string,"servico": string,"tipo": string | null
+                    "chave": string | null,"competencia": string | null,"documento_id": string | null,"empresa_id": string,"ignorado": boolean,"nsu": string,"recebido_em": string,"servico": string,"tipo": string | null
                   }
                   Insert: {
-                    "chave"?: string | null,"documento_id"?: string | null,"empresa_id": string,"nsu": string,"recebido_em"?: string,"servico": string,"tipo"?: string | null
+                    "chave"?: string | null,"competencia"?: string | null,"documento_id"?: string | null,"empresa_id": string,"ignorado"?: boolean,"nsu": string,"recebido_em"?: string,"servico": string,"tipo"?: string | null
                   }
                   Update: {
-                    "chave"?: string | null,"documento_id"?: string | null,"empresa_id"?: string,"nsu"?: string,"recebido_em"?: string,"servico"?: string,"tipo"?: string | null
+                    "chave"?: string | null,"competencia"?: string | null,"documento_id"?: string | null,"empresa_id"?: string,"ignorado"?: boolean,"nsu"?: string,"recebido_em"?: string,"servico"?: string,"tipo"?: string | null
                   }
                   Relationships: [
                     {
@@ -2846,6 +2846,9 @@ isOneToOne: false
 "anonimizar_usuario":
 { Args: { "p_motivo": string,"p_user_id": string }; Returns: undefined
                            },
+"apagar_notas_anteriores":
+{ Args: { "p_empresa_id": string,"p_motivo": string }; Returns: Json
+                           },
 "aplicar_atualizacao_normativa":
 { Args: { "p_id": string }; Returns: Json
                            },
@@ -2954,6 +2957,9 @@ isOneToOne: false
                            },
 "dados_previsao_impostos":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_meses"?: number }; Returns: Json
+                           },
+"definir_inicio_notas":
+{ Args: { "p_desde": string,"p_empresa_id": string }; Returns: Json
                            },
 "definir_logo_escritorio":
 { Args: { "p_path": string }; Returns: undefined
@@ -3191,6 +3197,11 @@ isOneToOne: false
 "notas_agendar":
 { Args: { "p_empresa_id": string,"p_quando": string }; Returns: undefined
                            },
+"notas_automaticas_por_mes":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "competencia": string,"nfe_entrada": number,"nfe_saida": number,"nfse_prestada": number,"nfse_tomada": number,"outros": number,"total": number
+            }[]
+                           },
 "notas_reservar":
 { Args: { "p_empresa_id": string,"p_segundos"?: number }; Returns: boolean
                            },
@@ -3236,7 +3247,7 @@ isOneToOne: false
 { Args: { "p_auth": string,"p_descricao"?: string,"p_endpoint": string,"p_p256dh": string }; Returns: string
                            },
 "registrar_certificado":
-{ Args: { "p_autorizacao_texto": string,"p_conteudo_cifrado": string,"p_documento": string,"p_emissor": string,"p_empresa_id": string,"p_impressao_digital": string,"p_numero_serie": string,"p_titular": string,"p_valido_ate": string,"p_valido_de": string }; Returns: string
+{ Args: { "p_autorizacao_texto": string,"p_buscar_desde"?: string,"p_conteudo_cifrado": string,"p_documento": string,"p_emissor": string,"p_empresa_id": string,"p_impressao_digital": string,"p_numero_serie": string,"p_sem_limite"?: boolean,"p_titular": string,"p_valido_ate": string,"p_valido_de": string }; Returns: string
                            },
 "registrar_compra_cartao":
 { Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_conta_cartao_id": string,"p_contraparte_id"?: string,"p_data_compra": string,"p_descricao": string,"p_empresa_id": string,"p_parcelas"?: number,"p_projeto_id"?: string,"p_valor": number }; Returns: string

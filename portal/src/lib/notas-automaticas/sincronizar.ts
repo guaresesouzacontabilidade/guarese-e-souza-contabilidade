@@ -31,6 +31,8 @@ import { importarXmlAutomatico } from "./importar";
  *     consulta fica para 1 hora depois, como exige a SEFAZ;
  *  2. Ciência da emissão das NF-e recebidas só em resumo (se a empresa ativou);
  *  3. NFS-e: distribuição por NSU no Ambiente Nacional.
+ * Notas emitidas antes do mês inicial da empresa (buscar_desde) são ignoradas:
+ * nada é guardado; o NSU fica marcado como ignorado, com o mês da nota.
  * Tudo o que chega é real; nada é inventado quando o serviço falha — o erro
  * fica registrado e a busca tenta de novo mais tarde.
  */
@@ -48,6 +50,8 @@ interface Contexto {
   cnpj: string;
   uf: string;
   documentoEmpresa: string;
+  /** Mês inicial da busca (AAAA-MM-01); nulo: tudo o que o serviço entregar. */
+  desde: string | null;
   credencial: Credencial;
   prazo: number;
   urls: { distribuicao: string; evento: string; nfse: string };
@@ -73,7 +77,14 @@ async function registrarExecucao(
   c: Contexto,
   servico: "nfe" | "nfse" | "ciencia",
   iniciado: Date,
-  r: { resultado: "novos" | "sem_novidades" | "limite" | "erro"; documentos?: number; resumos?: number; codigo?: string | null; mensagem?: string | null },
+  r: {
+    resultado: "novos" | "sem_novidades" | "limite" | "erro";
+    documentos?: number;
+    resumos?: number;
+    ignorados?: number;
+    codigo?: string | null;
+    mensagem?: string | null;
+  },
 ) {
   await c.admin.from("notas_automaticas_execucoes").insert({
     empresa_id: c.empresaId,
@@ -83,6 +94,7 @@ async function registrarExecucao(
     resultado: r.resultado,
     documentos: r.documentos ?? 0,
     resumos: r.resumos ?? 0,
+    ignorados: r.ignorados ?? 0,
     codigo: r.codigo?.slice(0, 40) ?? null,
     mensagem: r.mensagem?.slice(0, 1000) ?? null,
   });
@@ -93,25 +105,51 @@ async function nsuProcessado(c: Contexto, servico: "nfe" | "nfse", nsu: string) 
   return Boolean(data);
 }
 
-async function marcarNsu(c: Contexto, servico: "nfe" | "nfse", nsu: string, tipo: string, chave: string | null, documentoId: string | null) {
-  await c.admin
-    .from("notas_automaticas_nsu")
-    .upsert({ empresa_id: c.empresaId, servico, nsu, tipo: tipo.slice(0, 60), chave: chave?.slice(0, 60) ?? null, documento_id: documentoId }, { onConflict: "empresa_id,servico,nsu", ignoreDuplicates: true });
+async function marcarNsu(
+  c: Contexto,
+  servico: "nfe" | "nfse",
+  nsu: string,
+  tipo: string,
+  chave: string | null,
+  documentoId: string | null,
+  ignoradoNoMes: string | null = null,
+) {
+  await c.admin.from("notas_automaticas_nsu").upsert(
+    {
+      empresa_id: c.empresaId,
+      servico,
+      nsu,
+      tipo: tipo.slice(0, 60),
+      chave: chave?.slice(0, 60) ?? null,
+      documento_id: documentoId,
+      ignorado: Boolean(ignoradoNoMes),
+      competencia: ignoradoNoMes,
+    },
+    { onConflict: "empresa_id,servico,nsu", ignoreDuplicates: true },
+  );
 }
+
+/** Mês (AAAA-MM-01) de uma data ISO com fuso, como vem nos XML. */
+const mesDe = (data: string | null | undefined) => (data && /^\d{4}-\d{2}/.test(data) ? `${data.slice(0, 7)}-01` : null);
+const antesDoInicio = (c: Contexto, mes: string | null) => Boolean(c.desde && mes && mes < c.desde);
 
 // -----------------------------------------------------------------------------
 // NF-e
 // -----------------------------------------------------------------------------
-async function processarDocumentoNfe(c: Contexto, d: DocumentoDistribuido): Promise<{ documentos: number; resumos: number }> {
+async function processarDocumentoNfe(c: Contexto, d: DocumentoDistribuido): Promise<{ documentos: number; resumos: number; ignorados: number }> {
   const nsu = d.nsu.replace(/^0+(?=\d)/, "");
-  if (await nsuProcessado(c, "nfe", nsu)) return { documentos: 0, resumos: 0 };
+  if (await nsuProcessado(c, "nfe", nsu)) return { documentos: 0, resumos: 0, ignorados: 0 };
   let chave: string | null = null;
   let documentoId: string | null = null;
   let documentos = 0;
   let resumos = 0;
+  let ignoradoNoMes: string | null = null;
   if (d.tipo === "resNFe") {
     const r = lerResumoNfe(d.xml);
-    if (r) {
+    if (r && antesDoInicio(c, mesDe(r.dataEmissao))) {
+      chave = r.chave;
+      ignoradoNoMes = mesDe(r.dataEmissao);
+    } else if (r) {
       chave = r.chave;
       await c.admin.from("nfe_resumos").upsert(
         {
@@ -152,10 +190,12 @@ async function processarDocumentoNfe(c: Contexto, d: DocumentoDistribuido): Prom
       nome: `NFe-NSU-${nsu}.xml`,
       origem: "sefaz",
       categoriaPadrao: "nfe_entrada_xml",
+      desde: c.desde,
     });
     chave = imp.chave;
     documentoId = imp.documentoId;
     if (imp.situacao === "importado") documentos = 1;
+    if (imp.situacao === "ignorado") ignoradoNoMes = imp.competencia;
     if (chave && documentoId) await c.admin.from("nfe_resumos").update({ documento_id: documentoId }).eq("empresa_id", c.empresaId).eq("chave", chave);
   } else if (d.tipo === "resEvento") {
     const r = lerResumoEvento(d.xml);
@@ -174,17 +214,19 @@ async function processarDocumentoNfe(c: Contexto, d: DocumentoDistribuido): Prom
         nome: `Evento-NFe-NSU-${nsu}.xml`,
         origem: "sefaz",
         categoriaPadrao: "eventos_fiscais",
+        desde: c.desde,
       });
       chave = imp.chave;
       documentoId = imp.documentoId;
       if (imp.situacao === "importado") documentos = 1;
+      if (imp.situacao === "ignorado") ignoradoNoMes = imp.competencia;
       if (chave && tipo && CANCELAMENTOS.includes(tipo)) {
         await c.admin.from("nfe_resumos").update({ situacao: "cancelada" }).eq("empresa_id", c.empresaId).eq("chave", chave);
       }
     }
   }
-  await marcarNsu(c, "nfe", nsu, d.tipo, chave, documentoId);
-  return { documentos, resumos };
+  await marcarNsu(c, "nfe", nsu, d.tipo, chave, documentoId, ignoradoNoMes);
+  return { documentos, resumos, ignorados: ignoradoNoMes ? 1 : 0 };
 }
 
 async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServico> {
@@ -194,6 +236,7 @@ async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServ
   let proxima = new Date(Date.now() + HORA);
   let documentos = 0;
   let resumos = 0;
+  let ignorados = 0;
   let codigo: string | null = null;
   let resultado: "novos" | "sem_novidades" | "limite" | "erro" = "sem_novidades";
   let mensagem: string | null = null;
@@ -237,6 +280,7 @@ async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServ
         const x = await processarDocumentoNfe(c, d);
         documentos += x.documentos;
         resumos += x.resumos;
+        ignorados += x.ignorados;
       }
       resultado = "novos";
       if (r.ultNsu) ult = r.ultNsu;
@@ -256,7 +300,7 @@ async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServ
     mensagem = erro;
   }
   await c.admin.from("notas_automaticas").update({ nfe_ult_nsu: ult, nfe_max_nsu: max, nfe_proxima: proxima.toISOString() }).eq("empresa_id", c.empresaId);
-  await registrarExecucao(c, "nfe", iniciado, { resultado, documentos, resumos, codigo, mensagem });
+  await registrarExecucao(c, "nfe", iniciado, { resultado, documentos, resumos, ignorados, codigo, mensagem });
   return { erro, proxima };
 }
 
@@ -317,12 +361,13 @@ async function enviarCiencias(c: Contexto): Promise<{ erro: string | null }> {
 // -----------------------------------------------------------------------------
 // NFS-e
 // -----------------------------------------------------------------------------
-async function processarDocumentoNfse(c: Contexto, d: DocumentoNfse): Promise<number> {
+async function processarDocumentoNfse(c: Contexto, d: DocumentoNfse): Promise<{ novos: number; ignorados: number }> {
   const nsu = String(d.nsu);
-  if (await nsuProcessado(c, "nfse", nsu)) return 0;
+  if (await nsuProcessado(c, "nfse", nsu)) return { novos: 0, ignorados: 0 };
   let documentoId: string | null = null;
   let chave = d.chave;
   let novos = 0;
+  let ignoradoNoMes: string | null = null;
   if (d.tipo === "NFSE" || d.tipo === "EVENTO") {
     const imp = await importarXmlAutomatico(c.admin, {
       empresaId: c.empresaId,
@@ -331,13 +376,15 @@ async function processarDocumentoNfse(c: Contexto, d: DocumentoNfse): Promise<nu
       nome: d.tipo === "NFSE" ? `NFSe-NSU-${nsu}.xml` : `Evento-NFSe-NSU-${nsu}.xml`,
       origem: "adn",
       categoriaPadrao: d.tipo === "NFSE" ? "nfse" : "eventos_fiscais",
+      desde: c.desde,
     });
     documentoId = imp.documentoId;
     chave = imp.chave ?? chave;
     if (imp.situacao === "importado") novos = 1;
+    if (imp.situacao === "ignorado") ignoradoNoMes = imp.competencia;
   }
-  await marcarNsu(c, "nfse", nsu, d.tipo, chave, documentoId);
-  return novos;
+  await marcarNsu(c, "nfse", nsu, d.tipo, chave, documentoId, ignoradoNoMes);
+  return { novos, ignorados: ignoradoNoMes ? 1 : 0 };
 }
 
 async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoServico> {
@@ -345,6 +392,7 @@ async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoSer
   let ult = ultInicial;
   let proxima = new Date(Date.now() + HORA);
   let documentos = 0;
+  let ignorados = 0;
   let codigo: string | null = null;
   let resultado: "novos" | "sem_novidades" | "limite" | "erro" = "sem_novidades";
   let mensagem: string | null = null;
@@ -369,7 +417,9 @@ async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoSer
       if (r.situacao === "nenhum") break;
       for (const d of r.documentos) {
         if (d.nsu <= ult) continue;
-        documentos += await processarDocumentoNfse(c, d);
+        const x = await processarDocumentoNfse(c, d);
+        documentos += x.novos;
+        ignorados += x.ignorados;
         ult = Math.max(ult, d.nsu);
       }
       resultado = "novos";
@@ -383,7 +433,7 @@ async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoSer
     mensagem = erro;
   }
   await c.admin.from("notas_automaticas").update({ nfse_ult_nsu: ult, nfse_proxima: proxima.toISOString() }).eq("empresa_id", c.empresaId);
-  await registrarExecucao(c, "nfse", iniciado, { resultado, documentos, codigo, mensagem });
+  await registrarExecucao(c, "nfse", iniciado, { resultado, documentos, ignorados, codigo, mensagem });
   return { erro, proxima };
 }
 
@@ -439,6 +489,7 @@ export async function executarNotasAutomaticas(admin: ClienteAdmin, job: Job, te
       cnpj: (emp.documento ?? "").toUpperCase().replace(/[^0-9A-Z]/g, ""),
       uf: emp.uf ?? "",
       documentoEmpresa: emp.documento ?? "",
+      desde: cfg.buscar_desde ?? null,
       credencial,
       prazo: Date.now() + TEMPO_MAXIMO_MS,
       urls: teste.urls ?? { distribuicao: URLS_NFE.distribuicao[AMBIENTE], evento: URLS_NFE.evento[AMBIENTE], nfse: URLS_NFSE[AMBIENTE] },

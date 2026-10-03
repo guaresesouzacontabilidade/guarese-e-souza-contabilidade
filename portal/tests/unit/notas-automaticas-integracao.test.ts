@@ -99,7 +99,8 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
     if (error) throw error;
     certificadoId = c.id;
     await admin.from("certificados_segredos").insert({ certificado_id: certificadoId, conteudo_cifrado: cifrar(JSON.stringify({ chave: pEmp.pem, certificados: [cEmp.pem] })) });
-    await admin.from("notas_automaticas").insert({ empresa_id: empresaId, ciencia_automatica: true });
+    // Sem mês inicial: os XML de teste são de setembro/2026 (o padrão seria o mês anterior ao de hoje)
+    await admin.from("notas_automaticas").insert({ empresa_id: empresaId, ciencia_automatica: true, buscar_desde: null });
 
     servidor = https.createServer({ key: pSrv.pem, cert: cSrv.pem, ca: [ac.pem], requestCert: true, rejectUnauthorized: true }, (req, res) => {
       let corpo = "";
@@ -257,4 +258,60 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
     expect(cfg?.ultimo_erro).toBeTruthy();
     expect(new Date(r.proxima).getTime()).toBeGreaterThan(Date.now() + 10 * 60_000);
   }, 60_000);
+
+  it("mês inicial: ignora as notas anteriores sem guardar nada e, ao recuar o mês, traz de novo as NFS-e", async () => {
+    const { executarNotasAutomaticas } = await import("@/lib/notas-automaticas/sincronizar");
+    // Recomeça a busca do zero, com o mês inicial em outubro/2026 (os XML de teste são de setembro)
+    const { data: docs } = await admin.from("documentos").select("id").eq("empresa_id", empresaId).eq("origem", "automatica");
+    const ids = (docs ?? []).map((d) => d.id);
+    if (ids.length) {
+      const { data: fiscais } = await admin.from("documentos_fiscais").select("id").in("documento_id", ids);
+      if (fiscais?.length) await admin.from("lancamentos").delete().in("documento_fiscal_id", fiscais.map((f) => f.id));
+      await admin.from("documento_fiscal_eventos").delete().in("documento_id", ids);
+      await admin.from("documentos_fiscais").delete().in("documento_id", ids);
+      await admin.from("documentos").delete().in("id", ids);
+    }
+    await admin.from("nfe_resumos").delete().eq("empresa_id", empresaId);
+    await admin.from("notas_automaticas_nsu").delete().eq("empresa_id", empresaId);
+    await admin.from("notas_automaticas_execucoes").delete().eq("empresa_id", empresaId);
+    await admin
+      .from("notas_automaticas")
+      .update({ buscar_desde: "2026-10-01", nfe_ult_nsu: "000000000000000", nfse_ult_nsu: 0, nfe_proxima: null, nfse_proxima: null, executando_ate: null, erros_seguidos: 0 })
+      .eq("empresa_id", empresaId);
+    const antesEventos = eventosRecebidos.length;
+    const job = { id: 3, tipo: "notas_automaticas", payload: { empresa_id: empresaId } } as never;
+    const urls = { distribuicao: `${base}/dist`, evento: `${base}/evento`, nfse: `${base}/nfse` };
+    const r = (await executarNotasAutomaticas(admin as never, job, { urls, ca: [ac.pem] })) as { erros: string[] };
+    expect(r.erros).toEqual([]);
+
+    // Nada de setembro é guardado: nem XML, nem resumo; os NSU ficam marcados como ignorados, com o mês
+    const { count: guardados } = await admin.from("documentos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("origem", "automatica");
+    expect(guardados).toBe(0);
+    const { count: resumos } = await admin.from("nfe_resumos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+    expect(resumos).toBe(0);
+    const { data: nsus } = await admin.from("notas_automaticas_nsu").select("servico, nsu, ignorado, competencia, documento_id").eq("empresa_id", empresaId).order("nsu");
+    expect(nsus?.map((n) => `${n.servico}:${n.nsu}:${n.ignorado}:${n.competencia}:${n.documento_id}`).sort()).toEqual([
+      "nfe:1:true:2026-09-01:null",
+      "nfe:2:true:2026-09-01:null",
+      "nfse:1:true:2026-09-01:null",
+    ]);
+    expect(eventosRecebidos.length).toBe(antesEventos); // sem resumo guardado, não há ciência a registrar
+    const { data: execucoes } = await admin.from("notas_automaticas_execucoes").select("servico, documentos, ignorados").eq("empresa_id", empresaId);
+    expect(execucoes?.map((e) => `${e.servico}:${e.documentos}:${e.ignorados}`).sort()).toEqual(["nfe:0:2", "nfse:0:1"]);
+    const { data: cfg } = await admin.from("notas_automaticas").select("nfe_ult_nsu, nfse_ult_nsu").eq("empresa_id", empresaId).single();
+    expect(cfg).toMatchObject({ nfe_ult_nsu: "000000000000002", nfse_ult_nsu: 1 });
+
+    // Recuar para setembro (o que definir_inicio_notas faz): a NFS-e ignorada é liberada e a busca volta ao NSU dela
+    await admin.from("notas_automaticas_nsu").delete().eq("empresa_id", empresaId).eq("servico", "nfse").eq("ignorado", true);
+    await admin.from("notas_automaticas").update({ buscar_desde: "2026-09-01", nfse_ult_nsu: 0, nfse_proxima: new Date().toISOString() }).eq("empresa_id", empresaId);
+    const r2 = (await executarNotasAutomaticas(admin as never, job, { urls, ca: [ac.pem] })) as { erros: string[] };
+    expect(r2.erros).toEqual([]);
+    const { data: depois } = await admin.from("documentos").select("categoria_codigo, competencia").eq("empresa_id", empresaId).eq("origem", "automatica");
+    // A NFS-e volta; a NF-e não (a SEFAZ não entrega de novo: a busca continua do NSU 2)
+    expect(depois?.map((d) => `${d.categoria_codigo}:${d.competencia}`)).toEqual(["nfse:2026-09-01"]);
+    const { data: nsuNfse } = await admin.from("notas_automaticas_nsu").select("ignorado, documento_id").eq("empresa_id", empresaId).eq("servico", "nfse").single();
+    expect(nsuNfse?.ignorado).toBe(false);
+    expect(nsuNfse?.documento_id).toBeTruthy();
+  }, 120_000);
 });
+
