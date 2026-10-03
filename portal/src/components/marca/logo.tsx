@@ -11,8 +11,8 @@ export function urlLogo(logoPath: string | null | undefined, atualizadoEm?: stri
 
 /** Proporção (largura ÷ altura) de cada versão da logomarca oficial. */
 const VERSOES = {
-  horizontal: { arquivo: "/marca/logo-horizontal.svg", proporcao: 4.427 },
-  vertical: { arquivo: "/marca/logo-vertical.svg", proporcao: 1.4579 },
+  horizontal: { arquivo: "/marca/logo-horizontal.svg", proporcao: 4.4757 },
+  vertical: { arquivo: "/marca/logo-vertical.svg", proporcao: 1.486 },
   simbolo: { arquivo: "/marca/simbolo.svg", proporcao: 1.7784 },
 } as const;
 
