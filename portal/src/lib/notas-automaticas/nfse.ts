@@ -33,6 +33,9 @@ export interface RetornoNfse {
 
 type Obj = Record<string, unknown>;
 
+/** Códigos do ADN que só informam que não há documento novo a partir do NSU pedido. */
+const SEM_DOCUMENTOS_NOVOS = new Set(["E2220"]);
+
 function campo(o: unknown, nome: string): unknown {
   if (!o || typeof o !== "object") return undefined;
   const alvo = nome.toLowerCase();
@@ -57,6 +60,10 @@ export function lerRetornoNfse(corpo: string, status: number): RetornoNfse {
   }
   const erros = (campo(json, "Erros") as unknown[] | undefined) ?? [];
   const situacao = String(campo(json, "StatusProcessamento") ?? "").toUpperCase();
+  // E2220 ("Nenhum documento localizado... a partir do NSU informado") vem na lista
+  // de erros, mas só quer dizer que não há documento novo: não é falha da consulta
+  const codigos = erros.map((e) => String(campo(e, "Codigo") ?? "").toUpperCase());
+  if (erros.length && codigos.every((c) => SEM_DOCUMENTOS_NOVOS.has(c))) return { situacao: "nenhum", documentos: [], mensagem: null };
   if (erros.length || situacao === "REJEICAO" || (status >= 400 && status !== 404)) {
     const mensagem =
       erros

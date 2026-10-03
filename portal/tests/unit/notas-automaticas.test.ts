@@ -240,6 +240,17 @@ describe("NFS-e — Ambiente de Dados Nacional", () => {
       [12, "EVENTO", "<evento/>"],
     ]);
     expect(lerRetornoNfse(JSON.stringify({ StatusProcessamento: "NENHUM_DOCUMENTO_LOCALIZADO", LoteDFe: [] }), 404).situacao).toBe("nenhum");
+    // Resposta real do ADN quando não há documento novo: vem como "erro" E2220, mas não é falha
+    const semNovos = JSON.stringify({
+      StatusProcessamento: "NENHUM_DOCUMENTO_LOCALIZADO",
+      LoteDFe: [],
+      Erros: [{ Codigo: "E2220", Descricao: "Nenhum documento localizado - não existem documentos fiscais para o Contribuinte a partir do NSU informado." }],
+    });
+    expect(lerRetornoNfse(semNovos, 404)).toEqual({ situacao: "nenhum", documentos: [], mensagem: null });
+    expect(lerRetornoNfse(semNovos, 200).situacao).toBe("nenhum");
+    // E2220 junto com outro erro continua sendo erro
+    const misto = lerRetornoNfse(JSON.stringify({ Erros: [{ Codigo: "E2220", Descricao: "x" }, { Codigo: "E9", Descricao: "Falha" }] }), 400);
+    expect(misto.situacao).toBe("erro");
     const erro = lerRetornoNfse(JSON.stringify({ StatusProcessamento: "REJEICAO", Erros: [{ Codigo: "E1", Descricao: "Certificado inválido" }] }), 400);
     expect(erro).toMatchObject({ situacao: "erro", mensagem: "E1: Certificado inválido" });
     expect(lerRetornoNfse("<html>", 502).situacao).toBe("erro");
