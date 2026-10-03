@@ -7,6 +7,7 @@ import { verificarAntivirus } from "@/lib/arquivos/antivirus";
 import { extrairZipSeguro, ErroZip } from "@/lib/arquivos/zip";
 import { lerXmlFiscal, categoriaDoXml, type NotaLida, type EventoLido } from "@/lib/fiscal/xml";
 import { lerOfx, ehOfx } from "@/lib/extratos/ofx";
+import { ehSped } from "@/lib/sped/leitura";
 import { lerArquivoPlanilha, sugerirMapeamento, aplicarMapeamento } from "@/lib/extratos/planilha";
 import { decodificarTexto } from "@/lib/extratos/comum";
 import { envServidor } from "@/lib/env-servidor";
@@ -113,6 +114,10 @@ export async function processarDocumento(admin: ClienteAdmin, job: Job) {
   try {
     if (ext === "zip") return await processarZip(admin, doc, bytes, referencia, p.zip_inicio ?? 0);
     if (ext === "xml") return await processarXml(admin, doc, bytes, referencia);
+    if (ext === "txt" && (doc.categoria_codigo === "sped_fiscal" || ehSped(new TextDecoder("latin1").decode(bytes.slice(0, 20))))) {
+      const { processarSped } = await import("@/lib/sped/processar");
+      return await processarSped(admin, doc, versao.versao, bytes, versao.nome_original);
+    }
     if (ext === "ofx" || (ext === "txt" && ehOfx(new TextDecoder("latin1").decode(bytes.slice(0, 2000))))) return await processarOfx(admin, doc, bytes);
     if (["csv", "xlsx"].includes(ext) && doc.categoria_codigo === "relatorio_maquininha") {
       return await processarRelatorioMaquininha(admin, doc, versao.versao, bytes, versao.nome_original);

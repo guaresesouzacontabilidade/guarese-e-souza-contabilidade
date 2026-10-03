@@ -2493,6 +2493,87 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"sped_arquivos": {
+                  Row: {
+                    "avisos": Json | null,"cnpj": string | null,"conferido_em": string | null,"created_at": string,"documento_id": string | null,"empresa_id": string,"erro": string | null,"finalidade": string | null,"id": string,"ie": string | null,"nome": string | null,"nome_arquivo": string | null,"perfil": string | null,"periodo_fim": string,"periodo_inicio": string,"resumo": Json | null,"situacao": string,"tipo": string,"totais": Json | null,"uf": string | null,"versao": number | null,"versao_leiaute": string | null,"vigente": boolean
+                  }
+                  Insert: {
+                    "avisos"?: Json | null,"cnpj"?: string | null,"conferido_em"?: string | null,"created_at"?: string,"documento_id"?: string | null,"empresa_id": string,"erro"?: string | null,"finalidade"?: string | null,"id"?: string,"ie"?: string | null,"nome"?: string | null,"nome_arquivo"?: string | null,"perfil"?: string | null,"periodo_fim": string,"periodo_inicio": string,"resumo"?: Json | null,"situacao"?: string,"tipo": string,"totais"?: Json | null,"uf"?: string | null,"versao"?: number | null,"versao_leiaute"?: string | null,"vigente"?: boolean
+                  }
+                  Update: {
+                    "avisos"?: Json | null,"cnpj"?: string | null,"conferido_em"?: string | null,"created_at"?: string,"documento_id"?: string | null,"empresa_id"?: string,"erro"?: string | null,"finalidade"?: string | null,"id"?: string,"ie"?: string | null,"nome"?: string | null,"nome_arquivo"?: string | null,"perfil"?: string | null,"periodo_fim"?: string,"periodo_inicio"?: string,"resumo"?: Json | null,"situacao"?: string,"tipo"?: string,"totais"?: Json | null,"uf"?: string | null,"versao"?: number | null,"versao_leiaute"?: string | null,"vigente"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sped_arquivos_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sped_arquivos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sped_divergencias": {
+                  Row: {
+                    "arquivo_id": string,"chave": string | null,"data": string | null,"detalhe": string | null,"diferenca": number | null,"documento_fiscal_id": string | null,"empresa_id": string,"gravidade": string,"id": number,"modelo": string | null,"numero": string | null,"operacao": string | null,"participante": string | null,"regra": string,"serie": string | null,"valor_sped": number | null,"valor_xml": number | null
+                  }
+                  Insert: {
+                    "arquivo_id": string,"chave"?: string | null,"data"?: string | null,"detalhe"?: string | null,"diferenca"?: number | null,"documento_fiscal_id"?: string | null,"empresa_id": string,"gravidade": string,"id"?: never,"modelo"?: string | null,"numero"?: string | null,"operacao"?: string | null,"participante"?: string | null,"regra": string,"serie"?: string | null,"valor_sped"?: number | null,"valor_xml"?: number | null
+                  }
+                  Update: {
+                    "arquivo_id"?: string,"chave"?: string | null,"data"?: string | null,"detalhe"?: string | null,"diferenca"?: number | null,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"gravidade"?: string,"id"?: never,"modelo"?: string | null,"numero"?: string | null,"operacao"?: string | null,"participante"?: string | null,"regra"?: string,"serie"?: string | null,"valor_sped"?: number | null,"valor_xml"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sped_divergencias_arquivo_id_fkey"
+      columns: ["arquivo_id"]
+isOneToOne: false
+      referencedRelation: "sped_arquivos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sped_divergencias_documento_fiscal_id_fkey"
+      columns: ["documento_fiscal_id"]
+isOneToOne: false
+      referencedRelation: "documentos_fiscais"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sped_divergencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sped_documentos": {
+                  Row: {
+                    "arquivo_id": string,"cfops": (string)[],"chave": string | null,"cod_mod": string,"cod_sit": string,"dt_doc": string | null,"dt_e_s": string | null,"empresa_id": string,"id": number,"ind_emit": string,"ind_oper": string,"linha": number | null,"numero": string | null,"participante_documento": string | null,"participante_nome": string | null,"serie": string | null,"vl_doc": number | null,"vl_icms": number | null,"vl_icms_st": number | null,"vl_ipi": number | null
+                  }
+                  Insert: {
+                    "arquivo_id": string,"cfops"?: (string)[],"chave"?: string | null,"cod_mod": string,"cod_sit": string,"dt_doc"?: string | null,"dt_e_s"?: string | null,"empresa_id": string,"id"?: never,"ind_emit": string,"ind_oper": string,"linha"?: number | null,"numero"?: string | null,"participante_documento"?: string | null,"participante_nome"?: string | null,"serie"?: string | null,"vl_doc"?: number | null,"vl_icms"?: number | null,"vl_icms_st"?: number | null,"vl_ipi"?: number | null
+                  }
+                  Update: {
+                    "arquivo_id"?: string,"cfops"?: (string)[],"chave"?: string | null,"cod_mod"?: string,"cod_sit"?: string,"dt_doc"?: string | null,"dt_e_s"?: string | null,"empresa_id"?: string,"id"?: never,"ind_emit"?: string,"ind_oper"?: string,"linha"?: number | null,"numero"?: string | null,"participante_documento"?: string | null,"participante_nome"?: string | null,"serie"?: string | null,"vl_doc"?: number | null,"vl_icms"?: number | null,"vl_icms_st"?: number | null,"vl_ipi"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sped_documentos_arquivo_id_fkey"
+      columns: ["arquivo_id"]
+isOneToOne: false
+      referencedRelation: "sped_arquivos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sped_documentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"tarefa_historico": {
                   Row: {
                     "acao": string,"comentario": string | null,"detalhes": Json | null,"empresa_id": string,"id": number,"ocorrido_em": string,"status_anterior": string | null,"status_novo": string | null,"tarefa_id": string,"usuario_id": string | null
@@ -3301,6 +3382,24 @@ isOneToOne: false
                            },
 "solicitar_nao_aplica":
 { Args: { "p_item_id": string,"p_justificativa": string }; Returns: undefined
+                           },
+"sped_carteira":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"sped_concluir":
+{ Args: { "p_arquivo_id": string,"p_avisos": Json,"p_totais": Json }; Returns: Json
+                           },
+"sped_conferir_de_novo":
+{ Args: { "p_arquivo_id": string }; Returns: Json
+                           },
+"sped_excluir_arquivo":
+{ Args: { "p_arquivo_id": string }; Returns: undefined
+                           },
+"sped_gravar_documentos":
+{ Args: { "p_arquivo_id": string,"p_documentos": Json }; Returns: number
+                           },
+"sped_registrar_arquivo":
+{ Args: { "p_cabecalho": Json,"p_documento_id": string,"p_erro"?: string,"p_nome": string,"p_situacao": string,"p_versao": number }; Returns: string
                            },
 "substituir_documento":
 { Args: { "p_documento_id": string,"p_mime": string,"p_motivo": string,"p_nome_arquivo": string,"p_sha256": string,"p_tamanho": number }; Returns: Json

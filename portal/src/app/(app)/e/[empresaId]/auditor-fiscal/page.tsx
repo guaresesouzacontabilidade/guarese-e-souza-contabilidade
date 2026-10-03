@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, BadgeDollarSign, FileSearch, PiggyBank, ScanSearch } from "lucide-react";
+import { AlertTriangle, BadgeDollarSign, FileCheck2, FileSearch, PiggyBank, ScanSearch } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador, urlCom } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AcoesAchado, BotaoAnalisar, BotaoPedirAjuda } from "@/components/auditor-fiscal/auditor-fiscal";
@@ -95,7 +96,16 @@ async function VisaoEquipe({ empresaId, base, sp, ctx }: { empresaId: string; ba
       <CabecalhoPagina
         titulo="Auditor fiscal"
         descricao="Confere as notas de compra e de venda e as notas de serviço dos últimos 5 anos (prazo para pedir de volta) e aponta imposto pago a mais e riscos. Os valores saem de regras fixas, com a lei citada; a equipe confere antes de mostrar ao cliente."
-        acoes={<BotaoAnalisar empresaId={empresaId} emAndamento={emAndamento} />}
+        acoes={
+          <>
+            <Button asChild variante="contorno">
+              <Link href={`${base}/auditor-fiscal/sped`}>
+                <FileCheck2 /> SPED Fiscal × XML
+              </Link>
+            </Button>
+            <BotaoAnalisar empresaId={empresaId} emAndamento={emAndamento} />
+          </>
+        }
       />
       <AtualizarEnquanto ativo={emAndamento} />
 

@@ -23,6 +23,7 @@ import { semearAgenda } from "./demo-agenda";
 import { semearSolicitacoes } from "./demo-solicitacoes";
 import { semearAuditor, semearServicosAuditor } from "./demo-auditor";
 import { semearMaquininhas } from "./demo-maquininhas";
+import { semearSped } from "./demo-sped";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
@@ -230,6 +231,9 @@ async function main() {
   }
   if (await semearMaquininhas(admin, { url, publica }, ids[0], `cliente@${DOMINIO}`)) {
     console.log("  Maquininhas de demonstração: contratos Cielo e Alelo e relatórios de vendas enviados (a importação roda na fila)");
+  }
+  if (await semearSped(admin, { url, publica }, ids[1], { equipe: `contador@${DOMINIO}`, cliente2: `cliente2@${DOMINIO}` })) {
+    console.log("  SPED Fiscal de demonstração da Oficina enviado (a conferência com os XML roda na fila)");
   }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");

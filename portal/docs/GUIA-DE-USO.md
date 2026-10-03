@@ -255,6 +255,18 @@ O menu **Auditor fiscal** do escritório mostra, para a carteira toda, a **poss�
 
 Para a conta do Simples ficar exata, preencha em **Cálculos → Configuração** o anexo das vendas e o dos serviços (com o Fator R, se for o caso) e, em **Receita e folha mês a mês**, a receita e a folha dos meses anteriores ao portal (sem isso o achado aparece com confiança média). O auditor não vê o PGDAS-D: ele mostra quanto foi cobrado a mais caso a separação não tenha sido feita — confira a apuração antes de publicar. A lista de produtos monofásicos usada (com a lei de cada linha) fica no fim da página do auditor da carteira.
 
+### SPED Fiscal × XML (antes de transmitir a EFD)
+Em cada empresa → **Auditor fiscal → SPED Fiscal × XML** (e no quadro do auditor da carteira):
+1. Gere a **EFD ICMS/IPI** do mês no sistema fiscal e envie o arquivo **.txt** (tipo "Arquivos do SPED", pelo botão **Enviar arquivo do SPED**).
+2. O portal lê o arquivo (período, CNPJ, perfil, as notas do registro C100 com os CFOP do C190 e a apuração do ICMS do E110, conforme o Guia Prático da EFD ICMS/IPI 3.2.2) e confere com os XML que já tem da empresa (enviados pelo cliente ou trazidos pelas notas automáticas).
+3. Aparece, separado por gravidade:
+   - **Corrigir**: nota **emitida e não escriturada**, nota **cancelada escriturada como regular**, **valor total** ou **ICMS / ICMS-ST / IPI** diferentes do XML e nota **em duplicidade**;
+   - **Conferir**: nota **recebida e não escriturada** (pode entrar no mês da chegada da mercadoria), **possível crédito de ICMS não aproveitado** (compra para revenda ou industrialização — CFOP 1101, 1102, 2101, 2102 — com ICMS no XML e sem crédito no SPED) e nota escriturada como cancelada sem o evento de cancelamento no portal;
+   - **Informação**: nota escriturada **sem XML no portal** e nota própria cancelada que não foi informada.
+4. Cada linha mostra o número, a data, o cliente ou fornecedor, o valor no SPED e no XML, a diferença e o link para o XML. Abaixo, a **apuração do ICMS** e as notas **por CFOP**, como estão no arquivo.
+5. Chegaram os XML que faltavam? **Conferir de novo**. Arquivo errado? **Excluir** (o arquivo continua em Documentos). Um arquivo novo do mesmo mês (retificado) passa a valer no lugar do anterior.
+- A **EFD-Contribuições** é reconhecida e guardada, mas ainda não é conferida. O portal **não transmite nem altera** a EFD.
+
 ### Maquininhas da carteira
 O menu **Maquininhas** do escritório mostra, no mês escolhido, quanto cada empresa teve cobrado acima do contrato, as vendas sem taxa cadastrada e os relatórios que esperam a conferência das colunas. Em cada empresa → **Maquininhas**:
 - **Formato novo**: quando chega um relatório que o portal ainda não conhece, a equipe recebe um aviso. Abra o relatório, confira a adquirente (sugerida pelo nome do arquivo) e qual coluna é cada informação — o portal sugere e mostra na hora como vai ler as primeiras vendas. Com **Lembrar este formato** marcado, os próximos relatórios iguais **de qualquer empresa** entram sozinhos (quando quem confere é o cliente, o formato vale só para a empresa dele).

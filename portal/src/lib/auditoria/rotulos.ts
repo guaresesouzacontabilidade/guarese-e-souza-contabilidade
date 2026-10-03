@@ -42,6 +42,8 @@ export const ROTULO_ACAO: Record<string, string> = {
   maquininha_mapeamento: "Conferiu as colunas de um relatório de maquininha",
   maquininha_excluir_relatorio: "Excluiu um relatório de maquininha da conferência",
   maquininha_importacao: "Importou um relatório de vendas de maquininha",
+  sped_conferido: "Conferiu um arquivo do SPED Fiscal com os XML",
+  sped_excluido: "Tirou um arquivo do SPED Fiscal da conferência",
 };
 
 export const ROTULO_ENTIDADE: Record<string, string> = {
@@ -53,6 +55,7 @@ export const ROTULO_ENTIDADE: Record<string, string> = {
   maquininha_taxas: "taxa do contrato de maquininha",
   maquininha_importacoes: "relatório de maquininha",
   maquininha_vendas: "conferência das maquininhas",
+  sped_arquivos: "arquivo do SPED Fiscal",
   baixas: "pagamento/recebimento",
   categorias_financeiras: "categoria financeira",
   checklist_itens: "item do checklist",

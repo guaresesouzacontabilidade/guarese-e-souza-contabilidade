@@ -256,3 +256,13 @@ Não precisa de configuração nem de chaves: roda pela fila de tarefas. O relat
 - **Conferência** (`app.maquininha_auditar`): contrato ativo vigente na data da venda; taxa da mesma modalidade com o número de parcelas dentro da faixa; a da bandeira vale mais que a de "todas"; entre faixas, a mais estreita. Esperado = valor × taxa ÷ 100 + tarifa por venda, arredondado em centavos; tolerância de R$ 0,02. A tela e o aviso mostram só as vendas aprovadas (canceladas e estornos ficam fora).
 - **Catálogo**: tabela `maquininha_adquirentes` (cartão, frota, benefícios e convênios), alterável só pelo administrador.
 - **Conexão direta com as adquirentes: desconectada.** Cada adquirente tem o seu serviço de arquivos de conciliação (EDI) ou API, que exige credenciamento próprio e a autorização da empresa para o CNPJ. Até essa ativação, o portal não consulta nenhuma adquirente e trabalha só com os relatórios enviados.
+
+## 17. SPED Fiscal × XML
+
+Não precisa de configuração: roda na leitura do documento (`processar_documento`). Entra pela categoria **Arquivos do SPED** (`.txt`) ou por qualquer `.txt` que comece com o registro `|0000|`.
+
+- **Leitura** (`src/lib/sped/leitura.ts`): registro 0000 (a EFD ICMS/IPI tem DT_INI no 4º campo; a EFD-Contribuições, no 6º), 0150 (participantes), C100 (notas, modelos 01, 1B, 04, 55 e 65), C190 (CFOP e valores) e E110 (apuração), até o registro 9999 — a assinatura digital depois dele é ignorada. Datas `ddmmaaaa`, valores com vírgula, texto em UTF-8 ou Latin-1 (Windows-1252).
+- **Gravação**: `sped_registrar_arquivo` (cabeçalho), `sped_gravar_documentos` (notas, em lotes de 2.000) e `sped_concluir` (totais, arquivo vigente do período, cruzamento e aviso à equipe). O arquivo de outro CNPJ (raiz diferente) fica com erro.
+- **Cruzamento** (`app.sped_conferir`): os XML considerados são as NF-e/NFC-e da empresa no portal (documentos não excluídos e sem protocolo de denegação); a data do XML é a data de emissão no horário de Brasília. A nota recebida só é apontada se não estiver em nenhum SPED vigente da empresa no portal. A tolerância de valores é de R$ 0,01. Em 2026, o VL_DOC não inclui IBS/CBS (Guia Prático 3.2.2), como o total do XML.
+- **Permissão**: tabelas `sped_arquivos`, `sped_documentos` e `sped_divergencias` com leitura só para quem tem `auditor.gerenciar`; gravação só pelo processador (`service_role`).
+- **EFD-Contribuições**: reconhecida e guardada com o período; a leitura dos blocos A, C, F e M fica para uma próxima versão.

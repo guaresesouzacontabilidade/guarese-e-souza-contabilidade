@@ -30,8 +30,8 @@ function gtin(base12: string) {
 }
 
 const DISTRIBUIDORA_BEBIDAS = dvCnpj("334445550001");
-const DISTRIBUIDORA_PECAS = dvCnpj("556667770001");
-const OFICINA_CLIENTE = dvCnpj("667778880001");
+export const DISTRIBUIDORA_PECAS = dvCnpj("556667770001");
+export const OFICINA_CLIENTE = dvCnpj("667778880001");
 
 const PRODUTOS = {
   refrigerante: { codigo: "REF2L", gtin: gtin("789100000001"), descricao: "REFRIGERANTE COLA 2L (FICTICIO)", ncm: "22021000", cest: "0300700" },
@@ -139,6 +139,10 @@ function nota(o: {
     : "";
   return {
     chave,
+    numero: o.numero,
+    data: o.data,
+    valor: Math.round(vProd * 100) / 100,
+    icms: Math.round(vIcms * 100) / 100,
     xml: `<?xml version="1.0" encoding="UTF-8"?>
 <nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">
   <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
@@ -157,11 +161,53 @@ function nota(o: {
   };
 }
 
-function dataNoMes(deslocamento: number, dia: number) {
+export function dataNoMes(deslocamento: number, dia: number) {
   const d = new Date();
   d.setUTCDate(1);
   d.setUTCMonth(d.getUTCMonth() + deslocamento);
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+}
+
+const EMIT_PECAS = { cnpj: DISTRIBUIDORA_PECAS, nome: "AUTOPECAS DISTRIBUIDORA DO NORTE (FICTICIA)", crt: "3" as const };
+const emitOficina = (cnpj: string) => ({ cnpj, nome: "OFICINA MECANICA EXEMPLO LTDA (DEMONSTRACAO - FICTICIA)", crt: "3" as const });
+const CLIENTE_OFICINA = { cnpj: OFICINA_CLIENTE, nome: "TRANSPORTES RIO TOCANTINS (FICTICIA)", contribuinte: false };
+
+/** Oficina: compra de autopeças (CST 04) e óleo, com ICMS destacado (dia 5 do mês). */
+export function compraPecasOficina(m: number, oficina: string) {
+  return nota({
+    modelo: "55", emitente: EMIT_PECAS, dest: { cnpj: oficina, nome: "OFICINA MECANICA EXEMPLO LTDA (FICTICIA)", contribuinte: true },
+    numero: 7200 + (m + 4), data: dataNoMes(m, 5), natOp: "Venda de mercadoria", ibsCbs: dataNoMes(m, 5) >= "2026-08-03",
+    itens: [
+      { p: PRODUTOS.pastilha, cfop: "5102", qtd: 30, unit: 70, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "04" } },
+      { p: PRODUTOS.filtro, cfop: "5102", qtd: 40, unit: 18, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "04" } },
+      { p: PRODUTOS.oleo, cfop: "5102", qtd: 60, unit: 22, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01", aliquotaPis: "1.65", aliquotaCofins: "7.60" } },
+    ],
+  });
+}
+
+/** Oficina: venda de peças com PIS/Cofins destacado (dia 20 do mês). */
+export function vendaPecasOficina(m: number, oficina: string) {
+  return nota({
+    modelo: "55", emitente: emitOficina(oficina), dest: CLIENTE_OFICINA,
+    numero: 300 + (m + 4), data: dataNoMes(m, 20), natOp: "Venda de mercadoria", ibsCbs: false,
+    itens: [
+      { p: PRODUTOS.pastilha, cfop: "5102", qtd: 12, unit: 140, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01" } },
+      { p: PRODUTOS.filtro, cfop: "5102", qtd: 20, unit: 38, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01" } },
+      { p: PRODUTOS.oleo, cfop: "5102", qtd: 25, unit: 45, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01" } },
+    ],
+  });
+}
+
+/** Oficina: outra venda do mês (dia 25), usada na conferência do SPED de demonstração. */
+export function vendaFiltrosOficina(m: number, oficina: string) {
+  return nota({
+    modelo: "55", emitente: emitOficina(oficina), dest: CLIENTE_OFICINA,
+    numero: 390 + (m + 4), data: dataNoMes(m, 25), natOp: "Venda de mercadoria", ibsCbs: false,
+    itens: [
+      { p: PRODUTOS.filtro, cfop: "5102", qtd: 20, unit: 38, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01" } },
+      { p: PRODUTOS.oleo, cfop: "5102", qtd: 10, unit: 45, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01" } },
+    ],
+  });
 }
 
 export async function semearAuditor(
@@ -181,9 +227,7 @@ export async function semearAuditor(
   const clienteOficina = await sessao(admin, conexao.url, conexao.publica, emails.cliente2);
 
   const EMIT_BEBIDAS = { cnpj: DISTRIBUIDORA_BEBIDAS, nome: "DISTRIBUIDORA DE BEBIDAS TOCANTINS (FICTICIA)", crt: "3" as const };
-  const EMIT_PECAS = { cnpj: DISTRIBUIDORA_PECAS, nome: "AUTOPECAS DISTRIBUIDORA DO NORTE (FICTICIA)", crt: "3" as const };
   const EMIT_PADARIA = { cnpj: padaria.documento, nome: "PADARIA PAO DOURADO LTDA (DEMONSTRACAO - FICTICIA)", crt: "1" as const };
-  const EMIT_OFICINA = { cnpj: oficina.documento, nome: "OFICINA MECANICA EXEMPLO LTDA (DEMONSTRACAO - FICTICIA)", crt: "3" as const };
 
   let n = 0;
   const subir = async (quem: SupabaseClient, empresaId: string, categoria: string, nome: string, xml: string, comp: string) => {
@@ -223,25 +267,9 @@ export async function semearAuditor(
     }
 
     // Oficina: compra de autopeças (CST 04) e óleo, venda com PIS/Cofins destacado nas peças
-    const compraPecas = nota({
-      modelo: "55", emitente: EMIT_PECAS, dest: { cnpj: oficina.documento, nome: "OFICINA MECANICA EXEMPLO LTDA (FICTICIA)", contribuinte: true },
-      numero: 7200 + (m + 4), data: dataNoMes(m, 5), natOp: "Venda de mercadoria", ibsCbs: apos(5),
-      itens: [
-        { p: PRODUTOS.pastilha, cfop: "5102", qtd: 30, unit: 70, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "04" } },
-        { p: PRODUTOS.filtro, cfop: "5102", qtd: 40, unit: 18, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "04" } },
-        { p: PRODUTOS.oleo, cfop: "5102", qtd: 60, unit: 22, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01", aliquotaPis: "1.65", aliquotaCofins: "7.60" } },
-      ],
-    });
+    const compraPecas = compraPecasOficina(m, oficina.documento);
     await subir(clienteOficina, empresas.oficina, "nfe_entrada_xml", `Compra pecas ${comp.slice(0, 7)}`, compraPecas.xml, comp);
-    const vendaPecas = nota({
-      modelo: "55", emitente: EMIT_OFICINA, dest: { cnpj: OFICINA_CLIENTE, nome: "TRANSPORTES RIO TOCANTINS (FICTICIA)", contribuinte: false },
-      numero: 300 + (m + 4), data: dataNoMes(m, 20), natOp: "Venda de mercadoria", ibsCbs: false,
-      itens: [
-        { p: PRODUTOS.pastilha, cfop: "5102", qtd: 12, unit: 140, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01" } },
-        { p: PRODUTOS.filtro, cfop: "5102", qtd: 20, unit: 38, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01" } },
-        { p: PRODUTOS.oleo, cfop: "5102", qtd: 25, unit: 45, t: { tipo: "normal", aliquotaIcms: "20.00", pis: "01" } },
-      ],
-    });
+    const vendaPecas = vendaPecasOficina(m, oficina.documento);
     await subir(clienteOficina, empresas.oficina, "nfe_saida_xml", `NF-e venda pecas ${dataNoMes(m, 20)}`, vendaPecas.xml, comp);
   }
   return n > 0;

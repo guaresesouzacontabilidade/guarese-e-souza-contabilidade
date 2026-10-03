@@ -119,3 +119,10 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **O que guarda**: de cada venda, a data, a bandeira, a modalidade, as parcelas, os valores (bruto, taxa e líquido), o NSU, o código de autorização, o terminal e a previsão de pagamento — não guarda número de cartão nem dados de quem comprou (as outras colunas ficam só no arquivo original, em Documentos). As primeiras 5 linhas do relatório, como vieram no arquivo, ficam guardadas para a conferência das colunas. Guarda também os contratos e taxas cadastrados e os formatos aprendidos (só os nomes e as posições das colunas, sem dados de vendas).
 - **Quem vê**: a equipe vinculada à empresa e, no cliente, quem tem a permissão "Conferência das taxas" (o empresário, por padrão). Cadastrar contratos, conferir colunas e excluir relatórios exige "Contratos e relatórios". O formato aprendido pela equipe vale para todo o escritório; o aprendido pelo cliente, só para a empresa dele.
 - **Registro**: contratos, taxas, conferência das colunas, importações, exclusões e cada download da planilha ficam no registro de atividades.
+
+## 15. SPED Fiscal × XML
+
+- **Onde roda**: dentro do portal (processador da fila), sobre o arquivo da EFD enviado em Documentos e os XML que o portal já tem. **Nada é enviado** à Receita, à SEFAZ, a serviços externos ou a inteligência artificial; o portal não transmite nem altera a EFD.
+- **O que guarda**: do arquivo, o cabeçalho (período, CNPJ, UF, IE, perfil), as notas escrituradas (modelo, situação, série, número, chave, datas, valor total, ICMS, ICMS-ST, IPI, CFOP e o nome e o CNPJ/CPF do cliente ou fornecedor), o resumo por CFOP e a apuração do ICMS; e os pontos encontrados na conferência. O arquivo original fica em Documentos, com as mesmas regras de guarda.
+- **Quem vê**: só a equipe com a permissão "Conduzir o auditor" (uso interno, antes da transmissão). O cliente vê o arquivo em **Meus documentos**, como qualquer documento da empresa.
+- **Registro**: cada conferência e cada exclusão ficam no registro de atividades.

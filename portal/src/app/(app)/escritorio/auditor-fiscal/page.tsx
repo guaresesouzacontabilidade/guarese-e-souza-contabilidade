@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, BookOpenCheck, FileSearch, PiggyBank, ScanSearch } from "lucide-react";
+import { AlertTriangle, BookOpenCheck, FileCheck2, FileSearch, PiggyBank, ScanSearch } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
@@ -11,7 +11,8 @@ import { buscarTudo } from "@/lib/supabase/paginar";
 import { ROTULO_GRUPO, type GrupoMonofasico } from "@/lib/auditor-fiscal/catalogo";
 import { SITUACAO_EXECUCAO } from "@/lib/auditor-fiscal/rotulos";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCnpj, formatarRelativo } from "@/lib/formatos";
+import { formatarCnpj, formatarCompetencia, formatarRelativo } from "@/lib/formatos";
+import { SITUACAO_SPED } from "@/lib/sped/rotulos";
 import { mensagemErro } from "@/lib/acoes";
 
 export const metadata: Metadata = { title: "Auditor fiscal" };
@@ -38,6 +39,17 @@ export default async function AuditorFiscalCarteira() {
   ])
     .then(([empresas, achados, execucoes, catalogo]) => ({ empresas, achados, execucoes, catalogo, erro: null as string | null }))
     .catch((e: unknown) => ({ empresas: [], achados: [], execucoes: [], catalogo: [], erro: mensagemErro(e) }));
+  const { data: speds } = await s.supabase.rpc("sped_carteira");
+  const ultimosSped = (speds ?? []) as unknown as {
+    empresa_id: string;
+    empresa: string;
+    tipo: string;
+    periodo_inicio: string;
+    situacao: string;
+    alta: number;
+    media: number;
+    arquivo_id: string;
+  }[];
 
   const resumo = new Map<string, Resumo>();
   for (const a of resultado.achados) {
@@ -127,6 +139,51 @@ export default async function AuditorFiscalCarteira() {
       ) : (
         <EstadoVazio icone={ScanSearch} titulo="Nenhuma empresa na carteira" />
       )}
+
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileCheck2 className="size-4" /> SPED Fiscal × XML
+          </CardTitle>
+          <CardDescription>
+            Último arquivo da EFD de cada empresa, conferido com os XML do portal. Para conferir um mês, envie o .txt da EFD na empresa (tipo “Arquivos do
+            SPED”).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {ultimosSped.length ? (
+            <Table>
+              <THead>
+                <Tr>
+                  <Th>Empresa</Th>
+                  <Th>Período</Th>
+                  <Th className="text-right">Corrigir</Th>
+                  <Th className="hidden text-right sm:table-cell">Conferir</Th>
+                </Tr>
+              </THead>
+              <TBody>
+                {ultimosSped.map((l) => (
+                  <Tr key={l.empresa_id}>
+                    <Td>
+                      <Link href={`/e/${l.empresa_id}/auditor-fiscal/sped?arquivo=${l.arquivo_id}`} className="font-medium text-primary hover:underline">
+                        {l.empresa}
+                      </Link>
+                    </Td>
+                    <Td>
+                      {formatarCompetencia(l.periodo_inicio)}
+                      <span className="block text-xs text-muted-foreground">{SITUACAO_SPED[l.situacao]?.rotulo ?? l.situacao}</span>
+                    </Td>
+                    <Td className="text-right">{l.alta ? <Badge variante="perigo">{l.alta}</Badge> : "—"}</Td>
+                    <Td className="hidden text-right sm:table-cell">{l.media ? <Badge variante="alerta">{l.media}</Badge> : "—"}</Td>
+                  </Tr>
+                ))}
+              </TBody>
+            </Table>
+          ) : (
+            <p className="text-sm text-muted-foreground">Nenhum arquivo do SPED enviado ainda.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
