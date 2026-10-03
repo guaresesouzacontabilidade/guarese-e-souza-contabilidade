@@ -161,7 +161,7 @@ O menu **Obrigações e prazos** é só do escritório: o cliente não vê nada 
 
 **Antes de começar (uma vez, administrador)**
 1. **Atualizações normativas** — o portal já vem com as regras das principais obrigações federais (Simples Nacional, PIS/Cofins, IRPJ/CSLL, DCTFWeb, eSocial, FGTS, EFD-Contribuições, EFD-Reinf, ECD, ECF e a transição para CBS/IBS), cada uma com a fonte oficial. Elas chegam como **propostas**: abra a fonte, confira e clique em **Validar** e depois em **Aplicar**. Sem isso, nenhum prazo é calculado.
-2. **Catálogo** — ICMS, ISS e EFD ICMS/IPI dependem da lei de cada estado e município: abra a obrigação e use **Propor regra** para cadastrar o prazo do Tocantins e de cada município atendido, com a lei e o link oficial. Antes de enviar, use **Simular prazos** para conferir as datas.
+2. **Catálogo** — ICMS, ISS e EFD ICMS/IPI dependem da lei de cada estado e município. Para o ICMS, use a aba **ICMS por estado** (abaixo). Para o ISS e a EFD ICMS/IPI, abra a obrigação e use **Propor regra** para cadastrar o prazo de cada município e estado atendido, com a lei e o link oficial. Antes de enviar, use **Simular prazos** para conferir as datas.
 3. **Feriados** — os nacionais e os do Tocantins (8/9 e 5/10) já estão cadastrados. Cadastre os feriados municipais (ex.: Porto Nacional) com a lei ou decreto.
 4. **Empresas** (do menu Obrigações) — em cada empresa, confira o município, marque se é contribuinte do ICMS/ISS, se tem empregados e pró-labore, e o histórico de regimes (Simples Nacional, Lucro Presumido, Lucro Real — trimestral ou anual — e Lucro Arbitrado). Se a empresa mudou de regime, use **Registrar mudança de regime** a partir da competência certa: as competências antigas continuam com o regime da época.
 
@@ -175,6 +175,22 @@ O menu **Obrigações e prazos** é só do escritório: o cliente não vê nada 
 
 **Quando uma norma muda**
 Abra a obrigação no **Catálogo** e use **Propor alteração** (ou **Propor encerramento**) com a fonte e a data da consulta. Depois que o administrador valida e aplica, a regra antiga é encerrada no mês anterior, as tarefas abertas são recalculadas e as competências anteriores ficam como estavam. Tudo fica na auditoria.
+
+#### ICMS por estado (alíquotas e vencimentos)
+
+Em **Obrigações e prazos → ICMS por estado** ficam, para os 27 estados, a **alíquota interna geral**, o **adicional do fundo de pobreza** (quando vale para as operações em geral) e o **vencimento do ICMS apurado no regime normal** (Lucro Presumido, Real ou Arbitrado), sempre com a lei, o artigo e o link oficial. Cada dado mostra como foi conferido:
+
+- **Conferida na lei / Conferido**: lido no texto oficial da lei, do regulamento ou de resposta oficial da Fazenda do estado;
+- **Informada pelo estado**: informação oficial do próprio estado (tabela da Fazenda, Portal Nacional do DIFAL ou Assembleia), sem leitura do texto da lei — confira antes de usar em cálculo;
+- **A conferir**: só há informação antiga ou indireta. **Nenhum prazo foi inventado**: estado sem prazo conferido não gera tarefa até alguém completar com a fonte;
+- **Calendário do estado** (Mato Grosso do Sul): o estado publica as datas periodicamente; cadastre as datas de cada calendário.
+
+Como usar:
+1. **Validar os prazos já conferidos** — os estados com prazo conferido chegam como **propostas de regra** do ICMS em **Atualizações normativas**. O administrador abre a fonte, confere e valida; daí em diante as tarefas de pagamento do ICMS são geradas para as empresas marcadas como contribuintes do ICMS naquele estado (feriados nacionais, estaduais e municipais e expediente bancário considerados).
+2. **Completar um estado** (administrador) — clique no lápis da linha, preencha o dia, o que acontece sem expediente bancário, o regulamento e o artigo, o link e a data da conferência e salve. Depois clique em **Propor regra** e valide em Atualizações normativas. **O Tocantins está "a conferir"**: o site da SEFAZ-TO não abriu a partir do servidor do portal; complete-o primeiro, pois é o estado das empresas do escritório.
+3. **Estados com prazo por atividade** — em São Paulo (código CPR), Minas Gerais, Pernambuco (indústria) e Mato Grosso, o prazo varia conforme a atividade (CNAE): a regra do estado usa o prazo mais comum (está na observação). Para uma empresa com prazo diferente, use **Propor regra** só para ela no Catálogo.
+4. **Consulta entre estados** — escolha a origem e o destino: o portal mostra a alíquota interestadual (7% do Sul e do Sudeste, exceto ES, para Norte, Nordeste, Centro-Oeste e ES; 12% nas demais; 4% para mercadoria importada — origem 1, 2, 3 ou 8 na nota), a interna do destino e o diferencial (DIFAL). Abaixo, a **matriz interestadual** completa.
+5. O **comparativo de regimes** mostra, no campo do ICMS, a alíquota interna geral do estado da empresa como referência (a média efetiva costuma ser menor por causa de reduções e da substituição tributária).
 
 ### Avisos de arquivos enviados pelos clientes
 

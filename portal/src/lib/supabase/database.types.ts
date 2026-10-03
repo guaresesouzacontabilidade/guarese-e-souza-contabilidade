@@ -1548,6 +1548,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"icms_uf": {
+                  Row: {
+                    "aliquota_base_legal": string | null,"aliquota_fonte_url": string | null,"aliquota_interna": number | null,"aliquota_observacao": string | null,"aliquota_situacao": string,"aliquota_vigencia": string | null,"atualizado_em": string,"atualizado_por": string | null,"conferido_em": string,"fcp": number | null,"fcp_observacao": string | null,"id": string,"nome": string,"regiao": string,"uf": string,"vencimento_ajuste": string | null,"vencimento_base_legal": string | null,"vencimento_dia": number | null,"vencimento_fonte_url": string | null,"vencimento_observacao": string | null,"vencimento_situacao": string
+                  }
+                  Insert: {
+                    "aliquota_base_legal"?: string | null,"aliquota_fonte_url"?: string | null,"aliquota_interna"?: number | null,"aliquota_observacao"?: string | null,"aliquota_situacao": string,"aliquota_vigencia"?: string | null,"atualizado_em"?: string,"atualizado_por"?: string | null,"conferido_em": string,"fcp"?: number | null,"fcp_observacao"?: string | null,"id"?: string,"nome": string,"regiao": string,"uf": string,"vencimento_ajuste"?: string | null,"vencimento_base_legal"?: string | null,"vencimento_dia"?: number | null,"vencimento_fonte_url"?: string | null,"vencimento_observacao"?: string | null,"vencimento_situacao": string
+                  }
+                  Update: {
+                    "aliquota_base_legal"?: string | null,"aliquota_fonte_url"?: string | null,"aliquota_interna"?: number | null,"aliquota_observacao"?: string | null,"aliquota_situacao"?: string,"aliquota_vigencia"?: string | null,"atualizado_em"?: string,"atualizado_por"?: string | null,"conferido_em"?: string,"fcp"?: number | null,"fcp_observacao"?: string | null,"id"?: string,"nome"?: string,"regiao"?: string,"uf"?: string,"vencimento_ajuste"?: string | null,"vencimento_base_legal"?: string | null,"vencimento_dia"?: number | null,"vencimento_fonte_url"?: string | null,"vencimento_observacao"?: string | null,"vencimento_situacao"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "icms_uf_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"importacoes": {
                   Row: {
                     "arquivo_nome": string | null,"arquivo_sha256": string | null,"chave_idempotencia": string,"conta_financeira_id": string | null,"created_at": string,"criado_por": string | null,"data_saldo_final": string | null,"desfeita_em": string | null,"desfeita_por": string | null,"documento_id": string | null,"empresa_id": string,"erros": NonNullable<Json>,"id": string,"mapeamento": Json | null,"motivo_desfazer": string | null,"opcoes": Json | null,"periodo_fim": string | null,"periodo_inicio": string | null,"saldo_final_extrato": number | null,"soma_creditos": number,"soma_debitos": number,"status": string,"tipo": string,"total_duplicadas": number,"total_invalidas": number,"total_linhas": number,"total_novas": number,"total_periodo_fechado": number
@@ -3060,6 +3079,9 @@ isOneToOne: false
                            },
 "gerar_tarefas":
 { Args: { "p_competencia": string,"p_empresa_id"?: string }; Returns: number
+                           },
+"icms_uf_propor_regra":
+{ Args: { "p_uf": string }; Returns: string
                            },
 "ignorar_movimento":
 { Args: { "p_ignorar": boolean,"p_motivo"?: string,"p_movimento_id": string }; Returns: undefined

@@ -20,6 +20,7 @@ import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarCompetencia } from "@/lib/formatos";
 import { mensagemErro } from "@/lib/acoes";
 import { parametro } from "@/lib/busca";
+import { SITUACAO_ALIQUOTA, textoAliquota, type SituacaoAliquota } from "@/lib/fiscal/icms-estados";
 
 export const metadata: Metadata = { title: "Comparativo de regimes" };
 
@@ -124,6 +125,20 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
   const c = compararRegimes(dados, ate, { margemLucro: margem, aliquotaIcms, aliquotaIss, creditosPisCofins: creditos });
   const fim = c.meses[c.meses.length - 1];
 
+  // Referência: alíquota interna geral do estado da empresa (Obrigações > ICMS por estado)
+  let referenciaIcms = "";
+  if (c.aplicaIcms) {
+    const { data: emp } = await ctx.supabase.from("empresas").select("uf").eq("id", empresaId).maybeSingle();
+    const uf = emp?.uf?.trim().toUpperCase();
+    if (uf) {
+      const { data: est } = await ctx.supabase.from("icms_uf").select("aliquota_interna, fcp, aliquota_situacao").eq("uf", uf).maybeSingle();
+      if (est?.aliquota_interna != null) {
+        const situacao = SITUACAO_ALIQUOTA[est.aliquota_situacao as SituacaoAliquota]?.rotulo.toLowerCase() ?? "";
+        referenciaIcms = ` Interna geral de ${uf}: ${textoAliquota(est.aliquota_interna)}${est.fcp ? ` + ${textoAliquota(est.fcp)} de fundo de pobreza` : ""} (${situacao}); a média efetiva costuma ser menor por causa de reduções e da substituição tributária.`;
+      }
+    }
+  }
+
   // Sugestão de margem: resultado do Financeiro no mesmo período (quando a empresa usa o Financeiro)
   let margemFinanceiro: Decimal | null = null;
   if (ctx.pode("relatorios.ver") || ctx.pode("financeiro.ver")) {
@@ -173,7 +188,10 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
               <Campo
                 rotulo="ICMS nas vendas, fora do Simples (%)"
                 htmlFor="cmp-icms"
-                ajuda={c.sugestaoIcms ? `Média do ICMS destacado nas notas: ${textoPercentual(c.sugestaoIcms)} (usada se ficar em branco).` : "Alíquota média sobre as vendas tributadas; os créditos vêm das notas de entrada."}
+                ajuda={
+                  (c.sugestaoIcms ? `Média do ICMS destacado nas notas: ${textoPercentual(c.sugestaoIcms)} (usada se ficar em branco).` : "Alíquota média sobre as vendas tributadas; os créditos vêm das notas de entrada.") +
+                  referenciaIcms
+                }
               >
                 <Input id="cmp-icms" name="icms" inputMode="decimal" defaultValue={textoNumero(aliquotaIcms)} placeholder={c.sugestaoIcms ? textoNumero(c.sugestaoIcms) : ""} />
               </Campo>

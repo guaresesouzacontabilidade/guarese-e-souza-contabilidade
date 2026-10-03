@@ -16,6 +16,7 @@ export default async function LayoutObrigacoes({ children }: LayoutProps<"/escri
           { rotulo: "Empresas", href: `${BASE}/empresas` },
           { rotulo: "Catálogo", href: `${BASE}/catalogo` },
           { rotulo: "Atualizações normativas", href: `${BASE}/normas` },
+          { rotulo: "ICMS por estado", href: `${BASE}/icms` },
           { rotulo: "Feriados", href: `${BASE}/feriados` },
         ]}
       />
