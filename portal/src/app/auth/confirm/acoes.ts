@@ -1,9 +1,11 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { destinoSeguro } from "@/lib/requisicao";
+import { COOKIE_PRESENCA, PRESENCA_SEGUNDOS } from "@/lib/auth/presenca";
 
 const TIPOS: EmailOtpType[] = ["invite", "recovery", "email", "email_change", "signup", "magiclink"];
 
@@ -15,5 +17,6 @@ export async function confirmarLink(formData: FormData) {
   const supabase = await criarClienteServidor();
   const { error } = await supabase.auth.verifyOtp({ type: tipo, token_hash: tokenHash });
   if (error) redirect("/login?erro=link");
+  (await cookies()).set(COOKIE_PRESENCA, "1", { maxAge: PRESENCA_SEGUNDOS, path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production" });
   redirect(proximo);
 }

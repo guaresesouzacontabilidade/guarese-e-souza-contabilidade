@@ -285,6 +285,13 @@ async function configurarLogin(ref: string, site: string) {
   } catch {
     aviso("Limites de duração de sessão são recurso de planos pagos do Supabase — mantidos os padrões no plano gratuito.");
   }
+  try {
+    // Recusa senhas que já apareceram em vazamentos públicos (HaveIBeenPwned; só a parte inicial do hash é consultada)
+    await sb(`/projects/${ref}/config/auth`, { method: "PATCH", body: JSON.stringify({ password_hibp_enabled: true }) });
+    ok("Bloqueio de senhas vazadas ativado.");
+  } catch {
+    aviso("Bloqueio de senhas vazadas é recurso de planos pagos do Supabase — não aplicado no plano gratuito.");
+  }
 }
 
 async function agendarRotinas(ref: string, site: string, segredoCron: string) {

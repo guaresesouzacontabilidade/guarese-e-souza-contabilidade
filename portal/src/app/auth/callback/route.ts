@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { destinoSeguro } from "@/lib/requisicao";
+import { COOKIE_PRESENCA, PRESENCA_SEGUNDOS } from "@/lib/auth/presenca";
 
 /**
  * Retorno dos links enviados pelo próprio Supabase Auth (quando o SMTP do
@@ -13,5 +14,7 @@ export async function GET(req: NextRequest) {
   const supabase = await criarClienteServidor();
   const { error } = await supabase.auth.exchangeCodeForSession(codigo);
   if (error) return NextResponse.redirect(new URL("/login?erro=link", req.url));
-  return NextResponse.redirect(new URL(proximo, req.url));
+  const resposta = NextResponse.redirect(new URL(proximo, req.url));
+  resposta.cookies.set(COOKIE_PRESENCA, "1", { maxAge: PRESENCA_SEGUNDOS, path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production" });
+  return resposta;
 }

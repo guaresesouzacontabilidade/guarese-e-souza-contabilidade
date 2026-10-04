@@ -1,10 +1,12 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { falha, falhaValidacao, type ResultadoAcao } from "@/lib/acoes";
 import { dadosRequisicao, destinoSeguro } from "@/lib/requisicao";
+import { COOKIE_PRESENCA, PRESENCA_SEGUNDOS } from "@/lib/auth/presenca";
 
 const esquema = z.object({
   email: z.string().trim().toLowerCase().email("Informe um e-mail válido."),
@@ -28,6 +30,8 @@ export async function entrar(_anterior: ResultadoAcao, formData: FormData): Prom
     return falha("E-mail ou senha incorretos, ou acesso ainda não ativado pelo convite.");
   }
 
+  // Sinal de "portal aberto" (renovado depois pela própria aba)
+  (await cookies()).set(COOKIE_PRESENCA, "1", { maxAge: PRESENCA_SEGUNDOS, path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production" });
   const destino = destinoSeguro(dados.data.proximo);
   const { data: nivel } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (nivel?.nextLevel === "aal2" && nivel.currentLevel !== "aal2") {

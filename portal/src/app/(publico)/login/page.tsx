@@ -10,6 +10,7 @@ const AVISOS: Record<string, string> = {
   inativo: "Seu acesso está desativado. Fale com o escritório.",
   sessao: "Sua sessão foi encerrada. Entre novamente.",
   saiu: "Você saiu do portal com segurança.",
+  fechado: "Por segurança, a sessão foi encerrada porque o portal foi fechado. Entre novamente.",
   link: "O link utilizado é inválido ou expirou. Solicite um novo.",
   senha: "Senha definida com sucesso. Entre com sua nova senha.",
 };

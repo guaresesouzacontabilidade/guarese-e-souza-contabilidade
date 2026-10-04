@@ -18,7 +18,7 @@ async function sair(request: NextRequest) {
   await supabase.auth.signOut({ scope: "local" });
   const destino = request.nextUrl.clone();
   destino.pathname = "/login";
-  destino.search = `?motivo=${encodeURIComponent(["inativo", "sessao", "saiu"].includes(motivo) ? motivo : "saiu")}`;
+  destino.search = `?motivo=${encodeURIComponent(["inativo", "sessao", "saiu", "fechado"].includes(motivo) ? motivo : "saiu")}`;
   return NextResponse.redirect(destino, { status: 303 });
 }
 

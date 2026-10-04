@@ -1,11 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { COOKIE_PRESENCA } from "@/lib/auth/presenca";
 
 /**
  * Proxy (antigo middleware):
  *  1. renova a sessão do Supabase e grava os cookies atualizados;
  *  2. protege as rotas privadas (sem sessão → /login; 2FA pendente → /mfa);
- *  3. aplica cabeçalhos de segurança e a política de conteúdo (CSP) com nonce.
+ *  3. encerra a sessão quando o portal foi fechado (nenhuma aba renovou o
+ *     sinal de "portal aberto" — veja lib/auth/presenca) antes de mostrar
+ *     qualquer página;
+ *  4. aplica cabeçalhos de segurança e a política de conteúdo (CSP) com nonce.
  * A autorização efetiva acontece no servidor (ações) e no banco (RLS).
  */
 
@@ -20,6 +24,9 @@ const ROTAS_PUBLICAS = [
 ];
 
 const ROTAS_SEM_EXIGENCIA_MFA = ["/mfa", "/auth/sair", "/auth/confirm", "/definir-senha", "/redefinir-senha"];
+
+/** Rotas que não dependem do sinal de "portal aberto" (a própria saída e as rotinas do servidor). */
+const ROTAS_SEM_PRESENCA = ["/auth/sair", "/api/cron/", "/api/saude"];
 
 function rotaPublica(caminho: string) {
   return caminho === "/" ? false : ROTAS_PUBLICAS.some((r) => caminho === r || caminho.startsWith(r));
@@ -73,9 +80,10 @@ export async function proxy(request: NextRequest) {
 
   let logado = false;
   let precisaMfa = false;
+  let supabase: ReturnType<typeof createServerClient> | null = null;
 
   if (url && chave) {
-    const supabase = createServerClient(url, chave, {
+    supabase = createServerClient(url, chave, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -110,6 +118,15 @@ export async function proxy(request: NextRequest) {
     for (const c of resposta.cookies.getAll()) r.cookies.set(c);
     return r;
   };
+
+  // Portal fechado: nenhuma aba aberta renovou o sinal. Encerra a sessão antes de mostrar qualquer coisa.
+  if (logado && !request.cookies.get(COOKIE_PRESENCA)?.value && !ROTAS_SEM_PRESENCA.some((r) => caminho.startsWith(r))) {
+    if (!ehApi) return aplicarCabecalhos(redirecionar("/auth/sair", { motivo: "fechado" }), csp);
+    await supabase?.auth.signOut({ scope: "local" });
+    const negado = NextResponse.json({ erro: "Sessão encerrada: o portal foi fechado. Entre novamente." }, { status: 401 });
+    for (const c of resposta.cookies.getAll()) negado.cookies.set(c);
+    return aplicarCabecalhos(negado, null);
+  }
 
   if (!ehApi) {
     if (!logado && !rotaPublica(caminho)) {
