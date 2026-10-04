@@ -134,8 +134,9 @@ export function HistoricoRegimes({ empresaId, periodos, competenciaAtual }: { em
           <tr>
             <Th>Período (competências)</Th>
             <Th>Regime</Th>
-            <Th className="hidden md:table-cell">Observação</Th>
-            <Th className="w-20" />
+            <Th className="w-20">
+              <span className="sr-only">Ações</span>
+            </Th>
           </tr>
         </THead>
         <TBody>
@@ -143,21 +144,30 @@ export function HistoricoRegimes({ empresaId, periodos, competenciaAtual }: { em
             const vigente = p.inicio <= competenciaAtual && (!p.fim || p.fim >= competenciaAtual);
             return (
               <Tr key={p.id}>
-                <Td className="whitespace-nowrap text-sm">
-                  {formatarCompetencia(p.inicio)} a {p.fim ? formatarCompetencia(p.fim) : "atual"}
+                <Td className="text-sm">
+                  <span className="whitespace-nowrap">
+                    {formatarCompetencia(p.inicio)} a {p.fim ? formatarCompetencia(p.fim) : "atual"}
+                  </span>
                   {vigente ? (
                     <Badge variante="sucesso" className="ml-2">
                       vigente
                     </Badge>
                   ) : null}
+                  {/* A observação fica sob o período: a tabela cabe no cartão e o lápis não some de vista */}
+                  {p.observacao ? <span className="mt-1 block text-xs text-muted-foreground">{p.observacao}</span> : null}
                 </Td>
                 <Td>
                   <span className="font-medium">{REGIMES[p.regime] ?? p.regime}</span>
                   {p.lucro_real_apuracao ? <span className="block text-xs text-muted-foreground">{LUCRO_REAL_APURACAO[p.lucro_real_apuracao]}</span> : null}
-                  {p.regime === "lucro_real" && !p.lucro_real_apuracao ? <span className="block text-xs text-alerta-fg">Informe se é trimestral ou anual</span> : null}
-                </Td>
-                <Td className="hidden max-w-xs truncate text-sm text-muted-foreground md:table-cell" title={p.observacao ?? undefined}>
-                  {p.observacao ?? "—"}
+                  {p.regime === "lucro_real" && !p.lucro_real_apuracao ? (
+                    <button
+                      type="button"
+                      onClick={() => setEditando(p)}
+                      className="block text-left text-xs font-medium text-alerta-fg underline underline-offset-2 hover:no-underline"
+                    >
+                      Informar se é trimestral ou anual
+                    </button>
+                  ) : null}
                 </Td>
                 <Td className="text-right">
                   <div className="flex justify-end gap-1">
