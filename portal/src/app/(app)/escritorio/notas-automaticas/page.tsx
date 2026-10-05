@@ -36,15 +36,13 @@ export default async function NotasAutomaticasCarteira() {
         .range(de, ate),
     ),
     buscarTudo((de, ate) => s.supabase.from("documentos").select("empresa_id").eq("origem", "automatica").gte("enviado_em", desde).range(de, ate)),
-    // NF-e recebidas só em resumo (sem o XML completo) e ainda sem a ciência da emissão
+    // NF-e recebidas só em resumo (sem o XML completo no portal)
     buscarTudo((de, ate) =>
       s.supabase
         .from("nfe_resumos")
-        .select("empresa_id")
+        .select("empresa_id, ciencia_em, ciencia_retorno")
         .eq("situacao", "autorizada")
         .is("documento_id", null)
-        .is("ciencia_em", null)
-        .is("ciencia_retorno", null)
         .order("id")
         .range(de, ate),
     ),
@@ -54,15 +52,22 @@ export default async function NotasAutomaticasCarteira() {
   const porEmpresa = new Map(resultado.configs.map((c) => [c.empresa_id, c]));
   const trazidas = new Map<string, number>();
   for (const d of resultado.docs) trazidas.set(d.empresa_id, (trazidas.get(d.empresa_id) ?? 0) + 1);
-  const soResumo = new Map<string, number>();
-  for (const r of resultado.resumos) soResumo.set(r.empresa_id, (soResumo.get(r.empresa_id) ?? 0) + 1);
+  // Por empresa: sem a ciência ainda, com a ciência registrada (XML a caminho) e com a ciência recusada pela SEFAZ
+  const semXmlPorEmpresa = new Map<string, { pendentes: number; aCaminho: number; recusadas: number }>();
+  for (const r of resultado.resumos) {
+    const t = semXmlPorEmpresa.get(r.empresa_id) ?? { pendentes: 0, aCaminho: 0, recusadas: 0 };
+    if (r.ciencia_em) t.aCaminho++;
+    else if (r.ciencia_retorno) t.recusadas++;
+    else t.pendentes++;
+    semXmlPorEmpresa.set(r.empresa_id, t);
+  }
 
   const linhas = resultado.empresas
     .map((e) => {
       const cfg = porEmpresa.get(e.id) ?? null;
       const situacao = situacaoNotas(cfg?.certificado_valido_ate ? { valido_ate: cfg.certificado_valido_ate } : null, cfg);
       const dias = cfg?.certificado_valido_ate ? diasEntre(hoje, cfg.certificado_valido_ate.slice(0, 10)) : null;
-      return { ...e, cfg, situacao, dias, notas: trazidas.get(e.id) ?? 0, soResumo: soResumo.get(e.id) ?? 0 };
+      return { ...e, cfg, situacao, dias, notas: trazidas.get(e.id) ?? 0, semXml: semXmlPorEmpresa.get(e.id) ?? { pendentes: 0, aCaminho: 0, recusadas: 0 } };
     })
     .sort((a, b) => {
       const ordem = { erro: 0, vencido: 1, pausada: 2, ativa: 3, desconectada: 4 } as const;
@@ -72,13 +77,17 @@ export default async function NotasAutomaticasCarteira() {
   const comErro = linhas.filter((l) => l.situacao === "erro" || l.situacao === "vencido").length;
   const vencendo = linhas.filter((l) => l.dias !== null && l.dias >= 0 && l.dias <= 30).length;
   const chaveServidor = Boolean(envServidor.certificadosChave());
-  const totalSoResumo = resultado.resumos.length;
-  // Empresas com certificado válido em que as próximas NF-e chegariam só em resumo
+  const totalSemXml = resultado.resumos.length;
   const buscando = (l: (typeof linhas)[number]) => l.situacao === "ativa" || l.situacao === "erro";
-  const semCiencia = linhas.filter((l) => buscando(l) && !(l.cfg?.ciencia_automatica && l.cfg.nfe_ativa)).length;
-  const aCaminho = linhas.filter((l) => buscando(l) && l.cfg?.ciencia_automatica && l.cfg.nfe_ativa).reduce((t, l) => t + l.soResumo, 0);
-  // Só em resumo em empresas pausadas ou sem certificado válido: a ciência não sai até resolver na empresa
-  const paradas = linhas.filter((l) => !buscando(l)).reduce((t, l) => t + l.soResumo, 0);
+  const cienciaLigada = (l: (typeof linhas)[number]) => Boolean(l.cfg?.ciencia_automatica && l.cfg.nfe_ativa);
+  const somar = (lista: typeof linhas, campo: "pendentes" | "aCaminho" | "recusadas") => lista.reduce((t, l) => t + l.semXml[campo], 0);
+  // Empresas com certificado válido em que as NF-e chegam só em resumo (ciência desligada)
+  const semCiencia = linhas.filter((l) => buscando(l) && !cienciaLigada(l)).length;
+  const aguardandoCiencia = somar(linhas.filter((l) => buscando(l) && cienciaLigada(l)), "pendentes");
+  const aCaminho = somar(linhas, "aCaminho");
+  const recusadas = somar(linhas, "recusadas");
+  // Sem a ciência em empresas pausadas ou sem certificado válido: nada sai até resolver na empresa
+  const paradas = somar(linhas.filter((l) => !buscando(l)), "pendentes");
 
   // Lotes de XML pedidos para a carteira nos últimos 8 dias, agrupados por pedido
   const { data: lotesCarteira } = await s.supabase
@@ -116,7 +125,7 @@ export default async function NotasAutomaticasCarteira() {
         <Indicador rotulo="Busca ativa" valor={ativas} tom={ativas ? "sucesso" : "neutro"} />
         <Indicador rotulo="Com erro ou vencido" valor={comErro} tom={comErro ? "perigo" : "neutro"} />
         <Indicador rotulo="Certificado vence em 30 dias" valor={vencendo} tom={vencendo ? "alerta" : "neutro"} />
-        <Indicador rotulo="NF-e só em resumo" valor={totalSoResumo} tom={totalSoResumo ? "alerta" : "neutro"} detalhe="sem o XML completo e sem a ciência" href="#nfe-entrada" />
+        <Indicador rotulo="NF-e sem o XML completo" valor={totalSemXml} tom={totalSemXml ? "alerta" : "neutro"} detalhe="recebidas só em resumo" href="#nfe-entrada" />
       </div>
       <Card className="mb-4 scroll-mt-20" id="nfe-entrada">
         <CardHeader>
@@ -130,18 +139,18 @@ export default async function NotasAutomaticasCarteira() {
         </CardHeader>
         <CardContent className="space-y-4">
           <FormPlanilhaEntradas meses={meses} padrao={padrao} />
-          {totalSoResumo || semCiencia ? (
+          {totalSemXml || semCiencia ? (
             <Alerta
               tom="alerta"
               titulo={
-                totalSoResumo
-                  ? `${totalSoResumo === 1 ? "1 NF-e esperando" : `${totalSoResumo} NF-e esperando`} o XML completo`
+                totalSemXml
+                  ? `${totalSemXml === 1 ? "1 NF-e" : `${totalSemXml} NF-e`} sem o XML completo`
                   : `Ciência automática desligada em ${semCiencia === 1 ? "1 empresa" : `${semCiencia} empresas`}`
               }
             >
               <p>
-                A SEFAZ só libera o XML completo da NF-e recebida depois da ciência da emissão. Com o XML no portal, as notas entram no XML da
-                carteira em lote.
+                A SEFAZ só libera o XML completo da NF-e recebida depois da ciência da emissão, aceita até 10 dias depois da emissão da nota. Com o
+                XML no portal, as notas entram no XML da carteira em lote.
               </p>
               <ul className="list-disc space-y-0.5 pl-5">
                 {semCiencia ? (
@@ -150,10 +159,21 @@ export default async function NotasAutomaticasCarteira() {
                     as notas delas chegam só em resumo.
                   </li>
                 ) : null}
+                {aguardandoCiencia ? (
+                  <li>
+                    {aguardandoCiencia === 1 ? "1 NF-e aguardando" : `${aguardandoCiencia} NF-e aguardando`} a ciência, que o portal registra na próxima
+                    busca.
+                  </li>
+                ) : null}
                 {aCaminho ? (
                   <li>
-                    {aCaminho === 1 ? "1 NF-e de empresa" : `${aCaminho} NF-e de empresas`} com a ciência automática ligada: o XML chega nas próximas
-                    buscas.
+                    {aCaminho === 1 ? "1 NF-e com a ciência registrada" : `${aCaminho} NF-e com a ciência registrada`}: o XML chega nas próximas buscas.
+                  </li>
+                ) : null}
+                {recusadas ? (
+                  <li>
+                    {recusadas === 1 ? "1 NF-e teve" : `${recusadas} NF-e tiveram`} a ciência recusada pela SEFAZ (em geral, por passar do prazo de 10
+                    dias): peça o XML ao fornecedor e envie em Documentos da empresa.
                   </li>
                 ) : null}
                 {paradas ? (
@@ -234,9 +254,10 @@ export default async function NotasAutomaticasCarteira() {
                           {l.nome_fantasia ?? l.razao_social}
                         </Link>
                         <span className="block text-xs text-muted-foreground">{l.documento ? formatarCnpj(l.documento) : ""}</span>
-                        {l.soResumo ? (
+                        {l.semXml.pendentes + l.semXml.aCaminho + l.semXml.recusadas ? (
                           <span className="block text-xs text-alerta-fg">
-                            {l.soResumo === 1 ? "1 NF-e só em resumo" : `${l.soResumo} NF-e só em resumo`}
+                            {l.semXml.pendentes + l.semXml.aCaminho + l.semXml.recusadas} NF-e sem o XML completo
+                            {l.semXml.recusadas ? ` (${l.semXml.recusadas} com a ciência recusada)` : ""}
                           </span>
                         ) : null}
                         {l.cfg?.ultimo_erro && (l.situacao === "erro" || l.situacao === "vencido") ? (

@@ -408,7 +408,10 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                     "A ciência automática está ligada: o portal registra a ciência da emissão nas próximas buscas e a SEFAZ libera o XML logo depois."
                   ) : gerenciar && certificadoValido ? (
                     <>
-                      <p>Com a ciência da emissão registrada na SEFAZ, o XML completo chega em Documentos, normalmente em algumas horas.</p>
+                      <p>
+                        Com a ciência da emissão registrada na SEFAZ, o XML completo chega em Documentos, normalmente em algumas horas. A SEFAZ aceita a
+                        ciência até 10 dias depois da emissão da nota.
+                      </p>
                       <div className="pt-2">
                         <BotaoPedirXml empresaId={empresaId} pausada={Boolean(config?.pausada)} />
                       </div>
@@ -428,8 +431,9 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
               ) : null}
               {cienciaRecusada ? (
                 <p className="text-sm text-perigo">
-                  {cienciaRecusada === 1 ? "1 NF-e teve a ciência recusada" : `${cienciaRecusada} NF-e tiveram a ciência recusada`} pela SEFAZ (o motivo
-                  aparece na lista abaixo). Peça o XML ao fornecedor e envie em Documentos.
+                  {cienciaRecusada === 1 ? "1 NF-e teve a ciência recusada" : `${cienciaRecusada} NF-e tiveram a ciência recusada`} pela SEFAZ — em geral,
+                  por passar do prazo de 10 dias depois da emissão (o motivo aparece na lista abaixo). Peça o XML ao fornecedor e envie em Documentos: a
+                  nota passa a ter o XML completo e entra no XML do mês em lote.
                 </p>
               ) : null}
               <div className="space-y-2 rounded-md border border-border p-3">

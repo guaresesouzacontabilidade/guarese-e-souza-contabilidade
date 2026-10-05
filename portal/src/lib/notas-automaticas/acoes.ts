@@ -182,7 +182,7 @@ export async function apagarNotasAnteriores(empresaId: string, _anterior: Result
 }
 
 const TEXTO_XML_A_CAMINHO =
-  "A ciência da emissão das NF-e recebidas só em resumo é registrada na SEFAZ nas próximas buscas (até 100 notas por busca), e a SEFAZ libera o XML completo logo depois — normalmente em algumas horas. Os XML aparecem em Documentos e passam a entrar no XML do mês em lote.";
+  "A ciência da emissão das NF-e recebidas só em resumo é registrada na SEFAZ nas próximas buscas (até 100 notas por busca), e a SEFAZ libera o XML completo logo depois — normalmente em algumas horas. Os XML aparecem em Documentos e passam a entrar no XML do mês em lote. A SEFAZ só aceita a ciência até 10 dias depois da emissão: para notas mais antigas, peça o XML ao fornecedor e envie em Documentos.";
 
 type Cliente = Awaited<ReturnType<typeof exigirEquipe>>["supabase"];
 

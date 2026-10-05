@@ -133,8 +133,10 @@ test("escritório baixa a planilha da carteira e pede os XML completos de todas 
   await page.goto("/escritorio/notas-automaticas");
   const cartao = page.locator("#nfe-entrada");
   await expect(cartao.getByText("NF-e de entrada da carteira")).toBeVisible();
-  await expect(cartao.getByText("2 NF-e esperando o XML completo")).toBeVisible();
+  await expect(cartao.getByText("3 NF-e sem o XML completo")).toBeVisible();
   await expect(cartao.getByText(/Ciência automática desligada em 1 empresa com certificado válido/)).toBeVisible();
+  await expect(cartao.getByText(/1 NF-e teve a ciência recusada pela SEFAZ \(em geral, por passar do prazo de 10/)).toBeVisible();
+  await expect(page.locator("tr", { hasText: "Oficina Exemplo (DEMO)" }).getByText("2 NF-e sem o XML completo (1 com a ciência recusada)")).toBeVisible();
   await expect(cartao.getByText(/1 NF-e é de empresa com a busca pausada ou sem certificado válido/)).toBeVisible();
   await expect(page.locator("#entradas-competencia-carteira")).toHaveValue(competencia);
 
@@ -176,7 +178,7 @@ test("escritório baixa a planilha da carteira e pede os XML completos de todas 
   const { data: cfg } = await servico!.from("notas_automaticas").select("ciencia_automatica, nfe_ativa, pausada").eq("empresa_id", oficinaId).single();
   expect(cfg).toEqual({ ciencia_automatica: true, nfe_ativa: true, pausada: false });
   await expect(cartao.getByText(/Ciência automática desligada/)).toHaveCount(0);
-  await expect(cartao.getByText(/com a ciência automática ligada: o XML chega nas próximas/)).toBeVisible();
+  await expect(cartao.getByText(/1 NF-e aguardando a ciência, que o portal registra na próxima/)).toBeVisible();
 });
 
 test("cliente pede os XML da própria empresa e só baixa as notas dela", async ({ page }) => {

@@ -260,7 +260,7 @@ export function ApagarNotasAnteriores({ empresaId, quantidade, mesInicial }: { e
 const CONFIRMAR_CIENCIA = {
   titulo: "Pedir os XML completos?",
   descricao:
-    "O portal registra na SEFAZ a ciência da emissão das NF-e recebidas só em resumo. A ciência só informa que a empresa tomou conhecimento da nota — não confirma nem recusa a operação — e libera o XML completo. A partir daí, as próximas NF-e recebidas também terão a ciência registrada sozinhas (dá para desligar em “O que buscar”).",
+    "O portal registra na SEFAZ a ciência da emissão das NF-e recebidas só em resumo. A ciência só informa que a empresa tomou conhecimento da nota — não confirma nem recusa a operação — e libera o XML completo. A partir daí, as próximas NF-e recebidas também terão a ciência registrada sozinhas (dá para desligar em “O que buscar”). A SEFAZ aceita a ciência até 10 dias depois da emissão da nota; para as mais antigas, peça o XML ao fornecedor.",
   textoConfirmar: "Pedir os XML",
 };
 
