@@ -10,11 +10,13 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import {
   ApagarNotasAnteriores,
   BotaoBuscarAgora,
+  BotaoPedirXml,
   FormCertificado,
   MesInicialNotas,
   PreferenciasNotas,
   RemoverCertificado,
 } from "@/components/notas-automaticas/notas-automaticas";
+import { FormPlanilhaEntradas } from "@/components/notas-automaticas/planilha-entradas";
 import { FormLoteXml } from "@/components/lotes-xml/form-lote";
 import { TabelaLotes, emPreparo, type LoteXml } from "@/components/lotes-xml/tabela-lotes";
 import { AtualizarEnquanto } from "@/components/ui/atualizar-enquanto";
@@ -79,6 +81,16 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
       : Promise.resolve({ data: [] }),
     verDocumentos ? ctx.supabase.rpc("notas_automaticas_por_mes", { p_empresa_id: empresaId }) : Promise.resolve({ data: [] }),
   ]);
+  // NF-e recebidas só em resumo (sem o XML completo), pela situação da ciência da emissão
+  const soResumo = () =>
+    ctx.supabase.from("nfe_resumos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("situacao", "autorizada").is("documento_id", null);
+  const [{ count: semCiencia }, { count: xmlACaminho }, { count: cienciaRecusada }] = verDocumentos
+    ? await Promise.all([
+        soResumo().is("ciencia_em", null).is("ciencia_retorno", null),
+        soResumo().not("ciencia_em", "is", null),
+        soResumo().is("ciencia_em", null).not("ciencia_retorno", "is", null),
+      ])
+    : [{ count: 0 }, { count: 0 }, { count: 0 }];
   const listaLotes = (lotes ?? []) as LoteXml[];
   const { meses, padrao } = mesesDoLote(competenciaAtual());
   const situacao = situacaoNotas(config?.certificado_valido_ate ? { valido_ate: config.certificado_valido_ate } : null, config);
@@ -86,7 +98,9 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
   const chaveServidor = Boolean(envServidor.certificadosChave());
   const diasValidade = certificado ? diasEntre(hojeISO(), certificado.valido_ate.slice(0, 10)) : null;
   const cadastradoPor = (certificado?.cadastrado as unknown as { nome: string } | null)?.nome ?? null;
-  const semXml = (resumos ?? []).filter((r) => !r.documento_id && r.situacao === "autorizada").length;
+  const semXml = (semCiencia ?? 0) + (xmlACaminho ?? 0) + (cienciaRecusada ?? 0);
+  const cienciaLigada = Boolean(config?.ciencia_automatica && config.nfe_ativa && !config.pausada);
+  const certificadoValido = situacao !== "desconectada" && situacao !== "vencido";
   const meses_ = porMes ?? [];
   const desde = config?.buscar_desde ?? null;
   const anteriores = desde ? meses_.filter((m) => m.competencia < desde).reduce((t, m) => t + m.total, 0) : 0;
@@ -154,7 +168,10 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
             ) : null}
             {verDocumentos && semXml > 0 ? (
               <p className="text-alerta-fg">
-                {semXml === 1 ? "1 NF-e recebida só em resumo" : `${semXml} NF-e recebidas só em resumo`} (sem o XML completo).
+                <Link href="#nfe-recebidas" className="underline-offset-4 hover:underline">
+                  {semXml === 1 ? "1 NF-e recebida só em resumo" : `${semXml} NF-e recebidas só em resumo`}
+                </Link>{" "}
+                (sem o XML completo).
               </p>
             ) : null}
           </CardContent>
@@ -368,18 +385,62 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
       ) : null}
 
       {verDocumentos ? (
-        <Card className="mb-4">
+        <Card className="mb-4 scroll-mt-20" id="nfe-recebidas">
           <CardHeader>
             <CardTitle>NF-e recebidas</CardTitle>
             <CardDescription>
-              Resumos que a SEFAZ entregou para a empresa. Quando o XML completo chega (ou já tinha sido enviado), ele fica em{" "}
+              Resumos que a SEFAZ entregou para a empresa. A SEFAZ só libera o XML completo depois da ciência da emissão; quando ele chega (ou já
+              tinha sido enviado), fica em{" "}
               <Link href={`${base}/documentos`} className="text-primary hover:underline">
                 Documentos
-              </Link>
-              .
+              </Link>{" "}
+              e entra no XML do mês em lote.
             </CardDescription>
           </CardHeader>
-          <CardContent className="px-0 pt-0 sm:px-0">
+          <CardContent className="space-y-4 px-0 pt-0 sm:px-0">
+            <div className="space-y-4 px-4 sm:px-6">
+              {semCiencia ? (
+                <Alerta
+                  tom="alerta"
+                  titulo={semCiencia === 1 ? "1 NF-e esperando o XML completo" : `${semCiencia} NF-e esperando o XML completo`}
+                >
+                  {cienciaLigada ? (
+                    "A ciência automática está ligada: o portal registra a ciência da emissão nas próximas buscas e a SEFAZ libera o XML logo depois."
+                  ) : gerenciar && certificadoValido ? (
+                    <>
+                      <p>Com a ciência da emissão registrada na SEFAZ, o XML completo chega em Documentos, normalmente em algumas horas.</p>
+                      <div className="pt-2">
+                        <BotaoPedirXml empresaId={empresaId} pausada={Boolean(config?.pausada)} />
+                      </div>
+                    </>
+                  ) : gerenciar ? (
+                    "Para pedir o XML completo, cadastre um certificado digital válido da empresa."
+                  ) : (
+                    "O escritório pode pedir o XML completo à SEFAZ (ciência da emissão)."
+                  )}
+                </Alerta>
+              ) : null}
+              {xmlACaminho ? (
+                <p className="text-sm text-muted-foreground">
+                  {xmlACaminho === 1 ? "1 NF-e com a ciência registrada" : `${xmlACaminho} NF-e com a ciência registrada`}: o XML completo chega nas
+                  próximas buscas.
+                </p>
+              ) : null}
+              {cienciaRecusada ? (
+                <p className="text-sm text-perigo">
+                  {cienciaRecusada === 1 ? "1 NF-e teve a ciência recusada" : `${cienciaRecusada} NF-e tiveram a ciência recusada`} pela SEFAZ (o motivo
+                  aparece na lista abaixo). Peça o XML ao fornecedor e envie em Documentos.
+                </p>
+              ) : null}
+              <div className="space-y-2 rounded-md border border-border p-3">
+                <p className="text-sm font-medium">Planilha das NF-e de entrada</p>
+                <p className="text-xs text-muted-foreground">
+                  Todas as NF-e de entrada emitidas no mês (as recebidas só em resumo e as que já têm o XML no portal), com fornecedor, valor,
+                  situação, chave de acesso e a coluna “XML completo no portal”.
+                </p>
+                <FormPlanilhaEntradas empresaId={empresaId} meses={meses} padrao={padrao} />
+              </div>
+            </div>
             {resumos?.length ? (
               <Table>
                 <THead>
@@ -412,9 +473,10 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                         ) : r.ciencia_em ? (
                           <span className="text-muted-foreground">ciência registrada; XML a caminho</span>
                         ) : r.ciencia_retorno ? (
-                          <span className="text-perigo" title={r.ciencia_retorno}>
-                            ciência recusada
-                          </span>
+                          <>
+                            <span className="block text-perigo">ciência recusada</span>
+                            <span className="block max-w-56 text-xs break-words text-muted-foreground">{r.ciencia_retorno}</span>
+                          </>
                         ) : (
                           <span className="text-muted-foreground">só resumo</span>
                         )}

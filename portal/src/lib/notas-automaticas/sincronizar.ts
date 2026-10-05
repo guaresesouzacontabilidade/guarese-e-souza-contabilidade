@@ -42,6 +42,7 @@ const MINUTO = 60_000;
 const HORA = 60 * MINUTO;
 const TEMPO_MAXIMO_MS = 25_000;
 const MAX_CONSULTAS = 10;
+const MAX_LOTES_CIENCIA = 5;
 const CANCELAMENTOS = ["110111", "110112"];
 
 interface Contexto {
@@ -304,7 +305,20 @@ async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServ
   return { erro, proxima };
 }
 
+/**
+ * Ciência da emissão das NF-e recebidas só em resumo: até 5 lotes de 20
+ * eventos (o máximo da SEFAZ por lote) por execução. Para no primeiro lote
+ * incompleto, com erro ou com alguma nota sem resposta (evita reenviar o mesmo lote).
+ */
 async function enviarCiencias(c: Contexto): Promise<{ erro: string | null }> {
+  for (let lote = 0; lote < MAX_LOTES_CIENCIA && Date.now() < c.prazo; lote++) {
+    const r = await enviarLoteCiencia(c);
+    if (r.erro || r.enviados < 20 || r.respondidos < r.enviados) return { erro: r.erro };
+  }
+  return { erro: null };
+}
+
+async function enviarLoteCiencia(c: Contexto): Promise<{ erro: string | null; enviados: number; respondidos: number }> {
   const { data: pendentes } = await c.admin
     .from("nfe_resumos")
     .select("chave")
@@ -315,7 +329,7 @@ async function enviarCiencias(c: Contexto): Promise<{ erro: string | null }> {
     .is("documento_id", null)
     .order("recebido_em")
     .limit(20);
-  if (!pendentes?.length) return { erro: null };
+  if (!pendentes?.length) return { erro: null, enviados: 0, respondidos: 0 };
   const iniciado = new Date();
   try {
     const quando = new Date(Date.now() - MINUTO);
@@ -334,8 +348,11 @@ async function enviarCiencias(c: Contexto): Promise<{ erro: string | null }> {
     const r = lerRetornoEventos(resp.corpo);
     if (r.cStat !== "128") throw new Error(`SEFAZ: ${r.cStat} - ${r.xMotivo}`);
     let registrados = 0;
+    let respondidos = 0;
+    const enviadas = new Set(pendentes.map((p) => p.chave));
     for (const ev of r.eventos) {
       if (!ev.chave) continue;
+      if (enviadas.has(ev.chave)) respondidos++;
       const ok = EVENTO_REGISTRADO.has(ev.cStat);
       if (ok) registrados++;
       await c.admin
@@ -350,11 +367,11 @@ async function enviarCiencias(c: Contexto): Promise<{ erro: string | null }> {
       codigo: r.cStat,
       mensagem: `${registrados} de ${pendentes.length} ciência(s) registrada(s).`,
     });
-    return { erro: null };
+    return { erro: null, enviados: pendentes.length, respondidos };
   } catch (e) {
     const erro = mensagemDe(e);
     await registrarExecucao(c, "ciencia", iniciado, { resultado: "erro", mensagem: erro });
-    return { erro };
+    return { erro, enviados: 0, respondidos: 0 };
   }
 }
 

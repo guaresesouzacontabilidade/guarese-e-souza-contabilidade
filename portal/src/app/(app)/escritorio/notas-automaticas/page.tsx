@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CloudDownload, FileArchive } from "lucide-react";
+import { CloudDownload, FileArchive, FileSpreadsheet } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormLoteXml } from "@/components/lotes-xml/form-lote";
+import { BotaoPedirXmlCarteira } from "@/components/notas-automaticas/notas-automaticas";
+import { FormPlanilhaEntradas } from "@/components/notas-automaticas/planilha-entradas";
 import { TabelaLotes, emPreparo, tiposTexto, type LoteXml } from "@/components/lotes-xml/tabela-lotes";
 import { AtualizarEnquanto } from "@/components/ui/atualizar-enquanto";
 import { pedirLotesXmlCarteira } from "@/lib/lotes-xml/acoes";
@@ -27,21 +29,40 @@ export default async function NotasAutomaticasCarteira() {
   const desde = `${somarDias(hoje, -30)}T00:00:00Z`;
   const resultado = await Promise.all([
     buscarTudo((de, ate) => s.supabase.from("empresas").select("id, razao_social, nome_fantasia, documento").order("razao_social").range(de, ate)),
-    buscarTudo((de, ate) => s.supabase.from("notas_automaticas").select("empresa_id, pausada, nfe_ativa, nfse_ativa, erros_seguidos, certificado_valido_ate, ultima_execucao, ultimo_erro, buscar_desde").range(de, ate)),
+    buscarTudo((de, ate) =>
+      s.supabase
+        .from("notas_automaticas")
+        .select("empresa_id, pausada, nfe_ativa, nfse_ativa, ciencia_automatica, erros_seguidos, certificado_valido_ate, ultima_execucao, ultimo_erro, buscar_desde")
+        .range(de, ate),
+    ),
     buscarTudo((de, ate) => s.supabase.from("documentos").select("empresa_id").eq("origem", "automatica").gte("enviado_em", desde).range(de, ate)),
+    // NF-e recebidas só em resumo (sem o XML completo) e ainda sem a ciência da emissão
+    buscarTudo((de, ate) =>
+      s.supabase
+        .from("nfe_resumos")
+        .select("empresa_id")
+        .eq("situacao", "autorizada")
+        .is("documento_id", null)
+        .is("ciencia_em", null)
+        .is("ciencia_retorno", null)
+        .order("id")
+        .range(de, ate),
+    ),
   ])
-    .then(([empresas, configs, docs]) => ({ empresas, configs, docs, erro: null as string | null }))
-    .catch((e: unknown) => ({ empresas: [], configs: [], docs: [], erro: mensagemErro(e) }));
+    .then(([empresas, configs, docs, resumos]) => ({ empresas, configs, docs, resumos, erro: null as string | null }))
+    .catch((e: unknown) => ({ empresas: [], configs: [], docs: [], resumos: [], erro: mensagemErro(e) }));
   const porEmpresa = new Map(resultado.configs.map((c) => [c.empresa_id, c]));
   const trazidas = new Map<string, number>();
   for (const d of resultado.docs) trazidas.set(d.empresa_id, (trazidas.get(d.empresa_id) ?? 0) + 1);
+  const soResumo = new Map<string, number>();
+  for (const r of resultado.resumos) soResumo.set(r.empresa_id, (soResumo.get(r.empresa_id) ?? 0) + 1);
 
   const linhas = resultado.empresas
     .map((e) => {
       const cfg = porEmpresa.get(e.id) ?? null;
       const situacao = situacaoNotas(cfg?.certificado_valido_ate ? { valido_ate: cfg.certificado_valido_ate } : null, cfg);
       const dias = cfg?.certificado_valido_ate ? diasEntre(hoje, cfg.certificado_valido_ate.slice(0, 10)) : null;
-      return { ...e, cfg, situacao, dias, notas: trazidas.get(e.id) ?? 0 };
+      return { ...e, cfg, situacao, dias, notas: trazidas.get(e.id) ?? 0, soResumo: soResumo.get(e.id) ?? 0 };
     })
     .sort((a, b) => {
       const ordem = { erro: 0, vencido: 1, pausada: 2, ativa: 3, desconectada: 4 } as const;
@@ -51,6 +72,13 @@ export default async function NotasAutomaticasCarteira() {
   const comErro = linhas.filter((l) => l.situacao === "erro" || l.situacao === "vencido").length;
   const vencendo = linhas.filter((l) => l.dias !== null && l.dias >= 0 && l.dias <= 30).length;
   const chaveServidor = Boolean(envServidor.certificadosChave());
+  const totalSoResumo = resultado.resumos.length;
+  // Empresas com certificado válido em que as próximas NF-e chegariam só em resumo
+  const buscando = (l: (typeof linhas)[number]) => l.situacao === "ativa" || l.situacao === "erro";
+  const semCiencia = linhas.filter((l) => buscando(l) && !(l.cfg?.ciencia_automatica && l.cfg.nfe_ativa)).length;
+  const aCaminho = linhas.filter((l) => buscando(l) && l.cfg?.ciencia_automatica && l.cfg.nfe_ativa).reduce((t, l) => t + l.soResumo, 0);
+  // Só em resumo em empresas pausadas ou sem certificado válido: a ciência não sai até resolver na empresa
+  const paradas = linhas.filter((l) => !buscando(l)).reduce((t, l) => t + l.soResumo, 0);
 
   // Lotes de XML pedidos para a carteira nos últimos 8 dias, agrupados por pedido
   const { data: lotesCarteira } = await s.supabase
@@ -84,11 +112,66 @@ export default async function NotasAutomaticasCarteira() {
           com o certificado da empresa.
         </Alerta>
       ) : null}
-      <div className="mb-4 grid gap-3 sm:grid-cols-3 [&>*]:min-w-0">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
         <Indicador rotulo="Busca ativa" valor={ativas} tom={ativas ? "sucesso" : "neutro"} />
         <Indicador rotulo="Com erro ou vencido" valor={comErro} tom={comErro ? "perigo" : "neutro"} />
         <Indicador rotulo="Certificado vence em 30 dias" valor={vencendo} tom={vencendo ? "alerta" : "neutro"} />
+        <Indicador rotulo="NF-e só em resumo" valor={totalSoResumo} tom={totalSoResumo ? "alerta" : "neutro"} detalhe="sem o XML completo e sem a ciência" href="#nfe-entrada" />
       </div>
+      <Card className="mb-4 scroll-mt-20" id="nfe-entrada">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="size-4" /> NF-e de entrada da carteira
+          </CardTitle>
+          <CardDescription>
+            Planilha com as NF-e de entrada emitidas no mês para todas as empresas (as recebidas só em resumo e as que já têm o XML no portal), com
+            fornecedor, valor, situação, chave de acesso, a coluna “XML completo no portal” e uma aba com os totais por empresa.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FormPlanilhaEntradas meses={meses} padrao={padrao} />
+          {totalSoResumo || semCiencia ? (
+            <Alerta
+              tom="alerta"
+              titulo={
+                totalSoResumo
+                  ? `${totalSoResumo === 1 ? "1 NF-e esperando" : `${totalSoResumo} NF-e esperando`} o XML completo`
+                  : `Ciência automática desligada em ${semCiencia === 1 ? "1 empresa" : `${semCiencia} empresas`}`
+              }
+            >
+              <p>
+                A SEFAZ só libera o XML completo da NF-e recebida depois da ciência da emissão. Com o XML no portal, as notas entram no XML da
+                carteira em lote.
+              </p>
+              <ul className="list-disc space-y-0.5 pl-5">
+                {semCiencia ? (
+                  <li>
+                    Ciência automática desligada em {semCiencia === 1 ? "1 empresa com certificado válido" : `${semCiencia} empresas com certificado válido`}:
+                    as notas delas chegam só em resumo.
+                  </li>
+                ) : null}
+                {aCaminho ? (
+                  <li>
+                    {aCaminho === 1 ? "1 NF-e de empresa" : `${aCaminho} NF-e de empresas`} com a ciência automática ligada: o XML chega nas próximas
+                    buscas.
+                  </li>
+                ) : null}
+                {paradas ? (
+                  <li>
+                    {paradas === 1 ? "1 NF-e é de empresa" : `${paradas} NF-e são de empresas`} com a busca pausada ou sem certificado válido: resolva
+                    na página da empresa (lista abaixo).
+                  </li>
+                ) : null}
+              </ul>
+              {semCiencia ? (
+                <div className="pt-2">
+                  <BotaoPedirXmlCarteira />
+                </div>
+              ) : null}
+            </Alerta>
+          ) : null}
+        </CardContent>
+      </Card>
       <Card className="mb-4 scroll-mt-20" id="lotes-xml">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -151,6 +234,11 @@ export default async function NotasAutomaticasCarteira() {
                           {l.nome_fantasia ?? l.razao_social}
                         </Link>
                         <span className="block text-xs text-muted-foreground">{l.documento ? formatarCnpj(l.documento) : ""}</span>
+                        {l.soResumo ? (
+                          <span className="block text-xs text-alerta-fg">
+                            {l.soResumo === 1 ? "1 NF-e só em resumo" : `${l.soResumo} NF-e só em resumo`}
+                          </span>
+                        ) : null}
                         {l.cfg?.ultimo_erro && (l.situacao === "erro" || l.situacao === "vencido") ? (
                           <span className="block max-w-md truncate text-xs text-perigo" title={l.cfg.ultimo_erro}>
                             {l.cfg.ultimo_erro}

@@ -32,7 +32,13 @@ export function FormularioAcao({
   atualizarAoSucesso = true,
   id,
 }: FormularioAcaoProps) {
-  const [estado, despachar, pendente] = useActionState(acao, estadoInicial);
+  const [estado, despachar, pendente] = useActionState(async (anterior: ResultadoAcao, fd: FormData) => {
+    const r = await acao(anterior, fd);
+    // A confirmação sai aqui, e não no efeito abaixo: quando a resposta já atualiza a
+    // página e o formulário some dela (ex.: o aviso que tinha o botão), o efeito não roda.
+    if (r.ok && r.mensagem) toast.success(r.mensagem);
+    return r;
+  }, estadoInicial);
   const ref = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const ultimo = useRef<ResultadoAcao>(estadoInicial);
@@ -41,7 +47,6 @@ export function FormularioAcao({
     if (estado === ultimo.current) return;
     ultimo.current = estado;
     if (estado.ok) {
-      if (estado.mensagem) toast.success(estado.mensagem);
       if (resetarAoSucesso) ref.current?.reset();
       aoSucesso?.(estado);
       if (atualizarAoSucesso) router.refresh();

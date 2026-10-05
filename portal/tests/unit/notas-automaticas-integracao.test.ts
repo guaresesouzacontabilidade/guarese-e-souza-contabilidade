@@ -313,5 +313,44 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
     expect(nsuNfse?.ignorado).toBe(false);
     expect(nsuNfse?.documento_id).toBeTruthy();
   }, 120_000);
+
+  it("ciência em lotes: 45 NF-e só em resumo recebem a ciência numa única busca (lotes de 20, 20 e 5)", async () => {
+    const { executarNotasAutomaticas } = await import("@/lib/notas-automaticas/sincronizar");
+    await admin.from("nfe_resumos").delete().eq("empresa_id", empresaId);
+    const chaves = Array.from({ length: 45 }, (_, i) => `1726095556667700018855001${String(70000 + i).padStart(9, "0")}1${String(70000 + i).padStart(8, "0")}0`);
+    const { error } = await admin.from("nfe_resumos").insert(
+      chaves.map((chave, i) => ({
+        empresa_id: empresaId,
+        chave,
+        emitente_documento: "55566677000188",
+        emitente_nome: "FORNECEDOR LOTE (FICTICIO)",
+        data_emissao: "2026-09-15T10:00:00-03:00",
+        tipo_operacao: "entrada",
+        valor: 10 + i,
+        recebido_em: new Date(Date.now() - (45 - i) * 1000).toISOString(),
+      })),
+    );
+    if (error) throw error;
+    // Só a ciência: a NF-e ainda espera a hora da SEFAZ e a NFS-e não está na vez
+    const depois = new Date(Date.now() + 3_600_000).toISOString();
+    await admin
+      .from("notas_automaticas")
+      .update({ ciencia_automatica: true, nfe_ativa: true, pausada: false, nfe_proxima: depois, nfse_proxima: depois, executando_ate: null, erros_seguidos: 0 })
+      .eq("empresa_id", empresaId);
+    await admin.from("notas_automaticas_execucoes").delete().eq("empresa_id", empresaId);
+    const antes = eventosRecebidos.length;
+    const job = { id: 4, tipo: "notas_automaticas", payload: { empresa_id: empresaId } } as never;
+    const r = (await executarNotasAutomaticas(admin as never, job, {
+      urls: { distribuicao: `${base}/dist`, evento: `${base}/evento`, nfse: `${base}/nfse` },
+      ca: [ac.pem],
+    })) as { erros: string[] };
+    expect(r.erros).toEqual([]);
+    const lotes = eventosRecebidos.slice(antes).map((corpo) => [...corpo.matchAll(/<chNFe>(\d{44})<\/chNFe>/g)].length);
+    expect(lotes).toEqual([20, 20, 5]);
+    const { count: semCiencia } = await admin.from("nfe_resumos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).is("ciencia_em", null);
+    expect(semCiencia).toBe(0);
+    const { data: execucoes } = await admin.from("notas_automaticas_execucoes").select("servico, resumos").eq("empresa_id", empresaId).order("iniciado_em");
+    expect(execucoes?.map((e) => `${e.servico}:${e.resumos}`)).toEqual(["ciencia:20", "ciencia:20", "ciencia:5"]);
+  }, 120_000);
 });
 

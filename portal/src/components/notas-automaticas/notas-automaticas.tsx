@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CalendarRange, KeyRound, RefreshCw, Trash2 } from "lucide-react";
+import { CalendarRange, FileDown, KeyRound, RefreshCw, Trash2 } from "lucide-react";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -11,6 +11,8 @@ import {
   buscarNotasAgora,
   cadastrarCertificado,
   definirMesInicial,
+  pedirXmlCompletos,
+  pedirXmlCompletosCarteira,
   removerCertificado,
   salvarPreferenciasNotas,
 } from "@/lib/notas-automaticas/acoes";
@@ -252,5 +254,46 @@ export function ApagarNotasAnteriores({ empresaId, quantidade, mesInicial }: { e
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+const CONFIRMAR_CIENCIA = {
+  titulo: "Pedir os XML completos?",
+  descricao:
+    "O portal registra na SEFAZ a ciência da emissão das NF-e recebidas só em resumo. A ciência só informa que a empresa tomou conhecimento da nota — não confirma nem recusa a operação — e libera o XML completo. A partir daí, as próximas NF-e recebidas também terão a ciência registrada sozinhas (dá para desligar em “O que buscar”).",
+  textoConfirmar: "Pedir os XML",
+};
+
+/** Liga a ciência automática da empresa para a SEFAZ liberar o XML completo das NF-e só em resumo. */
+export function BotaoPedirXml({ empresaId, pausada }: { empresaId: string; pausada?: boolean }) {
+  return (
+    <BotaoAcao
+      acao={pedirXmlCompletos.bind(null, empresaId)}
+      variante="contorno"
+      tamanho="sm"
+      confirmar={{
+        ...CONFIRMAR_CIENCIA,
+        descricao: pausada ? `${CONFIRMAR_CIENCIA.descricao} A busca, que está pausada, volta a funcionar.` : CONFIRMAR_CIENCIA.descricao,
+      }}
+    >
+      <FileDown /> Pedir os XML completos
+    </BotaoAcao>
+  );
+}
+
+/** Escritório: liga a ciência automática nas empresas da carteira com certificado válido. */
+export function BotaoPedirXmlCarteira() {
+  return (
+    <BotaoAcao
+      acao={pedirXmlCompletosCarteira}
+      variante="contorno"
+      confirmar={{
+        titulo: "Pedir os XML completos de todas as empresas?",
+        descricao: `${CONFIRMAR_CIENCIA.descricao} Vale para todas as empresas com certificado digital válido; as que estão com a busca pausada continuam pausadas.`,
+        textoConfirmar: "Pedir para todas",
+      }}
+    >
+      <FileDown /> Pedir os XML de todas as empresas
+    </BotaoAcao>
   );
 }

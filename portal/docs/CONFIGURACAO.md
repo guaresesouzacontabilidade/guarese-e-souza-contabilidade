@@ -216,6 +216,7 @@ A busca automática traz as notas fiscais de cada empresa direto dos serviços o
 - Roda pela fila de tarefas, de hora em hora por empresa. A SEFAZ exige 1 hora de espera depois de uma consulta sem documentos novos (código 137) ou ao chegar ao último NSU; com o código 656 (consumo indevido) a SEFAZ bloqueia por 1 hora — o portal respeita as duas regras.
 - Cada documento é guardado uma vez (controle por NSU e pela chave). Notas e eventos que já estavam no portal (enviados pelo cliente) não são duplicados; o resumo fica ligado ao XML existente.
 - As manifestações da própria empresa (ciência, confirmação) não viram documento.
+- Ciência da emissão: enviada em lotes de até 20 eventos (o máximo da SEFAZ por lote), até 5 lotes — 100 notas — por busca, só para as NF-e recebidas em resumo que ainda não têm o XML. Uma nota com a ciência recusada pela SEFAZ não é reenviada (o motivo fica na tela). O botão **Pedir os XML completos** (empresa) e **Pedir os XML de todas as empresas** (carteira) só ligam essa opção; o envio segue as mesmas regras e o mesmo horário da busca.
 - Erros (certificado recusado, serviço fora do ar) ficam no histórico da empresa e a próxima tentativa é espaçada (15 minutos, 30 minutos, 1 hora... até 6 horas). Nada é inventado quando um serviço falha.
 - Certificado vencido: a busca para e a tela pede o certificado renovado.
 

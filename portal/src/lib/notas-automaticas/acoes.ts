@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { exigirAdmin, obterContextoEmpresa } from "@/lib/auth/sessao";
+import { exigirAdmin, exigirEquipe, obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { competenciaAtual, lerCompetencia } from "@/lib/competencia";
 import { envServidor } from "@/lib/env-servidor";
@@ -179,4 +179,108 @@ export async function apagarNotasAnteriores(empresaId: string, _anterior: Result
   return sucesso(
     `Apagados: ${r.documentos ?? 0} arquivo(s), ${r.notas ?? 0} nota(s) lida(s), ${r.lancamentos ?? 0} lançamento(s) sugerido(s) e ${r.resumos ?? 0} resumo(s) de NF-e. A exclusão ficou registrada na auditoria.`,
   );
+}
+
+const TEXTO_XML_A_CAMINHO =
+  "A ciência da emissão das NF-e recebidas só em resumo é registrada na SEFAZ nas próximas buscas (até 100 notas por busca), e a SEFAZ libera o XML completo logo depois — normalmente em algumas horas. Os XML aparecem em Documentos e passam a entrar no XML do mês em lote.";
+
+type Cliente = Awaited<ReturnType<typeof exigirEquipe>>["supabase"];
+
+/** NF-e da empresa recebidas só em resumo que ainda podem receber a ciência (nem registrada nem recusada pela SEFAZ). */
+async function temNfeSoEmResumo(supabase: Cliente, empresaId: string) {
+  const { count } = await supabase
+    .from("nfe_resumos")
+    .select("id", { count: "exact", head: true })
+    .eq("empresa_id", empresaId)
+    .eq("situacao", "autorizada")
+    .is("documento_id", null)
+    .is("ciencia_em", null)
+    .is("ciencia_retorno", null);
+  return count ?? 0;
+}
+
+/**
+ * Liga a ciência da emissão (e a busca da NF-e, sem a qual a ciência não é
+ * enviada), mantendo a NFS-e como está. Só retoma uma busca pausada quando
+ * `retomar` (pedido feito na própria empresa).
+ */
+async function ligarCiencia(
+  supabase: Cliente,
+  empresaId: string,
+  cfg: { nfe_ativa: boolean; nfse_ativa: boolean; pausada: boolean; ciencia_automatica: boolean },
+  retomar: boolean,
+) {
+  const pausada = cfg.pausada && !retomar;
+  if (cfg.ciencia_automatica && cfg.nfe_ativa && cfg.pausada === pausada) return { error: null, mudou: false };
+  const { error } = await supabase.rpc("salvar_notas_automaticas", { p_empresa_id: empresaId, p_nfe: true, p_nfse: cfg.nfse_ativa, p_ciencia: true, p_pausada: pausada });
+  return { error, mudou: true };
+}
+
+/** Empresa: pede o XML completo das NF-e recebidas só em resumo (ciência da emissão automática). */
+export async function pedirXmlCompletos(empresaId: string): Promise<ResultadoAcao> {
+  const ctx = await contexto(empresaId);
+  if (!ctx) return falha("Seu acesso não permite alterar a busca automática desta empresa.");
+  const { data: cfg } = await ctx.supabase.from("notas_automaticas").select("nfe_ativa, nfse_ativa, pausada, ciencia_automatica, certificado_valido_ate").eq("empresa_id", empresaId).maybeSingle();
+  if (!cfg?.certificado_valido_ate || new Date(cfg.certificado_valido_ate).getTime() <= Date.now()) {
+    return falha("Cadastre um certificado digital válido da empresa: a ciência da emissão é registrada na SEFAZ com ele.");
+  }
+  const { error, mudou } = await ligarCiencia(ctx.supabase, empresaId, cfg, true);
+  if (error) return falha(mensagemErro(error));
+  // Já estava tudo ligado: a próxima busca começa agora (a ciência vai em toda busca)
+  if (!mudou) {
+    const { error: e2 } = await ctx.supabase.rpc("buscar_notas_agora", { p_empresa_id: empresaId });
+    if (e2) return falha(mensagemErro(e2));
+  }
+  processarFilaDepois({ tipos: ["notas_automaticas", "processar_documento"] });
+  revalidar(empresaId);
+  return sucesso(`${mudou ? "Ciência automática ligada." : "A ciência automática já estava ligada; a busca começou agora."} ${TEXTO_XML_A_CAMINHO}`);
+}
+
+/**
+ * Escritório: liga a ciência automática em todas as empresas com certificado
+ * válido que ainda não a têm (e nas que têm NF-e só em resumo com a busca da
+ * NF-e desligada). Empresas com a busca pausada continuam pausadas.
+ */
+export async function pedirXmlCompletosCarteira(): Promise<ResultadoAcao> {
+  const s = await exigirEquipe();
+  const { data: configs, error } = await s.supabase
+    .from("notas_automaticas")
+    .select("empresa_id, nfe_ativa, nfse_ativa, pausada, ciencia_automatica, certificado_valido_ate")
+    .gt("certificado_valido_ate", new Date().toISOString());
+  if (error) return falha(mensagemErro(error));
+  let ligadas = 0;
+  let pausadas = 0;
+  const falhas: string[] = [];
+  for (const cfg of configs ?? []) {
+    if (cfg.ciencia_automatica && cfg.nfe_ativa) {
+      if (cfg.pausada && (await temNfeSoEmResumo(s.supabase, cfg.empresa_id))) pausadas++;
+      continue;
+    }
+    // NF-e desligada de propósito e nada esperando o XML: fica como está
+    if (!cfg.nfe_ativa && !(await temNfeSoEmResumo(s.supabase, cfg.empresa_id))) continue;
+    const { error: e } = await ligarCiencia(s.supabase, cfg.empresa_id, cfg, false);
+    if (e) {
+      falhas.push(mensagemErro(e));
+      continue;
+    }
+    ligadas++;
+    if (cfg.pausada) pausadas++;
+    revalidatePath(`/e/${cfg.empresa_id}/notas-automaticas`);
+  }
+  if (ligadas) processarFilaDepois({ tipos: ["notas_automaticas", "processar_documento"] });
+  revalidatePath("/escritorio/notas-automaticas");
+  if (!ligadas && falhas.length) return falha(falhas[0]);
+  const partes = [
+    ligadas
+      ? `Ciência automática ligada em ${ligadas === 1 ? "1 empresa" : `${ligadas} empresas`}.`
+      : "A ciência automática já estava ligada em todas as empresas com certificado válido.",
+  ];
+  if (falhas.length) partes.push(`${falhas.length === 1 ? "1 empresa não pôde ser alterada" : `${falhas.length} empresas não puderam ser alteradas`}: ${falhas[0]}`);
+  if (pausadas) {
+    partes.push(
+      `${pausadas === 1 ? "1 empresa está com a busca pausada" : `${pausadas} empresas estão com a busca pausada`}: a ciência só é registrada quando a busca for retomada na página da empresa.`,
+    );
+  }
+  partes.push(TEXTO_XML_A_CAMINHO);
+  return sucesso(partes.join(" "));
 }
