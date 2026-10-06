@@ -201,8 +201,15 @@ export function tipoEventoDoProc(xml: string): string | null {
 }
 
 // -----------------------------------------------------------------------------
-// Ciência da emissão (evento 210210) com assinatura XML (RSA-SHA1, C14N)
+// Manifestação do destinatário com assinatura XML (RSA-SHA1, C14N): ciência da
+// emissão (210210, automática) e confirmação da operação (210200, pedida por uma pessoa)
 // -----------------------------------------------------------------------------
+
+export const EVENTOS_MANIFESTACAO = {
+  ciencia: { tipo: "210210", descricao: "Ciencia da Operacao" },
+  confirmacao: { tipo: "210200", descricao: "Confirmacao da Operacao" },
+} as const;
+export type Manifestacao = keyof typeof EVENTOS_MANIFESTACAO;
 
 /** Data e hora no fuso de Tocantins (UTC−3, sem horário de verão). */
 export function dataHoraBrasil(d: Date): string {
@@ -215,7 +222,8 @@ export function dataHoraBrasil(d: Date): string {
  * espaços entre elementos e com os namespaces declarados no próprio elemento,
  * de modo que o resumo (digest) calculado aqui é o mesmo que a SEFAZ calcula.
  */
-export function eventoCienciaAssinado(p: {
+export function eventoManifestacaoAssinado(p: {
+  manifestacao: Manifestacao;
   chave: string;
   cnpj: string;
   ambiente: Ambiente;
@@ -225,12 +233,13 @@ export function eventoCienciaAssinado(p: {
   sequencia?: number;
 }): string {
   if (!/^[0-9]{44}$/.test(p.chave)) throw new Error("Chave de acesso inválida.");
+  const ev = EVENTOS_MANIFESTACAO[p.manifestacao];
   const seq = p.sequencia ?? 1;
-  const id = `ID210210${p.chave}${String(seq).padStart(2, "0")}`;
+  const id = `ID${ev.tipo}${p.chave}${String(seq).padStart(2, "0")}`;
   const filhos =
     `<cOrgao>91</cOrgao><tpAmb>${p.ambiente === "producao" ? 1 : 2}</tpAmb><CNPJ>${escapar(p.cnpj)}</CNPJ><chNFe>${p.chave}</chNFe>` +
-    `<dhEvento>${dataHoraBrasil(p.quando)}</dhEvento><tpEvento>210210</tpEvento><nSeqEvento>${seq}</nSeqEvento><verEvento>1.00</verEvento>` +
-    '<detEvento versao="1.00"><descEvento>Ciencia da Operacao</descEvento></detEvento>';
+    `<dhEvento>${dataHoraBrasil(p.quando)}</dhEvento><tpEvento>${ev.tipo}</tpEvento><nSeqEvento>${seq}</nSeqEvento><verEvento>1.00</verEvento>` +
+    `<detEvento versao="1.00"><descEvento>${ev.descricao}</descEvento></detEvento>`;
   const canonico = `<infEvento xmlns="${NS_NFE}" Id="${id}">${filhos}</infEvento>`;
   const digest = createHash("sha1").update(canonico, "utf8").digest("base64");
   const signedInfo =
@@ -250,6 +259,11 @@ export function eventoCienciaAssinado(p: {
     `<Signature xmlns="${NS_DSIG}">${signedInfo.replace(` xmlns="${NS_DSIG}"`, "")}<SignatureValue>${assinatura}</SignatureValue>` +
     `<KeyInfo><X509Data><X509Certificate>${certificado}</X509Certificate></X509Data></KeyInfo></Signature></evento>`
   );
+}
+
+/** Ciência da emissão (210210). */
+export function eventoCienciaAssinado(p: Omit<Parameters<typeof eventoManifestacaoAssinado>[0], "manifestacao">): string {
+  return eventoManifestacaoAssinado({ ...p, manifestacao: "ciencia" });
 }
 
 export function montarEnvioEventos(eventos: string[], idLote: string) {

@@ -37,7 +37,9 @@ export async function GET(req: NextRequest) {
         filtrar(
           s.supabase
             .from("nfe_resumos")
-            .select("empresa_id, chave, emitente_documento, emitente_nome, emitente_ie, data_emissao, tipo_operacao, valor, situacao, ciencia_em, ciencia_retorno, documento_id"),
+            .select(
+              "empresa_id, chave, emitente_documento, emitente_nome, emitente_ie, data_emissao, tipo_operacao, valor, situacao, ciencia_em, ciencia_retorno, documento_id, confirmacao_pedida_em, confirmacao_em, confirmacao_retorno",
+            ),
         )
           .gte("data_emissao", `${comp}T00:00:00${FUSO}`)
           .lt("data_emissao", `${proximo}T00:00:00${FUSO}`)
@@ -92,11 +94,20 @@ export async function GET(req: NextRequest) {
   const ws = wb.addWorksheet("NF-e de entrada", { views: [{ state: "frozen", ySplit: 1 }] });
   const cabecalho = [
     "Empresa", "CNPJ da empresa", "Emissão", "Número", "Série", "Fornecedor / outra parte", "CNPJ/CPF", "Inscrição estadual", "UF",
-    "Valor (R$)", "Situação", "Tipo", "XML completo no portal", "Ciência da emissão", "Chave de acesso", "Natureza da operação", "CFOPs",
+    "Valor (R$)", "Situação", "Tipo", "XML completo no portal", "Ciência da emissão", "Confirmação da operação", "Chave de acesso", "Natureza da operação",
+    "CFOPs",
   ];
   ws.addRow(cabecalho);
   const textoCiencia = (l: LinhaEntrada) =>
     l.ciencia === "registrada" ? "Registrada" : l.ciencia === "recusada" ? `Recusada (${l.cienciaDetalhe ?? ""})` : l.ciencia === "pendente" ? "Não registrada" : "—";
+  const textoConfirmacao = (l: LinhaEntrada) =>
+    l.confirmacao === "registrada"
+      ? "Registrada"
+      : l.confirmacao === "pedida"
+        ? "Pedida (registro na próxima busca)"
+        : l.confirmacao === "recusada"
+          ? `Recusada (${l.confirmacaoDetalhe ?? ""})`
+          : "—";
   for (const l of linhas) {
     const e = porId.get(l.empresaId);
     ws.addRow([
@@ -114,6 +125,7 @@ export async function GET(req: NextRequest) {
       ROTULO_TIPO_ENTRADA[l.tipo],
       l.xmlCompleto ? "Sim" : "Não (só resumo)",
       textoCiencia(l),
+      textoConfirmacao(l),
       l.chave ?? "",
       l.natureza ?? "",
       l.cfops ?? "",
@@ -121,8 +133,8 @@ export async function GET(req: NextRequest) {
   }
   ws.getColumn(3).numFmt = "dd/mm/yyyy";
   ws.getColumn(10).numFmt = '"R$" #,##0.00';
-  ws.getColumn(15).numFmt = "@";
-  ws.columns.forEach((c, i) => (c.width = [30, 20, 12, 10, 7, 36, 21, 18, 6, 14, 14, 30, 18, 20, 48, 30, 14][i] ?? 14));
+  ws.getColumn(16).numFmt = "@";
+  ws.columns.forEach((c, i) => (c.width = [30, 20, 12, 10, 7, 36, 21, 18, 6, 14, 14, 30, 18, 20, 22, 48, 30, 14][i] ?? 14));
   titulo(ws, cabecalho.length);
 
   const wr = wb.addWorksheet("Resumo por empresa", { views: [{ state: "frozen", ySplit: 1 }] });

@@ -352,5 +352,52 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
     const { data: execucoes } = await admin.from("notas_automaticas_execucoes").select("servico, resumos").eq("empresa_id", empresaId).order("iniciado_em");
     expect(execucoes?.map((e) => `${e.servico}:${e.resumos}`)).toEqual(["ciencia:20", "ciencia:20", "ciencia:5"]);
   }, 120_000);
+
+  it("confirmação da operação pedida: envia o evento 210200 assinado e guarda o retorno da SEFAZ", async () => {
+    const { executarNotasAutomaticas } = await import("@/lib/notas-automaticas/sincronizar");
+    await admin.from("nfe_resumos").delete().eq("empresa_id", empresaId);
+    const chave = "17260955566677000188550010000092011000092010";
+    const { error } = await admin.from("nfe_resumos").insert({
+      empresa_id: empresaId,
+      chave,
+      emitente_nome: "FORNECEDOR CONFIRMACAO (FICTICIO)",
+      data_emissao: "2026-09-02T10:00:00-03:00",
+      valor: 50,
+      ciencia_retorno: "596 - Rejeicao: Evento apresentado apos o prazo permitido para o evento: [10 dias]",
+      confirmacao_pedida_em: new Date().toISOString(),
+    });
+    if (error) throw error;
+    // Ciência desligada: só a confirmação pedida sai; a NF-e e a NFS-e não estão na vez
+    const depois = new Date(Date.now() + 3_600_000).toISOString();
+    await admin
+      .from("notas_automaticas")
+      .update({ ciencia_automatica: false, nfe_ativa: true, pausada: false, nfe_proxima: depois, nfse_proxima: depois, executando_ate: null, erros_seguidos: 0 })
+      .eq("empresa_id", empresaId);
+    await admin.from("notas_automaticas_execucoes").delete().eq("empresa_id", empresaId);
+    const antes = eventosRecebidos.length;
+    const job = { id: 5, tipo: "notas_automaticas", payload: { empresa_id: empresaId } } as never;
+    const r = (await executarNotasAutomaticas(admin as never, job, {
+      urls: { distribuicao: `${base}/dist`, evento: `${base}/evento`, nfse: `${base}/nfse` },
+      ca: [ac.pem],
+    })) as { erros: string[] };
+    expect(r.erros).toEqual([]);
+    const novos = eventosRecebidos.slice(antes);
+    expect(novos).toHaveLength(1);
+    const env = /<envEvento[\s\S]*<\/envEvento>/.exec(novos[0])![0];
+    expect(env).toContain(`<chNFe>${chave}</chNFe>`);
+    expect(env).toContain("<tpEvento>210200</tpEvento>");
+    expect(env).toContain("<descEvento>Confirmacao da Operacao</descEvento>");
+    const doc = new DOMParser().parseFromString(env, "text/xml");
+    const certEnviado = /<X509Certificate>([^<]+)<\/X509Certificate>/.exec(env)![1];
+    const v = new SignedXml({ publicCert: `-----BEGIN CERTIFICATE-----\n${certEnviado}\n-----END CERTIFICATE-----` });
+    v.loadSignature(doc.getElementsByTagNameNS("http://www.w3.org/2000/09/xmldsig#", "Signature")[0]);
+    expect(v.checkSignature(env)).toBe(true);
+    const { data: nota } = await admin.from("nfe_resumos").select("confirmacao_em, confirmacao_retorno, ciencia_em").eq("empresa_id", empresaId).eq("chave", chave).single();
+    expect(nota?.confirmacao_em).not.toBeNull();
+    expect(nota?.confirmacao_retorno).toMatch(/^135 - /);
+    expect(nota?.ciencia_em).toBeNull();
+    const { data: execucoes } = await admin.from("notas_automaticas_execucoes").select("servico, resultado, resumos").eq("empresa_id", empresaId);
+    expect(execucoes?.map((e) => `${e.servico}:${e.resultado}:${e.resumos}`)).toEqual(["confirmacao:novos:1"]);
+  }, 120_000);
 });
 

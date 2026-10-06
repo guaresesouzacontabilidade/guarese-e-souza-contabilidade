@@ -910,6 +910,43 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"declaracoes_faturamento": {
+                  Row: {
+                    "assinada_em": string | null,"assinada_path": string | null,"assinada_por": string | null,"assinatura_digital": boolean | null,"cancelada_em": string | null,"cancelada_por": string | null,"cidade": string,"contador_crc": string,"contador_nome": string,"criado_em": string,"criado_por": string | null,"data_declaracao": string,"empresa_id": string,"finalidade": string | null,"id": string,"meses": NonNullable<Json>,"motivo_cancelamento": string | null,"observacao": string | null,"periodo_fim": string,"periodo_inicio": string,"representante_cargo": string | null,"representante_cpf": string | null,"representante_nome": string,"situacao": string,"total": number,"uf": string | null
+                  }
+                  Insert: {
+                    "assinada_em"?: string | null,"assinada_path"?: string | null,"assinada_por"?: string | null,"assinatura_digital"?: boolean | null,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"cidade": string,"contador_crc": string,"contador_nome": string,"criado_em"?: string,"criado_por"?: string | null,"data_declaracao": string,"empresa_id": string,"finalidade"?: string | null,"id"?: string,"meses": NonNullable<Json>,"motivo_cancelamento"?: string | null,"observacao"?: string | null,"periodo_fim": string,"periodo_inicio": string,"representante_cargo"?: string | null,"representante_cpf"?: string | null,"representante_nome": string,"situacao"?: string,"total": number,"uf"?: string | null
+                  }
+                  Update: {
+                    "assinada_em"?: string | null,"assinada_path"?: string | null,"assinada_por"?: string | null,"assinatura_digital"?: boolean | null,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"cidade"?: string,"contador_crc"?: string,"contador_nome"?: string,"criado_em"?: string,"criado_por"?: string | null,"data_declaracao"?: string,"empresa_id"?: string,"finalidade"?: string | null,"id"?: string,"meses"?: NonNullable<Json>,"motivo_cancelamento"?: string | null,"observacao"?: string | null,"periodo_fim"?: string,"periodo_inicio"?: string,"representante_cargo"?: string | null,"representante_cpf"?: string | null,"representante_nome"?: string,"situacao"?: string,"total"?: number,"uf"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "declaracoes_faturamento_assinada_por_fkey"
+      columns: ["assinada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "declaracoes_faturamento_cancelada_por_fkey"
+      columns: ["cancelada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "declaracoes_faturamento_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "declaracoes_faturamento_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"documento_acessos": {
                   Row: {
                     "documento_id": string,"empresa_id": string,"id": number,"ip": string | null,"ocorrido_em": string,"tipo": string,"user_agent": string | null,"user_id": string | null,"versao": number | null
@@ -1271,13 +1308,13 @@ isOneToOne: false
                   ]
                 },"empresas": {
                   Row: {
-                    "ativa": boolean,"atividade_principal": string | null,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnae": string | null,"complemento": string | null,"contador_responsavel_id": string | null,"contribuinte_icms": boolean,"contribuinte_iss": boolean,"controla_estoque": boolean,"created_at": string,"criado_por": string | null,"dados_receita": Json | null,"dados_receita_em": string | null,"data_inicio_atendimento": string | null,"demonstracao": boolean,"documento": string,"email": string | null,"id": string,"inscricao_estadual": string | null,"inscricao_municipal": string | null,"logradouro": string | null,"municipio_ibge": string | null,"nome_fantasia": string | null,"numero": string | null,"observacoes": string | null,"razao_social": string,"regime_tributario": string,"servicos": (string)[],"sugerir_lancamentos_xml": boolean,"telefone": string | null,"tem_empregados": boolean,"tem_pro_labore": boolean,"tipo_pessoa": string,"uf": string | null,"updated_at": string
+                    "ativa": boolean,"atividade_principal": string | null,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnae": string | null,"complemento": string | null,"contador_responsavel_id": string | null,"contribuinte_icms": boolean,"contribuinte_iss": boolean,"controla_estoque": boolean,"created_at": string,"criado_por": string | null,"dados_receita": Json | null,"dados_receita_em": string | null,"data_inicio_atendimento": string | null,"demonstracao": boolean,"documento": string,"email": string | null,"id": string,"inscricao_estadual": string | null,"inscricao_municipal": string | null,"logo_atualizado_em": string | null,"logo_path": string | null,"logradouro": string | null,"municipio_ibge": string | null,"nome_fantasia": string | null,"numero": string | null,"observacoes": string | null,"razao_social": string,"regime_tributario": string,"servicos": (string)[],"sugerir_lancamentos_xml": boolean,"telefone": string | null,"tem_empregados": boolean,"tem_pro_labore": boolean,"tipo_pessoa": string,"uf": string | null,"updated_at": string
                   }
                   Insert: {
-                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"contribuinte_icms"?: boolean,"contribuinte_iss"?: boolean,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"dados_receita"?: Json | null,"dados_receita_em"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento": string,"email"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social": string,"regime_tributario": string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tem_empregados"?: boolean,"tem_pro_labore"?: boolean,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"contribuinte_icms"?: boolean,"contribuinte_iss"?: boolean,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"dados_receita"?: Json | null,"dados_receita_em"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento": string,"email"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social": string,"regime_tributario": string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tem_empregados"?: boolean,"tem_pro_labore"?: boolean,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"contribuinte_icms"?: boolean,"contribuinte_iss"?: boolean,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"dados_receita"?: Json | null,"dados_receita_em"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento"?: string,"email"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social"?: string,"regime_tributario"?: string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tem_empregados"?: boolean,"tem_pro_labore"?: boolean,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"contribuinte_icms"?: boolean,"contribuinte_iss"?: boolean,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"dados_receita"?: Json | null,"dados_receita_em"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento"?: string,"email"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social"?: string,"regime_tributario"?: string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tem_empregados"?: boolean,"tem_pro_labore"?: boolean,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1333,13 +1370,13 @@ isOneToOne: false
                   ]
                 },"escritorio": {
                   Row: {
-                    "avisos_whatsapp_ativo": boolean,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnpj": string,"complemento": string | null,"descricao_sistema": string,"email": string | null,"exigir_2fa_clientes": boolean,"exigir_2fa_equipe": boolean,"id": number,"instagram": string | null,"lembretes_dias": (number)[],"lembretes_email_ativo": boolean,"lembretes_whatsapp_ativo": boolean,"logo_atualizado_em": string | null,"logo_path": string | null,"logradouro": string | null,"mensagem_login": string,"nome_fantasia": string,"nome_sistema": string,"numero": string | null,"razao_social": string,"retencao_padrao_anos": number,"site": string | null,"telefone": string | null,"uf": string | null,"updated_at": string,"updated_by": string | null,"upload_tamanho_maximo_mb": number,"whatsapp": string | null,"whatsapp_phone_number_id": string | null,"whatsapp_template_aviso": string | null,"whatsapp_template_idioma": string,"whatsapp_template_lembrete": string | null,"zip_max_arquivos": number,"zip_max_tamanho_mb": number
+                    "avisos_whatsapp_ativo": boolean,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnpj": string,"complemento": string | null,"contador_crc": string | null,"contador_nome": string | null,"descricao_sistema": string,"email": string | null,"exigir_2fa_clientes": boolean,"exigir_2fa_equipe": boolean,"id": number,"instagram": string | null,"lembretes_dias": (number)[],"lembretes_email_ativo": boolean,"lembretes_whatsapp_ativo": boolean,"logo_atualizado_em": string | null,"logo_path": string | null,"logradouro": string | null,"mensagem_login": string,"nome_fantasia": string,"nome_sistema": string,"numero": string | null,"razao_social": string,"retencao_padrao_anos": number,"site": string | null,"telefone": string | null,"uf": string | null,"updated_at": string,"updated_by": string | null,"upload_tamanho_maximo_mb": number,"whatsapp": string | null,"whatsapp_phone_number_id": string | null,"whatsapp_template_aviso": string | null,"whatsapp_template_idioma": string,"whatsapp_template_lembrete": string | null,"zip_max_arquivos": number,"zip_max_tamanho_mb": number
                   }
                   Insert: {
-                    "avisos_whatsapp_ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnpj": string,"complemento"?: string | null,"descricao_sistema"?: string,"email"?: string | null,"exigir_2fa_clientes"?: boolean,"exigir_2fa_equipe"?: boolean,"id"?: number,"instagram"?: string | null,"lembretes_dias"?: (number)[],"lembretes_email_ativo"?: boolean,"lembretes_whatsapp_ativo"?: boolean,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"mensagem_login"?: string,"nome_fantasia": string,"nome_sistema"?: string,"numero"?: string | null,"razao_social": string,"retencao_padrao_anos"?: number,"site"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"upload_tamanho_maximo_mb"?: number,"whatsapp"?: string | null,"whatsapp_phone_number_id"?: string | null,"whatsapp_template_aviso"?: string | null,"whatsapp_template_idioma"?: string,"whatsapp_template_lembrete"?: string | null,"zip_max_arquivos"?: number,"zip_max_tamanho_mb"?: number
+                    "avisos_whatsapp_ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnpj": string,"complemento"?: string | null,"contador_crc"?: string | null,"contador_nome"?: string | null,"descricao_sistema"?: string,"email"?: string | null,"exigir_2fa_clientes"?: boolean,"exigir_2fa_equipe"?: boolean,"id"?: number,"instagram"?: string | null,"lembretes_dias"?: (number)[],"lembretes_email_ativo"?: boolean,"lembretes_whatsapp_ativo"?: boolean,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"mensagem_login"?: string,"nome_fantasia": string,"nome_sistema"?: string,"numero"?: string | null,"razao_social": string,"retencao_padrao_anos"?: number,"site"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"upload_tamanho_maximo_mb"?: number,"whatsapp"?: string | null,"whatsapp_phone_number_id"?: string | null,"whatsapp_template_aviso"?: string | null,"whatsapp_template_idioma"?: string,"whatsapp_template_lembrete"?: string | null,"zip_max_arquivos"?: number,"zip_max_tamanho_mb"?: number
                   }
                   Update: {
-                    "avisos_whatsapp_ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnpj"?: string,"complemento"?: string | null,"descricao_sistema"?: string,"email"?: string | null,"exigir_2fa_clientes"?: boolean,"exigir_2fa_equipe"?: boolean,"id"?: number,"instagram"?: string | null,"lembretes_dias"?: (number)[],"lembretes_email_ativo"?: boolean,"lembretes_whatsapp_ativo"?: boolean,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"mensagem_login"?: string,"nome_fantasia"?: string,"nome_sistema"?: string,"numero"?: string | null,"razao_social"?: string,"retencao_padrao_anos"?: number,"site"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"upload_tamanho_maximo_mb"?: number,"whatsapp"?: string | null,"whatsapp_phone_number_id"?: string | null,"whatsapp_template_aviso"?: string | null,"whatsapp_template_idioma"?: string,"whatsapp_template_lembrete"?: string | null,"zip_max_arquivos"?: number,"zip_max_tamanho_mb"?: number
+                    "avisos_whatsapp_ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnpj"?: string,"complemento"?: string | null,"contador_crc"?: string | null,"contador_nome"?: string | null,"descricao_sistema"?: string,"email"?: string | null,"exigir_2fa_clientes"?: boolean,"exigir_2fa_equipe"?: boolean,"id"?: number,"instagram"?: string | null,"lembretes_dias"?: (number)[],"lembretes_email_ativo"?: boolean,"lembretes_whatsapp_ativo"?: boolean,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"mensagem_login"?: string,"nome_fantasia"?: string,"nome_sistema"?: string,"numero"?: string | null,"razao_social"?: string,"retencao_padrao_anos"?: number,"site"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"upload_tamanho_maximo_mb"?: number,"whatsapp"?: string | null,"whatsapp_phone_number_id"?: string | null,"whatsapp_template_aviso"?: string | null,"whatsapp_template_idioma"?: string,"whatsapp_template_lembrete"?: string | null,"zip_max_arquivos"?: number,"zip_max_tamanho_mb"?: number
                   }
                   Relationships: [
                     
@@ -2027,16 +2064,22 @@ isOneToOne: false
                   ]
                 },"nfe_resumos": {
                   Row: {
-                    "chave": string,"ciencia_em": string | null,"ciencia_retorno": string | null,"data_emissao": string | null,"documento_id": string | null,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"empresa_id": string,"id": string,"nsu": string | null,"protocolo": string | null,"recebido_em": string,"situacao": string,"tipo_operacao": string | null,"valor": number | null
+                    "chave": string,"ciencia_em": string | null,"ciencia_retorno": string | null,"confirmacao_em": string | null,"confirmacao_pedida_em": string | null,"confirmacao_pedida_por": string | null,"confirmacao_retorno": string | null,"data_emissao": string | null,"documento_id": string | null,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"empresa_id": string,"id": string,"nsu": string | null,"protocolo": string | null,"recebido_em": string,"situacao": string,"tipo_operacao": string | null,"valor": number | null
                   }
                   Insert: {
-                    "chave": string,"ciencia_em"?: string | null,"ciencia_retorno"?: string | null,"data_emissao"?: string | null,"documento_id"?: string | null,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"empresa_id": string,"id"?: string,"nsu"?: string | null,"protocolo"?: string | null,"recebido_em"?: string,"situacao"?: string,"tipo_operacao"?: string | null,"valor"?: number | null
+                    "chave": string,"ciencia_em"?: string | null,"ciencia_retorno"?: string | null,"confirmacao_em"?: string | null,"confirmacao_pedida_em"?: string | null,"confirmacao_pedida_por"?: string | null,"confirmacao_retorno"?: string | null,"data_emissao"?: string | null,"documento_id"?: string | null,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"empresa_id": string,"id"?: string,"nsu"?: string | null,"protocolo"?: string | null,"recebido_em"?: string,"situacao"?: string,"tipo_operacao"?: string | null,"valor"?: number | null
                   }
                   Update: {
-                    "chave"?: string,"ciencia_em"?: string | null,"ciencia_retorno"?: string | null,"data_emissao"?: string | null,"documento_id"?: string | null,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"empresa_id"?: string,"id"?: string,"nsu"?: string | null,"protocolo"?: string | null,"recebido_em"?: string,"situacao"?: string,"tipo_operacao"?: string | null,"valor"?: number | null
+                    "chave"?: string,"ciencia_em"?: string | null,"ciencia_retorno"?: string | null,"confirmacao_em"?: string | null,"confirmacao_pedida_em"?: string | null,"confirmacao_pedida_por"?: string | null,"confirmacao_retorno"?: string | null,"data_emissao"?: string | null,"documento_id"?: string | null,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"empresa_id"?: string,"id"?: string,"nsu"?: string | null,"protocolo"?: string | null,"recebido_em"?: string,"situacao"?: string,"tipo_operacao"?: string | null,"valor"?: number | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "nfe_resumos_confirmacao_pedida_por_fkey"
+      columns: ["confirmacao_pedida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "nfe_resumos_documento_fk"
       columns: ["empresa_id","documento_id"]
 isOneToOne: false
@@ -2914,6 +2957,9 @@ isOneToOne: false
               "area": string,"codigo": string,"config_id": string,"esfera": string,"etapas": (string)[],"fonte": string,"fonte_url": string,"modo": string,"motivo": string,"nome": string,"obrigacao_id": string,"periodicidade": string,"prazo_entrega": string,"prazo_interno_dias_uteis": number,"prazo_pagamento": string,"regra_id": string,"responsavel_id": string,"revisor_id": string,"situacao": string,"tributos": (string)[]
             }[]
                            },
+"cancelar_declaracao_faturamento":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
 "classificar_movimento":
 { Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_contraparte_id"?: string,"p_data_competencia"?: string,"p_descricao"?: string,"p_documento_ids"?: (string)[],"p_movimento_id": string,"p_projeto_id"?: string }; Returns: Json
                            },
@@ -2936,6 +2982,9 @@ isOneToOne: false
                            },
 "confirmar_conciliacao":
 { Args: { "p_conciliacao_id": string,"p_conta_contrapartida"?: string,"p_observacao"?: string,"p_tratamento"?: string }; Returns: Json
+                           },
+"confirmar_operacoes_nfe":
+{ Args: { "p_chaves": (string)[],"p_declaracao": string,"p_empresa_id": string }; Returns: number
                            },
 "confirmar_upload":
 { Args: { "p_versao_id": string }; Returns: Json
@@ -3041,6 +3090,9 @@ isOneToOne: false
 "editar_proposta_regra":
 { Args: { "p_fonte_consultada_em": string,"p_fonte_publicada_em": string,"p_fonte_titulo": string,"p_fonte_url": string,"p_id": string,"p_regra": Json,"p_resumo": string,"p_titulo": string }; Returns: undefined
                            },
+"emitir_declaracao_faturamento":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
 "encerrar_sessao":
 { Args: { "p_sessao_id": string }; Returns: undefined
                            },
@@ -3073,6 +3125,9 @@ isOneToOne: false
                            },
 "expurgar_documentos":
 { Args: { "p_ids": (string)[],"p_motivo": string }; Returns: number
+                           },
+"faturamento_mensal":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
                            },
 "fechar_competencia":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_observacao"?: string }; Returns: undefined
@@ -3254,6 +3309,9 @@ isOneToOne: false
                            },
 "registrar_convite":
 { Args: { "p_email": string,"p_empresa_id": string,"p_envio_erro"?: string,"p_envio_status": string,"p_nome": string,"p_papel": string,"p_permissoes": (string)[],"p_tipo_usuario": string,"p_user_id": string }; Returns: string
+                           },
+"registrar_declaracao_assinada":
+{ Args: { "p_assinatura_digital": boolean,"p_id": string,"p_path": string }; Returns: undefined
                            },
 "registrar_evento":
 { Args: { "p_acao": string,"p_detalhes"?: Json,"p_empresa_id"?: string,"p_entidade": string,"p_entidade_id"?: string,"p_ip"?: string,"p_user_agent"?: string }; Returns: undefined

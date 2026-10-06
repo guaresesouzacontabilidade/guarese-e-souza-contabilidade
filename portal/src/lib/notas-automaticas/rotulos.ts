@@ -20,6 +20,7 @@ export const SERVICO_EXECUCAO: Record<string, string> = {
   nfe: "NF-e (SEFAZ)",
   nfse: "NFS-e (Ambiente Nacional)",
   ciencia: "Ciência da emissão",
+  confirmacao: "Confirmação da operação",
 };
 
 export type SituacaoNotas = "desconectada" | "vencido" | "pausada" | "erro" | "ativa";

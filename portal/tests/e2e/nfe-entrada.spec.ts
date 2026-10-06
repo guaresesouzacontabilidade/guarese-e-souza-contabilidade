@@ -215,3 +215,37 @@ test("cliente pede os XML da própria empresa e só baixa as notas dela", async 
   await expect(cartao.getByText(/A ciência automática está ligada: o portal registra a ciência/)).toBeVisible();
   await expect(cartao.getByRole("button", { name: "Pedir os XML completos" })).toHaveCount(0);
 });
+
+test("cliente confirma a operação da nota com a ciência recusada (declaração obrigatória)", async ({ page }) => {
+  await servico!.from("notas_automaticas").update({ pausada: false, nfe_ativa: true }).eq("empresa_id", oficinaId);
+  await servico!.from("nfe_resumos").update({ confirmacao_pedida_em: null, confirmacao_em: null, confirmacao_retorno: null }).eq("chave", CHAVE_RECUSADA);
+  await entrar(page, `cliente2@${DOMINIO}`);
+  await page.goto(`/e/${oficinaId}/notas-automaticas`);
+  const cartao = page.locator("#nfe-recebidas");
+  const aviso = cartao.getByRole("status").filter({ hasText: "1 NF-e teve a ciência recusada pela SEFAZ" });
+  await expect(aviso).toContainText("confirme a operação (a SEFAZ aceita até 180 dias depois da emissão)");
+  await aviso.getByRole("button", { name: "Confirmar a operação" }).click();
+  const dialogo = page.getByRole("dialog");
+  await expect(dialogo).toContainText("declaração oficial da empresa na SEFAZ");
+  await expect(dialogo).toContainText("FORNECEDOR RESUMO (FICTICIO)");
+  // Sem marcar a declaração, nada é pedido
+  await dialogo.getByRole("button", { name: "Confirmar a operação" }).click();
+  await expect(dialogo.getByText("Marque a declaração para confirmar.").first()).toBeVisible({ timeout: 30_000 });
+  await dialogo.locator('input[name="declaro"]').check();
+  await dialogo.getByRole("button", { name: "Confirmar a operação" }).click();
+  await expect(page.getByText(/Confirmação da operação pedida\. O portal registra na SEFAZ na próxima busca/)).toBeVisible({ timeout: 30_000 });
+  const { data: nota } = await servico!.from("nfe_resumos").select("confirmacao_pedida_em, confirmacao_pedida_por").eq("chave", CHAVE_RECUSADA).single();
+  expect(nota?.confirmacao_pedida_em).not.toBeNull();
+  const { data: aud } = await servico!
+    .from("auditoria")
+    .select("detalhes")
+    .eq("acao", "nfe_confirmar_operacao")
+    .eq("empresa_id", oficinaId)
+    .order("ocorrido_em", { ascending: false })
+    .limit(1)
+    .single();
+  expect((aud?.detalhes as { declaracao?: string })?.declaracao).toMatch(/^Declaro que OFICINA MECANICA EXEMPLO LTDA/);
+  await expect(cartao.getByText("confirmação pedida; registro na próxima busca")).toBeVisible();
+  await expect(cartao.getByRole("button", { name: /Confirmar/ })).toHaveCount(0);
+});
+

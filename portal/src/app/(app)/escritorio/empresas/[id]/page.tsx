@@ -4,13 +4,14 @@ import { ArrowUpRight, Power } from "lucide-react";
 import { exigirEquipe, obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { AbasLink } from "@/components/ui/abas";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alerta } from "@/components/ui/feedback";
 import { BotaoAcao } from "@/components/ui/acao";
 import { FormularioEmpresa } from "@/components/empresas/formulario-empresa";
 import { PainelReceita } from "@/components/empresas/dados-receita";
+import { LogoEmpresa } from "@/components/empresas/logo-empresa";
 import { DadosReceitaSchema } from "@/lib/empresas/receita";
 import { ContatosEmpresa } from "@/components/empresas/contatos";
 import { ConvidarUsuario } from "@/components/usuarios/convite";
@@ -109,19 +110,32 @@ export default async function PaginaEmpresa({ params, searchParams }: PageProps<
     );
   } else {
     const receita = empresa.dados_receita ? DadosReceitaSchema.safeParse(empresa.dados_receita) : null;
+    // Logo num armazenamento privado: endereço temporário, só para quem vê a empresa
+    const { data: logo } = empresa.logo_path ? await ctx.supabase.storage.from("empresas-logos").createSignedUrl(empresa.logo_path, 600) : { data: null };
     conteudo = (
-      <Card>
-        <CardContent className="space-y-5 pt-5">
-          {receita?.success ? <PainelReceita dados={receita.data} /> : null}
-          <FormularioEmpresa
-            acao={atualizarEmpresa.bind(null, id)}
-            inicial={empresa}
-            equipe={equipe ?? []}
-            edicao
-            somenteLeitura={!ctx.pode("empresa.editar")}
-          />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Logo da empresa</CardTitle>
+            <CardDescription>Aparece nas declarações emitidas pelo portal (como a declaração de faturamento), ao lado da logo do escritório.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LogoEmpresa empresaId={id} logoUrl={logo?.signedUrl ?? null} podeEditar={ctx.pode("empresa.editar")} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="space-y-5 pt-5">
+            {receita?.success ? <PainelReceita dados={receita.data} /> : null}
+            <FormularioEmpresa
+              acao={atualizarEmpresa.bind(null, id)}
+              inicial={empresa}
+              equipe={equipe ?? []}
+              edicao
+              somenteLeitura={!ctx.pode("empresa.editar")}
+            />
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 

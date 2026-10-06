@@ -7,7 +7,7 @@ import type { Cabecalho } from "./pdf";
 type Cliente = ContextoEmpresa["supabase"];
 
 /** Logo enviada pelo escritório como data URL (PNG/JPEG) para embutir no PDF. */
-async function logoEmbutida(url: string | null) {
+export async function logoEmbutida(url: string | null) {
   if (!url) return null;
   try {
     const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(5000) });

@@ -9,7 +9,7 @@ import {
   ACAO_EVENTO,
   EVENTO_REGISTRADO,
   URLS_NFE,
-  eventoCienciaAssinado,
+  eventoManifestacaoAssinado,
   lerResumoEvento,
   lerResumoNfe,
   lerRetornoDistribuicao,
@@ -20,6 +20,7 @@ import {
   tipoEventoDoProc,
   type Ambiente,
   type DocumentoDistribuido,
+  type Manifestacao,
 } from "./nfe";
 import { URLS_NFSE, lerRetornoNfse, urlDistribuicaoNfse, type DocumentoNfse } from "./nfse";
 import { importarXmlAutomatico } from "./importar";
@@ -29,7 +30,8 @@ import { importarXmlAutomatico } from "./importar";
  *  1. NF-e: distribuição por NSU na SEFAZ (no máximo 10 consultas por vez);
  *     quando não há documentos novos ou chegou ao último NSU, a próxima
  *     consulta fica para 1 hora depois, como exige a SEFAZ;
- *  2. Ciência da emissão das NF-e recebidas só em resumo (se a empresa ativou);
+ *  2. Ciência da emissão das NF-e recebidas só em resumo (se a empresa ativou)
+ *     e confirmação da operação das notas que uma pessoa pediu para confirmar;
  *  3. NFS-e: distribuição por NSU no Ambiente Nacional.
  * Notas emitidas antes do mês inicial da empresa (buscar_desde) são ignoradas:
  * nada é guardado; o NSU fica marcado como ignorado, com o mês da nota.
@@ -76,7 +78,7 @@ function mensagemDe(e: unknown): string {
 
 async function registrarExecucao(
   c: Contexto,
-  servico: "nfe" | "nfse" | "ciencia",
+  servico: "nfe" | "nfse" | "ciencia" | "confirmacao",
   iniciado: Date,
   r: {
     resultado: "novos" | "sem_novidades" | "limite" | "erro";
@@ -306,41 +308,53 @@ async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServ
 }
 
 /**
- * Ciência da emissão das NF-e recebidas só em resumo: até 5 lotes de 20
- * eventos (o máximo da SEFAZ por lote) por execução. Para no primeiro lote
- * incompleto, com erro ou com alguma nota sem resposta (evita reenviar o mesmo lote).
+ * Manifestação do destinatário das NF-e recebidas só em resumo, em até 5 lotes
+ * de 20 eventos (o máximo da SEFAZ por lote) por execução:
+ *  - ciência da emissão (automática, quando a empresa ativou);
+ *  - confirmação da operação (só as notas que uma pessoa pediu para confirmar).
+ * Para no primeiro lote incompleto, com erro ou com alguma nota sem resposta
+ * (evita reenviar o mesmo lote). Erro de conexão não marca a nota: ela vai de novo na próxima busca.
  */
-async function enviarCiencias(c: Contexto): Promise<{ erro: string | null }> {
+async function enviarManifestacoes(c: Contexto, manifestacao: Manifestacao): Promise<{ erro: string | null }> {
   for (let lote = 0; lote < MAX_LOTES_CIENCIA && Date.now() < c.prazo; lote++) {
-    const r = await enviarLoteCiencia(c);
+    const r = await enviarLoteManifestacao(c, manifestacao);
     if (r.erro || r.enviados < 20 || r.respondidos < r.enviados) return { erro: r.erro };
   }
   return { erro: null };
 }
 
-async function enviarLoteCiencia(c: Contexto): Promise<{ erro: string | null; enviados: number; respondidos: number }> {
-  const { data: pendentes } = await c.admin
-    .from("nfe_resumos")
-    .select("chave")
-    .eq("empresa_id", c.empresaId)
-    .eq("situacao", "autorizada")
-    .is("ciencia_em", null)
-    .is("ciencia_retorno", null)
-    .is("documento_id", null)
-    .order("recebido_em")
-    .limit(20);
-  if (!pendentes?.length) return { erro: null, enviados: 0, respondidos: 0 };
+async function pendentesDeManifestacao(c: Contexto, manifestacao: Manifestacao) {
+  const base = c.admin.from("nfe_resumos").select("chave").eq("empresa_id", c.empresaId).eq("situacao", "autorizada").is("documento_id", null);
+  const { data } =
+    manifestacao === "ciencia"
+      ? await base.is("ciencia_em", null).is("ciencia_retorno", null).order("recebido_em").limit(20)
+      : await base.not("confirmacao_pedida_em", "is", null).is("confirmacao_em", null).is("confirmacao_retorno", null).order("confirmacao_pedida_em").limit(20);
+  return data ?? [];
+}
+
+async function enviarLoteManifestacao(c: Contexto, manifestacao: Manifestacao): Promise<{ erro: string | null; enviados: number; respondidos: number }> {
+  const pendentes = await pendentesDeManifestacao(c, manifestacao);
+  if (!pendentes.length) return { erro: null, enviados: 0, respondidos: 0 };
   const iniciado = new Date();
+  const nome = manifestacao === "ciencia" ? "ciência(s)" : "confirmação(ões) da operação";
   try {
     const quando = new Date(Date.now() - MINUTO);
     const eventos = pendentes.map((p) =>
-      eventoCienciaAssinado({ chave: p.chave, cnpj: c.cnpj, ambiente: AMBIENTE, quando, chavePem: c.credencial.chave, certificadoPem: c.credencial.certificados[0] }),
+      eventoManifestacaoAssinado({
+        manifestacao,
+        chave: p.chave,
+        cnpj: c.cnpj,
+        ambiente: AMBIENTE,
+        quando,
+        chavePem: c.credencial.chave,
+        certificadoPem: c.credencial.certificados[0],
+      }),
     );
     const resp = await requisitar(c.urls.evento, {
       metodo: "POST",
       credencial: c.credencial,
       ca: c.ca,
-        tempoLimiteMs: 20_000,
+      tempoLimiteMs: 20_000,
       corpo: montarEnvioEventos(eventos, String(Date.now()).slice(-15)),
       cabecalhos: { "Content-Type": tipoConteudoSoap(ACAO_EVENTO) },
     });
@@ -351,26 +365,32 @@ async function enviarLoteCiencia(c: Contexto): Promise<{ erro: string | null; en
     let respondidos = 0;
     const enviadas = new Set(pendentes.map((p) => p.chave));
     for (const ev of r.eventos) {
-      if (!ev.chave) continue;
-      if (enviadas.has(ev.chave)) respondidos++;
+      if (!ev.chave || !enviadas.has(ev.chave)) continue;
+      respondidos++;
       const ok = EVENTO_REGISTRADO.has(ev.cStat);
       if (ok) registrados++;
+      const retorno = `${ev.cStat} - ${ev.xMotivo}`.slice(0, 300);
+      const agora = new Date().toISOString();
       await c.admin
         .from("nfe_resumos")
-        .update({ ...(ok ? { ciencia_em: new Date().toISOString() } : {}), ciencia_retorno: `${ev.cStat} - ${ev.xMotivo}`.slice(0, 300) })
+        .update(
+          manifestacao === "ciencia"
+            ? { ...(ok ? { ciencia_em: agora } : {}), ciencia_retorno: retorno }
+            : { ...(ok ? { confirmacao_em: agora } : {}), confirmacao_retorno: retorno },
+        )
         .eq("empresa_id", c.empresaId)
         .eq("chave", ev.chave);
     }
-    await registrarExecucao(c, "ciencia", iniciado, {
+    await registrarExecucao(c, manifestacao, iniciado, {
       resultado: registrados ? "novos" : "sem_novidades",
       resumos: registrados,
       codigo: r.cStat,
-      mensagem: `${registrados} de ${pendentes.length} ciência(s) registrada(s).`,
+      mensagem: `${registrados} de ${pendentes.length} ${nome} registrada(s).`,
     });
     return { erro: null, enviados: pendentes.length, respondidos };
   } catch (e) {
     const erro = mensagemDe(e);
-    await registrarExecucao(c, "ciencia", iniciado, { resultado: "erro", mensagem: erro });
+    await registrarExecucao(c, manifestacao, iniciado, { resultado: "erro", mensagem: erro });
     return { erro, enviados: 0, respondidos: 0 };
   }
 }
@@ -519,9 +539,14 @@ export async function executarNotasAutomaticas(admin: ClienteAdmin, job: Job, te
         proximas.push(r.proxima);
       } else proximas.push(new Date(cfg.nfe_proxima!));
       if (cfg.ciencia_automatica && Date.now() < c.prazo) {
-        const r = await enviarCiencias(c);
+        const r = await enviarManifestacoes(c, "ciencia");
         if (r.erro) erros.push(`Ciência: ${r.erro}`);
       }
+    }
+    // Confirmações pedidas por uma pessoa saem mesmo com a busca da NF-e desligada
+    if (Date.now() < c.prazo) {
+      const r = await enviarManifestacoes(c, "confirmacao");
+      if (r.erro) erros.push(`Confirmação da operação: ${r.erro}`);
     }
     if (cfg.nfse_ativa) {
       if (vencida(cfg.nfse_proxima) && Date.now() < c.prazo) {

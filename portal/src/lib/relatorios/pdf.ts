@@ -13,7 +13,7 @@ import { rotuloMesCurto } from "./periodo";
  * Geração de PDFs no servidor (pdfmake). Sem acesso a URLs externas: a logo
  * enviada pelo escritório é lida antes e embutida como imagem.
  */
-const COR = { marrom: "#4a2c1d", bege: "#f1e8dc", begeForte: "#e6d6c2", cinza: "#6b625b", verde: "#15803d", vermelho: "#b91c1c", amarelo: "#a16207" };
+export const COR = { marrom: "#4a2c1d", bege: "#f1e8dc", begeForte: "#e6d6c2", cinza: "#6b625b", verde: "#15803d", vermelho: "#b91c1c", amarelo: "#a16207" };
 
 
 export interface Cabecalho {
@@ -27,7 +27,8 @@ export interface Cabecalho {
   observacao?: string;
 }
 
-async function pdfmake() {
+/** pdfmake com as fontes do próprio pacote e sem acesso a URLs (também usado nas declarações). */
+export async function carregarPdfMake() {
   const mod = (await import("pdfmake")) as unknown as { default?: PdfMake } & PdfMake;
   const pm = mod.default ?? mod;
   const pasta = join(process.cwd(), "node_modules", "pdfmake", "fonts", "Roboto");
@@ -52,7 +53,7 @@ interface PdfMake {
 }
 
 export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buffer> {
-  const pm = await pdfmake();
+  const pm = await carregarPdfMake();
   const marca: Content = cab.logo
     ? { image: cab.logo.dados, fit: [140, 40] }
     : { svg: logoHorizontalSvg(COR.marrom), width: 132 };

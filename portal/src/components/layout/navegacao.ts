@@ -23,6 +23,7 @@ import {
   ScanSearch,
   PiggyBank,
   CreditCard,
+  FileSignature,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -87,7 +88,10 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   if (p.has("maquininhas.ver")) itens.push({ rotulo: "Maquininhas", href: `${base}/maquininhas`, icone: CreditCard });
   if (p.has("conciliacao.executar")) itens.push({ rotulo: "Conciliação", href: `${base}/conciliacao`, icone: GitCompareArrows });
   if (p.has("fechamento.gerenciar")) itens.push({ rotulo: "Fechamento", href: `${base}/fechamento`, icone: CalendarCheck });
-  if (p.has("relatorios.ver")) itens.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });
+  if (p.has("relatorios.ver")) {
+    itens.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });
+    itens.push({ rotulo: "Declarações", href: `${base}/declaracoes`, icone: FileSignature });
+  }
   if (p.has("calculos.ver")) itens.push({ rotulo: "Cálculos", href: `${base}/calculos`, icone: Calculator });
   if (p.has("auditor.gerenciar")) itens.push({ rotulo: "Auditor fiscal", href: `${base}/auditor-fiscal`, icone: ScanSearch });
   else if (p.has("auditor.ver")) itens.push({ rotulo: "Economia de impostos", href: `${base}/auditor-fiscal`, icone: PiggyBank });

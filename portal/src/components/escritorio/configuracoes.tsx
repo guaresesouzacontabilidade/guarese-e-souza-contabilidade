@@ -43,6 +43,8 @@ export interface DadosEscritorio {
   nome_sistema: string;
   descricao_sistema: string;
   mensagem_login: string;
+  contador_nome: string | null;
+  contador_crc: string | null;
 }
 
 export function FormDadosEscritorio({ esc }: { esc: DadosEscritorio }) {
@@ -104,6 +106,16 @@ export function FormDadosEscritorio({ esc }: { esc: DadosEscritorio }) {
               </Campo>
               <Campo rotulo="Instagram" htmlFor="es-insta" erro={erro("instagram")} ajuda="Somente o usuário, sem @.">
                 <Input id="es-insta" name="instagram" defaultValue={esc.instagram ?? ""} />
+              </Campo>
+            </fieldset>
+            <fieldset className="grid gap-4 sm:grid-cols-3">
+              <legend className="mb-2 text-sm font-semibold text-titulo">Contador responsável</legend>
+              <p className="-mt-1 text-xs text-muted-foreground sm:col-span-3">Sai nas declarações emitidas pelo portal (como a declaração de faturamento), na linha de assinatura do contador.</p>
+              <Campo rotulo="Nome" htmlFor="es-contador" erro={erro("contador_nome")} className="sm:col-span-2">
+                <Input id="es-contador" name="contador_nome" defaultValue={esc.contador_nome ?? ""} maxLength={200} />
+              </Campo>
+              <Campo rotulo="CRC" htmlFor="es-crc" erro={erro("contador_crc")} ajuda="Ex.: TO-012345/O-6">
+                <Input id="es-crc" name="contador_crc" defaultValue={esc.contador_crc ?? ""} maxLength={40} />
               </Campo>
             </fieldset>
             <fieldset className="grid gap-4">

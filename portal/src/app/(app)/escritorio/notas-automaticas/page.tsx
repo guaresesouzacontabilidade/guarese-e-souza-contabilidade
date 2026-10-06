@@ -16,6 +16,7 @@ import { mesesDoLote } from "@/lib/lotes-xml/rotulos";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { buscarTudo } from "@/lib/supabase/paginar";
 import { SITUACAO_NOTAS, situacaoNotas } from "@/lib/notas-automaticas/rotulos";
+import { estadoSemXml } from "@/lib/notas-automaticas/situacao-xml";
 import { envServidor } from "@/lib/env-servidor";
 import { competenciaAtual, diasEntre, hojeISO, somarDias } from "@/lib/competencia";
 import { formatarCnpj, formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
@@ -40,7 +41,7 @@ export default async function NotasAutomaticasCarteira() {
     buscarTudo((de, ate) =>
       s.supabase
         .from("nfe_resumos")
-        .select("empresa_id, ciencia_em, ciencia_retorno")
+        .select("empresa_id, data_emissao, ciencia_em, ciencia_retorno, confirmacao_pedida_em, confirmacao_em, confirmacao_retorno")
         .eq("situacao", "autorizada")
         .is("documento_id", null)
         .order("id")
@@ -52,13 +53,14 @@ export default async function NotasAutomaticasCarteira() {
   const porEmpresa = new Map(resultado.configs.map((c) => [c.empresa_id, c]));
   const trazidas = new Map<string, number>();
   for (const d of resultado.docs) trazidas.set(d.empresa_id, (trazidas.get(d.empresa_id) ?? 0) + 1);
-  // Por empresa: sem a ciência ainda, com a ciência registrada (XML a caminho) e com a ciência recusada pela SEFAZ
+  // Por empresa: sem a ciência ainda, a caminho (ciência ou confirmação registrada ou pedida) e recusadas pela SEFAZ
   const semXmlPorEmpresa = new Map<string, { pendentes: number; aCaminho: number; recusadas: number }>();
   for (const r of resultado.resumos) {
     const t = semXmlPorEmpresa.get(r.empresa_id) ?? { pendentes: 0, aCaminho: 0, recusadas: 0 };
-    if (r.ciencia_em) t.aCaminho++;
-    else if (r.ciencia_retorno) t.recusadas++;
-    else t.pendentes++;
+    const e = estadoSemXml(r);
+    if (e === "aguardando_ciencia") t.pendentes++;
+    else if (e === "ciencia_recusada" || e === "confirmacao_recusada") t.recusadas++;
+    else t.aCaminho++;
     semXmlPorEmpresa.set(r.empresa_id, t);
   }
 
@@ -167,13 +169,14 @@ export default async function NotasAutomaticasCarteira() {
                 ) : null}
                 {aCaminho ? (
                   <li>
-                    {aCaminho === 1 ? "1 NF-e com a ciência registrada" : `${aCaminho} NF-e com a ciência registrada`}: o XML chega nas próximas buscas.
+                    {aCaminho === 1 ? "1 NF-e com a ciência ou a confirmação da operação registrada ou pedida" : `${aCaminho} NF-e com a ciência ou a confirmação da operação registrada ou pedida`}:
+                    o XML chega nas próximas buscas.
                   </li>
                 ) : null}
                 {recusadas ? (
                   <li>
                     {recusadas === 1 ? "1 NF-e teve" : `${recusadas} NF-e tiveram`} a ciência recusada pela SEFAZ (em geral, por passar do prazo de 10
-                    dias): peça o XML ao fornecedor e envie em Documentos da empresa.
+                    dias): na página da empresa, confirme a operação (até 180 dias depois da emissão) ou envie em Documentos o XML pedido ao fornecedor.
                   </li>
                 ) : null}
                 {paradas ? (

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { EXTENSAO_IMAGEM, tipoImagem } from "@/lib/imagens";
 import { z } from "zod";
 import { exigirAdmin } from "@/lib/auth/sessao";
 import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
@@ -69,6 +70,8 @@ const esquemaDados = z.object({
     .transform((v) => v.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, ""))
     .refine((v) => v === "" || /^[A-Za-z0-9._]{1,30}$/.test(v), "Informe só o usuário do Instagram (ex.: guaresesoncontabilidade).")
     .transform((v) => v || null),
+  contador_nome: z.string().trim().max(200, "Nome longo demais.").transform((v) => (v === "" ? null : v)),
+  contador_crc: z.string().trim().max(40, "CRC longo demais.").transform((v) => (v === "" ? null : v)),
   nome_sistema: z.string().trim().min(3, "Informe o nome do portal.").max(60),
   descricao_sistema: z.string().trim().min(3, "Informe uma descrição curta.").max(160),
   mensagem_login: z.string().trim().min(10, "Escreva a mensagem de boas-vindas.").max(400),
@@ -153,13 +156,6 @@ export async function salvarLembretes(_anterior: ResultadoAcao, fd: FormData): P
   return sucesso("Lembretes e avisos salvos.");
 }
 
-const TIPOS_LOGO: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg" };
-
-function assinaturaImagem(bytes: Uint8Array): "image/png" | "image/jpeg" | null {
-  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "image/png";
-  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
-  return null;
-}
 
 /** Logomarca: PNG ou JPEG até 2 MB, conferindo o conteúdo real do arquivo. */
 export async function enviarLogo(_anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
@@ -168,9 +164,9 @@ export async function enviarLogo(_anterior: ResultadoAcao, fd: FormData): Promis
   if (!(arquivo instanceof File) || arquivo.size === 0) return falha("Escolha o arquivo da logomarca.", { logo: ["Escolha um arquivo PNG ou JPG."] });
   if (arquivo.size > 2 * 1024 * 1024) return falha("Arquivo grande demais.", { logo: ["A logomarca deve ter até 2 MB."] });
   const bytes = new Uint8Array(await arquivo.arrayBuffer());
-  const tipo = assinaturaImagem(bytes);
+  const tipo = tipoImagem(bytes);
   if (!tipo) return falha("Formato não aceito.", { logo: ["Use PNG ou JPG (o arquivo enviado não é uma imagem nesses formatos)."] });
-  const caminho = `logo-${Date.now()}.${TIPOS_LOGO[tipo]}`;
+  const caminho = `logo-${Date.now()}.${EXTENSAO_IMAGEM[tipo]}`;
   const { error } = await s.supabase.storage.from("marca").upload(caminho, bytes, { contentType: tipo, cacheControl: "31536000", upsert: false });
   if (error) return falha(`Não foi possível enviar a logomarca: ${error.message}`);
   const { data: anterior } = await s.supabase.from("escritorio").select("logo_path").eq("id", 1).single();

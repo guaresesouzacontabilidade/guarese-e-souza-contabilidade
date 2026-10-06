@@ -57,7 +57,8 @@ test("equipe confere o SPED com os XML; arquivo retificado passa a valer; client
   await expect(page.getByText("Apuração do ICMS (registro E110)")).toBeVisible();
 
   // Arquivo retificado do mesmo mês: uma única venda sem XML no portal
-  const numero = String(Date.now()).slice(-6);
+  // Seis dígitos sem zero à esquerda (a tela mostra o número sem os zeros)
+  const numero = String(100000 + (Date.now() % 900000));
   const base = `17${String(ano).slice(2)}${mes}${CNPJ_OFICINA}55001${numero.padStart(9, "0")}1${numero.padStart(8, "0")}`;
   const chave = `${base}0`;
   const sped = [

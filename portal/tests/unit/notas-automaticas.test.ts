@@ -10,6 +10,7 @@ import { lerCertificadoA1, mesmaEmpresa, ErroCertificado } from "@/lib/notas-aut
 import { cifrar, decifrar, ErroChaveCertificados } from "@/lib/notas-automaticas/cripto";
 import {
   eventoCienciaAssinado,
+  eventoManifestacaoAssinado,
   lerResumoNfe,
   lerRetornoDistribuicao,
   lerRetornoEventos,
@@ -204,6 +205,27 @@ describe("NF-e — ciência da emissão assinada", () => {
     // Qualquer alteração no evento invalida a assinatura
     expect(verificar(xml.replace("<nSeqEvento>1</nSeqEvento>", "<nSeqEvento>2</nSeqEvento>"))).toBe(false);
     expect(verificar(xml.replace("Ciencia da Operacao", "Confirmacao da Operacao"))).toBe(false);
+  });
+
+  it("gera a confirmação da operação (210200) com assinatura XML válida", () => {
+    const quando = new Date("2026-10-06T12:00:00Z");
+    const evento = eventoManifestacaoAssinado({
+      manifestacao: "confirmacao",
+      chave: CHAVE,
+      cnpj: CNPJ,
+      ambiente: "producao",
+      quando,
+      chavePem: empresa.chavePem,
+      certificadoPem: certEmpresa.pem,
+    });
+    expect(evento).toContain(`<infEvento Id="ID210200${CHAVE}01">`);
+    expect(evento).toContain("<tpEvento>210200</tpEvento>");
+    expect(evento).toContain("<descEvento>Confirmacao da Operacao</descEvento>");
+    const xml = /<envEvento[\s\S]*<\/envEvento>/.exec(montarEnvioEventos([evento], "1"))![0];
+    const doc = new DOMParser().parseFromString(xml, "text/xml");
+    const v = new SignedXml({ publicCert: certEmpresa.pem });
+    v.loadSignature(doc.getElementsByTagNameNS("http://www.w3.org/2000/09/xmldsig#", "Signature")[0]);
+    expect(v.checkSignature(xml)).toBe(true);
   });
 
   it("lê o retorno do lote de eventos", () => {

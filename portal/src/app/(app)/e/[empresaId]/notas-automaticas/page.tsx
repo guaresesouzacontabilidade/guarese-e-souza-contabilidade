@@ -11,6 +11,7 @@ import {
   ApagarNotasAnteriores,
   BotaoBuscarAgora,
   BotaoPedirXml,
+  ConfirmarOperacao,
   FormCertificado,
   MesInicialNotas,
   PreferenciasNotas,
@@ -30,6 +31,7 @@ import {
   SITUACAO_NOTAS,
   situacaoNotas,
 } from "@/lib/notas-automaticas/rotulos";
+import { contarSemXml, estadoSemXml, podeConfirmar } from "@/lib/notas-automaticas/situacao-xml";
 import { envServidor } from "@/lib/env-servidor";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarCnpj, formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
@@ -66,7 +68,9 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
     verDocumentos
       ? ctx.supabase
           .from("nfe_resumos")
-          .select("id, chave, emitente_documento, emitente_nome, data_emissao, tipo_operacao, valor, situacao, ciencia_em, ciencia_retorno, documento_id")
+          .select(
+            "id, chave, emitente_documento, emitente_nome, data_emissao, tipo_operacao, valor, situacao, ciencia_em, ciencia_retorno, documento_id, confirmacao_pedida_em, confirmacao_em, confirmacao_retorno",
+          )
           .eq("empresa_id", empresaId)
           .order("data_emissao", { ascending: false, nullsFirst: false })
           .limit(50)
@@ -81,16 +85,24 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
       : Promise.resolve({ data: [] }),
     verDocumentos ? ctx.supabase.rpc("notas_automaticas_por_mes", { p_empresa_id: empresaId }) : Promise.resolve({ data: [] }),
   ]);
-  // NF-e recebidas só em resumo (sem o XML completo), pela situação da ciência da emissão
-  const soResumo = () =>
-    ctx.supabase.from("nfe_resumos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("situacao", "autorizada").is("documento_id", null);
-  const [{ count: semCiencia }, { count: xmlACaminho }, { count: cienciaRecusada }] = verDocumentos
-    ? await Promise.all([
-        soResumo().is("ciencia_em", null).is("ciencia_retorno", null),
-        soResumo().not("ciencia_em", "is", null),
-        soResumo().is("ciencia_em", null).not("ciencia_retorno", "is", null),
-      ])
-    : [{ count: 0 }, { count: 0 }, { count: 0 }];
+  // NF-e recebidas só em resumo (sem o XML completo), pela situação da ciência e da confirmação da operação
+  const { data: semXmlLista } = verDocumentos
+    ? await ctx.supabase
+        .from("nfe_resumos")
+        .select("chave, emitente_nome, valor, data_emissao, ciencia_em, ciencia_retorno, confirmacao_pedida_em, confirmacao_em, confirmacao_retorno")
+        .eq("empresa_id", empresaId)
+        .eq("situacao", "autorizada")
+        .is("documento_id", null)
+        .order("data_emissao")
+        .limit(5000)
+    : { data: [] };
+  const hoje = hojeISO();
+  const sx = contarSemXml(semXmlLista ?? [], hoje);
+  const confirmaveis = (semXmlLista ?? [])
+    .filter((r) => podeConfirmar(r, hoje))
+    .slice(0, 200)
+    .map((r) => ({ chave: r.chave, fornecedor: r.emitente_nome, valor: r.valor, emissao: r.data_emissao }));
+  const empresaNome = ctx.acesso.razao_social;
   const listaLotes = (lotes ?? []) as LoteXml[];
   const { meses, padrao } = mesesDoLote(competenciaAtual());
   const situacao = situacaoNotas(config?.certificado_valido_ate ? { valido_ate: config.certificado_valido_ate } : null, config);
@@ -98,9 +110,11 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
   const chaveServidor = Boolean(envServidor.certificadosChave());
   const diasValidade = certificado ? diasEntre(hojeISO(), certificado.valido_ate.slice(0, 10)) : null;
   const cadastradoPor = (certificado?.cadastrado as unknown as { nome: string } | null)?.nome ?? null;
-  const semXml = (semCiencia ?? 0) + (xmlACaminho ?? 0) + (cienciaRecusada ?? 0);
+  const semXml = sx.total;
   const cienciaLigada = Boolean(config?.ciencia_automatica && config.nfe_ativa && !config.pausada);
   const certificadoValido = situacao !== "desconectada" && situacao !== "vencido";
+  // A confirmação da operação sai na busca da NF-e (e o XML chega por ela)
+  const podeConfirmarAqui = gerenciar && certificadoValido && Boolean(config?.nfe_ativa && !config.pausada);
   const meses_ = porMes ?? [];
   const desde = config?.buscar_desde ?? null;
   const anteriores = desde ? meses_.filter((m) => m.competencia < desde).reduce((t, m) => t + m.total, 0) : 0;
@@ -399,10 +413,10 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
           </CardHeader>
           <CardContent className="space-y-4 px-0 pt-0 sm:px-0">
             <div className="space-y-4 px-4 sm:px-6">
-              {semCiencia ? (
+              {sx.aguardandoCiencia ? (
                 <Alerta
                   tom="alerta"
-                  titulo={semCiencia === 1 ? "1 NF-e esperando o XML completo" : `${semCiencia} NF-e esperando o XML completo`}
+                  titulo={sx.aguardandoCiencia === 1 ? "1 NF-e esperando o XML completo" : `${sx.aguardandoCiencia} NF-e esperando o XML completo`}
                 >
                   {cienciaLigada ? (
                     "A ciência automática está ligada: o portal registra a ciência da emissão nas próximas buscas e a SEFAZ libera o XML logo depois."
@@ -423,18 +437,43 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                   )}
                 </Alerta>
               ) : null}
-              {xmlACaminho ? (
+              {sx.aCaminho ? (
                 <p className="text-sm text-muted-foreground">
-                  {xmlACaminho === 1 ? "1 NF-e com a ciência registrada" : `${xmlACaminho} NF-e com a ciência registrada`}: o XML completo chega nas
-                  próximas buscas.
+                  {sx.aCaminho === 1 ? "1 NF-e com a ciência ou a confirmação registrada" : `${sx.aCaminho} NF-e com a ciência ou a confirmação registrada`}:
+                  o XML completo chega nas próximas buscas.
                 </p>
               ) : null}
-              {cienciaRecusada ? (
-                <p className="text-sm text-perigo">
-                  {cienciaRecusada === 1 ? "1 NF-e teve a ciência recusada" : `${cienciaRecusada} NF-e tiveram a ciência recusada`} pela SEFAZ — em geral,
-                  por passar do prazo de 10 dias depois da emissão (o motivo aparece na lista abaixo). Peça o XML ao fornecedor e envie em Documentos: a
-                  nota passa a ter o XML completo e entra no XML do mês em lote.
+              {sx.confirmacaoPedida ? (
+                <p className="text-sm text-muted-foreground">
+                  {sx.confirmacaoPedida === 1 ? "1 confirmação da operação pedida" : `${sx.confirmacaoPedida} confirmações da operação pedidas`}: o portal
+                  registra na SEFAZ na próxima busca.
                 </p>
+              ) : null}
+              {sx.recusadas ? (
+                <Alerta
+                  tom="alerta"
+                  titulo={sx.recusadas === 1 ? "1 NF-e teve a ciência recusada pela SEFAZ" : `${sx.recusadas} NF-e tiveram a ciência recusada pela SEFAZ`}
+                >
+                  <p>
+                    Em geral, por passar do prazo de 10 dias depois da emissão (o motivo aparece na lista abaixo). Para ter o XML completo: se a empresa
+                    recebeu a mercadoria ou o serviço, confirme a operação (a SEFAZ aceita até 180 dias depois da emissão); ou peça o XML ao fornecedor e
+                    envie em Documentos. Com o XML, a nota entra no XML do mês em lote.
+                  </p>
+                  {gerenciar && certificadoValido && confirmaveis.length && !podeConfirmarAqui ? (
+                    <p className="pt-1">Para confirmar a operação, ligue a busca da NF-e em “O que buscar” (ela está pausada ou desligada).</p>
+                  ) : null}
+                  {podeConfirmarAqui && confirmaveis.length ? (
+                    <div className="pt-2">
+                      <ConfirmarOperacao
+                        empresaId={empresaId}
+                        empresaNome={empresaNome}
+                        equipe={ctx.equipe}
+                        notas={confirmaveis}
+                        rotulo={confirmaveis.length === 1 ? "Confirmar a operação" : `Confirmar a operação das ${confirmaveis.length} notas`}
+                      />
+                    </div>
+                  ) : null}
+                </Alerta>
               ) : null}
               <div className="space-y-2 rounded-md border border-border p-3">
                 <p className="text-sm font-medium">Planilha das NF-e de entrada</p>
@@ -470,20 +509,21 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                       <Td className="hidden sm:table-cell">{r.data_emissao ? formatarData(r.data_emissao.slice(0, 10)) : "—"}</Td>
                       <Td className="numero text-right">{r.valor != null ? formatarMoeda(r.valor) : "—"}</Td>
                       <Td className="text-sm">
-                        {r.documento_id ? (
-                          <Link href={`${base}/documentos/${r.documento_id}`} className="text-primary hover:underline">
-                            Abrir
-                          </Link>
-                        ) : r.ciencia_em ? (
-                          <span className="text-muted-foreground">ciência registrada; XML a caminho</span>
-                        ) : r.ciencia_retorno ? (
-                          <>
-                            <span className="block text-perigo">ciência recusada</span>
-                            <span className="block max-w-56 text-xs break-words text-muted-foreground">{r.ciencia_retorno}</span>
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground">só resumo</span>
-                        )}
+                        <SituacaoXml
+                          resumo={r}
+                          base={base}
+                          confirmar={
+                            podeConfirmarAqui && r.situacao === "autorizada" && !r.documento_id && podeConfirmar(r, hoje) ? (
+                              <ConfirmarOperacao
+                                empresaId={empresaId}
+                                empresaNome={empresaNome}
+                                equipe={ctx.equipe}
+                                notas={[{ chave: r.chave, fornecedor: r.emitente_nome, valor: r.valor, emissao: r.data_emissao }]}
+                                rotulo="Confirmar operação"
+                              />
+                            ) : null
+                          }
+                        />
                       </Td>
                     </Tr>
                   ))}
@@ -529,7 +569,9 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                           <span className="block text-xs text-muted-foreground">
                             {[
                               e.documentos ? `${e.documentos} XML` : null,
-                              e.resumos ? `${e.resumos} ${e.servico === "ciencia" ? "ciência(s)" : "resumo(s)"}` : null,
+                              e.resumos
+                                ? `${e.resumos} ${e.servico === "ciencia" ? "ciência(s)" : e.servico === "confirmacao" ? "confirmação(ões)" : "resumo(s)"}`
+                                : null,
                               e.ignorados ? `${e.ignorados} anterior(es) ao mês inicial (ignorada(s))` : null,
                             ]
                               .filter(Boolean)
@@ -548,5 +590,54 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
         </Card>
       ) : null}
     </>
+  );
+}
+
+type ResumoLinha = {
+  documento_id: string | null;
+  situacao: string;
+  data_emissao: string | null;
+  ciencia_em: string | null;
+  ciencia_retorno: string | null;
+  confirmacao_pedida_em: string | null;
+  confirmacao_em: string | null;
+  confirmacao_retorno: string | null;
+};
+
+/** Coluna "XML" das NF-e recebidas: o documento, ou em que pé está a ciência ou a confirmação. */
+function SituacaoXml({ resumo: r, base, confirmar }: { resumo: ResumoLinha; base: string; confirmar: React.ReactNode }) {
+  if (r.documento_id) {
+    return (
+      <Link href={`${base}/documentos/${r.documento_id}`} className="text-primary hover:underline">
+        Abrir
+      </Link>
+    );
+  }
+  if (r.situacao !== "autorizada") return <span className="text-muted-foreground">só resumo</span>;
+  const estado = estadoSemXml(r);
+  const motivo = (texto: string | null) => (texto ? <span className="block max-w-56 text-xs break-words text-muted-foreground">{texto}</span> : null);
+  return (
+    <div className="space-y-1">
+      {estado === "confirmada" ? (
+        <span className="block text-muted-foreground">operação confirmada; XML a caminho</span>
+      ) : estado === "confirmacao_pedida" ? (
+        <span className="block text-muted-foreground">confirmação pedida; registro na próxima busca</span>
+      ) : estado === "confirmacao_recusada" ? (
+        <>
+          <span className="block text-perigo">confirmação recusada</span>
+          {motivo(r.confirmacao_retorno)}
+        </>
+      ) : estado === "ciencia_registrada" ? (
+        <span className="block text-muted-foreground">ciência registrada; XML a caminho</span>
+      ) : estado === "ciencia_recusada" ? (
+        <>
+          <span className="block text-perigo">ciência recusada</span>
+          {motivo(r.ciencia_retorno)}
+        </>
+      ) : (
+        <span className="block text-muted-foreground">só resumo</span>
+      )}
+      {confirmar}
+    </div>
   );
 }

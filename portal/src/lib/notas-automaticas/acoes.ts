@@ -284,3 +284,30 @@ export async function pedirXmlCompletosCarteira(): Promise<ResultadoAcao> {
   partes.push(TEXTO_XML_A_CAMINHO);
   return sucesso(partes.join(" "));
 }
+
+const CHAVE_NFE = /^\d{44}$/;
+
+/**
+ * Confirmação da operação (manifestação do destinatário, evento 210200) das
+ * notas escolhidas: é a empresa declarando na SEFAZ que a operação aconteceu.
+ * Exige a declaração marcada; o texto guardado na auditoria depende de quem pede.
+ */
+export async function confirmarOperacoes(empresaId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const ctx = await contexto(empresaId);
+  if (!ctx) return falha("Seu acesso não permite confirmar operações desta empresa.");
+  const chaves = [...new Set(fd.getAll("chave").map(String).filter((c) => CHAVE_NFE.test(c)))].slice(0, 200);
+  if (!chaves.length) return falha("Nenhuma nota escolhida.");
+  if (fd.get("declaro") !== "on") return falha("Marque a declaração para confirmar.", { declaro: ["Marque a declaração para confirmar."] });
+  const { data: empresa } = await ctx.supabase.from("empresas").select("razao_social").eq("id", empresaId).single();
+  const declaracao = ctx.equipe
+    ? `O cliente ${empresa?.razao_social ?? ""} confirmou ao escritório que recebeu as mercadorias ou os serviços destas notas e autorizou a confirmação da operação na SEFAZ.`
+    : `Declaro que ${empresa?.razao_social ?? "a empresa"} recebeu as mercadorias ou os serviços destas notas e confirmo a operação na SEFAZ.`;
+  const { data, error } = await ctx.supabase.rpc("confirmar_operacoes_nfe", { p_empresa_id: empresaId, p_chaves: chaves, p_declaracao: declaracao });
+  if (error) return falha(mensagemErro(error));
+  processarFilaDepois({ tipos: ["notas_automaticas", "processar_documento"] });
+  revalidar(empresaId);
+  const n = data ?? 0;
+  return sucesso(
+    `${n === 1 ? "Confirmação da operação pedida" : `Confirmação da operação de ${n} notas pedida`}. O portal registra na SEFAZ na próxima busca, com o certificado da empresa, e o XML completo chega logo depois — normalmente em algumas horas.`,
+  );
+}

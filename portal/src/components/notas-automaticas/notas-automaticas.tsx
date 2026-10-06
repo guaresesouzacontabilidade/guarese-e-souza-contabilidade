@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CalendarRange, FileDown, KeyRound, RefreshCw, Trash2 } from "lucide-react";
+import { BadgeCheck, CalendarRange, FileDown, KeyRound, RefreshCw, Trash2 } from "lucide-react";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -10,12 +10,15 @@ import {
   apagarNotasAnteriores,
   buscarNotasAgora,
   cadastrarCertificado,
+  confirmarOperacoes,
   definirMesInicial,
   pedirXmlCompletos,
   pedirXmlCompletosCarteira,
   removerCertificado,
   salvarPreferenciasNotas,
 } from "@/lib/notas-automaticas/acoes";
+import { formatarMoeda } from "@/lib/dinheiro";
+import { formatarData } from "@/lib/formatos";
 
 export type OpcaoMes = { valor: string; rotulo: string };
 
@@ -295,5 +298,96 @@ export function BotaoPedirXmlCarteira() {
     >
       <FileDown /> Pedir os XML de todas as empresas
     </BotaoAcao>
+  );
+}
+
+export interface NotaParaConfirmar {
+  chave: string;
+  fornecedor: string | null;
+  valor: number | null;
+  emissao: string | null;
+}
+
+/**
+ * Confirmação da operação (evento 210200) de uma ou várias notas: declaração
+ * obrigatória — da própria empresa (cliente) ou de que o cliente autorizou (escritório).
+ */
+export function ConfirmarOperacao({
+  empresaId,
+  empresaNome,
+  notas,
+  equipe,
+  rotulo,
+}: {
+  empresaId: string;
+  empresaNome: string;
+  notas: NotaParaConfirmar[];
+  equipe: boolean;
+  rotulo: string;
+}) {
+  const [aberto, setAberto] = React.useState(false);
+  const total = notas.reduce((t, n) => t + (n.valor ?? 0), 0);
+  return (
+    <>
+      <Button variante="contorno" tamanho="sm" onClick={() => setAberto(true)}>
+        <BadgeCheck /> {rotulo}
+      </Button>
+      <Dialog open={aberto} onOpenChange={setAberto}>
+        <DialogContent
+          titulo={notas.length === 1 ? "Confirmar a operação desta nota?" : `Confirmar a operação de ${notas.length} notas?`}
+          descricao="A confirmação da operação é uma declaração oficial da empresa na SEFAZ, feita com o certificado digital dela, de que recebeu a mercadoria ou o serviço da nota. Com ela, a SEFAZ libera o XML completo. Faça só para operações que realmente aconteceram: depois de registrada, não dá para desfazer pelo portal."
+          largura="lg"
+        >
+          <FormularioAcao acao={confirmarOperacoes.bind(null, empresaId)} aoSucesso={() => setAberto(false)} className="space-y-3">
+            {({ estado, pendente }) => (
+              <>
+                {notas.map((n) => (
+                  <input key={n.chave} type="hidden" name="chave" value={n.chave} />
+                ))}
+                <div className="max-h-56 overflow-y-auto rounded-md border border-border">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-muted text-left text-xs text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-1.5 font-medium">Fornecedor</th>
+                        <th className="px-3 py-1.5 font-medium">Emissão</th>
+                        <th className="px-3 py-1.5 text-right font-medium">Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {notas.map((n) => (
+                        <tr key={n.chave} className="border-t border-border">
+                          <td className="px-3 py-1.5">{n.fornecedor ?? "—"}</td>
+                          <td className="px-3 py-1.5 whitespace-nowrap">{n.emissao ? formatarData(n.emissao.slice(0, 10)) : "—"}</td>
+                          <td className="numero px-3 py-1.5 text-right whitespace-nowrap">{n.valor != null ? formatarMoeda(n.valor) : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {notas.length > 1 ? (
+                  <p className="text-sm">
+                    Total das notas: <strong className="numero">{formatarMoeda(total)}</strong>
+                  </p>
+                ) : null}
+                <label className="flex items-start gap-2 text-sm">
+                  <Checkbox name="declaro" className="mt-0.5" />
+                  <span>
+                    {equipe
+                      ? `O cliente ${empresaNome} confirmou ao escritório que recebeu as mercadorias ou os serviços ${notas.length === 1 ? "desta nota" : "destas notas"} e autorizou a confirmação da operação na SEFAZ.`
+                      : `Declaro que ${empresaNome} recebeu as mercadorias ou os serviços ${notas.length === 1 ? "desta nota" : "destas notas"}.`}
+                  </span>
+                </label>
+                {estado.erros?.declaro ? <p className="text-sm text-perigo">{estado.erros.declaro[0]}</p> : null}
+                <div className="flex justify-end">
+                  <BotaoEnviar pendente={pendente} textoPendente="Pedindo...">
+                    <BadgeCheck /> Confirmar a operação
+                  </BotaoEnviar>
+                </div>
+              </>
+            )}
+          </FormularioAcao>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

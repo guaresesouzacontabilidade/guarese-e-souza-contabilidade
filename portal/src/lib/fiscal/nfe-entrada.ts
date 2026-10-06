@@ -19,6 +19,9 @@ export interface ResumoEntrada {
   ciencia_em: string | null;
   ciencia_retorno: string | null;
   documento_id: string | null;
+  confirmacao_pedida_em?: string | null;
+  confirmacao_em?: string | null;
+  confirmacao_retorno?: string | null;
 }
 
 export interface FiscalEntrada {
@@ -70,6 +73,9 @@ export interface LinhaEntrada {
   /** "registrada" | "recusada" | "pendente" | null (nota sem resumo da SEFAZ: veio em Documentos). */
   ciencia: "registrada" | "recusada" | "pendente" | null;
   cienciaDetalhe: string | null;
+  /** Confirmação da operação pedida por uma pessoa: "pedida" | "registrada" | "recusada" | null (não pedida). */
+  confirmacao: "pedida" | "registrada" | "recusada" | null;
+  confirmacaoDetalhe: string | null;
   natureza: string | null;
   cfops: string | null;
 }
@@ -95,10 +101,17 @@ function situacaoDoResumo(s: string): SituacaoEntrada {
   return s === "cancelada" ? "Cancelada" : s === "denegada" ? "Denegada" : "Autorizada";
 }
 
-function ciencia(r: ResumoEntrada): Pick<LinhaEntrada, "ciencia" | "cienciaDetalhe"> {
-  if (r.ciencia_em) return { ciencia: "registrada", cienciaDetalhe: r.ciencia_em };
-  if (r.ciencia_retorno) return { ciencia: "recusada", cienciaDetalhe: r.ciencia_retorno };
-  return { ciencia: "pendente", cienciaDetalhe: null };
+function ciencia(r: ResumoEntrada): Pick<LinhaEntrada, "ciencia" | "cienciaDetalhe" | "confirmacao" | "confirmacaoDetalhe"> {
+  const confirmacao: Pick<LinhaEntrada, "confirmacao" | "confirmacaoDetalhe"> = r.confirmacao_em
+    ? { confirmacao: "registrada", confirmacaoDetalhe: r.confirmacao_em }
+    : r.confirmacao_pedida_em
+      ? r.confirmacao_retorno
+        ? { confirmacao: "recusada", confirmacaoDetalhe: r.confirmacao_retorno }
+        : { confirmacao: "pedida", confirmacaoDetalhe: r.confirmacao_pedida_em }
+      : { confirmacao: null, confirmacaoDetalhe: null };
+  if (r.ciencia_em) return { ciencia: "registrada", cienciaDetalhe: r.ciencia_em, ...confirmacao };
+  if (r.ciencia_retorno) return { ciencia: "recusada", cienciaDetalhe: r.ciencia_retorno, ...confirmacao };
+  return { ciencia: "pendente", cienciaDetalhe: null, ...confirmacao };
 }
 
 /**
@@ -127,6 +140,8 @@ export function mesclarEntradas(resumos: ResumoEntrada[], fiscais: FiscalEntrada
       xmlCompleto: true,
       ciencia: null,
       cienciaDetalhe: null,
+      confirmacao: null,
+      confirmacaoDetalhe: null,
       natureza: f.natureza_operacao,
       cfops: f.cfops?.length ? f.cfops.join(", ") : null,
     });
