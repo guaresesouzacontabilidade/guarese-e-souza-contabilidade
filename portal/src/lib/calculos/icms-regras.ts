@@ -29,9 +29,13 @@ export interface RegrasIcmsUf {
   };
   /** Diferencial de alíquotas nas compras de outros estados para uso e consumo ou ativo imobilizado. */
   difal: {
-    /** "base_dupla": o imposto do destino integra a própria base ("por dentro"). */
-    metodo: "base_dupla" | "base_unica";
-    fontes: Fonte[];
+    /**
+     * Método por regime. "base_unica": diferença entre a alíquota interna e a
+     * interestadual sobre o valor da compra (ex.: SP→TO, 20% − 7% = 13%);
+     * "base_dupla": o imposto do destino integra a própria base ("por dentro").
+     */
+    metodo: { simples: "base_dupla" | "base_unica"; normal: "base_dupla" | "base_unica" };
+    fontes: { simples: Fonte[]; normal: Fonte[] };
   };
   /** Dia do mês seguinte em que vencem o ICMS apurado, a complementação e o diferencial. */
   vencimento: { dia: number; texto: string; fontes: Fonte[] };
@@ -61,14 +65,25 @@ export const REGRAS_ICMS: Record<string, RegrasIcmsUf> = {
       ],
     },
     difal: {
-      metodo: "base_dupla",
-      fontes: [
-        RICMS_TO,
-        {
-          titulo: "SEFAZ-TO, Consultas nº 65/2021 e nº 10/2023 — o diferencial integra a própria base de cálculo (base dupla)",
-          url: "https://dtri.sefaz.to.gov.br/legislacao/consultas/2023/Consulta10.2023.htm",
-        },
-      ],
+      // Simples Nacional/MEI: diferença simples entre as alíquotas sobre o valor da compra (como o escritório apura);
+      // regime normal: base dupla, como nas consultas da SEFAZ-TO
+      metodo: { simples: "base_unica", normal: "base_dupla" },
+      fontes: {
+        simples: [
+          RICMS_TO,
+          {
+            titulo: "LC 123/2006, art. 13, § 1º, XIII, “h” — diferencial do Simples: diferença entre a alíquota interna e a interestadual",
+            url: "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm",
+          },
+        ],
+        normal: [
+          RICMS_TO,
+          {
+            titulo: "SEFAZ-TO, Consultas nº 65/2021 e nº 10/2023 — o diferencial integra a própria base de cálculo (base dupla)",
+            url: "https://dtri.sefaz.to.gov.br/legislacao/consultas/2023/Consulta10.2023.htm",
+          },
+        ],
+      },
     },
     vencimento: {
       dia: 9,

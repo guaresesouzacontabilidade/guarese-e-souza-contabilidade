@@ -34,11 +34,12 @@ type Num = number | string | null | undefined;
 
 export type Destinacao = "revenda" | "uso_consumo" | "ativo" | "nao_se_aplica";
 
-export const DESTINACOES: Record<Destinacao, { rotulo: string; curto: string }> = {
-  revenda: { rotulo: "Revenda ou industrialização", curto: "Revenda/industr." },
-  uso_consumo: { rotulo: "Uso e consumo", curto: "Uso e consumo" },
-  ativo: { rotulo: "Ativo imobilizado", curto: "Ativo" },
-  nao_se_aplica: { rotulo: "Não entra no cálculo (remessa, retorno, bonificação...)", curto: "Não entra" },
+/** nome: no texto; rotulo: nas opções (com o CFOP de entrada correspondente); curto: nos seletores. */
+export const DESTINACOES: Record<Destinacao, { nome: string; rotulo: string; curto: string }> = {
+  revenda: { nome: "Revenda ou industrialização", rotulo: "Revenda ou industrialização (CFOP 1.102/2.102)", curto: "Revenda/industr." },
+  uso_consumo: { nome: "Uso e consumo", rotulo: "Uso e consumo (CFOP 1.556/2.556)", curto: "Uso e consumo" },
+  ativo: { nome: "Ativo imobilizado", rotulo: "Ativo imobilizado (CFOP 1.551/2.551)", curto: "Ativo" },
+  nao_se_aplica: { nome: "Não entra no cálculo", rotulo: "Não entra no cálculo (remessa, retorno, bonificação...)", curto: "Não entra" },
 };
 
 export interface ItemEntradaDados {
@@ -434,7 +435,7 @@ function calcularNota(ctx: CtxEntradas, nota: NotaEntradaDados): NotaCalculada {
         );
       }
       if ((modo === "simples" || modo === "normal") && (destinacao === "uso_consumo" || destinacao === "ativo") && dif > 0) {
-        if (regras.difal.metodo === "base_dupla") {
+        if (regras.difal.metodo[modo === "simples" ? "simples" : "normal"] === "base_dupla") {
           const icmsOrigem = icmsDestacado.gt(0) ? icmsDestacado : valorOperacao.times(aliqInter).div(CEM);
           const base = valorOperacao.minus(icmsOrigem).div(new Decimal(1).minus(new Decimal(interna).div(CEM)));
           difal = Decimal.max(0, base.times(interna).div(CEM).minus(icmsOrigem));
@@ -775,16 +776,17 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
         vencimentoTexto: vencTexto,
       });
     }
-    if (difal.gt(0)) for (const f of regras.difal.fontes) addFonte(f);
+    const metodoDifal = regras.difal.metodo[modo === "simples" ? "simples" : "normal"];
+    if (difal.gt(0)) for (const f of regras.difal.fontes[modo === "simples" ? "simples" : "normal"]) addFonte(f);
     addLinha({
       chave: "difal",
       titulo: "ICMS — diferencial de alíquotas (uso e consumo / ativo de outros estados)",
       guia: "DARE",
       valor: difal,
       detalhes: [
-        regras.difal.metodo === "base_dupla"
+        metodoDifal === "base_dupla"
           ? `Base dupla: o ICMS do destino (${pctTxt(interna ?? 0)}) entra na própria base; desconta-se o ICMS da origem.`
-          : `Diferença entre a alíquota interna (${pctTxt(interna ?? 0)}) e a interestadual, sobre o valor da compra.`,
+          : `Diferença entre a alíquota interna (${pctTxt(interna ?? 0)}) e a interestadual, sobre o valor da compra (ex.: de SP, 7% → ${pctTxt((interna ?? 0) - 7)}).`,
         ...comItens("difal"),
       ],
       vencimento: venc(regras.vencimento.dia),
@@ -836,7 +838,7 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
   }
   if (r.itensPadrao > 0 && (modo === "normal" || r.interestaduais > 0)) {
     avisos.push(
-      `${r.itensPadrao} ${r.itensPadrao === 1 ? "item usa" : "itens usam"} a destinação padrão da empresa (${DESTINACOES[dados.destinacao_padrao].rotulo.toLowerCase()}). Confira as notas de entrada e marque o que for uso e consumo ou ativo.`,
+      `${r.itensPadrao} ${r.itensPadrao === 1 ? "item usa" : "itens usam"} a destinação padrão da empresa (${DESTINACOES[dados.destinacao_padrao].nome.toLowerCase()}). Confira as notas de entrada e marque o que for uso e consumo ou ativo.`,
     );
   }
   if (r.possivelSt > 0) {

@@ -127,19 +127,35 @@ describe("ICMS: Simples Nacional no Tocantins", () => {
     expect(linha(r, "icms_proprio")).toBeUndefined();
   });
 
-  it("DIFAL de uso e consumo com base dupla (fornecedor do regime normal e do Simples)", () => {
+  it("DIFAL do Simples: diferença simples entre as alíquotas (SP→TO 13%, GO→TO 8%)", () => {
     const r = calcularIcms(
       dados("simples_nacional", {
         entradas: [
-          // (1.000 − 120) ÷ 0,80 = 1.100; 1.100 × 20% − 120 = 100
+          // GO (12%): 1.000 × (20% − 12%) = 80
           nota("GO", [{ valor: 1000, icms: 120, p_icms: 12 }], { destinacao: "uso_consumo" }),
-          // Fornecedor do Simples (sem ICMS destacado): origem pela alíquota nominal de 7% → (500 − 35) ÷ 0,8 × 20% − 35 = 81,25
+          // SP, fornecedor do Simples (sem ICMS destacado): 500 × (20% − 7%) = 65
           nota("SP", [{ valor: 500, csosn: "102", cst: null }], { destinacao: "ativo", crt: "1" }),
         ],
       }),
     );
-    expect(linha(r, "difal")).toBe("181.25");
+    expect(linha(r, "difal")).toBe("145.00");
     expect(linha(r, "complementacao")).toBeUndefined();
+  });
+
+  it("nota de SP com itens 2.102 e 2.556: complementação 3,25% e DIFAL 13%; importado a 4%: complementação 4%", () => {
+    const r = calcularIcms(
+      dados("simples_nacional", {
+        entradas: [
+          nota("SP", [
+            { valor: 1000, icms: 70, p_icms: 7 }, // revenda (2.102): 1.000 × 25% × 13% = 32,50
+            { valor: 200, icms: 14, p_icms: 7, destinacao: "uso_consumo" }, // uso e consumo (2.556): 200 × 13% = 26,00
+            { valor: 400, icms: 16, p_icms: 4, orig: "2" }, // importado (4%): 400 × 25% × 16% = 16,00
+          ]),
+        ],
+      }),
+    );
+    expect(linha(r, "complementacao")).toBe("48.50");
+    expect(linha(r, "difal")).toBe("26.00");
   });
 
   it("destinação: item → nota → fornecedor → padrão da empresa", () => {
@@ -157,8 +173,8 @@ describe("ICMS: Simples Nacional no Tocantins", () => {
     expect(c1.destinacao).toBeNull();
     expect(c2.itens[0]).toMatchObject({ destinacao: "uso_consumo", origemDestinacao: "fornecedor" });
     expect(c3.itens[0]).toMatchObject({ destinacao: "revenda", origemDestinacao: "padrao" });
-    // DIFAL 100 + 100 (uso e consumo) e complementação 20 + 20 (revenda)
-    expect(linha(r, "difal")).toBe("200.00");
+    // DIFAL 80 + 80 (uso e consumo, 8%) e complementação 20 + 20 (revenda)
+    expect(linha(r, "difal")).toBe("160.00");
     expect(linha(r, "complementacao")).toBe("40.00");
   });
 
@@ -360,7 +376,7 @@ describe("ICMS: regra do fornecedor sem o CNPJ na tela", () => {
     const n = nota("GO", [{ valor: 1000, icms: 120 }], { emitente_documento: null, emitente: null, destinacao_fornecedor: "uso_consumo" });
     const r = calcularIcms(dados("simples_nacional", { entradas: [n] }));
     expect(r.notas[0].itens[0]).toMatchObject({ destinacao: "uso_consumo", origemDestinacao: "fornecedor" });
-    expect(linha(r, "difal")).toBe("100.00");
+    expect(linha(r, "difal")).toBe("80.00");
   });
 });
 

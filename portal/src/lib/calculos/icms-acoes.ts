@@ -38,7 +38,7 @@ export async function definirDestinacao(
   });
   if (error) return falha(mensagemErro(error));
   revalidar(empresaId);
-  const rotulo = destinacao ? DESTINACOES[destinacao as Destinacao].rotulo.toLowerCase() : "a destinação padrão";
+  const rotulo = destinacao ? DESTINACOES[destinacao as Destinacao].nome.toLowerCase() : "a destinação padrão";
   return sucesso(alvo.fornecedor ? `Notas deste fornecedor: ${rotulo}.` : `Destinação: ${rotulo}.`);
 }
 
@@ -49,7 +49,7 @@ export async function definirDestinacaoPadrao(empresaId: string, destinacao: str
   const { error } = await ctx.supabase.rpc("icms_definir_destinacao_padrao", { p_empresa_id: empresaId, p_destinacao: destinacao });
   if (error) return falha(mensagemErro(error));
   revalidar(empresaId);
-  return sucesso(`Compras da empresa, por padrão: ${DESTINACOES[destinacao].rotulo.toLowerCase()}.`);
+  return sucesso(`Compras da empresa, por padrão: ${DESTINACOES[destinacao].nome.toLowerCase()}.`);
 }
 
 export async function adicionarLancamentoIcms(empresaId: string, competencia: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {

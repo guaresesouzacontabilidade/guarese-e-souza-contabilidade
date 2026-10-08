@@ -82,8 +82,8 @@ test("equipe apura o ICMS do Simples: complementação, uso e consumo, outra gui
   await notaGoias.getByText("Itens e cálculo (2)").click();
   await notaGoias.getByRole("combobox", { name: "Destinação do item 2 da NF-e 4401/1" }).selectOption("uso_consumo");
   await expect(page.getByText("Destinação: uso e consumo.")).toBeVisible({ timeout: 30_000 });
-  // (300 − 36) ÷ 0,80 × 20% − 36 = 30,00; complementação 80,50 − 6,00 = 74,50
-  await expect(page.locator("tr", { hasText: "diferencial de alíquotas" })).toContainText("R$ 30,00");
+  // Simples: 300 × (20% − 12%) = 24,00; complementação 80,50 − 6,00 = 74,50
+  await expect(page.locator("tr", { hasText: "diferencial de alíquotas" })).toContainText("R$ 24,00");
   await expect(complementacao).toContainText("R$ 74,50");
 
   // Outra guia lançada pelo escritório
@@ -91,7 +91,7 @@ test("equipe apura o ICMS do Simples: complementação, uso e consumo, outra gui
   await page.fill("#icms-lanc-valor", "10,00");
   await page.getByRole("button", { name: "Lançar" }).click();
   await expect(page.getByText("Valor lançado na apuração.")).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator("tr", { hasText: "Total em guias de ICMS" })).toContainText("R$ 114,50");
+  await expect(page.locator("tr", { hasText: "Total em guias de ICMS" })).toContainText("R$ 108,50");
 
   // Conferência: o mês fica travado
   await page.getByRole("button", { name: "Conferir o mês" }).click();
@@ -100,7 +100,7 @@ test("equipe apura o ICMS do Simples: complementação, uso e consumo, outra gui
   await expect(page.getByText(/conferida em/).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Lançar" })).toHaveCount(0);
   const { data: ap } = await servico!.from("icms_apuracoes").select("total_guias").eq("empresa_id", empresaId).eq("competencia", competencia).single();
-  expect(Number(ap!.total_guias)).toBe(114.5);
+  expect(Number(ap!.total_guias)).toBe(108.5);
 
   // A previsão de impostos passa a mostrar a guia conferida
   await page.goto(`/e/${empresaId}/calculos?competencia=${competencia.slice(0, 7)}`);
@@ -110,7 +110,7 @@ test("equipe apura o ICMS do Simples: complementação, uso e consumo, outra gui
   await page.goto(`/escritorio/icms?competencia=${competencia.slice(0, 7)}`);
   const linha = page.locator("tr", { hasText: "Padaria Pão Dourado" });
   await expect(linha).toContainText("conferida");
-  await expect(linha).toContainText("R$ 114,50");
+  await expect(linha).toContainText("R$ 108,50");
 
   // Reabertura com motivo
   await page.goto(url);
