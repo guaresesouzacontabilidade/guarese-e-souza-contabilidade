@@ -17,10 +17,13 @@ export type Operacao = "entrada" | "saida" | "nao_relacionada";
  * Versão da leitura gravada com cada nota. A versão 2 passou a guardar os
  * códigos fiscais de cada item (CST/CSOSN, ST, PIS/Cofins, IBS/CBS, GTIN,
  * CEST); a 3, nas NFS-e, o regime do prestador, a alíquota, a base e a
- * retenção do ISS e as retenções federais. Notas lidas antes são relidas
- * pelo auditor fiscal.
+ * retenção do ISS e as retenções federais; a 4, nas NF-e/NFC-e, o frete, o
+ * seguro e as outras despesas de cada item, o crédito de ICMS do fornecedor do
+ * Simples Nacional (vCredICMSSN), o FCP do item e o DIFAL da venda a
+ * consumidor final de outro estado (vICMSUFDest). Notas lidas antes são
+ * relidas pelo auditor fiscal (versões 1–2) e pela apuração do ICMS (mês a mês).
  */
-export const VERSAO_LEITURA = 3;
+export const VERSAO_LEITURA = 4;
 
 export interface ItemNota {
   numero_item: number;
@@ -39,8 +42,9 @@ export interface ItemNota {
   ex_tipi: string | null;
   /**
    * Valores e códigos fiscais do item. Valores: icms, ipi, pis, cofins,
-   * icms_st, icms_st_retido, cbs, ibs_uf, ibs_mun, ibs... Códigos: orig,
-   * cst_icms, csosn, cst_pis, cst_cofins, cst_ipi, cst_ibscbs, cclasstrib...
+   * icms_st, icms_st_retido, cred_icms_sn, fcp, difal_destino, frete, seguro,
+   * outros, cbs, ibs_uf, ibs_mun, ibs... Códigos: orig, cst_icms, csosn,
+   * cst_pis, cst_cofins, cst_ipi, cst_ibscbs, cclasstrib...
    */
   tributos: Record<string, string>;
 }
@@ -229,12 +233,17 @@ function subgrupo(v: unknown): No | null {
   return null;
 }
 
-/** Valores e códigos fiscais de um item de NF-e/NFC-e. */
-function tributosDoItem(imposto: unknown): Record<string, string> {
+/** Valores e códigos fiscais de um item de NF-e/NFC-e (com o frete, o seguro e as outras despesas do item). */
+function tributosDoItem(imposto: unknown, prod?: unknown): Record<string, string> {
   const t: Record<string, string> = {};
   const por = (chave: string, valor: string | null) => {
     if (valor !== null) t[chave] = valor;
   };
+  // Despesas acessórias do item (entram no valor da operação do ICMS)
+  const naoZero = (v: string | null) => (v !== null && Number(v) !== 0 ? v : null);
+  por("frete", naoZero(decimal(caminho(prod, "vFrete"))));
+  por("seguro", naoZero(decimal(caminho(prod, "vSeg"))));
+  por("outros", naoZero(decimal(caminho(prod, "vOutro"))));
   const icms = subgrupo(caminho(imposto, "ICMS"));
   if (icms) {
     por("orig", codigo(icms.orig));
@@ -251,6 +260,17 @@ function tributosDoItem(imposto: unknown): Record<string, string> {
     por("bc_icms_st_retido", decimal(icms.vBCSTRet));
     por("icms_st_retido", decimal(icms.vICMSSTRet));
     por("icms_substituto", decimal(icms.vICMSSubstituto));
+    // Fundo de combate à pobreza do item e crédito permitido pelo fornecedor do Simples (CSOSN 101, 201, 900)
+    por("p_fcp", decimal(icms.pFCP));
+    por("fcp", decimal(icms.vFCP));
+    por("p_cred_sn", decimal(icms.pCredSN));
+    por("cred_icms_sn", decimal(icms.vCredICMSSN));
+  }
+  // Venda a consumidor final não contribuinte de outro estado (EC 87/2015): DIFAL do estado de destino
+  const ufDest = no(caminho(imposto, "ICMSUFDest"));
+  if (ufDest) {
+    por("difal_destino", decimal(ufDest.vICMSUFDest));
+    por("fcp_destino", decimal(ufDest.vFCPUFDest));
   }
   const ipiGrupo = no(caminho(imposto, "IPI"));
   const ipi = no(ipiGrupo?.IPITrib) ?? no(ipiGrupo?.IPINT);
@@ -452,7 +472,7 @@ function lerNfe(nfe: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
       gtin: gtin(caminho(prod, "cEAN")) ?? gtin(caminho(prod, "cEANTrib")),
       cest: digitos(caminho(prod, "CEST"))?.slice(0, 7) ?? null,
       ex_tipi: codigo(caminho(prod, "EXTIPI")),
-      tributos: tributosDoItem(caminho(d, "imposto")),
+      tributos: tributosDoItem(caminho(d, "imposto"), prod),
     };
   });
   const cfops = [...new Set(itens.map((i) => i.cfop).filter(Boolean) as string[])];
@@ -461,6 +481,7 @@ function lerNfe(nfe: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
   for (const [campo, nome] of [
     ["vBC", "base_icms"], ["vICMS", "icms"], ["vICMSDeson", "icms_desonerado"], ["vFCP", "fcp"], ["vBCST", "base_icms_st"],
     ["vST", "icms_st"], ["vFCPST", "fcp_st"], ["vII", "ii"], ["vIPI", "ipi"], ["vPIS", "pis"], ["vCOFINS", "cofins"], ["vTotTrib", "total_tributos_aprox"],
+    ["vICMSUFDest", "difal_destino"], ["vFCPUFDest", "fcp_destino"], ["vSeg", "seguro"],
   ] as const) {
     const v = decimal(caminho(tot, campo));
     if (v && v !== "0.00" && v !== "0") tributos[nome] = v;

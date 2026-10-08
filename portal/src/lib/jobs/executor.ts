@@ -21,6 +21,7 @@ const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
     return (admin, job) => executarNotasAutomaticas(admin, job);
   },
   auditor_fiscal: async () => (await import("@/lib/auditor-fiscal/executar")).executarAuditorFiscal,
+  reler_notas_mes: async () => (await import("@/lib/fiscal/releitura")).executarReleituraMes,
   importar_maquininha: async () => (await import("@/lib/maquininhas/importar")).importarMaquininha,
   gerar_lote_xml: async () => {
     const { gerarLoteXml } = await import("@/lib/lotes-xml/gerar");

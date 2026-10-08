@@ -24,6 +24,7 @@ import { semearSolicitacoes } from "./demo-solicitacoes";
 import { semearAuditor, semearServicosAuditor } from "./demo-auditor";
 import { semearMaquininhas } from "./demo-maquininhas";
 import { semearSped } from "./demo-sped";
+import { semearIcms } from "./demo-icms";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
@@ -234,6 +235,10 @@ async function main() {
   }
   if (await semearSped(admin, { url, publica }, ids[1], { equipe: `contador@${DOMINIO}`, cliente2: `cliente2@${DOMINIO}` })) {
     console.log("  SPED Fiscal de demonstração da Oficina enviado (a conferência com os XML roda na fila)");
+  }
+
+  if (await semearIcms(admin, { url, publica }, { padaria: ids[0], oficina: ids[1] }, { cliente: `cliente@${DOMINIO}`, cliente2: `cliente2@${DOMINIO}` })) {
+    console.log("  Compras de outros estados para a apuração do ICMS enviadas (a leitura roda na fila)");
   }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");

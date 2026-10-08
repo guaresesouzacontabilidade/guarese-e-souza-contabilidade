@@ -24,6 +24,7 @@ import {
   PiggyBank,
   CreditCard,
   FileSignature,
+  Landmark,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -53,6 +54,7 @@ export function menuEscritorio(admin: boolean): ItemMenu[] {
     { rotulo: "Pendências", href: "/escritorio/pendencias", icone: ListChecks },
     { rotulo: "Vencimentos", href: "/escritorio/vencimentos", icone: CalendarX2 },
     { rotulo: "Notas automáticas", href: "/escritorio/notas-automaticas", icone: CloudDownload },
+    { rotulo: "Apuração do ICMS", href: "/escritorio/icms", icone: Landmark },
     { rotulo: "Auditor fiscal", href: "/escritorio/auditor-fiscal", icone: ScanSearch },
     { rotulo: "Maquininhas", href: "/escritorio/maquininhas", icone: CreditCard },
     { rotulo: "Financeiro", href: "/escritorio/financeiro", icone: Wallet },

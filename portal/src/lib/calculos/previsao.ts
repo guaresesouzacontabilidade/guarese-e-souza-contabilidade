@@ -103,6 +103,20 @@ export interface DadosPrevisao {
   ajustes: { id: string; descricao: string; valor: Num; observacao: string | null }[];
   vencimentos: { codigo: string; vencimento: string | null; valor_guia: Num; concluida: boolean }[];
   guias_publicadas: number;
+  /**
+   * Guias de ICMS da apuração do mês (Cálculos → Apuração do ICMS), quando a
+   * página as calculou. Sem elas, vale a conta simples débitos − créditos.
+   */
+  icms?: LinhaIcmsPrevisao[] | null;
+}
+
+export interface LinhaIcmsPrevisao {
+  chave: string;
+  titulo: string;
+  guia: string;
+  valor: Decimal;
+  detalhes: string[];
+  vencimento: string | null;
 }
 
 // -----------------------------------------------------------------------------
@@ -729,8 +743,10 @@ function tributosLocais(ctx: Ctx) {
     if (m && dec(m.iss_retido).gt(0)) det.push(`ISS retido pelos tomadores: ${moeda(dec(m.iss_retido))} (descontado pelo cliente; não entra na guia).`);
     if (iss.gt(0)) addLinha(ctx, { chave: "iss", tributo: "ISS", guia: "Guia municipal", grupo: "pagar", valor: iss, detalhes: det, obrigacao: "ISS" });
   }
-  // ICMS próprio (débitos − créditos das notas)
-  if (dados.empresa.contribuinte_icms && p.calcular_icms && m) {
+  // ICMS: guias da apuração do mês; sem ela, a conta simples débitos − créditos
+  if (dados.icms && p.calcular_icms) {
+    adicionarLinhasIcms(ctx, dados.icms);
+  } else if (dados.empresa.contribuinte_icms && p.calcular_icms && m) {
     const debito = dec(m.icms_debito);
     const credito = dec(m.icms_credito);
     const saldo = debito.minus(credito);
@@ -763,6 +779,62 @@ function tributosLocais(ctx: Ctx) {
       });
     }
   }
+}
+
+function adicionarLinhasIcms(ctx: Ctx, linhas: LinhaIcmsPrevisao[]) {
+  for (const l of linhas) {
+    addLinha(ctx, {
+      chave: `icms:${l.chave}`,
+      tributo: l.titulo,
+      guia: l.guia,
+      grupo: "pagar",
+      valor: l.valor,
+      detalhes: l.detalhes,
+      vencimento: l.vencimento,
+      obrigacao: l.chave === "icms_proprio" ? "ICMS" : undefined,
+    });
+  }
+}
+
+/**
+ * ICMS que está dentro do DAS do mês (parcela do ICMS na repartição dos
+ * Anexos I e II), só para informação na apuração do ICMS.
+ */
+export function icmsNoDas(dados: DadosPrevisao, competencia: string): { valor: Decimal; detalhes: string[] } | null {
+  if (dados.empresa.regime !== "simples_nacional" || !dados.parametros) return null;
+  const comp = `${competencia.slice(0, 7)}-01`;
+  const porMes = new Map(dados.meses.map((m) => [`${String(m.competencia).slice(0, 7)}-01`, m]));
+  const ctx: Ctx = {
+    dados,
+    p: dados.parametros,
+    comp,
+    mes: (c) => porMes.get(c),
+    receita: receitaDoMes(porMes.get(comp)),
+    linhas: [],
+    avisos: [],
+    memoria: [],
+    fontes: [],
+  };
+  const merc = ctx.receita.mercadorias;
+  if (merc.lte(0)) return { valor: new Decimal(0), detalhes: ["Sem vendas de mercadorias no mês: não há ICMS no DAS."] };
+  const rbt12 = centavos(receita12Meses(ctx).rbt12);
+  const anexo = ctx.p.anexo_mercadorias as Anexo;
+  const a = aliquotaEfetiva(anexo, rbt12);
+  if (!a.dados.icms || rbt12.gt(SIMPLES.sublimite)) {
+    return {
+      valor: new Decimal(0),
+      detalhes: [`Receita dos últimos 12 meses (${moeda(rbt12)}) acima do sublimite: o ICMS é apurado fora do DAS, como no regime normal.`],
+    };
+  }
+  const st = Decimal.min(ctx.receita.vendasSt, merc);
+  const normal = merc.minus(st);
+  const parte = dec(a.dados.icms).div(CEM);
+  const valor = centavos(normal.times(a.efetiva).times(parte));
+  const detalhes = [
+    `Vendas de ${anexo === "II" ? "produtos" : "mercadorias"} sem ICMS-ST: ${moeda(normal)} × alíquota efetiva ${pct(a.efetiva)} (Anexo ${anexo}, ${a.faixa}ª faixa) × ${pctNum(a.dados.icms)} de ICMS na repartição = ${moeda(valor)}`,
+  ];
+  if (st.gt(0)) detalhes.push(`Vendas com ICMS-ST (${moeda(st)}) não têm a parcela do ICMS no DAS.`);
+  return { valor, detalhes };
 }
 
 // -----------------------------------------------------------------------------
@@ -964,6 +1036,7 @@ export function calcularPrevisao(dados: DadosPrevisao): Previsao {
     if (regime === "mei") {
       calcularMei(ctx);
       calcularFolha(ctx, "mei");
+      if (dados.icms && ctx.p.calcular_icms) adicionarLinhasIcms(ctx, dados.icms);
     } else if (regime === "simples_nacional") {
       const anexoServ = calcularSimples(ctx);
       const temIv = anexoServ === "IV" && receita.servicos.gt(0);
@@ -971,6 +1044,7 @@ export function calcularPrevisao(dados: DadosPrevisao): Previsao {
         ctx.avisos.push("Empresa com atividades do Anexo IV e de outros anexos: a contribuição patronal pode ser proporcional; o escritório confere na apuração.");
       }
       calcularFolha(ctx, temIv ? "simples_iv" : "simples");
+      if (dados.icms && ctx.p.calcular_icms) adicionarLinhasIcms(ctx, dados.icms);
     } else {
       if (regime === "lucro_presumido") {
         pisCofinsCumulativo(ctx);

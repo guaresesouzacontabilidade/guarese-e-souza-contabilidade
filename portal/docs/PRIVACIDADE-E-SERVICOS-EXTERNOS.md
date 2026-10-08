@@ -126,3 +126,11 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **O que guarda**: do arquivo, o cabeçalho (período, CNPJ, UF, IE, perfil), as notas escrituradas (modelo, situação, série, número, chave, datas, valor total, ICMS, ICMS-ST, IPI, CFOP e o nome e o CNPJ/CPF do cliente ou fornecedor), o resumo por CFOP e a apuração do ICMS; e os pontos encontrados na conferência. O arquivo original fica em Documentos, com as mesmas regras de guarda.
 - **Quem vê**: só a equipe com a permissão "Conduzir o auditor" (uso interno, antes da transmissão). O cliente vê o arquivo em **Meus documentos**, como qualquer documento da empresa.
 - **Registro**: cada conferência e cada exclusão ficam no registro de atividades.
+
+## 16. Apuração do ICMS
+
+- **Onde roda**: dentro do portal, sobre os XML de notas que o portal já tem e as escolhas da equipe. **Nada é enviado** à SEFAZ, a serviços externos ou a inteligência artificial; o portal não emite DARE/GNRE nem transmite a EFD.
+- **O que guarda**: a destinação das compras escolhida pela equipe (por item, nota ou CNPJ do fornecedor), os lançamentos da apuração (descrição, valor, observação), o saldo credor informado e o resultado de cada conferência (totais e guias, sem os dados das notas).
+- **Quem vê**: a apuração completa (com fornecedores e itens) é da equipe com a permissão de gerenciar os cálculos. O cliente vê só as guias de ICMS na **Previsão de impostos** da própria empresa.
+- **Registro**: destinações, lançamentos, conferências e reaberturas (com motivo) ficam no registro de atividades.
+

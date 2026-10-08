@@ -3,8 +3,7 @@ import Decimal from "decimal.js";
 import type { ClienteAdmin } from "@/lib/supabase/admin";
 import type { Job } from "@/lib/jobs/executor";
 import { hojeISO, somarMeses } from "@/lib/competencia";
-import { VERSAO_LEITURA, lerXmlFiscal } from "@/lib/fiscal/xml";
-import { decodificarTexto } from "@/lib/extratos/comum";
+import { relerNota } from "@/lib/fiscal/releitura";
 import { dasSimples, receitaBruta12Meses, type ColaboradorFolha, type DadosPrevisao, type MesDados, type ParametrosCalculo } from "@/lib/calculos/previsao";
 import type { LinhaCatalogo } from "./catalogo";
 import { auditar, inicioPrazo, type GrupoItens, type MesSimples } from "./regras";
@@ -66,30 +65,6 @@ async function iniciarExecucao(admin: ClienteAdmin, p: Payload): Promise<string>
     .single();
   if (error || !data) throw new Error(`Não foi possível registrar a análise: ${error?.message ?? "sem retorno"}`);
   return data.id;
-}
-
-/** Relê uma nota do arquivo guardado (versão atual do documento). */
-async function relerNota(admin: ClienteAdmin, documento: string, n: { id: string; documento_id: string }) {
-  const { data: doc } = await admin.from("documentos").select("versao_atual").eq("id", n.documento_id).maybeSingle();
-  const { data: versao } = doc
-    ? await admin.from("documento_versoes").select("storage_path").eq("documento_id", n.documento_id).eq("versao", doc.versao_atual).maybeSingle()
-    : { data: null };
-  let atualizada = false;
-  if (versao?.storage_path) {
-    const { data: arquivo } = await admin.storage.from("documentos").download(versao.storage_path);
-    if (arquivo) {
-      const bytes = new Uint8Array(await arquivo.arrayBuffer());
-      const cabecalho = new TextDecoder("latin1").decode(bytes.slice(0, 200));
-      const texto = decodificarTexto(bytes, /encoding="(iso-8859-1|windows-1252)"/i.exec(cabecalho)?.[1]);
-      const lido = lerXmlFiscal(texto, { documento });
-      if (lido.sucesso && lido.dados.tipo === "nota") {
-        const { error: e } = await admin.rpc("atualizar_leitura_xml_fiscal", { p_documento_fiscal_id: n.id, p_dados: lido.dados as never });
-        atualizada = !e;
-      }
-    }
-  }
-  // Arquivo ausente ou ilegível: marca como relida para não tentar para sempre (fica com os dados antigos).
-  if (!atualizada) await admin.from("documentos_fiscais").update({ leitura_versao: VERSAO_LEITURA }).eq("id", n.id);
 }
 
 /** Relê do armazenamento as notas gravadas antes da leitura completa dos códigos fiscais (algumas ao mesmo tempo). */

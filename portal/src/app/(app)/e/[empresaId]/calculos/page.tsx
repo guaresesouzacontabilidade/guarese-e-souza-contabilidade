@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TBody, TFoot, THead, Td, Th, Tr } from "@/components/ui/table";
 import { SeletorCompetencia } from "@/components/calculos/seletor-competencia";
 import { calcularPrevisao, type DadosPrevisao, type LinhaPrevisao } from "@/lib/calculos/previsao";
+import { carregarIcms, linhasIcmsPrevisao } from "@/lib/calculos/icms-carregar";
 import { competenciaDosCalculos, opcoesCompetencia } from "@/lib/calculos/competencias";
 import { PRIMEIRA_COMPETENCIA } from "@/lib/calculos/tabelas";
 import { somarMeses } from "@/lib/competencia";
@@ -117,7 +118,11 @@ export default async function PrevisaoImpostos({ params, searchParams }: PagePro
     );
   }
 
-  const p = calcularPrevisao(data as unknown as DadosPrevisao);
+  // Guias de ICMS da apuração do mês (conferida pelo escritório ou calculada agora)
+  const dadosPrevisao = data as unknown as DadosPrevisao;
+  const icms = await carregarIcms(ctx.supabase, empresaId, comp);
+  if (!("erro" in icms)) dadosPrevisao.icms = linhasIcmsPrevisao(icms.dados, icms.resultado);
+  const p = calcularPrevisao(dadosPrevisao);
   const mesComp = formatarCompetencia(p.competencia, true);
   const mesPag = formatarCompetencia(p.mesPagamento, true);
   const aPagar = p.linhas.filter((l) => l.grupo === "pagar");

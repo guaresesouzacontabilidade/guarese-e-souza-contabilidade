@@ -286,13 +286,13 @@ isOneToOne: false
                   ]
                 },"calculo_parametros": {
                   Row: {
-                    "acrescimo_lc224": boolean,"aliquota_iss": number | null,"anexo_mercadorias": string,"anexo_servicos": string,"atualizado_por": string | null,"calcular_icms": boolean,"calcular_ipi": boolean,"created_at": string,"creditos_pis_cofins": boolean,"empresa_id": string,"fap": number,"fator_r": boolean,"inicio_atividade": string | null,"mei_atividade": string | null,"presuncao_csll_mercadorias": number,"presuncao_csll_servicos": number,"presuncao_irpj_mercadorias": number,"presuncao_irpj_servicos": number,"pro_labore": number,"rat": number,"socios_pro_labore": number,"terceiros": number,"updated_at": string
+                    "acrescimo_lc224": boolean,"aliquota_iss": number | null,"anexo_mercadorias": string,"anexo_servicos": string,"atualizado_por": string | null,"calcular_icms": boolean,"calcular_ipi": boolean,"created_at": string,"creditos_pis_cofins": boolean,"empresa_id": string,"fap": number,"fator_r": boolean,"icms_destinacao_padrao": string,"inicio_atividade": string | null,"mei_atividade": string | null,"presuncao_csll_mercadorias": number,"presuncao_csll_servicos": number,"presuncao_irpj_mercadorias": number,"presuncao_irpj_servicos": number,"pro_labore": number,"rat": number,"socios_pro_labore": number,"terceiros": number,"updated_at": string
                   }
                   Insert: {
-                    "acrescimo_lc224"?: boolean,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id": string,"fap"?: number,"fator_r"?: boolean,"inicio_atividade"?: string | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
+                    "acrescimo_lc224"?: boolean,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id": string,"fap"?: number,"fator_r"?: boolean,"icms_destinacao_padrao"?: string,"inicio_atividade"?: string | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
                   }
                   Update: {
-                    "acrescimo_lc224"?: boolean,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id"?: string,"fap"?: number,"fator_r"?: boolean,"inicio_atividade"?: string | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
+                    "acrescimo_lc224"?: boolean,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id"?: string,"fap"?: number,"fator_r"?: boolean,"icms_destinacao_padrao"?: string,"inicio_atividade"?: string | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1582,6 +1582,93 @@ isOneToOne: false
       columns: ["informado_por"]
 isOneToOne: false
       referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"icms_apuracoes": {
+                  Row: {
+                    "a_recolher": number | null,"competencia": string,"conferida_em": string | null,"conferida_por": string | null,"empresa_id": string,"motivo_reabertura": string | null,"reaberta_em": string | null,"reaberta_por": string | null,"resultado": Json | null,"saldo_credor_anterior": number | null,"saldo_credor_transportar": number | null,"saldo_observacao": string | null,"total_guias": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "a_recolher"?: number | null,"competencia": string,"conferida_em"?: string | null,"conferida_por"?: string | null,"empresa_id": string,"motivo_reabertura"?: string | null,"reaberta_em"?: string | null,"reaberta_por"?: string | null,"resultado"?: Json | null,"saldo_credor_anterior"?: number | null,"saldo_credor_transportar"?: number | null,"saldo_observacao"?: string | null,"total_guias"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "a_recolher"?: number | null,"competencia"?: string,"conferida_em"?: string | null,"conferida_por"?: string | null,"empresa_id"?: string,"motivo_reabertura"?: string | null,"reaberta_em"?: string | null,"reaberta_por"?: string | null,"resultado"?: Json | null,"saldo_credor_anterior"?: number | null,"saldo_credor_transportar"?: number | null,"saldo_observacao"?: string | null,"total_guias"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "icms_apuracoes_conferida_por_fkey"
+      columns: ["conferida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "icms_apuracoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "icms_apuracoes_reaberta_por_fkey"
+      columns: ["reaberta_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"icms_destinacoes": {
+                  Row: {
+                    "atualizado_por": string | null,"destinacao": string,"documento_fiscal_id": string | null,"empresa_id": string,"fornecedor_documento": string | null,"id": string,"numero_item": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"destinacao": string,"documento_fiscal_id"?: string | null,"empresa_id": string,"fornecedor_documento"?: string | null,"id"?: string,"numero_item"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"destinacao"?: string,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"fornecedor_documento"?: string | null,"id"?: string,"numero_item"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "icms_destinacoes_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "icms_destinacoes_empresa_id_documento_fiscal_id_fkey"
+      columns: ["empresa_id","documento_fiscal_id"]
+isOneToOne: false
+      referencedRelation: "documentos_fiscais"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "icms_destinacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"icms_lancamentos": {
+                  Row: {
+                    "competencia": string,"created_at": string,"criado_por": string | null,"descricao": string,"empresa_id": string,"id": string,"observacao": string | null,"tipo": string,"valor": number
+                  }
+                  Insert: {
+                    "competencia": string,"created_at"?: string,"criado_por"?: string | null,"descricao": string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"tipo": string,"valor": number
+                  }
+                  Update: {
+                    "competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"tipo"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "icms_lancamentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "icms_lancamentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
       referencedColumns: ["id"]
     }
                   ]
@@ -3004,6 +3091,9 @@ isOneToOne: false
 "criar_solicitacao_titular":
 { Args: { "p_descricao": string,"p_tipo": string }; Returns: string
                            },
+"dados_apuracao_icms":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_versao_leitura"?: number }; Returns: Json
+                           },
 "dados_previsao_impostos":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_meses"?: number }; Returns: Json
                            },
@@ -3140,6 +3230,27 @@ isOneToOne: false
                            },
 "gerar_tarefas":
 { Args: { "p_competencia": string,"p_empresa_id"?: string }; Returns: number
+                           },
+"icms_carteira":
+{ Args: { "p_competencia": string }; Returns: Json
+                           },
+"icms_conferir":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_resultado": Json }; Returns: undefined
+                           },
+"icms_definir_destinacao":
+{ Args: { "p_destinacao": string,"p_documento_fiscal_id": string,"p_empresa_id": string,"p_fornecedor": string,"p_numero_item": number }; Returns: undefined
+                           },
+"icms_definir_destinacao_padrao":
+{ Args: { "p_destinacao": string,"p_empresa_id": string }; Returns: undefined
+                           },
+"icms_informar_saldo_anterior":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_observacao"?: string,"p_valor": number }; Returns: undefined
+                           },
+"icms_reabrir":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"icms_reler_notas":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_versao_leitura": number }; Returns: number
                            },
 "icms_uf_propor_regra":
 { Args: { "p_uf": string }; Returns: string

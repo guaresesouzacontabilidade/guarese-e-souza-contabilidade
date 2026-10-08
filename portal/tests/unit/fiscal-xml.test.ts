@@ -131,7 +131,7 @@ describe("NFS-e", () => {
   it("padrão nacional (leitura 3): regime do prestador, ISS retido e retenções federais", () => {
     const r = lerXmlFiscal(fixture("nfse-nacional-retencoes.xml"), EMPRESA);
     const n = (r as { dados: NotaLida }).dados;
-    expect(n.leitura_versao).toBe(3);
+    expect(n.leitura_versao).toBe(4);
     expect(n.tributos).toMatchObject({
       iss: "500.00",
       iss_retido: "sim",
@@ -177,7 +177,7 @@ describe("códigos fiscais de cada item (leitura versão 2)", () => {
     const n = (r as { dados: NotaLida }).dados;
     expect(n.avisos).toEqual([]);
     expect(n.operacao).toBe("entrada");
-    expect(n.leitura_versao).toBe(3);
+    expect(n.leitura_versao).toBe(4);
     expect(n).toMatchObject({ crt_emitente: "3", consumidor_final: false, id_destino: "1", ind_ie_dest: "1" });
     expect(n.tributos).toMatchObject({ icms_st: "108.00", ibs: "1.00", cbs: "9.00", base_ibscbs: "1000.00" });
     const [remedio, shampoo, biscoito] = n.itens;
@@ -192,6 +192,21 @@ describe("códigos fiscais de cada item (leitura versão 2)", () => {
     expect(shampoo.gtin).toBeNull();
     expect(shampoo.tributos).toMatchObject({ cst_pis: "04", icms_st: "48.00" });
     expect(biscoito.tributos).toMatchObject({ cst_icms: "00", cst_pis: "01", p_pis: "1.65", pis: "1.65", cst_cofins: "01", cofins: "7.60" });
+  });
+
+  it("leitura 4: frete, seguro e outras despesas por item, crédito do Simples e DIFAL de destino", () => {
+    const xml = fixture("nfe-compra-farmacia.xml")
+      .replace("<vProd>100.00</vProd><indTot>1</indTot>", "<vProd>100.00</vProd><vFrete>12.50</vFrete><vSeg>1.00</vSeg><vOutro>2.00</vOutro><indTot>1</indTot>")
+      .replace(
+        "<ICMS00><orig>0</orig><CST>00</CST><modBC>3</modBC><vBC>100.00</vBC><pICMS>20.00</pICMS><vICMS>20.00</vICMS></ICMS00>",
+        "<ICMSSN101><orig>0</orig><CSOSN>101</CSOSN><pCredSN>1.25</pCredSN><vCredICMSSN>1.25</vCredICMSSN></ICMSSN101>",
+      )
+      .replace("<vOutro>0.00</vOutro><vNF>", "<vOutro>0.00</vOutro><vICMSUFDest>30.00</vICMSUFDest><vFCPUFDest>5.00</vFCPUFDest><vNF>");
+    const n = (lerXmlFiscal(xml, FARMACIA) as { dados: NotaLida }).dados;
+    const biscoito = n.itens[2];
+    expect(biscoito.tributos).toMatchObject({ frete: "12.50", seguro: "1.00", outros: "2.00", csosn: "101", p_cred_sn: "1.25", cred_icms_sn: "1.25" });
+    expect(n.itens[0].tributos.frete).toBeUndefined();
+    expect(n.tributos).toMatchObject({ difal_destino: "30.00", fcp_destino: "5.00" });
   });
 
   it("NFC-e do Simples: CSOSN, consumidor final e sem grupo de IBS/CBS", () => {

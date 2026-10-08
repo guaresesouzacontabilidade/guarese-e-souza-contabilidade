@@ -62,31 +62,35 @@ describe.skipIf(!local)("XML em lote — partes (Supabase local)", () => {
     expect(r1).toMatchObject({ parte: 1, arquivos: 2 });
     const { count: proxima } = await admin.from("jobs").select("id", { count: "exact", head: true }).eq("chave_idempotencia", `lote:${loteId}:2`);
     expect(proxima).toBe(1);
-    const r2 = (await gerarLoteXml(admin as never, job, prazo, { maxArquivosParte: 2 })) as { concluido?: boolean; partes?: number };
-    expect(r2).toMatchObject({ concluido: true, partes: 2 });
+    // Notas de 09/2026 da Padaria: 3 NF-e de entrada (bebidas e as duas compras de outros estados da apuração do ICMS) e 2 NFC-e
+    const r2 = (await gerarLoteXml(admin as never, job, prazo, { maxArquivosParte: 2 })) as { parte?: number; arquivos?: number };
+    expect(r2).toMatchObject({ parte: 2, arquivos: 2 });
+    const r3 = (await gerarLoteXml(admin as never, job, prazo, { maxArquivosParte: 2 })) as { concluido?: boolean; partes?: number };
+    expect(r3).toMatchObject({ concluido: true, partes: 3 });
 
     const { data: lote } = await admin.from("xml_lotes").select("situacao, partes, total_arquivos, expira_em").eq("id", loteId).single();
-    expect(lote).toMatchObject({ situacao: "pronto", total_arquivos: 3 });
+    expect(lote).toMatchObject({ situacao: "pronto", total_arquivos: 5 });
     const partes = lote!.partes as { numero: number; caminho: string; nome: string; arquivos: number }[];
     expect(partes.map((p) => p.nome)).toEqual([
-      "xml-2026-09-padaria-pao-dourado-demo-parte-1-de-2.zip",
-      "xml-2026-09-padaria-pao-dourado-demo-parte-2-de-2.zip",
+      "xml-2026-09-padaria-pao-dourado-demo-parte-1-de-3.zip",
+      "xml-2026-09-padaria-pao-dourado-demo-parte-2-de-3.zip",
+      "xml-2026-09-padaria-pao-dourado-demo-parte-3-de-3.zip",
     ]);
-    expect(partes.map((p) => p.arquivos)).toEqual([2, 1]);
+    expect(partes.map((p) => p.arquivos)).toEqual([2, 2, 1]);
 
     const abrir = async (caminho: string) => {
       const { data } = await admin.storage.from("documentos").download(caminho);
       return unzipSync(new Uint8Array(await data!.arrayBuffer()));
     };
     const p1 = await abrir(partes[0].caminho);
-    const p2 = await abrir(partes[1].caminho);
+    const ultima = await abrir(partes[2].caminho);
     expect(Object.keys(p1).filter((n) => n.endsWith(".xml"))).toHaveLength(2);
     expect(Object.keys(p1)).not.toContain("Relacao das notas.xlsx");
     expect(strFromU8(p1["LEIA-ME.txt"])).toContain("Esta é a parte 1 do lote");
-    expect(Object.keys(p2)).toContain("Relacao das notas.xlsx");
-    const leiaMe = strFromU8(p2["LEIA-ME.txt"]);
+    expect(Object.keys(ultima)).toContain("Relacao das notas.xlsx");
+    const leiaMe = strFromU8(ultima["LEIA-ME.txt"]);
     expect(leiaMe).toContain("Tipos: NF-e de entrada, NFC-e");
-    expect(leiaMe).toContain("Total: 3 arquivos em 2 partes (esta é a parte 2 de 2)");
+    expect(leiaMe).toContain("Total: 5 arquivos em 3 partes (esta é a parte 3 de 3)");
     expect(leiaMe).toContain("NFC-e: 2 arquivos");
   }, 60_000);
 });
