@@ -28,6 +28,14 @@ export interface PartesChave {
   dv: string;
 }
 
+/** Código IBGE da UF (dois primeiros dígitos da chave) → sigla. */
+export const UF_POR_CODIGO: Record<string, string> = {
+  "11": "RO", "12": "AC", "13": "AM", "14": "RR", "15": "PA", "16": "AP", "17": "TO",
+  "21": "MA", "22": "PI", "23": "CE", "24": "RN", "25": "PB", "26": "PE", "27": "AL", "28": "SE", "29": "BA",
+  "31": "MG", "32": "ES", "33": "RJ", "35": "SP", "41": "PR", "42": "SC", "43": "RS",
+  "50": "MS", "51": "MT", "52": "GO", "53": "DF",
+};
+
 export function partesChave(chave: string): PartesChave | null {
   if (!/^\d{44}$/.test(chave)) return null;
   return {

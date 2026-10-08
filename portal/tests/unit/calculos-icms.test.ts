@@ -363,3 +363,23 @@ describe("ICMS: regra do fornecedor sem o CNPJ na tela", () => {
     expect(linha(r, "difal")).toBe("100.00");
   });
 });
+
+describe("ICMS: NF-e só em resumo (sem o XML completo)", () => {
+  it("lista, soma e avisa que ficam fora do cálculo", () => {
+    const r = calcularIcms(
+      dados("simples_nacional", {
+        sem_xml: [
+          // 35 = SP (outro estado); 17 = TO
+          { chave: `3526094931941100218755001000823700100000001${"0"}`, emitente: "RFG", emitente_documento: "49319411002187", data: "2026-09-21T10:00:00-03:00", valor: "6574.64", ciencia: false, confirmacao_pedida: true, confirmada: true },
+          { chave: `1726090338076300117555001000012345100000001${"0"}`, emitente: "Refrescos", emitente_documento: "03380763001175", data: "2026-09-12T10:00:00-03:00", valor: 27.85, ciencia: false, confirmacao_pedida: true, confirmada: false },
+        ],
+      }),
+    );
+    expect(r.semXml.notas).toHaveLength(2);
+    expect(r.semXml.valor.toFixed(2)).toBe("6602.49");
+    expect(r.semXml.outroEstado).toBe(1);
+    expect(r.semXml.notas[0]).toMatchObject({ uf: "SP", outroEstado: true, numero: "823700" });
+    expect(r.avisos[0]).toContain("2 NF-e de entrada do mês ainda estão só em resumo");
+    expect(r.totalGuias.toFixed(2)).toBe("0.00");
+  });
+});

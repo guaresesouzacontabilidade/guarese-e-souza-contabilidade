@@ -4,6 +4,7 @@ import { somarMeses } from "@/lib/competencia";
 import { formatarCompetencia } from "@/lib/formatos";
 import { REGIMES } from "@/lib/rotulos";
 import { ORIGENS_IMPORTADAS, aliquotaInterestadual } from "@/lib/fiscal/icms-estados";
+import { UF_POR_CODIGO } from "@/lib/fiscal/chave";
 import { REGRAS_ICMS, reducaoComplementacao, type RegrasIcmsUf } from "./icms-regras";
 import type { Fonte } from "./tabelas";
 
@@ -154,6 +155,19 @@ export interface DadosIcms {
   sped: { arquivo_id: string; nome: string | null; apuracao: ApuracaoSped; conferido_em: string | null } | null;
   releitura_pendente: boolean;
   vencimentos: { codigo: string; vencimento: string | null }[];
+  /** NF-e recebidas no mês só em resumo (sem o XML completo): ficam fora do cálculo. */
+  sem_xml?: NotaSemXmlDados[];
+}
+
+export interface NotaSemXmlDados {
+  chave: string;
+  emitente: string | null;
+  emitente_documento: string | null;
+  data: string | null;
+  valor: Num;
+  ciencia: boolean;
+  confirmacao_pedida: boolean;
+  confirmada: boolean;
 }
 
 // -----------------------------------------------------------------------------
@@ -266,6 +280,12 @@ export interface ResultadoIcms {
     ativoIcms: Decimal;
   };
   comparacaoSped: ComparacaoSped[] | null;
+  /** NF-e do mês ainda sem o XML completo (fora do cálculo). */
+  semXml: {
+    notas: (NotaSemXmlDados & { uf: string | null; outroEstado: boolean; numero: string })[];
+    valor: Decimal;
+    outroEstado: number;
+  };
   avisos: string[];
   fontes: Fonte[];
 }
@@ -519,6 +539,7 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
     notas: [],
     resumoEntradas: { notas: 0, interestaduais: 0, itensPadrao: 0, itensRateados: 0, possivelSt: 0, ativoIcms: ZERO },
     comparacaoSped: null,
+    semXml: { notas: [], valor: ZERO, outroEstado: 0 },
     avisos,
     fontes,
   };
@@ -561,6 +582,19 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
     possivelSt: todosItens.filter((i) => i.possivelSt).length,
     ativoIcms: todosItens.filter((i) => i.destinacao === "ativo" && i.tipo !== "devolucao").reduce((s, i) => s.plus(i.icmsDestacado), ZERO),
   };
+
+  // NF-e do mês que só têm o resumo da SEFAZ: sem itens nem ICMS, ficam fora do cálculo
+  const semXml = (dados.sem_xml ?? []).map((n) => {
+    const ufNota = UF_POR_CODIGO[n.chave.slice(0, 2)] ?? null;
+    return { ...n, uf: ufNota, outroEstado: Boolean(uf && ufNota && ufNota !== uf), numero: String(Number(n.chave.slice(25, 34))) };
+  });
+  base.semXml = { notas: semXml, valor: semXml.reduce((s, n) => s.plus(dec(n.valor)), ZERO), outroEstado: semXml.filter((n) => n.outroEstado).length };
+  if (semXml.length) {
+    const fora = base.semXml.outroEstado;
+    avisos.unshift(
+      `${semXml.length} ${semXml.length === 1 ? "NF-e de entrada do mês ainda está" : "NF-e de entrada do mês ainda estão"} só em resumo, sem o XML completo (${moeda(centavos(base.semXml.valor))}${fora ? `; ${fora} de outro estado` : ""}): ${semXml.length === 1 ? "ela não entra" : "elas não entram"} no cálculo até o XML chegar. Confirme a operação em Notas automáticas ou envie os XML em Enviar documentos.`,
+    );
+  }
 
   const lanc = (t: TipoLancamentoIcms) => dados.lancamentos.filter((l) => l.tipo === t).reduce((s, l) => s.plus(dec(l.valor)), ZERO);
   const linhas: LinhaIcms[] = [];

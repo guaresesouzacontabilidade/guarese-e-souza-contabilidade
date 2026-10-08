@@ -135,6 +135,7 @@ export default async function IcmsCarteira({ searchParams }: PageProps<"/escrito
                           ) : (
                             <Badge variante="alerta">a conferir</Badge>
                           )}
+                          {l.r?.semXml.notas.length ? <Badge variante="alerta">{l.r.semXml.notas.length} sem XML</Badge> : null}
                         </span>
                       </Td>
                       <Td className="hidden md:table-cell text-right numero">{l.r?.propria ? formatarMoeda(l.r.propria.aRecolher) : "—"}</Td>

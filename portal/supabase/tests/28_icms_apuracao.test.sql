@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(32);
+select plan(35);
 
 \ir 00_setup.sql.inc
 select set_config('request.jwt.claims', '', true);
@@ -125,6 +125,22 @@ select lives_ok($$select public.icms_reabrir(current_setting('testes.empresa_b')
 reset role;
 select ok(exists (select 1 from public.auditoria where acao = 'icms_apuracao_reaberta' and empresa_id = current_setting('testes.empresa_b')::uuid),
           'reabertura fica na auditoria');
+
+-- 4. NF-e só em resumo (sem XML) entram na lista "sem_xml"; com XML ligado, não
+insert into public.nfe_resumos (empresa_id, chave, emitente_documento, emitente_nome, data_emissao, valor, situacao)
+values (current_setting('testes.empresa_a')::uuid, '35260949319411002187550010008237001000000010', '49319411002187', 'FORNECEDOR SP',
+        '2026-09-21T10:00:00-03:00', 6574.64, 'autorizada'),
+       (current_setting('testes.empresa_a')::uuid, '35260949319411002187550010008237011000000011', '49319411002187', 'FORNECEDOR SP',
+        '2026-09-21T10:00:00-03:00', 10, 'cancelada');
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+set local role authenticated;
+select is(jsonb_array_length(public.dados_apuracao_icms(current_setting('testes.empresa_a')::uuid, '2026-09-01') -> 'sem_xml'), 1,
+          'nota autorizada só em resumo aparece em sem_xml (a cancelada não)');
+select is(public.dados_apuracao_icms(current_setting('testes.empresa_a')::uuid, '2026-09-01') #>> '{sem_xml,0,valor}', '6574.64',
+          'valor do resumo');
+select is(jsonb_array_length(public.dados_apuracao_icms(current_setting('testes.empresa_a')::uuid, '2026-10-01') -> 'sem_xml'), 0,
+          'resumo de outro mês não entra');
+reset role;
 
 -- 4. Releitura em fila
 select pg_temp.como('00000000-0000-0000-0000-0000000000a2');

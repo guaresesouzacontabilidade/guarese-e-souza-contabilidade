@@ -189,6 +189,41 @@ export default async function ApuracaoIcms({ params, searchParams }: PageProps<"
           </Alerta>
         ) : null}
 
+        {res.semXml.notas.length ? (
+          <Alerta
+            tom="alerta"
+            titulo={`${res.semXml.notas.length} NF-e de entrada ainda sem o XML completo (${moeda(res.semXml.valor)}) — fora do cálculo`}
+          >
+            <p>
+              A SEFAZ entregou só o resumo {res.semXml.notas.length === 1 ? "desta nota" : "destas notas"}: sem os itens e o ICMS, {res.semXml.notas.length === 1 ? "ela não entra" : "elas não entram"} na apuração até o XML chegar
+              {res.semXml.outroEstado ? ` (${res.semXml.outroEstado} de outro estado, que ${res.semXml.outroEstado === 1 ? "muda" : "mudam"} a complementação e o DIFAL)` : ""}. Confirme a operação em{" "}
+              <Link className="font-medium underline" href={`${base}/notas-automaticas`}>
+                Notas automáticas
+              </Link>{" "}
+              (o XML vem nas buscas seguintes) ou envie os XML em{" "}
+              <Link className="font-medium underline" href={`${base}/enviar?competencia=${comp.slice(0, 7)}`}>
+                Enviar documentos
+              </Link>
+              .
+            </p>
+            <details className="mt-2">
+              <summary className="cursor-pointer text-xs font-medium">Ver as notas</summary>
+              <ul className="mt-2 space-y-1 text-xs">
+                {res.semXml.notas.map((n) => (
+                  <li key={n.chave} className="flex flex-wrap justify-between gap-x-3">
+                    <span>
+                      NF-e {n.numero} · {formatarData(n.data)} · {n.emitente ?? "Fornecedor"} · {n.uf ?? "—"}
+                      {n.outroEstado ? " (outro estado)" : ""} ·{" "}
+                      {n.confirmada ? "confirmada, XML a caminho" : n.confirmacao_pedida ? "confirmação pedida" : n.ciencia ? "ciência registrada, XML a caminho" : "só resumo"}
+                    </span>
+                    <span className="numero">{moeda(n.valor)}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </Alerta>
+        ) : null}
+
         <div className="grid gap-3 sm:grid-cols-3 [&>*]:min-w-0">
           <Indicador
             rotulo={`Guias de ICMS a pagar em ${mesPag}`}
