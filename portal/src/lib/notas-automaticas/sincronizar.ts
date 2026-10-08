@@ -42,6 +42,12 @@ import { importarXmlAutomatico } from "./importar";
 const AMBIENTE: Ambiente = "producao";
 const MINUTO = 60_000;
 const HORA = 60 * MINUTO;
+/**
+ * Espera da SEFAZ depois de "nenhum documento" (137), do último NSU ou de
+ * consumo indevido (656): 1 hora, com 5 minutos de folga — consultar no
+ * minuto exato já foi recusado com 656, o que adia a busca por mais 1 hora.
+ */
+const ESPERA_SEFAZ = HORA + 5 * MINUTO;
 const TEMPO_MAXIMO_MS = 25_000;
 const MAX_CONSULTAS = 10;
 const MAX_LOTES_CIENCIA = 5;
@@ -236,7 +242,7 @@ async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServ
   const iniciado = new Date();
   let ult = ultInicial;
   let max: string | null = null;
-  let proxima = new Date(Date.now() + HORA);
+  let proxima = new Date(Date.now() + ESPERA_SEFAZ);
   let documentos = 0;
   let resumos = 0;
   let ignorados = 0;
@@ -263,20 +269,20 @@ async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServ
       if (r.cStat === "656") {
         // Consumo indevido: a SEFAZ bloqueia novas consultas por 1 hora
         resultado = "limite";
-        proxima = new Date(Date.now() + HORA);
+        proxima = new Date(Date.now() + ESPERA_SEFAZ);
         break;
       }
       if (r.cStat === "137") {
         // Nenhum documento novo: a próxima consulta só depois de 1 hora
         if (r.ultNsu) ult = r.ultNsu;
         if (r.maxNsu) max = r.maxNsu;
-        proxima = new Date(Date.now() + HORA);
+        proxima = new Date(Date.now() + ESPERA_SEFAZ);
         break;
       }
       if (r.cStat !== "138") {
         resultado = "erro";
         erro = `SEFAZ: ${mensagem}`;
-        proxima = new Date(Date.now() + HORA);
+        proxima = new Date(Date.now() + ESPERA_SEFAZ);
         break;
       }
       for (const d of r.documentos) {
@@ -291,7 +297,7 @@ async function buscarNfe(c: Contexto, ultInicial: string): Promise<ResultadoServ
       await c.admin.from("notas_automaticas").update({ nfe_ult_nsu: ult, nfe_max_nsu: max }).eq("empresa_id", c.empresaId);
       if (!max || ult >= max) {
         // Chegou ao último NSU: a SEFAZ pede 1 hora até a próxima consulta
-        proxima = new Date(Date.now() + HORA);
+        proxima = new Date(Date.now() + ESPERA_SEFAZ);
         break;
       }
       // Ainda há documentos: continua logo na próxima execução
