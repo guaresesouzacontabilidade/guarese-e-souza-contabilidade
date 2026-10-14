@@ -1,7 +1,7 @@
 // Service worker do Meu Dia: abre sem internet e atualiza com segurança.
 // A lista ASSETS e a VERSION são geradas por `npm run precache` — não edite à mão.
 
-const VERSION = '7e5d2818c7fe';
+const VERSION = '81ef262c2003';
 const ASSETS = [
   './',
   './assets/fonts/manrope.woff2',
@@ -22,6 +22,8 @@ const ASSETS = [
   './js/core/categories.js',
   './js/core/dates.js',
   './js/core/finance.js',
+  './js/core/forecast.js',
+  './js/core/installments.js',
   './js/core/money.js',
   './js/core/quickEntry.js',
   './js/core/recurrence.js',
@@ -50,9 +52,11 @@ const ASSETS = [
   './js/ui/forms/bill.js',
   './js/ui/forms/event.js',
   './js/ui/forms/import.js',
+  './js/ui/forms/limits.js',
   './js/ui/forms/transaction.js',
   './js/ui/forms/wallet.js',
   './js/ui/layers.js',
+  './js/ui/planning.js',
   './js/ui/rows.js',
   './js/ui/state.js',
   './js/ui/views/agenda.js',

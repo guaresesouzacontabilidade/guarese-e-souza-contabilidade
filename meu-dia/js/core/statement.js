@@ -80,15 +80,15 @@ function cleanDescription(text) {
 let seq = 0;
 const rowId = () => `r${++seq}`;
 
-function finishRow(row, mode, history) {
+function finishRow(row, mode, history, hints = {}) {
   const n = normalize(row.description);
   if (mode === 'card' && CARD_PAYMENT.test(n)) row.type = 'transfer';
-  row.category = row.type === 'transfer' ? null : suggestCategory(row.description, row.type, history);
+  row.category = row.type === 'transfer' ? null : suggestCategory(row.description, row.type, history, hints.custom, hints.rules);
   return row;
 }
 
 // Texto extraído de PDF (uma linha por linha visual do documento).
-export function parseStatementText(text, { today, mode: forcedMode, history = [] } = {}) {
+export function parseStatementText(text, { today, mode: forcedMode, history = [], rules = [], custom = [] } = {}) {
   const mode = forcedMode || detectMode(text);
   const year = guessYear(text, today);
   const rows = [];
@@ -134,7 +134,7 @@ export function parseStatementText(text, { today, mode: forcedMode, history = []
       confident = false;
     }
     if (balance !== null) lastBalance = balance;
-    rows.push(finishRow({ id: rowId(), date: currentDate, description: tidyCase(description), amount: value.value, type, confident }, mode, history));
+    rows.push(finishRow({ id: rowId(), date: currentDate, description: tidyCase(description), amount: value.value, type, confident }, mode, history, { rules, custom }));
   }
   return summarize(rows, mode);
 }
@@ -152,7 +152,7 @@ function tidyCase(s) {
 
 // ---------- OFX ----------
 
-export function parseOFX(text, { today, history = [] } = {}) {
+export function parseOFX(text, { today, history = [], rules = [], custom = [] } = {}) {
   const card = /CREDITCARDMSGSRSV1|CCSTMTRS/i.test(text);
   const mode = card ? 'card' : 'bank';
   const rows = [];
@@ -173,6 +173,7 @@ export function parseOFX(text, { today, history = [] } = {}) {
         { id: rowId(), date, description, amount: Math.abs(value), type: value < 0 ? 'expense' : 'income', confident: true, externalId: tag('FITID') || null },
         mode,
         history,
+        { rules, custom },
       ),
     );
   }
@@ -219,7 +220,7 @@ function parseCSVNumber(s) {
   return parseMoney(t);
 }
 
-export function parseCSV(text, { today, mode: forcedMode, history = [] } = {}) {
+export function parseCSV(text, { today, mode: forcedMode, history = [], rules = [], custom = [] } = {}) {
   const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) return summarize([], forcedMode || 'bank');
   const sep = (lines[0].match(/;/g) || []).length >= (lines[0].match(/,/g) || []).length ? ';' : ',';
@@ -246,7 +247,7 @@ export function parseCSV(text, { today, mode: forcedMode, history = [] } = {}) {
     const description = tidyCase((iDesc >= 0 ? cols[iDesc] : '') || 'Lançamento');
     // Na fatura, valor positivo é compra; no extrato, positivo é entrada.
     const type = mode === 'card' ? (value > 0 ? 'expense' : 'income') : value < 0 ? 'expense' : 'income';
-    rows.push(finishRow({ id: rowId(), date, description, amount: Math.abs(value), type, confident: true }, mode, history));
+    rows.push(finishRow({ id: rowId(), date, description, amount: Math.abs(value), type, confident: true }, mode, history, { rules, custom }));
   }
   return summarize(rows, mode);
 }

@@ -14,8 +14,9 @@ tema claro/escuro e salvamento automático.
 | **Adicionar** | Botão sempre visível. Compromisso, tarefa, receita, despesa ou conta, cada um com só os campos essenciais; o resto fica em “Mais detalhes”. |
 | **Agenda** | Visualizações dia, semana e mês; criar, editar, concluir e excluir; horário, local, notas, categoria, prioridade, lembrete; repetição semanal, mensal e anual; busca e filtros. Contas que vencem aparecem nos dias certos. |
 | **Finanças** | Receitas e despesas em segundos (valor, descrição e data); categoria sugerida automaticamente pela descrição; carteiras (banco, dinheiro, cartão) com saldo; busca; edição e exclusão com confirmação e “Desfazer”; aviso de lançamento repetido. **Importar extrato ou fatura** (PDF, inclusive com senha, OFX ou CSV): mostra o que entrou e o que saiu, deixa revisar cada linha antes de salvar e não importa duas vezes o mesmo lançamento. |
+| **Planejamento** | **Compras parceladas** (ex.: 10x de R$ 300): uma parcela por mês, com o que falta pagar e quanto já está comprometido nos próximos meses; excluir só uma parcela, as próximas ou todas. **Previsão do fim do mês**: saldo do mês + contas a receber − contas a pagar até o último dia, com “Como calculei”. **Limites por categoria** (ex.: Mercado até R$ 800): barra de uso, aviso ao chegar a 80% e ao atingir o limite. **Regras de categoria**: ao corrigir a categoria de um lançamento ou de uma linha do extrato, o app aprende (“UBER” → Transporte) e aplica nas próximas vezes; as regras ficam em Ajustes. |
 | **Contas** | A pagar e a receber; vencidas, vencem em breve, próximas e pagas; “Pagar”/“Recebi” com um toque; depois pergunta se quer registrar em Finanças e reaproveita um lançamento parecido para não duplicar; contas recorrentes geram a próxima sozinhas; lembretes configuráveis (no dia, 1, 3 ou 7 dias antes). |
-| **Assistente** | Responde perguntas como “Quanto gastei este mês?”, “Quanto gastei com combustível?”, “Quais contas vencem esta semana?”, “Quanto ainda tenho no orçamento?”, “Qual foi meu maior gasto?”. Usa só os dados registrados, mostra “Como calculei” e avisa quando não há dados. Não faz pagamentos nem promete resultados. |
+| **Assistente** | Responde perguntas como “Quanto gastei este mês?”, “Quanto gastei com combustível?”, “Quais contas vencem esta semana?”, “Quanto ainda tenho no orçamento?”, “Quanto ainda posso gastar com mercado?”, “Como vou terminar o mês?”, “Quanto falta pagar de parcelas?”, “Qual foi meu maior gasto?”. Usa só os dados registrados, mostra “Como calculei” e avisa quando não há dados. Não faz pagamentos nem promete resultados. |
 | **Relatórios** | Receitas, despesas e saldo por período (este mês, mês passado, 3 meses, ano ou datas livres), gastos por categoria, gráfico mês a mês (com opção de tabela) e comparação com o período anterior em frases simples. |
 | **Ajustes** | Nome, tema, ocultar valores, orçamento mensal, lembretes e notificações, conta e sincronização, instalação, exportar/importar dados (JSON e planilha CSV) e excluir dados/conta. |
 
@@ -28,6 +29,8 @@ tema claro/escuro e salvamento automático.
   exclusão de conta), mas só aparece ativo depois de configurar o Supabase (veja abaixo). Até lá, o app avisa
   que os dados ficam salvos neste aparelho.
 - Não se conecta a bancos e não movimenta dinheiro.
+- **Previsão do fim do mês:** usa só o que está registrado (lançamentos e contas). Gastos do dia a dia que
+  ainda não foram anotados não entram na conta, e o app avisa isso.
 - **Importar PDF:** lê extratos e faturas que têm texto (os gerados pelo app ou site do banco). PDF que é só
   imagem (foto ou escaneado) não dá para ler; nesse caso, use o OFX ou CSV que o banco oferece.
 

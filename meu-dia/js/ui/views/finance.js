@@ -10,6 +10,7 @@ import { navigate } from '../state.js';
 import { openAddForm } from '../forms/add.js';
 import { openWalletForm } from '../forms/wallet.js';
 import { openImport } from '../forms/import.js';
+import { ForecastBox, LimitsCard, InstallmentsCard } from '../planning.js';
 
 const TYPES = [
   { id: 'all', label: 'Tudo' },
@@ -24,14 +25,15 @@ function setParams(params) {
 }
 
 function Wallets({ s }) {
+  const today = todayISO();
   const wallets = live(s.wallets);
   return html`<section aria-label="Carteiras">
     <h2 class="group-title" style=${{ paddingTop: '4px' }}>
       Carteiras
-      ${wallets.length > 0 && html`<span class="money"><${Money} value=${wallets.reduce((n, w) => n + walletBalance(w, s.transactions), 0)} /></span>`}
+      ${wallets.length > 0 && html`<span class="money"><${Money} value=${wallets.reduce((n, w) => n + walletBalance(w, s.transactions, today), 0)} /></span>`}
     </h2>
     <div class="wallets">
-      ${wallets.map((w) => html`<${WalletChip} key=${w.id} wallet=${w} balance=${walletBalance(w, s.transactions)} onClick=${() => openWalletForm(w)} />`)}
+      ${wallets.map((w) => html`<${WalletChip} key=${w.id} wallet=${w} balance=${walletBalance(w, s.transactions, today)} onClick=${() => openWalletForm(w)} />`)}
       <button type="button" class="wallet add" onClick=${() => openWalletForm()}>
         <${Icon} name="plus" />
         <span>${wallets.length ? 'Nova carteira' : 'Adicionar carteira'}</span>
@@ -105,6 +107,8 @@ export function FinanceView({ s, params }) {
             <div class="kpi"><div class="kpi-label">Saldo do mês</div><div class=${`kpi-value ${t.balance < 0 ? 'amount-neg' : ''}`}><${Money} value=${t.balance} /></div></div>
           </div>
 
+          ${isCurrent && html`<${ForecastBox} s=${s} today=${today} card />`}
+
           ${budget &&
           html`<div class="card" style=${{ padding: '14px 16px' }}>
             <div class="budget" style=${{ marginTop: 0 }}>
@@ -115,6 +119,9 @@ export function FinanceView({ s, params }) {
               <${Meter} ratio=${budget.ratio} level=${budget.level} label=${`Orçamento usado: ${formatPercent(budget.ratio)}`} />
             </div>
           </div>`}
+
+          ${isCurrent && html`<${LimitsCard} s=${s} today=${today} />`}
+          ${isCurrent && html`<${InstallmentsCard} s=${s} today=${today} />`}
 
           <${Wallets} s=${s} />
 

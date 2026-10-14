@@ -63,11 +63,72 @@ function wordHit(text, word) {
   return (` ${text} `).includes(` ${w} `) || (w.length >= 5 && text.includes(w));
 }
 
-// Sugere uma categoria a partir da descrição: primeiro aprende com o histórico, depois usa palavras-chave.
-export function suggestCategory(description, type, history = [], custom = []) {
+// ---------- Regras aprendidas ("UBER" é sempre Transporte) ----------
+
+// Palavras que os bancos colocam antes do nome da loja e não ajudam a reconhecê-la.
+const NOISE = new Set([
+  'compra', 'compras', 'cartao', 'credito', 'debito', 'deb', 'cred', 'aut', 'automatico', 'pagamento', 'pagto', 'pgto', 'pag', 'pg',
+  'ec', 'mp', 'pp', 'ifd', 'dl', 'ebanx', 'mc', 'vs', 'elo', 'visa', 'master', 'mastercard', 'int', 'internacional', 'nacional',
+  'parc', 'parcela', 'parcelado', 'estab', 'loja', 'lojas', 'no', 'na', 'de', 'do', 'da', 'dos', 'das', 'em', 'com', 'para', 'pra',
+  'boleto', 'conta', 'tarifa', 'sa', 'ltda', 'me', 'eireli', 'br', 'bra', 'www', 'net',
+]);
+const TRANSFER = new Set(['pix', 'ted', 'doc', 'transferencia', 'transf', 'enviado', 'enviada', 'recebido', 'recebida', 'qrcode', 'qr']);
+// Palavras genéricas: junto com elas, guarda também a palavra seguinte ("posto shell", "farmacia sao joao").
+const GENERIC = new Set(['posto', 'farmacia', 'drogaria', 'supermercado', 'mercado', 'restaurante', 'padaria', 'auto', 'comercio', 'casa', 'bar', 'lanchonete', 'academia', 'clinica', 'hospital', 'escola', 'the', 'super', 'atacado', 'distribuidora']);
+
+// Palavras da descrição, sem acentos, números e símbolos ("IFD*IFOOD CLUB 12" → ifd ifood club).
+export function descriptionWords(description) {
+  return normalize(String(description || '').replace(/[*._/\\-]/g, ' '))
+    .split(' ')
+    .filter((w) => w.length >= 2 && !/\d/.test(w));
+}
+
+// O "nome" que identifica a loja ou pessoa numa descrição, usado como chave da regra.
+export function ruleKey(description) {
+  const words = descriptionWords(description);
+  const isTransfer = words.some((w) => TRANSFER.has(w));
+  const rest = words.filter((w) => !NOISE.has(w) && !TRANSFER.has(w));
+  if (!rest.length || rest[0].length < 3) return null;
+  // Pix e transferências: o nome da pessoa (duas palavras) para não juntar "João Silva" com "João Souza".
+  const take = isTransfer || GENERIC.has(rest[0]) || rest[0].length < 4 ? 2 : 1;
+  return rest.slice(0, take).join(' ');
+}
+
+export function ruleMatches(rule, description) {
+  return (` ${descriptionWords(description).join(' ')} `).includes(` ${rule.match} `);
+}
+
+// A regra mais específica (texto mais longo) que vale para a descrição.
+export function findRule(description, type, rules = []) {
+  let best = null;
+  for (const r of rules) {
+    if (r.type !== type || !ruleMatches(r, description)) continue;
+    if (!best || r.match.length > best.match.length) best = r;
+  }
+  return best;
+}
+
+// Guarda (ou atualiza) a regra a partir de uma correção. Devolve a lista nova e a regra, ou null se nada mudou.
+export function learnRule(rules = [], { description, type, category, id }) {
+  const match = ruleKey(description);
+  if (!match || !category || type === 'transfer') return { rules, rule: null };
+  const existing = rules.find((r) => r.type === type && r.match === match);
+  if (existing) {
+    if (existing.category === category) return { rules, rule: null };
+    const rule = { ...existing, category };
+    return { rules: rules.map((r) => (r === existing ? rule : r)), rule };
+  }
+  const rule = { id, type, match, category };
+  return { rules: [...rules, rule], rule };
+}
+
+// Sugere uma categoria a partir da descrição: regras aprendidas, depois o histórico, depois palavras-chave.
+export function suggestCategory(description, type, history = [], custom = [], rules = []) {
   const text = normalize(description);
   if (!text) return null;
   const valid = new Set(categoriesFor(type, custom).map((c) => c.id));
+  const rule = findRule(description, type, rules);
+  if (rule && valid.has(rule.category)) return rule.category;
   const past = history
     .filter((t) => t.type === type && t.category && !t.deleted && normalize(t.description) === text)
     .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0];

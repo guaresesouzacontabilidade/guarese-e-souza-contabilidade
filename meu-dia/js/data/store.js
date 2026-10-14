@@ -4,6 +4,7 @@ import { uid } from '../core/text.js';
 import { planPayment } from '../core/bills.js';
 import { isRecurring } from '../core/recurrence.js';
 import { BILL_KIND } from '../core/bills.js';
+import { learnRule } from '../core/categories.js';
 
 export const COLLECTIONS = ['events', 'transactions', 'wallets', 'bills'];
 const KEYS = [...COLLECTIONS, 'settings', 'prefs', 'meta'];
@@ -16,6 +17,8 @@ export const DEFAULT_SETTINGS = {
   billRemind: [1, 0],
   eventReminder: 30,
   customCategories: [],
+  categoryRules: [],
+  categoryBudgets: {},
   updatedAt: 0,
 };
 
@@ -138,6 +141,16 @@ export function create(collection, data) {
   return record;
 }
 
+// Vários registros de uma vez (parcelas, importação): uma só gravação.
+export function createMany(collection, list) {
+  const now = Date.now();
+  const records = list.map((data) => ({ ...data, id: data.id || uid(), createdAt: now, updatedAt: now }));
+  if (!records.length) return records;
+  commit({ [collection]: [...state[collection], ...records], meta: withDirty(records.map((r) => `${collection}:${r.id}`)) }, [collection, 'meta']);
+  requestPersistence();
+  return records;
+}
+
 export function update(collection, id, patch) {
   const now = Date.now();
   let updated = null;
@@ -229,6 +242,24 @@ export function linkedTransaction(bill) {
 export function updateSettings(patch) {
   const settings = { ...state.settings, ...patch, id: 'settings', updatedAt: Math.max(Date.now(), (state.settings.updatedAt || 0) + 1) };
   commit({ settings, meta: withDirty(['settings:settings']) }, ['settings', 'meta']);
+}
+
+// Aprende com a correção de categoria ("UBER" → Transporte). Devolve a regra nova ou alterada.
+export function learnCategory({ description, type, category }) {
+  const { rules, rule } = learnRule(state.settings.categoryRules || [], { description, type, category, id: uid() });
+  if (rule) updateSettings({ categoryRules: rules });
+  return rule;
+}
+
+export function removeCategoryRule(id) {
+  updateSettings({ categoryRules: (state.settings.categoryRules || []).filter((r) => r.id !== id) });
+}
+
+export function setCategoryLimit(categoryId, amount) {
+  const limits = { ...(state.settings.categoryBudgets || {}) };
+  if (amount > 0) limits[categoryId] = amount;
+  else delete limits[categoryId];
+  updateSettings({ categoryBudgets: limits });
 }
 
 export function updatePrefs(patch) {

@@ -53,7 +53,7 @@ function findDate(text, today) {
 
 const FILLER = /^(eu |hoje |agora |acabei de |acabei |ja |gastei |gasto |paguei |comprei |foi |foram |deu |recebi |ganhei |entrou |caiu |vendi |um |uma |uns |umas |de |do |da |dos |das |com |no |na |nos |nas |em |pro |pra |para |pelo |pela |o |a |os |as |reais |real )+/;
 
-export function parseQuickEntry(text, today, history = []) {
+export function parseQuickEntry(text, today, history = [], rules = [], custom = []) {
   if (!text || !text.trim()) return null;
   const type = INCOME.test(normalize(text)) ? 'income' : 'expense';
   const amount = findAmount(text);
@@ -79,7 +79,7 @@ export function parseQuickEntry(text, today, history = []) {
     amount: amount ? amount.cents : 0,
     date: date ? date.date : today,
     description,
-    category: description ? suggestCategory(description, type, history) : null,
+    category: description ? suggestCategory(description, type, history, custom, rules) : null,
   };
 }
 

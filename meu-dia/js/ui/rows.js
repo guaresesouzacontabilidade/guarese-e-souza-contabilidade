@@ -66,6 +66,7 @@ export function TransactionRow({ t, showDate = false }) {
   const cat = findCategory(t.category, t.type, s.settings.customCategories);
   const wallet = t.walletId ? s.wallets.find((w) => w.id === t.walletId && !w.deleted) : null;
   const sub = [t.category ? cat.label : 'Sem categoria'];
+  if (t.installment) sub.push(`Parcela ${t.installment.n}/${t.installment.of}`);
   if (wallet) sub.push(wallet.name);
   if (showDate) sub.push(relativeDay(t.date, todayISO()));
   return html`<button type="button" class="item" onClick=${() => openTransactionDetail(t)}>

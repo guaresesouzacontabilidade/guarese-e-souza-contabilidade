@@ -29,13 +29,14 @@ export function monthTotals(transactions, anyDayInMonth) {
   return totals(transactions, startOfMonth(anyDayInMonth), endOfMonth(anyDayInMonth));
 }
 
-export function walletBalance(wallet, transactions) {
-  const own = transactions.filter((t) => !t.deleted && t.walletId === wallet.id);
+// Saldo da carteira. Com `today`, lançamentos com data futura (ex.: próximas parcelas) ainda não contam.
+export function walletBalance(wallet, transactions, today) {
+  const own = transactions.filter((t) => !t.deleted && t.walletId === wallet.id && (!today || t.date <= today));
   return (wallet.initialBalance || 0) + sumBy(own, (t) => (t.type === 'income' ? t.amount : -t.amount));
 }
 
-export function walletsTotal(wallets, transactions) {
-  return sumBy(live(wallets), (w) => walletBalance(w, transactions));
+export function walletsTotal(wallets, transactions, today) {
+  return sumBy(live(wallets), (w) => walletBalance(w, transactions, today));
 }
 
 // Orçamento do mês: quanto já foi usado, quanto resta e quanto dá por dia.
@@ -61,6 +62,29 @@ export function budgetStatus(budget, spent, today) {
     level,
     expectedRatio,
   };
+}
+
+// Limites por categoria no mês (settings.categoryBudgets = { mercado: 80000, ... }), os mais usados primeiro.
+export function categoryLimits(limits, transactions, today, custom = []) {
+  const from = startOfMonth(today);
+  const to = endOfMonth(today);
+  return Object.entries(limits || {})
+    .filter(([, limit]) => limit > 0)
+    .map(([id, limit]) => {
+      const spent = sumBy(transactions.filter((t) => !t.deleted && t.type === 'expense' && t.category === id && t.date >= from && t.date <= to), (t) => t.amount);
+      return { id, category: findCategory(id, 'expense', custom), ...budgetStatus(limit, spent, today) };
+    })
+    .sort((a, b) => b.ratio - a.ratio);
+}
+
+// Aviso ao lançar uma despesa que faz a categoria chegar a 80% ou ao limite.
+export function limitWarning(limit, spentBefore, spentAfter) {
+  if (!limit || spentAfter <= spentBefore) return null;
+  const before = spentBefore / limit;
+  const after = spentAfter / limit;
+  if (after >= 1 && before < 1) return 'over';
+  if (after >= 0.8 && before < 0.8) return 'near';
+  return null;
 }
 
 export function budgetMessage(status) {

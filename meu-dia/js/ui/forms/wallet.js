@@ -3,6 +3,7 @@ import { html, useState } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { WALLET_TYPES, walletBalance } from '../../core/finance.js';
 import { formatMoney } from '../../core/money.js';
+import { todayISO } from '../../core/dates.js';
 import { Button, TextInput, Field, Chips, MoneyInput, SheetHeader, SheetActions, Hint } from '../components.js';
 import { openSheet, closeLayer, confirm, toast } from '../state.js';
 
@@ -39,7 +40,7 @@ function WalletForm({ item = null, onClose }) {
     closeLayer();
   };
 
-  const current = item ? walletBalance(item, store.getState().transactions) : null;
+  const current = item ? walletBalance(item, store.getState().transactions, todayISO()) : null;
 
   return html`<form class="form" onSubmit=${save} novalidate>
     <${SheetHeader} title=${editing ? 'Editar carteira' : 'Nova carteira'} subtitle="Onde seu dinheiro fica: banco, dinheiro ou cartão." onClose=${onClose} />

@@ -11,6 +11,7 @@ import { AgendaRow, BillRow } from '../rows.js';
 import { navigate, useNow } from '../state.js';
 import { openAddMenu, openAddForm, ADD_OPTIONS } from '../forms/add.js';
 import { openBudgetSheet } from './settings.js';
+import { ForecastBox, LimitAlerts } from '../planning.js';
 
 function QuickActions() {
   return html`<section class="quick o-4" aria-labelledby="quick-title">
@@ -58,7 +59,7 @@ function MonthCard({ s, today }) {
   const t = useMemo(() => totals(s.transactions, startOfMonth(today), endOfMonth(today)), [s.transactions, today]);
   const budget = budgetStatus(s.settings.budget, t.expense, today);
   const wallets = live(s.wallets);
-  const walletSum = wallets.length ? walletsTotal(wallets, s.transactions) : null;
+  const walletSum = wallets.length ? walletsTotal(wallets, s.transactions, today) : null;
   const month = monthName(today);
   const daysLeft = diffDays(today, endOfMonth(today)) + 1;
   return html`<${Card}
@@ -80,6 +81,7 @@ function MonthCard({ s, today }) {
         <span class="f-value"><${Money} value=${t.expense} /></span>
       </button>
     </div>
+    <${ForecastBox} s=${s} today=${today} />
     ${budget
       ? html`<div class="budget">
           <div class="budget-top">
@@ -99,6 +101,7 @@ function MonthCard({ s, today }) {
           <${Icon} name="target" size=${16} />
           <span><strong>Defina um orçamento mensal</strong> para ver quanto ainda pode gastar. Toque aqui.</span>
         </button>`}
+    <${LimitAlerts} s=${s} today=${today} />
     ${walletSum !== null &&
     html`<p class="hero-hint" style=${{ marginTop: '12px' }}>
       Saldo nas carteiras: <strong style=${{ color: 'var(--text)' }}><${Money} value=${walletSum} /></strong>

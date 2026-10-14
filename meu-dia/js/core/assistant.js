@@ -6,11 +6,13 @@ import {
 } from './dates.js';
 import { formatMoney, formatPercent, sumBy } from './money.js';
 import { normalize, plural, joinList } from './text.js';
-import { totals, byCategory, budgetStatus, walletBalance, live } from './finance.js';
+import { totals, byCategory, budgetStatus, walletBalance, live, categoryLimits } from './finance.js';
 import { categoryFromTerm, findCategory } from './categories.js';
 import { billsDueBetween, openBills } from './bills.js';
 import { occurrencesInRange, overdueTasks } from './agenda.js';
 import { comparePeriods, periodLabel } from './reports.js';
+import { monthForecast } from './forecast.js';
+import { activePlans, upcomingByMonth } from './installments.js';
 
 export const EXAMPLE_QUESTIONS = [
   'Quanto gastei este mês?',
@@ -20,6 +22,8 @@ export const EXAMPLE_QUESTIONS = [
   'Qual foi meu maior gasto?',
   'Onde gastei mais este mês?',
   'Comparar com o mês passado',
+  'Como vou terminar o mês?',
+  'Quanto falta pagar de parcelas?',
   'O que tenho na agenda hoje?',
 ];
 
@@ -120,10 +124,12 @@ export function detectIntent(q) {
   if (has(q, /^(oi|ola|bom dia|boa tarde|boa noite|e ai)\b/) && q.split(' ').length <= 3) return 'hello';
   if (has(q, /\b(ajuda|o que voce (faz|sabe|consegue)|como (funciona|te uso|usar)|exemplos?)\b/)) return 'help';
   if (has(q, /\b(dica|dicas|economizar|economia|gastar menos|sugest\w*|organizar (minhas|meu|as) (financas|dinheiro|contas))\b/)) return 'tips';
-  if (has(q, /\b(orcamento|posso gastar|ainda posso|limite (do mes|mensal|de gastos))\b/)) return 'budget';
+  if (has(q, /\b(parcelas?|parcelad\w*|prestac\w*)\b/) && !has(q, /\b(gastei|paguei|gasto com)\b/)) return 'installments';
+  if (has(q, /\b(orcamento|posso gastar|ainda posso|limites?)\b/)) return 'budget';
   if (has(q, /\b(tenho (que|pra|para|a) (pagar|receber)|falta (pagar|receber)|faltam pagar|preciso pagar|vou (pagar|receber)|a pagar|a receber)\b/)) return 'bills';
   if (has(q, /\b(contas?|boletos?|faturas?)\b/) && has(q, /\b(venc\w*|pagar|receber|aberto|abertas|pendentes?|atrasad\w*|proximas?|tenho que pagar|falta pagar|faltam)\b/)) return 'bills';
   if (has(q, /\b(boletos?)\b/)) return 'bills';
+  if (has(q, /\b(previs\w*|vai sobrar|vou terminar|vai faltar|terminar o mes|fechar o mes|vou ter no (fim|final)|saldo (no|do) (fim|final) do mes)\b/)) return 'forecast';
   if (has(q, /\b(compar\w*|em relacao ao|versus|vs|diferenca)\b/) || has(q, /\b(mais|menos) (do )?que (no |em )?(o )?mes passado\b/)) return 'compare';
   if (has(q, /\b(maior|maiores) (gasto|gastos|despesa|despesas|compra|compras|saida|saidas)\b/) || has(q, /\b(gasto|despesa|compra) mais (cara|caro|alta|alto)\b/)) return 'biggest';
   if (has(q, /\b(onde|com o que|com que|em que|no que|para onde|pra onde)\b.*\b(gastei|gasto|gastando|vai|foi)\b/) || has(q, /\b(por categoria|categorias?)\b/) || has(q, /\b(mais gastei|gastei mais)\b/)) return 'categories';
@@ -285,12 +291,12 @@ function answerBalance(q, ctx, p) {
   const wallets = live(ctx.wallets || []);
   const asksWallets = /\b(carteira|carteiras|conta bancaria|contas bancarias|banco|bancos|no total|guardado)\b/.test(q) || (/\bquanto (eu )?tenho\b/.test(q) && !p.explicit);
   if (asksWallets && wallets.length) {
-    const lines = wallets.map((w) => ({ w, bal: walletBalance(w, ctx.transactions) }));
+    const lines = wallets.map((w) => ({ w, bal: walletBalance(w, ctx.transactions, ctx.today) }));
     const total = sumBy(lines, (l) => l.bal);
     return {
       kind: 'answer',
       text: `Somando suas carteiras, você tem ${money(total)}.`,
-      steps: ['Para cada carteira: saldo inicial + receitas − despesas lançadas nela.', SOURCE_NOTE],
+      steps: ['Para cada carteira: saldo inicial + receitas − despesas lançadas nela até hoje.', SOURCE_NOTE],
       items: lines.map((l) => `${l.w.name} · ${money(l.bal)}`),
       total: `Total: ${money(total)}`,
       extra: 'Lançamentos sem carteira escolhida não entram nessa soma.',
@@ -312,9 +318,50 @@ function answerBalance(q, ctx, p) {
   };
 }
 
+function answerCategoryLimit(q, ctx, found) {
+  const custom = ctx.settings?.customCategories || [];
+  const limits = ctx.settings?.categoryBudgets || {};
+  const today = ctx.today;
+  const all = categoryLimits(limits, ctx.transactions, today, custom);
+  if (found) {
+    const cat = found.category;
+    const status = all.find((l) => l.id === cat.id);
+    if (!status) {
+      return {
+        kind: 'no-data',
+        text: `Você não definiu um limite para ${cat.label}, então não sei quanto ainda pode gastar com isso.`,
+        steps: ['Defina limites por categoria em Ajustes › Orçamento mensal › Limites por categoria.'],
+        action: { label: 'Definir limites', route: '#/ajustes?secao=orcamento' },
+        suggestions: [`Quanto gastei com ${cat.label.toLowerCase()} este mês?`],
+      };
+    }
+    const steps = [`Limite de ${cat.label}: ${money(status.budget)} por mês`, `Gasto em ${periodLabel(startOfMonth(today), endOfMonth(today))}: ${money(status.spent)}`, `${money(status.budget)} − ${money(status.spent)} = ${money(status.remaining)}`, SOURCE_NOTE];
+    const text = status.remaining >= 0
+      ? `Com ${cat.label} você ainda pode gastar ${money(status.remaining)} este mês (usou ${formatPercent(status.ratio)} do limite).`
+      : `Você passou ${money(-status.remaining)} do limite de ${cat.label} este mês.`;
+    return { kind: 'answer', text, steps, suggestions: ['Como estão meus limites?', 'Onde gastei mais este mês?'] };
+  }
+  if (!all.length) return null;
+  const over = all.filter((l) => l.level === 'over');
+  return {
+    kind: 'answer',
+    text: over.length ? `${plural(over.length, 'categoria passou', 'categorias passaram')} do limite: ${joinList(over.map((l) => l.category.label))}.` : 'Todas as categorias estão dentro do limite deste mês.',
+    items: all.map((l) => `${l.category.label} · ${money(l.spent)} de ${money(l.budget)} (${formatPercent(l.ratio)})`),
+    steps: [`Gastos de ${periodLabel(startOfMonth(today), endOfMonth(today))} em cada categoria com limite.`, SOURCE_NOTE],
+    suggestions: ['Quanto ainda tenho no orçamento?', 'Onde gastei mais este mês?'],
+  };
+}
+
 function answerBudget(q, ctx) {
   const today = ctx.today;
   const budget = ctx.settings?.budget || 0;
+  // "Quanto posso gastar com mercado?", "Como estão meus limites?"
+  const term = extractTerm(q, /\b(gastar|gasto|orcamento|limite|limites)\b/);
+  const found = term ? categoryFromTerm(term, ctx.settings?.customCategories || []) : null;
+  if (found || /\blimites?\b/.test(q)) {
+    const byCat = answerCategoryLimit(q, ctx, found);
+    if (byCat) return byCat;
+  }
   if (!budget) {
     return {
       kind: 'no-data',
@@ -347,6 +394,62 @@ function answerBudget(q, ctx) {
   }
   steps.push(SOURCE_NOTE);
   return { kind: 'answer', text, steps, extra, suggestions: ['Onde gastei mais este mês?', 'Quais contas vencem esta semana?'] };
+}
+
+function answerForecast(q, ctx) {
+  const today = ctx.today;
+  const f = monthForecast({ transactions: ctx.transactions, bills: ctx.bills || [] }, today);
+  if (noFinanceData(ctx) && !f.pay.length && !f.receive.length) return emptyFinance();
+  const end = formatNumeric(f.date);
+  const steps = [
+    `Saldo de ${periodLabel(startOfMonth(today), f.date)} com o que já está lançado: ${money(f.balance)} (receitas ${money(f.income)} − despesas ${money(f.expense)})`,
+  ];
+  if (f.scheduledCount) steps.push(`Já inclui ${plural(f.scheduledCount, 'lançamento', 'lançamentos')} com data até ${end} (ex.: parcelas).`);
+  if (f.toReceive) steps.push(`+ ${money(f.toReceive)} de ${plural(f.receive.length, 'conta', 'contas')} a receber até ${end}`);
+  if (f.toPay) steps.push(`− ${money(f.toPay)} de ${plural(f.pay.length, 'conta', 'contas')} a pagar até ${end}${f.overdueCount ? ` (inclui ${plural(f.overdueCount, 'vencida', 'vencidas')})` : ''}`);
+  steps.push(`= ${money(f.forecast)}`);
+  steps.push('Gastos do dia a dia que você ainda não registrou não entram na conta.');
+  const items = [...f.pay, ...f.receive]
+    .sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1))
+    .slice(0, MAX_ITEMS)
+    .map((d) => `${formatNumeric(d.dueDate).slice(0, 5)} · ${d.bill.description} · ${d.kind === 'receive' ? '+' : '−'}${money(d.amount)}`);
+  const text = f.forecast >= 0
+    ? `A previsão é terminar o mês com saldo de ${money(f.forecast)}.`
+    : `A previsão é terminar o mês no vermelho: faltam ${money(-f.forecast)}.`;
+  return {
+    kind: 'answer',
+    text: f.hasPending ? text : `${text} Não há contas em aberto até ${end}, então a previsão é igual ao saldo de agora.`,
+    steps,
+    items,
+    suggestions: ['Quais contas vencem esta semana?', 'Quanto ainda tenho no orçamento?'],
+  };
+}
+
+function answerInstallments(q, ctx) {
+  const today = ctx.today;
+  const plans = activePlans(ctx.transactions, today).filter((p) => p.type === 'expense');
+  if (!plans.length) {
+    return {
+      kind: 'no-data',
+      text: 'Você não tem compras parceladas com parcelas por vir.',
+      steps: ['Para registrar uma compra parcelada, crie uma despesa e ligue “Compra parcelada”.', SOURCE_NOTE],
+      action: { label: 'Registrar despesa', add: 'expense' },
+      suggestions: ['Quanto gastei este mês?'],
+    };
+  }
+  const remaining = sumBy(plans, (p) => p.remaining);
+  const months = upcomingByMonth(ctx.transactions, today, 3).filter((m) => m.total > 0);
+  return {
+    kind: 'answer',
+    text: `Faltam ${money(remaining)} em parcelas de ${plural(plans.length, 'compra', 'compras')}.`,
+    items: plans.map((p) => `${p.description} · faltam ${p.remainingCount} de ${p.of} · ${money(p.remaining)} · última em ${formatNumeric(p.last.date)}`),
+    steps: [
+      'Soma das parcelas com data depois de hoje.',
+      ...months.map((m) => `${capitalizeFirst(MONTHS[Number(m.month.slice(5, 7)) - 1])}: ${money(m.total)} em parcelas`),
+      SOURCE_NOTE,
+    ],
+    suggestions: ['Como vou terminar o mês?', 'Quanto gastei este mês?'],
+  };
 }
 
 function answerBills(q, ctx, p) {
@@ -570,6 +673,9 @@ function helpAnswer() {
       '“Quanto gastei com mercado em setembro?”',
       '“Quais contas vencem esta semana?”',
       '“Quanto ainda tenho no orçamento?”',
+      '“Quanto ainda posso gastar com mercado?”',
+      '“Como vou terminar o mês?”',
+      '“Quanto falta pagar de parcelas?”',
       '“Qual foi meu maior gasto?”',
       '“Comparar com o mês passado”',
       '“O que tenho amanhã?”',
@@ -609,6 +715,10 @@ export function ask(question, ctx) {
       return answerTips(q, ctx);
     case 'budget':
       return answerBudget(q, ctx);
+    case 'forecast':
+      return answerForecast(q, ctx);
+    case 'installments':
+      return answerInstallments(q, ctx);
     case 'bills':
       return answerBills(q, ctx, p);
     case 'compare':

@@ -3,7 +3,7 @@ import { html, useMemo, useRef, useState } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { todayISO, formatNumeric, formatShort } from '../../core/dates.js';
 import { formatMoney } from '../../core/money.js';
-import { findCategory } from '../../core/categories.js';
+import { findCategory, categoriesFor, ruleKey } from '../../core/categories.js';
 import { findPossibleDuplicates, walletType, live, byCategory } from '../../core/finance.js';
 import { parseStatementText, parseOFX, parseCSV, totalsOf, importKey } from '../../core/statement.js';
 import { periodLabel } from '../../core/reports.js';
@@ -22,23 +22,28 @@ async function readText(file) {
   return new TextDecoder('windows-1252').decode(buf);
 }
 
+// Histórico e regras aprendidas ajudam a sugerir a categoria de cada linha.
+function hints(mode) {
+  const s = store.getState();
+  return { today: todayISO(), mode, history: s.transactions, rules: s.settings.categoryRules || [], custom: s.settings.customCategories || [] };
+}
+
 async function parseFile(file, { password, mode } = {}) {
   const name = file.name.toLowerCase();
-  const today = todayISO();
-  const history = store.getState().transactions;
+  const opts = hints(mode);
   if (name.endsWith('.pdf') || file.type === 'application/pdf') {
     const { extractPdfText } = await import('../../services/pdf.js');
     const text = await extractPdfText(file, password);
-    return { text, kind: 'text', result: parseStatementText(text, { today, mode, history }) };
+    return { text, kind: 'text', result: parseStatementText(text, opts) };
   }
   const text = await readText(file);
-  if (name.endsWith('.ofx') || name.endsWith('.qfx') || /<OFX>/i.test(text)) return { text, kind: 'ofx', result: parseOFX(text, { today, history }) };
-  if (name.endsWith('.csv')) return { text, kind: 'csv', result: parseCSV(text, { today, mode, history }) };
-  return { text, kind: 'text', result: parseStatementText(text, { today, mode, history }) };
+  if (name.endsWith('.ofx') || name.endsWith('.qfx') || /<OFX>/i.test(text)) return { text, kind: 'ofx', result: parseOFX(text, opts) };
+  if (name.endsWith('.csv')) return { text, kind: 'csv', result: parseCSV(text, opts) };
+  return { text, kind: 'text', result: parseStatementText(text, opts) };
 }
 
 function reparse(kind, text, mode) {
-  const opts = { today: todayISO(), mode, history: store.getState().transactions };
+  const opts = hints(mode);
   if (kind === 'ofx') return parseOFX(text, opts);
   if (kind === 'csv') return parseCSV(text, opts);
   return parseStatementText(text, opts);
@@ -139,6 +144,7 @@ function Review({ file, parsed, onClose }) {
   const [mode, setMode] = useState(parsed.result.mode);
   const [rows, setRows] = useState(() => annotate(parsed.result.rows, file));
   const [walletId, setWalletId] = useState(null);
+  const [picking, setPicking] = useState(null); // linha com as categorias abertas
 
   const changeMode = (m) => {
     setMode(m);
@@ -146,7 +152,25 @@ function Review({ file, parsed, onClose }) {
   };
   const toggle = (id) => setRows(rows.map((r) => (r.id === id ? { ...r, selected: !r.selected } : r)));
   const flip = (id) =>
-    setRows(rows.map((r) => (r.id === id ? { ...r, type: r.type === 'income' ? 'expense' : 'income', selected: true } : r)));
+    setRows(rows.map((r) => (r.id === id ? { ...r, type: r.type === 'income' ? 'expense' : 'income', category: null, selected: true } : r)));
+
+  // Corrigir a categoria de uma linha também corrige as linhas da mesma loja (e vira regra ao importar).
+  const pickCategory = (row, category) => {
+    const key = ruleKey(row.description);
+    let alsoChanged = 0;
+    setRows(
+      rows.map((r) => {
+        if (r.id === row.id) return { ...r, category, userCategory: true };
+        if (key && !r.userCategory && r.type === row.type && r.category !== category && ruleKey(r.description) === key) {
+          alsoChanged++;
+          return { ...r, category };
+        }
+        return r;
+      }),
+    );
+    setPicking(null);
+    if (alsoChanged) toast(`Também mudei ${plural(alsoChanged, 'linha parecida', 'linhas parecidas')} (“${key}”).`, { tone: 'success' });
+  };
 
   const chosen = rows.filter((r) => r.selected && r.type !== 'transfer');
   const t = totalsOf(chosen);
@@ -154,8 +178,9 @@ function Review({ file, parsed, onClose }) {
   const dates = rows.map((r) => r.date).sort();
 
   const doImport = () => {
-    for (const r of chosen) {
-      store.create('transactions', {
+    store.createMany(
+      'transactions',
+      chosen.map((r) => ({
         type: r.type,
         amount: r.amount,
         description: r.description,
@@ -164,13 +189,20 @@ function Review({ file, parsed, onClose }) {
         walletId,
         notes: '',
         importId: r.key,
-      });
+      })),
+    );
+    // O que a pessoa corrigiu vira regra para as próximas importações.
+    const learned = [];
+    for (const r of rows) {
+      if (!r.userCategory || !r.category) continue;
+      const rule = store.learnCategory({ description: r.description, type: r.type, category: r.category });
+      if (rule) learned.push(`“${rule.match}” → ${findCategory(rule.category, rule.type, custom).label}`);
     }
     haptic('success');
     toast(`${plural(chosen.length, 'lançamento importado', 'lançamentos importados')}`, { tone: 'success' });
     const from = chosen.map((r) => r.date).sort()[0];
     const to = chosen.map((r) => r.date).sort().at(-1);
-    replaceSheet((close) => html`<${Done} totals=${t} cats=${cats} count=${chosen.length} from=${from} to=${to} onClose=${close} />`);
+    replaceSheet((close) => html`<${Done} totals=${t} cats=${cats} count=${chosen.length} from=${from} to=${to} learned=${learned} onClose=${close} />`);
   };
 
   return html`<div class="form">
@@ -198,11 +230,11 @@ function Review({ file, parsed, onClose }) {
     html`<${Field} label="Lançar em qual carteira? (opcional)">
       <${Chips} label="Carteira" options=${wallets.map((w) => ({ id: w.id, label: w.name, icon: walletType(w.type).icon }))} value=${walletId} onChange=${setWalletId} />
     </${Field}>`}
-    <${Hint}>Toque em um item para incluir ou tirar. Toque em “Entrada/Saída” para trocar. Itens que parecem já registrados vêm desmarcados.</${Hint}>
+    <${Hint}>Toque em um item para incluir ou tirar, na categoria para corrigir e em “Entrada/Saída” para trocar. Itens que parecem já registrados vêm desmarcados.</${Hint}>
     <div class="import-list" role="list">
       ${rows.map((r) => {
         const cat = r.category ? findCategory(r.category, r.type === 'transfer' ? 'expense' : r.type, custom) : null;
-        return html`<div class=${`import-row ${r.selected ? 'is-on' : ''}`} role="listitem" key=${r.id}>
+        return html`<div class=${`import-row ${r.selected ? 'is-on' : ''} ${picking === r.id ? 'is-picking' : ''}`} role="listitem" key=${r.id}>
           <button type="button" class="check" role="checkbox" aria-checked=${r.selected ? 'true' : 'false'} aria-label=${`Importar ${r.description}`} onClick=${() => toggle(r.id)} disabled=${r.type === 'transfer'}>
             <span class="check-ring"><${Icon} name="check" size=${16} /></span>
           </button>
@@ -210,13 +242,22 @@ function Review({ file, parsed, onClose }) {
             <span class="item-title" style=${{ display: 'block' }}>${r.description}</span>
             <span class="item-sub">
               <span>${formatShort(r.date)}</span>
-              ${cat && html`<span class="dot"></span><span>${cat.label}</span>`}
               ${r.already && html`<span class="badge is-accent">Já importado</span>`}
               ${r.dup && html`<span class="badge is-warning">Parece já registrado (${formatNumeric(r.dup.date).slice(0, 5)})</span>`}
               ${r.type === 'transfer' && html`<span class="badge">Pagamento da fatura · não conta</span>`}
               ${!r.confident && html`<span class="badge is-warning">Confira</span>`}
             </span>
           </button>
+          ${r.type !== 'transfer' &&
+          html`<button
+            type="button"
+            class=${`cat-pill ${cat ? '' : 'is-empty'}`}
+            aria-expanded=${picking === r.id ? 'true' : 'false'}
+            aria-label=${`Categoria de ${r.description}: ${cat ? cat.label : 'sem categoria'}. Trocar`}
+            onClick=${() => setPicking(picking === r.id ? null : r.id)}
+          >
+            <${Icon} name=${cat ? cat.icon : 'tag'} size=${14} /><span>${cat ? cat.label : 'Categoria'}</span>
+          </button>`}
           <div class="import-end">
             <span class=${`money ${r.type === 'income' ? 'amount-in' : ''}`}>${r.type === 'income' ? '+' : r.type === 'expense' ? '-' : ''}${formatMoney(r.amount)}</span>
             ${r.type !== 'transfer' &&
@@ -224,6 +265,10 @@ function Review({ file, parsed, onClose }) {
               ${r.type === 'income' ? 'Entrada' : 'Saída'}
             </button>`}
           </div>
+          ${picking === r.id &&
+          html`<div class="import-cats">
+            <${Chips} label=${`Categoria de ${r.description}`} options=${categoriesFor(r.type, custom)} value=${r.category} onChange=${(v) => pickCategory(r, v)} />
+          </div>`}
         </div>`;
       })}
     </div>
@@ -237,7 +282,7 @@ function Review({ file, parsed, onClose }) {
 
 // ---------- Passo 3: análise ----------
 
-function Done({ totals, cats, count, from, to, onClose }) {
+function Done({ totals, cats, count, from, to, learned = [], onClose }) {
   return html`<div class="form">
     <${SheetHeader} title="Pronto!" subtitle=${`${plural(count, 'lançamento importado', 'lançamentos importados')} · ${periodLabel(from, to)}`} onClose=${onClose} />
     <ul class="sentences">
@@ -245,6 +290,7 @@ function Done({ totals, cats, count, from, to, onClose }) {
       <li><${Icon} name="arrow-up-right" size=${18} /><span>Saiu <strong>${formatMoney(totals.expense)}</strong></span></li>
       <li><${Icon} name="wallet" size=${18} /><span>${totals.balance >= 0 ? `Sobraram ${formatMoney(totals.balance)}` : `Faltaram ${formatMoney(-totals.balance)}`} no período.</span></li>
       ${cats.length > 0 && html`<li><${Icon} name="chart-pie" size=${18} /><span>Onde mais saiu: ${joinList(cats.map((c) => `${c.category.label} (${formatMoney(c.total)})`))}.</span></li>`}
+      ${learned.length > 0 && html`<li><${Icon} name="wand-sparkles" size=${18} /><span>Aprendi com suas correções: ${joinList(learned)}. Vale para as próximas importações.</span></li>`}
     </ul>
     <div class="dialog-actions" style=${{ marginTop: 0 }}>
       <${Button} size="lg" icon="chart-column" onClick=${() => goTo(`/relatorios?periodo=custom&de=${from}&ate=${to}`)}>Ver relatório do período</${Button}>

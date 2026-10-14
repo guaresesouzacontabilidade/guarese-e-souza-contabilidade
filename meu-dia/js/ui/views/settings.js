@@ -16,8 +16,11 @@ import { openImport } from '../forms/import.js';
 import { lockAvailable, setLockEnabled } from '../../services/lock.js';
 import { autoBackupAvailable, listBackups, readBackup, writeBackupNow } from '../../services/autobackup.js';
 import { formatDayMonth, todayISO, timeHM } from '../../core/dates.js';
+import { findCategory } from '../../core/categories.js';
+import { plural } from '../../core/text.js';
+import { openCategoryLimits } from '../forms/limits.js';
 
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
 
 function BudgetSheet({ onClose }) {
   const [value, setValue] = useState(store.getState().settings.budget || 0);
@@ -365,9 +368,44 @@ function AutoBackupSection({ s }) {
   </${Card}>`;
 }
 
+// Regras que o app aprendeu com as correções de categoria.
+function RulesSection({ s }) {
+  const rules = s.settings.categoryRules || [];
+  const custom = s.settings.customCategories || [];
+  return html`<${Card} title="Regras de categoria" icon="wand-sparkles">
+    ${rules.length === 0
+      ? html`<p class="hero-hint">Quando você corrigir a categoria de um lançamento (ou de uma linha do extrato), o app aprende e aplica sozinho nas próximas vezes. As regras aparecem aqui.</p>`
+      : html`<p class="hero-hint" style=${{ marginBottom: '8px' }}>O app usa estas regras para sugerir a categoria ao registrar, falar ou importar.</p>
+          <div class="settings-list">
+            ${[...rules].sort((a, b) => a.match.localeCompare(b.match, 'pt-BR')).map((r) => {
+              const cat = findCategory(r.category, r.type, custom);
+              return html`<div class="settings-row" key=${r.id}>
+                <span class="cat-icon"><${Icon} name=${cat.icon} size=${20} /></span>
+                <span class="grow">
+                  <span class="label" style=${{ display: 'block' }}>“${r.match}”</span>
+                  <span class="desc" style=${{ display: 'block' }}>${r.type === 'income' ? 'Receita' : 'Despesa'} → ${cat.label}</span>
+                </span>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  aria-label=${`Apagar a regra “${r.match}”`}
+                  onClick=${() => {
+                    store.removeCategoryRule(r.id);
+                    toast(`Regra “${r.match}” apagada`, { action: { label: 'Desfazer', onClick: () => store.updateSettings({ categoryRules: [...(store.getState().settings.categoryRules || []), r] }) } });
+                  }}
+                >
+                  <${Icon} name="trash-2" size=${18} />
+                </button>
+              </div>`;
+            })}
+          </div>`}
+  </${Card}>`;
+}
+
 export function SettingsView({ s, params }) {
   const [name, setName] = useState(s.settings.name || '');
   const budget = s.settings.budget;
+  const limitCount = Object.values(s.settings.categoryBudgets || {}).filter((v) => v > 0).length;
   return html`<div class="view stack">
     <header class="page-head">
       <div>
@@ -402,8 +440,16 @@ export function SettingsView({ s, params }) {
           desc=${budget ? 'Limite de gastos por mês' : 'Defina para acompanhar quanto ainda pode gastar'}
           onClick=${openBudgetSheet}
         />
+        <${Row}
+          icon="gauge"
+          label="Limites por categoria"
+          desc=${limitCount ? `${plural(limitCount, 'categoria', 'categorias')} com limite` : 'Ex.: Mercado até R$ 800 por mês'}
+          onClick=${() => openCategoryLimits()}
+        />
       </div>
     </${Card}>
+
+    <${RulesSection} s=${s} />
 
     <${NotificationsSection} s=${s} />
     <${PrivacySection} s=${s} />
