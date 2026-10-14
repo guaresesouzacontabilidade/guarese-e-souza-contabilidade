@@ -53,10 +53,10 @@ export async function registerServiceWorker() {
       emit();
     }
     reg.addEventListener('updatefound', () => track(reg.installing));
-    let reloading = false;
+    // Recarrega só quando o usuário pediu a atualização (não na primeira instalação).
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloading) return;
-      reloading = true;
+      if (!updateRequested) return;
+      updateRequested = false;
       location.reload();
     });
     // Procura versão nova quando o app volta ao primeiro plano.
@@ -68,6 +68,10 @@ export async function registerServiceWorker() {
   }
 }
 
+let updateRequested = false;
+
 export function applyUpdate() {
-  updateReady?.postMessage({ type: 'SKIP_WAITING' });
+  if (!updateReady) return;
+  updateRequested = true;
+  updateReady.postMessage({ type: 'SKIP_WAITING' });
 }

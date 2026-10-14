@@ -1,0 +1,13 @@
+{
+  "appId": "br.com.meudia.app",
+  "appName": "Meu Dia",
+  "webDir": "dist",
+  "backgroundColor": "#060912",
+  "android": {
+    "backgroundColor": "#060912"
+  },
+  "ios": {
+    "backgroundColor": "#060912",
+    "contentInset": "never"
+  }
+}

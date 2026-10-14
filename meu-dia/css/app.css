@@ -37,14 +37,14 @@
   --accent-soft: rgba(13, 148, 136, 0.1);
   --accent-2: #4f46e5;
   --accent-2-soft: rgba(79, 70, 229, 0.09);
-  --grad: linear-gradient(135deg, #0d9488 0%, #4f46e5 100%);
+  --grad: linear-gradient(135deg, #0f766e 0%, #4f46e5 100%);
   --grad-soft: linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(79, 70, 229, 0.08));
   --on-grad: #ffffff;
   --positive: #047857;
   --positive-soft: rgba(4, 120, 87, 0.1);
   --negative: #be123c;
   --negative-soft: rgba(190, 18, 60, 0.08);
-  --warning: #a16207;
+  --warning: #8d5a00;
   --warning-soft: rgba(202, 138, 4, 0.12);
   --income: #0f766e;
   --expense: #c2410c;
