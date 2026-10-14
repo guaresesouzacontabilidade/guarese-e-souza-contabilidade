@@ -1,0 +1,79 @@
+# Gera o app Android do Meu Dia (APK) a cada mudança em meu-dia/.
+# O arquivo fica em Actions › (execução) › Artifacts › MeuDia-android.
+#
+# Para o APK sair assinado com a chave do Meu Dia (e instalar por cima das versões
+# anteriores sem perder dados), cadastre em Settings › Secrets and variables › Actions:
+#   MEUDIA_KEYSTORE_BASE64    conteúdo do arquivo meudia-keystore-base64.txt
+#   MEUDIA_KEYSTORE_PASSWORD  a senha da chave
+# Sem esses segredos, o APK sai com uma chave de teste (serve para experimentar).
+name: Meu Dia — app Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['meu-dia/**', '.github/workflows/meu-dia-android.yml']
+  pull_request:
+    paths: ['meu-dia/**', '.github/workflows/meu-dia-android.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meu-dia-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: meu-dia
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: meu-dia/package-lock.json
+
+      # Sem cache do Gradle aqui: o projeto android/ só é gerado mais adiante.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes de unidade
+        run: npm test
+
+      - name: Navegador para gerar os ícones
+        run: npx playwright install chromium
+
+      - name: Chave de assinatura (se cadastrada)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.MEUDIA_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/meudia.jks"
+            echo "MEUDIA_KEYSTORE=$RUNNER_TEMP/meudia.jks" >> "$GITHUB_ENV"
+            echo "APK será assinado com a chave do Meu Dia."
+          else
+            echo "Sem chave cadastrada: APK de teste."
+          fi
+
+      - name: Gerar APK
+        env:
+          MEUDIA_KEYSTORE_PASSWORD: ${{ secrets.MEUDIA_KEYSTORE_PASSWORD }}
+          MEUDIA_KEY_ALIAS: meudia
+        run: npm run android:apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MeuDia-android
+          path: meu-dia/dist-android/*.apk
+          retention-days: 30

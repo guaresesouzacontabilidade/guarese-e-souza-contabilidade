@@ -1,0 +1,23 @@
+{
+  "appId": "br.com.meudia.app",
+  "appName": "Meu Dia",
+  "webDir": "dist",
+  "backgroundColor": "#060912",
+  "android": {
+    "backgroundColor": "#060912"
+  },
+  "ios": {
+    "backgroundColor": "#060912",
+    "contentInset": "never"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_meudia",
+      "iconColor": "#2DD4BF"
+    }
+  }
+}
