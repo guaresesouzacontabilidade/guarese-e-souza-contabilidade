@@ -1,12 +1,27 @@
 // Primeira abertura: uma tela só, sem tutorial.
-import { html, useState } from '../../vendor/preact.js';
+import { html, useState, useEffect } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { Icon, Button, TextInput } from '../components.js';
 import { cloudEnabled } from '../../services/cloud.js';
 import { openAuthSheet } from './auth.js';
+import { listBackups, readBackup } from '../../services/autobackup.js';
+import { formatDayMonth, todayISO } from '../../core/dates.js';
 
 export function Welcome() {
   const [name, setName] = useState('');
+  const [backup, setBackup] = useState(null);
+  const [restoring, setRestoring] = useState(false);
+  useEffect(() => {
+    listBackups().then((list) => setBackup(list[0] || null));
+  }, []);
+  const restore = async () => {
+    setRestoring(true);
+    try {
+      await store.replaceAllData(await readBackup(backup.name));
+    } catch {
+      setRestoring(false);
+    }
+  };
   const start = (e) => {
     e?.preventDefault();
     if (name.trim()) store.updateSettings({ name: name.trim() });
@@ -24,6 +39,16 @@ export function Welcome() {
         <li><span class="f-ico"><${Icon} name="wallet" /></span>Gastos, receitas e orçamento do mês</li>
         <li><span class="f-ico"><${Icon} name="sparkles" /></span>Assistente que responde sobre seus gastos</li>
       </ul>
+      ${backup &&
+      html`<div class="hint" style=${{ fontSize: '15px', color: 'var(--text)' }}>
+        <${Icon} name="archive-restore" size=${18} />
+        <span>
+          Encontramos uma cópia dos seus dados de <strong>${formatDayMonth(backup.date, todayISO())}</strong>.
+          <button type="button" class="link-btn" style=${{ padding: '0 4px', minHeight: '28px' }} onClick=${restore} disabled=${restoring}>
+            <span>${restoring ? 'Restaurando…' : 'Restaurar'}</span>
+          </button>
+        </span>
+      </div>`}
       <${TextInput} label="Como quer ser chamado? (opcional)" placeholder="Seu nome" value=${name} onInput=${setName} autocomplete="given-name" maxlength="40" />
       <${Button} type="submit" size="lg" icon="arrow-right">Começar</${Button}>
       ${cloudEnabled() &&

@@ -4,7 +4,8 @@ import { ask, EXAMPLE_QUESTIONS } from '../../core/assistant.js';
 import { todayISO } from '../../core/dates.js';
 import { getState } from '../../data/store.js';
 import { Icon, Button, Chips, Hint } from '../components.js';
-import { goTo } from '../state.js';
+import { goTo, toast } from '../state.js';
+import { listen, voiceAvailable } from '../../services/voice.js';
 import { openAddForm } from '../forms/add.js';
 
 // A conversa fica na memória enquanto o app está aberto.
@@ -121,6 +122,22 @@ export function AssistantView({ params }) {
       >
         <label for="ask" class="sr-only">Sua pergunta</label>
         <input id="ask" ref=${inputRef} value=${text} onInput=${(e) => setText(e.currentTarget.value)} placeholder="Ex.: Quanto gastei com mercado?" autocomplete="off" enterkeyhint="send" maxlength="200" />
+        ${voiceAvailable() &&
+        html`<button
+          type="button"
+          class="icon-btn"
+          aria-label="Perguntar falando"
+          onClick=${async () => {
+            try {
+              const heard = await listen('Pergunte, ex.: “quanto gastei este mês?”');
+              if (heard) send(heard);
+            } catch (err) {
+              toast(err.message, { tone: 'warning' });
+            }
+          }}
+        >
+          <${Icon} name="mic" size=${20} />
+        </button>`}
         <button type="submit" class="send-btn" aria-label="Enviar pergunta" disabled=${!text.trim()}><${Icon} name="send" size=${20} /></button>
       </form>
       ${conversation.length === 0 && html`<${Hint} icon="shield-check">Usa só os seus dados, não faz pagamentos nem transferências e não promete resultados.</${Hint}>`}

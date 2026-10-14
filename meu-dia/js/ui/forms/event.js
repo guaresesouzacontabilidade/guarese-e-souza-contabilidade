@@ -9,6 +9,7 @@ import {
   Button, TextInput, TextArea, DateField, Field, Chips, Segmented, Select, Details, SheetHeader, SheetActions, Icon, Hint,
 } from '../components.js';
 import { openSheet, replaceSheet, closeLayer, confirm, choose, toast } from '../state.js';
+import { haptic } from '../../services/feedback.js';
 
 export function EventForm({ kind: initialKind = 'event', item = null, date, onClose }) {
   const settings = store.getState().settings;
@@ -55,6 +56,7 @@ export function EventForm({ kind: initialKind = 'event', item = null, date, onCl
       toast(`${KIND_LABEL[kind]} atualizado${kind === 'task' ? 'a' : ''}`, { tone: 'success' });
     } else {
       store.create('events', { ...data, done: false, doneDates: [], skipDates: [] });
+      haptic('light');
       toast(`${KIND_LABEL[kind]} salv${kind === 'task' ? 'a' : 'o'} para ${relativeDay(day, todayISO())}`, { tone: 'success' });
     }
     onClose();

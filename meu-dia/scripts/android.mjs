@@ -10,7 +10,7 @@
 // por cima sem desinstalar); senão, sai com a chave de depuração.
 import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile, copyFile, readdir } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, copyFile, readdir, cp } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
@@ -31,6 +31,28 @@ run('node scripts/build-native.mjs');
 if (!existsSync(android)) run('npx cap add android');
 run('npx cap sync android');
 
+// Código nativo próprio (widget, atalhos, plugin MeuDia) por cima do projeto gerado.
+await cp(path.join(root, 'native/android'), android, { recursive: true, force: true });
+
+const manifestFile = path.join(android, 'app/src/main/AndroidManifest.xml');
+let manifest = await readFile(manifestFile, 'utf8');
+if (!manifest.includes('.TodayWidget')) {
+  manifest = manifest.replace(
+    '</application>',
+    `    <receiver android:name=".TodayWidget" android:exported="false" android:label="Meu Dia — Hoje">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_today_info" />
+        </receiver>
+    </application>`,
+  );
+}
+if (!manifest.includes('android.app.shortcuts')) {
+  manifest = manifest.replace('</activity>', '    <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />\n        </activity>');
+}
+await writeFile(manifestFile, manifest);
+
 // Versão do app a partir do package.json (1.2.3 → versionCode 10203).
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const [maj, min, pat] = pkg.version.split('.').map(Number);
@@ -41,7 +63,20 @@ gradle = gradle
   .replace(/versionName "[^"]*"/, `versionName "${pkg.version}"`);
 // Assinatura: lida de variáveis de ambiente, nunca gravada no projeto.
 if (!gradle.includes("apply from: 'meudia-signing.gradle'")) gradle += "\napply from: 'meudia-signing.gradle'\n";
+if (!gradle.includes("apply from: 'meudia-size.gradle'")) gradle += "apply from: 'meudia-size.gradle'\n";
 await writeFile(gradleFile, gradle);
+// Tamanho: o leitor de boleto usa o ML Kit do Google Play Services (o mesmo do leitor de câmera),
+// em vez da versão embutida, que traz ~20 MB de bibliotecas nativas.
+await writeFile(
+  path.join(android, 'app/meudia-size.gradle'),
+  `// Gerado por scripts/android.mjs: troca o ML Kit embutido pelo do Google Play Services (mesma API).
+configurations.all {
+  resolutionStrategy.dependencySubstitution {
+    substitute module('com.google.mlkit:barcode-scanning') using module('com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1')
+  }
+}
+`,
+);
 await writeFile(
   path.join(android, 'app/meudia-signing.gradle'),
   `// Gerado por scripts/android.mjs: assina a versão final com a chave do Meu Dia, se informada.
@@ -137,6 +172,26 @@ for (const [d, k] of Object.entries(DENSITIES)) {
   await render(path.join(res, `mipmap-${d}/ic_launcher_foreground.png`), fg, fg, img(foreground, fg));
   const stat = Math.round(24 * k);
   await render(path.join(res, `drawable-${d}/ic_stat_meudia.png`), stat, stat, img(white, stat));
+}
+
+// Ícones dos atalhos (segurar o ícone do app).
+const lucide = async (name) =>
+  (await readFile(path.join(root, 'node_modules/lucide-static/icons', `${name}.svg`), 'utf8'))
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/stroke="currentColor"/, 'stroke="#5EEAD4"')
+    .replace(/stroke-width="2"/, 'stroke-width="2.2"');
+const SHORTCUTS = { ic_sc_expense: 'arrow-up-right', ic_sc_event: 'calendar-clock', ic_sc_voice: 'mic', ic_sc_bills: 'receipt' };
+for (const [file, icon] of Object.entries(SHORTCUTS)) {
+  const glyph = await lucide(icon);
+  for (const [d, k] of Object.entries(DENSITIES)) {
+    const size = Math.round(48 * k);
+    await render(
+      path.join(res, `drawable-${d}/${file}.png`),
+      size,
+      size,
+      `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${ICON_BG};display:grid;place-items:center">${img(glyph, Math.round(size * 0.5))}</div>`,
+    );
+  }
 }
 
 // Splash (versões antigas do Android): fundo escuro com o ícone no centro.

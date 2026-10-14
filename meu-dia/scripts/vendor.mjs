@@ -55,7 +55,7 @@ const ICONS = [
   'history', 'target', 'utensils', 'shopping-cart', 'fuel', 'car', 'heart-pulse', 'graduation-cap', 'ticket',
   'shopping-bag', 'tv', 'briefcase', 'paw-print', 'circle-ellipsis', 'briefcase-business', 'store', 'undo-2', 'gift',
   'users', 'book-open', 'list-checks', 'hand-coins', 'message-circle', 'circle-help', 'rotate-ccw', 'file-down',
-  'file-up', 'database', 'house-plug',
+  'file-up', 'database', 'house-plug', 'mic', 'scan-barcode', 'fingerprint', 'copy', 'lock-keyhole', 'archive-restore',
 ];
 const out = {};
 for (const name of ICONS) {

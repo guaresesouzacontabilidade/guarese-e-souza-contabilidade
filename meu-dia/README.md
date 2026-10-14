@@ -13,7 +13,7 @@ tema claro/escuro e salvamento automático.
 | **Início** | Saudação e data, compromissos e tarefas de hoje, resumo do mês (saldo, receitas, despesas), indicador de orçamento, contas que vencem em breve, atalhos e botão para ocultar valores. |
 | **Adicionar** | Botão sempre visível. Compromisso, tarefa, receita, despesa ou conta, cada um com só os campos essenciais; o resto fica em “Mais detalhes”. |
 | **Agenda** | Visualizações dia, semana e mês; criar, editar, concluir e excluir; horário, local, notas, categoria, prioridade, lembrete; repetição semanal, mensal e anual; busca e filtros. Contas que vencem aparecem nos dias certos. |
-| **Finanças** | Receitas e despesas em segundos (valor, descrição e data); categoria sugerida automaticamente pela descrição; carteiras (banco, dinheiro, cartão) com saldo; busca; edição e exclusão com confirmação e “Desfazer”; aviso de lançamento repetido. |
+| **Finanças** | Receitas e despesas em segundos (valor, descrição e data); categoria sugerida automaticamente pela descrição; carteiras (banco, dinheiro, cartão) com saldo; busca; edição e exclusão com confirmação e “Desfazer”; aviso de lançamento repetido. **Importar extrato ou fatura** (PDF, inclusive com senha, OFX ou CSV): mostra o que entrou e o que saiu, deixa revisar cada linha antes de salvar e não importa duas vezes o mesmo lançamento. |
 | **Contas** | A pagar e a receber; vencidas, vencem em breve, próximas e pagas; “Pagar”/“Recebi” com um toque; depois pergunta se quer registrar em Finanças e reaproveita um lançamento parecido para não duplicar; contas recorrentes geram a próxima sozinhas; lembretes configuráveis (no dia, 1, 3 ou 7 dias antes). |
 | **Assistente** | Responde perguntas como “Quanto gastei este mês?”, “Quanto gastei com combustível?”, “Quais contas vencem esta semana?”, “Quanto ainda tenho no orçamento?”, “Qual foi meu maior gasto?”. Usa só os dados registrados, mostra “Como calculei” e avisa quando não há dados. Não faz pagamentos nem promete resultados. |
 | **Relatórios** | Receitas, despesas e saldo por período (este mês, mês passado, 3 meses, ano ou datas livres), gastos por categoria, gráfico mês a mês (com opção de tabela) e comparação com o período anterior em frases simples. |
@@ -28,6 +28,8 @@ tema claro/escuro e salvamento automático.
   exclusão de conta), mas só aparece ativo depois de configurar o Supabase (veja abaixo). Até lá, o app avisa
   que os dados ficam salvos neste aparelho.
 - Não se conecta a bancos e não movimenta dinheiro.
+- **Importar PDF:** lê extratos e faturas que têm texto (os gerados pelo app ou site do banco). PDF que é só
+  imagem (foto ou escaneado) não dá para ler; nesse caso, use o OFX ou CSV que o banco oferece.
 
 ## Usar no celular
 
@@ -71,6 +73,19 @@ mais recente. Ao entrar pela primeira vez, o app pergunta se deve juntar os dado
 O mesmo código vira app nativo com o [Capacitor](https://capacitorjs.com). No app nativo:
 os lembretes tocam **mesmo com o app fechado**, o “Exportar” abre o menu de compartilhar
 do celular e o app aparece na lista de apps como qualquer outro.
+
+### Só no app Android
+
+| Recurso | Como usar |
+| --- | --- |
+| **Botões na notificação** | “Pagar”/“Recebi” e “Lembrar em 1 h” nas contas; “Concluir” e “Adiar 1 h” nas tarefas; “Lembrar em 10 min” nos compromissos. |
+| **Widget “Hoje”** | Segure a tela inicial › Widgets › Meu Dia. Mostra compromissos, saldo do mês e a próxima conta, com botões de despesa e compromisso. Atualiza quando o app muda algo e a cada 30 min. |
+| **Atalhos do ícone** | Segure o ícone: Nova despesa, Novo compromisso, Falar um gasto, Contas. |
+| **Ler boleto** | Em Nova conta › “Ler código de barras”: preenche valor, vencimento e banco. O código fica guardado para copiar na hora de pagar. Usa o leitor do Google Play Services. |
+| **Despesa por voz** | “Gastei 45 reais de gasolina ontem” → valor, data e categoria preenchidos para conferir. Pode precisar de internet, conforme o celular. |
+| **Bloqueio com digital ou rosto** | Ajustes › Privacidade. Pede a digital ao abrir e depois de 1 min fora do app; esconde o conteúdo na tela de apps recentes. |
+| **Cópia automática** | Uma cópia por dia dentro do app (guarda as 7 últimas), em Ajustes › Cópias automáticas. Ao reinstalar, a tela inicial oferece restaurar. Vai para o Google Drive só se o backup do Google estiver ligado no celular. |
+| **Vibração e voltar** | Vibração leve ao salvar e pagar; o botão voltar fecha o painel aberto, depois volta ao Início e só então sai. |
 
 ### Android — instalar o APK
 

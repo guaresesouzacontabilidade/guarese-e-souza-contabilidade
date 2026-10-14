@@ -11,8 +11,37 @@ const NATIVE_HORIZON = 45 * 86400000; // agenda os próximos 45 dias
 const NATIVE_MAX = 60; // limite seguro de lembretes agendados (o iOS aceita 64)
 
 let onInApp = null;
+let onAction = null;
 let started = false;
 let nativePermission = 'prompt';
+
+// Botões que aparecem na notificação (Android).
+const ACTION_TYPES = [
+  { id: 'MD_BILL', actions: [{ id: 'pay', title: 'Pagar' }, { id: 'snooze', title: 'Lembrar em 1 h' }] },
+  { id: 'MD_BILL_RECEIVE', actions: [{ id: 'pay', title: 'Recebi' }, { id: 'snooze', title: 'Lembrar em 1 h' }] },
+  { id: 'MD_TASK', actions: [{ id: 'done', title: 'Concluir' }, { id: 'snooze', title: 'Adiar 1 h' }] },
+  { id: 'MD_EVENT', actions: [{ id: 'snooze10', title: 'Lembrar em 10 min' }] },
+];
+const ACTION_TYPE_FOR = { bill: 'MD_BILL', 'bill-receive': 'MD_BILL_RECEIVE', task: 'MD_TASK', event: 'MD_EVENT' };
+
+// Quem trata "Pagar"/"Concluir" (a interface registra ao iniciar).
+export function onReminderAction(fn) {
+  onAction = fn;
+}
+
+// "Adiar": guarda um lembrete extra e reagenda.
+export function snoozeReminder(reminder, minutes) {
+  const now = Date.now();
+  const s = store.getState();
+  const snoozes = (s.meta.snoozes || []).filter((x) => x.fireAt > now);
+  snoozes.push({ ...reminder, key: `${reminder.key.split(':snz')[0]}:snz${now}`, fireAt: now + minutes * 60000 });
+  store.updateMeta({ snoozes });
+  scheduleNativeSoon(0);
+}
+
+function pendingSnoozes(s, from, to) {
+  return (s.meta.snoozes || []).filter((x) => x.fireAt > from && x.fireAt <= to);
+}
 
 const LocalNotifications = () => plugin('LocalNotifications');
 
@@ -99,7 +128,9 @@ async function syncNativeSchedule() {
   const s = store.getState();
   const enabled = s.prefs.notifications && nativePermission === 'granted';
   const now = Date.now();
-  const list = enabled ? dueReminders(s, now, now + NATIVE_HORIZON).slice(0, NATIVE_MAX) : [];
+  const list = enabled
+    ? [...dueReminders(s, now, now + NATIVE_HORIZON), ...pendingSnoozes(s, now, now + NATIVE_HORIZON)].sort((a, b) => a.fireAt - b.fireAt).slice(0, NATIVE_MAX)
+    : [];
   const signature = list.map((r) => `${r.key}|${r.title}|${r.body}`).join('\n');
   if (signature === lastSignature) return;
   const pending = await LN.getPending();
@@ -111,7 +142,8 @@ async function syncNativeSchedule() {
         title: r.title,
         body: r.body,
         schedule: { at: new Date(r.fireAt), allowWhileIdle: true },
-        extra: { route: r.route },
+        extra: { route: r.route, kind: r.kind, ref: r.ref, key: r.key, title: r.title, body: r.body },
+        actionTypeId: ACTION_TYPE_FOR[r.kind],
         smallIcon: 'ic_stat_meudia',
         iconColor: '#2DD4BF',
       })),
@@ -129,9 +161,23 @@ async function initNative() {
   } catch {
     /* plugin indisponível */
   }
+  try {
+    await LN.registerActionTypes({ types: ACTION_TYPES });
+  } catch {
+    /* versões sem botões */
+  }
   LN.addListener('localNotificationActionPerformed', (event) => {
-    const route = event?.notification?.extra?.route;
-    if (route) location.hash = route;
+    const extra = event?.notification?.extra || {};
+    const actionId = event?.actionId || 'tap';
+    if (actionId === 'snooze' || actionId === 'snooze10') {
+      snoozeReminder({ key: extra.key || 'lembrete', title: extra.title || event.notification.title, body: extra.body || event.notification.body, route: extra.route, kind: extra.kind, ref: extra.ref }, actionId === 'snooze10' ? 10 : 60);
+      return;
+    }
+    if ((actionId === 'pay' || actionId === 'done') && onAction) {
+      onAction(actionId, extra);
+      return;
+    }
+    if (extra.route) location.hash = extra.route;
   });
   // Reagenda quando compromissos, contas ou ajustes mudam (ignora mudanças só de controle interno).
   let prev = store.getState();
@@ -157,7 +203,7 @@ function check() {
   const now = Date.now();
   const last = s.meta.lastReminderCheck || now - CATCH_UP_WINDOW;
   const from = Math.max(last, now - CATCH_UP_WINDOW);
-  const due = dueReminders(s, from, now).filter((r) => !s.meta.notified?.[r.key]);
+  const due = [...dueReminders(s, from, now), ...pendingSnoozes(s, from, now)].filter((r) => !s.meta.notified?.[r.key]);
   const notified = { ...(s.meta.notified || {}) };
   for (const key of Object.keys(notified)) if (notified[key] < now - 10 * 86400000) delete notified[key];
   for (const r of due) notified[r.key] = now;

@@ -6,23 +6,44 @@ import { formatMoney } from '../../core/money.js';
 import { categoriesFor, findCategory, suggestCategory } from '../../core/categories.js';
 import { findPossibleDuplicates, walletType, live } from '../../core/finance.js';
 import {
-  Button, TextInput, TextArea, DateField, Field, Chips, Segmented, MoneyInput, Details, SheetHeader, SheetActions, Icon, Money, CategoryIcon,
+  Button, TextInput, TextArea, DateField, Field, Chips, Segmented, MoneyInput, Details, SheetHeader, SheetActions, Icon, Money, CategoryIcon, Hint,
 } from '../components.js';
+import { listen, voiceAvailable } from '../../services/voice.js';
+import { parseQuickEntry } from '../../core/quickEntry.js';
 import { openSheet, replaceSheet, closeLayer, confirm, toast } from '../state.js';
+import { haptic } from '../../services/feedback.js';
 
 const TYPE_LABEL = { expense: 'Despesa', income: 'Receita' };
 const VISIBLE_CATS = 7;
 
-export function TransactionForm({ type: initialType = 'expense', item = null, date, onClose }) {
+export function TransactionForm({ type: initialType = 'expense', item = null, date, prefill = null, heard = '', onClose }) {
   const s = store.getState();
   const custom = s.settings.customCategories || [];
   const editing = Boolean(item);
-  const [type, setType] = useState(item?.type || initialType);
-  const [amount, setAmount] = useState(item?.amount || 0);
-  const [description, setDescription] = useState(item?.description || '');
-  const [day, setDay] = useState(item?.date || date || todayISO());
-  const [category, setCategory] = useState(item?.category || null);
+  const [type, setType] = useState(item?.type || prefill?.type || initialType);
+  const [amount, setAmount] = useState(item?.amount || prefill?.amount || 0);
+  const [description, setDescription] = useState(item?.description || prefill?.description || '');
+  const [day, setDay] = useState(item?.date || prefill?.date || date || todayISO());
+  const [category, setCategory] = useState(item?.category || prefill?.category || null);
   const [pickedCategory, setPicked] = useState(Boolean(item?.category));
+  const [heardText, setHeard] = useState(heard);
+
+  const fillByVoice = async () => {
+    try {
+      const text = await listen('Ex.: “gastei 45 reais de gasolina”');
+      if (!text) return;
+      const p = parseQuickEntry(text, todayISO(), s.transactions);
+      setHeard(text);
+      setType(p.type);
+      if (p.amount) setAmount(p.amount);
+      if (p.description) setDescription(p.description);
+      setDay(p.date);
+      setCategory(p.category);
+      setPicked(false);
+    } catch (err) {
+      toast(err.message, { tone: 'warning' });
+    }
+  };
   const [walletId, setWalletId] = useState(item?.walletId ?? (s.wallets.filter((w) => !w.deleted).length === 1 ? s.wallets.find((w) => !w.deleted).id : null));
   const [notes, setNotes] = useState(item?.notes || '');
   const [showAllCats, setShowAllCats] = useState(false);
@@ -73,6 +94,7 @@ export function TransactionForm({ type: initialType = 'expense', item = null, da
         if (!go) return;
       }
       const created = store.create('transactions', data);
+      haptic('light');
       toast(`${TYPE_LABEL[type]} de ${formatMoney(amount)} registrada`, {
         tone: 'success',
         action: { label: 'Desfazer', onClick: () => store.remove('transactions', created.id) },
@@ -95,7 +117,9 @@ export function TransactionForm({ type: initialType = 'expense', item = null, da
         { id: 'income', label: 'Receita', icon: 'arrow-down-left' },
       ]}
     />
-    <${MoneyInput} big value=${amount} onChange=${setAmount} error=${errors.amount} autoFocus=${!editing} />
+    <${MoneyInput} big value=${amount} onChange=${setAmount} error=${errors.amount} autoFocus=${!editing && !prefill} />
+    ${!editing && voiceAvailable() && html`<${Button} variant="secondary" icon="mic" onClick=${fillByVoice}>Preencher falando</${Button}>`}
+    ${heardText && html`<${Hint} icon="mic">Ouvi: “${heardText}”. Confira e toque em registrar.</${Hint}>`}
     <${TextInput}
       label="Descrição"
       placeholder=${type === 'expense' ? 'Ex.: Mercado, gasolina, farmácia' : 'Ex.: Salário, venda, freela'}
@@ -135,6 +159,18 @@ export function TransactionForm({ type: initialType = 'expense', item = null, da
       <${Button} type="submit" size="lg" icon="check">${editing ? 'Salvar alterações' : `Registrar ${TYPE_LABEL[type].toLowerCase()}`}</${Button}>
     </${SheetActions}>
   </form>`;
+}
+
+// Atalho "Falar um gasto": ouve, entende e abre o formulário já preenchido para conferir.
+export async function startVoiceEntry({ replace = false } = {}) {
+  try {
+    const text = await listen('Diga o gasto. Ex.: “gastei 45 reais de gasolina”');
+    if (!text) return;
+    const prefill = parseQuickEntry(text, todayISO(), store.getState().transactions);
+    openTransactionForm({ type: prefill.type, prefill, heard: text, replace });
+  } catch (err) {
+    toast(err.message, { tone: 'warning' });
+  }
 }
 
 export function openTransactionForm(opts = {}) {

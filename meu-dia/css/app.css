@@ -2384,6 +2384,7 @@ body.is-locked .toasts {
   color: var(--text);
 }
 .composer {
+  grid-template-columns: minmax(0, 1fr);
   position: sticky;
   bottom: calc(var(--tab-h) + var(--safe-b) + 8px);
   display: grid;
@@ -2398,7 +2399,7 @@ body.is-locked .toasts {
 }
 .composer-row {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
   padding: 6px 6px 6px 16px;
   border-radius: 20px;
@@ -2413,6 +2414,7 @@ body.is-locked .toasts {
 .composer-row input {
   flex: 1;
   min-width: 0;
+  width: 100%;
   border: 0;
   outline: none;
   background: transparent;
@@ -2728,4 +2730,31 @@ button.settings-row:hover {
 }
 .check[disabled] {
   opacity: 0.4;
+}
+
+/* ---------- Bloqueio ---------- */
+
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  background:
+    radial-gradient(700px 420px at 50% 0%, var(--glow-2), transparent 60%),
+    var(--bg);
+}
+.lock-screen h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.lock-screen p {
+  color: var(--text-2);
+  margin-bottom: 12px;
 }

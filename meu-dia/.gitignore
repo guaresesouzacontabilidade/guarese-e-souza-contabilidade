@@ -1,9 +1,9 @@
 node_modules/
-dist/
+/dist/
 test-results/
 playwright-report/
-android/
-ios/
-dist-android/
+/android/
+/ios/
+/dist-android/
 *.keystore
 *.jks

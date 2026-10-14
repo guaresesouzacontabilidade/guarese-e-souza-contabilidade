@@ -1,5 +1,5 @@
 // Ajustes: perfil, aparência, orçamento, lembretes, conta, instalação e dados.
-import { html, useState, useRef } from '../../vendor/preact.js';
+import { html, useState, useRef, useEffect } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { BILL_REMIND_OPTIONS } from '../../core/bills.js';
 import { formatMoney } from '../../core/money.js';
@@ -13,6 +13,9 @@ import { isStandalone, isIOS, canPromptInstall, promptInstall } from '../../serv
 import { cloudEnabled, syncNow, signOut, deleteAccount, friendlyError, unsyncedCount } from '../../services/cloud.js';
 import { openAuthSheet } from './auth.js';
 import { openImport } from '../forms/import.js';
+import { lockAvailable, setLockEnabled } from '../../services/lock.js';
+import { autoBackupAvailable, listBackups, readBackup, writeBackupNow } from '../../services/autobackup.js';
+import { formatDayMonth, todayISO, timeHM } from '../../core/dates.js';
 
 export const APP_VERSION = '1.0.0';
 
@@ -277,6 +280,91 @@ function DataSection({ s }) {
   </${Card}>`;
 }
 
+function PrivacySection({ s }) {
+  const [available, setAvailable] = useState(false);
+  useEffect(() => {
+    lockAvailable().then(setAvailable);
+  }, []);
+  if (!available) return null;
+  return html`<${Card} title="Privacidade" icon="lock-keyhole">
+    <${Toggle}
+      label="Bloquear com digital ou rosto"
+      description="Pede a digital, o rosto ou a senha do celular ao abrir o Meu Dia e esconde a tela nos apps recentes."
+      checked=${s.prefs.lock === true}
+      onChange=${async (on) => {
+        try {
+          await setLockEnabled(on);
+          toast(on ? 'Bloqueio ativado' : 'Bloqueio desativado', { tone: 'success' });
+        } catch {
+          toast('Não foi possível confirmar sua identidade.', { tone: 'warning' });
+        }
+      }}
+    />
+  </${Card}>`;
+}
+
+function RestoreSheet({ onClose }) {
+  const [list, setList] = useState(null);
+  useEffect(() => {
+    listBackups().then(setList);
+  }, []);
+  const restore = async (b) => {
+    const ok = await confirm({
+      title: `Voltar para a cópia de ${formatDayMonth(b.date, todayISO())}?`,
+      message: 'Os dados atuais serão substituídos pelos dessa cópia. As cópias dos outros dias continuam guardadas.',
+      confirmLabel: 'Restaurar',
+      icon: 'archive-restore',
+    });
+    if (!ok) return;
+    try {
+      const n = await store.replaceAllData(await readBackup(b.name));
+      toast(`Cópia restaurada (${n} itens)`, { tone: 'success' });
+      onClose();
+    } catch {
+      toast('Não foi possível restaurar esta cópia.', { tone: 'warning' });
+    }
+  };
+  return html`<div class="form">
+    <${SheetHeader} title="Restaurar uma cópia" subtitle="Cópias automáticas dos últimos dias." onClose=${onClose} />
+    ${list === null
+      ? html`<p class="hero-hint">Carregando…</p>`
+      : list.length === 0
+        ? html`<p class="hero-hint">Ainda não há cópias. A primeira é feita assim que você registrar algo.</p>`
+        : html`<div class="settings-list">
+            ${list.map(
+              (b) => html`<${Row}
+                key=${b.name}
+                icon="archive-restore"
+                label=${formatDayMonth(b.date, todayISO())}
+                desc=${`${Math.max(1, Math.round(b.size / 1024))} KB`}
+                onClick=${() => restore(b)}
+              />`,
+            )}
+          </div>`}
+  </div>`;
+}
+
+function AutoBackupSection({ s }) {
+  if (!autoBackupAvailable()) return null;
+  const last = s.meta.lastAutoBackup;
+  const when = last ? `${formatDayMonth(todayISO(new Date(last)), todayISO())} às ${timeHM(new Date(last))}` : 'ainda não feita';
+  return html`<${Card} title="Cópias automáticas" icon="archive-restore">
+    <div class="settings-list">
+      <${Row}
+        icon="shield-check"
+        label=${`Última cópia: ${when}`}
+        desc="Uma por dia, guardadas por 7 dias. Com o backup do Google ligado no celular, vão junto para a sua conta Google."
+        end=${html`<span></span>`}
+      />
+      <${Row} icon="refresh-cw" label="Fazer uma cópia agora" onClick=${async () => {
+        await writeBackupNow();
+        toast('Cópia feita', { tone: 'success' });
+      }} />
+      <${Row} icon="history" label="Restaurar uma cópia" onClick=${() => openSheet((close) => html`<${RestoreSheet} onClose=${close} />`)} />
+    </div>
+  </${Card}>`;
+}
+
 export function SettingsView({ s, params }) {
   const [name, setName] = useState(s.settings.name || '');
   const budget = s.settings.budget;
@@ -318,6 +406,8 @@ export function SettingsView({ s, params }) {
     </${Card}>
 
     <${NotificationsSection} s=${s} />
+    <${PrivacySection} s=${s} />
+    <${AutoBackupSection} s=${s} />
     <${AccountSection} />
     <${InstallSection} />
     <${DataSection} s=${s} />

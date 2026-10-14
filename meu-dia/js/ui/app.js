@@ -1,6 +1,6 @@
 // Estrutura do app: navegação, telas e camadas.
 import { html, useEffect, useRef, useState } from '../vendor/preact.js';
-import { useStore, useRoute, useCloud, navigate, choose, toast, goTo } from './state.js';
+import { useStore, useRoute, useCloud, navigate, choose, toast, goTo, hasLayers, closeLayer, parseRoute } from './state.js';
 import { Icon, IconButton } from './components.js';
 import { Layers, Toasts } from './layers.js';
 import { HomeView } from './views/home.js';
@@ -14,9 +14,18 @@ import { Welcome } from './views/welcome.js';
 import { openAuthSheet } from './views/auth.js';
 import { openAddMenu } from './forms/add.js';
 import { resolveMerge } from '../services/cloud.js';
-import { startReminders } from '../services/notifications.js';
+import { startReminders, onReminderAction, snoozeReminder } from '../services/notifications.js';
+import { quickPay } from './forms/bill.js';
+import * as store from '../data/store.js';
+import { isDoneOn } from '../core/agenda.js';
+import { haptic } from '../services/feedback.js';
 import { subscribeInstall, hasUpdate, applyUpdate } from '../services/install.js';
-import { setSystemBarsTheme } from '../services/native.js';
+import { setSystemBarsTheme, isNative, plugin } from '../services/native.js';
+import { startWidgetSync, listenLaunchRoutes } from '../services/widget.js';
+import { startLock, subscribeLock, isLocked, unlock } from '../services/lock.js';
+import { startAutoBackup } from '../services/autobackup.js';
+import { openAddForm } from './forms/add.js';
+import { startVoiceEntry } from './forms/transaction.js';
 
 const NAV = [
   { path: '/', label: 'Início', icon: 'house' },
@@ -43,6 +52,93 @@ function applyTheme(pref) {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#060912' : '#f2f4f9');
   setSystemBarsTheme(dark);
 }
+
+// Botões dos lembretes: "Pagar"/"Recebi" abre a confirmação; "Concluir" marca a tarefa.
+function handleReminderAction(actionId, info) {
+  const ref = info?.ref || {};
+  if (actionId === 'pay') {
+    const bill = store.findById('bills', ref.id);
+    if (!bill || bill.status === 'paid') {
+      toast('Esta conta já está paga.');
+      return;
+    }
+    goTo('/contas');
+    setTimeout(() => quickPay(bill), 350);
+    return;
+  }
+  if (actionId === 'done') {
+    const item = store.findById('events', ref.id);
+    if (!item) return;
+    if (!isDoneOn(item, ref.date)) store.toggleTask(item, ref.date);
+    haptic('success');
+    toast(`Tarefa concluída: ${item.title}`, { tone: 'success' });
+  }
+}
+
+// Telas pedidas por atalhos do ícone e botões do widget.
+let pendingRoute = null;
+function handleLaunchRoute(route) {
+  if (!store.getState().prefs.onboarded) return;
+  if (isLocked()) {
+    pendingRoute = route;
+    return;
+  }
+  if (route.startsWith('add:')) openAddForm(route.slice(4));
+  else if (route === 'voice:expense') startVoiceEntry();
+  else if (route.startsWith('#')) goTo(route.slice(1));
+}
+
+function LockScreen() {
+  const [busy, setBusy] = useState(false);
+  const tryUnlock = async () => {
+    setBusy(true);
+    const ok = await unlock();
+    setBusy(false);
+    if (ok && pendingRoute) {
+      const r = pendingRoute;
+      pendingRoute = null;
+      setTimeout(() => handleLaunchRoute(r), 200);
+    }
+  };
+  useEffect(() => {
+    tryUnlock();
+  }, []);
+  return html`<div class="lock-screen" role="dialog" aria-modal="true" aria-label="Meu Dia bloqueado">
+    <img src="./assets/icons/icon.svg" alt="" width="72" height="72" class="welcome-logo" />
+    <h1>Meu Dia</h1>
+    <p>Bloqueado para proteger seus dados.</p>
+    <button type="button" class="btn btn-primary btn-lg" onClick=${tryUnlock} disabled=${busy}>
+      <${Icon} name="fingerprint" /><span>${busy ? 'Aguardando…' : 'Desbloquear'}</span>
+    </button>
+  </div>`;
+}
+
+function useLocked() {
+  const [locked, setLocked] = useState(isLocked());
+  useEffect(() => subscribeLock(setLocked), []);
+  return locked;
+}
+
+// Android: "voltar" fecha o painel aberto; depois volta ao Início; no Início, sai do app.
+function setupBackButton() {
+  const app = plugin('App');
+  if (!app) return;
+  app.addListener('backButton', () => {
+    if (hasLayers()) {
+      closeLayer();
+      return;
+    }
+    const route = parseRoute();
+    if (route.params.busca) {
+      location.replace(`#${route.path}`);
+    } else if (route.path !== '/') {
+      location.replace('#/');
+    } else {
+      app.exitApp();
+    }
+  });
+}
+if (isNative()) setupBackButton();
 
 function addContext(route) {
   return route.path === '/agenda' && route.params.dia ? { date: route.params.dia } : {};
@@ -155,11 +251,24 @@ export function App() {
     mainRef.current?.focus({ preventScroll: true });
   }, [route.path]);
 
+  const locked = useLocked();
+
   useEffect(() => {
     if (!s.ready) return;
+    startLock();
+    startWidgetSync();
+    startAutoBackup();
+    listenLaunchRoutes(handleLaunchRoute);
+    onReminderAction(handleReminderAction);
     startReminders((due) => {
       for (const r of due.slice(0, 3)) {
-        toast(`${r.title} · ${r.body}`, { tone: 'reminder', duration: 9000, action: { label: 'Ver', onClick: () => goTo(r.route.replace(/^#/, '')) } });
+        const action =
+          r.kind === 'bill' || r.kind === 'bill-receive'
+            ? { label: r.kind === 'bill' ? 'Pagar' : 'Recebi', onClick: () => handleReminderAction('pay', r) }
+            : r.kind === 'task'
+              ? { label: 'Concluir', onClick: () => handleReminderAction('done', r) }
+              : { label: 'Ver', onClick: () => goTo(r.route.replace(/^#/, '')) };
+        toast(`${r.title} · ${r.body}`, { tone: 'reminder', duration: 10000, action });
       }
       if (due.length > 3) toast(`+ ${due.length - 3} lembretes`, { tone: 'reminder' });
     });
@@ -188,6 +297,7 @@ export function App() {
   if (!s.prefs.onboarded) {
     return html`<${Welcome} /><${Layers} /><${Toasts} />`;
   }
+  if (locked) return html`<${LockScreen} />`;
 
   return html`
     <div id="app-shell" class="app">

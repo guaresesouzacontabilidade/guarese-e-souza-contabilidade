@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { runtimeFiles } from '../../scripts/precache.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -33,4 +34,17 @@ test('manifesto do PWA tem ícones e textos em português', async () => {
   assert.equal(manifest.display, 'standalone');
   assert.ok(manifest.icons.some((i) => i.purpose === 'maskable'));
   for (const icon of manifest.icons) await access(path.join(root, icon.src));
+});
+
+test('código nativo do Android não é ignorado pelo git (senão o APK do CI sai sem widget e atalhos)', () => {
+  const files = ['native/android/app/src/main/java/br/com/meudia/app/MeuDiaPlugin.java', 'native/android/app/src/main/res/xml/shortcuts.xml'];
+  for (const f of files) {
+    let ignored = true;
+    try {
+      execFileSync('git', ['check-ignore', '-q', f], { cwd: root });
+    } catch (err) {
+      ignored = err.status !== 1; // 1 = não ignorado
+    }
+    assert.equal(ignored, false, `${f} está no .gitignore`);
+  }
 });

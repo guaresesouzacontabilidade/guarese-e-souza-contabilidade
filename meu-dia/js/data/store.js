@@ -19,7 +19,7 @@ export const DEFAULT_SETTINGS = {
   updatedAt: 0,
 };
 
-const DEFAULT_PREFS = { theme: 'auto', hideValues: false, notifications: false, onboarded: false, installDismissed: false };
+const DEFAULT_PREFS = { theme: 'auto', hideValues: false, notifications: false, onboarded: false, installDismissed: false, lock: false };
 const DEFAULT_META = { dirty: {}, lastPulledAt: null, ownerId: null, notified: {}, lastSyncAt: null };
 
 let state = {
@@ -353,6 +353,17 @@ export function importData(data) {
   }
   state = { ...state, ...patch };
   commit({ meta: withDirty(dirtyKeys) }, [...COLLECTIONS, 'settings', 'meta']);
+  return count;
+}
+
+// Volta tudo a uma cópia (ex.: backup automático de ontem). Mantém as preferências do aparelho.
+export async function replaceAllData(data) {
+  if (!data || data.app !== 'meu-dia') throw new Error('Cópia inválida.');
+  const { ownerId, lastPulledAt } = state.meta;
+  await resetLocal({ keepPrefs: true });
+  updateMeta({ ownerId, lastPulledAt });
+  const count = importData({ ...data, settings: data.settings ? { ...data.settings, updatedAt: (data.settings.updatedAt || 0) + 1 } : undefined });
+  updatePrefs({ onboarded: true });
   return count;
 }
 

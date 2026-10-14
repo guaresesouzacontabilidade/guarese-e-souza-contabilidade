@@ -57,6 +57,8 @@ let seq = 0;
 const layerListeners = new Set();
 const emitLayers = () => layerListeners.forEach((fn) => fn(layers));
 
+export const hasLayers = () => layers.length > 0;
+
 export function useLayers() {
   const [list, setList] = useState(layers);
   useEffect(() => {

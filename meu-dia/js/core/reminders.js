@@ -24,6 +24,8 @@ export function dueReminders({ events, bills, settings }, fromMs, toMs) {
       title: item.kind === 'task' ? `Tarefa: ${item.title}` : item.title,
       body: item.reminder >= 1440 ? `Amanhã ${item.time ? `às ${item.time}` : ''}`.trim() : `${item.location ? `${item.location} · ` : ''}${when}`,
       route: `#/agenda?dia=${date}`,
+      kind: item.kind === 'task' ? 'task' : 'event',
+      ref: { id: item.id, date },
     });
   }
 
@@ -41,6 +43,8 @@ export function dueReminders({ events, bills, settings }, fromMs, toMs) {
         title: `${bill.description} ${when}`,
         body: `${formatMoney(bill.amount)} ${verb}`,
         route: '#/contas',
+        kind: bill.kind === 'receive' ? 'bill-receive' : 'bill',
+        ref: { id: bill.id },
       });
     }
   }

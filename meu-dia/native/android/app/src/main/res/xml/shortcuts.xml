@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="despesa" android:enabled="true" android:icon="@drawable/ic_sc_expense"
+        android:shortcutShortLabel="@string/sc_expense_short" android:shortcutLongLabel="@string/sc_expense_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="br.com.meudia.app" android:targetClass="br.com.meudia.app.MainActivity">
+            <extra android:name="meudia_route" android:value="add:expense" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="compromisso" android:enabled="true" android:icon="@drawable/ic_sc_event"
+        android:shortcutShortLabel="@string/sc_event_short" android:shortcutLongLabel="@string/sc_event_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="br.com.meudia.app" android:targetClass="br.com.meudia.app.MainActivity">
+            <extra android:name="meudia_route" android:value="add:event" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="voz" android:enabled="true" android:icon="@drawable/ic_sc_voice"
+        android:shortcutShortLabel="@string/sc_voice_short" android:shortcutLongLabel="@string/sc_voice_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="br.com.meudia.app" android:targetClass="br.com.meudia.app.MainActivity">
+            <extra android:name="meudia_route" android:value="voice:expense" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="contas" android:enabled="true" android:icon="@drawable/ic_sc_bills"
+        android:shortcutShortLabel="@string/sc_bills_short" android:shortcutLongLabel="@string/sc_bills_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="br.com.meudia.app" android:targetClass="br.com.meudia.app.MainActivity">
+            <extra android:name="meudia_route" android:value="#/contas" />
+        </intent>
+    </shortcut>
+</shortcuts>

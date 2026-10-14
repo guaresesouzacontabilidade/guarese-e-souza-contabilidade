@@ -7,10 +7,13 @@ import { REPEAT_OPTIONS, repeatLabel, isRecurring } from '../../core/recurrence.
 import { categoriesFor, findCategory } from '../../core/categories.js';
 import { BILL_KIND, BILL_REMIND_OPTIONS, billState } from '../../core/bills.js';
 import { findPossibleDuplicates, walletType, live } from '../../core/finance.js';
+import { parseBoleto } from '../../core/boleto.js';
+import { scanBoleto, scannerAvailable, copyText } from '../../services/scanner.js';
 import {
   Button, TextInput, TextArea, DateField, Field, Chips, Segmented, MoneyInput, Details, SheetHeader, SheetActions, Icon, Money, Hint,
 } from '../components.js';
 import { openSheet, replaceSheet, closeLayer, confirm, toast } from '../state.js';
+import { haptic } from '../../services/feedback.js';
 
 export function BillForm({ kind: initialKind = 'pay', item = null, onClose }) {
   const s = store.getState();
@@ -25,9 +28,39 @@ export function BillForm({ kind: initialKind = 'pay', item = null, onClose }) {
   const [category, setCategory] = useState(item?.category || null);
   const [walletId, setWalletId] = useState(item?.walletId || null);
   const [notes, setNotes] = useState(item?.notes || '');
+  const [barcode, setBarcode] = useState(item?.barcode || '');
+  const [pasting, setPasting] = useState(false);
+  const [code, setCode] = useState('');
   const [errors, setErrors] = useState({});
   const wallets = live(s.wallets);
   const txType = BILL_KIND[kind].tx;
+
+  // Preenche a conta a partir do código do boleto (lido pela câmera ou colado).
+  const applyBoleto = (raw) => {
+    const b = parseBoleto(raw, todayISO());
+    if (!b) {
+      toast('Não reconheci esse código. Confira se é a linha digitável do boleto.', { tone: 'warning' });
+      return false;
+    }
+    if (b.amount) setAmount(b.amount);
+    if (b.dueDate) setDueDate(b.dueDate);
+    if (!description.trim()) setDescription(b.suggestion.description);
+    if (!category && b.suggestion.category) setCategory(b.suggestion.category);
+    setBarcode(b.line);
+    setKind('pay');
+    haptic('success');
+    const parts = [b.amount ? formatMoney(b.amount) : null, b.dueDate ? `vence ${formatNumeric(b.dueDate).slice(0, 5)}` : 'informe o vencimento'].filter(Boolean);
+    toast(b.valid ? `Boleto lido: ${parts.join(', ')}` : `Código lido, mas pode ter erro — confira os dados (${parts.join(', ')}).`, { tone: b.valid ? 'success' : 'warning' });
+    return true;
+  };
+  const scan = async () => {
+    try {
+      const raw = await scanBoleto();
+      if (raw) applyBoleto(raw);
+    } catch (err) {
+      toast(err.message || 'Não foi possível abrir a câmera.', { tone: 'warning' });
+    }
+  };
 
   const save = (e) => {
     e?.preventDefault();
@@ -47,6 +80,7 @@ export function BillForm({ kind: initialKind = 'pay', item = null, onClose }) {
       category,
       walletId,
       notes: notes.trim(),
+      barcode: barcode || null,
     };
     if (editing) {
       // Mudou o vencimento de uma conta recorrente: a série passa a seguir a nova data.
@@ -55,6 +89,7 @@ export function BillForm({ kind: initialKind = 'pay', item = null, onClose }) {
       toast('Conta atualizada', { tone: 'success' });
     } else {
       store.create('bills', { ...data, status: 'open', seriesStart: dueDate });
+      haptic('light');
       toast(`Conta salva · ${dueLabel(dueDate, todayISO())}`, { tone: 'success' });
     }
     onClose();
@@ -71,6 +106,26 @@ export function BillForm({ kind: initialKind = 'pay', item = null, onClose }) {
         { id: 'receive', label: 'A receber', icon: 'hand-coins' },
       ]}
     />
+    ${kind === 'pay' &&
+    !editing &&
+    html`<div class="row-actions">
+      ${scannerAvailable() && html`<${Button} variant="secondary" icon="scan-barcode" onClick=${scan}>Ler código de barras</${Button}>`}
+      <${Button} variant="secondary" icon="copy" onClick=${() => setPasting(!pasting)}>${pasting ? 'Fechar' : 'Colar código do boleto'}</${Button}>
+    </div>`}
+    ${pasting &&
+    html`<${TextInput}
+      label="Linha digitável ou código de barras"
+      inputmode="numeric"
+      placeholder="Cole ou digite os números do boleto"
+      value=${code}
+      onInput=${(v) => {
+        setCode(v);
+        const digits = v.replace(/\D/g, '');
+        if ([44, 47, 48].includes(digits.length) && applyBoleto(digits)) setPasting(false);
+      }}
+      hint="Valor e vencimento são preenchidos sozinhos."
+    />`}
+    ${barcode && html`<${Hint} icon="scan-barcode">Código do boleto guardado — dá para copiar depois na conta, para pagar no app do banco.</${Hint}>`}
     <${TextInput}
       label="Descrição"
       placeholder=${kind === 'pay' ? 'Ex.: Luz, aluguel, cartão' : 'Ex.: Cliente, aluguel recebido'}
@@ -115,6 +170,7 @@ export function openBillForm(opts = {}) {
 export function quickPay(bill, { replace = false } = {}) {
   const today = todayISO();
   const { bill: paid, next } = store.payBill(bill, { date: today, amount: bill.amount });
+  haptic('success');
   const kind = BILL_KIND[bill.kind];
   const existing = store.linkedTransaction(paid);
   if (existing) {
@@ -285,6 +341,18 @@ function BillDetail({ id, onClose }) {
       html`<li><${Icon} name=${tx ? 'circle-check' : 'info'} size=${18} /><span>${tx ? 'Registrada em Finanças' : 'Não registrada em Finanças'}</span></li>`}
       ${bill.notes && html`<li><${Icon} name="notebook-pen" size=${18} /><span>${bill.notes}</span></li>`}
     </ul>
+    ${bill.barcode &&
+    bill.status !== 'paid' &&
+    html`<${Button}
+      variant="secondary"
+      icon="copy"
+      onClick=${async () => {
+        const ok = await copyText(bill.barcode.replace(/\D/g, ''));
+        toast(ok ? 'Código copiado. Cole no app do banco para pagar.' : 'Não foi possível copiar.', { tone: ok ? 'success' : 'warning' });
+      }}
+    >
+      Copiar código do boleto
+    </${Button}>`}
     ${bill.status !== 'paid'
       ? html`<${Button}
           size="lg"
