@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Meu Dia</title>
+    <meta name="description" content="Agenda inteligente e assistente financeiro pessoal: compromissos, tarefas, contas, gastos e orçamento num só lugar." />
+    <meta name="theme-color" content="#060912" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Meu Dia" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icons/icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="./assets/icons/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png" />
+    <link rel="preload" href="./assets/fonts/manrope.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="./assets/fonts/sora.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./css/app.css" />
+    <script>
+      // Aplica o tema antes de desenhar a tela (sem "piscar").
+      (function () {
+        var pref = 'auto';
+        try {
+          pref = JSON.parse(localStorage.getItem('meu-dia:prefs-mirror') || '{}').theme || 'auto';
+        } catch (e) {}
+        var dark = pref === 'dark' || (pref === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', dark ? '#060912' : '#f2f4f9');
+      })();
+    </script>
+    <style>
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: var(--bg, #060912);
+        transition: opacity 0.25s ease;
+      }
+      .boot img {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        animation: boot 1.4s ease-in-out infinite;
+      }
+      @keyframes boot {
+        50% {
+          opacity: 0.6;
+          transform: scale(0.96);
+        }
+      }
+      .is-ready .boot {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <p style="padding: 24px; font-family: system-ui">O Meu Dia precisa de JavaScript ativado para funcionar.</p>
+    </noscript>
+    <div id="app"></div>
+    <div class="boot" aria-hidden="true"><img src="./assets/icons/icon.svg" alt="" /></div>
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
