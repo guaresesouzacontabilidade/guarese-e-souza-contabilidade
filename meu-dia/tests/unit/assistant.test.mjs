@@ -92,7 +92,7 @@ test('termo livre procura na descrição', () => {
 
 test('palavra de categoria sem lançamento com esse nome usa a categoria', () => {
   const r = q('quanto gastei com etanol?');
-  assert.equal(brl(r.text), 'Este mês você gastou R$ 350,00 com Combustível.');
+  assert.equal(brl(r.text), 'Não achei “etanol” nas descrições. Considerando toda a categoria Combustível, este mês você gastou R$ 350,00.');
   assert.ok(r.steps.some((s) => s.includes('entendi “etanol” como Combustível')));
 });
 
@@ -159,4 +159,19 @@ test('pergunta desconhecida sugere exemplos', () => {
   const r = q('qual a capital da França?');
   assert.equal(r.kind, 'unknown');
   assert.ok(r.suggestions.length >= 3);
+});
+
+test('perguntas do dia a dia que antes eram mal interpretadas', () => {
+  assert.equal(detectIntent(normalize('Quanto tenho que pagar este mês?')), 'bills');
+  assert.match(brl(q('Quanto tenho que pagar este mês?').text), /^Este mês vencem 2 contas a pagar/);
+  assert.equal(brl(q('quanto gastei só com combustível?').text), 'Este mês você gastou R$ 350,00 com Combustível.');
+  // "Marco" (nome) não é o mês de março.
+  assert.equal(parsePeriod('quanto gastei com o marco', TODAY), null);
+  assert.deepEqual(pick(parsePeriod('o que tenho na sexta', TODAY, { pastBias: false })), ['2026-10-16', '2026-10-16']);
+  assert.deepEqual(pick(parsePeriod('quanto gastei na sexta', TODAY)), ['2026-10-09', '2026-10-09']);
+  assert.deepEqual(pick(parsePeriod('quanto gastei sabado passado', TODAY)), ['2026-10-10', '2026-10-10']);
+  assert.equal(q('O que tenho amanhã?').text, 'Amanhã você tem 1 tarefa.');
+  assert.equal(q('O que tenho na sexta?').text, 'Nada na agenda na sexta-feira (16/10).');
+  const cmp = q('comparar este ano com o ano passado');
+  assert.ok(cmp.steps[0].includes('2026'));
 });

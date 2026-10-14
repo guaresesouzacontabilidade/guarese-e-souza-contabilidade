@@ -2,7 +2,7 @@
 // apenas com os dados registrados pelo usuário, mostrando como chegou ao resultado.
 import {
   addDays, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfYear, endOfYear,
-  formatNumeric, formatDayMonth, MONTHS,
+  formatNumeric, formatDayMonth, MONTHS, WEEKDAYS, weekday,
 } from './dates.js';
 import { formatMoney, formatPercent, sumBy } from './money.js';
 import { normalize, plural, joinList } from './text.js';
@@ -29,6 +29,7 @@ const MAX_ITEMS = 8;
 // ---------- Períodos ----------
 
 const MONTH_NORMAL = MONTHS.map((m) => normalize(m));
+const WEEKDAY_NORMAL = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
 function period(from, to, label, text, explicit = true) {
   return { from, to, label, text, explicit };
@@ -73,13 +74,30 @@ export function parsePeriod(q, today, { pastBias = true } = {}) {
   if ((m = q.match(/\b(?:(?:este|esse|neste|nesse|no|do|deste|desse) )?ano\b/))) {
     return period(startOfYear(today), endOfYear(today), 'este ano', m[0]);
   }
-  const monthRe = new RegExp(`\\b(?:(?:em|no|de|do|mes de) )?(${MONTH_NORMAL.join('|')})(?: (?:de )?(\\d{4}))?\\b`);
+  // Mês só conta com preposição ou ano junto ("em março", "março de 2025"), para não confundir "Marco" (nome).
+  const months = MONTH_NORMAL.join('|');
+  const monthRe = new RegExp(`\\b(?:(?:em|no|de|do|desde|ate|mes de) (${months})(?: (?:de )?(\\d{4}))?|(${months}) (?:de )?(\\d{4}))\\b|^(${months})$`);
   if ((m = q.match(monthRe))) {
-    const idx = MONTH_NORMAL.indexOf(m[1]);
-    let year = m[2] ? Number(m[2]) : Number(today.slice(0, 4));
-    if (!m[2] && pastBias && idx + 1 > Number(today.slice(5, 7))) year -= 1;
+    const name = m[1] || m[3] || m[5];
+    const yearText = m[2] || m[4];
+    const idx = MONTH_NORMAL.indexOf(name);
+    let year = yearText ? Number(yearText) : Number(today.slice(0, 4));
+    if (!yearText && pastBias && idx + 1 > Number(today.slice(5, 7))) year -= 1;
     const start = `${year}-${String(idx + 1).padStart(2, '0')}-01`;
     return period(start, endOfMonth(start), `em ${MONTHS[idx]}${year !== Number(today.slice(0, 4)) ? ` de ${year}` : ''}`, m[0]);
+  }
+  const wd = q.match(/\b(?:(?:na|no|de|da|do|nesta|neste|nessa|nesse|esta|este|essa|esse|proxima|proximo|ultima|ultimo|passada|passado) )?(domingo|segunda|terca|quarta|quinta|sexta|sabado)(?: feira)?(?: (?:passada|passado|que vem))?\b/);
+  if (wd) {
+    const target = WEEKDAY_NORMAL.indexOf(wd[1]);
+    const past = /\b(ultima|ultimo|passada|passado)\b/.test(wd[0]) || (pastBias && !/\b(proxima|proximo|que vem)\b/.test(wd[0]));
+    let diff = target - weekday(today);
+    if (past && diff > 0) diff -= 7;
+    if (!past && diff < 0) diff += 7;
+    const day = addDays(today, diff);
+    const masc = target === 0 || target === 6; // domingo e sábado
+    const article = diff < 0 ? (masc ? 'no último' : 'na última') : masc ? 'no' : 'na';
+    const label = diff === 0 ? 'hoje' : `${article} ${WEEKDAYS[target]} (${formatNumeric(day).slice(0, 5)})`;
+    return period(day, day, label, wd[0]);
   }
   if ((m = q.match(/\b(?:(?:este|esse|neste|nesse|no|do|deste|desse) )?mes\b/))) {
     return period(startOfMonth(today), endOfMonth(today), 'este mês', m[0]);
@@ -103,12 +121,13 @@ export function detectIntent(q) {
   if (has(q, /\b(ajuda|o que voce (faz|sabe|consegue)|como (funciona|te uso|usar)|exemplos?)\b/)) return 'help';
   if (has(q, /\b(dica|dicas|economizar|economia|gastar menos|sugest\w*|organizar (minhas|meu|as) (financas|dinheiro|contas))\b/)) return 'tips';
   if (has(q, /\b(orcamento|posso gastar|ainda posso|limite (do mes|mensal|de gastos))\b/)) return 'budget';
+  if (has(q, /\b(tenho (que|pra|para|a) (pagar|receber)|falta (pagar|receber)|faltam pagar|preciso pagar|vou (pagar|receber)|a pagar|a receber)\b/)) return 'bills';
   if (has(q, /\b(contas?|boletos?|faturas?)\b/) && has(q, /\b(venc\w*|pagar|receber|aberto|abertas|pendentes?|atrasad\w*|proximas?|tenho que pagar|falta pagar|faltam)\b/)) return 'bills';
   if (has(q, /\b(boletos?)\b/)) return 'bills';
   if (has(q, /\b(compar\w*|em relacao ao|versus|vs|diferenca)\b/) || has(q, /\b(mais|menos) (do )?que (no |em )?(o )?mes passado\b/)) return 'compare';
   if (has(q, /\b(maior|maiores) (gasto|gastos|despesa|despesas|compra|compras|saida|saidas)\b/) || has(q, /\b(gasto|despesa|compra) mais (cara|caro|alta|alto)\b/)) return 'biggest';
   if (has(q, /\b(onde|com o que|com que|em que|no que|para onde|pra onde)\b.*\b(gastei|gasto|gastando|vai|foi)\b/) || has(q, /\b(por categoria|categorias?)\b/) || has(q, /\b(mais gastei|gastei mais)\b/)) return 'categories';
-  if (has(q, /\b(compromissos?|agenda|tarefas?|reunio\w*|marcado|o que tenho (hoje|amanha|para|pra|essa|esta|na))\b/)) return 'agenda';
+  if (has(q, /\b(compromissos?|agenda|tarefas?|reunio\w*|marcado|o que tenho (hoje|amanha|para|pra|essa|esta|nessa|nesta|neste|nesse|na|no|dia|de)|o que (eu )?tenho\??$)\b/)) return 'agenda';
   if (has(q, /\b(saldo|sobrou|sobra|quanto (eu )?tenho|dinheiro (eu )?tenho|balanco)\b/)) return 'balance';
   if (has(q, /\b(recebi|ganhei|receitas?|entrou|entradas?|faturei|renda)\b/)) return 'income';
   if (has(q, /\b(gastei|gasto|gastos|gastamos|despesas?|paguei|custou|saiu|saidas?)\b/)) return 'spend';
@@ -120,7 +139,7 @@ export function extractTerm(q, keywordRe) {
   const m = q.match(keywordRe);
   if (!m) return '';
   let rest = q.slice(m.index + m[0].length).trim();
-  rest = rest.replace(/^(eu |ja |ate agora |no total |ao todo |total )+/g, '');
+  rest = rest.replace(/^(eu |ja |ate agora |no total |ao todo |total |so |somente |apenas |muito |mais |bastante |tanto |demais |ao todo )+/g, '');
   const pm = rest.match(/^(?:com|em|no|na|nos|nas|de|do|da|dos|das|pra|para|pro|pela|pelo|o|a|os|as)\s+(.+)$/);
   if (!pm) return '';
   let term = pm[1];
@@ -186,6 +205,7 @@ function filterByTerm(list, term, type, custom) {
       notFoundText: `com “${term}” nem na categoria ${cat.category.label}`,
       filterStep: `da categoria ${cat.category.label} (entendi “${term}” como ${cat.category.label})`,
       category: cat.category,
+      viaKeyword: true,
     };
   }
   return { list: [], filterText: `com “${term}”`, filterStep: `com “${term}” na descrição ou categoria`, notFound: true };
@@ -212,7 +232,9 @@ function answerSpend(q, ctx, p) {
   steps.push(`Somei ${plural(f.list.length, 'despesa', 'despesas')}${f.filterStep ? ` ${f.filterStep}` : ''}:`);
   const result = {
     kind: 'answer',
-    text: `${capitalizeFirst(p.label)} você gastou ${money(total)}${f.filterText ? ` ${f.filterText}` : ''}.`,
+    text: f.viaKeyword
+      ? `Não achei “${term}” nas descrições. Considerando toda a categoria ${f.category.label}, ${p.label} você gastou ${money(total)}.`
+      : `${capitalizeFirst(p.label)} você gastou ${money(total)}${f.filterText ? ` ${f.filterText}` : ''}.`,
     steps,
     items: listItems(f.list, custom),
     total: `Total: ${money(total)}`,
@@ -249,7 +271,9 @@ function answerIncome(q, ctx, p) {
   }
   return {
     kind: 'answer',
-    text: `${capitalizeFirst(p.label)} você recebeu ${money(total)}${f.filterText ? ` ${f.filterText}` : ''}.`,
+    text: f.viaKeyword
+      ? `Não achei “${term}” nas descrições. Considerando toda a categoria ${f.category.label}, ${p.label} você recebeu ${money(total)}.`
+      : `${capitalizeFirst(p.label)} você recebeu ${money(total)}${f.filterText ? ` ${f.filterText}` : ''}.`,
     steps: [`Período: ${rangeText(p)}.`, `Somei ${plural(f.list.length, 'receita', 'receitas')}${f.filterStep ? ` ${f.filterStep}` : ''}:`, SOURCE_NOTE],
     items: listItems(f.list, custom),
     total: `Total: ${money(total)}`,
@@ -435,7 +459,9 @@ function answerCompare(q, ctx, p) {
   if (p && /passad|anterior|ultim/.test(p.text)) {
     range = /semana/.test(p.text)
       ? period(startOfWeek(ctx.today), endOfWeek(ctx.today), 'esta semana', '')
-      : thisMonth(ctx.today);
+      : /ano/.test(p.text)
+        ? period(startOfYear(ctx.today), endOfYear(ctx.today), 'este ano', '')
+        : thisMonth(ctx.today);
   }
   const custom = ctx.settings?.customCategories || [];
   const c = comparePeriods(ctx.transactions, range.from, range.to, ctx.today, custom);

@@ -202,13 +202,30 @@ test('lembretes: contas e compromissos no horário certo', () => {
   const from = d.toTimestamp('2026-10-15', '08:00');
   const to = d.toTimestamp('2026-10-15', '10:00');
   const list = dueReminders({ events: [], bills, settings }, from, to);
-  assert.deepEqual(list.map((r) => r.key), ['bill:b2:1']);
+  assert.deepEqual(list.map((r) => r.key), [`bill:b2:${d.toTimestamp('2026-10-15', '09:00')}`]);
   assert.match(list[0].title, /Internet vence amanhã/);
 
   const evs = [{ id: 'e1', kind: 'event', title: 'Dentista', date: '2026-10-15', time: '15:00', reminder: 30, repeat: 'none' }];
   const r = dueReminders({ events: evs, bills: [], settings }, d.toTimestamp('2026-10-15', '14:00'), d.toTimestamp('2026-10-15', '14:45'));
   assert.equal(r.length, 1);
   assert.equal(r[0].fireAt, d.toTimestamp('2026-10-15', '14:30'));
+
+  // Remarcado para mais tarde: novo lembrete com outra chave.
+  const moved = [{ ...evs[0], time: '16:00' }];
+  const r2 = dueReminders({ events: moved, bills: [], settings }, d.toTimestamp('2026-10-15', '15:00'), d.toTimestamp('2026-10-15', '15:45'));
+  assert.equal(r2.length, 1);
+  assert.notEqual(r2[0].key, r[0].key);
+});
+
+test('pagamento não é vinculado a lançamento de outra conta', () => {
+  const list = [
+    { id: 'old', type: 'expense', amount: 15000, description: 'Diarista', date: '2026-10-07', billId: 'semana1' },
+    { id: 'free', type: 'expense', amount: 15000, description: 'Diarista', date: '2026-10-13' },
+  ];
+  const base = { type: 'expense', amount: 15000, date: TODAY, description: 'Diarista' };
+  assert.deepEqual(findPossibleDuplicates(list, base).map((t) => t.id), ['free', 'old']);
+  assert.deepEqual(findPossibleDuplicates(list, { ...base, unlinkedOnly: true, linkedIds: new Set() }).map((t) => t.id), ['free']);
+  assert.deepEqual(findPossibleDuplicates(list, { ...base, unlinkedOnly: true, linkedIds: new Set(['free']) }), []);
 });
 
 test('relatórios: períodos e rótulos', () => {

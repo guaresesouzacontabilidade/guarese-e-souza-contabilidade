@@ -73,6 +73,7 @@ export function monthlySeries(transactions, from, to, max = 12) {
 
 function prevName(range) {
   if (range.from.slice(0, 7) === range.to.slice(0, 7)) return `em ${monthName(range.from)}`;
+  if (range.from.slice(5) === '01-01' && range.from.slice(0, 4) === range.to.slice(0, 4)) return `em ${range.from.slice(0, 4)}`;
   return 'no período anterior';
 }
 

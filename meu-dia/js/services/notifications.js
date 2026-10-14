@@ -55,6 +55,10 @@ async function showSystem(reminder) {
 function check() {
   const s = store.getState();
   if (!s.ready) return;
+  const useSystem = s.prefs.notifications && permission() === 'granted';
+  const visible = document.visibilityState === 'visible';
+  // Sem notificação do sistema, o aviso só pode aparecer dentro do app: espera a pessoa voltar.
+  if (!useSystem && !visible) return;
   const now = Date.now();
   const last = s.meta.lastReminderCheck || now - CATCH_UP_WINDOW;
   const from = Math.max(last, now - CATCH_UP_WINDOW);
@@ -65,8 +69,7 @@ function check() {
   store.updateMeta({ lastReminderCheck: now, notified });
   if (!due.length) return;
 
-  const useSystem = s.prefs.notifications && permission() === 'granted';
-  if (useSystem && document.visibilityState !== 'visible') {
+  if (useSystem && !visible) {
     if (due.length > 3) {
       showSystem({ key: 'resumo', title: `Você tem ${due.length} lembretes`, body: due.slice(0, 3).map((r) => r.title).join(' · '), route: '#/' });
     } else {

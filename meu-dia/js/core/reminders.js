@@ -18,7 +18,8 @@ export function dueReminders({ events, bills, settings }, fromMs, toMs) {
     if (fireAt <= fromMs || fireAt > toMs) continue;
     const when = item.time ? `às ${item.time}` : 'hoje';
     out.push({
-      key: `ev:${item.id}:${date}:${item.reminder}`,
+      // O horário entra na chave: se o compromisso mudar de hora, avisa de novo.
+      key: `ev:${item.id}:${fireAt}`,
       fireAt,
       title: item.kind === 'task' ? `Tarefa: ${item.title}` : item.title,
       body: item.reminder >= 1440 ? `Amanhã ${item.time ? `às ${item.time}` : ''}`.trim() : `${item.location ? `${item.location} · ` : ''}${when}`,
@@ -35,7 +36,7 @@ export function dueReminders({ events, bills, settings }, fromMs, toMs) {
       const verb = bill.kind === 'receive' ? 'a receber' : 'a pagar';
       const when = daysBefore === 0 ? 'vence hoje' : daysBefore === 1 ? 'vence amanhã' : `vence em ${daysBefore} dias (${formatShort(bill.dueDate)})`;
       out.push({
-        key: `bill:${bill.id}:${daysBefore}`,
+        key: `bill:${bill.id}:${fireAt}`,
         fireAt,
         title: `${bill.description} ${when}`,
         body: `${formatMoney(bill.amount)} ${verb}`,

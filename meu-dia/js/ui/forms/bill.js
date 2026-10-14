@@ -137,7 +137,10 @@ function AfterPay({ billId, nextId, onClose }) {
   const [walletId, setWalletId] = useState(bill?.walletId || null);
   const [amount, setAmount] = useState(bill?.paidAmount ?? bill?.amount ?? 0);
   const [date, setDate] = useState(bill?.paidAt || todayISO());
-  const dup = bill ? findPossibleDuplicates(s.transactions, { type: txType, amount, date, description: bill.description })[0] : null;
+  const linkedIds = new Set(s.bills.filter((b) => !b.deleted && b.transactionId).map((b) => b.transactionId));
+  const dup = bill
+    ? findPossibleDuplicates(s.transactions, { type: txType, amount, date, description: bill.description, unlinkedOnly: true, linkedIds })[0]
+    : null;
   const [choice, setChoice] = useState(dup ? 'link' : 'new');
   if (!bill) return html`<div><${SheetHeader} title="Conta não encontrada" onClose=${onClose} /></div>`;
   const kind = BILL_KIND[bill.kind];

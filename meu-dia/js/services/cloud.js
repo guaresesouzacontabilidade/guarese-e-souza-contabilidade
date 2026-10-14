@@ -109,7 +109,8 @@ function handleSignedIn(user) {
     setAuth({ pendingMerge: { count: store.countRecords() } });
     return;
   }
-  adoptDevice(user, { merge: false });
+  // Aparelho sem registros (ou de outra pessoa): usa os dados da conta.
+  adoptDevice(user, { merge: !s.meta.ownerId });
 }
 
 export async function resolveMerge(merge) {
@@ -123,10 +124,19 @@ async function adoptDevice(user, { merge }) {
   if (!merge || (s.meta.ownerId && s.meta.ownerId !== user.id)) {
     await store.resetLocal();
   } else {
-    store.markAllDirty();
+    // Envia os registros do aparelho; os ajustes da conta (orçamento, categorias…)
+    // têm prioridade e os locais só servem se a conta ainda não tiver nenhum.
+    store.prepareMerge();
   }
   store.updateMeta({ ownerId: user.id, lastPulledAt: null });
+  if (current) await current.catch(() => {});
   await syncNow();
+  // A conta ainda não tinha ajustes: usa os do aparelho (ex.: nome digitado no cadastro).
+  const st = store.getState();
+  if (sync.state === 'ok' && st.meta.ownerId === user.id && !st.settings.updatedAt && store.hasCustomSettings()) {
+    store.updateSettings({});
+    scheduleSync(0);
+  }
 }
 
 export async function signUp({ email, password, name }) {
@@ -164,29 +174,49 @@ export function cancelRecovery() {
   setAuth({ recovery: false });
 }
 
-export async function signOut() {
-  const client = await getClient();
-  // Tenta enviar o que falta antes de sair.
+// Espera a sincronização em andamento e envia o que faltar antes de sair.
+async function finishSync() {
+  clearTimeout(timer);
   try {
+    if (current) await current;
     await syncNow();
   } catch {
     /* segue mesmo offline */
   }
-  await client.auth.signOut({ scope: 'local' });
-  handledUserId = null;
-  await store.resetLocal();
-  setAuth({ user: null });
-  setSync({ state: 'idle', lastSyncAt: null });
+}
+
+export async function signOut() {
+  const client = await getClient();
+  await finishSync();
+  blocked = true;
+  clearTimeout(timer);
+  try {
+    await client.auth.signOut({ scope: 'local' });
+    handledUserId = null;
+    await store.resetLocal();
+    setAuth({ user: null });
+    setSync({ state: 'idle', lastSyncAt: null });
+  } finally {
+    blocked = false;
+  }
 }
 
 export async function deleteAccount() {
   const client = await getClient();
-  const { error } = await client.rpc('meudia_delete_account');
-  if (error) throw error;
-  await client.auth.signOut({ scope: 'local' });
-  handledUserId = null;
-  await store.resetLocal({ keepPrefs: false });
-  setAuth({ user: null });
+  clearTimeout(timer);
+  if (current) await current.catch(() => {});
+  blocked = true;
+  try {
+    const { error } = await client.rpc('meudia_delete_account');
+    if (error) throw error;
+    await client.auth.signOut({ scope: 'local' });
+    handledUserId = null;
+    await store.resetLocal({ keepPrefs: false });
+    setAuth({ user: null });
+    setSync({ state: 'idle', lastSyncAt: null });
+  } finally {
+    blocked = false;
+  }
 }
 
 export function unsyncedCount() {
@@ -200,41 +230,51 @@ function appUrl() {
 // ---------- Sincronização ----------
 
 let timer = null;
-let running = false;
+let current = null; // sincronização em andamento
 let again = false;
+let blocked = false; // saindo da conta: nada de sincronizar
 
 export function scheduleSync(delay = 2000) {
-  if (!auth.user || auth.pendingMerge) return;
+  if (!auth.user || auth.pendingMerge || blocked) return;
   clearTimeout(timer);
   timer = setTimeout(syncNow, delay);
 }
 
-export async function syncNow() {
-  const client = await getClient();
-  if (!client || !auth.user || auth.pendingMerge) return;
-  if (running) {
+export function syncNow() {
+  if (current) {
     again = true;
-    return;
+    return current;
   }
-  running = true;
-  setSync({ state: 'syncing', error: null });
-  try {
-    await push(client);
-    await pull(client);
-    setSync({ state: 'ok', lastSyncAt: Date.now(), error: null });
-  } catch (err) {
-    console.warn('[meu-dia] sincronização falhou', err);
-    setSync({ state: navigator.onLine ? 'error' : 'offline', error: friendlyError(err) });
-  } finally {
-    running = false;
+  current = runSync().finally(() => {
+    current = null;
     if (again) {
       again = false;
       scheduleSync(800);
     }
+  });
+  return current;
+}
+
+async function runSync() {
+  const client = await getClient();
+  if (!client || !auth.user || auth.pendingMerge || blocked) return;
+  const uid = auth.user.id;
+  setSync({ state: 'syncing', error: null });
+  try {
+    await push(client, uid);
+    await pull(client, uid);
+    setSync({ state: 'ok', lastSyncAt: Date.now(), error: null });
+  } catch (err) {
+    console.warn('[meu-dia] sincronização falhou', err);
+    setSync({ state: navigator.onLine ? 'error' : 'offline', error: friendlyError(err) });
   }
 }
 
-async function push(client) {
+// O aparelho ainda pertence a este usuário? (pode ter saído no meio da sincronização)
+const stillOwner = (uid) => !blocked && auth.user?.id === uid && store.getState().meta.ownerId === uid;
+
+async function push(client, uid) {
+  if (!stillOwner(uid)) return;
   const s = store.getState();
   const keys = Object.keys(s.meta.dirty || {});
   if (!keys.length) return;
@@ -249,7 +289,7 @@ async function push(client) {
     }
     const { id: _id, updatedAt, deleted, ...data } = rec;
     rows.push({
-      user_id: auth.user.id,
+      user_id: uid,
       collection,
       id,
       data,
@@ -262,10 +302,11 @@ async function push(client) {
     const { error } = await client.from(TABLE).upsert(rows.slice(i, i + 200), { onConflict: 'user_id,collection,id' });
     if (error) throw error;
   }
-  store.clearDirty(versions);
+  if (stillOwner(uid)) store.clearDirty(versions);
 }
 
-async function pull(client) {
+async function pull(client, uid) {
+  if (!stillOwner(uid)) return;
   const cursor = store.getState().meta.lastPulledAt;
   // Pequena sobreposição para não perder gravações simultâneas; aplicar de novo é inofensivo.
   const since = cursor ? new Date(new Date(cursor).getTime() - 5000).toISOString() : '1970-01-01T00:00:00Z';
@@ -278,11 +319,12 @@ async function pull(client) {
       .order('server_updated_at', { ascending: true })
       .range(from, from + 999);
     if (error) throw error;
+    if (!stillOwner(uid)) return;
     store.applyRemote(data);
     for (const r of data) {
       if (!maxTs || new Date(r.server_updated_at) > new Date(maxTs)) maxTs = r.server_updated_at;
     }
     if (data.length < 1000) break;
   }
-  store.updateMeta({ lastPulledAt: maxTs, lastSyncAt: Date.now() });
+  if (stillOwner(uid)) store.updateMeta({ lastPulledAt: maxTs, lastSyncAt: Date.now() });
 }

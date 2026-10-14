@@ -250,9 +250,19 @@ export function allRecords() {
   return out;
 }
 
-export function markAllDirty() {
-  const keys = allRecords().map(({ collection, record }) => `${collection}:${record.id}`);
-  commit({ meta: withDirty(keys) }, ['meta'], { synced: false });
+// Ao juntar os dados do aparelho a uma conta: envia todos os registros, mas deixa os
+// ajustes locais como reserva (updatedAt 0), para que os ajustes já salvos na conta prevaleçam.
+export function prepareMerge() {
+  const keys = [];
+  for (const c of COLLECTIONS) for (const r of state[c]) keys.push(`${c}:${r.id}`);
+  const dirty = { ...withDirty(keys).dirty };
+  delete dirty['settings:settings'];
+  commit({ settings: { ...state.settings, updatedAt: 0 }, meta: { ...state.meta, dirty } }, ['settings', 'meta'], { synced: false });
+}
+
+export function hasCustomSettings() {
+  const s = state.settings;
+  return Object.keys(DEFAULT_SETTINGS).some((k) => k !== 'updatedAt' && JSON.stringify(s[k]) !== JSON.stringify(DEFAULT_SETTINGS[k]));
 }
 
 // Junta registros vindos da nuvem. Vence a versão alterada por último.
@@ -328,8 +338,9 @@ export function importData(data) {
     for (const r of data[c] || []) {
       if (!r || !r.id) continue;
       const local = map.get(r.id);
-      if (!local || (r.updatedAt || 0) > (local.updatedAt || 0)) {
-        map.set(r.id, { ...r, updatedAt: Math.max(now, r.updatedAt || 0) });
+      // Também restaura o que foi excluído depois de o backup ser feito.
+      if (!local || (r.updatedAt || 0) > (local.updatedAt || 0) || (local.deleted && !r.deleted)) {
+        map.set(r.id, { ...r, deleted: false, updatedAt: Math.max(now, (local?.updatedAt || 0) + 1, r.updatedAt || 0) });
         dirtyKeys.push(`${c}:${r.id}`);
         count++;
       }

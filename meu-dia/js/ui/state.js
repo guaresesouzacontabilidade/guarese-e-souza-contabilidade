@@ -66,13 +66,48 @@ export function useLayers() {
   return list;
 }
 
+// Cada painel aberto ganha uma entrada no histórico, para o "voltar" do Android/navegador
+// fechar o painel em vez de sair da tela. history.back() é assíncrono, então novas entradas
+// esperam os "voltar" pendentes terminarem antes de serem criadas.
+let expectedPops = 0;
+let queuedPushes = [];
+let pendingNav = null;
+
+let backBatch = 0;
+
+function pushEntry(layer) {
+  if (expectedPops > 0 || backBatch > 0) {
+    queuedPushes.push(layer.id);
+    return;
+  }
+  history.pushState({ ...(history.state || {}), layer: layer.id }, '');
+  layer.pushed = true;
+}
+
+// Junta vários "voltar" pedidos no mesmo instante num único history.go (alguns navegadores os unem).
+function goBack(n) {
+  if (n <= 0) return;
+  if (backBatch === 0) {
+    queueMicrotask(() => {
+      const total = backBatch;
+      backBatch = 0;
+      expectedPops++;
+      history.go(-total);
+    });
+  }
+  backBatch += n;
+}
+
+function addLayer(layer) {
+  layers = [...layers, layer];
+  pushEntry(layer);
+  emitLayers();
+}
+
 // Abre um painel. `render(close)` devolve o conteúdo.
 export function openSheet(render, { title = '', size = 'md', onClose } = {}) {
   const id = ++seq;
-  const returnFocus = document.activeElement;
-  layers = [...layers, { id, type: 'sheet', render, title, size, onClose, returnFocus }];
-  history.pushState({ ...(history.state || {}), layer: id }, '');
-  emitLayers();
+  addLayer({ id, type: 'sheet', render, title, size, onClose, returnFocus: document.activeElement });
   return id;
 }
 
@@ -85,39 +120,41 @@ export function replaceSheet(render, { title = '', size = 'md' } = {}) {
   return top.id;
 }
 
-function dropTop() {
-  const top = layers[layers.length - 1];
-  if (!top) return;
-  layers = layers.slice(0, -1);
-  emitLayers();
-  top.onClose?.();
-  if (top.resolve) top.resolve(top.cancelValue);
+function finish(layer) {
+  layer.onClose?.();
+  if (layer.resolve) layer.resolve(layer.cancelValue);
   try {
-    top.returnFocus?.focus?.({ preventScroll: true });
+    layer.returnFocus?.focus?.({ preventScroll: true });
   } catch {
     /* ignore */
   }
 }
 
+function dropTop() {
+  const top = layers[layers.length - 1];
+  if (!top) return null;
+  layers = layers.slice(0, -1);
+  queuedPushes = queuedPushes.filter((id) => id !== top.id);
+  emitLayers();
+  finish(top);
+  return top;
+}
+
+// Fecha o painel do topo (botão X, fundo, Esc ou ação concluída).
 export function closeLayer() {
-  if (!layers.length) return;
-  if (history.state?.layer === layers[layers.length - 1].id) history.back();
-  else dropTop();
+  const top = dropTop();
+  if (top?.pushed) goBack(1);
 }
 
 export function closeAllLayers(thenNavigate) {
-  const n = layers.length;
-  if (!n) {
-    if (thenNavigate) navigate(thenNavigate);
-    return;
+  let pushed = 0;
+  while (layers.length) {
+    const top = dropTop();
+    if (top.pushed) pushed++;
   }
-  const ownsHistory = history.state?.layer === layers[n - 1].id;
-  while (layers.length) dropTop();
-  if (ownsHistory) {
-    // Volta as entradas de histórico criadas pelos painéis (um único popstate).
-    ignorePops = 1;
+  if (pushed) {
     pendingNav = thenNavigate || null;
-    history.go(-n);
+    goBack(pushed);
   } else if (thenNavigate) {
     navigate(thenNavigate);
   }
@@ -128,18 +165,26 @@ export function goTo(path) {
   closeAllLayers(path);
 }
 
-let ignorePops = 0;
-let pendingNav = null;
 addEventListener('popstate', () => {
-  if (ignorePops > 0) {
-    ignorePops--;
-    if (pendingNav) {
-      const target = pendingNav;
-      pendingNav = null;
-      navigate(target);
+  if (expectedPops > 0) {
+    // Fim de um "voltar" que nós mesmos pedimos.
+    expectedPops--;
+    if (expectedPops === 0) {
+      const ids = queuedPushes;
+      queuedPushes = [];
+      for (const id of ids) {
+        const layer = layers.find((l) => l.id === id);
+        if (layer) pushEntry(layer);
+      }
+      if (pendingNav) {
+        const target = pendingNav;
+        pendingNav = null;
+        navigate(target);
+      }
     }
     return;
   }
+  // "Voltar" do usuário: fecha o painel do topo.
   if (layers.length) dropTop();
 });
 
@@ -162,10 +207,7 @@ export function confirm({ title, message = '', confirmLabel = 'Confirmar', cance
 export function choose({ title, message = '', options, icon = 'circle-help', danger = false, cancelValue = null }) {
   return new Promise((resolve) => {
     const id = ++seq;
-    const returnFocus = document.activeElement;
-    layers = [...layers, { id, type: 'dialog', title, message, options, icon, danger, resolve, cancelValue, returnFocus }];
-    history.pushState({ ...(history.state || {}), layer: id }, '');
-    emitLayers();
+    addLayer({ id, type: 'dialog', title, message, options, icon, danger, resolve, cancelValue, returnFocus: document.activeElement });
   });
 }
 

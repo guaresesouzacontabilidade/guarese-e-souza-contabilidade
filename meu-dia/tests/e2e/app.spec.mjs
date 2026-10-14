@@ -198,6 +198,25 @@ test('ao pagar, reaproveita lançamento parecido em vez de duplicar', async ({ p
   await expect(page.locator('.item', { hasText: 'Internet' })).toHaveCount(1);
 });
 
+test('conta semanal: o pagamento da semana seguinte não reaproveita o lançamento da anterior', async ({ page }) => {
+  await start(page);
+  await openAdd(page, 'Conta');
+  await page.getByLabel('Descrição', { exact: true }).fill('Diarista');
+  await typeMoney(page, 'Valor', '15000');
+  await page.getByRole('button', { name: 'Toda semana', exact: true }).click();
+  await page.getByRole('button', { name: 'Salvar conta' }).click();
+  await goTo(page, 'Contas');
+  await page.getByRole('button', { name: 'Marcar como paga: Diarista' }).click();
+  await page.locator('.sheet').getByRole('button', { name: 'Registrar despesa' }).click();
+  await expect(page.locator('.sheet')).toHaveCount(0);
+  // A próxima (semana que vem) também é paga hoje: deve criar um lançamento novo.
+  await page.getByRole('button', { name: 'Marcar como paga: Diarista' }).click();
+  await expect(page.locator('.sheet')).not.toContainText('Encontramos um lançamento parecido');
+  await page.locator('.sheet').getByRole('button', { name: 'Registrar despesa' }).click();
+  await goTo(page, 'Finanças');
+  await expect(page.locator('.item', { hasText: 'Diarista' })).toHaveCount(2);
+});
+
 test('aviso de lançamento repetido ao registrar a mesma despesa', async ({ page }) => {
   await start(page);
   await addExpense(page, { amount: '5000', description: 'Mercado' });
@@ -280,6 +299,39 @@ test('voltar do navegador/Android fecha o painel em vez de sair da tela', async 
   await page.goBack();
   await expect(page.locator('.sheet')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Ana');
+});
+
+test('painéis e confirmações mantêm o histórico certo', async ({ page }) => {
+  await start(page);
+  const hash = await page.evaluate(() => location.hash);
+  // Fecha um painel e abre outro no mesmo instante: o "voltar" deve fechar o novo.
+  await page.evaluate(async () => {
+    const ui = await import('./js/ui/state.js');
+    const { html } = await import('./js/vendor/preact.js');
+    ui.openSheet(() => html`<p>Painel A</p>`);
+    await new Promise((r) => setTimeout(r, 50));
+    ui.closeLayer();
+    ui.openSheet(() => html`<p>Painel B</p>`);
+  });
+  await expect(page.locator('.sheet')).toContainText('Painel B');
+  await page.waitForTimeout(150);
+  await page.goBack();
+  await expect(page.locator('.sheet')).toHaveCount(0);
+  expect(await page.evaluate(() => location.hash)).toBe(hash);
+
+  // Excluir com confirmação dentro de um painel e depois usar "voltar" normalmente.
+  await addExpense(page, { amount: '1000', description: 'Pão' });
+  await goTo(page, 'Finanças');
+  await page.locator('.item', { hasText: 'Pão' }).click();
+  await page.getByRole('button', { name: 'Excluir' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Excluir' }).click();
+  await expect(page.locator('.sheet, .dialog')).toHaveCount(0);
+  await page.waitForTimeout(150);
+  await expect(page).toHaveURL(/#\/financas/);
+  await openAdd(page, 'Tarefa');
+  await page.goBack();
+  await expect(page.locator('.sheet')).toHaveCount(0);
+  await expect(page).toHaveURL(/#\/financas/);
 });
 
 test('tema escuro e claro', async ({ page }) => {

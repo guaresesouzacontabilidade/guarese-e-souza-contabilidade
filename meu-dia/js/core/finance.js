@@ -122,11 +122,13 @@ export function groupByDate(transactions) {
 }
 
 // Procura lançamentos parecidos para evitar registro em dobro (mesmo tipo e valor, datas próximas).
-export function findPossibleDuplicates(transactions, { type, amount, date, description, excludeId, windowDays = 5 }) {
+// `unlinkedOnly`: ignora lançamentos que já pertencem a uma conta paga (ex.: a semana anterior de uma conta semanal).
+export function findPossibleDuplicates(transactions, { type, amount, date, description, excludeId, windowDays = 5, unlinkedOnly = false, linkedIds }) {
   const desc = normalize(description);
   const firstWord = desc.split(' ').find((w) => w.length >= 3);
   return transactions
     .filter((t) => !t.deleted && t.id !== excludeId && t.type === type && t.amount === amount)
+    .filter((t) => !unlinkedOnly || (!t.billId && !linkedIds?.has(t.id)))
     .map((t) => ({ t, distance: Math.abs(diffDays(t.date, date)) }))
     .filter(({ t, distance }) => distance <= windowDays || (firstWord && normalize(t.description).includes(firstWord) && distance <= 20))
     .sort((a, b) => a.distance - b.distance)
