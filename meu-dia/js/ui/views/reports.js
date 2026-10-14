@@ -196,6 +196,7 @@ export function ReportsView({ s, params }) {
             <div class="kpi"><div class="kpi-label">Saldo</div><div class=${`kpi-value ${t.balance < 0 ? 'amount-neg' : ''}`}><${Money} value=${t.balance} /></div></div>
           </div>
 
+          <div class="two-col">
           <section class="card" aria-label="Em resumo">
             <h2 class="card-title" style=${{ marginBottom: '12px' }}><${Icon} name="sparkles" size=${18} />Em resumo</h2>
             <ul class="sentences">
@@ -218,6 +219,7 @@ export function ReportsView({ s, params }) {
             />
             <div style=${{ marginTop: '16px' }}><${CategoryBars} list=${cats} type=${catType} /></div>
           </section>
+          </div>
 
           <section class="card" aria-label="Mês a mês">
             <h2 class="card-title" style=${{ marginBottom: '12px' }}><${Icon} name="chart-column" size=${18} />Mês a mês</h2>

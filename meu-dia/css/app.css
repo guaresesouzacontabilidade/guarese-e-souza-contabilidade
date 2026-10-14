@@ -2264,6 +2264,18 @@ body.is-locked .toasts {
   font-size: 13px;
 }
 
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 1180px) {
+  .two-col {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
 .custom-range {
   display: grid;
   grid-template-columns: 1fr 1fr;
