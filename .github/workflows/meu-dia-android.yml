@@ -31,19 +31,19 @@ jobs:
       run:
         working-directory: meu-dia
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: meu-dia/package-lock.json
 
-      - uses: actions/setup-java@v4
+      # Sem cache do Gradle aqui: o projeto android/ só é gerado mais adiante.
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
-          cache: gradle
 
       - name: Instalar dependências
         run: npm ci
