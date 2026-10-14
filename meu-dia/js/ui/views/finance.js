@@ -9,6 +9,7 @@ import { TransactionRow, WalletChip } from '../rows.js';
 import { navigate } from '../state.js';
 import { openAddForm } from '../forms/add.js';
 import { openWalletForm } from '../forms/wallet.js';
+import { openImport } from '../forms/import.js';
 
 const TYPES = [
   { id: 'all', label: 'Tudo' },
@@ -119,6 +120,7 @@ export function FinanceView({ s, params }) {
 
           <div class="row-actions">
             <${Button} variant="secondary" icon="chart-column" onClick=${() => navigate('/relatorios')}>Relatórios</${Button}>
+            <${Button} variant="secondary" icon="file-up" onClick=${() => openImport()}>Importar extrato</${Button}>
             <${Button} variant="secondary" icon="sparkles" onClick=${() => navigate('/assistente')}>Perguntar</${Button}>
           </div>
 

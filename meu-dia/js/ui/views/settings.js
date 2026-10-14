@@ -12,6 +12,7 @@ import {
 import { isStandalone, isIOS, canPromptInstall, promptInstall } from '../../services/install.js';
 import { cloudEnabled, syncNow, signOut, deleteAccount, friendlyError, unsyncedCount } from '../../services/cloud.js';
 import { openAuthSheet } from './auth.js';
+import { openImport } from '../forms/import.js';
 
 export const APP_VERSION = '1.0.0';
 
@@ -268,6 +269,7 @@ function DataSection({ s }) {
     <div class="settings-list">
       <${Row} icon="file-down" label="Exportar backup completo" desc="Arquivo .json com tudo que você registrou" onClick=${downloadBackup} />
       <${Row} icon="download" label="Exportar lançamentos (planilha)" desc="Arquivo .csv para Excel ou Planilhas" onClick=${() => downloadTransactionsCSV(s.transactions)} />
+      <${Row} icon="landmark" label="Importar extrato ou fatura" desc="PDF, OFX ou CSV do banco — você revisa antes" onClick=${() => openImport()} />
       <${Row} icon="file-up" label="Importar backup" desc="Junta um backup .json aos dados atuais" onClick=${() => fileRef.current?.click()} />
       ${!auth.user && html`<${Row} icon="trash-2" label="Apagar dados deste aparelho" danger onClick=${clearDevice} />`}
     </div>

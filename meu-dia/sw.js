@@ -1,7 +1,7 @@
 // Service worker do Meu Dia: abre sem internet e atualiza com segurança.
 // A lista ASSETS e a VERSION são geradas por `npm run precache` — não edite à mão.
 
-const VERSION = 'a36065b22ef6';
+const VERSION = 'e7e59351bcb2';
 const ASSETS = [
   './',
   './assets/fonts/manrope.woff2',
@@ -18,27 +18,33 @@ const ASSETS = [
   './js/core/agenda.js',
   './js/core/assistant.js',
   './js/core/bills.js',
+  './js/core/boleto.js',
   './js/core/categories.js',
   './js/core/dates.js',
   './js/core/finance.js',
   './js/core/money.js',
+  './js/core/quickEntry.js',
   './js/core/recurrence.js',
   './js/core/reminders.js',
   './js/core/reports.js',
+  './js/core/statement.js',
   './js/core/text.js',
   './js/data/backup.js',
   './js/data/storage.js',
   './js/data/store.js',
   './js/main.js',
   './js/services/cloud.js',
+  './js/services/feedback.js',
   './js/services/install.js',
   './js/services/native.js',
   './js/services/notifications.js',
+  './js/services/pdf.js',
   './js/ui/app.js',
   './js/ui/components.js',
   './js/ui/forms/add.js',
   './js/ui/forms/bill.js',
   './js/ui/forms/event.js',
+  './js/ui/forms/import.js',
   './js/ui/forms/transaction.js',
   './js/ui/forms/wallet.js',
   './js/ui/layers.js',
@@ -54,6 +60,8 @@ const ASSETS = [
   './js/ui/views/settings.js',
   './js/ui/views/welcome.js',
   './js/vendor/icons.js',
+  './js/vendor/pdf.min.mjs',
+  './js/vendor/pdf.worker.min.mjs',
   './js/vendor/preact.js',
   './js/vendor/supabase.js',
   './manifest.webmanifest'

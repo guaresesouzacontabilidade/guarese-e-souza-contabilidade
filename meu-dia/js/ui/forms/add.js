@@ -5,6 +5,7 @@ import { openSheet } from '../state.js';
 import { openEventForm } from './event.js';
 import { openTransactionForm } from './transaction.js';
 import { openBillForm } from './bill.js';
+import { openImport } from './import.js';
 
 export const ADD_OPTIONS = [
   { id: 'event', label: 'Compromisso', sub: 'Com data e horário', icon: 'calendar-clock' },
@@ -12,6 +13,7 @@ export const ADD_OPTIONS = [
   { id: 'expense', label: 'Despesa', sub: 'Dinheiro que saiu', icon: 'arrow-up-right' },
   { id: 'income', label: 'Receita', sub: 'Dinheiro que entrou', icon: 'arrow-down-left' },
   { id: 'bill', label: 'Conta', sub: 'A pagar ou a receber, com lembrete', icon: 'receipt' },
+  { id: 'import', label: 'Importar extrato ou fatura', sub: 'PDF, OFX ou CSV do banco', icon: 'file-up', menuOnly: true },
 ];
 
 // Abre direto o formulário do tipo escolhido.
@@ -19,6 +21,7 @@ export function openAddForm(id, { date, replace = false } = {}) {
   if (id === 'event' || id === 'task') return openEventForm({ kind: id, date, replace });
   if (id === 'expense' || id === 'income') return openTransactionForm({ type: id, replace });
   if (id === 'bill' || id === 'bill-receive') return openBillForm({ kind: id === 'bill-receive' ? 'receive' : 'pay', replace });
+  if (id === 'import') return openImport({ replace });
   return null;
 }
 
@@ -30,12 +33,12 @@ function AddMenu({ onClose, date }) {
         (o, i) => html`<button
           type="button"
           key=${o.id}
-          class=${`add-opt ${o.id === 'bill' ? 'wide' : ''}`}
+          class=${`add-opt ${o.id === 'bill' || o.id === 'import' ? 'wide' : ''}`}
           style=${{ '--i': i }}
           data-autofocus=${i === 0 ? '' : undefined}
           onClick=${() => openAddForm(o.id, { date, replace: true })}
         >
-          <span class="q-ico cat-icon ${o.id === 'income' ? 'tone-income' : o.id === 'expense' ? 'tone-expense' : o.id === 'bill' ? 'tone-warning' : 'tone-event'}">
+          <span class="q-ico cat-icon ${o.id === 'income' ? 'tone-income' : o.id === 'expense' ? 'tone-expense' : o.id === 'bill' ? 'tone-warning' : o.id === 'import' ? 'tone-ok' : 'tone-event'}">
             <${Icon} name=${o.icon} size=${22} />
           </span>
           <span class="txt">

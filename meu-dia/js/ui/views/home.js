@@ -16,7 +16,7 @@ function QuickActions() {
   return html`<section class="quick o-4" aria-labelledby="quick-title">
     <h2 class="group-title" id="quick-title" style=${{ paddingTop: 0 }}>Adicionar rápido</h2>
     <div class="quick-row">
-      ${ADD_OPTIONS.map(
+      ${ADD_OPTIONS.filter((o) => !o.menuOnly).map(
         (o) => html`<button type="button" key=${o.id} class="quick-btn" onClick=${() => openAddForm(o.id)}>
           <span class="q-ico"><${Icon} name=${o.icon} size=${18} /></span>
           <span>${o.label}</span>

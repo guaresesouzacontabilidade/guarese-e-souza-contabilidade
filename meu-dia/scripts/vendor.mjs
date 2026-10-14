@@ -34,6 +34,10 @@ await bundle(
 
 await bundle(`export { createClient } from '@supabase/supabase-js';`, 'js/vendor/supabase.js');
 
+// Leitor de PDF (Mozilla pdf.js, licença Apache 2.0) para importar extratos e faturas.
+await copyFile(nm('pdfjs-dist/legacy/build/pdf.min.mjs'), path.join(root, 'js/vendor/pdf.min.mjs'));
+await copyFile(nm('pdfjs-dist/legacy/build/pdf.worker.min.mjs'), path.join(root, 'js/vendor/pdf.worker.min.mjs'));
+
 // Fontes variáveis (subconjunto latino, cobre português).
 await mkdir(path.join(root, 'assets/fonts'), { recursive: true });
 await copyFile(nm('@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2'), path.join(root, 'assets/fonts/manrope.woff2'));

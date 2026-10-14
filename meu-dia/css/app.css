@@ -2663,3 +2663,69 @@ button.settings-row:hover {
     background: transparent;
   }
 }
+
+/* ---------- Importar extrato ---------- */
+
+.import-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.import-summary > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+.import-summary strong {
+  font-family: var(--font-display);
+  font-size: clamp(13px, 3.8vw, 17px);
+  font-weight: 600;
+}
+.import-summary strong .money {
+  white-space: normal;
+}
+.import-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  margin: 0 -8px;
+}
+.import-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 0;
+  border-radius: 14px;
+  opacity: 0.55;
+  transition: opacity var(--dur), background var(--dur);
+}
+.import-row.is-on {
+  opacity: 1;
+}
+.import-main {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 6px 0;
+}
+.import-end {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  flex: none;
+  font-weight: 700;
+}
+.type-toggle {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-2);
+}
+.check[disabled] {
+  opacity: 0.4;
+}
