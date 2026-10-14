@@ -7,7 +7,7 @@ import { Card, Icon, Button, Field, Chips, MoneyInput, SheetHeader, SheetActions
 import { openSheet, confirm, toast, useCloud } from '../state.js';
 import { downloadBackup, downloadTransactionsCSV, importBackupFile } from '../../data/backup.js';
 import {
-  notificationsSupported, permission, requestPermission, disableNotifications, needsInstallForNotifications,
+  notificationsSupported, permission, requestPermission, disableNotifications, needsInstallForNotifications, remindersWorkWhenClosed,
 } from '../../services/notifications.js';
 import { isStandalone, isIOS, canPromptInstall, promptInstall } from '../../services/install.js';
 import { cloudEnabled, syncNow, signOut, deleteAccount, friendlyError, unsyncedCount } from '../../services/cloud.js';
@@ -93,7 +93,11 @@ function NotificationsSection({ s }) {
     ${supported && !iosNeedsInstall
       ? html`<${Toggle}
           label="Notificações no aparelho"
-          description=${perm === 'denied' ? 'Bloqueadas no navegador. Libere nas configurações do site para ativar.' : 'Só pedimos permissão quando você ativar aqui.'}
+          description=${perm === 'denied'
+            ? remindersWorkWhenClosed()
+              ? 'Bloqueadas nos ajustes do celular. Libere em Configurações › Apps › Meu Dia › Notificações.'
+              : 'Bloqueadas no navegador. Libere nas configurações do site para ativar.'
+            : 'Só pedimos permissão quando você ativar aqui.'}
           checked=${enabled}
           onChange=${toggle}
         />`
@@ -110,7 +114,11 @@ function NotificationsSection({ s }) {
       <${Chips} label="Lembrete padrão" multiple options=${BILL_REMIND_OPTIONS} value=${s.settings.billRemind || []} onChange=${(v) => store.updateSettings({ billRemind: v })} />
     </${Field}>
     <div style=${{ height: '14px' }}></div>
-    <${Hint}>Nesta versão web, os avisos aparecem enquanto o Meu Dia está aberto ou em segundo plano. Com o app fechado por completo, o aviso aparece assim que você abrir.</${Hint}>
+    <${Hint}>
+      ${remindersWorkWhenClosed()
+        ? 'Com as notificações ativadas, os lembretes chegam no horário mesmo com o Meu Dia fechado.'
+        : 'Nesta versão web, os avisos aparecem enquanto o Meu Dia está aberto ou em segundo plano. Com o app fechado por completo, o aviso aparece assim que você abrir.'}
+    </${Hint}>
   </${Card}>`;
 }
 

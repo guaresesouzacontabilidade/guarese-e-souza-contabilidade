@@ -4,3 +4,6 @@ test-results/
 playwright-report/
 android/
 ios/
+dist-android/
+*.keystore
+*.jks

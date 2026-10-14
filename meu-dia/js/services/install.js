@@ -1,10 +1,11 @@
 // Instalação como app (PWA) e atualização do service worker.
+import { isNative } from './native.js';
 
 let deferredPrompt = null;
 const listeners = new Set();
 let updateReady = null;
 
-export const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+export const isStandalone = () => isNative() || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 export const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 export const canPromptInstall = () => Boolean(deferredPrompt);
 export const hasUpdate = () => Boolean(updateReady);
@@ -36,7 +37,8 @@ export async function promptInstall() {
 }
 
 export async function registerServiceWorker() {
-  if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+  // O app nativo já traz todos os arquivos dentro dele; o service worker é só para a versão web.
+  if (isNative() || !('serviceWorker' in navigator) || location.protocol === 'file:') return;
   try {
     const reg = await navigator.serviceWorker.register('./sw.js');
     if (!reg) return;

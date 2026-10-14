@@ -16,6 +16,7 @@ import { openAddMenu } from './forms/add.js';
 import { resolveMerge } from '../services/cloud.js';
 import { startReminders } from '../services/notifications.js';
 import { subscribeInstall, hasUpdate, applyUpdate } from '../services/install.js';
+import { setSystemBarsTheme } from '../services/native.js';
 
 const NAV = [
   { path: '/', label: 'Início', icon: 'house' },
@@ -40,6 +41,7 @@ function applyTheme(pref) {
   const dark = pref === 'dark' || (pref === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#060912' : '#f2f4f9');
+  setSystemBarsTheme(dark);
 }
 
 function addContext(route) {

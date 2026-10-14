@@ -2,8 +2,13 @@
 import { exportData, importData, getState } from './store.js';
 import { findCategory } from '../core/categories.js';
 import { formatNumeric, todayISO } from '../core/dates.js';
+import { isNative, shareFile } from '../services/native.js';
 
 function download(filename, content, type) {
+  if (isNative()) {
+    shareFile(filename, content).catch((err) => console.warn('[meu-dia] exportação cancelada', err));
+    return;
+  }
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

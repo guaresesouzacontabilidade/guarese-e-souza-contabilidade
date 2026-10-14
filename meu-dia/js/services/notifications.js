@@ -1,27 +1,49 @@
 // Lembretes. Só usa notificações do sistema se o usuário autorizar.
-// Na versão web, os avisos aparecem enquanto o app está aberto ou em segundo plano;
-// avisos com o app totalmente fechado dependem da versão para lojas (notificações locais nativas).
+// - App nativo (Android/iOS): os lembretes são agendados no aparelho e tocam mesmo com o app fechado.
+// - Web: os avisos aparecem enquanto o app está aberto ou em segundo plano.
 import * as store from '../data/store.js';
 import { dueReminders } from '../core/reminders.js';
+import { isNative, plugin } from './native.js';
 
 const CHECK_EVERY = 30000;
 const CATCH_UP_WINDOW = 12 * 3600000; // ao abrir o app, mostra o que venceu nas últimas 12 h
+const NATIVE_HORIZON = 45 * 86400000; // agenda os próximos 45 dias
+const NATIVE_MAX = 60; // limite seguro de lembretes agendados (o iOS aceita 64)
 
 let onInApp = null;
 let started = false;
+let nativePermission = 'prompt';
 
-export const notificationsSupported = () => 'Notification' in globalThis;
-export const permission = () => (notificationsSupported() ? Notification.permission : 'unsupported');
+const LocalNotifications = () => plugin('LocalNotifications');
 
-// iPhone só permite notificações quando o app foi adicionado à Tela de Início.
+export const notificationsSupported = () => (isNative() ? Boolean(LocalNotifications()) : 'Notification' in globalThis);
+
+export function permission() {
+  if (isNative()) return nativePermission;
+  return 'Notification' in globalThis ? Notification.permission : 'unsupported';
+}
+
+// iPhone só permite notificações na web quando o app foi adicionado à Tela de Início.
 export function needsInstallForNotifications() {
+  if (isNative()) return false;
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   return ios && !standalone;
 }
 
+export const remindersWorkWhenClosed = () => isNative();
+
+const toPermission = (display) => (display === 'granted' ? 'granted' : display === 'denied' ? 'denied' : 'default');
+
 export async function requestPermission() {
-  if (!notificationsSupported()) return 'unsupported';
+  if (isNative()) {
+    const res = await LocalNotifications().requestPermissions();
+    nativePermission = toPermission(res.display);
+    store.updatePrefs({ notifications: nativePermission === 'granted' });
+    scheduleNativeSoon(0);
+    return nativePermission;
+  }
+  if (!('Notification' in globalThis)) return 'unsupported';
   const result = await Notification.requestPermission();
   store.updatePrefs({ notifications: result === 'granted' });
   return result;
@@ -29,6 +51,7 @@ export async function requestPermission() {
 
 export function disableNotifications() {
   store.updatePrefs({ notifications: false });
+  scheduleNativeSoon(0);
 }
 
 async function showSystem(reminder) {
@@ -52,6 +75,78 @@ async function showSystem(reminder) {
   }
 }
 
+// ---------- Agendamento nativo ----------
+
+// Número estável (int de 31 bits) para cada lembrete.
+function notificationId(key) {
+  let h = 5381;
+  for (let i = 0; i < key.length; i++) h = ((h << 5) + h + key.charCodeAt(i)) | 0;
+  return (h & 0x7fffffff) || 1;
+}
+
+let nativeTimer = null;
+let lastSignature = '';
+
+function scheduleNativeSoon(delay = 1500) {
+  if (!isNative()) return;
+  clearTimeout(nativeTimer);
+  nativeTimer = setTimeout(() => syncNativeSchedule().catch((err) => console.warn('[meu-dia] agendamento falhou', err)), delay);
+}
+
+async function syncNativeSchedule() {
+  const LN = LocalNotifications();
+  if (!LN) return;
+  const s = store.getState();
+  const enabled = s.prefs.notifications && nativePermission === 'granted';
+  const now = Date.now();
+  const list = enabled ? dueReminders(s, now, now + NATIVE_HORIZON).slice(0, NATIVE_MAX) : [];
+  const signature = list.map((r) => `${r.key}|${r.title}|${r.body}`).join('\n');
+  if (signature === lastSignature) return;
+  const pending = await LN.getPending();
+  if (pending.notifications?.length) await LN.cancel({ notifications: pending.notifications.map((n) => ({ id: n.id })) });
+  if (list.length) {
+    await LN.schedule({
+      notifications: list.map((r) => ({
+        id: notificationId(r.key),
+        title: r.title,
+        body: r.body,
+        schedule: { at: new Date(r.fireAt), allowWhileIdle: true },
+        extra: { route: r.route },
+        smallIcon: 'ic_stat_meudia',
+        iconColor: '#2DD4BF',
+      })),
+    });
+  }
+  lastSignature = signature;
+}
+
+async function initNative() {
+  const LN = LocalNotifications();
+  if (!LN) return;
+  try {
+    const res = await LN.checkPermissions();
+    nativePermission = toPermission(res.display);
+  } catch {
+    /* plugin indisponível */
+  }
+  LN.addListener('localNotificationActionPerformed', (event) => {
+    const route = event?.notification?.extra?.route;
+    if (route) location.hash = route;
+  });
+  // Reagenda quando compromissos, contas ou ajustes mudam (ignora mudanças só de controle interno).
+  let prev = store.getState();
+  store.subscribe((s) => {
+    if (s.events !== prev.events || s.bills !== prev.bills || s.settings !== prev.settings || s.prefs !== prev.prefs) scheduleNativeSoon();
+    prev = s;
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') scheduleNativeSoon(500);
+  });
+  scheduleNativeSoon(0);
+}
+
+// ---------- Verificação dentro do app ----------
+
 function check() {
   const s = store.getState();
   if (!s.ready) return;
@@ -69,6 +164,8 @@ function check() {
   store.updateMeta({ lastReminderCheck: now, notified });
   if (!due.length) return;
 
+  // No app nativo com permissão, o próprio sistema já mostrou a notificação agendada.
+  if (isNative() && useSystem) return;
   if (useSystem && !visible) {
     if (due.length > 3) {
       showSystem({ key: 'resumo', title: `Você tem ${due.length} lembretes`, body: due.slice(0, 3).map((r) => r.title).join(' · '), route: '#/' });
@@ -84,6 +181,7 @@ export function startReminders(inAppHandler) {
   onInApp = inAppHandler;
   if (started) return;
   started = true;
+  if (isNative()) initNative();
   check();
   setInterval(check, CHECK_EVERY);
   document.addEventListener('visibilitychange', () => {
