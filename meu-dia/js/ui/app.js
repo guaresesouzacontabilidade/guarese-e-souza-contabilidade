@@ -18,7 +18,8 @@ import { startReminders, onReminderAction, snoozeReminder } from '../services/no
 import { quickPay } from './forms/bill.js';
 import * as store from '../data/store.js';
 import { isDoneOn } from '../core/agenda.js';
-import { haptic } from '../services/feedback.js';
+import { feedback } from '../services/feedback.js';
+import { applyMotionPref } from './fx.js';
 import { subscribeInstall, hasUpdate, applyUpdate } from '../services/install.js';
 import { setSystemBarsTheme, isNative, plugin } from '../services/native.js';
 import { startWidgetSync, listenLaunchRoutes } from '../services/widget.js';
@@ -70,7 +71,7 @@ function handleReminderAction(actionId, info) {
     const item = store.findById('events', ref.id);
     if (!item) return;
     if (!isDoneOn(item, ref.date)) store.toggleTask(item, ref.date);
-    haptic('success');
+    feedback('complete');
     toast(`Tarefa concluída: ${item.title}`, { tone: 'success' });
   }
 }
@@ -239,6 +240,8 @@ export function App() {
     mq.addEventListener?.('change', on);
     return () => mq.removeEventListener?.('change', on);
   }, [s.prefs.theme]);
+
+  useEffect(applyMotionPref, [s.prefs.motion]);
 
   // Ao trocar de tela: volta ao topo e anuncia o título para leitores de tela.
   useEffect(() => {

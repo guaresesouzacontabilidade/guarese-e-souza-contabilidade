@@ -18,7 +18,8 @@ tema claro/escuro e salvamento automático.
 | **Contas** | A pagar e a receber; vencidas, vencem em breve, próximas e pagas; “Pagar”/“Recebi” com um toque; depois pergunta se quer registrar em Finanças e reaproveita um lançamento parecido para não duplicar; contas recorrentes geram a próxima sozinhas; lembretes configuráveis (no dia, 1, 3 ou 7 dias antes). |
 | **Assistente** | Responde perguntas como “Quanto gastei este mês?”, “Quanto gastei com combustível?”, “Quais contas vencem esta semana?”, “Quanto ainda tenho no orçamento?”, “Quanto ainda posso gastar com mercado?”, “Como vou terminar o mês?”, “Quanto falta pagar de parcelas?”, “Qual foi meu maior gasto?”. Usa só os dados registrados, mostra “Como calculei” e avisa quando não há dados. Não faz pagamentos nem promete resultados. |
 | **Relatórios** | Receitas, despesas e saldo por período (este mês, mês passado, 3 meses, ano ou datas livres), gastos por categoria, gráfico mês a mês (com opção de tabela) e comparação com o período anterior em frases simples. |
-| **Ajustes** | Nome, tema, ocultar valores, orçamento mensal, lembretes e notificações, conta e sincronização, instalação, exportar/importar dados (JSON e planilha CSV) e excluir dados/conta. |
+| **Efeitos e sons** | Onda de luz no ponto do toque e botões que “afundam” e voltam com mola; troca de tela deslizando para o lado certo, com o destaque da aba ativa viajando até a nova; sons curtos gerados pelo próprio app (clique, troca de tela, acorde ao salvar e pagar, alerta); confete ao concluir tarefa, pagar conta e importar extrato; saldo do Início que “corre” até o valor novo. Cada coisa tem seu ajuste, e quem ativa “reduzir movimento” no celular recebe a versão calma. |
+| **Ajustes** | Nome, tema, ocultar valores, sons, vibração e animações, orçamento mensal, lembretes e notificações, conta e sincronização, instalação, exportar/importar dados (JSON e planilha CSV) e excluir dados/conta. |
 
 ### Limites honestos desta versão
 

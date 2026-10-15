@@ -13,7 +13,7 @@ import {
 import { listen, voiceAvailable } from '../../services/voice.js';
 import { parseQuickEntry } from '../../core/quickEntry.js';
 import { openSheet, replaceSheet, closeLayer, confirm, choose, toast } from '../state.js';
-import { haptic } from '../../services/feedback.js';
+import { feedback } from '../../services/feedback.js';
 
 const TYPE_LABEL = { expense: 'Despesa', income: 'Receita' };
 const VISIBLE_CATS = 7;
@@ -38,7 +38,7 @@ export function warnLimits(before) {
     const b = before.find((x) => x.id === a.id);
     const kind = limitWarning(a.budget, b ? b.spent : 0, a.spent);
     if (!kind) continue;
-    haptic('warning');
+    feedback('warning');
     const amounts = `${formatMoney(a.spent)} de ${formatMoney(a.budget)}`;
     toast(
       kind === 'over'
@@ -154,7 +154,7 @@ export function TransactionForm({ type: initialType = 'expense', item = null, da
         ? store.createMany('transactions', planInstallments(data, { count, perInstallment, group: uid() }))
         : [store.create('transactions', data)];
       const rule = changedCategory ? learnFrom(data) : null;
-      haptic('light');
+      feedback('save');
       const label = splitting
         ? `Compra parcelada registrada: ${count}x de ${formatMoney(created[created.length - 1].amount)}.`
         : `${TYPE_LABEL[type]} de ${formatMoney(amount)} registrada.`;
@@ -165,6 +165,7 @@ export function TransactionForm({ type: initialType = 'expense', item = null, da
       });
     } else {
       store.update('transactions', item.id, data);
+      feedback('save');
       // Parcelas: descrição, categoria, carteira e observações valem para a compra toda.
       let others = 0;
       if (item.installment) {
@@ -319,6 +320,7 @@ async function deleteInstallments(item) {
   if (!choice) return false;
   const list = choice === 'all' ? all : choice === 'next' ? fromHere : [item];
   list.forEach((t) => store.remove('transactions', t.id));
+  feedback('delete');
   toast(list.length === 1 ? 'Parcela excluída' : `${list.length} parcelas excluídas (${formatMoney(sumBy(list, (t) => t.amount))})`, {
     action: { label: 'Desfazer', onClick: () => list.forEach((t) => store.restore('transactions', t.id)) },
   });
@@ -335,6 +337,7 @@ export async function deleteTransaction(item) {
   });
   if (!ok) return false;
   store.remove('transactions', item.id);
+  feedback('delete');
   // Se veio de uma conta paga, desfaz o vínculo para não confundir.
   const bill = store.getState().bills.find((b) => !b.deleted && b.transactionId === item.id);
   if (bill) store.update('bills', bill.id, { transactionId: null });

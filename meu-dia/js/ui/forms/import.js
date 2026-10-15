@@ -10,7 +10,8 @@ import { periodLabel } from '../../core/reports.js';
 import { plural, joinList } from '../../core/text.js';
 import { Button, Icon, Field, Chips, Segmented, SheetHeader, SheetActions, Hint, Money, TextInput } from '../components.js';
 import { openSheet, replaceSheet, goTo, toast } from '../state.js';
-import { haptic } from '../../services/feedback.js';
+import { feedback } from '../../services/feedback.js';
+import { celebrate } from '../fx.js';
 
 const ACCEPT = '.pdf,.ofx,.qfx,.csv,.txt,application/pdf,text/csv';
 
@@ -198,7 +199,8 @@ function Review({ file, parsed, onClose }) {
       const rule = store.learnCategory({ description: r.description, type: r.type, category: r.category });
       if (rule) learned.push(`“${rule.match}” → ${findCategory(rule.category, rule.type, custom).label}`);
     }
-    haptic('success');
+    feedback('success');
+    celebrate();
     toast(`${plural(chosen.length, 'lançamento importado', 'lançamentos importados')}`, { tone: 'success' });
     const from = chosen.map((r) => r.date).sort()[0];
     const to = chosen.map((r) => r.date).sort().at(-1);

@@ -13,7 +13,8 @@ import {
   Button, TextInput, TextArea, DateField, Field, Chips, Segmented, MoneyInput, Details, SheetHeader, SheetActions, Icon, Money, Hint,
 } from '../components.js';
 import { openSheet, replaceSheet, closeLayer, confirm, toast } from '../state.js';
-import { haptic } from '../../services/feedback.js';
+import { feedback } from '../../services/feedback.js';
+import { celebrate } from '../fx.js';
 
 export function BillForm({ kind: initialKind = 'pay', item = null, onClose }) {
   const s = store.getState();
@@ -48,7 +49,7 @@ export function BillForm({ kind: initialKind = 'pay', item = null, onClose }) {
     if (!category && b.suggestion.category) setCategory(b.suggestion.category);
     setBarcode(b.line);
     setKind('pay');
-    haptic('success');
+    feedback('success');
     const parts = [b.amount ? formatMoney(b.amount) : null, b.dueDate ? `vence ${formatNumeric(b.dueDate).slice(0, 5)}` : 'informe o vencimento'].filter(Boolean);
     toast(b.valid ? `Boleto lido: ${parts.join(', ')}` : `Código lido, mas pode ter erro — confira os dados (${parts.join(', ')}).`, { tone: b.valid ? 'success' : 'warning' });
     return true;
@@ -86,10 +87,11 @@ export function BillForm({ kind: initialKind = 'pay', item = null, onClose }) {
       // Mudou o vencimento de uma conta recorrente: a série passa a seguir a nova data.
       const patch = item.dueDate !== dueDate ? { ...data, seriesStart: dueDate } : data;
       store.update('bills', item.id, patch);
+      feedback('save');
       toast('Conta atualizada', { tone: 'success' });
     } else {
       store.create('bills', { ...data, status: 'open', seriesStart: dueDate });
-      haptic('light');
+      feedback('save');
       toast(`Conta salva · ${dueLabel(dueDate, todayISO())}`, { tone: 'success' });
     }
     onClose();
@@ -170,7 +172,8 @@ export function openBillForm(opts = {}) {
 export function quickPay(bill, { replace = false } = {}) {
   const today = todayISO();
   const { bill: paid, next } = store.payBill(bill, { date: today, amount: bill.amount });
-  haptic('success');
+  feedback('success');
+  celebrate();
   const kind = BILL_KIND[bill.kind];
   const existing = store.linkedTransaction(paid);
   if (existing) {
@@ -279,6 +282,7 @@ export async function deleteBill(bill) {
   });
   if (!ok) return false;
   store.remove('bills', bill.id);
+  feedback('delete');
   toast('Conta excluída', { action: { label: 'Desfazer', onClick: () => store.restore('bills', bill.id) } });
   return true;
 }

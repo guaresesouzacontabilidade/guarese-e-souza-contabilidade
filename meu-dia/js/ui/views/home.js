@@ -6,7 +6,7 @@ import { totals, budgetStatus, budgetMessage, walletsTotal, live } from '../../c
 import { upcomingForHome, totalAmount } from '../../core/bills.js';
 import { formatMoney, formatPercent } from '../../core/money.js';
 import { plural } from '../../core/text.js';
-import { Card, Icon, Money, HideValuesButton, LinkButton, Empty, Meter, Button } from '../components.js';
+import { Card, Icon, Money, AnimatedMoney, HideValuesButton, LinkButton, Empty, Meter, Button } from '../components.js';
 import { AgendaRow, BillRow } from '../rows.js';
 import { navigate, useNow } from '../state.js';
 import { openAddMenu, openAddForm, ADD_OPTIONS } from '../forms/add.js';
@@ -69,16 +69,16 @@ function MonthCard({ s, today }) {
     action=${html`<${HideValuesButton} />`}
   >
     <div class="hero-label">Saldo do mês</div>
-    <div class=${`hero-value num ${t.balance < 0 && !s.prefs.hideValues ? 'is-negative' : ''}`}><${Money} value=${t.balance} /></div>
+    <div class=${`hero-value num ${t.balance < 0 && !s.prefs.hideValues ? 'is-negative' : ''}`}><${AnimatedMoney} value=${t.balance} /></div>
     <div class="hero-hint">Receitas menos despesas de ${month}</div>
     <div class="flow">
       <button type="button" class="flow-item in" onClick=${() => navigate('/financas?tipo=income')}>
         <span class="f-label"><${Icon} name="arrow-down-left" size=${16} />Receitas</span>
-        <span class="f-value"><${Money} value=${t.income} /></span>
+        <span class="f-value"><${AnimatedMoney} value=${t.income} /></span>
       </button>
       <button type="button" class="flow-item out" onClick=${() => navigate('/financas?tipo=expense')}>
         <span class="f-label"><${Icon} name="arrow-up-right" size=${16} />Despesas</span>
-        <span class="f-value"><${Money} value=${t.expense} /></span>
+        <span class="f-value"><${AnimatedMoney} value=${t.expense} /></span>
       </button>
     </div>
     <${ForecastBox} s=${s} today=${today} />

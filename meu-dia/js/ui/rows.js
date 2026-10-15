@@ -3,7 +3,8 @@ import { html } from '../vendor/preact.js';
 import * as store from '../data/store.js';
 import { Icon, Money, CategoryIcon } from './components.js';
 import { toast } from './state.js';
-import { haptic } from '../services/feedback.js';
+import { feedback } from '../services/feedback.js';
+import { celebrate } from './fx.js';
 import { todayISO, dueLabel, relativeDay } from '../core/dates.js';
 import { findCategory, findAgendaCategory } from '../core/categories.js';
 import { BILL_KIND, billState } from '../core/bills.js';
@@ -23,7 +24,8 @@ export function TaskCheck({ item, date, done }) {
     onClick=${(e) => {
       e.stopPropagation();
       store.toggleTask(item, date);
-      haptic(done ? 'light' : 'success');
+      feedback(done ? 'undo' : 'complete');
+      if (!done) celebrate({ x: e.clientX, y: e.clientY });
       if (!done) toast('Tarefa concluída', { tone: 'success', duration: 2500, action: { label: 'Desfazer', onClick: () => store.toggleTask(store.findById('events', item.id), date) } });
     }}
   >

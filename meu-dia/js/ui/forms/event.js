@@ -9,7 +9,7 @@ import {
   Button, TextInput, TextArea, DateField, Field, Chips, Segmented, Select, Details, SheetHeader, SheetActions, Icon, Hint,
 } from '../components.js';
 import { openSheet, replaceSheet, closeLayer, confirm, choose, toast } from '../state.js';
-import { haptic } from '../../services/feedback.js';
+import { feedback } from '../../services/feedback.js';
 
 export function EventForm({ kind: initialKind = 'event', item = null, date, onClose }) {
   const settings = store.getState().settings;
@@ -53,10 +53,11 @@ export function EventForm({ kind: initialKind = 'event', item = null, date, onCl
     };
     if (editing) {
       store.update('events', item.id, data);
+      feedback('save');
       toast(`${KIND_LABEL[kind]} atualizado${kind === 'task' ? 'a' : ''}`, { tone: 'success' });
     } else {
       store.create('events', { ...data, done: false, doneDates: [], skipDates: [] });
-      haptic('light');
+      feedback('save');
       toast(`${KIND_LABEL[kind]} salv${kind === 'task' ? 'a' : 'o'} para ${relativeDay(day, todayISO())}`, { tone: 'success' });
     }
     onClose();
@@ -156,6 +157,7 @@ export async function deleteEvent(item, date) {
     if (!ok) return false;
   }
   store.remove('events', item.id);
+  feedback('delete');
   toast(`${KIND_LABEL[item.kind]} excluíd${item.kind === 'task' ? 'a' : 'o'}`, { action: { label: 'Desfazer', onClick: () => store.restore('events', item.id) } });
   return true;
 }

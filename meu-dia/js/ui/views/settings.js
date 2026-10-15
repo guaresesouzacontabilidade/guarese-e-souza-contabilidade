@@ -17,10 +17,12 @@ import { lockAvailable, setLockEnabled } from '../../services/lock.js';
 import { autoBackupAvailable, listBackups, readBackup, writeBackupNow } from '../../services/autobackup.js';
 import { formatDayMonth, todayISO, timeHM } from '../../core/dates.js';
 import { findCategory } from '../../core/categories.js';
+import { soundSupported } from '../../services/sound.js';
+import { vibrationSupported } from '../../services/feedback.js';
 import { plural } from '../../core/text.js';
 import { openCategoryLimits } from '../forms/limits.js';
 
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 
 function BudgetSheet({ onClose }) {
   const [value, setValue] = useState(store.getState().settings.budget || 0);
@@ -430,6 +432,23 @@ export function SettingsView({ s, params }) {
       <${ThemePicker} value=${s.prefs.theme} />
       <div style=${{ height: '8px' }}></div>
       <${Toggle} label="Ocultar valores" description="Esconde os valores em reais nas telas. Útil em público." checked=${s.prefs.hideValues} onChange=${(v) => store.updatePrefs({ hideValues: v })} />
+      ${soundSupported() &&
+      html`<${Toggle}
+        label="Sons"
+        description="Clique suave ao tocar e um acorde ao salvar ou pagar. No iPhone, segue a chave de silencioso."
+        checked=${s.prefs.sound !== false}
+        onChange=${(v) => store.updatePrefs({ sound: v })}
+      />`}
+      ${vibrationSupported() &&
+      html`<${Toggle} label="Vibração" description="Vibração leve ao salvar, pagar e trocar de tela." checked=${s.prefs.vibration !== false} onChange=${(v) => store.updatePrefs({ vibration: v })} />`}
+      <${Toggle}
+        label="Animações"
+        description=${matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'Seu aparelho pede menos movimento, então o app já usa a versão calma.'
+          : 'Transições entre telas, efeito ao tocar e confete ao concluir.'}
+        checked=${s.prefs.motion !== false}
+        onChange=${(v) => store.updatePrefs({ motion: v })}
+      />
     </${Card}>
 
     <${Card} title="Orçamento mensal" icon="target" id="orcamento" className=${params.secao === 'orcamento' ? 'card-hero' : ''}>

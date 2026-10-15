@@ -4,6 +4,7 @@ import { ICONS } from '../vendor/icons.js';
 import { formatMoney, formatAmount, digitsToCents } from '../core/money.js';
 import { getState, updatePrefs } from '../data/store.js';
 import { todayISO, addDays } from '../core/dates.js';
+import { motionReduced } from './fx.js';
 
 export function Icon({ name, size = 22, className = '', label }) {
   const inner = ICONS[name] || ICONS.circle;
@@ -29,6 +30,35 @@ export function Money({ value, signed = false, className = '', forceShow = false
   const hidden = getState().prefs.hideValues && !forceShow;
   if (hidden) return html`<span class=${`money is-hidden ${className}`} aria-label="valor oculto">R$ •••••</span>`;
   return html`<span class=${`money ${className}`}>${formatMoney(value, { signed })}</span>`;
+}
+
+// Valor que "corre" até o número novo (saldo do Início). Leitores de tela recebem só o valor final.
+export function AnimatedMoney({ value, className = '' }) {
+  const hidden = getState().prefs.hideValues;
+  const still = motionReduced();
+  const from = useRef(still ? value : 0);
+  const [shown, setShown] = useState(from.current);
+  useEffect(() => {
+    const a = from.current;
+    if (motionReduced() || a === value) {
+      from.current = value;
+      setShown(value);
+      return undefined;
+    }
+    const start = performance.now();
+    let raf = 0;
+    const step = (now) => {
+      const k = Math.min(1, (now - start) / 750);
+      const v = Math.round(a + (value - a) * (1 - (1 - k) ** 4));
+      from.current = v;
+      setShown(v);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  if (hidden) return html`<${Money} value=${value} className=${className} />`;
+  return html`<span class=${`money money-anim ${className}`}><span aria-hidden="true">${formatMoney(shown)}</span><span class="sr-only">${formatMoney(value)}</span></span>`;
 }
 
 export function HideValuesButton({ className = '' }) {
