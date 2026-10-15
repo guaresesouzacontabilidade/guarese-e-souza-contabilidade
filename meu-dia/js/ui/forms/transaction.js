@@ -3,7 +3,7 @@ import { html, useState } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { todayISO, formatLongDate, formatNumeric, isValidISODate, MONTHS_SHORT } from '../../core/dates.js';
 import { formatMoney, formatPercent, sumBy } from '../../core/money.js';
-import { categoriesFor, findCategory, suggestCategory, ruleMatches } from '../../core/categories.js';
+import { categoriesFor, findCategory, suggestCategory, ruleMatches, categoryHue } from '../../core/categories.js';
 import { findPossibleDuplicates, walletType, live, categoryLimits, limitWarning } from '../../core/finance.js';
 import { planInstallments, groupItems, MAX_INSTALLMENTS } from '../../core/installments.js';
 import { uid, plural } from '../../core/text.js';
@@ -13,7 +13,7 @@ import {
 import { listen, voiceAvailable } from '../../services/voice.js';
 import { parseQuickEntry } from '../../core/quickEntry.js';
 import { openSheet, replaceSheet, closeLayer, confirm, choose, toast } from '../state.js';
-import { haptic } from '../../services/feedback.js';
+import { feedback } from '../../services/feedback.js';
 
 const TYPE_LABEL = { expense: 'Despesa', income: 'Receita' };
 const VISIBLE_CATS = 7;
@@ -38,7 +38,7 @@ export function warnLimits(before) {
     const b = before.find((x) => x.id === a.id);
     const kind = limitWarning(a.budget, b ? b.spent : 0, a.spent);
     if (!kind) continue;
-    haptic('warning');
+    feedback('warning');
     const amounts = `${formatMoney(a.spent)} de ${formatMoney(a.budget)}`;
     toast(
       kind === 'over'
@@ -154,7 +154,7 @@ export function TransactionForm({ type: initialType = 'expense', item = null, da
         ? store.createMany('transactions', planInstallments(data, { count, perInstallment, group: uid() }))
         : [store.create('transactions', data)];
       const rule = changedCategory ? learnFrom(data) : null;
-      haptic('light');
+      feedback('save');
       const label = splitting
         ? `Compra parcelada registrada: ${count}x de ${formatMoney(created[created.length - 1].amount)}.`
         : `${TYPE_LABEL[type]} de ${formatMoney(amount)} registrada.`;
@@ -165,6 +165,7 @@ export function TransactionForm({ type: initialType = 'expense', item = null, da
       });
     } else {
       store.update('transactions', item.id, data);
+      feedback('save');
       // Parcelas: descrição, categoria, carteira e observações valem para a compra toda.
       let others = 0;
       if (item.installment) {
@@ -319,6 +320,7 @@ async function deleteInstallments(item) {
   if (!choice) return false;
   const list = choice === 'all' ? all : choice === 'next' ? fromHere : [item];
   list.forEach((t) => store.remove('transactions', t.id));
+  feedback('delete');
   toast(list.length === 1 ? 'Parcela excluída' : `${list.length} parcelas excluídas (${formatMoney(sumBy(list, (t) => t.amount))})`, {
     action: { label: 'Desfazer', onClick: () => list.forEach((t) => store.restore('transactions', t.id)) },
   });
@@ -334,7 +336,14 @@ export async function deleteTransaction(item) {
     danger: true,
   });
   if (!ok) return false;
+  deleteTransactionNow(item);
+  return true;
+}
+
+// Exclui na hora, com "Desfazer" (usado também ao arrastar a linha para a esquerda).
+export function deleteTransactionNow(item) {
   store.remove('transactions', item.id);
+  feedback('delete');
   // Se veio de uma conta paga, desfaz o vínculo para não confundir.
   const bill = store.getState().bills.find((b) => !b.deleted && b.transactionId === item.id);
   if (bill) store.update('bills', bill.id, { transactionId: null });
@@ -347,7 +356,6 @@ export async function deleteTransaction(item) {
       },
     },
   });
-  return true;
 }
 
 function TransactionDetail({ id, onClose }) {
@@ -362,7 +370,7 @@ function TransactionDetail({ id, onClose }) {
   return html`<div class="form">
     <${SheetHeader} title=${item.description} subtitle=${TYPE_LABEL[item.type]} onClose=${onClose} />
     <div class="detail-hero">
-      <${CategoryIcon} icon=${cat.icon} tone=${item.type} />
+      <${CategoryIcon} icon=${cat.icon} tone=${item.type} hue=${item.category ? categoryHue(cat) : null} />
       <div>
         <div class="detail-label">${cat.label}</div>
         <div class="detail-value num">

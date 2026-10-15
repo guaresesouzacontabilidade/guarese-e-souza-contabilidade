@@ -2,6 +2,7 @@
 import { useEffect, useState } from '../vendor/preact.js';
 import * as store from '../data/store.js';
 import { getAuth, getSync, subscribeCloud } from '../services/cloud.js';
+import { navTransition } from './fx.js';
 
 // ---------- Rotas (hash) ----------
 
@@ -19,7 +20,15 @@ export function navigate(path) {
 export function useRoute() {
   const [route, setRoute] = useState(parseRoute());
   useEffect(() => {
-    const on = () => setRoute(parseRoute());
+    let current = parseRoute();
+    // Trocar de tela anima (desliza); mudar só um filtro da mesma tela, não.
+    const on = () => {
+      const next = parseRoute();
+      const prev = current;
+      current = next;
+      if (next.path !== prev.path) navTransition(prev.path, next.path, () => setRoute(next));
+      else setRoute(next);
+    };
     addEventListener('hashchange', on);
     return () => removeEventListener('hashchange', on);
   }, []);

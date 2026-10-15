@@ -6,7 +6,7 @@ import { plural } from '../core/text.js';
 import { categoryLimits } from '../core/finance.js';
 import { monthForecast } from '../core/forecast.js';
 import { activePlans, upcomingByMonth } from '../core/installments.js';
-import { findCategory } from '../core/categories.js';
+import { findCategory, categoryHue } from '../core/categories.js';
 import { Card, Icon, Money, Meter, LinkButton, CategoryIcon } from './components.js';
 import { navigate } from './state.js';
 import { openCategoryLimits } from './forms/limits.js';
@@ -72,7 +72,7 @@ export function LimitsCard({ s, today }) {
       ${list.map(
         (l) => html`<button type="button" class="limit is-button" key=${l.id} onClick=${() => openCategoryLimits(l.id)}>
           <span class="limit-top">
-            <span class="limit-name"><${Icon} name=${l.category.icon} size=${16} />${l.category.label}</span>
+            <span class="limit-name"><span class="hue-ink" style=${{ '--h': categoryHue(l.category) ?? 210 }}><${Icon} name=${l.category.icon} size=${16} /></span>${l.category.label}</span>
             <span class="limit-amt"><${Money} value=${l.spent} /> de <${Money} value=${l.budget} /></span>
           </span>
           <${Meter} ratio=${l.ratio} level=${l.level} label=${`${l.category.label}: ${Math.round(l.ratio * 100)}% do limite`} />
@@ -105,7 +105,7 @@ export function InstallmentsCard({ s, today }) {
       ${plans.map((p) => {
         const cat = findCategory(p.category, 'expense', custom);
         return html`<button type="button" class="item" key=${p.group} onClick=${() => openTransactionDetail(p.next)}>
-          <${CategoryIcon} icon=${p.category ? cat.icon : 'calendar-range'} tone="expense" />
+          <${CategoryIcon} icon=${p.category ? cat.icon : 'calendar-range'} tone="expense" hue=${p.category ? categoryHue(cat) : null} />
           <span class="item-body">
             <span class="item-title" style=${{ display: 'block' }}>${p.description}</span>
             <span class="item-sub">Faltam ${p.remainingCount} de ${p.of}<span class="dot"></span>próxima ${formatNumeric(p.next.date).slice(0, 5)}</span>

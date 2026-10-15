@@ -11,6 +11,7 @@ import { openAddForm } from '../forms/add.js';
 import { openWalletForm } from '../forms/wallet.js';
 import { openImport } from '../forms/import.js';
 import { ForecastBox, LimitsCard, InstallmentsCard } from '../planning.js';
+import { SwipeHint } from '../swipe.js';
 
 const TYPES = [
   { id: 'all', label: 'Tudo' },
@@ -143,7 +144,8 @@ export function FinanceView({ s, params }) {
                   <${Button} variant="secondary" size="sm" icon="arrow-down-left" onClick=${() => openAddForm('income')}>Receita</${Button}>
                 </div>`}
               /></div>`
-            : html`<div class="card" style=${{ paddingTop: '6px' }}>
+            : html`<${SwipeHint} text="Dica: arraste um lançamento para a esquerda para excluir." />
+              <div class="card" style=${{ paddingTop: '6px' }}>
                 ${groups.map(
                   (g) => html`<section key=${g.date} aria-label=${formatLongDate(g.date)}>
                     <h3 class="group-title">

@@ -4,6 +4,7 @@ import { todayISO } from '../../core/dates.js';
 import { groupBills, totalAmount, STATE_LABEL } from '../../core/bills.js';
 import { Segmented, Empty, Button, Money, Icon, IconButton, Hint } from '../components.js';
 import { BillRow } from '../rows.js';
+import { SwipeHint } from '../swipe.js';
 import { navigate } from '../state.js';
 import { openBillForm } from '../forms/bill.js';
 
@@ -68,6 +69,7 @@ export function BillsView({ s, params }) {
           action=${!query && html`<${Button} icon="plus" onClick=${() => openBillForm({ kind })}>${kind === 'pay' ? 'Cadastrar conta a pagar' : 'Cadastrar valor a receber'}</${Button}>`}
         /></div>`
       : html`
+          ${open.length > 0 && html`<${SwipeHint} text=${`Dica: arraste uma conta para a direita para marcar como ${kind === 'receive' ? 'recebida' : 'paga'}.`} />`}
           <${Group} id="overdue" bills=${groups.overdue} kind=${kind} />
           <${Group} id="soon" bills=${groups.soon} kind=${kind} />
           <${Group} id="upcoming" bills=${groups.upcoming} kind=${kind} />

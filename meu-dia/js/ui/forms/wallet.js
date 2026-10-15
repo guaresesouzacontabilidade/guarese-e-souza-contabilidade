@@ -6,6 +6,7 @@ import { formatMoney } from '../../core/money.js';
 import { todayISO } from '../../core/dates.js';
 import { Button, TextInput, Field, Chips, MoneyInput, SheetHeader, SheetActions, Hint } from '../components.js';
 import { openSheet, closeLayer, confirm, toast } from '../state.js';
+import { feedback } from '../../services/feedback.js';
 
 function WalletForm({ item = null, onClose }) {
   const editing = Boolean(item);
@@ -36,6 +37,7 @@ function WalletForm({ item = null, onClose }) {
     });
     if (!ok) return;
     store.remove('wallets', item.id);
+    feedback('delete');
     toast('Carteira excluída', { action: { label: 'Desfazer', onClick: () => store.restore('wallets', item.id) } });
     closeLayer();
   };

@@ -22,7 +22,7 @@ export const DEFAULT_SETTINGS = {
   updatedAt: 0,
 };
 
-const DEFAULT_PREFS = { theme: 'auto', hideValues: false, notifications: false, onboarded: false, installDismissed: false, lock: false };
+const DEFAULT_PREFS = { theme: 'auto', hideValues: false, notifications: false, onboarded: false, installDismissed: false, lock: false, sound: true, vibration: true, motion: true, swipeLearned: false };
 const DEFAULT_META = { dirty: {}, lastPulledAt: null, ownerId: null, notified: {}, lastSyncAt: null };
 
 let state = {

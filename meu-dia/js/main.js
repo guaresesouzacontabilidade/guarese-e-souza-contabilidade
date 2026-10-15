@@ -5,9 +5,11 @@ import * as store from './data/store.js';
 import { initCloud } from './services/cloud.js';
 import { registerServiceWorker } from './services/install.js';
 import { openAddForm } from './ui/forms/add.js';
+import { startFx } from './ui/fx.js';
 
 async function start() {
   await store.load();
+  startFx();
   render(html`<${App} />`, document.getElementById('app'));
   document.documentElement.classList.add('is-ready');
 

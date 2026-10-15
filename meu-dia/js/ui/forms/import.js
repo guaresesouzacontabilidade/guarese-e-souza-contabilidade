@@ -3,14 +3,15 @@ import { html, useMemo, useRef, useState } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { todayISO, formatNumeric, formatShort } from '../../core/dates.js';
 import { formatMoney } from '../../core/money.js';
-import { findCategory, categoriesFor, ruleKey } from '../../core/categories.js';
+import { findCategory, categoriesFor, ruleKey, categoryHue } from '../../core/categories.js';
 import { findPossibleDuplicates, walletType, live, byCategory } from '../../core/finance.js';
 import { parseStatementText, parseOFX, parseCSV, totalsOf, importKey } from '../../core/statement.js';
 import { periodLabel } from '../../core/reports.js';
 import { plural, joinList } from '../../core/text.js';
 import { Button, Icon, Field, Chips, Segmented, SheetHeader, SheetActions, Hint, Money, TextInput } from '../components.js';
 import { openSheet, replaceSheet, goTo, toast } from '../state.js';
-import { haptic } from '../../services/feedback.js';
+import { feedback } from '../../services/feedback.js';
+import { celebrate } from '../fx.js';
 
 const ACCEPT = '.pdf,.ofx,.qfx,.csv,.txt,application/pdf,text/csv';
 
@@ -198,7 +199,8 @@ function Review({ file, parsed, onClose }) {
       const rule = store.learnCategory({ description: r.description, type: r.type, category: r.category });
       if (rule) learned.push(`“${rule.match}” → ${findCategory(rule.category, rule.type, custom).label}`);
     }
-    haptic('success');
+    feedback('success');
+    celebrate();
     toast(`${plural(chosen.length, 'lançamento importado', 'lançamentos importados')}`, { tone: 'success' });
     const from = chosen.map((r) => r.date).sort()[0];
     const to = chosen.map((r) => r.date).sort().at(-1);
@@ -256,7 +258,7 @@ function Review({ file, parsed, onClose }) {
             aria-label=${`Categoria de ${r.description}: ${cat ? cat.label : 'sem categoria'}. Trocar`}
             onClick=${() => setPicking(picking === r.id ? null : r.id)}
           >
-            <${Icon} name=${cat ? cat.icon : 'tag'} size=${14} /><span>${cat ? cat.label : 'Categoria'}</span>
+            <span class="hue-ink" style=${{ '--h': categoryHue(cat) ?? 210 }}><${Icon} name=${cat ? cat.icon : 'tag'} size=${14} /></span><span>${cat ? cat.label : 'Categoria'}</span>
           </button>`}
           <div class="import-end">
             <span class=${`money ${r.type === 'income' ? 'amount-in' : ''}`}>${r.type === 'income' ? '+' : r.type === 'expense' ? '-' : ''}${formatMoney(r.amount)}</span>

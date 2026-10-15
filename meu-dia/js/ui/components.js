@@ -4,6 +4,7 @@ import { ICONS } from '../vendor/icons.js';
 import { formatMoney, formatAmount, digitsToCents } from '../core/money.js';
 import { getState, updatePrefs } from '../data/store.js';
 import { todayISO, addDays } from '../core/dates.js';
+import { motionReduced } from './fx.js';
 
 export function Icon({ name, size = 22, className = '', label }) {
   const inner = ICONS[name] || ICONS.circle;
@@ -29,6 +30,35 @@ export function Money({ value, signed = false, className = '', forceShow = false
   const hidden = getState().prefs.hideValues && !forceShow;
   if (hidden) return html`<span class=${`money is-hidden ${className}`} aria-label="valor oculto">R$ •••••</span>`;
   return html`<span class=${`money ${className}`}>${formatMoney(value, { signed })}</span>`;
+}
+
+// Valor que "corre" até o número novo (saldo do Início). Leitores de tela recebem só o valor final.
+export function AnimatedMoney({ value, className = '' }) {
+  const hidden = getState().prefs.hideValues;
+  const still = motionReduced();
+  const from = useRef(still ? value : 0);
+  const [shown, setShown] = useState(from.current);
+  useEffect(() => {
+    const a = from.current;
+    if (motionReduced() || a === value) {
+      from.current = value;
+      setShown(value);
+      return undefined;
+    }
+    const start = performance.now();
+    let raf = 0;
+    const step = (now) => {
+      const k = Math.min(1, (now - start) / 750);
+      const v = Math.round(a + (value - a) * (1 - (1 - k) ** 4));
+      from.current = v;
+      setShown(v);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  if (hidden) return html`<${Money} value=${value} className=${className} />`;
+  return html`<span class=${`money money-anim ${className}`}><span aria-hidden="true">${formatMoney(shown)}</span><span class="sr-only">${formatMoney(value)}</span></span>`;
 }
 
 export function HideValuesButton({ className = '' }) {
@@ -242,6 +272,43 @@ export function Empty({ icon = 'sparkles', title, text, action }) {
   </div>`;
 }
 
+// Anel de progresso (orçamento do mês). Enche ao aparecer.
+export function Ring({ ratio, level = 'ok', size = 84, stroke = 9, label, children }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const [shown, setShown] = useState(motionReduced() ? ratio : 0);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(ratio));
+    return () => cancelAnimationFrame(id);
+  }, [ratio]);
+  const pct = Math.max(0, Math.min(1, shown || 0));
+  const mid = size / 2;
+  return html`<div
+    class=${`ring is-${level}`}
+    style=${{ width: `${size}px`, height: `${size}px` }}
+    role="meter"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow=${Math.round((ratio || 0) * 100)}
+    aria-label=${label}
+  >
+    <svg width=${size} height=${size} viewBox=${`0 0 ${size} ${size}`} aria-hidden="true">
+      <circle class="ring-track" cx=${mid} cy=${mid} r=${r} stroke-width=${stroke} />
+      <circle
+        class="ring-fill"
+        cx=${mid}
+        cy=${mid}
+        r=${r}
+        stroke-width=${stroke}
+        stroke-dasharray=${c}
+        stroke-dashoffset=${c * (1 - pct)}
+        transform=${`rotate(-90 ${mid} ${mid})`}
+      />
+    </svg>
+    <span class="ring-label">${children}</span>
+  </div>`;
+}
+
 export function Meter({ ratio, level = 'ok', label }) {
   const pct = Math.max(0, Math.min(1, ratio || 0));
   return html`<div class=${`meter is-${level}`} role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round((ratio || 0) * 100)} aria-label=${label}>
@@ -249,7 +316,11 @@ export function Meter({ ratio, level = 'ok', label }) {
   </div>`;
 }
 
-export function CategoryIcon({ icon, tone = 'neutral', size = 20 }) {
+// Ícone da categoria. Com `hue`, usa a cor própria da categoria (Mercado verde, Transporte azul…).
+export function CategoryIcon({ icon, tone = 'neutral', size = 20, hue = null }) {
+  if (hue !== null && hue !== undefined) {
+    return html`<span class="cat-icon has-hue" style=${{ '--h': hue }} aria-hidden="true"><${Icon} name=${icon} size=${size} /></span>`;
+  }
   return html`<span class=${`cat-icon tone-${tone}`} aria-hidden="true"><${Icon} name=${icon} size=${size} /></span>`;
 }
 

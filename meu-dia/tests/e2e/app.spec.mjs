@@ -48,7 +48,8 @@ test('registrar despesa e ver o resumo do mês atualizado', async ({ page }) => 
 
   const month = page.locator('.card-hero');
   await expect(month).toContainText('Finanças de outubro');
-  expect(money(await month.locator('.hero-value').innerText())).toBe('-R$ 45,90');
+  // O saldo "corre" até o valor novo; o número visível termina no valor certo.
+  await expect(month.locator('.hero-value [aria-hidden="true"]')).toHaveText('-R$ 45,90');
   expect(money(await month.locator('.flow-item.out').innerText())).toContain('R$ 45,90');
 
   await goTo(page, 'Finanças');
@@ -201,7 +202,7 @@ test('ocultar valores com um toque', async ({ page }) => {
   await page.getByRole('button', { name: 'Ocultar valores' }).click();
   await expect(page.locator('.card-hero .hero-value')).toHaveText('R$ •••••');
   await page.getByRole('button', { name: 'Mostrar valores' }).click();
-  expect(money(await page.locator('.card-hero .hero-value').innerText())).toBe('-R$ 33,00');
+  await expect(page.locator('.card-hero .hero-value [aria-hidden="true"]')).toHaveText('-R$ 33,00');
 });
 
 test('relatórios: período, categorias e comparação em frases', async ({ page }) => {
