@@ -6,13 +6,23 @@ import { toast } from './state.js';
 import { feedback } from '../services/feedback.js';
 import { celebrate } from './fx.js';
 import { todayISO, dueLabel, relativeDay } from '../core/dates.js';
-import { findCategory, findAgendaCategory } from '../core/categories.js';
+import { findCategory, findAgendaCategory, categoryHue } from '../core/categories.js';
 import { BILL_KIND, billState } from '../core/bills.js';
 import { isRecurring } from '../core/recurrence.js';
 import { walletType } from '../core/finance.js';
 import { openEventDetail } from './forms/event.js';
-import { openTransactionDetail } from './forms/transaction.js';
+import { openTransactionDetail, deleteTransactionNow } from './forms/transaction.js';
+import { Swipe } from './swipe.js';
 import { openBillDetail, quickPay } from './forms/bill.js';
+
+// Concluir ou desmarcar tarefa (pelo círculo ou arrastando a linha).
+function toggleTask(item, date, done, point) {
+  store.toggleTask(item, date);
+  feedback(done ? 'undo' : 'complete');
+  if (done) return;
+  celebrate(point);
+  toast('Tarefa concluída', { tone: 'success', duration: 2500, action: { label: 'Desfazer', onClick: () => store.toggleTask(store.findById('events', item.id), date) } });
+}
 
 export function TaskCheck({ item, date, done }) {
   return html`<button
@@ -23,10 +33,7 @@ export function TaskCheck({ item, date, done }) {
     aria-label=${done ? `Desmarcar “${item.title}”` : `Concluir “${item.title}”`}
     onClick=${(e) => {
       e.stopPropagation();
-      store.toggleTask(item, date);
-      feedback(done ? 'undo' : 'complete');
-      if (!done) celebrate({ x: e.clientX, y: e.clientY });
-      if (!done) toast('Tarefa concluída', { tone: 'success', duration: 2500, action: { label: 'Desfazer', onClick: () => store.toggleTask(store.findById('events', item.id), date) } });
+      toggleTask(item, date, done, { x: e.clientX, y: e.clientY });
     }}
   >
     <span class="check-ring"><${Icon} name="check" size=${16} /></span>
@@ -45,7 +52,8 @@ export function AgendaRow({ occ, showDate = false, overdue = false, past = false
   if (item.location) sub.push(item.location);
   if (cat) sub.push(cat.label);
 
-  return html`<div class=${`item ${done ? 'is-done' : ''} ${past ? 'is-past' : ''}`}>
+  const swipe = item.kind === 'task' ? { label: done ? 'Desmarcar' : 'Concluir', icon: done ? 'undo-2' : 'check', tone: 'ok', run: () => toggleTask(item, date, done) } : null;
+  return html`<${Swipe} right=${swipe}><div class=${`item ${done ? 'is-done' : ''} ${past ? 'is-past' : ''}`}>
     ${item.kind === 'task'
       ? html`<${TaskCheck} item=${item} date=${date} done=${done} />`
       : html`<span class="time-pill" aria-hidden="true">${item.time || html`<${Icon} name="calendar" size=${18} />`}</span>`}
@@ -60,7 +68,7 @@ export function AgendaRow({ occ, showDate = false, overdue = false, past = false
         </span>
       </span>
     </button>
-  </div>`;
+  </div></${Swipe}>`;
 }
 
 export function TransactionRow({ t, showDate = false }) {
@@ -71,8 +79,8 @@ export function TransactionRow({ t, showDate = false }) {
   if (t.installment) sub.push(`Parcela ${t.installment.n}/${t.installment.of}`);
   if (wallet) sub.push(wallet.name);
   if (showDate) sub.push(relativeDay(t.date, todayISO()));
-  return html`<button type="button" class="item" onClick=${() => openTransactionDetail(t)}>
-    <${CategoryIcon} icon=${t.category ? cat.icon : t.type === 'income' ? 'arrow-down-left' : 'arrow-up-right'} tone=${t.type} />
+  return html`<${Swipe} left=${{ label: 'Excluir', icon: 'trash-2', tone: 'danger', run: () => deleteTransactionNow(t) }}><button type="button" class="item" onClick=${() => openTransactionDetail(t)}>
+    <${CategoryIcon} icon=${t.category ? cat.icon : t.type === 'income' ? 'arrow-down-left' : 'arrow-up-right'} tone=${t.type} hue=${t.category ? categoryHue(cat) : null} />
     <span class="item-body">
       <span class="item-title" style=${{ display: 'block' }}>${t.description}</span>
       <span class="item-sub">${sub.map((x, i) => html`${i > 0 && html`<span class="dot"></span>`}<span>${x}</span>`)}</span>
@@ -80,7 +88,7 @@ export function TransactionRow({ t, showDate = false }) {
     <span class=${`item-end ${t.type === 'income' ? 'amount-in' : 'amount-out'}`}>
       <${Money} value=${t.type === 'income' ? t.amount : -t.amount} signed />
     </span>
-  </button>`;
+  </button></${Swipe}>`;
 }
 
 export function BillRow({ bill, compact = false }) {
@@ -91,7 +99,8 @@ export function BillRow({ bill, compact = false }) {
   const icon = { overdue: 'triangle-alert', soon: 'calendar-clock', upcoming: 'calendar', paid: 'circle-check' }[state];
   const label = state === 'paid' ? `${kind.done} ${relativeDay(bill.paidAt || bill.dueDate, today)}` : dueLabel(bill.dueDate, today);
   const amount = state === 'paid' ? bill.paidAmount ?? bill.amount : bill.amount;
-  return html`<div class="item bill-row">
+  const swipe = state === 'paid' ? null : { label: kind.verb, icon: 'check', tone: 'ok', run: () => quickPay(bill) };
+  return html`<${Swipe} right=${swipe}><div class="item bill-row">
     <button type="button" class="item-main" onClick=${() => openBillDetail(bill)}>
       <span class=${`cat-icon tone-${tone}`} aria-hidden="true"><${Icon} name=${icon} size=${20} /></span>
       <span class="item-body">
@@ -108,7 +117,7 @@ export function BillRow({ bill, compact = false }) {
     html`<button type="button" class="btn btn-pay" onClick=${() => quickPay(bill)} aria-label=${`${kind.doneVerb}: ${bill.description}`}>
       <${Icon} name="check" size=${16} />${kind.verb}
     </button>`}
-  </div>`;
+  </div></${Swipe}>`;
 }
 
 export function WalletChip({ wallet, balance, onClick }) {

@@ -2,6 +2,7 @@
 import { html, useMemo, useState, useRef, useEffect } from '../../vendor/preact.js';
 import { todayISO, isValidISODate, addMonths, startOfMonth, MONTHS, parseISODate, formatMonthYear } from '../../core/dates.js';
 import { totals, byCategory } from '../../core/finance.js';
+import { categoryHue } from '../../core/categories.js';
 import { formatPercent } from '../../core/money.js';
 import { periodPresets, periodLabel, comparePeriods, monthlySeries, balanceSentence } from '../../core/reports.js';
 import { Chips, Money, Icon, Empty, Button, Segmented, CategoryIcon, Field } from '../components.js';
@@ -124,7 +125,7 @@ function CategoryBars({ list, type }) {
     ${list.slice(0, 10).map(
       (c) => html`<div class="bar-row" key=${c.id}>
         <div class="bar-top">
-          <${CategoryIcon} icon=${c.category.icon} tone=${type} size=${18} />
+          <${CategoryIcon} icon=${c.category.icon} tone=${type} size=${18} hue=${categoryHue(c.category)} />
           <span class="name">${c.category.label}</span>
           <span class="val"><${Money} value=${c.total} /></span>
           <span class="pct">${formatPercent(c.share)}</span>

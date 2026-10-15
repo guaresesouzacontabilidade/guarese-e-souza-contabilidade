@@ -18,6 +18,8 @@ import { startReminders, onReminderAction, snoozeReminder } from '../services/no
 import { quickPay } from './forms/bill.js';
 import * as store from '../data/store.js';
 import { isDoneOn } from '../core/agenda.js';
+import { openBills } from '../core/bills.js';
+import { todayISO } from '../core/dates.js';
 import { feedback } from '../services/feedback.js';
 import { applyMotionPref } from './fx.js';
 import { subscribeInstall, hasUpdate, applyUpdate } from '../services/install.js';
@@ -145,7 +147,24 @@ function addContext(route) {
   return route.path === '/agenda' && route.params.dia ? { date: route.params.dia } : {};
 }
 
-function Sidebar({ route }) {
+// Contas vencidas ou que vencem hoje: viram um número na aba Contas.
+function dueCount(bills) {
+  const today = todayISO();
+  return openBills(bills).filter((b) => b.dueDate <= today).length;
+}
+
+function DueBadge({ count }) {
+  if (!count) return null;
+  return html`<span class="tab-badge" key=${count} aria-hidden="true">${count > 9 ? '9+' : count}</span>`;
+}
+
+// Para leitores de tela, depois do nome da aba: "Contas (2 contas para hoje ou vencidas)".
+function DueText({ count }) {
+  if (!count) return null;
+  return html`<span class="sr-only"> (${count === 1 ? '1 conta para hoje ou vencida' : `${count} contas para hoje ou vencidas`})</span>`;
+}
+
+function Sidebar({ route, due }) {
   return html`<nav class="sidebar" aria-label="Navegação principal">
     <a class="brand" href="#/"><img class="brand-mark" src="./assets/icons/icon.svg" alt="" width="32" height="32" />Meu Dia</a>
     <button type="button" class="btn btn-primary btn-lg side-add" onClick=${() => openAddMenu(addContext(route))}>
@@ -153,7 +172,7 @@ function Sidebar({ route }) {
     </button>
     ${NAV.map(
       (n) => html`<a key=${n.path} class="side-link" href=${`#${n.path}`} aria-current=${route.path === n.path ? 'page' : undefined}>
-        <${Icon} name=${n.icon} />${n.label}
+        <${Icon} name=${n.icon} />${n.label}${n.path === '/contas' && html`<${DueText} count=${due} /><${DueBadge} count=${due} />`}
       </a>`,
     )}
     <div class="side-foot">
@@ -180,10 +199,10 @@ function Topbar({ route }) {
   </header>`;
 }
 
-function Tabbar({ route }) {
+function Tabbar({ route, due }) {
   const items = NAV.filter((n) => !n.desktopOnly);
   const tab = (n) => html`<a key=${n.path} class="tab" href=${`#${n.path}`} aria-current=${route.path === n.path ? 'page' : undefined}>
-    <span class="tab-ico"><${Icon} name=${n.icon} /></span>${n.label}
+    <span class="tab-ico"><${Icon} name=${n.icon} />${n.path === '/contas' && html`<${DueBadge} count=${due} />`}</span>${n.label}${n.path === '/contas' && html`<${DueText} count=${due} />`}
   </a>`;
   return html`<nav class="tabbar" aria-label="Navegação principal">
     ${tab(items[0])}${tab(items[1])}
@@ -304,12 +323,12 @@ export function App() {
 
   return html`
     <div id="app-shell" class="app">
-      <${Sidebar} route=${route} />
+      <${Sidebar} route=${route} due=${dueCount(s.bills)} />
       <${Topbar} route=${route} />
       <main id="app-main" class="content" tabindex="-1" ref=${mainRef} aria-label=${TITLES[route.path] || 'Início'}>
         <${View} key=${route.path} route=${route} s=${s} />
       </main>
-      <${Tabbar} route=${route} />
+      <${Tabbar} route=${route} due=${dueCount(s.bills)} />
     </div>
     <${Layers} />
     <${Toasts} />

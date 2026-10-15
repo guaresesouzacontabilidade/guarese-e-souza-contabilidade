@@ -159,6 +159,26 @@ export function findPossibleDuplicates(transactions, { type, amount, date, descr
     .map(({ t }) => t);
 }
 
+// Lançamentos que a pessoa repete sempre igual (mesma descrição e valor), para registrar de novo com um toque.
+// Ignora parcelas, contas pagas e importações, que já têm seu próprio caminho.
+export function frequentEntries(transactions, today, limit = 4) {
+  const from = addDays(today, -90);
+  const groups = new Map();
+  for (const t of transactions) {
+    if (t.deleted || t.installment || t.billId || t.importId || t.date < from || t.date > today) continue;
+    const key = `${t.type}|${normalize(t.description)}|${t.amount}`;
+    const g = groups.get(key) || { count: 0, last: t };
+    g.count++;
+    if (t.date > g.last.date || (t.date === g.last.date && (t.createdAt || 0) > (g.last.createdAt || 0))) g.last = t;
+    groups.set(key, g);
+  }
+  return [...groups.values()]
+    .filter((g) => g.count >= 2)
+    .sort((a, b) => b.count - a.count || (a.last.date < b.last.date ? 1 : -1))
+    .slice(0, limit)
+    .map(({ last, count }) => ({ type: last.type, description: last.description, amount: last.amount, category: last.category || null, walletId: last.walletId || null, count }));
+}
+
 export function lastNDays(today, n) {
   return { from: addDays(today, -(n - 1)), to: today };
 }

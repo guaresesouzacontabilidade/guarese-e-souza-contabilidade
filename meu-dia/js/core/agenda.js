@@ -1,6 +1,7 @@
 // Compromissos e tarefas: ocorrências, conclusão, busca.
 import { occurrencesBetween, isRecurring } from './recurrence.js';
-import { matchesQuery } from './text.js';
+import { matchesQuery, plural, joinList } from './text.js';
+import { openBills } from './bills.js';
 import { minutesOf } from './dates.js';
 
 export const KIND_LABEL = { event: 'Compromisso', task: 'Tarefa' };
@@ -69,6 +70,23 @@ export function todayAgenda(events, today, nowHM) {
   const upcoming = list.filter((o) => !o.done && !isPast(o));
   const finished = list.filter((o) => o.done || isPast(o));
   return { upcoming, finished, total: list.length };
+}
+
+// Resumo de uma linha para a saudação: "Hoje: 2 tarefas, 1 compromisso e 1 conta para pagar."
+export function daySummary(events, bills, today, nowHM) {
+  const { upcoming, total } = todayAgenda(events, today, nowHM);
+  const tasks = upcoming.filter((o) => o.item.kind === 'task').length;
+  const meetings = upcoming.filter((o) => o.item.kind === 'event').length;
+  const due = openBills(bills).filter((b) => b.dueDate === today);
+  const pay = due.filter((b) => b.kind !== 'receive').length;
+  const receive = due.length - pay;
+  const parts = [];
+  if (tasks) parts.push(plural(tasks, 'tarefa', 'tarefas'));
+  if (meetings) parts.push(plural(meetings, 'compromisso', 'compromissos'));
+  if (pay) parts.push(`${plural(pay, 'conta', 'contas')} para pagar`);
+  if (receive) parts.push(`${receive} a receber`);
+  if (parts.length) return `Hoje: ${joinList(parts)}.`;
+  return total ? 'Tudo feito por hoje.' : 'Nada marcado para hoje.';
 }
 
 export function searchAgenda(events, query, { kind = 'all', status = 'all', category = 'all' } = {}) {

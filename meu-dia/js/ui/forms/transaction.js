@@ -3,7 +3,7 @@ import { html, useState } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { todayISO, formatLongDate, formatNumeric, isValidISODate, MONTHS_SHORT } from '../../core/dates.js';
 import { formatMoney, formatPercent, sumBy } from '../../core/money.js';
-import { categoriesFor, findCategory, suggestCategory, ruleMatches } from '../../core/categories.js';
+import { categoriesFor, findCategory, suggestCategory, ruleMatches, categoryHue } from '../../core/categories.js';
 import { findPossibleDuplicates, walletType, live, categoryLimits, limitWarning } from '../../core/finance.js';
 import { planInstallments, groupItems, MAX_INSTALLMENTS } from '../../core/installments.js';
 import { uid, plural } from '../../core/text.js';
@@ -336,6 +336,12 @@ export async function deleteTransaction(item) {
     danger: true,
   });
   if (!ok) return false;
+  deleteTransactionNow(item);
+  return true;
+}
+
+// Exclui na hora, com "Desfazer" (usado também ao arrastar a linha para a esquerda).
+export function deleteTransactionNow(item) {
   store.remove('transactions', item.id);
   feedback('delete');
   // Se veio de uma conta paga, desfaz o vínculo para não confundir.
@@ -350,7 +356,6 @@ export async function deleteTransaction(item) {
       },
     },
   });
-  return true;
 }
 
 function TransactionDetail({ id, onClose }) {
@@ -365,7 +370,7 @@ function TransactionDetail({ id, onClose }) {
   return html`<div class="form">
     <${SheetHeader} title=${item.description} subtitle=${TYPE_LABEL[item.type]} onClose=${onClose} />
     <div class="detail-hero">
-      <${CategoryIcon} icon=${cat.icon} tone=${item.type} />
+      <${CategoryIcon} icon=${cat.icon} tone=${item.type} hue=${item.category ? categoryHue(cat) : null} />
       <div>
         <div class="detail-label">${cat.label}</div>
         <div class="detail-value num">

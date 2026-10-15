@@ -105,7 +105,7 @@ test('previsão do fim do mês: saldo mais o que ainda vai entrar e sair', async
   await page.getByRole('button', { name: 'Registrar receita' }).click();
   await addBill(page, { description: 'Aluguel', amount: '150000' });
 
-  const box = page.locator('.card-hero .forecast');
+  const box = page.locator('.plan-card .forecast');
   await expect(box).toContainText('Previsão para 31/10');
   expect(money(await box.innerText())).toContain('R$ 3.500,00');
   await box.getByRole('button', { name: /Previsão para/ }).click();

@@ -3,7 +3,7 @@ import { html, useState, useRef, useEffect } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { BILL_REMIND_OPTIONS } from '../../core/bills.js';
 import { formatMoney } from '../../core/money.js';
-import { Card, Icon, Button, Field, Chips, MoneyInput, SheetHeader, SheetActions, Hint, TextInput, Toggle } from '../components.js';
+import { Card, Icon, Button, Field, Chips, MoneyInput, SheetHeader, SheetActions, Hint, TextInput, Toggle, CategoryIcon } from '../components.js';
 import { openSheet, confirm, toast, useCloud } from '../state.js';
 import { downloadBackup, downloadTransactionsCSV, importBackupFile } from '../../data/backup.js';
 import {
@@ -16,13 +16,13 @@ import { openImport } from '../forms/import.js';
 import { lockAvailable, setLockEnabled } from '../../services/lock.js';
 import { autoBackupAvailable, listBackups, readBackup, writeBackupNow } from '../../services/autobackup.js';
 import { formatDayMonth, todayISO, timeHM } from '../../core/dates.js';
-import { findCategory } from '../../core/categories.js';
+import { findCategory, categoryHue } from '../../core/categories.js';
 import { soundSupported } from '../../services/sound.js';
 import { vibrationSupported } from '../../services/feedback.js';
 import { plural } from '../../core/text.js';
 import { openCategoryLimits } from '../forms/limits.js';
 
-export const APP_VERSION = '1.2.0';
+export const APP_VERSION = '1.3.0';
 
 function BudgetSheet({ onClose }) {
   const [value, setValue] = useState(store.getState().settings.budget || 0);
@@ -382,7 +382,7 @@ function RulesSection({ s }) {
             ${[...rules].sort((a, b) => a.match.localeCompare(b.match, 'pt-BR')).map((r) => {
               const cat = findCategory(r.category, r.type, custom);
               return html`<div class="settings-row" key=${r.id}>
-                <span class="cat-icon"><${Icon} name=${cat.icon} size=${20} /></span>
+                <${CategoryIcon} icon=${cat.icon} hue=${categoryHue(cat)} />
                 <span class="grow">
                   <span class="label" style=${{ display: 'block' }}>“${r.match}”</span>
                   <span class="desc" style=${{ display: 'block' }}>${r.type === 'income' ? 'Receita' : 'Despesa'} → ${cat.label}</span>

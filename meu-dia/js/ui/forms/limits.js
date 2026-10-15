@@ -3,7 +3,7 @@ import { html, useState } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { todayISO, addMonths, startOfMonth, endOfMonth } from '../../core/dates.js';
 import { formatMoney, sumBy } from '../../core/money.js';
-import { categoriesFor, findCategory } from '../../core/categories.js';
+import { categoriesFor, findCategory, categoryHue } from '../../core/categories.js';
 import { categoryLimits } from '../../core/finance.js';
 import { Button, Icon, Chips, MoneyInput, SheetHeader, SheetActions, Hint, Money, Meter } from '../components.js';
 import { openSheet, toast } from '../state.js';
@@ -78,7 +78,7 @@ function LimitsSheet({ onClose, initial = null }) {
           ${status.map(
             (l) => html`<button type="button" class="limit is-button" key=${l.id} onClick=${() => edit(l.id)} aria-label=${`${l.category.label}: limite de ${formatMoney(l.budget)}. Editar`}>
               <span class="limit-top">
-                <span class="limit-name"><${Icon} name=${l.category.icon} size=${16} />${l.category.label}</span>
+                <span class="limit-name"><span class="hue-ink" style=${{ '--h': categoryHue(l.category) ?? 210 }}><${Icon} name=${l.category.icon} size=${16} /></span>${l.category.label}</span>
                 <span class="limit-amt"><${Money} value=${l.spent} /> de <${Money} value=${l.budget} /></span>
               </span>
               <${Meter} ratio=${l.ratio} level=${l.level} label=${`${l.category.label}: ${Math.round(l.ratio * 100)}% do limite`} />

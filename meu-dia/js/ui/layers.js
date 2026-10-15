@@ -37,58 +37,86 @@ function useFocusTrap(ref, active) {
   }, [active]);
 }
 
-// Arrastar para baixo fecha o painel (no celular).
-function useSwipeToClose(sheetRef, gripRef) {
+// Arrastar para baixo pelo topo do painel (alça ou título) fecha; um peteleco rápido também.
+function useSwipeToClose(sheetRef, scrimRef) {
   useEffect(() => {
-    const grip = gripRef.current;
     const sheet = sheetRef.current;
-    if (!grip || !sheet) return undefined;
-    let startY = null;
+    if (!sheet) return undefined;
+    let start = null;
     let dy = 0;
+    let dragging = false;
+    let lastY = 0;
+    let lastT = 0;
+    let speed = 0;
     const down = (e) => {
-      startY = e.clientY;
+      if (!e.target.closest('.sheet-grip, .sheet-head') || e.target.closest('button, a, input, select, textarea')) return;
+      start = { y: e.clientY, id: e.pointerId };
       dy = 0;
-      grip.setPointerCapture(e.pointerId);
-      sheet.style.transition = 'none';
+      dragging = false;
+      lastY = e.clientY;
+      lastT = e.timeStamp;
+      speed = 0;
     };
     const move = (e) => {
-      if (startY === null) return;
-      dy = Math.max(0, e.clientY - startY);
+      if (!start || e.pointerId !== start.id) return;
+      const d = e.clientY - start.y;
+      if (!dragging) {
+        if (d < 6) return;
+        dragging = true;
+        sheet.setPointerCapture?.(e.pointerId);
+        sheet.style.transition = 'none';
+      }
+      dy = Math.max(0, d);
+      const dt = e.timeStamp - lastT;
+      if (dt > 0) speed = (e.clientY - lastY) / dt;
+      lastY = e.clientY;
+      lastT = e.timeStamp;
       sheet.style.transform = `translateY(${dy}px)`;
-    };
-    const up = () => {
-      if (startY === null) return;
-      startY = null;
-      sheet.style.transition = 'transform 220ms cubic-bezier(.2,.8,.2,1)';
-      if (dy > 110) {
-        sheet.style.transform = 'translateY(100%)';
-        setTimeout(closeLayer, 160);
-      } else {
-        sheet.style.transform = '';
+      const scrim = scrimRef.current;
+      if (scrim) {
+        scrim.style.transition = 'none';
+        scrim.style.opacity = String(Math.max(0.15, 1 - dy / (sheet.offsetHeight || 600)));
       }
     };
-    grip.addEventListener('pointerdown', down);
-    grip.addEventListener('pointermove', move);
-    grip.addEventListener('pointerup', up);
-    grip.addEventListener('pointercancel', up);
+    const up = (e) => {
+      if (!start || (e && e.pointerId !== start.id)) return;
+      start = null;
+      if (!dragging) return;
+      dragging = false;
+      const scrim = scrimRef.current;
+      sheet.style.transition = 'transform 240ms cubic-bezier(.2,.8,.2,1)';
+      if (scrim) scrim.style.transition = 'opacity 220ms';
+      if (dy > Math.min(150, sheet.offsetHeight * 0.3) || (speed > 0.55 && dy > 24)) {
+        sheet.style.transform = 'translateY(105%)';
+        if (scrim) scrim.style.opacity = '0';
+        setTimeout(closeLayer, 170);
+      } else {
+        sheet.style.transform = '';
+        if (scrim) scrim.style.opacity = '';
+      }
+    };
+    sheet.addEventListener('pointerdown', down);
+    sheet.addEventListener('pointermove', move);
+    sheet.addEventListener('pointerup', up);
+    sheet.addEventListener('pointercancel', up);
     return () => {
-      grip.removeEventListener('pointerdown', down);
-      grip.removeEventListener('pointermove', move);
-      grip.removeEventListener('pointerup', up);
-      grip.removeEventListener('pointercancel', up);
+      sheet.removeEventListener('pointerdown', down);
+      sheet.removeEventListener('pointermove', move);
+      sheet.removeEventListener('pointerup', up);
+      sheet.removeEventListener('pointercancel', up);
     };
   }, []);
 }
 
 function Sheet({ layer, isTop }) {
   const ref = useRef(null);
-  const grip = useRef(null);
+  const scrim = useRef(null);
   useFocusTrap(ref, isTop);
-  useSwipeToClose(ref, grip);
+  useSwipeToClose(ref, scrim);
   return html`<div class="layer" style=${{ zIndex: 100 + layer.id }}>
-    <div class="scrim" onClick=${closeLayer}></div>
+    <div class="scrim" ref=${scrim} onClick=${closeLayer}></div>
     <div class="sheet" ref=${ref} role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
-      <div class="sheet-grip" ref=${grip} aria-hidden="true"></div>
+      <div class="sheet-grip" aria-hidden="true"></div>
       <div class="sheet-scroll" key=${layer.key || layer.id}>${layer.render(closeLayer)}</div>
     </div>
   </div>`;

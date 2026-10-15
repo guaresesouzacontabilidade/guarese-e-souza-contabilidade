@@ -272,6 +272,43 @@ export function Empty({ icon = 'sparkles', title, text, action }) {
   </div>`;
 }
 
+// Anel de progresso (orçamento do mês). Enche ao aparecer.
+export function Ring({ ratio, level = 'ok', size = 84, stroke = 9, label, children }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const [shown, setShown] = useState(motionReduced() ? ratio : 0);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(ratio));
+    return () => cancelAnimationFrame(id);
+  }, [ratio]);
+  const pct = Math.max(0, Math.min(1, shown || 0));
+  const mid = size / 2;
+  return html`<div
+    class=${`ring is-${level}`}
+    style=${{ width: `${size}px`, height: `${size}px` }}
+    role="meter"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow=${Math.round((ratio || 0) * 100)}
+    aria-label=${label}
+  >
+    <svg width=${size} height=${size} viewBox=${`0 0 ${size} ${size}`} aria-hidden="true">
+      <circle class="ring-track" cx=${mid} cy=${mid} r=${r} stroke-width=${stroke} />
+      <circle
+        class="ring-fill"
+        cx=${mid}
+        cy=${mid}
+        r=${r}
+        stroke-width=${stroke}
+        stroke-dasharray=${c}
+        stroke-dashoffset=${c * (1 - pct)}
+        transform=${`rotate(-90 ${mid} ${mid})`}
+      />
+    </svg>
+    <span class="ring-label">${children}</span>
+  </div>`;
+}
+
 export function Meter({ ratio, level = 'ok', label }) {
   const pct = Math.max(0, Math.min(1, ratio || 0));
   return html`<div class=${`meter is-${level}`} role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round((ratio || 0) * 100)} aria-label=${label}>
@@ -279,7 +316,11 @@ export function Meter({ ratio, level = 'ok', label }) {
   </div>`;
 }
 
-export function CategoryIcon({ icon, tone = 'neutral', size = 20 }) {
+// Ícone da categoria. Com `hue`, usa a cor própria da categoria (Mercado verde, Transporte azul…).
+export function CategoryIcon({ icon, tone = 'neutral', size = 20, hue = null }) {
+  if (hue !== null && hue !== undefined) {
+    return html`<span class="cat-icon has-hue" style=${{ '--h': hue }} aria-hidden="true"><${Icon} name=${icon} size=${size} /></span>`;
+  }
   return html`<span class=${`cat-icon tone-${tone}`} aria-hidden="true"><${Icon} name=${icon} size=${size} /></span>`;
 }
 

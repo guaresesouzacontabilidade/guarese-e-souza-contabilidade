@@ -11,6 +11,13 @@ const root = document.documentElement;
 
 let lastPoint = null;
 let started = false;
+let swallowClick = false;
+
+// Depois de arrastar uma linha, o "clique" que o navegador dispara ao soltar não deve abrir nada.
+export function suppressNextClick() {
+  swallowClick = true;
+  setTimeout(() => (swallowClick = false), 400);
+}
 
 export const motionReduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches || getState().prefs.motion === false;
 
@@ -92,6 +99,12 @@ function onPointerDown(e) {
 
 // Som do toque: só em toques de verdade (o "click"), nunca ao começar a rolar a tela.
 function onClick(e) {
+  if (swallowClick) {
+    swallowClick = false;
+    e.stopPropagation();
+    e.preventDefault();
+    return;
+  }
   const el = e.target.closest?.(PRESSABLE);
   if (!el || el.disabled || el.closest(OWN_SOUND)) return;
   feedback('tap');
@@ -127,6 +140,8 @@ export function navTransition(fromPath, toPath, update) {
     return;
   }
   try {
+    // Marca a troca em andamento (durante ela a página não recebe toques).
+    root.dataset.navigating = '';
     const t = document.startViewTransition(async () => {
       update();
       await new Promise((r) => setTimeout(r, 0));
@@ -134,8 +149,9 @@ export function navTransition(fromPath, toPath, update) {
     });
     t.ready.catch(() => {});
     t.updateCallbackDone.catch(() => {});
-    t.finished.catch(() => {});
+    t.finished.catch(() => {}).finally(() => delete root.dataset.navigating);
   } catch {
+    delete root.dataset.navigating;
     update();
   }
 }
