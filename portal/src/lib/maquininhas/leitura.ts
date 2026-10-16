@@ -26,6 +26,8 @@ export interface VendaLida {
   terminal: string | null;
   data_prevista: string | null;
   situacao: SituacaoVenda;
+  /** Vendas somadas na linha (relatórios resumidos por dia); 1 nos relatórios venda a venda. */
+  quantidade: number;
   linha: number;
   chave_unica: string;
 }
@@ -113,6 +115,9 @@ export function normalizarModalidade(texto: string | null | undefined, parcelas:
   if (/\bPIX\b/.test(t)) return "pix";
   if (tipo === "frota") return "frota";
   if (tipo === "beneficio") return "voucher";
+  // Cartão pré-pago de débito ou de crédito: a adquirente cobra como débito ou crédito à vista
+  if (/DEBITO PRE ?PAGO|PRE ?PAGO DEBITO/.test(t)) return "debito";
+  if (/CREDITO PRE ?PAGO|PRE ?PAGO CREDITO/.test(t)) return parcelas > 1 ? "credito_parcelado" : "credito_vista";
   if (/PRE ?PAGO/.test(t)) return "pre_pago";
   if (/FROTA|COMBUST/.test(t)) return "frota";
   if (/VOUCHER|REFEICAO|ALIMENTACAO|BENEFICIO|\bVALE\b/.test(t)) return "voucher";
@@ -172,6 +177,7 @@ const PADROES: Padrao[] = [
     teste: (n) =>
       /MODALIDADE|FORMA D[EO] PAGAMENTO|MEIO D[EO] PAGAMENTO|\bPRODUTO\b|TIPO D[AEO] (TRANSAC|VENDA|PAGAMENTO|CARTAO|PRODUTO|OPERAC|CAPTURA)|^TIPO$|^PLANO$|^FORMA$|^MEIO$/.test(n),
   },
+  { campo: "quantidade", teste: (n) => /^(QUANTIDADE|QTDE?|QTD)( DE)?( VENDAS?| TRANSACOES| TRANSACAO| CVS?| OPERACOES)?$/.test(n) },
   { campo: "parcelas", teste: (n) => /PARCELAS?\b|\bPARC\b|QTD PARC|QTDE PARC|N PARC|NUM PARC/.test(n) && !/VALOR|VLR|\bVL\b|DATA|\bDT\b/.test(n) },
   {
     campo: "nsu",
@@ -234,6 +240,7 @@ const MAPEAMENTO_VAZIO = {
   terminal: null,
   previsao: null,
   situacao: null,
+  quantidade: null,
 } satisfies Record<CampoRelatorio, null>;
 
 export function sugerirMapeamento(cabecalho: string[], linhaCabecalho: number): MapeamentoMaquininha {
@@ -345,12 +352,13 @@ export function lerVendas(linhas: string[][], m: MapeamentoMaquininha, tipo: Tip
     const nsu = textoCurto(pegar(l, m.nsu));
     const autorizacao = textoCurto(pegar(l, m.autorizacao));
     const terminal = textoCurto(pegar(l, m.terminal));
+    const quantidade = Math.min(100000, Math.max(1, Number.parseInt(pegar(l, m.quantidade ?? null).replace(/\D/g, ""), 10) || 1));
     const valor = bruto.toFixed(2);
     const base = nsu
       ? `${data}|N:${nsu}|${valor}`
       : autorizacao
         ? `${data}|A:${autorizacao}|${valor}`
-        : `${data}|${valor}|${parcelas}|${bandeira ?? ""}|${modalidade}|${terminal ?? ""}`;
+        : `${data}|${valor}|${parcelas}|${bandeira ?? ""}|${modalidade}|${terminal ?? ""}${quantidade > 1 ? `|Q${quantidade}` : ""}`;
     const ocorrencia = (contagem.get(base) ?? 0) + 1;
     contagem.set(base, ocorrencia);
     vendas.push({
@@ -366,6 +374,7 @@ export function lerVendas(linhas: string[][], m: MapeamentoMaquininha, tipo: Tip
       terminal,
       data_prevista: lerData(pegar(l, m.previsao)),
       situacao,
+      quantidade,
       linha: i + 1,
       chave_unica: `${base}|${ocorrencia}`,
     });

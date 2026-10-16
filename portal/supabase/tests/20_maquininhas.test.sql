@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(39);
+select plan(43);
 
 \ir 00_setup.sql.inc
 
@@ -160,6 +160,26 @@ values (current_setting('testes.contrato')::uuid, current_setting('testes.empres
 select is(public.maquininha_reconferir(current_setting('testes.empresa_a')::uuid), 6, 'reconfere as vendas depois de mudar as taxas');
 select is((select conferencia from public.maquininha_vendas where nsu = '5'), 'ok', 'a venda no Pix passa a ter taxa para conferir');
 reset role;
+
+-- Linha de relatório resumido (várias vendas): a tarifa fixa conta uma vez por venda
+insert into public.maquininha_taxas (contrato_id, empresa_id, modalidade, taxa_percentual, tarifa_fixa)
+values (current_setting('testes.contrato')::uuid, current_setting('testes.empresa_a')::uuid, 'voucher', 1.00, 0.50);
+select set_config('request.jwt.claims', '', true);
+select is(public.maquininha_gravar_vendas(current_setting('testes.imp')::uuid, '[
+  {"data_venda":"2026-09-08","bandeira":null,"modalidade":"voucher","parcelas":1,"valor_bruto":300,"valor_taxa":4.50,"valor_liquido":295.50,"situacao":"aprovada","linha":8,"quantidade":3,"chave_unica":"2026-09-08|300.00|1||voucher||Q3|1"}
+]'::jsonb), '{"novas": 1, "atualizadas": 0}'::jsonb, 'grava a linha resumida com a quantidade de vendas');
+select app.maquininha_auditar(current_setting('testes.empresa_a')::uuid, '2026-09-08', '2026-09-08');
+select is((select valor_esperado::text || '/' || conferencia from public.maquininha_vendas where importacao_id = current_setting('testes.imp')::uuid and data_venda = '2026-09-08' and modalidade = 'voucher'),
+  '4.50/ok', 'esperado = 1% de R$ 300 + 3 × R$ 0,50 de tarifa');
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+set local role authenticated;
+select is((select (g ->> 'vendas')::int from jsonb_array_elements(public.maquininha_resumo(current_setting('testes.empresa_a')::uuid, '2026-09-01', '2026-09-30') -> 'grupos') g
+            where g ->> 'modalidade' = 'voucher'), 3, 'o resumo conta as vendas da linha, não a linha');
+reset role;
+select set_config('request.jwt.claims', '', true);
+select is(public.maquininha_registrar_relatorio(current_setting('testes.doc2')::uuid, 2, 'Vendas_cielo.pdf',
+  'data da venda|forma de pagamento|quantidade de vendas|valor bruto|valor taxa tarifa|valor liquido|origem pdf lista de vendas cielo',
+  '[]'::jsonb, '[]'::jsonb, 4) ->> 'situacao', 'na_fila', 'a Lista de Vendas da Cielo em PDF entra sozinha em qualquer empresa');
 
 select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
 set local role authenticated;

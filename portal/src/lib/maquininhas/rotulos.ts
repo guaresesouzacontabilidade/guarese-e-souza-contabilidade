@@ -82,6 +82,12 @@ export const CAMPOS_RELATORIO = [
   { chave: "bandeira", rotulo: "Bandeira", obrigatorio: false, ajuda: "Visa, Mastercard, Elo, Alelo..." },
   { chave: "modalidade", rotulo: "Modalidade / produto", obrigatorio: false, ajuda: "Débito, crédito, parcelado, voucher, frota, Pix..." },
   { chave: "parcelas", rotulo: "Parcelas", obrigatorio: false, ajuda: "Quantidade de parcelas (ex.: 3x ou 1/3)." },
+  {
+    chave: "quantidade",
+    rotulo: "Quantidade de vendas",
+    obrigatorio: false,
+    ajuda: "Em relatórios resumidos (uma linha por dia): quantas vendas a linha soma. A tarifa fixa conta uma vez por venda.",
+  },
   { chave: "nsu", rotulo: "NSU / código da venda", obrigatorio: false, ajuda: "Evita contar a mesma venda duas vezes." },
   { chave: "autorizacao", rotulo: "Código de autorização", obrigatorio: false, ajuda: "" },
   { chave: "terminal", rotulo: "Terminal / maquininha", obrigatorio: false, ajuda: "" },

@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/maquininhas/
       s.supabase
         .from("maquininha_vendas")
         .select(
-          "id, data_venda, adquirente_chave, bandeira, modalidade, parcelas, valor_bruto, valor_taxa, valor_liquido, nsu, autorizacao, terminal, data_prevista, situacao, conferencia, taxa_contratada, tarifa_contratada, valor_esperado, diferenca, contrato:maquininha_contratos(adquirente_nome), importacao:maquininha_importacoes(adquirente_nome, nome_arquivo)",
+          "id, data_venda, adquirente_chave, bandeira, modalidade, parcelas, quantidade, valor_bruto, valor_taxa, valor_liquido, nsu, autorizacao, terminal, data_prevista, situacao, conferencia, taxa_contratada, tarifa_contratada, valor_esperado, diferenca, contrato:maquininha_contratos(adquirente_nome), importacao:maquininha_importacoes(adquirente_nome, nome_arquivo)",
         )
         .eq("empresa_id", empresaId)
         .gte("data_venda", comp)
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/maquininhas/
   const cabecalho = [
     "Data da venda", "Adquirente", "Bandeira", "Tipo de venda", "Parcelas", "Valor da venda", "Taxa cobrada (R$)", "Taxa cobrada (%)",
     "Taxa do contrato (%)", "Tarifa do contrato (R$)", "Taxa pelo contrato (R$)", "Diferença (R$)", "Conferência", "NSU", "Autorização",
-    "Terminal", "Previsão de pagamento", "Situação", "Arquivo",
+    "Terminal", "Previsão de pagamento", "Situação", "Arquivo", "Vendas na linha",
   ];
   const linha = (v: (typeof vendas)[number]) => {
     const bruto = Number(v.valor_bruto);
@@ -71,6 +71,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/maquininhas/
       v.data_prevista ? new Date(`${v.data_prevista}T12:00:00Z`) : "",
       v.situacao === "aprovada" ? "Aprovada" : v.situacao === "chargeback" ? "Chargeback" : "Cancelada",
       imp?.nome_arquivo ?? "",
+      v.quantidade,
     ];
   };
   const planilha = (nome: string, linhas: typeof vendas) => {
@@ -82,7 +83,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/maquininhas/
     [1, 17].forEach((c) => (ws.getColumn(c).numFmt = "dd/mm/yyyy"));
     [6, 7, 10, 11, 12].forEach((c) => (ws.getColumn(c).numFmt = '"R$" #,##0.00;[Red]-"R$" #,##0.00'));
     [8, 9].forEach((c) => (ws.getColumn(c).numFmt = "0.00%"));
-    ws.columns.forEach((c, i) => (c.width = [12, 24, 14, 20, 9, 14, 14, 12, 12, 12, 14, 13, 24, 16, 14, 14, 14, 12, 30][i] ?? 14));
+    ws.columns.forEach((c, i) => (c.width = [12, 24, 14, 20, 9, 14, 14, 12, 12, 12, 14, 13, 24, 16, 14, 14, 14, 12, 30, 10][i] ?? 14));
     ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cabecalho.length } };
   };
   planilha(

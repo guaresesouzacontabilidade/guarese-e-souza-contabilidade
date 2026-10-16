@@ -2,13 +2,15 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test, expect, type Page } from "@playwright/test";
+import pdfmake from "pdfmake";
 
 /**
  * Maquininhas (dados fictícios da demonstração): o cliente envia o relatório
  * de vendas da Cielo num formato que o escritório já conhece e ele entra
  * sozinho; a conferência aponta a venda cobrada acima do contrato; a equipe
  * cadastra e exclui um contrato de frota; o colaborador sem permissão e o
- * cliente de outra empresa não veem nada.
+ * cliente de outra empresa não veem nada. A "Lista de Vendas" da Cielo em PDF
+ * (uma linha por dia e forma de pagamento) também entra sozinha.
  */
 const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
 const DOMINIO = "demo.guareses.test";
@@ -114,6 +116,69 @@ test("relatório no formato conhecido entra sozinho e aponta a taxa acima do con
   await entrar(outro, `cliente2@${DOMINIO}`);
   expect((await outro.request.get(`/api/maquininhas/${empresa}?competencia=${ano}-${mes}`)).status()).toBe(403);
   await ctxOutro.close();
+});
+
+/** PDF com o texto da "Lista de Vendas" da Cielo (valores fictícios). */
+async function pdfListaCielo(linhas: string[]): Promise<Buffer> {
+  const pm = pdfmake as unknown as {
+    setFonts(f: Record<string, Record<string, string>>): void;
+    createPdf(d: unknown): { getBuffer(): Promise<Buffer> };
+  };
+  const pasta = join(process.cwd(), "node_modules", "pdfmake", "fonts", "Roboto");
+  const fonte = join(pasta, "Roboto-Regular.ttf");
+  pm.setFonts({ Roboto: { normal: fonte, bold: fonte, italics: fonte, bolditalics: fonte } });
+  return pm.createPdf({ content: linhas.map((text) => ({ text })) }).getBuffer();
+}
+
+test("Lista de Vendas da Cielo em PDF entra sozinha e confere cada forma de pagamento", async ({ browser }) => {
+  test.setTimeout(420_000);
+  const { ano, mes } = mesPassado();
+  const marca = String(Date.now()).slice(-6);
+  const pasta = mkdtempSync(join(tmpdir(), "maquininha-pdf-"));
+  const nome = `lista-vendas-cielo-e2e-${marca}.pdf`;
+  writeFileSync(
+    join(pasta, nome),
+    await pdfListaCielo([
+      "Lista de Vendas (teste automático - dados fictícios)",
+      "Visualizar por: Forma de pagamento",
+      "Data da venda Forma de pagamento Quantidade de vendas Valor bruto Valor Taxa/Tarifa Valor líquido",
+      // Débito (2 vendas na linha): contrato 1,19% → R$ 2,38; cobrado R$ 3,98 (R$ 1,60 a mais)
+      `26/${mes}/${ano} Débito à vista 2 R$ 200,00 -R$ 3,98 R$ 196,02`,
+      // Débito pré-pago: conferido com a taxa de débito (1,19% de R$ 50,00 = R$ 0,60)
+      `26/${mes}/${ano} Débito pré-pago 1 R$ 50,00 -R$ 0,60 R$ 49,40`,
+      // Crédito à vista sem bandeira: taxa geral do contrato 2,99% → conforme
+      `26/${mes}/${ano} Crédito à vista 3 R$ 100,00 -R$ 2,99 R$ 97,01`,
+      "Consolidado de vendas Cielo",
+    ]),
+  );
+
+  const ctx = await browser.newContext({ baseURL: BASE, locale: "pt-BR" });
+  const cliente = await ctx.newPage();
+  await entrar(cliente, `cliente@${DOMINIO}`);
+  await cliente.waitForURL(/\/e\/[0-9a-f-]{36}/, { timeout: 90_000 });
+  const empresa = cliente.url().match(/\/e\/([0-9a-f-]{36})/)![1];
+  await cliente.goto(`/e/${empresa}/maquininhas`);
+  await cliente.getByRole("link", { name: /Enviar relatório/ }).click();
+  await expect(cliente.locator("#categoria")).toHaveValue("relatorio_maquininha");
+  await cliente.setInputFiles('input[aria-label="Escolher arquivos"]', join(pasta, nome));
+  await cliente.getByRole("button", { name: /Enviar \d+ arquivo/ }).click();
+  await expect(cliente.getByText(/1 documento\(s\) recebido\(s\) pelo escritório/)).toBeVisible({ timeout: 60_000 });
+
+  await cliente.goto(`/e/${empresa}/maquininhas?competencia=${ano}-${mes}`);
+  const linha = cliente.locator("tr", { hasText: nome });
+  await expect(async () => {
+    await cliente.reload();
+    await expect(linha.getByText("Importado")).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 180_000 });
+  // Só a linha do débito ficou acima do contrato (R$ 3,98 − R$ 2,38)
+  await expect(linha).toContainText(/R\$\s1,60 a mais/);
+  await expect(cliente.getByText("2 vendas somadas no relatório")).toBeVisible();
+
+  await linha.getByRole("link", { name: nome }).click();
+  await cliente.getByRole("button", { name: "Excluir" }).click();
+  await cliente.getByRole("button", { name: "Tirar da conferência" }).click();
+  await expect(cliente.getByText(/Relatório e vendas excluídos da conferência/)).toBeVisible({ timeout: 30_000 });
+  await ctx.close();
 });
 
 test("equipe cadastra um contrato de frota com a taxa e depois exclui", async ({ page }) => {

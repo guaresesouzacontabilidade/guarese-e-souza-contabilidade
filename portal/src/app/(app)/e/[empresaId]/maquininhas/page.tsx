@@ -51,6 +51,7 @@ type Maior = {
   nsu: string | null;
   autorizacao: string | null;
   adquirente_chave: string;
+  quantidade?: number;
 };
 type Resumo = { totais: Totais; grupos: Grupo[]; maiores: Maior[] };
 
@@ -286,6 +287,7 @@ export default async function Maquininhas({ params, searchParams }: PageProps<"/
                     <Td>
                       <span className="block text-xs text-muted-foreground sm:hidden">{formatarData(v.data)}</span>
                       {v.bandeira ?? "—"} · {modalidadeTexto(v.modalidade, v.parcelas)}
+                      {(v.quantidade ?? 1) > 1 ? <span className="block text-xs text-muted-foreground">{v.quantidade} vendas somadas no relatório</span> : null}
                       {v.nsu || v.autorizacao ? <span className="block text-xs text-muted-foreground">{v.nsu ? `NSU ${v.nsu}` : `Aut. ${v.autorizacao}`}</span> : null}
                     </Td>
                     <Td className="text-right numero whitespace-nowrap">{formatarMoeda(v.bruto)}</Td>

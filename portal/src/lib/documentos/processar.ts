@@ -119,8 +119,8 @@ export async function processarDocumento(admin: ClienteAdmin, job: Job) {
       return await processarSped(admin, doc, versao.versao, bytes, versao.nome_original);
     }
     if (ext === "ofx" || (ext === "txt" && ehOfx(new TextDecoder("latin1").decode(bytes.slice(0, 2000))))) return await processarOfx(admin, doc, bytes);
-    if (["csv", "xlsx"].includes(ext) && doc.categoria_codigo === "relatorio_maquininha") {
-      return await processarRelatorioMaquininha(admin, doc, versao.versao, bytes, versao.nome_original);
+    if (["csv", "xlsx", "pdf"].includes(ext) && doc.categoria_codigo === "relatorio_maquininha") {
+      return await processarRelatorioMaquininha(admin, doc, versao.versao, bytes, versao.nome_original, ext);
     }
     if (["csv", "xlsx"].includes(ext) && ["extrato_bancario", "extrato_cartao"].includes(doc.categoria_codigo)) {
       return await processarPlanilha(admin, doc, bytes, versao.nome_original);
@@ -424,9 +424,29 @@ async function processarPlanilha(admin: ClienteAdmin, doc: Documento, bytes: Uin
 }
 
 /** Relatório de vendas da maquininha: o módulo Maquininhas confere as taxas com o contrato. */
-async function processarRelatorioMaquininha(admin: ClienteAdmin, doc: Documento, versao: number, bytes: Uint8Array, nome: string) {
+async function processarRelatorioMaquininha(admin: ClienteAdmin, doc: Documento, versao: number, bytes: Uint8Array, nome: string, ext: string) {
   const { registrarRelatorio } = await import("@/lib/maquininhas/importar");
-  const r = await registrarRelatorio(admin, doc, versao, bytes, nome);
+  let r: Awaited<ReturnType<typeof registrarRelatorio>>;
+  try {
+    r = await registrarRelatorio(admin, doc, versao, bytes, nome);
+  } catch (e) {
+    const { PdfNaoReconhecido } = await import("@/lib/maquininhas/pdf");
+    if (!(e instanceof PdfNaoReconhecido)) throw e;
+    // PDF num formato que o auditor não lê: aparece em Maquininhas com a orientação, e o PDF segue a leitura normal
+    await admin.from("maquininha_importacoes").upsert(
+      {
+        empresa_id: doc.empresa_id,
+        documento_id: doc.id,
+        versao,
+        nome_arquivo: nome.slice(0, 300),
+        situacao: "erro",
+        erro: e.message,
+        criado_por: doc.enviado_por ?? null,
+      },
+      { onConflict: "documento_id,versao" },
+    );
+    return await processarImagemOuPdf(admin, doc, bytes, ext);
+  }
   await admin
     .from("documentos")
     .update({

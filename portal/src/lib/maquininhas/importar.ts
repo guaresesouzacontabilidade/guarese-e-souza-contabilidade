@@ -5,11 +5,13 @@ import { Decimal } from "@/lib/dinheiro";
 import { lerArquivoPlanilha } from "@/lib/extratos/planilha";
 import { amostraDoRelatorio, assinaturaCabecalho, detectarCabecalho, lerVendas, localizarCabecalho, type MapeamentoMaquininha } from "./leitura";
 import type { TipoAdquirente } from "./rotulos";
+import { lerRelatorioPdf } from "./pdf";
 
 /**
  * Relatórios de vendas das maquininhas.
  *  - registrarRelatorio: chamado pelo processador de documentos quando chega um
- *    CSV/Excel da categoria "Relatórios de maquininhas". Guarda o cabeçalho e
+ *    CSV/Excel (ou PDF num formato conhecido, como a "Lista de Vendas" da
+ *    Cielo) da categoria "Relatórios de maquininhas". Guarda o cabeçalho e
  *    algumas linhas de exemplo; se o formato já é conhecido, a importação entra
  *    na fila; se não, fica aguardando a conferência das colunas.
  *  - importarMaquininha (tarefa "importar_maquininha"): lê todas as vendas,
@@ -19,6 +21,12 @@ import type { TipoAdquirente } from "./rotulos";
 
 const LOTE = 1000;
 
+/** Linhas do relatório: planilha (CSV/Excel) ou PDF num formato conhecido. */
+export async function lerArquivoRelatorio(bytes: Uint8Array, nome: string): Promise<string[][]> {
+  if (nome.toLowerCase().endsWith(".pdf")) return (await lerRelatorioPdf(bytes)).linhas;
+  return lerArquivoPlanilha(bytes, nome);
+}
+
 export async function registrarRelatorio(
   admin: ClienteAdmin,
   doc: { id: string },
@@ -26,7 +34,7 @@ export async function registrarRelatorio(
   bytes: Uint8Array,
   nome: string,
 ): Promise<{ importacao_id: string; situacao: string; linhas: number }> {
-  const linhas = await lerArquivoPlanilha(bytes, nome);
+  const linhas = await lerArquivoRelatorio(bytes, nome);
   let linhaCabecalho = detectarCabecalho(linhas);
   // Cabeçalho com nomes que o portal não reconhece: a primeira linha com várias colunas preenchidas
   // (quem conferir as colunas diz o que é cada uma)
@@ -110,7 +118,7 @@ async function importar(admin: ClienteAdmin, imp: Importacao & { mapeamento: Map
 
   let linhas: string[][];
   try {
-    linhas = await lerArquivoPlanilha(new Uint8Array(await arquivo.arrayBuffer()), versao.nome_original);
+    linhas = await lerArquivoRelatorio(new Uint8Array(await arquivo.arrayBuffer()), versao.nome_original);
   } catch (e) {
     return falhar(admin, imp.id, e instanceof Error ? e.message : String(e));
   }
@@ -137,14 +145,16 @@ async function importar(admin: ClienteAdmin, imp: Importacao & { mapeamento: Map
   const aprovadas = lido.vendas.filter((v) => v.situacao === "aprovada");
   const datas = lido.vendas.map((v) => v.data_venda).sort();
   const soma = (campo: "valor_bruto" | "valor_taxa") => aprovadas.reduce((s, v) => s.plus(v[campo]), new Decimal(0)).toFixed(2);
+  // Relatórios resumidos trazem várias vendas numa linha
+  const contar = (lista: typeof lido.vendas) => lista.reduce((s, v) => s + v.quantidade, 0);
   const { data: conclusao, error } = await admin.rpc("maquininha_concluir_importacao", {
     p_importacao_id: imp.id,
     p_resumo: {
       periodo_inicio: datas[0],
       periodo_fim: datas[datas.length - 1],
-      vendas: aprovadas.length,
+      vendas: contar(aprovadas),
       duplicadas: atualizadas,
-      canceladas: lido.vendas.length - aprovadas.length,
+      canceladas: contar(lido.vendas) - contar(aprovadas),
       invalidas: lido.invalidas.length,
       total_bruto: soma("valor_bruto"),
       total_taxas: soma("valor_taxa"),
