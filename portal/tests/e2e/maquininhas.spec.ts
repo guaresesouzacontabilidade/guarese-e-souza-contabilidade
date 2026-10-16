@@ -122,9 +122,13 @@ test("relatório no formato conhecido entra sozinho e aponta a taxa acima do con
 async function pdfListaCielo(linhas: string[]): Promise<Buffer> {
   const pm = pdfmake as unknown as {
     setFonts(f: Record<string, Record<string, string>>): void;
+    setUrlAccessPolicy(fn: (url: string) => boolean): void;
+    setLocalAccessPolicy(fn: (caminho: string) => boolean): void;
     createPdf(d: unknown): { getBuffer(): Promise<Buffer> };
   };
   const pasta = join(process.cwd(), "node_modules", "pdfmake", "fonts", "Roboto");
+  pm.setUrlAccessPolicy(() => false);
+  pm.setLocalAccessPolicy((caminho) => caminho.startsWith(pasta));
   const fonte = join(pasta, "Roboto-Regular.ttf");
   pm.setFonts({ Roboto: { normal: fonte, bold: fonte, italics: fonte, bolditalics: fonte } });
   return pm.createPdf({ content: linhas.map((text) => ({ text })) }).getBuffer();
