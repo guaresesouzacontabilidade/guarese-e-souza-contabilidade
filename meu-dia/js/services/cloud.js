@@ -1,6 +1,7 @@
 // Conta e sincronização (Supabase). O cliente só é carregado quando a nuvem está configurada.
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, PUBLIC_URL } from '../config.js';
 import * as store from '../data/store.js';
+import { isNative } from './native.js';
 
 const TABLE = 'meudia_records';
 
@@ -223,8 +224,9 @@ export function unsyncedCount() {
   return Object.keys(store.getState().meta.dirty || {}).length;
 }
 
+// No app nativo o endereço é interno (https://localhost), então os e-mails apontam para o site.
 function appUrl() {
-  return `${location.origin}${location.pathname}`;
+  return isNative() ? PUBLIC_URL : `${location.origin}${location.pathname}`;
 }
 
 // ---------- Sincronização ----------

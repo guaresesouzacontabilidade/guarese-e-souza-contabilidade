@@ -6,6 +6,10 @@ import path from 'node:path';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.PORT || 4173);
+// Nos testes o app fica sem nuvem: nada sai para a internet e cada teste começa do zero.
+const NO_CLOUD = process.env.MEUDIA_NO_CLOUD
+  ? "export const SUPABASE_URL = '';\nexport const SUPABASE_ANON_KEY = '';\nexport const PUBLIC_URL = '';\n"
+  : null;
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -22,6 +26,11 @@ createServer(async (req, res) => {
   try {
     let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (p.endsWith('/')) p += 'index.html';
+    if (NO_CLOUD && p === '/js/config.js') {
+      res.writeHead(200, { 'Content-Type': TYPES['.js'], 'Cache-Control': 'no-cache' });
+      res.end(NO_CLOUD);
+      return;
+    }
     const file = path.join(root, path.normalize(p));
     if (!file.startsWith(root)) throw new Error('fora da pasta');
     const info = await stat(file);
