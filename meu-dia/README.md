@@ -27,9 +27,10 @@ tema claro/escuro e salvamento automático.
 - **Notificações:** só aparecem com autorização. No **app nativo (Android)** tocam no horário mesmo com o app
   fechado. Na versão web, chegam enquanto o app está aberto ou em segundo plano (com o app totalmente fechado,
   o aviso aparece ao abrir); no iPhone, a versão web precisa estar adicionada à Tela de Início.
-- **Conta e sincronização:** o código está pronto (cadastro, login, recuperação de senha, sincronização,
-  exclusão de conta), mas só aparece ativo depois de configurar o Supabase (veja abaixo). Até lá, o app avisa
-  que os dados ficam salvos neste aparelho.
+- **Conta e sincronização:** ativas (cadastro, login, recuperação de senha, sincronização entre aparelhos,
+  exclusão de conta), ligadas ao projeto Supabase do Meu Dia. No plano gratuito do Supabase, o e-mail de
+  confirmação só chega para quem é membro da organização do projeto, e o projeto “dorme” depois de cerca de uma
+  semana sem uso (dá para reativar no painel; os dados ficam guardados no aparelho do mesmo jeito).
 - Não se conecta a bancos e não movimenta dinheiro.
 - **Previsão do fim do mês:** usa só o que está registrado (lançamentos e contas). Gastos do dia a dia que
   ainda não foram anotados não entram na conta, e o app avisa isso.
@@ -66,12 +67,16 @@ Qualquer hospedagem estática com HTTPS serve (Netlify, Vercel, Cloudflare Pages
 4. Em **Authentication → Providers → Email**, mantenha a confirmação de e-mail ligada e, se quiser, traduza os
    modelos de e-mail para português em **Email Templates**.
 5. Em **Project Settings → API**, copie a *Project URL* e a chave *anon/publishable* para `js/config.js`.
-   Essa chave é pública por natureza; a proteção vem do RLS.
+   Essa chave é pública por natureza; a proteção vem do RLS. Em `PUBLIC_URL`, coloque o endereço publicado:
+   os links dos e-mails pedidos pelo app Android abrem nele.
 6. Rode `npm run precache` e publique.
 
 Como funciona: os dados ficam sempre no aparelho (abre e funciona offline) e, com a conta conectada, cada mudança é
 enviada para a nuvem e baixada nos outros aparelhos. Se o mesmo item for alterado em dois lugares, vale a alteração
 mais recente. Ao entrar pela primeira vez, o app pergunta se deve juntar os dados que já estavam no aparelho.
+
+Nos testes automáticos o app roda sem nuvem (o servidor de testes entrega um `config.js` vazio) e a
+sincronização entre dois aparelhos é testada com uma imitação do Supabase (`tests/e2e/sync.spec.mjs`).
 
 ## App nativo (Android e iPhone)
 

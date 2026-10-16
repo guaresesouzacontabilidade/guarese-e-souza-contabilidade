@@ -22,7 +22,7 @@ export default defineConfig({
   ],
   webServer: {
     command: `node scripts/serve.mjs`,
-    env: { PORT: String(PORT) },
+    env: { PORT: String(PORT), MEUDIA_NO_CLOUD: '1' },
     url: `http://localhost:${PORT}/`,
     reuseExistingServer: true,
   },

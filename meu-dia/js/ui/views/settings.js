@@ -22,7 +22,7 @@ import { vibrationSupported } from '../../services/feedback.js';
 import { plural } from '../../core/text.js';
 import { openCategoryLimits } from '../forms/limits.js';
 
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.4.0';
 
 function BudgetSheet({ onClose }) {
   const [value, setValue] = useState(store.getState().settings.budget || 0);

@@ -1,7 +1,7 @@
 // Service worker do Meu Dia: abre sem internet e atualiza com segurança.
 // A lista ASSETS e a VERSION são geradas por `npm run precache` — não edite à mão.
 
-const VERSION = '43685252b14e';
+const VERSION = '7babb61fcdcc';
 const ASSETS = [
   './',
   './assets/fonts/manrope.woff2',
