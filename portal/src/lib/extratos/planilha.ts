@@ -64,11 +64,19 @@ export async function lerArquivoPlanilha(bytes: Uint8Array, nome: string): Promi
  * No padrão brasileiro o separador é ";" e a vírgula é a casa decimal: a
  * detecção automática poderia escolher a vírgula ("154,85" vira duas colunas).
  * Se ao menos metade das primeiras linhas tem ";" (ou tabulação), usa esse.
+ * Relatórios com muitas linhas de título e rodapé (a "Lista de Vendas" da
+ * Cielo em CSV, por exemplo) também ficam com ";" quando há mais linhas
+ * divididas por ";" do que linhas com vírgula fora de números.
  */
 export function detectarDelimitador(texto: string): string {
   const linhas = texto.split(/\r?\n/).filter((l) => l.trim()).slice(0, 30);
   const minimo = Math.max(1, Math.ceil(linhas.length / 2));
   for (const d of [";", "\t"]) if (linhas.filter((l) => l.includes(d)).length >= minimo) return d;
+  const virgulaSeparando = linhas.filter((l) => l.replace(/\d,\d/g, "").includes(",")).length;
+  for (const d of [";", "\t"]) {
+    const divididas = linhas.filter((l) => l.split(d).length >= 3).length;
+    if (divididas >= 3 && divididas > virgulaSeparando) return d;
+  }
   return "";
 }
 

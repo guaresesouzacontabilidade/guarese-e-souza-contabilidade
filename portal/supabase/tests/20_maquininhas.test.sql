@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(43);
+select plan(46);
 
 \ir 00_setup.sql.inc
 
@@ -180,6 +180,19 @@ select set_config('request.jwt.claims', '', true);
 select is(public.maquininha_registrar_relatorio(current_setting('testes.doc2')::uuid, 2, 'Vendas_cielo.pdf',
   'data da venda|forma de pagamento|quantidade de vendas|valor bruto|valor taxa tarifa|valor liquido|origem pdf lista de vendas cielo',
   '[]'::jsonb, '[]'::jsonb, 4) ->> 'situacao', 'na_fila', 'a Lista de Vendas da Cielo em PDF entra sozinha em qualquer empresa');
+
+-- CSV da Cielo lido errado antes (uma coluna só, colunas conferidas todas na primeira): a releitura usa o formato novo
+select is(public.maquininha_registrar_relatorio(current_setting('testes.doc2')::uuid, 3, 'Vendas_cielo.csv',
+  'formas de pagamento quantidade de vendas valor bruto taxa tarifa valor liquido', '[]'::jsonb, '[]'::jsonb, 20) ->> 'situacao',
+  'aguardando_mapeamento', 'cabeçalho lido errado fica para conferir');
+update public.maquininha_importacoes set mapeamento = '{"linhaCabecalho":0,"data":0,"bruto":0,"liquido":0}'::jsonb, situacao = 'erro', erro = 'Nenhuma venda reconhecida'
+ where documento_id = current_setting('testes.doc2')::uuid and versao = 3;
+select is(public.maquininha_registrar_relatorio(current_setting('testes.doc2')::uuid, 3, 'Vendas_cielo.csv',
+  'data da venda|forma de pagamento|quantidade de vendas|valor bruto|valor taxa tarifa|valor liquido', '[]'::jsonb, '[]'::jsonb, 20) ->> 'situacao',
+  'na_fila', 'a Lista de Vendas da Cielo em CSV entra sozinha');
+select is((select (mapeamento ->> 'bruto') || '/' || coalesce(erro, 'sem erro') from public.maquininha_importacoes
+            where documento_id = current_setting('testes.doc2')::uuid and versao = 3),
+  '3/sem erro', 'na releitura com outro cabeçalho, as colunas antigas dão lugar às do formato novo');
 
 select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
 set local role authenticated;

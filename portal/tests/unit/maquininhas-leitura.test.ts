@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { detectarDelimitador } from "@/lib/extratos/planilha";
+import { readFileSync } from "node:fs";
+import { detectarDelimitador, lerArquivoPlanilha } from "@/lib/extratos/planilha";
 import {
   assinaturaCabecalho,
   detectarCabecalho,
@@ -34,6 +35,35 @@ describe("cabeçalho e colunas", () => {
     expect(detectarDelimitador("Relatório de vendas\r\nData;Valor bruto;Valor líquido\r\n01/09/2026;154,85;150,22\r\n02/09/2026;10,00;9,70")).toBe(";");
     expect(detectarDelimitador("Data\tValor\n01/09/2026\t154,85")).toBe("\t");
     expect(detectarDelimitador("Data,Valor\n2026-09-01,154.85")).toBe("");
+  });
+
+  it("CSV com muitas linhas de título e rodapé (Lista de Vendas da Cielo): continua ';'", async () => {
+    const titulo = ["Esse relatório não deve ser utilizado como documento fiscal.", "Lista de Vendas", "Totalizador", "Filtros:", "Data da venda: 01/10/2026 à 15/10/2026", "Estabelecimento: Todos", "Visualizar por: Forma de pagamento", "Status: Aprovada"];
+    const rodape = ["Ouvidoria", "0800 000 0000 (todas as localidades)", "Atendimento de segunda a sexta, das 8h30 às 17h30.", "Central de Relacionamento", "Usuário: FULANO", "Tipo de visualização: Individual"];
+    const csv = [
+      ...titulo,
+      "Formas de pagamento;Quantidade de vendas;Valor bruto;Taxa/tarifa;Valor líquido",
+      "2;5;1100,00;-20,00;1080,00",
+      "Data da venda;Forma de pagamento;Quantidade de vendas;Valor bruto;Valor Taxa/Tarifa;Valor líquido",
+      "06/10/2026;Crédito à vista;1;300,00;-9,66;290,34",
+      "10/10/2026;Débito pré-pago;4;800,00;-6,40;793,60",
+      ...rodape,
+    ].join("\r\n");
+    expect(detectarDelimitador(csv)).toBe(";");
+    // O cabeçalho certo é achado (não o do totalizador) e o formato já vem cadastrado
+    const linhas = await lerArquivoPlanilha(new TextEncoder().encode(csv), "Vendas_cielo.csv");
+    const cab = detectarCabecalho(linhas);
+    expect(linhas[cab][0]).toBe("Data da venda");
+    const migracao = readFileSync("supabase/migrations/20261017005500_maquininhas_csv_cielo.sql", "utf8");
+    expect(migracao).toContain(`'${assinaturaCabecalho(linhas[cab])}'`);
+    const { vendas, invalidas } = lerVendas(linhas, sugerirMapeamento(linhas[cab], cab), "cartao");
+    expect(invalidas).toEqual([]);
+    expect(vendas.map((v) => [v.modalidade, v.quantidade, v.valor_bruto, v.valor_taxa])).toEqual([
+      ["credito_vista", 1, "300.00", "9.66"],
+      ["debito", 4, "800.00", "6.40"],
+    ]);
+    // Planilha com vírgula como separador e alguns ";" no texto continua com a detecção automática
+    expect(detectarDelimitador("Data,Descrição,Valor\n2026-09-01,Pagamento; parcela 1,154.85\n2026-09-02,Outro,10.00\n2026-09-03,Mais um,1.00")).toBe("");
   });
 
   it("acha o cabeçalho depois das linhas de título", () => {
