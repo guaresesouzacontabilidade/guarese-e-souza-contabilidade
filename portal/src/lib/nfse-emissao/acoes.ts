@@ -53,6 +53,23 @@ export async function buscarTomador(empresaId: string, cnpj: string): Promise<Re
   }
 }
 
+/** Busca na Receita as atividades (CNAE principal e secundários) da empresa e guarda com o cadastro. */
+export async function buscarAtividades(empresaId: string): Promise<ResultadoAcao> {
+  const ctx = await contexto(empresaId, "nfse.configurar");
+  if (!ctx) return falha("Somente a equipe do escritório busca as atividades da empresa.");
+  const { data: emp } = await ctx.supabase.from("empresas").select("documento, tipo_pessoa").eq("id", empresaId).maybeSingle();
+  if (!emp || emp.tipo_pessoa !== "PJ") return falha("A busca das atividades é para empresas (CNPJ).");
+  try {
+    const r = await consultarCnpjReceita(emp.documento);
+    const { error } = await ctx.supabase.from("empresas").update({ dados_receita: r as never, dados_receita_em: r.consultadoEm }).eq("id", empresaId);
+    if (error) return falha(mensagemErro(error));
+    const n = (r.cnaePrincipal ? 1 : 0) + r.cnaesSecundarios.length;
+    return sucesso(n ? `${n} atividade(s) encontrada(s) na Receita.` : "A Receita não informou atividades para este CNPJ.");
+  } catch (e) {
+    return falha(e instanceof ErroConsultaCnpj ? e.message : "Não foi possível consultar a Receita agora. Tente de novo em alguns minutos.");
+  }
+}
+
 /** Pede (e emite na hora) a nota de serviço. */
 export async function pedirNota(empresaId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao<{ id?: string; repetida?: boolean }>> {
   const ctx = await contexto(empresaId, "nfse.emitir");
@@ -230,8 +247,10 @@ export async function salvarServico(empresaId: string, _anterior: ResultadoAcao,
   const nacional = somenteDigitos(texto(fd, "codigo_tributacao_nacional"));
   const municipal = somenteDigitos(texto(fd, "codigo_tributacao_municipal"));
   const nbs = somenteDigitos(texto(fd, "codigo_nbs"));
+  const cnae = texto(fd, "cnae");
   if (nome.length < 2) erros.nome = ["Dê um nome ao serviço."];
-  if (nacional.length !== 6) erros.codigo_tributacao_nacional = ["Código com 6 números (item, subitem e desdobro)."];
+  if (nacional.length !== 6) erros.codigo_tributacao_nacional = ["Escolha o serviço na lista nacional."];
+  if (cnae && !/^\d{4}-\d\/\d{2}$/.test(cnae)) erros.cnae = ["Atividade inválida."];
   if (municipal && (municipal.length !== 3 || municipal === "000")) erros.codigo_tributacao_municipal = ["Código com 3 números (diferente de 000)."];
   if (nbs && nbs.length !== 9) erros.codigo_nbs = ["Código NBS com 9 números."];
   if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
@@ -245,6 +264,7 @@ export async function salvarServico(empresaId: string, _anterior: ResultadoAcao,
       codigo_nbs: nbs || null,
       descricao_padrao: texto(fd, "descricao_padrao") || null,
       ativo: fd.get("ativo") !== "off",
+      cnae: cnae || null,
     } as never,
   });
   if (error) return falha(mensagemErro(error));

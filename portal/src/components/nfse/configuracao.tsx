@@ -1,15 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Pencil, Plus } from "lucide-react";
-import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
+import { Check, Pencil, Plus, Search } from "lucide-react";
+import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Alerta } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { salvarConfiguracao, salvarServico } from "@/lib/nfse-emissao/acoes";
+import { buscarAtividades, salvarConfiguracao, salvarServico } from "@/lib/nfse-emissao/acoes";
+import { buscarServicos, formatarCodigoServico, indexarServicos, type Cnae, type ServicoNacional } from "@/lib/nfse-emissao/lista-servicos";
 import { AMBIENTE_NFSE, REGIME_APURACAO_SN, REGIME_ESPECIAL } from "@/lib/nfse-emissao/rotulos";
 
 export interface ConfigNfse {
@@ -39,6 +40,7 @@ export interface ServicoNfse {
   codigo_nbs: string | null;
   descricao_padrao: string | null;
   ativo: boolean;
+  cnae: string | null;
 }
 
 const num = (v: number | null | undefined) => (v === null || v === undefined ? "" : String(v).replace(".", ","));
@@ -188,7 +190,100 @@ export function FormConfiguracao({ empresaId, cfg, regime, municipioNome }: { em
   );
 }
 
-function FormServico({ empresaId, servico, aoSalvar }: { empresaId: string; servico?: ServicoNfse; aoSalvar: () => void }) {
+/** Atividade (CNAE) da empresa com os códigos da lista nacional sugeridos para ela. */
+export interface AtividadeEmpresa extends Cnae {
+  comercio: boolean;
+  sugestoes: string[];
+}
+
+interface InicialServico {
+  nome: string;
+  codigo: string;
+  cnae: string | null;
+}
+
+const curto = (t: string, max = 110) => (t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t);
+
+/** Escolha do serviço na lista nacional: busca por palavras ou pelo código. */
+function SeletorServicoNacional({ lista, inicial, erro }: { lista: ServicoNacional[]; inicial: string; erro?: string[] }) {
+  const indice = React.useMemo(() => indexarServicos(lista), [lista]);
+  const porCodigo = React.useMemo(() => new Map(lista.map((s) => [s.codigo, s])), [lista]);
+  const [codigo, setCodigo] = React.useState(inicial);
+  const [busca, setBusca] = React.useState("");
+  const escolhido = porCodigo.get(codigo);
+  const resultados = busca.trim().length >= 2 ? buscarServicos(indice, busca, 8) : [];
+  const escolher = (c: string) => {
+    setCodigo(c);
+    setBusca("");
+  };
+  return (
+    <Campo
+      rotulo="Serviço da lista nacional"
+      htmlFor="sv-nacional"
+      obrigatorio
+      erro={erro}
+      ajuda="Digite o que a empresa faz (ex.: conserto, contabilidade, hospedagem) ou o código (ex.: 14.01.01)."
+    >
+      <input type="hidden" name="codigo_tributacao_nacional" value={escolhido ? codigo : ""} />
+      {escolhido ? (
+        <div className="flex items-start justify-between gap-3 rounded-md border border-border bg-muted/40 p-3 text-sm">
+          <p className="min-w-0">
+            <span className="numero font-medium">{formatarCodigoServico(escolhido.codigo)}</span> — {escolhido.descricao}
+          </p>
+          <Button type="button" variante="contorno" tamanho="sm" onClick={() => escolher("")}>
+            Trocar
+          </Button>
+        </div>
+      ) : (
+        <>
+          <Input
+            id="sv-nacional"
+            value={busca}
+            autoComplete="off"
+            placeholder="Buscar serviço..."
+            onChange={(ev) => {
+              const v = ev.target.value;
+              const d = v.replace(/\D/g, "");
+              // Código completo digitado: já escolhe
+              if (d.length === 6 && /^[\d.\s-]+$/.test(v.trim()) && porCodigo.has(d)) escolher(d);
+              else setBusca(v);
+            }}
+          />
+          {resultados.length ? (
+            <ul className="mt-1 max-h-72 overflow-auto rounded-md border border-border" aria-label="Serviços encontrados">
+              {resultados.map((s) => (
+                <li key={s.codigo} className="border-b border-border last:border-b-0">
+                  <button type="button" className="w-full px-3 py-2 text-left text-sm hover:bg-muted" onClick={() => escolher(s.codigo)}>
+                    <span className="numero font-medium">{formatarCodigoServico(s.codigo)}</span> — {curto(s.descricao, 160)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : busca.trim().length >= 2 ? (
+            <p className="mt-1 text-xs text-muted-foreground">Nada encontrado. Tente outra palavra ou o código.</p>
+          ) : null}
+        </>
+      )}
+    </Campo>
+  );
+}
+
+function FormServico({
+  empresaId,
+  servico,
+  inicial,
+  lista,
+  atividades,
+  aoSalvar,
+}: {
+  empresaId: string;
+  servico?: ServicoNfse;
+  inicial?: InicialServico;
+  lista: ServicoNacional[];
+  atividades: AtividadeEmpresa[];
+  aoSalvar: () => void;
+}) {
+  const cnae = servico?.cnae ?? inicial?.cnae ?? "";
   return (
     <FormularioAcao acao={salvarServico.bind(null, empresaId)} aoSucesso={aoSalvar} className="space-y-4">
       {({ estado, pendente }) => {
@@ -196,27 +291,31 @@ function FormServico({ empresaId, servico, aoSalvar }: { empresaId: string; serv
         return (
           <>
             {servico ? <input type="hidden" name="id" value={servico.id} /> : null}
-            <Campo rotulo="Nome do serviço" htmlFor="sv-nome" obrigatorio erro={e.nome} ajuda="Como o cliente vai reconhecer na lista (ex.: Consultoria, Manutenção).">
-              <Input id="sv-nome" name="nome" maxLength={120} defaultValue={servico?.nome ?? ""} />
+            <SeletorServicoNacional lista={lista} inicial={servico?.codigo_tributacao_nacional ?? inicial?.codigo ?? ""} erro={e.codigo_tributacao_nacional} />
+            <Campo rotulo="Nome do serviço" htmlFor="sv-nome" obrigatorio erro={e.nome} ajuda="Como o cliente vai reconhecer na hora de emitir (ex.: Revisão de veículos, Consultoria).">
+              <Input id="sv-nome" name="nome" maxLength={120} defaultValue={servico?.nome ?? inicial?.nome ?? ""} />
             </Campo>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Campo
-                rotulo="Código de tributação nacional"
-                htmlFor="sv-nacional"
-                obrigatorio
-                erro={e.codigo_tributacao_nacional}
-                ajuda="6 números: item, subitem e desdobro da lista nacional (ex.: 170101)."
-                className="sm:col-span-2"
-              >
-                <Input id="sv-nacional" name="codigo_tributacao_nacional" inputMode="numeric" maxLength={8} defaultValue={servico?.codigo_tributacao_nacional ?? ""} />
+            {atividades.length || cnae ? (
+              <Campo rotulo="Atividade da empresa (CNAE)" htmlFor="sv-cnae" erro={e.cnae} ajuda="Só para organizar: a nota não leva o CNAE.">
+                <Select id="sv-cnae" name="cnae" defaultValue={cnae}>
+                  <option value="">—</option>
+                  {cnae && !atividades.some((a) => a.codigo === cnae) ? <option value={cnae}>{cnae}</option> : null}
+                  {atividades.map((a) => (
+                    <option key={a.codigo} value={a.codigo}>
+                      {a.codigo} — {curto(a.descricao ?? "", 70)}
+                    </option>
+                  ))}
+                </Select>
               </Campo>
-              <Campo rotulo="Código municipal" htmlFor="sv-municipal" erro={e.codigo_tributacao_municipal} ajuda="3 números, se o município pede.">
+            ) : null}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo rotulo="Código municipal" htmlFor="sv-municipal" erro={e.codigo_tributacao_municipal} ajuda="3 números, só se o município pede.">
                 <Input id="sv-municipal" name="codigo_tributacao_municipal" inputMode="numeric" maxLength={3} defaultValue={servico?.codigo_tributacao_municipal ?? ""} />
               </Campo>
+              <Campo rotulo="Código NBS" htmlFor="sv-nbs" erro={e.codigo_nbs} ajuda="Opcional, 9 números.">
+                <Input id="sv-nbs" name="codigo_nbs" inputMode="numeric" maxLength={12} defaultValue={servico?.codigo_nbs ?? ""} />
+              </Campo>
             </div>
-            <Campo rotulo="Código NBS" htmlFor="sv-nbs" erro={e.codigo_nbs} ajuda="Opcional, 9 números.">
-              <Input id="sv-nbs" name="codigo_nbs" inputMode="numeric" maxLength={12} defaultValue={servico?.codigo_nbs ?? ""} />
-            </Campo>
             <Campo rotulo="Descrição padrão" htmlFor="sv-descricao" ajuda="Sugerida no pedido; o cliente pode ajustar.">
               <Textarea id="sv-descricao" name="descricao_padrao" rows={3} maxLength={1000} defaultValue={servico?.descricao_padrao ?? ""} />
             </Campo>
@@ -236,12 +335,126 @@ function FormServico({ empresaId, servico, aoSalvar }: { empresaId: string; serv
   );
 }
 
-export function ServicosNfse({ empresaId, servicos }: { empresaId: string; servicos: ServicoNfse[] }) {
-  const [editando, setEditando] = React.useState<ServicoNfse | "novo" | null>(null);
+/** Atividades (CNAE) da empresa com os serviços da lista nacional sugeridos para cada uma. */
+function AtividadesEmpresa({
+  empresaId,
+  atividades,
+  completas,
+  lista,
+  servicos,
+  adicionar,
+}: {
+  empresaId: string;
+  atividades: AtividadeEmpresa[];
+  completas: boolean;
+  lista: ServicoNacional[];
+  servicos: ServicoNfse[];
+  adicionar: (inicial: InicialServico) => void;
+}) {
+  const porCodigo = new Map(lista.map((s) => [s.codigo, s]));
+  const buscar = (
+    <BotaoAcao variante="contorno" tamanho="sm" acao={buscarAtividades.bind(null, empresaId)}>
+      <Search /> Buscar as atividades na Receita
+    </BotaoAcao>
+  );
+  if (!atividades.length) {
+    return (
+      <div className="mb-4 rounded-lg border border-dashed border-border p-3 text-sm">
+        <p className="mb-2 text-muted-foreground">As atividades (CNAE) da empresa não estão no cadastro. Busque na Receita para o portal sugerir os serviços de cada uma.</p>
+        {buscar}
+      </div>
+    );
+  }
+  return (
+    <div className="mb-5">
+      <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium">Atividades da empresa (CNAE)</p>
+          <p className="text-xs text-muted-foreground">A nota leva o código do serviço da lista nacional, não o CNAE. As sugestões comparam as descrições: confira antes de adicionar.</p>
+        </div>
+        {completas ? null : buscar}
+      </div>
+      <ul className="divide-y divide-border rounded-lg border border-border">
+        {atividades.map((a) => (
+          <li key={a.codigo} className="p-3">
+            <p className="text-sm">
+              <span className="numero font-medium">{a.codigo}</span> {a.descricao ?? ""}
+              {a.principal ? (
+                <Badge variante="contorno" className="ml-1.5 align-middle">
+                  principal
+                </Badge>
+              ) : null}
+            </p>
+            {a.comercio ? (
+              <p className="mt-1 text-xs text-muted-foreground">Comércio: a venda de mercadoria sai na nota de produto (NF-e), não na nota de serviço.</p>
+            ) : a.sugestoes.length ? (
+              <ul className="mt-2 space-y-2">
+                {a.sugestoes.map((codigo) => {
+                  const s = porCodigo.get(codigo);
+                  if (!s) return null;
+                  const cadastrado = servicos.some((x) => x.codigo_tributacao_nacional === codigo);
+                  return (
+                    <li key={codigo} className="flex items-start justify-between gap-3 text-sm">
+                      <span className="min-w-0 text-muted-foreground">
+                        <span className="numero font-medium text-foreground">{formatarCodigoServico(codigo)}</span> — {curto(s.descricao)}
+                      </span>
+                      {cadastrado ? (
+                        <Badge variante="sucesso">
+                          <Check /> Cadastrado
+                        </Badge>
+                      ) : (
+                        <Button
+                          type="button"
+                          variante="contorno"
+                          tamanho="sm"
+                          aria-label={`Adicionar o serviço ${formatarCodigoServico(codigo)} da atividade ${a.codigo}`}
+                          onClick={() => adicionar({ nome: curto(a.descricao ?? s.descricao, 120), codigo, cnae: a.codigo })}
+                        >
+                          <Plus /> Adicionar
+                        </Button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">Nenhum serviço parecido na lista nacional. Se a empresa presta serviço nesta atividade, use “Novo serviço” e busque pelo nome.</p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function ServicosNfse({
+  empresaId,
+  servicos,
+  lista,
+  atividades,
+  atividadesCompletas,
+}: {
+  empresaId: string;
+  servicos: ServicoNfse[];
+  lista: ServicoNacional[];
+  atividades: AtividadeEmpresa[];
+  atividadesCompletas: boolean;
+}) {
+  const [editando, setEditando] = React.useState<{ servico?: ServicoNfse; inicial?: InicialServico } | null>(null);
+  const porCodigo = React.useMemo(() => new Map(lista.map((s) => [s.codigo, s])), [lista]);
   return (
     <>
-      <div className="mb-3 flex justify-end">
-        <Button variante="contorno" onClick={() => setEditando("novo")}>
+      <AtividadesEmpresa
+        empresaId={empresaId}
+        atividades={atividades}
+        completas={atividadesCompletas}
+        lista={lista}
+        servicos={servicos}
+        adicionar={(inicial) => setEditando({ inicial })}
+      />
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="text-sm font-medium">Serviços cadastrados</p>
+        <Button variante="contorno" onClick={() => setEditando({})}>
           <Plus /> Novo serviço
         </Button>
       </div>
@@ -261,13 +474,14 @@ export function ServicosNfse({ empresaId, servicos }: { empresaId: string; servi
             {servicos.map((s) => (
               <Tr key={s.id}>
                 <Td>{s.nome}</Td>
-                <Td className="numero">
-                  {s.codigo_tributacao_nacional}
+                <Td className="numero" title={porCodigo.get(s.codigo_tributacao_nacional)?.descricao}>
+                  {formatarCodigoServico(s.codigo_tributacao_nacional)}
                   {s.codigo_tributacao_municipal ? ` / ${s.codigo_tributacao_municipal}` : ""}
+                  {s.cnae ? <span className="block text-xs text-muted-foreground">CNAE {s.cnae}</span> : null}
                 </Td>
                 <Td className="hidden sm:table-cell">{s.ativo ? <Badge variante="sucesso">Ativo</Badge> : <Badge>Inativo</Badge>}</Td>
                 <Td>
-                  <Button variante="fantasma" tamanho="iconeSm" aria-label={`Editar o serviço ${s.nome}`} onClick={() => setEditando(s)}>
+                  <Button variante="fantasma" tamanho="iconeSm" aria-label={`Editar o serviço ${s.nome}`} onClick={() => setEditando({ servico: s })}>
                     <Pencil />
                   </Button>
                 </Td>
@@ -276,11 +490,20 @@ export function ServicosNfse({ empresaId, servicos }: { empresaId: string; servi
           </TBody>
         </Table>
       ) : (
-        <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado. Cadastre os serviços que a empresa presta, com o código de tributação nacional.</p>
+        <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado. Adicione pelas atividades acima ou use “Novo serviço” e busque pelo nome.</p>
       )}
       <Dialog open={editando !== null} onOpenChange={(v) => !v && setEditando(null)}>
-        <DialogContent titulo={editando && editando !== "novo" ? "Editar serviço" : "Novo serviço"} largura="lg">
-          {editando !== null ? <FormServico empresaId={empresaId} servico={editando === "novo" ? undefined : editando} aoSalvar={() => setEditando(null)} /> : null}
+        <DialogContent titulo={editando?.servico ? "Editar serviço" : "Novo serviço"} largura="lg">
+          {editando !== null ? (
+            <FormServico
+              empresaId={empresaId}
+              servico={editando.servico}
+              inicial={editando.inicial}
+              lista={lista}
+              atividades={atividades}
+              aoSalvar={() => setEditando(null)}
+            />
+          ) : null}
         </DialogContent>
       </Dialog>
     </>

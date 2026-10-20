@@ -2254,15 +2254,28 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"nfse_servicos": {
+                },"nfse_lista_servicos": {
                   Row: {
-                    "ativo": boolean,"codigo_nbs": string | null,"codigo_tributacao_municipal": string | null,"codigo_tributacao_nacional": string,"created_at": string,"descricao_padrao": string | null,"empresa_id": string,"id": string,"nome": string,"updated_at": string
+                    "codigo": string,"descricao": string,"descricao_item": string | null,"descricao_subitem": string | null,"desdobro": number,"item": number,"subitem": number
                   }
                   Insert: {
-                    "ativo"?: boolean,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional": string,"created_at"?: string,"descricao_padrao"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string
+                    "codigo": string,"descricao": string,"descricao_item"?: string | null,"descricao_subitem"?: string | null,"desdobro": number,"item": number,"subitem": number
                   }
                   Update: {
-                    "ativo"?: boolean,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional"?: string,"created_at"?: string,"descricao_padrao"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string
+                    "codigo"?: string,"descricao"?: string,"descricao_item"?: string | null,"descricao_subitem"?: string | null,"desdobro"?: number,"item"?: number,"subitem"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"nfse_servicos": {
+                  Row: {
+                    "ativo": boolean,"cnae": string | null,"codigo_nbs": string | null,"codigo_tributacao_municipal": string | null,"codigo_tributacao_nacional": string,"created_at": string,"descricao_padrao": string | null,"empresa_id": string,"id": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cnae"?: string | null,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional": string,"created_at"?: string,"descricao_padrao"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cnae"?: string | null,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional"?: string,"created_at"?: string,"descricao_padrao"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {

@@ -328,7 +328,9 @@ Em cada empresa → **Auditor fiscal → SPED Fiscal × XML** (e no quadro do au
 ### Emissão de notas de serviço (configurar e acompanhar)
 Para ligar a emissão de uma empresa (menu da empresa → **Emitir nota fiscal → Configurar emissão**):
 1. **Certificado digital A1** cadastrado (em Notas automáticas) — é ele que assina as notas.
-2. **Serviços** que a empresa presta, com o **código de tributação nacional** (6 números da lista nacional, ex.: 170101) e, se o município pede, o código municipal.
+2. **Serviços** que a empresa presta. Em **Atividades da empresa (CNAE)** aparecem o CNAE principal e os secundários da Receita, cada um com os serviços da **lista nacional** de descrição parecida: confira e clique em **Adicionar** (dá para mudar o nome para o cliente reconhecer, ex.: "Revisão de veículos"). Sem as atividades no cadastro, use **Buscar as atividades na Receita**. Também dá para usar **Novo serviço** e buscar pelo nome (ex.: "conserto", "contabilidade") ou pelo código (ex.: 14.01.01). Se o município pede, informe o código municipal.
+   - A nota nacional leva o **código do serviço** (lista da LC 116), não o CNAE. Não existe tabela oficial ligando um ao outro: as sugestões comparam as descrições e o escritório decide. Atividades de comércio não ganham sugestão (a venda de mercadoria é nota de produto, NF-e).
+   - Na hora de emitir, o cliente **só escolhe o serviço** da lista da empresa.
 3. **Configuração**: município emissor (código IBGE), inscrição municipal só se a empresa tem cadastro complementar no Emissor Nacional, série e numeração da DPS (use uma série que a empresa não usa em outro sistema), **tributos aproximados** (Simples: a alíquota efetiva do DAS; Presumido/Real: federais e ISS), retenção do ISS (se o cliente pode marcar) e envio ao tomador por e-mail.
 4. **Autorização do cliente**: registre como o cliente autorizou o portal a emitir com o certificado da empresa.
 5. Ligue a emissão **no ambiente de teste**, peça uma nota de teste (o PDF sai com "sem validade jurídica"), confira e só então passe para **produção**.

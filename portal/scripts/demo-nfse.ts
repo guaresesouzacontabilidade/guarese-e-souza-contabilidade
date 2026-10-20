@@ -9,7 +9,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function semearNfse(admin: SupabaseClient, oficinaId: string): Promise<boolean> {
   const { data: existente } = await admin.from("nfse_emissao_config").select("empresa_id").eq("empresa_id", oficinaId).maybeSingle();
-  if (existente) return false;
+  if (existente) {
+    // Demonstrações semeadas antes da lista nacional: funilaria é o 14.12.01 e cada serviço indica a atividade (CNAE)
+    await admin.from("nfse_servicos").update({ codigo_tributacao_nacional: "141201", cnae: "4520-0/02" }).eq("empresa_id", oficinaId).eq("nome", "Funilaria e pintura");
+    await admin.from("nfse_servicos").update({ cnae: "4520-0/01" }).eq("empresa_id", oficinaId).eq("nome", "Revisão e manutenção de veículos");
+    return false;
+  }
   const { error } = await admin.from("nfse_emissao_config").insert({
     empresa_id: oficinaId,
     ativa: false,
@@ -25,12 +30,14 @@ export async function semearNfse(admin: SupabaseClient, oficinaId: string): Prom
       empresa_id: oficinaId,
       nome: "Revisão e manutenção de veículos",
       codigo_tributacao_nacional: "140101",
+      cnae: "4520-0/01",
       descricao_padrao: "Revisão e manutenção do veículo (mão de obra).",
     },
     {
       empresa_id: oficinaId,
       nome: "Funilaria e pintura",
-      codigo_tributacao_nacional: "140501",
+      codigo_tributacao_nacional: "141201",
+      cnae: "4520-0/02",
       descricao_padrao: "Serviço de funilaria e pintura (mão de obra).",
     },
   ]);

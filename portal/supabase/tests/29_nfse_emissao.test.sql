@@ -31,7 +31,7 @@ select throws_like($$select public.nfse_configurar(current_setting('testes.empre
 select set_config('testes.servico', public.nfse_servico_salvar(current_setting('testes.empresa_a')::uuid, null,
   '{"nome": "Consultoria", "codigo_tributacao_nacional": "170101", "descricao_padrao": "Consultoria empresarial"}'::jsonb)::text, true);
 select throws_like($$select public.nfse_servico_salvar(current_setting('testes.empresa_a')::uuid, null,
-  '{"nome": "Errado", "codigo_tributacao_nacional": "17.01"}'::jsonb)$$, '%violates check constraint%', 'código de tributação com 6 dígitos');
+  '{"nome": "Errado", "codigo_tributacao_nacional": "17.01"}'::jsonb)$$, '%lista nacional de serviços%', 'código de tributação da lista nacional');
 reset role;
 
 insert into public.certificados_digitais (empresa_id, titular, documento, impressao_digital, valido_de, valido_ate, autorizacao, autorizacao_texto)

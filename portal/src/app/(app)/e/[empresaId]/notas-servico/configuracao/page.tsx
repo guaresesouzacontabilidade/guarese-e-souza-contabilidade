@@ -4,9 +4,11 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Alerta } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormConfiguracao, ServicosNfse, type ConfigNfse, type ServicoNfse } from "@/components/nfse/configuracao";
+import { FormConfiguracao, ServicosNfse, type AtividadeEmpresa, type ConfigNfse, type ServicoNfse } from "@/components/nfse/configuracao";
 import { formatarData } from "@/lib/formatos";
 import { certificadoValido } from "@/lib/nfse-emissao/rotulos";
+import { atividadeDeComercio, cnaesDaEmpresa, indexarServicos, sugerirServicos, type ServicoNacional } from "@/lib/nfse-emissao/lista-servicos";
+import { DadosReceitaSchema } from "@/lib/empresas/receita";
 
 export const metadata: Metadata = { title: "Configurar emissão de notas" };
 
@@ -16,11 +18,16 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
   if (!ctx.pode("nfse.configurar")) return <Alerta tom="alerta">Somente a equipe do escritório configura a emissão de notas.</Alerta>;
   const base = `/e/${empresaId}`;
 
-  const [{ data: cfg }, { data: servicos }, { data: emp }, { data: cert }] = await Promise.all([
+  const [{ data: cfg }, { data: servicos }, { data: emp }, { data: cert }, { data: lista }] = await Promise.all([
     ctx.supabase.from("nfse_emissao_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
-    ctx.supabase.from("nfse_servicos").select("id, nome, codigo_tributacao_nacional, codigo_tributacao_municipal, codigo_nbs, descricao_padrao, ativo").eq("empresa_id", empresaId).order("nome"),
-    ctx.supabase.from("empresas").select("regime_tributario, municipio_ibge, tipo_pessoa").eq("id", empresaId).maybeSingle(),
+    ctx.supabase
+      .from("nfse_servicos")
+      .select("id, nome, codigo_tributacao_nacional, codigo_tributacao_municipal, codigo_nbs, descricao_padrao, ativo, cnae")
+      .eq("empresa_id", empresaId)
+      .order("nome"),
+    ctx.supabase.from("empresas").select("regime_tributario, municipio_ibge, tipo_pessoa, cnae, atividade_principal, dados_receita").eq("id", empresaId).maybeSingle(),
     ctx.supabase.from("certificados_digitais").select("valido_ate").eq("empresa_id", empresaId).is("revogado_em", null).maybeSingle(),
+    ctx.supabase.from("nfse_lista_servicos").select("codigo, descricao, descricao_subitem, descricao_item").order("codigo"),
   ]);
   const codigo = cfg?.codigo_municipio ?? emp?.municipio_ibge ?? null;
   const { data: municipio } = codigo ? await ctx.supabase.from("municipios").select("nome, uf").eq("ibge", codigo).maybeSingle() : { data: null };
@@ -43,6 +50,16 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
     autorizacao_texto: cfg?.autorizacao_texto ?? null,
   };
   const certificadoOk = certificadoValido(cert?.valido_ate);
+
+  // Atividades (CNAE) da empresa e os serviços da lista nacional sugeridos para cada uma
+  const servicosNacionais = (lista ?? []) as ServicoNacional[];
+  const receita = emp?.dados_receita ? DadosReceitaSchema.safeParse(emp.dados_receita) : null;
+  const indice = indexarServicos(servicosNacionais);
+  const atividades: AtividadeEmpresa[] = cnaesDaEmpresa(receita?.success ? receita.data : null, emp?.cnae, emp?.atividade_principal).map((c) => ({
+    ...c,
+    comercio: atividadeDeComercio(c.codigo),
+    sugestoes: sugerirServicos(indice, c).map((s) => s.codigo),
+  }));
 
   return (
     <>
@@ -78,10 +95,16 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
         <Card>
           <CardHeader>
             <CardTitle>Serviços da empresa</CardTitle>
-            <CardDescription>O cliente escolhe um destes serviços no pedido; o código de tributação vai para a nota.</CardDescription>
+            <CardDescription>Na hora de emitir, o cliente só escolhe um destes serviços; o código da lista nacional vai para a nota.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ServicosNfse empresaId={empresaId} servicos={(servicos ?? []) as ServicoNfse[]} />
+            <ServicosNfse
+              empresaId={empresaId}
+              servicos={(servicos ?? []) as ServicoNfse[]}
+              lista={servicosNacionais}
+              atividades={atividades}
+              atividadesCompletas={Boolean(receita?.success) || emp?.tipo_pessoa !== "PJ"}
+            />
           </CardContent>
         </Card>
       </div>

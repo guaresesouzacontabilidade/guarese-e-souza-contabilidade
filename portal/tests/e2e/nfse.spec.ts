@@ -4,8 +4,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Emissão de NFS-e pelo portal (dados fictícios da demonstração, Oficina):
- *  - a equipe vê a emissão desligada (sem certificado), cadastra um serviço e
- *    não consegue ligar a emissão sem o certificado;
+ *  - a equipe vê a emissão desligada (sem certificado), vê as atividades
+ *    (CNAE) da empresa com o serviço sugerido, cadastra um serviço buscando
+ *    na lista nacional e não consegue ligar a emissão sem o certificado;
  *  - o empresário vê a emissão desconectada e não configura nada;
  *  - com a emissão ligada (certificado fictício gravado pelo teste), o
  *    empresário pede a nota pela tela; neste ambiente nenhuma consulta fiscal
@@ -75,11 +76,18 @@ test("equipe: emissão desligada sem certificado, cadastro de serviço e bloquei
   await page.waitForURL(/\/notas-servico\/configuracao/);
   await expect(page.getByText("Sem certificado digital válido")).toBeVisible();
   await expect(page.getByRole("cell", { name: "Revisão e manutenção de veículos", exact: true })).toBeVisible();
+  // Atividade principal da Oficina (CNAE 4520-0/01) com o serviço sugerido da lista nacional, já cadastrado
+  await expect(page.getByText("Atividades da empresa (CNAE)")).toBeVisible();
+  await expect(page.getByText("4520-0/01", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cadastrado", { exact: true })).toBeVisible();
 
+  // Novo serviço escolhido pela busca na lista nacional
   await page.getByRole("button", { name: "Novo serviço" }).click();
   const dialogo = page.getByRole("dialog");
+  await dialogo.locator("#sv-nacional").fill("assessoria consultoria");
+  await dialogo.getByRole("button", { name: /^17\.01\.01/ }).click();
+  await expect(dialogo.getByText(/Assessoria ou consultoria de qualquer natureza/)).toBeVisible();
   await dialogo.locator("#sv-nome").fill("Consultoria automotiva (E2E)");
-  await dialogo.locator("#sv-nacional").fill("17.01.01");
   await dialogo.getByRole("button", { name: "Cadastrar serviço" }).click();
   await expect(page.getByText("Serviço cadastrado.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("cell", { name: "Consultoria automotiva (E2E)", exact: true })).toBeVisible();
