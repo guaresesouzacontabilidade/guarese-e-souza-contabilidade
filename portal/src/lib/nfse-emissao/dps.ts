@@ -262,12 +262,8 @@ export function dpsAssinada(d: DadosDps, chaves: ChavesAssinatura): { id: string
 // Cancelamento (pedido de registro do evento 101101)
 // -----------------------------------------------------------------------------
 
-export const MOTIVOS_CANCELAMENTO = {
-  1: "Erro na emissão",
-  2: "Serviço não prestado",
-  9: "Outros",
-} as const;
-export type MotivoCancelamento = keyof typeof MOTIVOS_CANCELAMENTO;
+/** 1 = erro na emissão; 2 = serviço não prestado; 9 = outros */
+export type MotivoCancelamento = 1 | 2 | 9;
 
 export function pedidoCancelamentoAssinado(
   p: { ambiente: AmbienteNfse; chave: string; cnpj: string; quando: Date; motivo: MotivoCancelamento; justificativa: string },
