@@ -1,6 +1,8 @@
 import "server-only";
 import https from "node:https";
+import { rootCertificates } from "node:tls";
 import { gunzipSync } from "node:zlib";
+import { CERTIFICADOS_ICP_BRASIL } from "@/lib/fiscal/icp-brasil";
 
 /** Chave privada e certificados (PEM) da empresa, usados na conexão segura (TLS com certificado do cliente). */
 export interface Credencial {
@@ -25,14 +27,30 @@ export class ErroConexao extends Error {
 
 const LIMITE_BYTES = 30 * 1024 * 1024;
 
+/** Autoridades padrão do Node mais as da ICP-Brasil (servidores das SEFAZ com certificado ICP-Brasil, como a de MT). */
+let comIcpBrasil: string[] | null = null;
+function autoridadesComIcpBrasil() {
+  comIcpBrasil ??= [...rootCertificates, ...CERTIFICADOS_ICP_BRASIL.map((c) => c.pem)];
+  return comIcpBrasil;
+}
+
 /**
  * Requisição HTTPS com o certificado da empresa (exigido pela SEFAZ e pelo
  * Ambiente Nacional da NFS-e). A verificação do certificado do servidor é a
- * padrão do Node (nunca desligada); `ca` só é usado nos testes automáticos.
+ * padrão do Node (nunca desligada); com `icpBrasil`, as autoridades da
+ * ICP-Brasil se somam às padrão; `ca` só é usado nos testes automáticos.
  */
 export function requisitar(
   url: string,
-  opcoes: { metodo: "GET" | "POST"; credencial: Credencial; corpo?: string; cabecalhos?: Record<string, string>; tempoLimiteMs?: number; ca?: string[] },
+  opcoes: {
+    metodo: "GET" | "POST";
+    credencial: Credencial;
+    corpo?: string;
+    cabecalhos?: Record<string, string>;
+    tempoLimiteMs?: number;
+    ca?: string[];
+    icpBrasil?: boolean;
+  },
 ): Promise<RespostaHttp> {
   const destino = new URL(url);
   if (destino.protocol !== "https:") return Promise.reject(new ErroConexao("Endereço sem HTTPS.", "url"));
@@ -44,7 +62,7 @@ export function requisitar(
         method: opcoes.metodo,
         key: opcoes.credencial.chave,
         cert: opcoes.credencial.certificados.join("\n"),
-        ca: opcoes.ca,
+        ca: opcoes.ca ?? (opcoes.icpBrasil ? autoridadesComIcpBrasil() : undefined),
         minVersion: "TLSv1.2",
         timeout: opcoes.tempoLimiteMs ?? 30_000,
         headers: {
