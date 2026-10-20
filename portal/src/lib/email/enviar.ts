@@ -31,12 +31,25 @@ export function emailConfigurado() {
  * Envia e-mail pelo SMTP configurado. Quando o SMTP não está configurado,
  * NÃO simula o envio: retorna { enviado: false, motivo: "nao_configurado" }.
  */
-export async function enviarEmail(para: string, assunto: string, conteudo: DadosModeloEmail): Promise<ResultadoEnvio> {
+export interface AnexoEmail {
+  nome: string;
+  conteudo: Buffer;
+  tipo: string;
+}
+
+export async function enviarEmail(para: string, assunto: string, conteudo: DadosModeloEmail, anexos: AnexoEmail[] = []): Promise<ResultadoEnvio> {
   const t = obterTransporte();
   if (!t) return { enviado: false, motivo: "nao_configurado" };
   const { html, texto } = modeloEmail(conteudo);
   try {
-    const info = await t.transporte.sendMail({ from: t.remetente, to: para, subject: assunto, html, text: texto });
+    const info = await t.transporte.sendMail({
+      from: t.remetente,
+      to: para,
+      subject: assunto,
+      html,
+      text: texto,
+      attachments: anexos.map((a) => ({ filename: a.nome, content: a.conteudo, contentType: a.tipo })),
+    });
     return { enviado: true, id: info.messageId ?? null };
   } catch (e) {
     return { enviado: false, motivo: "falhou", erro: e instanceof Error ? e.message : String(e) };

@@ -27,6 +27,8 @@ export interface Cabecalho {
   observacao?: string;
 }
 
+const FONTES_PADRAO = new Set(["Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique"]);
+
 /** pdfmake com as fontes do próprio pacote e sem acesso a URLs (também usado nas declarações). */
 export async function carregarPdfMake() {
   const mod = (await import("pdfmake")) as unknown as { default?: PdfMake } & PdfMake;
@@ -39,10 +41,12 @@ export async function carregarPdfMake() {
       italics: join(pasta, "Roboto-Italic.ttf"),
       bolditalics: join(pasta, "Roboto-MediumItalic.ttf"),
     },
+    // Fonte padrão do PDF (mesmas medidas da Arial), usada no DANFSe da NFS-e
+    Helvetica: { normal: "Helvetica", bold: "Helvetica-Bold", italics: "Helvetica-Oblique", bolditalics: "Helvetica-BoldOblique" },
   });
   pm.setUrlAccessPolicy(() => false);
-  // Arquivos locais: somente as fontes do próprio pdfmake
-  pm.setLocalAccessPolicy((caminho) => resolve(caminho).startsWith(pasta));
+  // Arquivos locais: somente as fontes do próprio pdfmake (as fontes padrão do PDF vêm pelo nome)
+  pm.setLocalAccessPolicy((caminho) => FONTES_PADRAO.has(caminho) || resolve(caminho).startsWith(pasta));
   return pm;
 }
 interface PdfMake {

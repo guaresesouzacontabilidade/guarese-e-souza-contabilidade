@@ -23,6 +23,14 @@ const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
   auditor_fiscal: async () => (await import("@/lib/auditor-fiscal/executar")).executarAuditorFiscal,
   reler_notas_mes: async () => (await import("@/lib/fiscal/releitura")).executarReleituraMes,
   importar_maquininha: async () => (await import("@/lib/maquininhas/importar")).importarMaquininha,
+  emitir_nfse: async () => {
+    const { emitirNfse } = await import("@/lib/nfse-emissao/emitir");
+    return (admin, job) => emitirNfse(admin, job);
+  },
+  cancelar_nfse: async () => {
+    const { cancelarNfse } = await import("@/lib/nfse-emissao/emitir");
+    return (admin, job) => cancelarNfse(admin, job);
+  },
   gerar_lote_xml: async () => {
     const { gerarLoteXml } = await import("@/lib/lotes-xml/gerar");
     return (admin, job, contexto) => gerarLoteXml(admin, job, contexto);

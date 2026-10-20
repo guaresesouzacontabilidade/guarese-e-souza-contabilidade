@@ -481,6 +481,14 @@ begin
   if v_emp.tipo_pessoa <> 'PJ' then
     raise exception 'A emissão pelo portal está disponível para empresas (CNPJ).';
   end if;
+  -- Tributos aproximados (Lei 12.741/2012) são obrigatórios na nota, exceto para o MEI
+  if v_emp.regime_tributario = 'simples_nacional' and v_cfg.percentual_tributos_sn is null then
+    raise exception 'Falta o percentual do Simples Nacional na configuração da emissão. Fale com o escritório.';
+  end if;
+  if v_emp.regime_tributario not in ('mei', 'simples_nacional')
+     and (v_cfg.percentual_tributos_federais is null or v_cfg.percentual_tributos_municipais is null) then
+    raise exception 'Faltam os percentuais aproximados de tributos na configuração da emissão. Fale com o escritório.';
+  end if;
   select * into v_serv from public.nfse_servicos where id = (p_dados ->> 'servico_id')::uuid and empresa_id = p_empresa_id and ativo;
   if v_serv.id is null then
     raise exception 'Escolha um dos serviços cadastrados pelo escritório.';
