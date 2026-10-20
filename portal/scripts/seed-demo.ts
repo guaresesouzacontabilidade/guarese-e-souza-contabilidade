@@ -25,6 +25,7 @@ import { semearAuditor, semearServicosAuditor } from "./demo-auditor";
 import { semearMaquininhas } from "./demo-maquininhas";
 import { semearSped } from "./demo-sped";
 import { semearIcms } from "./demo-icms";
+import { semearNfse } from "./demo-nfse";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
@@ -239,6 +240,9 @@ async function main() {
 
   if (await semearIcms(admin, { url, publica }, { padaria: ids[0], oficina: ids[1] }, { cliente: `cliente@${DOMINIO}`, cliente2: `cliente2@${DOMINIO}` })) {
     console.log("  Compras de outros estados para a apuração do ICMS enviadas (a leitura roda na fila)");
+  }
+  if (await semearNfse(admin, ids[1])) {
+    console.log("  Emissão de NFS-e da Oficina configurada (desligada: a demonstração não tem certificado digital)");
   }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");

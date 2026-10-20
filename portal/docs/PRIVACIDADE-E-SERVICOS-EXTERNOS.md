@@ -134,3 +134,12 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **Quem vê**: a apuração completa (com fornecedores e itens) é da equipe com a permissão de gerenciar os cálculos. O cliente vê só as guias de ICMS na **Previsão de impostos** da própria empresa.
 - **Registro**: destinações, lançamentos, conferências e reaberturas (com motivo) ficam no registro de atividades.
 
+## 17. Emissão de NFS-e
+
+- **Serviço externo**: o **Emissor Nacional da NFS-e** (Sefin Nacional, Receita Federal / Comitê Gestor da NFS-e), serviço público oficial. Só recebe dados quando a empresa pede uma nota (ou o cancelamento) e a emissão está ligada.
+- **O que é transmitido**: a declaração da nota (DPS) assinada com o certificado da empresa — CNPJ e inscrição municipal da empresa, dados do tomador informados no pedido (CNPJ/CPF, nome, endereço, e-mail e telefone, se preenchidos), serviço, valor, data e local da prestação, tributos aproximados e informações complementares. No cancelamento, a chave da nota e o motivo.
+- **O que fica no portal**: o pedido, o XML da nota autorizada e, em produção, o registro nos documentos fiscais da empresa. Com o e-mail do tomador preenchido e o envio ligado, o PDF e o XML vão para ele pelo e-mail do escritório.
+- **Quem vê**: quem tem a permissão de emitir notas da empresa (o empresário, por padrão) e a equipe. Configurar a emissão é só da equipe; ligar exige a autorização do cliente registrada.
+- **Sem inteligência artificial**: a nota é montada por regras fixas do leiaute oficial; nenhum dado vai para serviço de IA.
+- **Demonstração**: não tem certificado; a emissão fica desligada e nada é enviado.
+

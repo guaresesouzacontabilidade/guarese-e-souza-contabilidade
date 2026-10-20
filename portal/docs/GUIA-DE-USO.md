@@ -86,6 +86,17 @@ Com o **certificado digital A1 (e-CNPJ)** da empresa, o portal busca sozinho as 
 - Para desligar, use **Remover certificado**: a busca para e o certificado é apagado do portal. As notas já trazidas continuam em Documentos.
 - **XML do mês em lote**: na mesma tela, escolha o mês de emissão e os tipos de nota (NF-e de entrada e de saída, NFC-e, CT-e, NFS-e prestadas e tomadas, eventos de cancelamento e correção) e clique em **Gerar arquivo do mês**. O portal monta um ZIP com os XML separados em pastas por tipo, a planilha **Relacao das notas.xlsx** (número, chave, emitente, destinatário, valor e situação de cada nota) e um **LEIA-ME** com o resumo — inclusive as NF-e que a SEFAZ entregou só em resumo. Entram as notas buscadas com o certificado e as enviadas em Documentos. Você recebe um aviso quando o arquivo fica pronto; ele fica disponível por **7 dias**. Meses com muitas notas saem em partes (parte 1 de 2, 2 de 2...). Cada download fica registrado.
 
+### Emitir nota fiscal (nota de serviço — NFS-e)
+Quando o escritório liga a emissão para a sua empresa, a nota de serviço sai **na hora**, pelo Emissor Nacional do governo, com o certificado digital da empresa:
+1. Abra **Emitir nota fiscal → Emitir nota**.
+2. Escolha o **serviço** (cadastrado pelo escritório, com o código certo), diga **para quem é a nota** — empresa (digite o CNPJ e clique em **Buscar**: o portal traz o nome e o endereço da Receita), pessoa física (CPF e nome) ou consumidor não identificado —, o **valor**, a **data** e a **descrição** do serviço.
+3. Clique em **Emitir nota**, confira o resumo e confirme. Em poucos segundos a nota aparece como **Emitida**, com o **PDF (DANFSe)** e o **XML** para baixar. Com o e-mail do tomador preenchido, a nota vai para ele por e-mail.
+- **Não emitida**: o Emissor Nacional recusou; a tela mostra o motivo em palavras simples. Use **Pedir de novo com estes dados**, corrija e emita.
+- **Sem resposta**: o Emissor Nacional não respondeu; o portal tenta de novo sozinho (sem emitir duas vezes) ou você clica em **Tentar de novo**.
+- **Cancelar**: na nota emitida, **Cancelar nota**, escolha o motivo e explique. O prazo para cancelar depende do município.
+- Pediu igual sem querer? O portal avisa quando uma nota com o mesmo tomador, valor e descrição foi pedida há poucos minutos.
+- Enquanto o escritório testa, as notas saem no **ambiente de teste** do governo, com a marca "sem validade jurídica" — elas não valem como nota fiscal.
+
 ### Meus documentos
 Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, folha, relatórios). Cada documento mostra a situação, o histórico e as versões. Baixar ou visualizar fica registrado.
 
@@ -313,6 +324,18 @@ Em cada empresa → **Auditor fiscal → SPED Fiscal × XML** (e no quadro do au
 4. Cada linha mostra o número, a data, o cliente ou fornecedor, o valor no SPED e no XML, a diferença e o link para o XML. Abaixo, a **apuração do ICMS** e as notas **por CFOP**, como estão no arquivo.
 5. Chegaram os XML que faltavam? **Conferir de novo**. Arquivo errado? **Excluir** (o arquivo continua em Documentos). Um arquivo novo do mesmo mês (retificado) passa a valer no lugar do anterior.
 - A **EFD-Contribuições** é reconhecida e guardada, mas ainda não é conferida. O portal **não transmite nem altera** a EFD.
+
+### Emissão de notas de serviço (configurar e acompanhar)
+Para ligar a emissão de uma empresa (menu da empresa → **Emitir nota fiscal → Configurar emissão**):
+1. **Certificado digital A1** cadastrado (em Notas automáticas) — é ele que assina as notas.
+2. **Serviços** que a empresa presta, com o **código de tributação nacional** (6 números da lista nacional, ex.: 170101) e, se o município pede, o código municipal.
+3. **Configuração**: município emissor (código IBGE), inscrição municipal só se a empresa tem cadastro complementar no Emissor Nacional, série e numeração da DPS (use uma série que a empresa não usa em outro sistema), **tributos aproximados** (Simples: a alíquota efetiva do DAS; Presumido/Real: federais e ISS), retenção do ISS (se o cliente pode marcar) e envio ao tomador por e-mail.
+4. **Autorização do cliente**: registre como o cliente autorizou o portal a emitir com o certificado da empresa.
+5. Ligue a emissão **no ambiente de teste**, peça uma nota de teste (o PDF sai com "sem validade jurídica"), confira e só então passe para **produção**.
+- A partir de 1º/11/2026 as ME/EPP do Simples são obrigadas a emitir a NFS-e pelo padrão nacional (Resolução CGSN 191/2026); o portal usa a API do próprio Emissor Nacional.
+- A emissão é automática: quem tem a permissão **Emitir notas** (o empresário, por padrão) emite sem aprovação. Para tirar de alguém, ajuste as permissões do usuário.
+- Em produção, cada nota emitida entra sozinha nos documentos fiscais da empresa (previsão, auditor, lote de XML). As notas de teste não entram.
+- **Notas de serviço emitidas** (menu do escritório) mostra, por empresa, as notas do mês, as recusadas e pendentes e a situação do certificado.
 
 ### Maquininhas da carteira
 O menu **Maquininhas** do escritório mostra, no mês escolhido, quanto cada empresa teve cobrado acima do contrato, as vendas sem taxa cadastrada e os relatórios que esperam a conferência das colunas. Em cada empresa → **Maquininhas**:
