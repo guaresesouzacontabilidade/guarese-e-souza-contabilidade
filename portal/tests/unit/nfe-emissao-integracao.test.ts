@@ -327,10 +327,11 @@ describe.skipIf(!local)("NF-e — emissão de ponta a ponta (Supabase local)", (
     expect(() => execFileSync("xmllint", ["--noout", "--schema", join(pasta, "proc.xsd"), join(pasta, "doc.xml")], { stdio: "pipe" })).not.toThrow();
 
     const { data: guias } = await admin.from("nfe_guias").select("tipo, uf, valor, codigo_receita, situacao").eq("emissao_id", n.id).order("tipo");
+    // Nota de teste: guias só para conferência, já como "não se aplica" (não contam como guias a gerar)
     expect(guias).toEqual([
-      { tipo: "contribuicao", uf: "MT", valor: 751.5, codigo_receita: "5005", situacao: "a_gerar" },
-      { tipo: "icms_frete", uf: "MT", valor: 432, codigo_receita: null, situacao: "a_gerar" },
-      { tipo: "icms_operacao", uf: "MT", valor: 4140, codigo_receita: "1112", situacao: "a_gerar" },
+      { tipo: "contribuicao", uf: "MT", valor: 751.5, codigo_receita: "5005", situacao: "dispensada" },
+      { tipo: "icms_frete", uf: "MT", valor: 432, codigo_receita: null, situacao: "dispensada" },
+      { tipo: "icms_operacao", uf: "MT", valor: 4140, codigo_receita: "1112", situacao: "dispensada" },
     ]);
 
     const { gerarDanfe } = await import("@/lib/nfe-emissao/danfe");
@@ -366,6 +367,8 @@ describe.skipIf(!local)("NF-e — emissão de ponta a ponta (Supabase local)", (
     const { eventoNfe } = await import("@/lib/nfe-emissao/emitir");
     const { data: e } = await admin.from("nfe_emissoes").select("id").eq("empresa_id", empresaId).eq("numero", 1).single();
     await admin.from("nfe_emissoes").update({ situacao: "cancelando" }).eq("id", e!.id);
+    // Como numa nota de produção: guias ainda a gerar
+    await admin.from("nfe_guias").update({ situacao: "a_gerar", observacao: null }).eq("emissao_id", e!.id);
     const { data: ev } = await admin
       .from("nfe_eventos")
       .insert({ emissao_id: e!.id, empresa_id: empresaId, tipo: "cancelamento", sequencia: 1, texto: "Venda desfeita a pedido do cliente" })
@@ -378,7 +381,8 @@ describe.skipIf(!local)("NF-e — emissão de ponta a ponta (Supabase local)", (
     const { data: evento } = await admin.from("nfe_eventos").select("situacao, protocolo, xml").eq("id", ev!.id).single();
     expect(evento).toMatchObject({ situacao: "registrado", protocolo: "151260000099999" });
     expect(evento!.xml).toContain("<procEventoNFe");
-    const { data: guias } = await admin.from("nfe_guias").select("situacao").eq("emissao_id", e!.id);
-    expect(guias!.every((g) => g.situacao === "dispensada")).toBe(true);
+    const { data: guias } = await admin.from("nfe_guias").select("situacao, observacao").eq("emissao_id", e!.id);
+    expect(guias!.length).toBeGreaterThan(0);
+    expect(guias!.every((g) => g.situacao === "dispensada" && g.observacao === "Nota cancelada.")).toBe(true);
   });
 });

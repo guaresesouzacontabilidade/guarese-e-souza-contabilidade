@@ -218,7 +218,7 @@ export function GuiasNota({
                   {g.codigo_receita ? ` — código de receita ${g.codigo_receita}` : ""}
                 </p>
               </div>
-              <Badge variante={g.paga ? "sucesso" : s.tom}>{g.paga ? "Paga" : s.rotulo}</Badge>
+              <Badge variante={g.paga ? "sucesso" : s.tom}>{g.paga ? "Paga" : teste ? "Teste" : s.rotulo}</Badge>
             </div>
             {g.situacao === "a_gerar" && !teste ? (
               <>
@@ -241,7 +241,7 @@ export function GuiasNota({
             ) : g.situacao === "dispensada" ? (
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 {g.observacao}
-                {escritorio ? <Dispensar empresaId={empresaId} guia={g} /> : null}
+                {escritorio && !teste ? <Dispensar empresaId={empresaId} guia={g} /> : null}
               </div>
             ) : null}
           </div>

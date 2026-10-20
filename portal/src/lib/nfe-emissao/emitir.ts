@@ -102,11 +102,15 @@ async function avisar(admin: ClienteAdmin, id: string) {
 const ultimaTentativa = (job: Job) => job.tentativas >= (job.max_tentativas ?? 5);
 const esperar = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
 
-/** Guias da nota autorizada, com o valor calculado e vencimento no dia da emissão (pagamento antes da saída). */
+/**
+ * Guias da nota autorizada, com o valor calculado e vencimento no dia da emissão (pagamento antes da saída).
+ * Nota de teste (homologação) não tem imposto a pagar: as guias ficam só para conferência, já como "não se aplica".
+ */
 async function criarGuias(admin: ClienteAdmin, e: Emissao, nota: NotaCalculada, emitidaEm: Date) {
   if (!nota.guias.length) return;
   const codigos = ((e.dados as Record<string, unknown>).codigosReceita ?? {}) as Record<string, string | null>;
   const dia = dataHoraUf(emitidaEm, nota.entrada.emitente.endereco.uf).slice(0, 10);
+  const teste = e.ambiente !== "producao";
   const linhas = nota.guias.map((g) => ({
     emissao_id: e.id,
     empresa_id: e.empresa_id,
@@ -116,6 +120,7 @@ async function criarGuias(admin: ClienteAdmin, e: Emissao, nota: NotaCalculada, 
     codigo_receita: g.codigoReceita ?? codigos[g.tipo] ?? null,
     valor: Number(fmt(g.valor, 2)),
     vencimento: dia,
+    ...(teste ? { situacao: "dispensada", observacao: "Nota de teste (homologação): sem valor fiscal, não gera guia." } : {}),
   }));
   const { error } = await admin.from("nfe_guias").upsert(linhas, { onConflict: "emissao_id,tipo,descricao", ignoreDuplicates: true });
   if (error) console.error("[nfe] guias:", error.message);
