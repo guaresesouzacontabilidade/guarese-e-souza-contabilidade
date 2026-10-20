@@ -9,6 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 import { DOMParser } from "@xmldom/xmldom";
 import { SignedXml } from "xml-crypto";
 import { nfseFicticia } from "./apoio/nfse-ficticia";
+import { semearNfse } from "../../scripts/demo-nfse";
 
 /**
  * Emissão de NFS-e de ponta a ponta contra o Supabase local e um servidor
@@ -175,7 +176,11 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
 
   afterAll(async () => {
     servidor?.close();
-    if (empresaId) await limpar();
+    if (empresaId) {
+      await limpar();
+      // Devolve a configuração e os serviços da demonstração (usados pelos testes de tela)
+      await semearNfse(admin, empresaId);
+    }
     process.env.CERTIFICADOS_CHAVE = chaveAnterior;
   }, 60_000);
 
