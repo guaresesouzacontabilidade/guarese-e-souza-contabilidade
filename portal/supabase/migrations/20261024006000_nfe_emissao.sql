@@ -535,7 +535,8 @@ create table public.nfe_emissoes (
   -- autorizada → cancelando → cancelada; rejeitada → (corrigida) na_fila | descartada
   situacao text not null default 'na_fila'
     check (situacao in ('na_fila', 'enviando', 'aguardando', 'autorizada', 'rejeitada', 'denegada', 'falha', 'cancelando', 'cancelada', 'descartada')),
-  -- Dados da nota com as regras fiscais da operação (montados pelo banco no pedido)
+  -- Pedido como foi feito (para corrigir ou copiar a nota) e dados da nota com as regras fiscais da operação (montados pelo banco)
+  pedido jsonb not null check (jsonb_typeof(pedido) = 'object' and pg_column_size(pedido) <= 300000),
   dados jsonb not null check (jsonb_typeof(dados) = 'object' and pg_column_size(dados) <= 500000),
   natureza text not null,
   destinatario_nome text not null,
@@ -1335,7 +1336,7 @@ begin
     end if;
     update public.nfe_emissoes
        set operacao_id = (p_dados ->> 'operacao_id')::uuid, destinatario_id = (p_dados ->> 'destinatario_id')::uuid,
-           situacao = 'na_fila', dados = v_dados, natureza = v_dados ->> 'natureza',
+           situacao = 'na_fila', pedido = p_dados - 'confirmar_repetida', dados = v_dados, natureza = v_dados ->> 'natureza',
            destinatario_nome = v_resumo ->> 'destinatario_nome', destinatario_documento = v_resumo ->> 'destinatario_documento',
            destinatario_uf = v_resumo ->> 'destinatario_uf', valor_total = (v_resumo ->> 'valor_total')::numeric,
            emitida_em = null, chave = null, recibo = null, totais = null, xml_assinado = null, mensagens = null, tentativas = 0
@@ -1375,16 +1376,31 @@ begin
   end loop;
 
   insert into public.nfe_emissoes (
-    empresa_id, emitente_id, operacao_id, destinatario_id, ambiente, serie, numero, codigo_numerico, dados,
+    empresa_id, emitente_id, operacao_id, destinatario_id, ambiente, serie, numero, codigo_numerico, pedido, dados,
     natureza, destinatario_nome, destinatario_documento, destinatario_uf, valor_total
   ) values (
-    p_empresa_id, v_emi.id, (p_dados ->> 'operacao_id')::uuid, (p_dados ->> 'destinatario_id')::uuid, v_cfg.ambiente, v_emi.serie, v_numero, v_cnf, v_dados,
+    p_empresa_id, v_emi.id, (p_dados ->> 'operacao_id')::uuid, (p_dados ->> 'destinatario_id')::uuid, v_cfg.ambiente, v_emi.serie, v_numero, v_cnf,
+    p_dados - 'confirmar_repetida', v_dados,
     v_dados ->> 'natureza', v_resumo ->> 'destinatario_nome', v_resumo ->> 'destinatario_documento', v_resumo ->> 'destinatario_uf',
     (v_resumo ->> 'valor_total')::numeric
   ) returning id into v_id;
 
   perform app.enfileirar('emitir_nfe', jsonb_build_object('emissao_id', v_id), p_empresa_id, 'nfe:' || v_id::text, now(), 5);
   return jsonb_build_object('id', v_id, 'numero', v_numero, 'serie', v_emi.serie, 'ambiente', v_cfg.ambiente);
+end;
+$$;
+
+-- Prévia: os dados que a nota terá (regras da operação), para conferir os valores antes de emitir
+create or replace function public.nfe_previa(p_empresa_id uuid, p_dados jsonb)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform app.exigir(p_empresa_id, 'nfe.emitir');
+  return app.nfe_montar_dados(p_empresa_id, p_dados);
 end;
 $$;
 
@@ -1634,13 +1650,13 @@ $$;
 
 revoke execute on function public.nfe_configurar(uuid, jsonb), public.nfe_emitente_salvar(uuid, uuid, jsonb), public.nfe_produto_salvar(uuid, uuid, jsonb),
   public.nfe_operacao_salvar(uuid, uuid, jsonb), public.nfe_destinatario_salvar(uuid, uuid, jsonb), public.nfe_transportador_salvar(uuid, uuid, jsonb),
-  public.nfe_emitir(uuid, jsonb, uuid), public.nfe_tentar_de_novo(uuid), public.nfe_descartar(uuid), public.nfe_cancelar(uuid, text),
+  public.nfe_emitir(uuid, jsonb, uuid), public.nfe_previa(uuid, jsonb), public.nfe_tentar_de_novo(uuid), public.nfe_descartar(uuid), public.nfe_cancelar(uuid, text),
   public.nfe_carta_correcao(uuid, text), public.nfe_guia_atualizar(uuid, text, uuid, text), public.nfe_avisar(uuid), public.nfe_carteira(date, date),
   app.nfe_montar_dados(uuid, jsonb), app.nfe_contribuicoes_validas(jsonb)
   from public, anon, authenticated;
 grant execute on function public.nfe_configurar(uuid, jsonb), public.nfe_emitente_salvar(uuid, uuid, jsonb), public.nfe_produto_salvar(uuid, uuid, jsonb),
   public.nfe_operacao_salvar(uuid, uuid, jsonb), public.nfe_destinatario_salvar(uuid, uuid, jsonb), public.nfe_transportador_salvar(uuid, uuid, jsonb),
-  public.nfe_emitir(uuid, jsonb, uuid), public.nfe_tentar_de_novo(uuid), public.nfe_descartar(uuid), public.nfe_cancelar(uuid, text),
+  public.nfe_emitir(uuid, jsonb, uuid), public.nfe_previa(uuid, jsonb), public.nfe_tentar_de_novo(uuid), public.nfe_descartar(uuid), public.nfe_cancelar(uuid, text),
   public.nfe_carta_correcao(uuid, text), public.nfe_guia_atualizar(uuid, text, uuid, text), public.nfe_carteira(date, date)
   to authenticated;
 grant execute on function public.nfe_avisar(uuid), app.nfe_montar_dados(uuid, jsonb) to service_role;

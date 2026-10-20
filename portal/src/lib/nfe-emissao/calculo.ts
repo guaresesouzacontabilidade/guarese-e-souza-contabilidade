@@ -693,7 +693,10 @@ export function calcularNota(e: EntradaNfe): NotaCalculada {
     if (c.valor > 0n) guias.push({ tipo: "contribuicao", descricao: c.nome, uf: ufEmit, valor: c.valor, codigoReceita: c.codigoReceita });
   }
 
-  const real = (v: Dec) => `R$ ${fmt(v, 2).replace(".", ",")}`;
+  const real = (v: Dec) => {
+    const [inteiro, centavos] = fmt(v, 2).split(".");
+    return `R$ ${inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${centavos}`;
+  };
   const pct = (v: Dec) => `${fmt(v, 2).replace(".", ",")}%`;
   const textosAutomaticos: string[] = [];
   if (icmsFrete) {

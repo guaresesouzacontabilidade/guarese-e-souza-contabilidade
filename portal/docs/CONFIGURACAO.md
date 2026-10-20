@@ -197,7 +197,7 @@ Os avisos do portal (por exemplo, “Padaria enviou 3 arquivos”) também podem
 
 ## 13. Notas automáticas (SEFAZ e NFS-e Nacional)
 
-A busca automática traz as notas fiscais de cada empresa direto dos serviços oficiais, com o certificado digital A1 (e-CNPJ) da própria empresa:
+A busca automática traz as notas fiscais de cada empresa direto dos serviços oficiais, com o certificado digital A1 da própria empresa (e-CNPJ; no produtor rural pessoa física, o e-CPF do produtor — a consulta vai pelo CPF):
 
 | Serviço | Endereço | O que traz |
 | --- | --- | --- |
@@ -286,3 +286,18 @@ Não precisa de chave nova: usa o certificado A1 já cadastrado da empresa (cifr
 - **Banco**: `nfse_emissao_config`, `nfse_servicos`, `nfse_emissoes` (leitura com `nfse.emitir` ou `nfse.configurar`; escrita só pelas funções); permissões `nfse.emitir` (equipe e titular) e `nfse.configurar` (só equipe). Proteção contra pedido repetido (mesmo tomador, valor e descrição em 10 minutos) e limite de 60 notas por hora por empresa.
 - **Demonstração e testes**: com `NOTAS_AUTOMATICAS_SEM_REDE=1`, nada é enviado (a nota fica "Sem resposta" com o aviso). Os testes automáticos usam um servidor local no papel do Emissor Nacional e notas fictícias.
 
+
+## 19. Emissão de NF-e (nota de produto, modelo 55)
+
+Não precisa de chave nova: usa o certificado A1 já cadastrado da empresa (cifrado com `CERTIFICADOS_CHAVE`) e a fila de tarefas. Sem certificado, inscrição (série), operação ou autorização registrada, a emissão não liga (desconectada). A empresa ou o produtor precisa estar **credenciado na SEFAZ** do estado como emissor de NF-e.
+
+- **Leiaute**: NF-e 4.00 com a reforma tributária (NT 2025.002, esquemas PL_010f v1.04, em `tests/fixtures/nfe-xsd-PL010f`); eventos de cancelamento (110111) e carta de correção (110110) v1.00. O XML é montado em forma canônica e assinado com RSA-SHA1/C14N (`src/lib/nfe-emissao/nfe.ts`, `src/lib/fiscal/xml-assinatura.ts`). Os testes validam cada XML gerado nos esquemas oficiais.
+- **Cálculo** (`src/lib/nfe-emissao/calculo.ts`): decimais exatos; ICMS por CST (00, 20, 40/41/50, 51, 90) ou CSOSN (101, 102/103/300/400, 900); DIFAL (`ICMSUFDest`, base única ou dupla, FCP, alíquota interna do destino da tabela `icms_uf`); ICMS do frete retido (`retTransp`); PIS/Cofins com a exclusão do ICMS (Tema 69); IBS/CBS (alíquotas de 2026 — CBS 0,9%, IBS UF 0,1% — com redução e diferimento da `nfe_cclass_trib`, 104 classificações da tabela oficial de 01/09/2026; para 2027 em diante o cálculo recusa até as alíquotas serem cadastradas); FUNRURAL e contribuições por tonelada (FETHAB) nas informações complementares e nas guias.
+- **SEFAZ** (`src/lib/nfe-emissao/sefaz.ts`): SOAP 1.2 nos autorizadores de cada UF (AM, BA, GO, MG, MS, MT, PE, PR, RS e SP próprios; MA na SVAN; os demais, inclusive TO, na SVRS), envio síncrono com consulta do recibo, consulta por chave antes de reenviar (nunca emite duas vezes) e tratamento de duplicidade (204/539). A conexão confia nas raízes do Node **e** nas da ICP-Brasil (`src/lib/fiscal/icp-brasil.ts`; a SEFAZ-MT usa a cadeia v10), sem desligar a verificação TLS.
+- **Fila**: `nfe_emitir` monta os dados da nota no banco a partir das regras da operação (o pedido não traz regra fiscal), reserva o número por série e ambiente e põe `emitir_nfe` na fila; nota rejeitada é corrigida e reenviada com o mesmo número. Proteção contra pedido repetido (mesmo cliente e valor em 10 minutos) e limite de 60 notas por hora por empresa. `evento_nfe` envia cancelamento e carta de correção.
+- **Guias** (`nfe_guias`): na autorização, cada valor a recolher por nota vira uma guia "a gerar" com o vencimento na data da emissão (pagamento antes da saída). A equipe gera o documento oficial no site (SEFAZ-MT: "Recolhimento prévio ICMS – Posto Fiscal" pela chave; GNRE para outro estado) e anexa o PDF, que vira documento `esc_guia` publicado e entra na agenda de pagamentos. **GNRE automática: desconectada** — o Portal GNRE exige credenciamento do sistema; até lá, a guia é gerada no portal oficial.
+- **DANFE** (`src/lib/nfe-emissao/danfe.ts`): retrato A4 com código de barras Code 128C da chave, "SEM VALOR FISCAL" no teste e marca d'água "CANCELADA".
+- **Em produção**: a nota autorizada é registrada nos documentos fiscais (origem "emissão NF-e") e enviada ao comprador por e-mail (DANFE e XML), se configurado o SMTP e marcado na empresa.
+- **Banco**: `nfe_config`, `nfe_emitentes`, `nfe_produtos`, `nfe_operacoes`, `nfe_destinatarios`, `nfe_transportadores`, `nfe_emissoes`, `nfe_eventos`, `nfe_guias` (leitura com `nfe.emitir` ou `nfe.configurar`; escrita só pelas funções); permissões `nfe.emitir` (equipe e titular) e `nfe.configurar` (só equipe). Empresa de demonstração não liga a emissão em produção.
+- **Demonstração e testes**: com `NOTAS_AUTOMATICAS_SEM_REDE=1`, nada é enviado (a nota fica "Sem resposta" com o aviso). Os testes automáticos usam um servidor local no papel da SEFAZ e notas fictícias.
+- **Próxima etapa (não incluída)**: MDF-e, inutilização de numeração, LCDPR e SPED/Sintegra.

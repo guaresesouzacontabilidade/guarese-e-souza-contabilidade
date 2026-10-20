@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  PackageCheck,
   Building2,
   FileInput,
   FolderOpen,
@@ -56,6 +57,7 @@ export function menuEscritorio(admin: boolean): ItemMenu[] {
     { rotulo: "Vencimentos", href: "/escritorio/vencimentos", icone: CalendarX2 },
     { rotulo: "Notas automáticas", href: "/escritorio/notas-automaticas", icone: CloudDownload },
     { rotulo: "Notas de serviço emitidas", href: "/escritorio/notas-servico", icone: ReceiptText },
+    { rotulo: "Notas de produto emitidas", href: "/escritorio/notas-produto", icone: PackageCheck },
     { rotulo: "Apuração do ICMS", href: "/escritorio/icms", icone: Landmark },
     { rotulo: "Auditor fiscal", href: "/escritorio/auditor-fiscal", icone: ScanSearch },
     { rotulo: "Maquininhas", href: "/escritorio/maquininhas", icone: CreditCard },
@@ -79,7 +81,8 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   const base = `/e/${empresa.id}`;
   const itens: ItemMenu[] = [{ rotulo: "Visão geral", href: base, icone: Home, exato: true }];
   if (p.has("documentos.enviar")) itens.push({ rotulo: "Enviar documentos", href: `${base}/enviar`, icone: Upload });
-  if (p.has("nfse.emitir") || p.has("nfse.configurar")) itens.push({ rotulo: "Emitir nota fiscal", href: `${base}/notas-servico`, icone: ReceiptText });
+  if (p.has("nfse.emitir") || p.has("nfse.configurar")) itens.push({ rotulo: "Emitir nota de serviço", href: `${base}/notas-servico`, icone: ReceiptText });
+  if (p.has("nfe.emitir") || p.has("nfe.configurar")) itens.push({ rotulo: "Emitir nota de produto", href: `${base}/notas-produto`, icone: PackageCheck });
   if (p.has("documentos.ver")) {
     itens.push({ rotulo: equipe ? "Documentos" : "Meus documentos", href: `${base}/documentos`, icone: FolderOpen });
     itens.push({ rotulo: "Pendências", href: `${base}/pendencias`, icone: ListChecks });

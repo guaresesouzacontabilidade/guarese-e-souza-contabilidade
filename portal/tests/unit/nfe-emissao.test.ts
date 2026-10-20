@@ -85,6 +85,8 @@ describe("cálculo da NF-e", () => {
     expect(fmt(t.vProd, 2)).toBe("34500.00");
     expect(fmt(t.vBC, 2)).toBe("34500.00");
     expect(fmt(t.vICMS, 2)).toBe("4140.00");
+    // Textos da nota no formato brasileiro (milhar com ponto)
+    expect(n.textosAutomaticos.join(" ")).toContain("base R$ 3.600,00, alíquota 12,00%, valor R$ 432,00");
     // PIS/COFINS sobre 34.500 − 4.140 = 30.360
     expect(fmt(n.itens[0].pis.vBC, 2)).toBe("30360.00");
     expect(fmt(t.vPIS, 2)).toBe("500.94");

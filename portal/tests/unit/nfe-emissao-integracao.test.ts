@@ -277,6 +277,7 @@ describe.skipIf(!local)("NF-e — emissão de ponta a ponta (Supabase local)", (
         serie: 1,
         numero: ++numero,
         codigo_numerico: String(48213765 + numero),
+        pedido: pedido as never,
         dados: dados as never,
         natureza: String(dados.natureza),
         destinatario_nome: String(resumo.destinatario_nome),

@@ -81,10 +81,6 @@ const texto = (no: No | null | undefined, campo: string): string | null => {
   return String(v);
 };
 
-function escapar(v: string) {
-  return v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 function envelope(corpo: string) {
   return (
     '<?xml version="1.0" encoding="utf-8"?>' +
@@ -100,15 +96,22 @@ export function tipoConteudoSoap(acao: string) {
 // -----------------------------------------------------------------------------
 // Distribuição de DF-e
 // -----------------------------------------------------------------------------
+/** CNPJ da empresa ou CPF do produtor rural (certificado e-CPF): o leiaute aceita os dois. */
+function grupoDocumento(documento: string): string {
+  if (/^[0-9A-Z]{12}[0-9]{2}$/.test(documento)) return `<CNPJ>${documento}</CNPJ>`;
+  if (/^[0-9]{11}$/.test(documento)) return `<CPF>${documento}</CPF>`;
+  throw new Error("CNPJ ou CPF da empresa inválido.");
+}
+
 export function montarDistribuicao(p: { cnpj: string; uf: string; ultNsu: string; ambiente: Ambiente }) {
   const cuf = CODIGO_UF[p.uf.toUpperCase()];
   if (!cuf) throw new Error(`UF da empresa inválida (${p.uf}).`);
-  if (!/^[0-9A-Z]{12}[0-9]{2}$/.test(p.cnpj)) throw new Error("CNPJ da empresa inválido.");
+  const documento = grupoDocumento(p.cnpj);
   const nsu = p.ultNsu.padStart(15, "0");
   return envelope(
     '<nfeDistDFeInteresse xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/NFeDistribuicaoDFe"><nfeDadosMsg>' +
       `<distDFeInt xmlns="${NS_NFE}" versao="1.01"><tpAmb>${p.ambiente === "producao" ? 1 : 2}</tpAmb><cUFAutor>${cuf}</cUFAutor>` +
-      `<CNPJ>${p.cnpj}</CNPJ><distNSU><ultNSU>${nsu}</ultNSU></distNSU></distDFeInt>` +
+      `${documento}<distNSU><ultNSU>${nsu}</ultNSU></distNSU></distDFeInt>` +
       "</nfeDadosMsg></nfeDistDFeInteresse>",
   );
 }
@@ -237,7 +240,7 @@ export function eventoManifestacaoAssinado(p: {
   const seq = p.sequencia ?? 1;
   const id = `ID${ev.tipo}${p.chave}${String(seq).padStart(2, "0")}`;
   const filhos =
-    `<cOrgao>91</cOrgao><tpAmb>${p.ambiente === "producao" ? 1 : 2}</tpAmb><CNPJ>${escapar(p.cnpj)}</CNPJ><chNFe>${p.chave}</chNFe>` +
+    `<cOrgao>91</cOrgao><tpAmb>${p.ambiente === "producao" ? 1 : 2}</tpAmb>${grupoDocumento(p.cnpj)}<chNFe>${p.chave}</chNFe>` +
     `<dhEvento>${dataHoraBrasil(p.quando)}</dhEvento><tpEvento>${ev.tipo}</tpEvento><nSeqEvento>${seq}</nSeqEvento><verEvento>1.00</verEvento>` +
     `<detEvento versao="1.00"><descEvento>${ev.descricao}</descEvento></detEvento>`;
   const canonico = `<infEvento xmlns="${NS_NFE}" Id="${id}">${filhos}</infEvento>`;

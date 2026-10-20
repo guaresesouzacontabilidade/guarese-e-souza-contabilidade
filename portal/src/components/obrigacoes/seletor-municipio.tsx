@@ -15,6 +15,7 @@ export function SeletorMunicipio({
   idBase = "municipio",
   desabilitado,
   aoMudar,
+  carregar = listarMunicipios,
 }: {
   ufInicial: string | null;
   municipioInicial: string | null;
@@ -24,6 +25,8 @@ export function SeletorMunicipio({
   idBase?: string;
   desabilitado?: boolean;
   aoMudar?: (v: { uf: string; municipio: string }) => void;
+  /** Busca dos municípios da UF (padrão: a da equipe do escritório) */
+  carregar?: (uf: string) => Promise<{ ibge: string; nome: string }[]>;
 }) {
   const [uf, setUf] = useState(ufInicial ?? "");
   const [municipio, setMunicipio] = useState(municipioInicial ?? "");
@@ -35,7 +38,7 @@ export function SeletorMunicipio({
     setMunicipio("");
     setLista([]);
     aoMudar?.({ uf: nova, municipio: "" });
-    if (nova) iniciar(async () => setLista(await listarMunicipios(nova)));
+    if (nova) iniciar(async () => setLista(await carregar(nova)));
   };
 
   return (

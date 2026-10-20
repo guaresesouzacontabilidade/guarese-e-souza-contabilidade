@@ -49,6 +49,28 @@ export function cnpjDoCertificado(cn: string | null, der: Buffer): string | null
   return /([0-9A-Z]{12}[0-9]{2})/.exec(trecho)?.[1] ?? null;
 }
 
+/** OID dos dados da pessoa física no certificado ICP-Brasil (otherName 2.16.76.1.3.1: nascimento, CPF, NIS...). */
+const OID_PESSOA_FISICA = Buffer.from([0x06, 0x05, 0x60, 0x4c, 0x01, 0x03, 0x01]);
+
+/** Conteúdo de um otherName da ICP-Brasil: [0] { OCTET STRING | UTF8String | PrintableString | IA5String }. */
+function valorOtherName(der: Buffer, oid: Buffer): string | null {
+  const i = der.indexOf(oid);
+  if (i < 0) return null;
+  let p = i + oid.length;
+  if (der[p] !== 0xa0) return null;
+  p += der[p + 1] & 0x80 ? 2 + (der[p + 1] & 0x7f) : 2;
+  if (![0x04, 0x0c, 0x13, 0x16].includes(der[p]) || der[p + 1] & 0x80) return null;
+  return der.subarray(p + 2, p + 2 + der[p + 1]).toString("latin1");
+}
+
+/** CPF do titular do e-CPF (produtor rural pessoa física): no nome ("NOME:12345678901") ou no campo próprio da ICP-Brasil. */
+export function cpfDoCertificado(cn: string | null, der: Buffer): string | null {
+  const doNome = cn ? /:([0-9]{11})$/.exec(cn)?.[1] : null;
+  if (doNome) return doNome;
+  const cpf = valorOtherName(der, OID_PESSOA_FISICA)?.slice(8, 19) ?? "";
+  return /^[0-9]{11}$/.test(cpf) && !/^0+$/.test(cpf) ? cpf : null;
+}
+
 export function lerCertificadoA1(arquivo: Uint8Array, senha: string, agora = new Date()): CertificadoLido {
   if (arquivo.length === 0 || arquivo.length > TAMANHO_MAXIMO_CERTIFICADO) {
     throw new ErroCertificado("Arquivo de certificado inválido (o A1 tem poucos kilobytes, extensão .pfx ou .p12).");
@@ -107,7 +129,7 @@ export function lerCertificadoA1(arquivo: Uint8Array, senha: string, agora = new
     certificadoPem,
     cadeiaPem,
     titular,
-    documento: cnpjDoCertificado(titular, x509.raw),
+    documento: cnpjDoCertificado(titular, x509.raw) ?? cpfDoCertificado(titular, x509.raw),
     emissor: campo("CN", x509.issuer) ?? x509.issuer.replace(/\n/g, ", "),
     numeroSerie: x509.serialNumber.toUpperCase().replace(/^0+(?=.)/, ""),
     impressaoDigital: x509.fingerprint256.replace(/:/g, "").toUpperCase(),
@@ -116,9 +138,10 @@ export function lerCertificadoA1(arquivo: Uint8Array, senha: string, agora = new
   };
 }
 
-/** Mesmo CNPJ (raiz de 8 caracteres) da empresa. */
+/** Mesmo CNPJ (raiz de 8 caracteres) da empresa ou, no produtor rural pessoa física, o mesmo CPF. */
 export function mesmaEmpresa(documentoCertificado: string | null, documentoEmpresa: string | null | undefined): boolean {
   const a = (documentoCertificado ?? "").toUpperCase().replace(/[^0-9A-Z]/g, "");
   const b = (documentoEmpresa ?? "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+  if (a.length === 11 && b.length === 11) return a === b;
   return a.length === 14 && b.length === 14 && a.slice(0, 8) === b.slice(0, 8);
 }

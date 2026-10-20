@@ -28,6 +28,8 @@ export const TODAS_PERMISSOES = [
   "maquininhas.gerenciar",
   "nfse.emitir",
   "nfse.configurar",
+  "nfe.emitir",
+  "nfe.configurar",
 ] as const;
 
 export type Permissao = (typeof TODAS_PERMISSOES)[number];
@@ -42,6 +44,7 @@ export const PERMISSOES_EXCLUSIVAS_EQUIPE: Permissao[] = [
   "calculos.gerenciar",
   "auditor.gerenciar",
   "nfse.configurar",
+  "nfe.configurar",
 ];
 
 export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotulo: string; descricao: string }[] }[] = [
@@ -125,6 +128,21 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
     ],
   },
   {
+    grupo: "Notas de produto (NF-e)",
+    itens: [
+      {
+        chave: "nfe.emitir",
+        rotulo: "Emitir NF-e",
+        descricao: "Emitir notas de produto com as operações cadastradas pelo escritório, cadastrar clientes e transportadores, cancelar e corrigir (carta de correção).",
+      },
+      {
+        chave: "nfe.configurar",
+        rotulo: "Configurar a NF-e",
+        descricao: "Cadastrar as inscrições e séries, os produtos e as operações (CFOP, CST, alíquotas, IBS/CBS, DIFAL, FETHAB), anexar as guias e ligar a emissão.",
+      },
+    ],
+  },
+  {
     grupo: "Comunicação",
     itens: [{ chave: "mensagens.usar", rotulo: "Mensagens", descricao: "Usar a central de mensagens." }],
   },
@@ -136,7 +154,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
     "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar",
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
-    "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir",
+    "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir", "nfe.emitir",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
 };

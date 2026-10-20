@@ -26,6 +26,7 @@ import { semearMaquininhas } from "./demo-maquininhas";
 import { semearSped } from "./demo-sped";
 import { semearIcms } from "./demo-icms";
 import { semearNfse } from "./demo-nfse";
+import { semearNfe } from "./demo-nfe";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
@@ -244,6 +245,9 @@ async function main() {
   if (await semearNfse(admin, ids[1])) {
     console.log("  Emissão de NFS-e da Oficina configurada (desligada: a demonstração não tem certificado digital)");
   }
+  if (await semearNfe(admin, comoAdmin, { dominio: DOMINIO, contadorId: idEquipe, inicioAtendimento: competencia(-12) })) {
+    console.log("  Produtor rural fictício com a emissão de NF-e configurada (desligada: a demonstração não tem certificado digital)");
+  }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);
@@ -252,7 +256,7 @@ async function main() {
   console.log(`  Cliente 2:      cliente2@${DOMINIO} (somente Oficina)`);
   console.log(`  Colaborador:    colaborador@${DOMINIO} (Padaria, acesso restrito)`);
   console.log(MANTER_SENHAS ? "  Senhas: mantidas (não foram alteradas)" : `  Senha de todos: ${senha}`);
-  console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}\n`);
+  console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}, Fazenda Exemplo (DEMO) — só a equipe\n`);
 }
 
 main().catch((e) => {

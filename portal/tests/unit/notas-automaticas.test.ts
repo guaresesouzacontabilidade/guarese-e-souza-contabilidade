@@ -40,7 +40,7 @@ function novoPar(): ParChaves {
 function certificado(
   par: ParChaves,
   cn: string,
-  opcoes: { emissor?: { par: ParChaves; cert: forge.pki.Certificate }; de?: Date; ate?: Date; ca?: boolean; dns?: string } = {},
+  opcoes: { emissor?: { par: ParChaves; cert: forge.pki.Certificate }; de?: Date; ate?: Date; ca?: boolean; dns?: string; dadosPessoaFisica?: string } = {},
 ) {
   const c = forge.pki.createCertificate();
   c.publicKey = par.forgePublica;
@@ -52,6 +52,17 @@ function certificado(
   c.setIssuer(opcoes.emissor ? opcoes.emissor.cert.subject.attributes : sujeito);
   const ext: object[] = [{ name: "basicConstraints", cA: Boolean(opcoes.ca) }];
   if (opcoes.dns) ext.push({ name: "subjectAltName", altNames: [{ type: 2, value: opcoes.dns }, { type: 7, ip: "127.0.0.1" }] });
+  if (opcoes.dadosPessoaFisica) {
+    // otherName 2.16.76.1.3.1 da ICP-Brasil (nascimento, CPF, NIS, RG e órgão), como nos e-CPF
+    const a = forge.asn1;
+    const nomes = a.create(a.Class.UNIVERSAL, a.Type.SEQUENCE, true, [
+      a.create(a.Class.CONTEXT_SPECIFIC, 0, true, [
+        a.create(a.Class.UNIVERSAL, a.Type.OID, false, a.oidToDer("2.16.76.1.3.1").getBytes()),
+        a.create(a.Class.CONTEXT_SPECIFIC, 0, true, [a.create(a.Class.UNIVERSAL, a.Type.OCTETSTRING, false, opcoes.dadosPessoaFisica)]),
+      ]),
+    ]);
+    ext.push({ id: "2.5.29.17", value: a.toDer(nomes).getBytes() });
+  }
   c.setExtensions(ext);
   c.sign(opcoes.emissor?.par.forgeChave ?? par.forgeChave, forge.md.sha256.create());
   return { forge: c, pem: forge.pki.certificateToPem(c) };
@@ -88,14 +99,27 @@ describe("certificado A1", () => {
     }
   });
 
-  it("senha errada, certificado vencido e e-CPF são recusados ou sinalizados", () => {
+  it("senha errada e certificado vencido são recusados", () => {
     const arquivo = pfx(empresa, [certEmpresa.forge], "certa", "3des");
     expect(() => lerCertificadoA1(arquivo, "errada")).toThrow("Senha do certificado incorreta.");
     const vencido = certificado(empresa, `EMPRESA TESTE LTDA:${CNPJ}`, { de: new Date("2024-01-01"), ate: new Date("2025-01-01") });
     expect(() => lerCertificadoA1(pfx(empresa, [vencido.forge], "x", "3des"), "x")).toThrow(/venceu em/);
-    const pf = certificado(empresa, "FULANO DE TAL:12345678909");
-    expect(lerCertificadoA1(pfx(empresa, [pf.forge], "x", "3des"), "x").documento).toBeNull();
     expect(() => lerCertificadoA1(new Uint8Array([1, 2, 3]), "x")).toThrow(ErroCertificado);
+  });
+
+  it("lê o CPF do e-CPF do produtor rural (no nome ou nos dados da pessoa física) e confere o mesmo CPF", () => {
+    const pf = certificado(empresa, "FULANO DE TAL:12345678909");
+    expect(lerCertificadoA1(pfx(empresa, [pf.forge], "x", "3des"), "x").documento).toBe("12345678909");
+    // Sem o CPF no nome: vem do campo 2.16.76.1.3.1 (51 caracteres; o tamanho 0x33 é um "3" em texto e não pode confundir a leitura)
+    const dados = "01011980" + "52998224725" + "00000000000" + "000000000000000" + "SSPTO ";
+    const semNome = certificado(empresa, "FULANO DE TAL", { dadosPessoaFisica: dados });
+    expect(lerCertificadoA1(pfx(empresa, [semNome.forge], "x", "3des"), "x").documento).toBe("52998224725");
+    const semCpf = certificado(empresa, "FULANO DE TAL", { dadosPessoaFisica: "01011980" + "0".repeat(43) });
+    expect(lerCertificadoA1(pfx(empresa, [semCpf.forge], "x", "3des"), "x").documento).toBeNull();
+    expect(mesmaEmpresa("52998224725", "529.982.247-25")).toBe(true);
+    expect(mesmaEmpresa("52998224725", "529.982.247-26")).toBe(false);
+    expect(mesmaEmpresa("52998224725", CNPJ)).toBe(false);
+    expect(mesmaEmpresa(CNPJ, "529.982.247-25")).toBe(false);
   });
 
   it("confere a raiz do CNPJ da empresa (inclusive CNPJ alfanumérico)", () => {
@@ -144,6 +168,9 @@ describe("NF-e — distribuição de DF-e", () => {
     expect(xml).toContain("<tpAmb>1</tpAmb><cUFAutor>17</cUFAutor><CNPJ>12345678000195</CNPJ>");
     expect(xml).toContain("<distNSU><ultNSU>000000000000041</ultNSU></distNSU>");
     expect(() => montarDistribuicao({ cnpj: CNPJ, uf: "XX", ultNsu: "0", ambiente: "producao" })).toThrow(/UF/);
+    // Produtor rural pessoa física (e-CPF): a consulta vai pelo CPF
+    expect(montarDistribuicao({ cnpj: "52998224725", uf: "MT", ultNsu: "0", ambiente: "producao" })).toContain("<cUFAutor>51</cUFAutor><CPF>52998224725</CPF><distNSU>");
+    expect(() => montarDistribuicao({ cnpj: "123", uf: "MT", ultNsu: "0", ambiente: "producao" })).toThrow(/CNPJ ou CPF/);
   });
 
   it("lê o retorno: situação, NSU e documentos compactados (resumo e XML completo)", () => {

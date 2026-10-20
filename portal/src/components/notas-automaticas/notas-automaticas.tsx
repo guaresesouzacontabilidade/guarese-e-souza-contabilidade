@@ -61,7 +61,7 @@ export function FormCertificado({
       {({ estado, pendente }) => (
         <>
           <div className="grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">
-            <Campo rotulo="Arquivo do certificado A1" htmlFor="cert-arquivo" erro={estado.erros?.arquivo} ajuda="Arquivo .pfx ou .p12 do e-CNPJ da empresa." obrigatorio>
+            <Campo rotulo="Arquivo do certificado A1" htmlFor="cert-arquivo" erro={estado.erros?.arquivo} ajuda="Arquivo .pfx ou .p12 do e-CNPJ da empresa (ou do e-CPF, no produtor rural pessoa física)." obrigatorio>
               <Input id="cert-arquivo" name="arquivo" type="file" accept=".pfx,.p12,application/x-pkcs12" />
             </Campo>
             <Campo rotulo="Senha do certificado" htmlFor="cert-senha" erro={estado.erros?.senha} ajuda="Usada só para abrir o arquivo agora; o portal não guarda a senha." obrigatorio>

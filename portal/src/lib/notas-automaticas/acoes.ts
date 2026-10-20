@@ -69,10 +69,14 @@ export async function cadastrarCertificado(empresaId: string, _anterior: Resulta
     if (e instanceof ErroCertificado) return falha(e.message, e.message.includes("Senha") ? { senha: [e.message] } : { arquivo: [e.message] });
     return falha("Não foi possível ler o certificado.");
   }
-  if (!lido.documento) return falha("Use o certificado e-CNPJ (A1) da empresa: este arquivo não traz um CNPJ.", { arquivo: ["Certificado sem CNPJ (e-CPF?)."] });
+  if (!lido.documento) {
+    return falha("Use o certificado A1 da empresa (e-CNPJ) ou do produtor rural (e-CPF): este arquivo não traz o CNPJ nem o CPF.", { arquivo: ["Certificado sem CNPJ ou CPF."] });
+  }
   const { data: empresa } = await ctx.supabase.from("empresas").select("documento").eq("id", empresaId).single();
   if (!mesmaEmpresa(lido.documento, empresa?.documento)) {
-    return falha("Este certificado é de outro CNPJ. Use o certificado da própria empresa.", { arquivo: ["CNPJ do certificado diferente do da empresa."] });
+    return falha("Este certificado é de outro CNPJ ou CPF. Use o certificado da própria empresa (ou do próprio produtor).", {
+      arquivo: ["CNPJ ou CPF do certificado diferente do cadastro."],
+    });
   }
 
   const { error } = await ctx.supabase.rpc("registrar_certificado", {

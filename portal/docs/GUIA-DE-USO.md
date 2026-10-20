@@ -72,7 +72,7 @@ Certificado digital, alvará de funcionamento, licenças (sanitária, bombeiros,
 - **Arquivar**: quando o documento não é mais necessário (para de avisar). Excluir é só com o escritório.
 
 ### Notas automáticas
-Com o **certificado digital A1 (e-CNPJ)** da empresa, o portal busca sozinho as notas fiscais nos serviços oficiais — as NF-e que a empresa recebe (SEFAZ) e as NFS-e emitidas e tomadas (Ambiente Nacional da NFS-e) — e as coloca em **Meus documentos**, sem ninguém precisar enviar.
+Com o **certificado digital A1** da empresa (e-CNPJ; para o produtor rural pessoa física, o e-CPF), o portal busca sozinho as notas fiscais nos serviços oficiais — as NF-e que a empresa recebe (SEFAZ) e as NFS-e emitidas e tomadas (Ambiente Nacional da NFS-e) — e as coloca em **Meus documentos**, sem ninguém precisar enviar.
 - Para ativar (empresário titular): **Notas automáticas → Certificado digital A1**, escolha o arquivo `.pfx` ou `.p12`, digite a senha e marque a autorização. O portal confere se o certificado é da empresa e se está válido. **A senha não é guardada**: o arquivo é aberto só nesse momento, e a chave fica guardada cifrada, usada apenas pelo servidor.
 - Sem certificado, a busca fica **desconectada** e nenhuma consulta é feita. O escritório também pode cadastrar o certificado, com a sua autorização por escrito — você é avisado.
 - **Mês inicial**: no cadastro do certificado você escolhe **"Trazer notas a partir de"** — se não mexer, fica o **mês anterior** ao cadastro (o mês que o escritório vai fechar). Notas emitidas antes desse mês **não são trazidas** (nada é guardado). Os serviços oficiais não têm consulta "por mês": eles entregam as notas numa fila, da mais antiga para a mais nova, e o portal separa tudo pelo mês de emissão. Dá para mudar o mês depois, no cartão **Notas por mês**: ao **recuar** o mês, as NFS-e (serviços) daqueles meses voltam a ser buscadas; as **NF-e (produtos) não voltam**, porque a SEFAZ entrega cada nota uma única vez e só guarda as dos últimos 3 meses — se precisar delas, envie os XML em Documentos. A troca do certificado (renovação) não muda o mês inicial.
@@ -86,9 +86,9 @@ Com o **certificado digital A1 (e-CNPJ)** da empresa, o portal busca sozinho as 
 - Para desligar, use **Remover certificado**: a busca para e o certificado é apagado do portal. As notas já trazidas continuam em Documentos.
 - **XML do mês em lote**: na mesma tela, escolha o mês de emissão e os tipos de nota (NF-e de entrada e de saída, NFC-e, CT-e, NFS-e prestadas e tomadas, eventos de cancelamento e correção) e clique em **Gerar arquivo do mês**. O portal monta um ZIP com os XML separados em pastas por tipo, a planilha **Relacao das notas.xlsx** (número, chave, emitente, destinatário, valor e situação de cada nota) e um **LEIA-ME** com o resumo — inclusive as NF-e que a SEFAZ entregou só em resumo. Entram as notas buscadas com o certificado e as enviadas em Documentos. Você recebe um aviso quando o arquivo fica pronto; ele fica disponível por **7 dias**. Meses com muitas notas saem em partes (parte 1 de 2, 2 de 2...). Cada download fica registrado.
 
-### Emitir nota fiscal (nota de serviço — NFS-e)
+### Emitir nota de serviço (NFS-e)
 Quando o escritório liga a emissão para a sua empresa, a nota de serviço sai **na hora**, pelo Emissor Nacional do governo, com o certificado digital da empresa:
-1. Abra **Emitir nota fiscal → Emitir nota**.
+1. Abra **Emitir nota de serviço → Emitir nota**.
 2. Escolha o **serviço** (cadastrado pelo escritório, com o código certo), diga **para quem é a nota** — empresa (digite o CNPJ e clique em **Buscar**: o portal traz o nome e o endereço da Receita), pessoa física (CPF e nome) ou consumidor não identificado —, o **valor**, a **data** e a **descrição** do serviço.
 3. Clique em **Emitir nota**, confira o resumo e confirme. Em poucos segundos a nota aparece como **Emitida**, com o **PDF (DANFSe)** e o **XML** para baixar. Com o e-mail do tomador preenchido, a nota vai para ele por e-mail.
 - **Não emitida**: o Emissor Nacional recusou; a tela mostra o motivo em palavras simples. Use **Pedir de novo com estes dados**, corrija e emita.
@@ -96,6 +96,21 @@ Quando o escritório liga a emissão para a sua empresa, a nota de serviço sai 
 - **Cancelar**: na nota emitida, **Cancelar nota**, escolha o motivo e explique. O prazo para cancelar depende do município.
 - Pediu igual sem querer? O portal avisa quando uma nota com o mesmo tomador, valor e descrição foi pedida há poucos minutos.
 - Enquanto o escritório testa, as notas saem no **ambiente de teste** do governo, com a marca "sem validade jurídica" — elas não valem como nota fiscal.
+
+### Emitir nota de produto (NF-e — empresa ou produtor rural)
+Quando o escritório liga a emissão, a nota fiscal eletrônica de venda (modelo 55) sai pelo portal, assinada com o certificado digital e enviada à SEFAZ do estado. Serve para empresas e para o **produtor rural** (CPF e inscrição estadual de cada propriedade).
+1. Abra **Emitir nota de produto → Emitir NF-e**.
+2. Escolha **quem emite** (a inscrição ou a propriedade), a **operação** (ex.: "Venda de milho para outro estado" — as regras fiscais foram cadastradas pelo escritório) e o **cliente** (comprador). Cliente novo: clique em **Novo**; com o CNPJ, o portal traz o nome e o endereço da Receita — a **inscrição estadual** é preciso pedir ao comprador.
+3. Inclua os **produtos** (quantidade e preço), o **frete** (por conta de quem, transportador, placa) e a **forma de pagamento** (à vista ou parcelas).
+4. Clique em **Conferir e emitir**. O portal mostra a nota calculada: valor dos produtos, ICMS, IBS/CBS, FUNRURAL e as **guias que a nota vai gerar** (ICMS da operação, ICMS do frete, DIFAL e contribuições como o FETHAB). Confira e clique em **Emitir NF-e**.
+5. Em segundos a nota aparece como **Autorizada**, com o **DANFE (PDF)** e o **XML**. Com o envio ligado, o comprador recebe os dois por e-mail.
+- **Rejeitada**: a SEFAZ recusou; a tela explica o motivo em palavras simples. Use **Corrigir e enviar de novo** (o número é o mesmo) ou **Descartar**.
+- **Sem resposta**: a SEFAZ não respondeu; o portal consulta antes de tentar de novo, para nunca emitir duas vezes.
+- **Carta de correção**: corrige textos como placa, endereço de entrega ou peso (não muda valores, quantidades nem o comprador).
+- **Cancelar**: só se a mercadoria não saiu, e em geral em até 24 horas da autorização.
+- **Nova nota com estes dados**: abre uma nota nova já preenchida (útil para vendas parecidas).
+- **Guias**: depois da autorização, o escritório gera a guia oficial (DAR da SEFAZ-MT pela chave da nota, DARE ou GNRE) e anexa o PDF; ela aparece na sua **Agenda de pagamentos**, com o "paguei". Em MT, o ICMS da venda para outro estado de quem não tem regime especial é pago **antes da saída** da mercadoria.
+- Enquanto o escritório testa, as notas saem no **ambiente de teste** da SEFAZ ("sem valor fiscal").
 
 ### Meus documentos
 Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, folha, relatórios). Cada documento mostra a situação, o histórico e as versões. Baixar ou visualizar fica registrado.
@@ -326,7 +341,7 @@ Em cada empresa → **Auditor fiscal → SPED Fiscal × XML** (e no quadro do au
 - A **EFD-Contribuições** é reconhecida e guardada, mas ainda não é conferida. O portal **não transmite nem altera** a EFD.
 
 ### Emissão de notas de serviço (configurar e acompanhar)
-Para ligar a emissão de uma empresa (menu da empresa → **Emitir nota fiscal → Configurar emissão**):
+Para ligar a emissão de uma empresa (menu da empresa → **Emitir nota de serviço → Configurar emissão**):
 1. **Certificado digital A1** cadastrado (em Notas automáticas) — é ele que assina as notas.
 2. **Serviços** que a empresa presta. Em **Atividades da empresa (CNAE)** aparecem o CNAE principal e os secundários da Receita, cada um com os serviços da **lista nacional** de descrição parecida: confira e clique em **Adicionar** (dá para mudar o nome para o cliente reconhecer, ex.: "Revisão de veículos"). Sem as atividades no cadastro, use **Buscar as atividades na Receita**. Também dá para usar **Novo serviço** e buscar pelo nome (ex.: "conserto", "contabilidade") ou pelo código (ex.: 14.01.01). Se o município pede, informe o código municipal.
    - A nota nacional leva o **código do serviço** (lista da LC 116), não o CNAE. Não existe tabela oficial ligando um ao outro: as sugestões comparam as descrições e o escritório decide. Atividades de comércio não ganham sugestão (a venda de mercadoria é nota de produto, NF-e).
@@ -339,6 +354,19 @@ Para ligar a emissão de uma empresa (menu da empresa → **Emitir nota fiscal �
 - A emissão é automática: quem tem a permissão **Emitir notas** (o empresário, por padrão) emite sem aprovação. Para tirar de alguém, ajuste as permissões do usuário.
 - Em produção, cada nota emitida entra sozinha nos documentos fiscais da empresa (previsão, auditor, lote de XML). As notas de teste não entram.
 - **Notas de serviço emitidas** (menu do escritório) mostra, por empresa, as notas do mês, as recusadas e pendentes e a situação do certificado.
+
+### Emissão de notas de produto — NF-e (configurar e acompanhar)
+Para ligar a emissão de uma empresa ou produtor (menu da empresa → **Emitir nota de produto → Configurar emissão**):
+1. **Certificado digital A1** cadastrado (em Notas automáticas). O produtor rural pessoa física usa o certificado do CPF (e-CPF).
+2. **Credenciamento na SEFAZ**: a empresa ou o produtor precisa estar credenciado como emissor de NF-e na SEFAZ do estado. Sem isso a SEFAZ recusa a nota (rejeição 203). Depois de salvar, use **Testar conexão com a SEFAZ**.
+3. **Quem emite**: a inscrição estadual do estabelecimento ou de **cada propriedade** do produtor, com endereço, **série** (produtor pessoa física: 920 a 969; empresa: use uma série que não é usada em outro sistema) e o próximo número.
+4. **Produtos**: código, descrição, **NCM**, unidade e **peso de uma unidade** (ex.: saca de milho = 60 kg) — o peso vai para a nota e para o cálculo por tonelada (FETHAB). Há modelos prontos de milho e soja.
+5. **Operações (regras fiscais)**: natureza, destino, CFOP, ICMS (CST/CSOSN, alíquota, redução, diferimento), **ICMS pago por nota** antes da saída (ex.: MT), **DIFAL** para consumidor de outro estado, **ICMS do frete** retido pelo vendedor (autônomo ou transportadora de outro estado), PIS/Cofins, **IBS/CBS** (classificação da tabela oficial; obrigatória no regime normal desde 03/08/2026), **FUNRURAL** e **contribuições** como o FETHAB (percentual da UPF por tonelada — informe o percentual e a UPF vigentes). Quem emite só escolhe a operação.
+6. **Configuração**: regime (CRT), FUNRURAL (percentual e quem recolhe), envio ao comprador por e-mail, autorização do escritório para baixar o XML e informações padrão.
+7. **Autorização do cliente** registrada e a emissão ligada **no ambiente de teste**. Emita uma nota de teste, confira o DANFE e os impostos e só então passe para **produção**.
+- **Guias da nota**: ao autorizar, o portal calcula cada guia (ICMS da operação, ICMS do frete, DIFAL, FCP e contribuições) e mostra na nota como **A gerar**, com o caminho: na SEFAZ-MT, "Recolhimento prévio ICMS – Posto Fiscal" com a chave da nota (o portal tem o botão **Copiar a chave**); outro estado, GNRE. Gere a guia no site oficial, clique em **Anexar a guia gerada** e envie o PDF: ela entra nos documentos como guia e na agenda de pagamentos do cliente. **Não se aplica** dispensa a guia (com o motivo). A SEFAZ-MT não oferece serviço para sistemas gerarem o DAR, e a GNRE automática fica **desconectada** até o escritório credenciar o portal no Portal GNRE — por isso a guia oficial é gerada no site.
+- Em produção, cada nota autorizada entra sozinha nos documentos fiscais da empresa (previsão, auditor, lote de XML). As notas de teste não entram.
+- **Notas de produto emitidas** (menu do escritório) mostra, por empresa, as notas do mês, as recusadas e pendentes, as **guias a gerar** e a situação do certificado.
 
 ### Maquininhas da carteira
 O menu **Maquininhas** do escritório mostra, no mês escolhido, quanto cada empresa teve cobrado acima do contrato, as vendas sem taxa cadastrada e os relatórios que esperam a conferência das colunas. Em cada empresa → **Maquininhas**:

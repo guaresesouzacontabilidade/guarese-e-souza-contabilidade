@@ -111,7 +111,7 @@ export default async function NotasServicoCarteira({ searchParams }: PageProps<"
             <EstadoVazio
               icone={PlugZap}
               titulo="Nenhuma empresa com emissão configurada"
-              descricao="Abra uma empresa, vá em Emitir nota fiscal → Configurar emissão, cadastre os serviços e ligue a emissão (com o certificado digital)."
+              descricao="Abra uma empresa, vá em Emitir nota de serviço → Configurar emissão, cadastre os serviços e ligue a emissão (com o certificado digital)."
             />
           )}
         </CardContent>

@@ -153,7 +153,7 @@ test("colaborador sem a permissão não vê a emissão", async ({ page }) => {
   test.setTimeout(180_000);
   await entrar(page, `colaborador@${DOMINIO}`);
   await page.waitForURL(/\/e\/[0-9a-f-]{36}/, { timeout: 90_000 });
-  await expect(page.getByRole("link", { name: "Emitir nota fiscal" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Emitir nota de serviço" })).toHaveCount(0);
   const padaria = page.url().match(/\/e\/([0-9a-f-]{36})/)![1];
   await page.goto(`/e/${padaria}/notas-servico`);
   await expect(page.getByText("Seu acesso não inclui a emissão de notas desta empresa.")).toBeVisible();

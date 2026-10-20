@@ -20,7 +20,7 @@ $$;
 -- 1. Titular cadastra (autorização dada no portal)
 select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
 set local role authenticated;
-select throws_ok($$select pg_temp.cadastrar('99888777000166')$$, 'P0001', 'O certificado não é desta empresa (CNPJ diferente).', 'certificado de outro CNPJ é recusado');
+select throws_ok($$select pg_temp.cadastrar('99888777000166')$$, 'P0001', 'O certificado não é desta empresa (CNPJ ou CPF diferente).', 'certificado de outro CNPJ é recusado');
 select throws_ok($$select pg_temp.cadastrar('11444777000161', now() - interval '1 day')$$, 'P0001', 'Este certificado está vencido.', 'certificado vencido é recusado');
 select set_config('testes.cert1', pg_temp.cadastrar('11444777000161')::text, true);
 select ok(current_setting('testes.cert1') <> '', 'titular cadastra o certificado da própria empresa');
