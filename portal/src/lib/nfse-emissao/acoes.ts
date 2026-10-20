@@ -234,7 +234,16 @@ export async function salvarConfiguracao(empresaId: string, _anterior: Resultado
       autorizacao_texto: texto(fd, "autorizacao_texto") || null,
     } as never,
   });
-  if (error) return falha(mensagemErro(error));
+  if (error) {
+    const msg = mensagemErro(error);
+    // A autorização fica no fim do formulário: aponta o campo
+    if (/autorizou o portal/.test(msg)) {
+      return falha("Para ligar a emissão, preencha a “Autorização do cliente”, no fim do formulário.", {
+        autorizacao_texto: ["Escreva como o cliente autorizou (ex.: e-mail do sócio de 20/10/2026, contrato assinado)."],
+      });
+    }
+    return falha(msg);
+  }
   return sucesso("Configuração da emissão salva.");
 }
 

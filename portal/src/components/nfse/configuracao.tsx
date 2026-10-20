@@ -168,6 +168,8 @@ export function FormConfiguracao({ empresaId, cfg, regime, municipioNome }: { em
             <Campo
               rotulo="Autorização do cliente"
               htmlFor="autorizacao_texto"
+              obrigatorio={!cfg.autorizacao_texto}
+              erro={e.autorizacao_texto}
               ajuda={
                 cfg.autorizacao_texto
                   ? `Registrada: “${cfg.autorizacao_texto}”. Preencha só para registrar uma nova.`
