@@ -2267,6 +2267,19 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"nfse_leiaute_ambiente": {
+                  Row: {
+                    "ambiente": string,"atualizado_em": string,"motivo": string | null,"variante": NonNullable<Json>
+                  }
+                  Insert: {
+                    "ambiente": string,"atualizado_em"?: string,"motivo"?: string | null,"variante": NonNullable<Json>
+                  }
+                  Update: {
+                    "ambiente"?: string,"atualizado_em"?: string,"motivo"?: string | null,"variante"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"nfse_lista_servicos": {
                   Row: {
                     "codigo": string,"descricao": string,"descricao_item": string | null,"descricao_subitem": string | null,"desdobro": number,"item": number,"subitem": number

@@ -24,13 +24,14 @@ import { createHash, createPrivateKey, sign, X509Certificate } from "node:crypto
  *  - no leiaute 1.01 atual de produção, o grupo de IBS/CBS é opcional: não é
  *    enviado.
  *
- * A produção restrita (testes) já valida o leiaute da NT 009 v1.01 (Anexo VI
- * v1.04.01, de 01/10/2026; sem esquema XSD publicado): finalidade da nota
- * (finNFSe) e destinatário (indDest) no infDPS, regime do IBS/CBS no Simples
- * (regApIBSCBSSN), atividade do Simples (cAtvSN), NBS e o grupo IBSCBS
- * obrigatórios para competência a partir de 01/10/2026 (E0855). Cada
- * ambiente usa o seu leiaute (LEIAUTE_POR_AMBIENTE); quando a NT 009 entrar
- * em produção, basta trocar o leiaute da produção.
+ * Leiaute da NT 009 v1.01 (Anexo VI v1.04.01, de 01/10/2026; publicado só
+ * como planilha, sem XSD): o governo implanta em etapas — a produção restrita
+ * já exige a finalidade (finNFSe) no infDPS e o grupo IBSCBS com o CST e o
+ * cClassTrib direto no trib, mas ainda recusa os campos do Simples
+ * (regApIBSCBSSN, cAtvSN); depois vêm o indDest na raiz e a nova ordem do
+ * cServ. Por isso o leiaute é uma combinação de partes (VarianteLeiaute), com
+ * um padrão por ambiente, e o emissor ajusta a combinação pela mensagem de
+ * recusa do esquema (ajustarVariante) e envia de novo a mesma DPS.
  */
 
 export const NS_NFSE = "http://www.sped.fazenda.gov.br/nfse";
@@ -40,9 +41,89 @@ export const VERSAO_APLICATIVO = "PortalGuaresesON-1.0";
 
 export type AmbienteNfse = "producao" | "homologacao";
 
-/** "1.01": leiaute atual de produção (esquemas de 09/02/2026); "nt009": leiaute da NT 009 v1.01. */
-export type LeiauteDps = "1.01" | "nt009";
-export const LEIAUTE_POR_AMBIENTE: Record<AmbienteNfse, LeiauteDps> = { producao: "1.01", homologacao: "nt009" };
+/** Partes da NT 009 v1.01 usadas na DPS (todas falsas = leiaute 1.01 dos esquemas de 09/02/2026). */
+export interface VarianteLeiaute {
+  /** 2.2: finNFSe no infDPS, logo depois do tpEmit */
+  finNFSe: boolean;
+  /** Grupo IBSCBS (obrigatório na NT 009 para competência a partir de 01/10/2026, E0855), com o NBS (E0322) */
+  ibscbs: boolean;
+  /** 2.4: regApIBSCBSSN e cAtvSN para o Simples ME/EPP */
+  simples: boolean;
+  /** Ordem do cServ da NT 009: NBS (e cAtvSN) antes da descrição */
+  cServNovaOrdem: boolean;
+  /** 2.11: indDest no infDPS, depois do tomador (antes: dentro do IBSCBS) */
+  indDestNaRaiz: boolean;
+  /** 2.16: CST e cClassTrib direto no trib, antes do gIBSCBS (antes: dentro do gIBSCBS) */
+  cstNoTrib: boolean;
+}
+
+export const LEIAUTE_1_01: VarianteLeiaute = { finNFSe: false, ibscbs: false, simples: false, cServNovaOrdem: false, indDestNaRaiz: false, cstNoTrib: false };
+export const LEIAUTE_NT009: VarianteLeiaute = { finNFSe: true, ibscbs: true, simples: true, cServNovaOrdem: true, indDestNaRaiz: true, cstNoTrib: true };
+
+/** Ponto de partida de cada ambiente (o emissor guarda o que aprender com as recusas). */
+export const VARIANTE_PADRAO: Record<AmbienteNfse, VarianteLeiaute> = {
+  producao: LEIAUTE_1_01,
+  // Produção restrita em 20/10/2026: finNFSe e CST no trib já valem; Simples (2.4), indDest na raiz e a nova ordem ainda não
+  homologacao: { finNFSe: true, ibscbs: true, simples: false, cServNovaOrdem: false, indDestNaRaiz: false, cstNoTrib: true },
+};
+
+/**
+ * A partir da recusa do Sistema Nacional, a combinação de partes do leiaute
+ * que corrige o problema (ou null quando a recusa não é de leiaute). Lê a
+ * mensagem do validador de esquema (E1235: "The element 'X' has invalid child
+ * element 'Y'. List of possible elements expected: 'Z'") e as regras de
+ * obrigatoriedade do grupo IBSCBS e dos campos do Simples.
+ */
+export function ajustarVariante(v: VarianteLeiaute, erros: { codigo: string; descricao: string; complemento?: string | null }[]): VarianteLeiaute | null {
+  const com = (mudanca: Partial<VarianteLeiaute>) => {
+    const nova = { ...v, ...mudanca };
+    return (Object.keys(mudanca) as (keyof VarianteLeiaute)[]).some((k) => nova[k] !== v[k]) ? nova : null;
+  };
+  for (const e of erros) {
+    const texto = `${e.descricao ?? ""} ${e.complemento ?? ""}`;
+    const lista = texto.split("List of possible elements expected:")[1] ?? "";
+    const esperados = [...lista.matchAll(/'([^']*)'/g)]
+      .map((m) => m[1])
+      .filter((x) => !x.startsWith("http"))
+      .flatMap((x) => x.split(/,\s*/))
+      .filter(Boolean);
+    const filhoInvalido = /The element '(\w+)'(?: in namespace '[^']*')? has invalid child element '(\w+)'/.exec(texto);
+    const incompleto = /The element '(\w+)'(?: in namespace '[^']*')? has incomplete content/.exec(texto);
+    let r: VarianteLeiaute | null = null;
+    if (filhoInvalido) {
+      const [, pai, filho] = filhoInvalido;
+      if (filho === "regApIBSCBSSN" || filho === "cAtvSN") r = com({ simples: false });
+      else if (pai === "regTrib" && esperados.includes("regApIBSCBSSN")) r = com({ simples: true });
+      else if (pai === "cServ" && esperados.includes("cAtvSN")) r = com({ simples: true });
+      else if (pai === "infDPS" && esperados.includes("finNFSe")) r = com({ finNFSe: true });
+      else if (pai === "infDPS" && filho === "finNFSe") r = com({ finNFSe: false });
+      else if (pai === "infDPS" && esperados.includes("indDest")) r = com({ indDestNaRaiz: true });
+      else if (pai === "infDPS" && filho === "indDest") r = com({ indDestNaRaiz: false });
+      else if (pai === "IBSCBS" && esperados.includes("indDest")) r = com({ indDestNaRaiz: false });
+      else if (pai === "IBSCBS" && filho === "indDest") r = com({ indDestNaRaiz: true });
+      else if (pai === "cServ" && filho === "cNBS" && esperados.includes("xDescServ")) r = com({ cServNovaOrdem: false });
+      else if (pai === "cServ" && filho === "xDescServ" && esperados.some((x) => ["cNBS", "cAtvSN", "cIntContrib"].includes(x))) r = com({ cServNovaOrdem: true });
+      else if (pai === "trib" && filho === "CST") r = com({ cstNoTrib: false });
+      else if (pai === "trib" && filho === "gIBSCBS" && esperados.includes("CST")) r = com({ cstNoTrib: true });
+      else if (pai === "gIBSCBS" && esperados.includes("CST")) r = com({ cstNoTrib: false });
+      else if (pai === "infDPS" && filho === "IBSCBS") r = com({ ibscbs: false });
+    } else if (incompleto) {
+      const [, pai] = incompleto;
+      if (pai === "IBSCBS" && esperados.includes("indDest")) r = com({ indDestNaRaiz: false });
+      else if (pai === "infDPS" && esperados.includes("indDest")) r = com({ indDestNaRaiz: true });
+      else if (pai === "infDPS" && esperados.includes("finNFSe")) r = com({ finNFSe: true });
+      else if (pai === "gIBSCBS" && esperados.includes("CST")) r = com({ cstNoTrib: false });
+      else if (pai === "trib" && esperados.includes("CST")) r = com({ cstNoTrib: true });
+      else if (pai === "regTrib" && esperados.includes("regApIBSCBSSN")) r = com({ simples: true });
+    } else if (e.codigo === "E0855") {
+      r = com({ ibscbs: true });
+    } else if (/obrigat/i.test(texto) && /(regApIBSCBSSN|cAtvSN|atividade do Simples Nacional|apuração tributária pelo Simples Nacional para IBS)/i.test(texto)) {
+      r = com({ simples: true });
+    }
+    if (r) return r;
+  }
+  return null;
+}
 
 /** CST do IBS/CBS sem tributação na nota (isenção, imunidade, declaração em regime específico): sem cIndOp nem gIBSCBS. */
 const CST_SEM_TRIBUTACAO = new Set(["400", "410", "820"]);
@@ -116,8 +197,8 @@ export interface EnderecoNacional {
 
 export interface DadosDps {
   ambiente: AmbienteNfse;
-  /** Sem ele, o do ambiente (LEIAUTE_POR_AMBIENTE) */
-  leiaute?: LeiauteDps;
+  /** Partes da NT 009 usadas (sem ela, o padrão do ambiente) */
+  variante?: VarianteLeiaute;
   emitidaEm: Date;
   serie: number;
   numero: number;
@@ -187,13 +268,14 @@ export function montarInfDps(d: DadosDps): { id: string; canonico: string; filho
   const p = d.prestador;
   if (!/^[0-9]{14}$/.test(p.cnpj)) throw new Error("CNPJ do prestador inválido.");
   const id = idDps(d.codigoMunicipioEmissor, p.cnpj, d.serie, d.numero);
-  const nt009 = (d.leiaute ?? LEIAUTE_POR_AMBIENTE[d.ambiente]) === "nt009";
+  const v = d.variante ?? VARIANTE_PADRAO[d.ambiente];
+  const simplesNt009 = v.simples && p.opcaoSimples === 3;
 
   const regTrib =
     `<regTrib><opSimpNac>${p.opcaoSimples}</opSimpNac>` +
     (p.opcaoSimples === 3 ? `<regApTribSN>${p.regimeApuracaoSn}</regApTribSN>` : "") +
     // NT 009: IBS e CBS apurados pelo Simples (a opção pelo regime regular só existe a partir de 2027)
-    (nt009 && p.opcaoSimples === 3 ? "<regApIBSCBSSN>1</regApIBSCBSSN>" : "") +
+    (simplesNt009 ? "<regApIBSCBSSN>1</regApIBSCBSSN>" : "") +
     `<regEspTrib>${p.opcaoSimples === 2 || (p.opcaoSimples === 3 && p.regimeApuracaoSn === 1) ? 0 : p.regimeEspecial}</regEspTrib></regTrib>`;
   const prest = `<prest><CNPJ>${p.cnpj}</CNPJ>${txt("IM", p.inscricaoMunicipal ? textoLeiaute(p.inscricaoMunicipal, 15) : null)}${regTrib}</prest>`;
 
@@ -212,18 +294,15 @@ export function montarInfDps(d: DadosDps): { id: string; canonico: string; filho
   const s = d.servico;
   const descricao = textoLeiaute(s.descricao, 1000, { quebras: true });
   if (descricao.length < 1) throw new Error("Descrição do serviço vazia.");
-  let cServ: string;
-  if (nt009) {
-    // NT 009: NBS obrigatório com o grupo IBSCBS (E0322); cAtvSN obrigatório para o Simples ME/EPP; a descrição vem por último
-    if (!s.codigoNbs) throw new Error("Falta o código NBS do serviço (obrigatório no leiaute novo da NFS-e). Ajuste o serviço em Configurar emissão.");
-    if (p.opcaoSimples === 3 && !s.atividadeSimples) throw new Error("Falta a atividade do Simples Nacional do serviço (obrigatória no leiaute novo da NFS-e).");
-    cServ =
-      `<cServ><cTribNac>${s.codigoTributacaoNacional}</cTribNac>${el("cTribMun", s.codigoTributacaoMunicipal)}<cNBS>${s.codigoNbs}</cNBS>` +
-      (p.opcaoSimples === 3 ? `<cAtvSN>${String(s.atividadeSimples).padStart(2, "0")}</cAtvSN>` : "") +
-      `${txt("xDescServ", descricao)}</cServ>`;
-  } else {
-    cServ = `<cServ><cTribNac>${s.codigoTributacaoNacional}</cTribNac>${el("cTribMun", s.codigoTributacaoMunicipal)}${txt("xDescServ", descricao)}${el("cNBS", s.codigoNbs)}</cServ>`;
-  }
+  // Com o grupo IBSCBS, o NBS é obrigatório (E0322); com os campos do Simples, a atividade (cAtvSN)
+  if (v.ibscbs && !s.codigoNbs) throw new Error("Falta o código NBS do serviço (obrigatório no leiaute novo da NFS-e). Ajuste o serviço em Configurar emissão.");
+  if (simplesNt009 && !s.atividadeSimples) throw new Error("Falta a atividade do Simples Nacional do serviço (obrigatória no leiaute novo da NFS-e).");
+  const nbs = el("cNBS", s.codigoNbs);
+  const atvSn = simplesNt009 ? `<cAtvSN>${String(s.atividadeSimples).padStart(2, "0")}</cAtvSN>` : "";
+  const cServ =
+    `<cServ><cTribNac>${s.codigoTributacaoNacional}</cTribNac>${el("cTribMun", s.codigoTributacaoMunicipal)}` +
+    (v.cServNovaOrdem ? `${nbs}${atvSn}${txt("xDescServ", descricao)}` : `${txt("xDescServ", descricao)}${nbs}${atvSn}`) +
+    "</cServ>";
   const serv =
     `<serv><locPrest><cLocPrestacao>${s.localPrestacao}</cLocPrestacao></locPrest>${cServ}` +
     (d.informacoesComplementares ? `<infoCompl>${txt("xInfComp", textoLeiaute(d.informacoesComplementares, 2000))}</infoCompl>` : "") +
@@ -246,26 +325,35 @@ export function montarInfDps(d: DadosDps): { id: string; canonico: string; filho
         : "<totTrib><indTotTrib>0</indTotTrib></totTrib>";
   const valores = `<valores><vServPrest><vServ>${decimal(d.valor, 15)}</vServ></vServPrest><trib>${tribMun}${totTrib}</trib></valores>`;
 
-  // NT 009: grupo do IBS/CBS (os valores são calculados pelo Sistema Nacional a partir da classificação)
+  // Grupo do IBS/CBS (os valores são calculados pelo Sistema Nacional a partir da classificação)
   let ibscbs = "";
-  if (nt009) {
+  if (v.ibscbs) {
     const ib = s.ibscbs;
     if (!ib || !/^[0-9]{6}$/.test(ib.classificacao) || !/^[0-9]{6}$/.test(ib.indicadorOperacao)) {
       throw new Error("Falta a classificação do IBS/CBS do serviço (obrigatória no leiaute novo da NFS-e). Ajuste o serviço em Configurar emissão.");
     }
     const cst = ib.classificacao.slice(0, 3);
-    const tributado = !CST_SEM_TRIBUTACAO.has(cst);
-    ibscbs =
-      `<IBSCBS>${tributado ? `<cIndOp>${ib.indicadorOperacao}</cIndOp>` : ""}` +
-      `<valores><trib><CST>${cst}</CST><cClassTrib>${ib.classificacao}</cClassTrib>${tributado ? "<gIBSCBS></gIBSCBS>" : ""}</trib></valores></IBSCBS>`;
+    const classificacao = `<CST>${cst}</CST><cClassTrib>${ib.classificacao}</cClassTrib>`;
+    let indOp: string;
+    let trib: string;
+    if (v.cstNoTrib) {
+      // NT 009: sem tributação na nota (CST 400, 410, 820), sem indicador da operação nem gIBSCBS
+      const tributado = !CST_SEM_TRIBUTACAO.has(cst);
+      indOp = tributado ? `<cIndOp>${ib.indicadorOperacao}</cIndOp>` : "";
+      trib = `${classificacao}${tributado ? "<gIBSCBS></gIBSCBS>" : ""}`;
+    } else {
+      indOp = `<cIndOp>${ib.indicadorOperacao}</cIndOp>`;
+      trib = `<gIBSCBS>${classificacao}</gIBSCBS>`;
+    }
+    ibscbs = `<IBSCBS>${indOp}${v.indDestNaRaiz ? "" : "<indDest>0</indDest>"}<valores><trib>${trib}</trib></valores></IBSCBS>`;
   }
 
   const filhos =
     `<tpAmb>${d.ambiente === "producao" ? 1 : 2}</tpAmb><dhEmi>${dataHoraBrasil(d.emitidaEm)}</dhEmi>` +
     `<verAplic>${VERSAO_APLICATIVO}</verAplic><serie>${d.serie}</serie><nDPS>${d.numero}</nDPS><dCompet>${d.competencia}</dCompet>` +
-    `<tpEmit>1</tpEmit>${nt009 ? "<finNFSe>0</finNFSe>" : ""}<cLocEmi>${d.codigoMunicipioEmissor}</cLocEmi>${prest}${toma}` +
-    // NT 009: o destinatário é o próprio tomador
-    `${nt009 ? "<indDest>0</indDest>" : ""}${serv}${valores}${ibscbs}`;
+    `<tpEmit>1</tpEmit>${v.finNFSe ? "<finNFSe>0</finNFSe>" : ""}<cLocEmi>${d.codigoMunicipioEmissor}</cLocEmi>${prest}${toma}` +
+    // O destinatário é o próprio tomador
+    `${v.ibscbs && v.indDestNaRaiz ? "<indDest>0</indDest>" : ""}${serv}${valores}${ibscbs}`;
   return { id, filhos, canonico: `<infDPS xmlns="${NS_NFSE}" Id="${id}">${filhos}</infDPS>` };
 }
 

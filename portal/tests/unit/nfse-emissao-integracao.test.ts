@@ -62,7 +62,8 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
   let chavesEmpresa: { chavePem: string; certificadoPem: string };
   let chaveAnterior: string | undefined;
   /** Comportamento do servidor para o próximo pedido */
-  let modo: "autoriza" | "rejeita" | "erro500" = "autoriza";
+  // "etapa2": simula o Sistema Nacional com o indDest já na raiz da DPS (NT 009, 2.11)
+  let modo: "autoriza" | "rejeita" | "erro500" | "etapa2" = "autoriza";
   const recebidas: { metodo: string; url: string; corpo: string }[] = [];
   const emitidas = new Map<string, { chave: string; xml: string }>();
   let numero = 100;
@@ -142,6 +143,19 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
         if (req.method === "POST" && req.url === "/SefinNacional/nfse") {
           const dps = gunzipSync(Buffer.from(JSON.parse(corpo).dpsXmlGZipB64, "base64")).toString("utf8");
           if (modo === "erro500") return responder(res, 500, { mensagem: "instabilidade" });
+          if (modo === "etapa2" && /<IBSCBS>[^]*<indDest>/.test(dps)) {
+            const ns = "in namespace 'http://www.sped.fazenda.gov.br/nfse'";
+            return responder(res, 400, {
+              tipoAmbiente: 2,
+              erros: [
+                {
+                  Codigo: "E1235",
+                  Descricao: `Falha no esquema XML do DF-e. (The element 'IBSCBS' ${ns} has invalid child element 'indDest' ${ns}. List of possible elements expected: 'tpOper, gRefNFSe, tpEnteGov, imovel, valores' ${ns}.)`,
+                  Complemento: null,
+                },
+              ],
+            });
+          }
           if (modo === "rejeita") {
             return responder(res, 400, { tipoAmbiente: 2, erros: [{ Codigo: "E0310", Descricao: "Código de tributação nacional não administrado pelo município.", Complemento: null }] });
           }
@@ -179,6 +193,7 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
     await admin.from("certificados_digitais").delete().eq("empresa_id", empresaId);
     await admin.from("jobs").delete().eq("empresa_id", empresaId).in("tipo", ["emitir_nfse", "cancelar_nfse"]);
     await admin.from("notificacoes").delete().eq("empresa_id", empresaId).eq("tipo", "nfse");
+    await admin.from("nfse_leiaute_ambiente").delete().eq("ambiente", "homologacao");
   }
 
   afterAll(async () => {
@@ -236,11 +251,12 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
     expect(dps).toContain(`<infDPS Id="${p.id_dps}">`);
     expect(dps).toContain("<tpAmb>2</tpAmb>");
     expect(dps).toContain("<opSimpNac>1</opSimpNac>");
-    // Ambiente de teste: leiaute da NT 009 (finalidade, destinatário, NBS e grupo do IBS/CBS)
+    // Ambiente de teste na etapa atual da NT 009: finalidade, NBS e grupo do IBS/CBS (com o indDest ainda dentro do grupo)
     expect(dps).toContain("<tpEmit>1</tpEmit><finNFSe>0</finNFSe>");
-    expect(dps).toContain("<indDest>0</indDest>");
     expect(dps).toContain("<cNBS>120013110</cNBS>");
-    expect(dps).toContain("<IBSCBS><cIndOp>050101</cIndOp><valores><trib><CST>000</CST><cClassTrib>000001</cClassTrib><gIBSCBS></gIBSCBS></trib></valores></IBSCBS>");
+    expect(dps).toContain(
+      "<IBSCBS><cIndOp>050101</cIndOp><indDest>0</indDest><valores><trib><CST>000</CST><cClassTrib>000001</cClassTrib><gIBSCBS></gIBSCBS></trib></valores></IBSCBS>",
+    );
     expect(dps).toContain("<pTotTribFed>13.45</pTotTribFed>");
     expect(dps).toContain("<vServ>850.50</vServ>");
     const doc = new DOMParser().parseFromString(dps, "text/xml");
@@ -252,6 +268,31 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
     expect(e).toMatchObject({ situacao: "autorizada", numero_nfse: String(numero), tentativas: 1, documento_id: null });
     expect(e!.chave_acesso).toMatch(/^[0-9]{50}$/);
     expect(e!.xml_nfse).toContain("<NFSe");
+  });
+
+  it("recusa de esquema de uma etapa nova da NT 009: ajusta o leiaute, envia de novo a mesma DPS e guarda o que aprendeu", async () => {
+    const { emitirNfse } = await import("@/lib/nfse-emissao/emitir");
+    const p = await pedido({ descricao: "Pedido na etapa 2 da NT 009 (teste)" });
+    modo = "etapa2";
+    const antes = recebidas.length;
+    const r = (await emitirNfse(admin as never, job(p.id), { base, ca: [ac.pem] })) as { situacao: string };
+    expect(r.situacao).toBe("autorizada");
+    const envios = recebidas.slice(antes).filter((x) => x.metodo === "POST" && x.url === "/SefinNacional/nfse");
+    expect(envios).toHaveLength(2);
+    const segunda = gunzipSync(Buffer.from(JSON.parse(envios[1].corpo).dpsXmlGZipB64, "base64")).toString("utf8");
+    expect(segunda).toContain(`<infDPS Id="${p.id_dps}">`);
+    expect(segunda).toContain("</toma><indDest>0</indDest><serv>");
+    const { data: aprendido } = await admin.from("nfse_leiaute_ambiente").select("variante, motivo").eq("ambiente", "homologacao").single();
+    expect(aprendido!.variante).toMatchObject({ indDestNaRaiz: true, finNFSe: true });
+    expect(aprendido!.motivo).toContain("E1235");
+
+    // A próxima nota já sai com o que foi aprendido (um envio só)
+    const p2 = await pedido({ descricao: "Segundo pedido na etapa 2 (teste)" });
+    const antes2 = recebidas.length;
+    expect(((await emitirNfse(admin as never, job(p2.id), { base, ca: [ac.pem] })) as { situacao: string }).situacao).toBe("autorizada");
+    expect(recebidas.slice(antes2).filter((x) => x.metodo === "POST" && x.url === "/SefinNacional/nfse")).toHaveLength(1);
+    await admin.from("nfse_leiaute_ambiente").delete().eq("ambiente", "homologacao");
+    modo = "autoriza";
   });
 
   it("rejeição do Emissor Nacional fica registrada com o motivo e avisa", async () => {

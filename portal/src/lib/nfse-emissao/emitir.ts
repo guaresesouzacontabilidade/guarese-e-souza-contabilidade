@@ -6,7 +6,17 @@ import { envServidor } from "@/lib/env-servidor";
 import { decifrar } from "@/lib/notas-automaticas/cripto";
 import { ErroConexao, type Credencial } from "@/lib/notas-automaticas/transporte";
 import { importarXmlAutomatico } from "@/lib/notas-automaticas/importar";
-import { dpsAssinada, pedidoCancelamentoAssinado, type DadosDps, type EnderecoNacional, type MotivoCancelamento } from "./dps";
+import {
+  VARIANTE_PADRAO,
+  ajustarVariante,
+  dpsAssinada,
+  pedidoCancelamentoAssinado,
+  type AmbienteNfse,
+  type DadosDps,
+  type EnderecoNacional,
+  type MotivoCancelamento,
+  type VarianteLeiaute,
+} from "./dps";
 import { URLS_SEFIN, chaveDaDps, enviarDps, lerNfse, nfsePorChave, registrarEvento, type ConexaoSefin, type ErroSefin } from "./sefin";
 import { atividadeSimplesPadrao } from "./reforma";
 
@@ -116,6 +126,21 @@ export function dadosDaDps(
   };
 }
 
+/** Combinação de partes do leiaute que o ambiente aceita: a aprendida nas recusas ou o padrão. */
+export async function varianteDoAmbiente(admin: ClienteAdmin, ambiente: AmbienteNfse): Promise<VarianteLeiaute> {
+  const { data } = await admin.from("nfse_leiaute_ambiente").select("variante").eq("ambiente", ambiente).maybeSingle();
+  return { ...VARIANTE_PADRAO[ambiente], ...((data?.variante as Partial<VarianteLeiaute> | null) ?? {}) };
+}
+
+async function guardarVariante(admin: ClienteAdmin, ambiente: AmbienteNfse, variante: VarianteLeiaute, erros: ErroSefin[]) {
+  await admin.from("nfse_leiaute_ambiente").upsert({
+    ambiente,
+    variante: variante as never,
+    motivo: erros.map((x) => `${x.codigo}: ${x.descricao}`).join(" | ").slice(0, 2000),
+    atualizado_em: new Date().toISOString(),
+  });
+}
+
 async function registrar(admin: ClienteAdmin, id: string, dados: Partial<Emissao>) {
   const { error } = await admin.from("nfse_emissoes").update(dados as never).eq("id", id);
   if (error) throw new Error(`Falha ao gravar a nota: ${error.message}`);
@@ -189,15 +214,25 @@ export async function emitirNfse(admin: ClienteAdmin, job: Job, teste: OpcoesTes
   const cred = await credencialDaEmpresa(admin, e.empresa_id);
   if ("erro" in cred) return falhaDefinitiva(cred.erro);
 
+  const ambiente = e.ambiente as AmbienteNfse;
+  const chaves = { chavePem: cred.credencial.chave, certificadoPem: cred.credencial.certificados[0] };
   // Dados fora do leiaute: a nota não sai daqui (rejeitada pelo portal, sem envio)
-  let dps: { id: string; xml: string };
-  try {
-    dps = dpsAssinada(dadosDaDps(e, cfg, emp, new Date(), simples), { chavePem: cred.credencial.chave, certificadoPem: cred.credencial.certificados[0] });
+  const montar = (variante: VarianteLeiaute) => {
+    const dps = dpsAssinada({ ...dadosDaDps(e, cfg, emp, new Date(), simples), variante }, chaves);
     if (dps.id !== e.id_dps) throw new Error("Identificador da DPS diferente do reservado.");
-  } catch (err) {
+    return dps;
+  };
+  const rejeitarNoPortal = async (err: unknown) => {
     await registrar(admin, id, { situacao: "rejeitada", mensagens: [{ codigo: PORTAL, descricao: mensagem(err) }] as never });
     await avisar(admin, id);
     return { situacao: "rejeitada", motivo: mensagem(err) };
+  };
+  let variante = await varianteDoAmbiente(admin, ambiente);
+  let dps: { id: string; xml: string };
+  try {
+    dps = montar(variante);
+  } catch (err) {
+    return rejeitarNoPortal(err);
   }
 
   const conexao: ConexaoSefin = { base: teste.base ?? URLS_SEFIN[e.ambiente as keyof typeof URLS_SEFIN], credencial: cred.credencial, ca: teste.ca };
@@ -208,16 +243,33 @@ export async function emitirNfse(admin: ClienteAdmin, job: Job, teste: OpcoesTes
       const chave = await chaveDaDps(conexao, e.id_dps);
       if (chave) return concluirAutorizada(admin, e, emp, cfg, chave, await nfsePorChave(conexao, chave));
     }
-    const r = await enviarDps(conexao, dps.xml);
-    if (r.situacao === "autorizada") return concluirAutorizada(admin, e, emp, cfg, r.chave, r.xml);
-    // E0014: série e número já usados numa nota (resposta anterior perdida): busca essa nota
-    if (r.erros.some((x) => x.codigo === "E0014")) {
-      const chave = await chaveDaDps(conexao, e.id_dps);
-      if (chave) return concluirAutorizada(admin, e, emp, cfg, chave, await nfsePorChave(conexao, chave));
+    // Recusa de leiaute (o governo implanta a NT 009 em etapas): ajusta a combinação e envia de novo a mesma DPS,
+    // que não foi registrada; a combinação que passou fica guardada para as próximas notas do ambiente
+    const vistas = new Set([JSON.stringify(variante)]);
+    for (;;) {
+      const r = await enviarDps(conexao, dps.xml);
+      if (r.situacao === "autorizada") return concluirAutorizada(admin, e, emp, cfg, r.chave, r.xml);
+      // E0014: série e número já usados numa nota (resposta anterior perdida): busca essa nota
+      if (r.erros.some((x) => x.codigo === "E0014")) {
+        const chave = await chaveDaDps(conexao, e.id_dps);
+        if (chave) return concluirAutorizada(admin, e, emp, cfg, chave, await nfsePorChave(conexao, chave));
+      }
+      const nova = ajustarVariante(variante, r.erros);
+      if (nova && !vistas.has(JSON.stringify(nova)) && vistas.size < 7) {
+        vistas.add(JSON.stringify(nova));
+        variante = nova;
+        await guardarVariante(admin, ambiente, variante, r.erros);
+        try {
+          dps = montar(variante);
+        } catch (err) {
+          return rejeitarNoPortal(err);
+        }
+        continue;
+      }
+      await registrar(admin, id, { situacao: "rejeitada", mensagens: r.erros as never });
+      await avisar(admin, id);
+      return { situacao: "rejeitada", erros: r.erros.length };
     }
-    await registrar(admin, id, { situacao: "rejeitada", mensagens: r.erros as never });
-    await avisar(admin, id);
-    return { situacao: "rejeitada", erros: r.erros.length };
   } catch (err) {
     const erro: ErroSefin = { codigo: err instanceof ErroConexao ? err.codigo : PORTAL, descricao: mensagem(err) };
     await registrar(admin, id, { situacao: "falha", mensagens: [erro] as never });

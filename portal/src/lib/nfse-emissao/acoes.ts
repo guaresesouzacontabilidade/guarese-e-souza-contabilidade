@@ -6,7 +6,8 @@ import { lerValorBR } from "@/lib/dinheiro";
 import { somenteDigitos, validarCnpj, validarCpf } from "@/lib/formatos";
 import { processarFilaDepois } from "@/lib/jobs/disparo";
 import { ErroConsultaCnpj, consultarCnpjReceita } from "@/lib/empresas/receita";
-import { LEIAUTE_POR_AMBIENTE, type AmbienteNfse } from "./dps";
+import { VARIANTE_PADRAO, type AmbienteNfse, type VarianteLeiaute } from "./dps";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { itensCorrelacao, type OpcaoReforma } from "./reforma";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -88,6 +89,12 @@ export async function buscarAtividades(empresaId: string): Promise<ResultadoAcao
   }
 }
 
+/** Partes do leiaute que o ambiente aceita (aprendidas nas recusas, guardadas só para o servidor). */
+async function varianteReforma(ambiente: AmbienteNfse): Promise<VarianteLeiaute> {
+  const { data } = await criarClienteAdmin().from("nfse_leiaute_ambiente").select("variante").eq("ambiente", ambiente).maybeSingle();
+  return { ...VARIANTE_PADRAO[ambiente], ...((data?.variante as Partial<VarianteLeiaute> | null) ?? {}) };
+}
+
 /** Pede (e emite na hora) a nota de serviço. */
 export async function pedirNota(empresaId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao<{ id?: string; repetida?: boolean }>> {
   const ctx = await contexto(empresaId, "nfse.emitir");
@@ -145,7 +152,8 @@ export async function pedirNota(empresaId: string, _anterior: ResultadoAcao, fd:
     ctx.supabase.from("nfse_emissao_config").select("ambiente").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("nfse_servicos").select("codigo_nbs, cind_op, cclass_trib").eq("id", servico).eq("empresa_id", empresaId).maybeSingle(),
   ]);
-  if (cfgAmb && serv && LEIAUTE_POR_AMBIENTE[cfgAmb.ambiente as AmbienteNfse] === "nt009" && !(serv.codigo_nbs && serv.cind_op && serv.cclass_trib)) {
+  const exigeReforma = cfgAmb ? (await varianteReforma(cfgAmb.ambiente as AmbienteNfse)).ibscbs : false;
+  if (serv && exigeReforma && !(serv.codigo_nbs && serv.cind_op && serv.cclass_trib)) {
     return falha(
       "Este serviço ainda não tem o código NBS e a classificação do IBS/CBS, exigidos pelo leiaute novo da nota. Peça ao escritório para completar o serviço em Configurar emissão.",
       { servico_id: ["Serviço sem os dados da reforma tributária (NBS e IBS/CBS)."] },

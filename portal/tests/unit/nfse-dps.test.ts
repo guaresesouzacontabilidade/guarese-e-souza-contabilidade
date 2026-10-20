@@ -7,7 +7,18 @@ import { join, resolve } from "node:path";
 import { generateKeyPairSync, randomBytes } from "node:crypto";
 import { DOMParser } from "@xmldom/xmldom";
 import { SignedXml } from "xml-crypto";
-import { dpsAssinada, idDps, montarInfDps, pedidoCancelamentoAssinado, textoLeiaute, type DadosDps } from "@/lib/nfse-emissao/dps";
+import {
+  LEIAUTE_1_01,
+  LEIAUTE_NT009,
+  VARIANTE_PADRAO,
+  ajustarVariante,
+  dpsAssinada,
+  idDps,
+  montarInfDps,
+  pedidoCancelamentoAssinado,
+  textoLeiaute,
+  type DadosDps,
+} from "@/lib/nfse-emissao/dps";
 import { esquemasNt009 } from "./apoio/xsd-nt009";
 
 /**
@@ -51,7 +62,8 @@ const temXmllint = (() => {
   }
 })();
 
-const XSD_NT009 = esquemasNt009();
+const XSD_NT009 = esquemasNt009(LEIAUTE_NT009);
+const XSD_TESTE_HOJE = esquemasNt009(VARIANTE_PADRAO.homologacao);
 
 function validar(xml: string, esquema: string, pastaXsd = XSD) {
   const pasta = mkdtempSync(join(tmpdir(), "dps-"));
@@ -74,7 +86,7 @@ function assinaturaConfere(xml: string) {
 
 const base: DadosDps = {
   ambiente: "homologacao",
-  leiaute: "1.01",
+  variante: LEIAUTE_1_01,
   emitidaEm: new Date("2026-10-20T13:30:00Z"),
   serie: 1,
   numero: 42,
@@ -225,14 +237,14 @@ describe("NFS-e autorizada: leitura e DANFSe", () => {
   });
 });
 
-describe("NFS-e: DPS no leiaute da NT 009 (produção restrita)", () => {
+describe("NFS-e: DPS com as partes da NT 009", () => {
   const nt009: DadosDps = {
     ...base,
-    leiaute: undefined,
+    variante: LEIAUTE_NT009,
     servico: { ...base.servico, codigoNbs: "113022100", atividadeSimples: 7, ibscbs: { indicadorOperacao: "100301", classificacao: "200052" } },
   };
 
-  it("finalidade, destinatário, IBS/CBS pelo Simples, NBS, atividade do Simples e grupo IBSCBS; passa no esquema ajustado e a assinatura confere", () => {
+  it("NT 009 completa: finalidade, destinatário, IBS/CBS pelo Simples, NBS, atividade do Simples e grupo IBSCBS; passa no esquema ajustado e a assinatura confere", () => {
     const { xml } = dpsAssinada(nt009, chaves);
     expect(xml).toContain("<tpEmit>1</tpEmit><finNFSe>0</finNFSe><cLocEmi>1718204</cLocEmi>");
     expect(xml).toContain("<regApTribSN>1</regApTribSN><regApIBSCBSSN>1</regApIBSCBSSN><regEspTrib>0</regEspTrib>");
@@ -245,14 +257,31 @@ describe("NFS-e: DPS no leiaute da NT 009 (produção restrita)", () => {
     expect(assinaturaConfere(xml)).toBe(true);
   });
 
+  it("produção restrita hoje (finalidade e CST no trib; sem os campos do Simples; indDest ainda no IBSCBS): passa no esquema dessa etapa", () => {
+    const { xml } = dpsAssinada({ ...nt009, variante: undefined }, chaves);
+    expect(xml).toContain("<tpEmit>1</tpEmit><finNFSe>0</finNFSe><cLocEmi>");
+    expect(xml).toContain("<regApTribSN>1</regApTribSN><regEspTrib>0</regEspTrib>");
+    expect(xml).not.toContain("<cAtvSN>");
+    expect(xml).toContain("</xDescServ><cNBS>113022100</cNBS></cServ>");
+    expect(xml).toContain(
+      "<IBSCBS><cIndOp>100301</cIndOp><indDest>0</indDest><valores><trib><CST>200</CST><cClassTrib>200052</cClassTrib><gIBSCBS></gIBSCBS></trib></valores></IBSCBS>",
+    );
+    if (temXmllint) {
+      expect(validar(xml, "DPS_v1.01.xsd", XSD_TESTE_HOJE)).toBe("ok");
+      // A DPS com a NT 009 completa (enviada na DPS 4) é recusada nesta etapa, como o governo recusou
+      expect(validar(dpsAssinada(nt009, chaves).xml, "DPS_v1.01.xsd", XSD_TESTE_HOJE)).toMatch(/regApIBSCBSSN/);
+    }
+    expect(assinaturaConfere(xml)).toBe(true);
+  });
+
   it("produção continua no leiaute 1.01, sem os campos novos", () => {
-    const { xml } = dpsAssinada({ ...nt009, ambiente: "producao" }, chaves);
+    const { xml } = dpsAssinada({ ...nt009, ambiente: "producao", variante: undefined }, chaves);
     for (const campo of ["finNFSe", "indDest", "regApIBSCBSSN", "cAtvSN", "IBSCBS"]) expect(xml).not.toContain(`<${campo}>`);
     expect(xml).toContain("</xDescServ><cNBS>113022100</cNBS>");
     if (temXmllint) expect(validar(xml, "DPS_v1.01.xsd")).toBe("ok");
   });
 
-  it("isenção (CST 400) vai sem indicador da operação e sem o grupo de tributação; não optante não informa os campos do Simples", () => {
+  it("isenção (CST 400) na NT 009 vai sem indicador da operação e sem o grupo de tributação; não optante não informa os campos do Simples", () => {
     const { xml } = dpsAssinada(
       {
         ...nt009,
@@ -272,5 +301,36 @@ describe("NFS-e: DPS no leiaute da NT 009 (produção restrita)", () => {
     expect(() => montarInfDps({ ...nt009, servico: { ...nt009.servico, codigoNbs: null } })).toThrow(/NBS/);
     expect(() => montarInfDps({ ...nt009, servico: { ...nt009.servico, ibscbs: null } })).toThrow(/classificação do IBS\/CBS/);
     expect(() => montarInfDps({ ...nt009, servico: { ...nt009.servico, atividadeSimples: null } })).toThrow(/atividade do Simples/);
+  });
+
+  it("ajusta as partes do leiaute pela recusa do Sistema Nacional (mensagens reais das DPS 3 e 4)", () => {
+    const ns = "in namespace 'http://www.sped.fazenda.gov.br/nfse'";
+    const dps3 = {
+      codigo: "E1235",
+      descricao: `Falha no esquema XML do DF-e. (The element 'infDPS' ${ns} has invalid child element 'cLocEmi' ${ns}. List of possible elements expected: 'cMotivoEmisTI, finNFSe' ${ns}.)`,
+    };
+    const dps4 = {
+      codigo: "E1235",
+      descricao: `Falha no esquema XML do DF-e. (The element 'regTrib' ${ns} has invalid child element 'regApIBSCBSSN' ${ns}. List of possible elements expected: 'regEspTrib' ${ns}.)`,
+    };
+    expect(ajustarVariante(LEIAUTE_1_01, [dps3])).toEqual({ ...LEIAUTE_1_01, finNFSe: true });
+    expect(ajustarVariante(LEIAUTE_NT009, [dps4])).toEqual({ ...LEIAUTE_NT009, simples: false });
+    const indDestNoGrupo = {
+      codigo: "E1235",
+      descricao: `Falha no esquema XML do DF-e. (The element 'infDPS' ${ns} has invalid child element 'indDest' ${ns}. List of possible elements expected: 'interm, serv' ${ns}.)`,
+    };
+    expect(ajustarVariante(LEIAUTE_NT009, [indDestNoGrupo])).toEqual({ ...LEIAUTE_NT009, indDestNaRaiz: false });
+    const indDestNaRaiz = {
+      codigo: "E1235",
+      descricao: `Falha no esquema XML do DF-e. (The element 'IBSCBS' ${ns} has invalid child element 'indDest' ${ns}. List of possible elements expected: 'tpOper, gRefNFSe, tpEnteGov, imovel, valores' ${ns}.)`,
+    };
+    expect(ajustarVariante(VARIANTE_PADRAO.homologacao, [indDestNaRaiz])).toEqual({ ...VARIANTE_PADRAO.homologacao, indDestNaRaiz: true });
+    expect(ajustarVariante(LEIAUTE_1_01, [{ codigo: "E0855", descricao: "É obrigatório declarar informações de IBS/CBS quando a data de competência for igual ou posterior a 01/10/2026." }])).toEqual({
+      ...LEIAUTE_1_01,
+      ibscbs: true,
+    });
+    expect(ajustarVariante(LEIAUTE_NT009, [{ codigo: "E0202", descricao: "Na emissão da NFS-e não é permitido que o prestador do serviço seja igual ao tomador." }])).toBeNull();
+    // Mesma combinação: nada a ajustar
+    expect(ajustarVariante({ ...LEIAUTE_1_01, finNFSe: true }, [dps3])).toBeNull();
   });
 });

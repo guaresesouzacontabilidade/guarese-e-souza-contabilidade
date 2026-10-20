@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(10);
+select plan(11);
 
 \ir 00_setup.sql.inc
 
@@ -13,6 +13,7 @@ set local role authenticated;
 select ok((select count(*) from public.nfse_correlacao_ibscbs) > 1400, 'usuário do portal lê a tabela oficial de correlação');
 select throws_ok($$insert into public.nfse_correlacao_ibscbs values ('14.01', '999999999', 'x', '050101', '000001', 'x')$$, '42501', null,
   'ninguém altera a tabela pelo navegador');
+select throws_ok($$select * from public.nfse_leiaute_ambiente$$, '42501', null, 'o leiaute aprendido de cada ambiente é só do servidor');
 reset role;
 
 select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
