@@ -69,12 +69,12 @@ test("equipe: emissão desligada sem certificado, cadastro de serviço e bloquei
   await page.goto(`/e/${empresaId}/notas-servico`);
   await expect(page.getByRole("heading", { name: "Notas de serviço", level: 1 })).toBeVisible();
   await expect(page.getByText("Emissão desconectada")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Emitir nota" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Emitir nota", exact: true })).toHaveCount(0);
 
   await page.getByRole("link", { name: /Configurar emissão/ }).first().click();
   await page.waitForURL(/\/notas-servico\/configuracao/);
   await expect(page.getByText("Sem certificado digital válido")).toBeVisible();
-  await expect(page.getByRole("cell", { name: "Revisão e manutenção de veículos" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Revisão e manutenção de veículos", exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Novo serviço" }).click();
   const dialogo = page.getByRole("dialog");
@@ -82,7 +82,7 @@ test("equipe: emissão desligada sem certificado, cadastro de serviço e bloquei
   await dialogo.locator("#sv-nacional").fill("17.01.01");
   await dialogo.getByRole("button", { name: "Cadastrar serviço" }).click();
   await expect(page.getByText("Serviço cadastrado.")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("cell", { name: "Consultoria automotiva (E2E)" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Consultoria automotiva (E2E)", exact: true })).toBeVisible();
 
   await page.getByLabel(/Emissão ligada/).check();
   await page.fill("#autorizacao_texto", "Autorização fictícia do teste automático (E2E).");
@@ -120,7 +120,7 @@ test("empresário: emissão desconectada sem configurar; com a emissão ligada p
 
   await page.goto(`/e/${empresaId}/notas-servico`);
   await expect(page.getByText("Emissão em teste")).toBeVisible();
-  await page.getByRole("link", { name: "Emitir nota" }).click();
+  await page.getByRole("link", { name: "Emitir nota", exact: true }).click();
   await page.waitForURL(/\/notas-servico\/nova/);
   await page.selectOption("#servico_id", { label: "Revisão e manutenção de veículos (140101)" });
   await page.getByLabel("Pessoa física (CPF)").check();
