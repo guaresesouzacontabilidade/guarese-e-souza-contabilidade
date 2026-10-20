@@ -21,8 +21,16 @@ import { createHash, createPrivateKey, sign, X509Certificate } from "node:crypto
  *  - tributos aproximados: Simples ME/EPP informa a alíquota do SN
  *    (pTotTribSN); não optante informa os percentuais (pTotTrib); o MEI
  *    pode não informar (indTotTrib = 0);
- *  - o grupo de IBS/CBS é opcional em 2026 (e só obrigatório para o Simples a
- *    partir de 2027): não é enviado.
+ *  - no leiaute 1.01 atual de produção, o grupo de IBS/CBS é opcional: não é
+ *    enviado.
+ *
+ * A produção restrita (testes) já valida o leiaute da NT 009 v1.01 (Anexo VI
+ * v1.04.01, de 01/10/2026; sem esquema XSD publicado): finalidade da nota
+ * (finNFSe) e destinatário (indDest) no infDPS, regime do IBS/CBS no Simples
+ * (regApIBSCBSSN), atividade do Simples (cAtvSN), NBS e o grupo IBSCBS
+ * obrigatórios para competência a partir de 01/10/2026 (E0855). Cada
+ * ambiente usa o seu leiaute (LEIAUTE_POR_AMBIENTE); quando a NT 009 entrar
+ * em produção, basta trocar o leiaute da produção.
  */
 
 export const NS_NFSE = "http://www.sped.fazenda.gov.br/nfse";
@@ -31,6 +39,13 @@ export const VERSAO_LEIAUTE = "1.01";
 export const VERSAO_APLICATIVO = "PortalGuaresesON-1.0";
 
 export type AmbienteNfse = "producao" | "homologacao";
+
+/** "1.01": leiaute atual de produção (esquemas de 09/02/2026); "nt009": leiaute da NT 009 v1.01. */
+export type LeiauteDps = "1.01" | "nt009";
+export const LEIAUTE_POR_AMBIENTE: Record<AmbienteNfse, LeiauteDps> = { producao: "1.01", homologacao: "nt009" };
+
+/** CST do IBS/CBS sem tributação na nota (isenção, imunidade, declaração em regime específico): sem cIndOp nem gIBSCBS. */
+const CST_SEM_TRIBUTACAO = new Set(["400", "410", "820"]);
 
 // -----------------------------------------------------------------------------
 // Texto
@@ -101,6 +116,8 @@ export interface EnderecoNacional {
 
 export interface DadosDps {
   ambiente: AmbienteNfse;
+  /** Sem ele, o do ambiente (LEIAUTE_POR_AMBIENTE) */
+  leiaute?: LeiauteDps;
   emitidaEm: Date;
   serie: number;
   numero: number;
@@ -125,6 +142,10 @@ export interface DadosDps {
     codigoTributacaoMunicipal: string | null;
     codigoNbs: string | null;
     descricao: string;
+    /** NT 009: atividade do Simples Nacional (cAtvSN), obrigatória para ME/EPP */
+    atividadeSimples?: number | null;
+    /** NT 009: indicador da operação (cIndOp) e classificação tributária (cClassTrib) do IBS/CBS */
+    ibscbs?: { indicadorOperacao: string; classificacao: string } | null;
   };
   valor: string;
   issRetido: boolean;
@@ -166,10 +187,13 @@ export function montarInfDps(d: DadosDps): { id: string; canonico: string; filho
   const p = d.prestador;
   if (!/^[0-9]{14}$/.test(p.cnpj)) throw new Error("CNPJ do prestador inválido.");
   const id = idDps(d.codigoMunicipioEmissor, p.cnpj, d.serie, d.numero);
+  const nt009 = (d.leiaute ?? LEIAUTE_POR_AMBIENTE[d.ambiente]) === "nt009";
 
   const regTrib =
     `<regTrib><opSimpNac>${p.opcaoSimples}</opSimpNac>` +
     (p.opcaoSimples === 3 ? `<regApTribSN>${p.regimeApuracaoSn}</regApTribSN>` : "") +
+    // NT 009: IBS e CBS apurados pelo Simples (a opção pelo regime regular só existe a partir de 2027)
+    (nt009 && p.opcaoSimples === 3 ? "<regApIBSCBSSN>1</regApIBSCBSSN>" : "") +
     `<regEspTrib>${p.opcaoSimples === 2 || (p.opcaoSimples === 3 && p.regimeApuracaoSn === 1) ? 0 : p.regimeEspecial}</regEspTrib></regTrib>`;
   const prest = `<prest><CNPJ>${p.cnpj}</CNPJ>${txt("IM", p.inscricaoMunicipal ? textoLeiaute(p.inscricaoMunicipal, 15) : null)}${regTrib}</prest>`;
 
@@ -188,10 +212,20 @@ export function montarInfDps(d: DadosDps): { id: string; canonico: string; filho
   const s = d.servico;
   const descricao = textoLeiaute(s.descricao, 1000, { quebras: true });
   if (descricao.length < 1) throw new Error("Descrição do serviço vazia.");
+  let cServ: string;
+  if (nt009) {
+    // NT 009: NBS obrigatório com o grupo IBSCBS (E0322); cAtvSN obrigatório para o Simples ME/EPP; a descrição vem por último
+    if (!s.codigoNbs) throw new Error("Falta o código NBS do serviço (obrigatório no leiaute novo da NFS-e). Ajuste o serviço em Configurar emissão.");
+    if (p.opcaoSimples === 3 && !s.atividadeSimples) throw new Error("Falta a atividade do Simples Nacional do serviço (obrigatória no leiaute novo da NFS-e).");
+    cServ =
+      `<cServ><cTribNac>${s.codigoTributacaoNacional}</cTribNac>${el("cTribMun", s.codigoTributacaoMunicipal)}<cNBS>${s.codigoNbs}</cNBS>` +
+      (p.opcaoSimples === 3 ? `<cAtvSN>${String(s.atividadeSimples).padStart(2, "0")}</cAtvSN>` : "") +
+      `${txt("xDescServ", descricao)}</cServ>`;
+  } else {
+    cServ = `<cServ><cTribNac>${s.codigoTributacaoNacional}</cTribNac>${el("cTribMun", s.codigoTributacaoMunicipal)}${txt("xDescServ", descricao)}${el("cNBS", s.codigoNbs)}</cServ>`;
+  }
   const serv =
-    `<serv><locPrest><cLocPrestacao>${s.localPrestacao}</cLocPrestacao></locPrest>` +
-    `<cServ><cTribNac>${s.codigoTributacaoNacional}</cTribNac>${el("cTribMun", s.codigoTributacaoMunicipal)}` +
-    `${txt("xDescServ", descricao)}${el("cNBS", s.codigoNbs)}</cServ>` +
+    `<serv><locPrest><cLocPrestacao>${s.localPrestacao}</cLocPrestacao></locPrest>${cServ}` +
     (d.informacoesComplementares ? `<infoCompl>${txt("xInfComp", textoLeiaute(d.informacoesComplementares, 2000))}</infoCompl>` : "") +
     "</serv>";
 
@@ -212,10 +246,26 @@ export function montarInfDps(d: DadosDps): { id: string; canonico: string; filho
         : "<totTrib><indTotTrib>0</indTotTrib></totTrib>";
   const valores = `<valores><vServPrest><vServ>${decimal(d.valor, 15)}</vServ></vServPrest><trib>${tribMun}${totTrib}</trib></valores>`;
 
+  // NT 009: grupo do IBS/CBS (os valores são calculados pelo Sistema Nacional a partir da classificação)
+  let ibscbs = "";
+  if (nt009) {
+    const ib = s.ibscbs;
+    if (!ib || !/^[0-9]{6}$/.test(ib.classificacao) || !/^[0-9]{6}$/.test(ib.indicadorOperacao)) {
+      throw new Error("Falta a classificação do IBS/CBS do serviço (obrigatória no leiaute novo da NFS-e). Ajuste o serviço em Configurar emissão.");
+    }
+    const cst = ib.classificacao.slice(0, 3);
+    const tributado = !CST_SEM_TRIBUTACAO.has(cst);
+    ibscbs =
+      `<IBSCBS>${tributado ? `<cIndOp>${ib.indicadorOperacao}</cIndOp>` : ""}` +
+      `<valores><trib><CST>${cst}</CST><cClassTrib>${ib.classificacao}</cClassTrib>${tributado ? "<gIBSCBS></gIBSCBS>" : ""}</trib></valores></IBSCBS>`;
+  }
+
   const filhos =
     `<tpAmb>${d.ambiente === "producao" ? 1 : 2}</tpAmb><dhEmi>${dataHoraBrasil(d.emitidaEm)}</dhEmi>` +
     `<verAplic>${VERSAO_APLICATIVO}</verAplic><serie>${d.serie}</serie><nDPS>${d.numero}</nDPS><dCompet>${d.competencia}</dCompet>` +
-    `<tpEmit>1</tpEmit><cLocEmi>${d.codigoMunicipioEmissor}</cLocEmi>${prest}${toma}${serv}${valores}`;
+    `<tpEmit>1</tpEmit>${nt009 ? "<finNFSe>0</finNFSe>" : ""}<cLocEmi>${d.codigoMunicipioEmissor}</cLocEmi>${prest}${toma}` +
+    // NT 009: o destinatário é o próprio tomador
+    `${nt009 ? "<indDest>0</indDest>" : ""}${serv}${valores}${ibscbs}`;
   return { id, filhos, canonico: `<infDPS xmlns="${NS_NFSE}" Id="${id}">${filhos}</infDPS>` };
 }
 

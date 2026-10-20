@@ -8,6 +8,7 @@ import { generateKeyPairSync, randomBytes } from "node:crypto";
 import { DOMParser } from "@xmldom/xmldom";
 import { SignedXml } from "xml-crypto";
 import { dpsAssinada, idDps, montarInfDps, pedidoCancelamentoAssinado, textoLeiaute, type DadosDps } from "@/lib/nfse-emissao/dps";
+import { esquemasNt009 } from "./apoio/xsd-nt009";
 
 /**
  * DPS da NFS-e (leiaute 1.01): o XML gerado passa nos esquemas oficiais
@@ -50,12 +51,14 @@ const temXmllint = (() => {
   }
 })();
 
-function validar(xml: string, esquema: string) {
+const XSD_NT009 = esquemasNt009();
+
+function validar(xml: string, esquema: string, pastaXsd = XSD) {
   const pasta = mkdtempSync(join(tmpdir(), "dps-"));
   const arquivo = join(pasta, "doc.xml");
   writeFileSync(arquivo, xml);
   try {
-    execFileSync("xmllint", ["--noout", "--schema", join(XSD, esquema), arquivo], { stdio: "pipe" });
+    execFileSync("xmllint", ["--noout", "--schema", join(pastaXsd, esquema), arquivo], { stdio: "pipe" });
     return "ok";
   } catch (e) {
     return String((e as { stderr?: Buffer }).stderr ?? e);
@@ -71,6 +74,7 @@ function assinaturaConfere(xml: string) {
 
 const base: DadosDps = {
   ambiente: "homologacao",
+  leiaute: "1.01",
   emitidaEm: new Date("2026-10-20T13:30:00Z"),
   serie: 1,
   numero: 42,
@@ -218,5 +222,55 @@ describe("NFS-e autorizada: leitura e DANFSe", () => {
     const cancelada = await ler(await gerarDanfse(xml, { cancelada: true }));
     expect(cancelada.texto).toContain("CANCELADA");
     expect(cancelada.texto).toContain("NFS-e Cancelada");
+  });
+});
+
+describe("NFS-e: DPS no leiaute da NT 009 (produção restrita)", () => {
+  const nt009: DadosDps = {
+    ...base,
+    leiaute: undefined,
+    servico: { ...base.servico, codigoNbs: "113022100", atividadeSimples: 7, ibscbs: { indicadorOperacao: "100301", classificacao: "200052" } },
+  };
+
+  it("finalidade, destinatário, IBS/CBS pelo Simples, NBS, atividade do Simples e grupo IBSCBS; passa no esquema ajustado e a assinatura confere", () => {
+    const { xml } = dpsAssinada(nt009, chaves);
+    expect(xml).toContain("<tpEmit>1</tpEmit><finNFSe>0</finNFSe><cLocEmi>1718204</cLocEmi>");
+    expect(xml).toContain("<regApTribSN>1</regApTribSN><regApIBSCBSSN>1</regApIBSCBSSN><regEspTrib>0</regEspTrib>");
+    expect(xml).toContain("</toma><indDest>0</indDest><serv>");
+    expect(xml).toContain("<cTribNac>170101</cTribNac><cNBS>113022100</cNBS><cAtvSN>07</cAtvSN><xDescServ>");
+    expect(xml).toContain(
+      "</valores><IBSCBS><cIndOp>100301</cIndOp><valores><trib><CST>200</CST><cClassTrib>200052</cClassTrib><gIBSCBS></gIBSCBS></trib></valores></IBSCBS></infDPS>",
+    );
+    if (temXmllint) expect(validar(xml, "DPS_v1.01.xsd", XSD_NT009)).toBe("ok");
+    expect(assinaturaConfere(xml)).toBe(true);
+  });
+
+  it("produção continua no leiaute 1.01, sem os campos novos", () => {
+    const { xml } = dpsAssinada({ ...nt009, ambiente: "producao" }, chaves);
+    for (const campo of ["finNFSe", "indDest", "regApIBSCBSSN", "cAtvSN", "IBSCBS"]) expect(xml).not.toContain(`<${campo}>`);
+    expect(xml).toContain("</xDescServ><cNBS>113022100</cNBS>");
+    if (temXmllint) expect(validar(xml, "DPS_v1.01.xsd")).toBe("ok");
+  });
+
+  it("isenção (CST 400) vai sem indicador da operação e sem o grupo de tributação; não optante não informa os campos do Simples", () => {
+    const { xml } = dpsAssinada(
+      {
+        ...nt009,
+        prestador: { ...nt009.prestador, opcaoSimples: 1 },
+        tributosAproximados: { tipo: "percentuais", federal: "13.45", estadual: "0", municipal: "5" },
+        servico: { ...nt009.servico, atividadeSimples: null, ibscbs: { indicadorOperacao: "100301", classificacao: "400001" } },
+      },
+      chaves,
+    );
+    expect(xml).toContain("<IBSCBS><valores><trib><CST>400</CST><cClassTrib>400001</cClassTrib></trib></valores></IBSCBS>");
+    expect(xml).not.toContain("<regApIBSCBSSN>");
+    expect(xml).not.toContain("<cAtvSN>");
+    if (temXmllint) expect(validar(xml, "DPS_v1.01.xsd", XSD_NT009)).toBe("ok");
+  });
+
+  it("sem NBS, sem classificação do IBS/CBS ou sem a atividade do Simples, a nota não sai do portal", () => {
+    expect(() => montarInfDps({ ...nt009, servico: { ...nt009.servico, codigoNbs: null } })).toThrow(/NBS/);
+    expect(() => montarInfDps({ ...nt009, servico: { ...nt009.servico, ibscbs: null } })).toThrow(/classificação do IBS\/CBS/);
+    expect(() => montarInfDps({ ...nt009, servico: { ...nt009.servico, atividadeSimples: null } })).toThrow(/atividade do Simples/);
   });
 });

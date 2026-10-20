@@ -8,6 +8,7 @@ import { ErroConexao, type Credencial } from "@/lib/notas-automaticas/transporte
 import { importarXmlAutomatico } from "@/lib/notas-automaticas/importar";
 import { dpsAssinada, pedidoCancelamentoAssinado, type DadosDps, type EnderecoNacional, type MotivoCancelamento } from "./dps";
 import { URLS_SEFIN, chaveDaDps, enviarDps, lerNfse, nfsePorChave, registrarEvento, type ConexaoSefin, type ErroSefin } from "./sefin";
+import { atividadeSimplesPadrao } from "./reforma";
 
 /**
  * Tarefas da fila que falam com o Emissor Nacional:
@@ -53,6 +54,7 @@ export function dadosDaDps(
   cfg: Pick<Config, "inscricao_municipal" | "regime_apuracao_sn" | "regime_especial" | "percentual_tributos_sn" | "percentual_tributos_federais" | "percentual_tributos_municipais">,
   emp: { documento: string; regime_tributario: string },
   agora: Date,
+  simples: { anexo_servicos?: string | null; fator_r?: boolean | null } | null = null,
 ): DadosDps {
   const opcao = emp.regime_tributario === "mei" ? 2 : emp.regime_tributario === "simples_nacional" ? 3 : 1;
   const end = e.tomador_endereco as Record<string, string | null> | null;
@@ -103,6 +105,8 @@ export function dadosDaDps(
       codigoTributacaoMunicipal: e.codigo_tributacao_municipal,
       codigoNbs: e.codigo_nbs,
       descricao: e.descricao,
+      atividadeSimples: opcao === 3 ? (e.atividade_sn ?? atividadeSimplesPadrao(e.codigo_tributacao_nacional, simples?.anexo_servicos, simples?.fator_r)) : null,
+      ibscbs: e.cind_op && e.cclass_trib ? { indicadorOperacao: e.cind_op, classificacao: e.cclass_trib } : null,
     },
     valor: String(e.valor),
     issRetido: e.iss_retido,
@@ -167,9 +171,10 @@ export async function emitirNfse(admin: ClienteAdmin, job: Job, teste: OpcoesTes
   const { data: e } = await admin.from("nfse_emissoes").select("*").eq("id", id).maybeSingle();
   if (!e) return { ignorado: "nota não encontrada" };
   if (!["na_fila", "enviando", "falha"].includes(e.situacao)) return { ignorado: `nota ${e.situacao}` };
-  const [{ data: cfg }, { data: emp }] = await Promise.all([
+  const [{ data: cfg }, { data: emp }, { data: simples }] = await Promise.all([
     admin.from("nfse_emissao_config").select("*").eq("empresa_id", e.empresa_id).maybeSingle(),
     admin.from("empresas").select("documento, regime_tributario").eq("id", e.empresa_id).maybeSingle(),
+    admin.from("calculo_parametros").select("anexo_servicos, fator_r").eq("empresa_id", e.empresa_id).maybeSingle(),
   ]);
   if (!cfg || !emp) return { ignorado: "empresa sem configuração" };
 
@@ -187,7 +192,7 @@ export async function emitirNfse(admin: ClienteAdmin, job: Job, teste: OpcoesTes
   // Dados fora do leiaute: a nota não sai daqui (rejeitada pelo portal, sem envio)
   let dps: { id: string; xml: string };
   try {
-    dps = dpsAssinada(dadosDaDps(e, cfg, emp, new Date()), { chavePem: cred.credencial.chave, certificadoPem: cred.credencial.certificados[0] });
+    dps = dpsAssinada(dadosDaDps(e, cfg, emp, new Date(), simples), { chavePem: cred.credencial.chave, certificadoPem: cred.credencial.certificados[0] });
     if (dps.id !== e.id_dps) throw new Error("Identificador da DPS diferente do reservado.");
   } catch (err) {
     await registrar(admin, id, { situacao: "rejeitada", mensagens: [{ codigo: PORTAL, descricao: mensagem(err) }] as never });

@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { buscarAtividades, salvarConfiguracao, salvarServico } from "@/lib/nfse-emissao/acoes";
+import { buscarAtividades, opcoesReforma, salvarConfiguracao, salvarServico } from "@/lib/nfse-emissao/acoes";
+import { ATIVIDADES_SIMPLES, atividadesSimplesDoServico, classificacaoPadrao, formatarNbs, nbsMaisParecido, type OpcaoReforma } from "@/lib/nfse-emissao/reforma";
 import { buscarServicos, formatarCodigoServico, indexarServicos, type Cnae, type ServicoNacional } from "@/lib/nfse-emissao/lista-servicos";
 import { AMBIENTE_NFSE, REGIME_APURACAO_SN, REGIME_ESPECIAL } from "@/lib/nfse-emissao/rotulos";
 
@@ -41,6 +42,9 @@ export interface ServicoNfse {
   descricao_padrao: string | null;
   ativo: boolean;
   cnae: string | null;
+  cind_op: string | null;
+  cclass_trib: string | null;
+  atividade_sn: number | null;
 }
 
 const num = (v: number | null | undefined) => (v === null || v === undefined ? "" : String(v).replace(".", ","));
@@ -207,15 +211,24 @@ interface InicialServico {
 const curto = (t: string, max = 110) => (t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t);
 
 /** Escolha do serviço na lista nacional: busca por palavras ou pelo código. */
-function SeletorServicoNacional({ lista, inicial, erro }: { lista: ServicoNacional[]; inicial: string; erro?: string[] }) {
+function SeletorServicoNacional({
+  lista,
+  codigo,
+  aoEscolher,
+  erro,
+}: {
+  lista: ServicoNacional[];
+  codigo: string;
+  aoEscolher: (codigo: string) => void;
+  erro?: string[];
+}) {
   const indice = React.useMemo(() => indexarServicos(lista), [lista]);
   const porCodigo = React.useMemo(() => new Map(lista.map((s) => [s.codigo, s])), [lista]);
-  const [codigo, setCodigo] = React.useState(inicial);
   const [busca, setBusca] = React.useState("");
   const escolhido = porCodigo.get(codigo);
   const resultados = busca.trim().length >= 2 ? buscarServicos(indice, busca, 8) : [];
   const escolher = (c: string) => {
-    setCodigo(c);
+    aoEscolher(c);
     setBusca("");
   };
   return (
@@ -270,12 +283,139 @@ function SeletorServicoNacional({ lista, inicial, erro }: { lista: ServicoNacion
   );
 }
 
+/** NBS, indicador da operação e classificação do IBS/CBS (tabela oficial) e atividade do Simples. */
+function CamposReforma({
+  empresaId,
+  codigo,
+  texto,
+  servico,
+  simples,
+  erros,
+}: {
+  empresaId: string;
+  codigo: string;
+  texto: string;
+  servico?: ServicoNfse;
+  simples: boolean;
+  erros: Record<string, string[] | undefined>;
+}) {
+  const [carregado, setCarregado] = React.useState<{ codigo: string; opcoes: OpcaoReforma[] } | null>(null);
+  React.useEffect(() => {
+    if (!/^\d{6}$/.test(codigo)) return;
+    let vivo = true;
+    opcoesReforma(empresaId, codigo).then((r) => {
+      if (vivo) setCarregado({ codigo, opcoes: r.ok ? (r.dados?.opcoes ?? []) : [] });
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [empresaId, codigo]);
+  const opcoes = carregado?.codigo === codigo ? carregado.opcoes : null;
+  // undefined: ainda não escolhido (usa o do serviço ou a sugestão); "": nenhum
+  const [nbsEscolhido, setNbsEscolhido] = React.useState<string | undefined>(servico?.codigo_nbs ?? undefined);
+  const [classeEscolhida, setClasseEscolhida] = React.useState<string | undefined>(
+    servico?.cind_op && servico.cclass_trib ? `${servico.cind_op}|${servico.cclass_trib}` : undefined,
+  );
+  const [manual, setManual] = React.useState({ nbs: servico?.codigo_nbs ?? "", indOp: servico?.cind_op ?? "", classe: servico?.cclass_trib ?? "" });
+
+  const nbsDisponiveis = [...new Map((opcoes ?? []).map((o) => [o.nbs, o.descricao_nbs])).entries()];
+  const nbs =
+    nbsEscolhido !== undefined && (nbsEscolhido === "" || nbsDisponiveis.some(([n]) => n === nbsEscolhido))
+      ? nbsEscolhido
+      : opcoes
+        ? (nbsMaisParecido(opcoes, texto) ?? "")
+        : "";
+  const doNbs = (opcoes ?? []).filter((o) => o.nbs === nbs);
+  const padrao = opcoes ? classificacaoPadrao(opcoes, nbs) : null;
+  const classe =
+    classeEscolhida && doNbs.some((o) => `${o.cind_op}|${o.cclass_trib}` === classeEscolhida)
+      ? classeEscolhida
+      : padrao
+        ? `${padrao.cind_op}|${padrao.cclass_trib}`
+        : "";
+  const semTabela = opcoes !== null && opcoes.length === 0;
+  const atividades = atividadesSimplesDoServico(codigo);
+
+  return (
+    <fieldset className="space-y-4 rounded-lg border border-border p-3">
+      <legend className="px-1 text-sm font-medium">Reforma tributária (IBS/CBS)</legend>
+      <p className="text-xs text-muted-foreground">
+        Exigidos no leiaute novo da nota (NT 009), que o ambiente de teste do governo já usa. Os dados vêm da tabela oficial que liga o serviço ao NBS e à classificação do IBS/CBS.
+      </p>
+      {!/^\d{6}$/.test(codigo) ? (
+        <p className="text-sm text-muted-foreground">Escolha o serviço da lista nacional para ver as opções.</p>
+      ) : opcoes === null ? (
+        <p className="text-sm text-muted-foreground">Carregando as opções da tabela oficial...</p>
+      ) : semTabela ? (
+        <>
+          <p className="text-sm text-muted-foreground">Este serviço não está na tabela oficial de correlação. Informe os códigos (com o apoio do contador responsável).</p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Campo rotulo="Código NBS" htmlFor="sv-nbs" erro={erros.codigo_nbs} ajuda="9 números.">
+              <Input id="sv-nbs" name="codigo_nbs" inputMode="numeric" maxLength={12} value={manual.nbs} onChange={(ev) => setManual({ ...manual, nbs: ev.target.value })} />
+            </Campo>
+            <Campo rotulo="Indicador da operação" htmlFor="sv-indop" ajuda="cIndOp, 6 números.">
+              <Input id="sv-indop" inputMode="numeric" maxLength={6} value={manual.indOp} onChange={(ev) => setManual({ ...manual, indOp: ev.target.value })} />
+            </Campo>
+            <Campo rotulo="Classificação do IBS/CBS" htmlFor="sv-class" ajuda="cClassTrib, 6 números.">
+              <Input id="sv-class" inputMode="numeric" maxLength={6} value={manual.classe} onChange={(ev) => setManual({ ...manual, classe: ev.target.value })} />
+            </Campo>
+          </div>
+          <input type="hidden" name="classificacao" value={manual.indOp && manual.classe ? `${manual.indOp.replace(/\D/g, "")}|${manual.classe.replace(/\D/g, "")}` : ""} />
+        </>
+      ) : (
+        <>
+          <input type="hidden" name="codigo_nbs" value={nbs} />
+          <input type="hidden" name="classificacao" value={nbs ? classe : ""} />
+          <Campo rotulo="Código NBS" htmlFor="sv-nbs" erro={erros.codigo_nbs} ajuda="Sugerido pelo nome do serviço; confira.">
+            <Select id="sv-nbs" value={nbs} onChange={(ev) => setNbsEscolhido(ev.target.value)}>
+              <option value="">— sem NBS —</option>
+              {nbsDisponiveis.map(([n, d]) => (
+                <option key={n} value={n}>
+                  {formatarNbs(n)} — {d}
+                </option>
+              ))}
+            </Select>
+          </Campo>
+          {nbs ? (
+            <Campo
+              rotulo="Classificação do IBS/CBS"
+              htmlFor="sv-classe"
+              ajuda="O indicador da operação termina em 01 quando o serviço é feito no estabelecimento da empresa ou para cliente no Brasil; em 02, fora dele ou para cliente no exterior."
+            >
+              <Select id="sv-classe" value={classe} onChange={(ev) => setClasseEscolhida(ev.target.value)}>
+                {doNbs.map((o) => (
+                  <option key={`${o.cind_op}|${o.cclass_trib}`} value={`${o.cind_op}|${o.cclass_trib}`}>
+                    {o.cclass_trib} — {o.nome_cclass_trib} (operação {o.cind_op})
+                  </option>
+                ))}
+              </Select>
+            </Campo>
+          ) : null}
+        </>
+      )}
+      {simples ? (
+        <Campo rotulo="Atividade no Simples Nacional" htmlFor="sv-atividade" erro={erros.atividade_sn} ajuda="Automática: pelo anexo dos serviços em Cálculos → Configuração (Anexo III: 07; IV: 14; V ou Fator R: 09).">
+          <Select id="sv-atividade" name="atividade_sn" defaultValue={servico?.atividade_sn ? String(servico.atividade_sn) : ""}>
+            <option value="">Automática</option>
+            {atividades.map((a) => (
+              <option key={a} value={a}>
+                {ATIVIDADES_SIMPLES[a]}
+              </option>
+            ))}
+          </Select>
+        </Campo>
+      ) : null}
+    </fieldset>
+  );
+}
+
 function FormServico({
   empresaId,
   servico,
   inicial,
   lista,
   atividades,
+  simples,
   aoSalvar,
 }: {
   empresaId: string;
@@ -283,9 +423,12 @@ function FormServico({
   inicial?: InicialServico;
   lista: ServicoNacional[];
   atividades: AtividadeEmpresa[];
+  simples: boolean;
   aoSalvar: () => void;
 }) {
   const cnae = servico?.cnae ?? inicial?.cnae ?? "";
+  const [codigo, setCodigo] = React.useState(servico?.codigo_tributacao_nacional ?? inicial?.codigo ?? "");
+  const [nome, setNome] = React.useState(servico?.nome ?? inicial?.nome ?? "");
   return (
     <FormularioAcao acao={salvarServico.bind(null, empresaId)} aoSucesso={aoSalvar} className="space-y-4">
       {({ estado, pendente }) => {
@@ -293,9 +436,9 @@ function FormServico({
         return (
           <>
             {servico ? <input type="hidden" name="id" value={servico.id} /> : null}
-            <SeletorServicoNacional lista={lista} inicial={servico?.codigo_tributacao_nacional ?? inicial?.codigo ?? ""} erro={e.codigo_tributacao_nacional} />
+            <SeletorServicoNacional lista={lista} codigo={codigo} aoEscolher={setCodigo} erro={e.codigo_tributacao_nacional} />
             <Campo rotulo="Nome do serviço" htmlFor="sv-nome" obrigatorio erro={e.nome} ajuda="Como o cliente vai reconhecer na hora de emitir (ex.: Revisão de veículos, Consultoria).">
-              <Input id="sv-nome" name="nome" maxLength={120} defaultValue={servico?.nome ?? inicial?.nome ?? ""} />
+              <Input id="sv-nome" name="nome" maxLength={120} value={nome} onChange={(ev) => setNome(ev.target.value)} />
             </Campo>
             {atividades.length || cnae ? (
               <Campo rotulo="Atividade da empresa (CNAE)" htmlFor="sv-cnae" erro={e.cnae} ajuda="Só para organizar: a nota não leva o CNAE.">
@@ -310,14 +453,10 @@ function FormServico({
                 </Select>
               </Campo>
             ) : null}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Campo rotulo="Código municipal" htmlFor="sv-municipal" erro={e.codigo_tributacao_municipal} ajuda="3 números, só se o município pede.">
-                <Input id="sv-municipal" name="codigo_tributacao_municipal" inputMode="numeric" maxLength={3} defaultValue={servico?.codigo_tributacao_municipal ?? ""} />
-              </Campo>
-              <Campo rotulo="Código NBS" htmlFor="sv-nbs" erro={e.codigo_nbs} ajuda="Opcional, 9 números.">
-                <Input id="sv-nbs" name="codigo_nbs" inputMode="numeric" maxLength={12} defaultValue={servico?.codigo_nbs ?? ""} />
-              </Campo>
-            </div>
+            <Campo rotulo="Código municipal" htmlFor="sv-municipal" erro={e.codigo_tributacao_municipal} ajuda="3 números, só se o município pede.">
+              <Input id="sv-municipal" name="codigo_tributacao_municipal" inputMode="numeric" maxLength={3} defaultValue={servico?.codigo_tributacao_municipal ?? ""} />
+            </Campo>
+            <CamposReforma empresaId={empresaId} codigo={codigo} texto={nome || inicial?.nome || ""} servico={servico} simples={simples} erros={e} />
             <Campo rotulo="Descrição padrão" htmlFor="sv-descricao" ajuda="Sugerida no pedido; o cliente pode ajustar.">
               <Textarea id="sv-descricao" name="descricao_padrao" rows={3} maxLength={1000} defaultValue={servico?.descricao_padrao ?? ""} />
             </Campo>
@@ -435,12 +574,14 @@ export function ServicosNfse({
   lista,
   atividades,
   atividadesCompletas,
+  simples,
 }: {
   empresaId: string;
   servicos: ServicoNfse[];
   lista: ServicoNacional[];
   atividades: AtividadeEmpresa[];
   atividadesCompletas: boolean;
+  simples: boolean;
 }) {
   const [editando, setEditando] = React.useState<{ servico?: ServicoNfse; inicial?: InicialServico } | null>(null);
   const porCodigo = React.useMemo(() => new Map(lista.map((s) => [s.codigo, s])), [lista]);
@@ -480,6 +621,13 @@ export function ServicosNfse({
                   {formatarCodigoServico(s.codigo_tributacao_nacional)}
                   {s.codigo_tributacao_municipal ? ` / ${s.codigo_tributacao_municipal}` : ""}
                   {s.cnae ? <span className="block text-xs text-muted-foreground">CNAE {s.cnae}</span> : null}
+                  {s.codigo_nbs && s.cclass_trib ? (
+                    <span className="block text-xs text-muted-foreground">NBS {formatarNbs(s.codigo_nbs)}</span>
+                  ) : (
+                    <Badge variante="alerta" className="mt-1">
+                      sem NBS / IBS-CBS
+                    </Badge>
+                  )}
                 </Td>
                 <Td className="hidden sm:table-cell">{s.ativo ? <Badge variante="sucesso">Ativo</Badge> : <Badge>Inativo</Badge>}</Td>
                 <Td>
@@ -503,6 +651,7 @@ export function ServicosNfse({
               inicial={editando.inicial}
               lista={lista}
               atividades={atividades}
+              simples={simples}
               aoSalvar={() => setEditando(null)}
             />
           ) : null}

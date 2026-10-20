@@ -6,6 +6,8 @@ import { lerValorBR } from "@/lib/dinheiro";
 import { somenteDigitos, validarCnpj, validarCpf } from "@/lib/formatos";
 import { processarFilaDepois } from "@/lib/jobs/disparo";
 import { ErroConsultaCnpj, consultarCnpjReceita } from "@/lib/empresas/receita";
+import { LEIAUTE_POR_AMBIENTE, type AmbienteNfse } from "./dps";
+import { itensCorrelacao, type OpcaoReforma } from "./reforma";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -51,6 +53,22 @@ export async function buscarTomador(empresaId: string, cnpj: string): Promise<Re
   } catch (e) {
     return falha(e instanceof ErroConsultaCnpj ? e.message : "Não foi possível consultar a Receita agora. Preencha os dados do tomador à mão.");
   }
+}
+
+/** Opções da tabela oficial da reforma (NBS, indicador da operação e classificação do IBS/CBS) para um código de serviço. */
+export async function opcoesReforma(empresaId: string, codigo: string): Promise<ResultadoAcao<{ opcoes: OpcaoReforma[] }>> {
+  const ctx = await contexto(empresaId, "nfse.configurar");
+  if (!ctx) return falha("Somente a equipe do escritório configura os serviços.");
+  if (!/^\d{6}$/.test(codigo)) return sucesso("", { opcoes: [] });
+  const { data, error } = await ctx.supabase
+    .from("nfse_correlacao_ibscbs")
+    .select("nbs, descricao_nbs, cind_op, cclass_trib, nome_cclass_trib")
+    .in("item", itensCorrelacao(codigo))
+    .order("nbs")
+    .order("cind_op")
+    .order("cclass_trib");
+  if (error) return falha(mensagemErro(error));
+  return sucesso("", { opcoes: data ?? [] });
 }
 
 /** Busca na Receita as atividades (CNAE principal e secundários) da empresa e guarda com o cadastro. */
@@ -120,6 +138,18 @@ export async function pedirNota(empresaId: string, _anterior: ResultadoAcao, fd:
     const { data: m } = await ctx.supabase.from("municipios").select("ibge").eq("ibge", somenteDigitos(local)).maybeSingle();
     if (!m) return falha("Revise os campos destacados.", { local_prestacao: ["Município do local da prestação não encontrado."] });
     local = m.ibge;
+  }
+
+  // Leiaute novo (NT 009, hoje só no ambiente de teste): o serviço precisa do NBS e da classificação do IBS/CBS
+  const [{ data: cfgAmb }, { data: serv }] = await Promise.all([
+    ctx.supabase.from("nfse_emissao_config").select("ambiente").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("nfse_servicos").select("codigo_nbs, cind_op, cclass_trib").eq("id", servico).eq("empresa_id", empresaId).maybeSingle(),
+  ]);
+  if (cfgAmb && serv && LEIAUTE_POR_AMBIENTE[cfgAmb.ambiente as AmbienteNfse] === "nt009" && !(serv.codigo_nbs && serv.cind_op && serv.cclass_trib)) {
+    return falha(
+      "Este serviço ainda não tem o código NBS e a classificação do IBS/CBS, exigidos pelo leiaute novo da nota. Peça ao escritório para completar o serviço em Configurar emissão.",
+      { servico_id: ["Serviço sem os dados da reforma tributária (NBS e IBS/CBS)."] },
+    );
   }
 
   const { data, error } = await ctx.supabase.rpc("nfse_pedir", {
@@ -257,6 +287,9 @@ export async function salvarServico(empresaId: string, _anterior: ResultadoAcao,
   const municipal = somenteDigitos(texto(fd, "codigo_tributacao_municipal"));
   const nbs = somenteDigitos(texto(fd, "codigo_nbs"));
   const cnae = texto(fd, "cnae");
+  // "cIndOp|cClassTrib" escolhidos na tabela oficial (vazio: o padrão do NBS)
+  const [indOp, classTrib] = texto(fd, "classificacao").split("|");
+  const atividade = texto(fd, "atividade_sn");
   if (nome.length < 2) erros.nome = ["Dê um nome ao serviço."];
   if (nacional.length !== 6) erros.codigo_tributacao_nacional = ["Escolha o serviço na lista nacional."];
   if (cnae && !/^\d{4}-\d\/\d{2}$/.test(cnae)) erros.cnae = ["Atividade inválida."];
@@ -274,6 +307,9 @@ export async function salvarServico(empresaId: string, _anterior: ResultadoAcao,
       descricao_padrao: texto(fd, "descricao_padrao") || null,
       ativo: fd.get("ativo") !== "off",
       cnae: cnae || null,
+      cind_op: /^\d{6}$/.test(indOp ?? "") ? indOp : null,
+      cclass_trib: /^\d{6}$/.test(classTrib ?? "") ? classTrib : null,
+      atividade_sn: /^\d{1,2}$/.test(atividade) ? Number(atividade) : null,
     } as never,
   });
   if (error) return falha(mensagemErro(error));

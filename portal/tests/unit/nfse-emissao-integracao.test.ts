@@ -107,7 +107,14 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
     await admin.from("certificados_segredos").insert({ certificado_id: c.id, conteudo_cifrado: cifrar(JSON.stringify({ chave: pEmp.pem, certificados: [cEmp.pem] })) });
     const { data: s, error: e2 } = await admin
       .from("nfse_servicos")
-      .insert({ empresa_id: empresaId, nome: "Manutenção de veículos (teste)", codigo_tributacao_nacional: "140101" })
+      .insert({
+        empresa_id: empresaId,
+        nome: "Manutenção de veículos (teste)",
+        codigo_tributacao_nacional: "140101",
+        codigo_nbs: "120013110",
+        cind_op: "050101",
+        cclass_trib: "000001",
+      })
       .select("id")
       .single();
     if (e2) throw e2;
@@ -229,6 +236,11 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
     expect(dps).toContain(`<infDPS Id="${p.id_dps}">`);
     expect(dps).toContain("<tpAmb>2</tpAmb>");
     expect(dps).toContain("<opSimpNac>1</opSimpNac>");
+    // Ambiente de teste: leiaute da NT 009 (finalidade, destinatário, NBS e grupo do IBS/CBS)
+    expect(dps).toContain("<tpEmit>1</tpEmit><finNFSe>0</finNFSe>");
+    expect(dps).toContain("<indDest>0</indDest>");
+    expect(dps).toContain("<cNBS>120013110</cNBS>");
+    expect(dps).toContain("<IBSCBS><cIndOp>050101</cIndOp><valores><trib><CST>000</CST><cClassTrib>000001</cClassTrib><gIBSCBS></gIBSCBS></trib></valores></IBSCBS>");
     expect(dps).toContain("<pTotTribFed>13.45</pTotTribFed>");
     expect(dps).toContain("<vServ>850.50</vServ>");
     const doc = new DOMParser().parseFromString(dps, "text/xml");

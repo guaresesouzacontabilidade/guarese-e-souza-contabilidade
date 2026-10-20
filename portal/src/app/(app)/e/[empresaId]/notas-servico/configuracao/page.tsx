@@ -22,7 +22,7 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
     ctx.supabase.from("nfse_emissao_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase
       .from("nfse_servicos")
-      .select("id, nome, codigo_tributacao_nacional, codigo_tributacao_municipal, codigo_nbs, descricao_padrao, ativo, cnae")
+      .select("id, nome, codigo_tributacao_nacional, codigo_tributacao_municipal, codigo_nbs, descricao_padrao, ativo, cnae, cind_op, cclass_trib, atividade_sn")
       .eq("empresa_id", empresaId)
       .order("nome"),
     ctx.supabase.from("empresas").select("regime_tributario, municipio_ibge, tipo_pessoa, cnae, atividade_principal, dados_receita").eq("id", empresaId).maybeSingle(),
@@ -50,6 +50,8 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
     autorizacao_texto: cfg?.autorizacao_texto ?? null,
   };
   const certificadoOk = certificadoValido(cert?.valido_ate);
+
+  const faltamReforma = (servicos ?? []).filter((s) => s.ativo && !(s.codigo_nbs && s.cind_op && s.cclass_trib));
 
   // Atividades (CNAE) da empresa e os serviços da lista nacional sugeridos para cada uma
   const servicosNacionais = (lista ?? []) as ServicoNacional[];
@@ -82,6 +84,12 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
           </>
         )}
       </Alerta>
+      {faltamReforma.length ? (
+        <Alerta tom="alerta" className="mb-4" titulo="Serviços sem os dados da reforma tributária">
+          O leiaute novo da nota (NT 009), que o ambiente de teste do governo já usa, exige o código NBS e a classificação do IBS/CBS em cada serviço. Edite:{" "}
+          {faltamReforma.map((s) => s.nome).join(", ")}.
+        </Alerta>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] [&>*]:min-w-0">
         <Card>
           <CardHeader>
@@ -104,6 +112,7 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
               lista={servicosNacionais}
               atividades={atividades}
               atividadesCompletas={Boolean(receita?.success) || emp?.tipo_pessoa !== "PJ"}
+              simples={emp?.regime_tributario === "simples_nacional"}
             />
           </CardContent>
         </Card>
