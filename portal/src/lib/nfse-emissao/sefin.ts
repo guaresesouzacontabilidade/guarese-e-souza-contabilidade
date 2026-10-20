@@ -41,8 +41,12 @@ export interface ConexaoSefin {
   ca?: string[];
 }
 
+/** O Sistema Nacional exige o documento em UTF-8 com a declaração no início; sem ela, recusa com E1229. */
+const DECLARACAO_XML = '<?xml version="1.0" encoding="UTF-8"?>';
+
 export function compactar(xml: string): string {
-  return gzipSync(Buffer.from(xml, "utf8")).toString("base64");
+  const documento = xml.startsWith("<?xml") ? xml : DECLARACAO_XML + xml;
+  return gzipSync(Buffer.from(documento, "utf8")).toString("base64");
 }
 
 export function descompactar(b64: string): string {

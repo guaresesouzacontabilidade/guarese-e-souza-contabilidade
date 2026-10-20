@@ -225,6 +225,7 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
 
     const envio = recebidas.find((x) => x.metodo === "POST" && x.url === "/SefinNacional/nfse")!;
     const dps = gunzipSync(Buffer.from(JSON.parse(envio.corpo).dpsXmlGZipB64, "base64")).toString("utf8");
+    expect(dps.startsWith('<?xml version="1.0" encoding="UTF-8"?><DPS ')).toBe(true);
     expect(dps).toContain(`<infDPS Id="${p.id_dps}">`);
     expect(dps).toContain("<tpAmb>2</tpAmb>");
     expect(dps).toContain("<opSimpNac>1</opSimpNac>");
@@ -290,6 +291,7 @@ describe.skipIf(!local)("NFS-e — emissão de ponta a ponta (Supabase local)", 
     expect(r.situacao).toBe("cancelada");
     const envio = recebidas.find((x) => x.metodo === "POST" && x.url === `/SefinNacional/nfse/${autorizada!.chave_acesso}/eventos`)!;
     const xml = gunzipSync(Buffer.from(JSON.parse(envio.corpo).pedidoRegistroEventoXmlGZipB64, "base64")).toString("utf8");
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?><pedRegEvento ')).toBe(true);
     expect(xml).toContain(`<infPedReg Id="PRE${autorizada!.chave_acesso}101101">`);
     expect(xml).toContain("<cMotivo>1</cMotivo>");
     const { data: e } = await admin.from("nfse_emissoes").select("situacao, cancelada_em, cancelamento_xml").eq("id", autorizada!.id).single();
