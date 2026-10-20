@@ -2180,6 +2180,99 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"nfse_emissao_config": {
+                  Row: {
+                    "aliquota_iss_retencao": number | null,"ambiente": string,"ativa": boolean,"atualizado_por": string | null,"autorizacao_texto": string | null,"autorizado_em": string | null,"autorizado_por": string | null,"codigo_municipio": string | null,"created_at": string,"empresa_id": string,"enviar_email_tomador": boolean,"inscricao_municipal": string | null,"iss_retencao_permitida": boolean,"percentual_tributos_federais": number | null,"percentual_tributos_municipais": number | null,"percentual_tributos_sn": number | null,"proximo_numero_homologacao": number,"proximo_numero_producao": number,"regime_apuracao_sn": number,"regime_especial": number,"serie": number,"updated_at": string
+                  }
+                  Insert: {
+                    "aliquota_iss_retencao"?: number | null,"ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"codigo_municipio"?: string | null,"created_at"?: string,"empresa_id": string,"enviar_email_tomador"?: boolean,"inscricao_municipal"?: string | null,"iss_retencao_permitida"?: boolean,"percentual_tributos_federais"?: number | null,"percentual_tributos_municipais"?: number | null,"percentual_tributos_sn"?: number | null,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"regime_apuracao_sn"?: number,"regime_especial"?: number,"serie"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "aliquota_iss_retencao"?: number | null,"ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"codigo_municipio"?: string | null,"created_at"?: string,"empresa_id"?: string,"enviar_email_tomador"?: boolean,"inscricao_municipal"?: string | null,"iss_retencao_permitida"?: boolean,"percentual_tributos_federais"?: number | null,"percentual_tributos_municipais"?: number | null,"percentual_tributos_sn"?: number | null,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"regime_apuracao_sn"?: number,"regime_especial"?: number,"serie"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfse_emissao_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissao_config_autorizado_por_fkey"
+      columns: ["autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissao_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfse_emissoes": {
+                  Row: {
+                    "aliquota_iss": number | null,"ambiente": string,"autorizada_em": string | null,"cancelada_em": string | null,"cancelamento_justificativa": string | null,"cancelamento_motivo": number | null,"cancelamento_pedido_em": string | null,"cancelamento_pedido_por": string | null,"cancelamento_xml": string | null,"chave_acesso": string | null,"codigo_municipio_emissor": string,"codigo_nbs": string | null,"codigo_tributacao_municipal": string | null,"codigo_tributacao_nacional": string,"competencia": string,"created_at": string,"descricao": string,"documento_id": string | null,"email_tomador_enviado_em": string | null,"empresa_id": string,"id": string,"id_dps": string,"informacoes_complementares": string | null,"iss_retido": boolean,"local_prestacao": string,"mensagens": Json | null,"numero_dps": number,"numero_nfse": string | null,"pedido_por": string | null,"serie": number,"servico_id": string | null,"situacao": string,"tentativas": number,"tomador_documento": string | null,"tomador_email": string | null,"tomador_endereco": Json | null,"tomador_nome": string | null,"tomador_telefone": string | null,"tomador_tipo": string,"ultimo_envio_em": string | null,"updated_at": string,"valor": number,"xml_nfse": string | null
+                  }
+                  Insert: {
+                    "aliquota_iss"?: number | null,"ambiente": string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"cancelamento_justificativa"?: string | null,"cancelamento_motivo"?: number | null,"cancelamento_pedido_em"?: string | null,"cancelamento_pedido_por"?: string | null,"cancelamento_xml"?: string | null,"chave_acesso"?: string | null,"codigo_municipio_emissor": string,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional": string,"competencia": string,"created_at"?: string,"descricao": string,"documento_id"?: string | null,"email_tomador_enviado_em"?: string | null,"empresa_id": string,"id"?: string,"id_dps": string,"informacoes_complementares"?: string | null,"iss_retido"?: boolean,"local_prestacao": string,"mensagens"?: Json | null,"numero_dps": number,"numero_nfse"?: string | null,"pedido_por"?: string | null,"serie": number,"servico_id"?: string | null,"situacao"?: string,"tentativas"?: number,"tomador_documento"?: string | null,"tomador_email"?: string | null,"tomador_endereco"?: Json | null,"tomador_nome"?: string | null,"tomador_telefone"?: string | null,"tomador_tipo": string,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor": number,"xml_nfse"?: string | null
+                  }
+                  Update: {
+                    "aliquota_iss"?: number | null,"ambiente"?: string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"cancelamento_justificativa"?: string | null,"cancelamento_motivo"?: number | null,"cancelamento_pedido_em"?: string | null,"cancelamento_pedido_por"?: string | null,"cancelamento_xml"?: string | null,"chave_acesso"?: string | null,"codigo_municipio_emissor"?: string,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional"?: string,"competencia"?: string,"created_at"?: string,"descricao"?: string,"documento_id"?: string | null,"email_tomador_enviado_em"?: string | null,"empresa_id"?: string,"id"?: string,"id_dps"?: string,"informacoes_complementares"?: string | null,"iss_retido"?: boolean,"local_prestacao"?: string,"mensagens"?: Json | null,"numero_dps"?: number,"numero_nfse"?: string | null,"pedido_por"?: string | null,"serie"?: number,"servico_id"?: string | null,"situacao"?: string,"tentativas"?: number,"tomador_documento"?: string | null,"tomador_email"?: string | null,"tomador_endereco"?: Json | null,"tomador_nome"?: string | null,"tomador_telefone"?: string | null,"tomador_tipo"?: string,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor"?: number,"xml_nfse"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfse_emissoes_cancelamento_pedido_por_fkey"
+      columns: ["cancelamento_pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissoes_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissoes_servico_id_fkey"
+      columns: ["servico_id"]
+isOneToOne: false
+      referencedRelation: "nfse_servicos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfse_servicos": {
+                  Row: {
+                    "ativo": boolean,"codigo_nbs": string | null,"codigo_tributacao_municipal": string | null,"codigo_tributacao_nacional": string,"created_at": string,"descricao_padrao": string | null,"empresa_id": string,"id": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional": string,"created_at"?: string,"descricao_padrao"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional"?: string,"created_at"?: string,"descricao_padrao"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfse_servicos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notas_automaticas": {
                   Row: {
                     "atualizado_por": string | null,"buscar_desde": string | null,"certificado_valido_ate": string | null,"ciencia_automatica": boolean,"empresa_id": string,"erros_seguidos": number,"executando_ate": string | null,"nfe_ativa": boolean,"nfe_max_nsu": string | null,"nfe_proxima": string | null,"nfe_ult_nsu": string,"nfse_ativa": boolean,"nfse_proxima": string | null,"nfse_ult_nsu": number,"pausada": boolean,"ultima_execucao": string | null,"ultimo_erro": string | null,"ultimo_sucesso": string | null,"updated_at": string
@@ -3360,6 +3453,27 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"nfse_avisar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfse_cancelar":
+{ Args: { "p_id": string,"p_justificativa": string,"p_motivo": number }; Returns: undefined
+                           },
+"nfse_carteira":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"nfse_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"nfse_pedir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"nfse_servico_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfse_tentar_de_novo":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "notas_agendar":
 { Args: { "p_empresa_id": string,"p_quando": string }; Returns: undefined
                            },

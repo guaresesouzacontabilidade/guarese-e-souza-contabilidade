@@ -26,6 +26,8 @@ export const TODAS_PERMISSOES = [
   "auditor.gerenciar",
   "maquininhas.ver",
   "maquininhas.gerenciar",
+  "nfse.emitir",
+  "nfse.configurar",
 ] as const;
 
 export type Permissao = (typeof TODAS_PERMISSOES)[number];
@@ -39,6 +41,7 @@ export const PERMISSOES_EXCLUSIVAS_EQUIPE: Permissao[] = [
   "fechamento.reabrir",
   "calculos.gerenciar",
   "auditor.gerenciar",
+  "nfse.configurar",
 ];
 
 export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotulo: string; descricao: string }[] }[] = [
@@ -111,6 +114,17 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
     ],
   },
   {
+    grupo: "Notas de serviço",
+    itens: [
+      { chave: "nfse.emitir", rotulo: "Emitir notas", descricao: "Pedir notas fiscais de serviço (emitidas na hora pelo Emissor Nacional), baixar e cancelar." },
+      {
+        chave: "nfse.configurar",
+        rotulo: "Configurar a emissão",
+        descricao: "Cadastrar os serviços e códigos de tributação, a numeração e ligar a emissão da empresa.",
+      },
+    ],
+  },
+  {
     grupo: "Comunicação",
     itens: [{ chave: "mensagens.usar", rotulo: "Mensagens", descricao: "Usar a central de mensagens." }],
   },
@@ -122,7 +136,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
     "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar",
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
-    "maquininhas.ver", "maquininhas.gerenciar",
+    "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
 };
