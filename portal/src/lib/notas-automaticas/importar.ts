@@ -5,12 +5,13 @@ import { categoriaDoXml, lerXmlFiscal } from "@/lib/fiscal/xml";
 import { registrarXml, resumoXml } from "@/lib/documentos/processar";
 import { competenciaAtual } from "@/lib/competencia";
 
-export type OrigemAutomatica = "sefaz" | "adn" | "emissao";
+export type OrigemAutomatica = "sefaz" | "adn" | "emissao" | "emissao_nfe";
 
 const ROTULO_ORIGEM: Record<OrigemAutomatica, string> = {
   sefaz: "Obtido automaticamente na SEFAZ (Ambiente Nacional da NF-e).",
   adn: "Obtido automaticamente no Ambiente de Dados Nacional da NFS-e.",
   emissao: "Nota emitida pelo portal no Emissor Nacional da NFS-e.",
+  emissao_nfe: "NF-e emitida pelo portal (autorizada pela SEFAZ).",
 };
 
 function competenciaDe(data: string | null | undefined) {

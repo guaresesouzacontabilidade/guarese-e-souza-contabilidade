@@ -44,7 +44,8 @@ function mensagem(e: unknown) {
   return e instanceof Error ? e.message : String(e);
 }
 
-async function credencialDaEmpresa(admin: ClienteAdmin, empresaId: string): Promise<{ credencial: Credencial } | { erro: string }> {
+/** Chave e certificados (PEM) do A1 da empresa, decifrados só para a conexão e a assinatura. */
+export async function credencialDaEmpresa(admin: ClienteAdmin, empresaId: string): Promise<{ credencial: Credencial } | { erro: string }> {
   const { data: cert } = await admin
     .from("certificados_digitais")
     .select("id, valido_ate")

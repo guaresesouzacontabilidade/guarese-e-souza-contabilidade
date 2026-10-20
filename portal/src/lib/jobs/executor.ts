@@ -31,6 +31,14 @@ const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
     const { cancelarNfse } = await import("@/lib/nfse-emissao/emitir");
     return (admin, job) => cancelarNfse(admin, job);
   },
+  emitir_nfe: async () => {
+    const { emitirNfe } = await import("@/lib/nfe-emissao/emitir");
+    return (admin, job) => emitirNfe(admin, job);
+  },
+  evento_nfe: async () => {
+    const { eventoNfe } = await import("@/lib/nfe-emissao/emitir");
+    return (admin, job) => eventoNfe(admin, job);
+  },
   gerar_lote_xml: async () => {
     const { gerarLoteXml } = await import("@/lib/lotes-xml/gerar");
     return (admin, job, contexto) => gerarLoteXml(admin, job, contexto);

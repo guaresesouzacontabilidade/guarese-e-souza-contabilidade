@@ -2149,6 +2149,261 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"nfe_cclass_trib": {
+                  Row: {
+                    "base_legal": string | null,"cclass_trib": string,"cst": string,"descricao_cst": string,"fim_vigencia": string | null,"inicio_vigencia": string | null,"nome": string,"p_red_cbs": number,"p_red_ibs": number,"tipo_aliquota": string | null
+                  }
+                  Insert: {
+                    "base_legal"?: string | null,"cclass_trib": string,"cst": string,"descricao_cst": string,"fim_vigencia"?: string | null,"inicio_vigencia"?: string | null,"nome": string,"p_red_cbs"?: number,"p_red_ibs"?: number,"tipo_aliquota"?: string | null
+                  }
+                  Update: {
+                    "base_legal"?: string | null,"cclass_trib"?: string,"cst"?: string,"descricao_cst"?: string,"fim_vigencia"?: string | null,"inicio_vigencia"?: string | null,"nome"?: string,"p_red_cbs"?: number,"p_red_ibs"?: number,"tipo_aliquota"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"nfe_config": {
+                  Row: {
+                    "ambiente": string,"ativa": boolean,"atualizado_por": string | null,"autorizacao_texto": string | null,"autorizado_em": string | null,"autorizado_por": string | null,"autorizar_escritorio_xml": boolean,"created_at": string,"crt": number,"empresa_id": string,"enviar_email_destinatario": boolean,"funrural_modo": string | null,"funrural_percentual": number | null,"informacoes_padrao": string | null,"presenca": number,"updated_at": string
+                  }
+                  Insert: {
+                    "ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"autorizar_escritorio_xml"?: boolean,"created_at"?: string,"crt"?: number,"empresa_id": string,"enviar_email_destinatario"?: boolean,"funrural_modo"?: string | null,"funrural_percentual"?: number | null,"informacoes_padrao"?: string | null,"presenca"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"autorizar_escritorio_xml"?: boolean,"created_at"?: string,"crt"?: number,"empresa_id"?: string,"enviar_email_destinatario"?: boolean,"funrural_modo"?: string | null,"funrural_percentual"?: number | null,"informacoes_padrao"?: string | null,"presenca"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_config_autorizado_por_fkey"
+      columns: ["autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_destinatarios": {
+                  Row: {
+                    "bairro": string,"cep": string | null,"cidade_exterior": string | null,"codigo_pais": string | null,"complemento": string | null,"created_at": string,"documento": string | null,"email": string | null,"empresa_id": string,"id": string,"indicador_ie": number,"inscricao_estadual": string | null,"logradouro": string,"municipio_ibge": string | null,"nome": string,"numero": string,"pais": string | null,"telefone": string | null,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "bairro": string,"cep"?: string | null,"cidade_exterior"?: string | null,"codigo_pais"?: string | null,"complemento"?: string | null,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id": string,"id"?: string,"indicador_ie": number,"inscricao_estadual"?: string | null,"logradouro": string,"municipio_ibge"?: string | null,"nome": string,"numero": string,"pais"?: string | null,"telefone"?: string | null,"tipo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "bairro"?: string,"cep"?: string | null,"cidade_exterior"?: string | null,"codigo_pais"?: string | null,"complemento"?: string | null,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id"?: string,"id"?: string,"indicador_ie"?: number,"inscricao_estadual"?: string | null,"logradouro"?: string,"municipio_ibge"?: string | null,"nome"?: string,"numero"?: string,"pais"?: string | null,"telefone"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_destinatarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_destinatarios_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    }
+                  ]
+                },"nfe_emissoes": {
+                  Row: {
+                    "ambiente": string,"autorizada_em": string | null,"cancelada_em": string | null,"chave": string | null,"codigo_numerico": string,"created_at": string,"dados": NonNullable<Json>,"descartada_em": string | null,"destinatario_documento": string | null,"destinatario_id": string | null,"destinatario_nome": string,"destinatario_uf": string | null,"documento_id": string | null,"email_destinatario_enviado_em": string | null,"emitente_id": string,"emitida_em": string | null,"empresa_id": string,"id": string,"mensagens": Json | null,"natureza": string,"numero": number,"operacao_id": string | null,"pedido_por": string | null,"protocolo": string | null,"recibo": string | null,"serie": number,"situacao": string,"tentativas": number,"totais": Json | null,"ultimo_envio_em": string | null,"updated_at": string,"valor_total": number,"xml_assinado": string | null,"xml_autorizado": string | null
+                  }
+                  Insert: {
+                    "ambiente": string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"chave"?: string | null,"codigo_numerico": string,"created_at"?: string,"dados": NonNullable<Json>,"descartada_em"?: string | null,"destinatario_documento"?: string | null,"destinatario_id"?: string | null,"destinatario_nome": string,"destinatario_uf"?: string | null,"documento_id"?: string | null,"email_destinatario_enviado_em"?: string | null,"emitente_id": string,"emitida_em"?: string | null,"empresa_id": string,"id"?: string,"mensagens"?: Json | null,"natureza": string,"numero": number,"operacao_id"?: string | null,"pedido_por"?: string | null,"protocolo"?: string | null,"recibo"?: string | null,"serie": number,"situacao"?: string,"tentativas"?: number,"totais"?: Json | null,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor_total": number,"xml_assinado"?: string | null,"xml_autorizado"?: string | null
+                  }
+                  Update: {
+                    "ambiente"?: string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"chave"?: string | null,"codigo_numerico"?: string,"created_at"?: string,"dados"?: NonNullable<Json>,"descartada_em"?: string | null,"destinatario_documento"?: string | null,"destinatario_id"?: string | null,"destinatario_nome"?: string,"destinatario_uf"?: string | null,"documento_id"?: string | null,"email_destinatario_enviado_em"?: string | null,"emitente_id"?: string,"emitida_em"?: string | null,"empresa_id"?: string,"id"?: string,"mensagens"?: Json | null,"natureza"?: string,"numero"?: number,"operacao_id"?: string | null,"pedido_por"?: string | null,"protocolo"?: string | null,"recibo"?: string | null,"serie"?: number,"situacao"?: string,"tentativas"?: number,"totais"?: Json | null,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor_total"?: number,"xml_assinado"?: string | null,"xml_autorizado"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_emissoes_destinatario_id_fkey"
+      columns: ["destinatario_id"]
+isOneToOne: false
+      referencedRelation: "nfe_destinatarios"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_emitente_id_fkey"
+      columns: ["emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_operacao_id_fkey"
+      columns: ["operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_emitentes": {
+                  Row: {
+                    "ativo": boolean,"bairro": string,"cep": string,"complemento": string | null,"created_at": string,"empresa_id": string,"id": string,"inscricao_estadual": string,"logradouro": string,"municipio_ibge": string,"nome": string,"numero": string,"proximo_numero_homologacao": number,"proximo_numero_producao": number,"serie": number,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"bairro": string,"cep": string,"complemento"?: string | null,"created_at"?: string,"empresa_id": string,"id"?: string,"inscricao_estadual": string,"logradouro": string,"municipio_ibge": string,"nome": string,"numero": string,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"serie": number,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"bairro"?: string,"cep"?: string,"complemento"?: string | null,"created_at"?: string,"empresa_id"?: string,"id"?: string,"inscricao_estadual"?: string,"logradouro"?: string,"municipio_ibge"?: string,"nome"?: string,"numero"?: string,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"serie"?: number,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_emitentes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emitentes_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    }
+                  ]
+                },"nfe_eventos": {
+                  Row: {
+                    "created_at": string,"emissao_id": string,"empresa_id": string,"id": string,"mensagens": Json | null,"pedido_por": string | null,"protocolo": string | null,"registrado_em": string | null,"sequencia": number,"situacao": string,"tentativas": number,"texto": string,"tipo": string,"updated_at": string,"xml": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"emissao_id": string,"empresa_id": string,"id"?: string,"mensagens"?: Json | null,"pedido_por"?: string | null,"protocolo"?: string | null,"registrado_em"?: string | null,"sequencia": number,"situacao"?: string,"tentativas"?: number,"texto": string,"tipo": string,"updated_at"?: string,"xml"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"emissao_id"?: string,"empresa_id"?: string,"id"?: string,"mensagens"?: Json | null,"pedido_por"?: string | null,"protocolo"?: string | null,"registrado_em"?: string | null,"sequencia"?: number,"situacao"?: string,"tentativas"?: number,"texto"?: string,"tipo"?: string,"updated_at"?: string,"xml"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_eventos_emissao_id_fkey"
+      columns: ["emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_eventos_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_guias": {
+                  Row: {
+                    "atualizado_por": string | null,"codigo_receita": string | null,"created_at": string,"descricao": string,"documento_id": string | null,"emissao_id": string,"empresa_id": string,"id": string,"observacao": string | null,"situacao": string,"tipo": string,"uf": string,"updated_at": string,"valor": number,"vencimento": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"created_at"?: string,"descricao": string,"documento_id"?: string | null,"emissao_id": string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"situacao"?: string,"tipo": string,"uf": string,"updated_at"?: string,"valor": number,"vencimento": string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"created_at"?: string,"descricao"?: string,"documento_id"?: string | null,"emissao_id"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"situacao"?: string,"tipo"?: string,"uf"?: string,"updated_at"?: string,"valor"?: number,"vencimento"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_guias_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_guias_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "nfe_guias_emissao_id_fkey"
+      columns: ["emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_guias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_operacoes": {
+                  Row: {
+                    "ativa": boolean,"cfop": string,"cofins_aliquota": number | null,"cofins_cst": string,"consumidor_final": boolean,"contribuicoes": NonNullable<Json>,"created_at": string,"destino": string,"difal_codigo_receita": string | null,"difal_metodo": string | null,"empresa_id": string,"excluir_icms_pis_cofins": boolean,"finalidade": number,"frete_aliquota": number | null,"frete_cfop": string | null,"frete_codigo_receita": string | null,"frete_icms_retido": boolean,"frete_reducao": number | null,"ibscbs_cclass_trib": string | null,"ibscbs_diferimento": number | null,"icms_aliquota": number | null,"icms_beneficio": string | null,"icms_codigo_receita": string | null,"icms_credito_sn": number | null,"icms_cst": string,"icms_diferimento": number | null,"icms_por_operacao": boolean,"icms_reducao": number | null,"id": string,"incide_funrural": boolean,"informacoes": string | null,"natureza": string,"nome": string,"pis_aliquota": number | null,"pis_cst": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"cfop": string,"cofins_aliquota"?: number | null,"cofins_cst": string,"consumidor_final"?: boolean,"contribuicoes"?: NonNullable<Json>,"created_at"?: string,"destino": string,"difal_codigo_receita"?: string | null,"difal_metodo"?: string | null,"empresa_id": string,"excluir_icms_pis_cofins"?: boolean,"finalidade"?: number,"frete_aliquota"?: number | null,"frete_cfop"?: string | null,"frete_codigo_receita"?: string | null,"frete_icms_retido"?: boolean,"frete_reducao"?: number | null,"ibscbs_cclass_trib"?: string | null,"ibscbs_diferimento"?: number | null,"icms_aliquota"?: number | null,"icms_beneficio"?: string | null,"icms_codigo_receita"?: string | null,"icms_credito_sn"?: number | null,"icms_cst": string,"icms_diferimento"?: number | null,"icms_por_operacao"?: boolean,"icms_reducao"?: number | null,"id"?: string,"incide_funrural"?: boolean,"informacoes"?: string | null,"natureza": string,"nome": string,"pis_aliquota"?: number | null,"pis_cst": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"cfop"?: string,"cofins_aliquota"?: number | null,"cofins_cst"?: string,"consumidor_final"?: boolean,"contribuicoes"?: NonNullable<Json>,"created_at"?: string,"destino"?: string,"difal_codigo_receita"?: string | null,"difal_metodo"?: string | null,"empresa_id"?: string,"excluir_icms_pis_cofins"?: boolean,"finalidade"?: number,"frete_aliquota"?: number | null,"frete_cfop"?: string | null,"frete_codigo_receita"?: string | null,"frete_icms_retido"?: boolean,"frete_reducao"?: number | null,"ibscbs_cclass_trib"?: string | null,"ibscbs_diferimento"?: number | null,"icms_aliquota"?: number | null,"icms_beneficio"?: string | null,"icms_codigo_receita"?: string | null,"icms_credito_sn"?: number | null,"icms_cst"?: string,"icms_diferimento"?: number | null,"icms_por_operacao"?: boolean,"icms_reducao"?: number | null,"id"?: string,"incide_funrural"?: boolean,"informacoes"?: string | null,"natureza"?: string,"nome"?: string,"pis_aliquota"?: number | null,"pis_cst"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_operacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_operacoes_ibscbs_cclass_trib_fkey"
+      columns: ["ibscbs_cclass_trib"]
+isOneToOne: false
+      referencedRelation: "nfe_cclass_trib"
+      referencedColumns: ["cclass_trib"]
+    }
+                  ]
+                },"nfe_produtos": {
+                  Row: {
+                    "ativo": boolean,"cest": string | null,"codigo": string,"created_at": string,"descricao": string,"empresa_id": string,"gtin": string | null,"id": string,"ncm": string,"origem": number,"peso_kg": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"created_at"?: string,"descricao": string,"empresa_id": string,"gtin"?: string | null,"id"?: string,"ncm": string,"origem"?: number,"peso_kg"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"created_at"?: string,"descricao"?: string,"empresa_id"?: string,"gtin"?: string | null,"id"?: string,"ncm"?: string,"origem"?: number,"peso_kg"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_produtos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"nfe_resumos": {
                   Row: {
                     "chave": string,"ciencia_em": string | null,"ciencia_retorno": string | null,"confirmacao_em": string | null,"confirmacao_pedida_em": string | null,"confirmacao_pedida_por": string | null,"confirmacao_retorno": string | null,"data_emissao": string | null,"documento_id": string | null,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"empresa_id": string,"id": string,"nsu": string | null,"protocolo": string | null,"recebido_em": string,"situacao": string,"tipo_operacao": string | null,"valor": number | null
@@ -2174,6 +2429,25 @@ isOneToOne: false
       referencedColumns: ["empresa_id","id"]
     },{
       foreignKeyName: "nfe_resumos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_transportadores": {
+                  Row: {
+                    "created_at": string,"documento": string,"empresa_id": string,"endereco": string | null,"id": string,"inscricao_estadual": string | null,"municipio": string | null,"nome": string,"placa": string | null,"placa_uf": string | null,"rntc": string | null,"tipo": string,"uf": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"documento": string,"empresa_id": string,"endereco"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"municipio"?: string | null,"nome": string,"placa"?: string | null,"placa_uf"?: string | null,"rntc"?: string | null,"tipo": string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"documento"?: string,"empresa_id"?: string,"endereco"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"municipio"?: string | null,"nome"?: string,"placa"?: string | null,"placa_uf"?: string | null,"rntc"?: string | null,"tipo"?: string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_transportadores_empresa_id_fkey"
       columns: ["empresa_id"]
 isOneToOne: false
       referencedRelation: "empresas"
@@ -3492,6 +3766,48 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"nfe_avisar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfe_cancelar":
+{ Args: { "p_id": string,"p_justificativa": string }; Returns: undefined
+                           },
+"nfe_carta_correcao":
+{ Args: { "p_id": string,"p_texto": string }; Returns: undefined
+                           },
+"nfe_carteira":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"nfe_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"nfe_descartar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfe_destinatario_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_emitente_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id"?: string }; Returns: Json
+                           },
+"nfe_guia_atualizar":
+{ Args: { "p_documento_id"?: string,"p_id": string,"p_observacao"?: string,"p_situacao": string }; Returns: undefined
+                           },
+"nfe_operacao_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_produto_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_tentar_de_novo":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfe_transportador_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
 "nfse_avisar":
 { Args: { "p_id": string }; Returns: undefined
                            },

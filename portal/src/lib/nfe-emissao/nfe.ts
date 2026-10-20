@@ -249,7 +249,7 @@ function transporteXml(n: NotaCalculada): string {
     x += `<veicTransp><placa>${placa}</placa>${v.uf ? `<UF>${v.uf.toUpperCase()}</UF>` : ""}${tx("RNTC", v.rntc, 20)}</veicTransp>`;
   }
   const vol = tr.volumes;
-  if (vol || n.pesoLiquidoKg != null) {
+  if (vol?.quantidade || vol?.especie?.trim() || vol?.marca?.trim() || n.pesoLiquidoKg != null) {
     const peso = n.pesoLiquidoKg != null ? fmt(n.pesoLiquidoKg, 3) : null;
     x +=
       "<vol>" +

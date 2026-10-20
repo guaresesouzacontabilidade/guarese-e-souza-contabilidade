@@ -10,6 +10,7 @@ import { SignedXml } from "xml-crypto";
 import { chaveValida } from "@/lib/fiscal/chave";
 import { calcularNota, dataHoraUf, type EntradaNfe } from "@/lib/nfe-emissao/calculo";
 import { fmt } from "@/lib/nfe-emissao/decimal";
+import { code128C } from "@/lib/nfe-emissao/codigo-barras";
 import { chaveDeAcesso, montarNfe, nfeAssinada, NOME_HOMOLOGACAO, sortearCodigoNumerico } from "@/lib/nfe-emissao/nfe";
 import { vendaMilho } from "./apoio/nfe-ficticia";
 
@@ -193,6 +194,14 @@ describe("XML da NF-e", () => {
     expect(dataHoraUf(new Date("2026-11-01T02:00:00Z"), "TO")).toBe("2026-10-31T23:00:00-03:00");
     const c = sortearCodigoNumerico(15);
     expect(c).toMatch(/^\d{8}$/);
+  });
+
+  it("código de barras CODE-128C da chave igual ao de uma biblioteca independente (python-barcode)", () => {
+    expect(code128C("51261011444777000161550010000000151482137659")).toBe(
+      "11010011100110111010001110010011011001000100110001001001000110111010001110110111101110101101100110011001101100" +
+      "11001000010111010001101101100110011001000100110110011001101100110011011001100101110011001001100111010010011110" +
+      "100110111001100101000011100011010100001001101100011101011",
+    );
   });
 
   it.skipIf(!temXmllint)("passa nos esquemas oficiais e a assinatura confere (venda de milho para outro estado)", () => {
