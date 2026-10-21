@@ -7,6 +7,7 @@ import { relerNota } from "@/lib/fiscal/releitura";
 import { dasSimples, receitaBruta12Meses, type ColaboradorFolha, type DadosPrevisao, type MesDados, type ParametrosCalculo } from "@/lib/calculos/previsao";
 import type { LinhaCatalogo } from "./catalogo";
 import { auditar, inicioPrazo, type GrupoItens, type MesSimples } from "./regras";
+import type { ExclusaoSt, SegmentoExclusaoSt } from "./st-estadual";
 import { auditarServicos, type AnexoServicos, type MesSimplesServicos, type NotaServico } from "./servicos";
 
 /**
@@ -217,6 +218,34 @@ export async function executarAuditorFiscal(admin: ClienteAdmin, job: Job) {
       return s;
     };
 
+    // Produtos que saíram da ST por regra do Estado da empresa
+    const uf = dados.empresa.uf?.toUpperCase() ?? null;
+    const exclusoesSt: ExclusaoSt[] = [];
+    if (uf) {
+      const { data: linhas, error: erroSt } = await admin
+        .from("auditor_st_exclusoes")
+        .select("uf, item, segmento, cest_prefixo, ncm_prefixo, descricao, condicao, somente_fabricante_uf, confianca, fonte_titulo, fonte_url, vigencia_inicio, vigencia_fim")
+        .eq("ativo", true)
+        .eq("uf", uf);
+      if (erroSt) throw new Error(`Falha ao carregar a lista de ST do Estado: ${erroSt.message}`);
+      for (const l of linhas ?? []) {
+        exclusoesSt.push({
+          uf: l.uf,
+          item: l.item,
+          segmento: l.segmento as SegmentoExclusaoSt,
+          cest: l.cest_prefixo,
+          ncm: l.ncm_prefixo,
+          descricao: l.descricao,
+          condicao: l.condicao,
+          somente_fabricante_uf: l.somente_fabricante_uf,
+          confianca: l.confianca === "alta" ? "alta" : "conferir",
+          fonte: { titulo: l.fonte_titulo, ...(l.fonte_url ? { url: l.fonte_url } : {}) },
+          inicio: l.vigencia_inicio,
+          fim: l.vigencia_fim,
+        });
+      }
+    }
+
     // 4. Regras
     const semIbsCbs = new Map(dados.sem_ibscbs.map((x) => [String(x.competencia).slice(0, 7), x]));
     const regimeDoMes = (c: string) => regimes.get(c.slice(0, 7)) ?? dados.empresa.regime;
@@ -230,6 +259,8 @@ export async function executarAuditorFiscal(admin: ClienteAdmin, job: Job) {
         grupos,
         catalogo: dados.catalogo,
         semIbsCbs: (c) => semIbsCbs.get(c.slice(0, 7)) ?? null,
+        uf,
+        exclusoesSt,
       }),
       ...auditarServicos({
         inicio,

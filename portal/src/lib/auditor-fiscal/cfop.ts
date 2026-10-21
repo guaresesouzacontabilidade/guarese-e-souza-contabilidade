@@ -54,3 +54,13 @@ const PRODUCAO_PROPRIA = new Set(["101", "103", "105", "109", "111", "116", "118
 export function cfopRevenda(c: string | null | undefined) {
   return cfopVenda(c) && !PRODUCAO_PROPRIA.has(t(c).slice(1));
 }
+
+/**
+ * Na nota do fornecedor: venda interna (5.xxx) da produção do próprio
+ * estabelecimento — o fornecedor é a indústria fabricante e está no mesmo
+ * Estado da empresa (5.101, 5.103, 5.105, 5.111, 5.116, 5.118, 5.122 e, com
+ * ICMS-ST retido como substituto, 5.401 e 5.402).
+ */
+export function cfopVendaProducaoInterna(c: string | null | undefined) {
+  return ["5101", "5103", "5105", "5111", "5116", "5118", "5122", "5401", "5402"].includes(t(c));
+}

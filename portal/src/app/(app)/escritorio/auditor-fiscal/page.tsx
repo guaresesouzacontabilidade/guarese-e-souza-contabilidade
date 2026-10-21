@@ -10,8 +10,9 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { buscarTudo } from "@/lib/supabase/paginar";
 import { ROTULO_GRUPO, type GrupoMonofasico } from "@/lib/auditor-fiscal/catalogo";
 import { SITUACAO_EXECUCAO } from "@/lib/auditor-fiscal/rotulos";
+import { ROTULO_SEGMENTO_ST, type SegmentoExclusaoSt } from "@/lib/auditor-fiscal/st-estadual";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCnpj, formatarCompetencia, formatarRelativo } from "@/lib/formatos";
+import { formatarCnpj, formatarCompetencia, formatarData, formatarRelativo } from "@/lib/formatos";
 import { SITUACAO_SPED } from "@/lib/sped/rotulos";
 import { mensagemErro } from "@/lib/acoes";
 
@@ -36,9 +37,19 @@ export default async function AuditorFiscalCarteira() {
     buscarTudo((de, ate) =>
       s.supabase.from("auditor_ncm_monofasico").select("ncm_prefixo, ex_tipi, excecao, grupo, descricao, condicao, confianca, fonte_titulo, fonte_url").eq("ativo", true).order("grupo").order("ncm_prefixo").range(de, ate),
     ),
+    buscarTudo((de, ate) =>
+      s.supabase
+        .from("auditor_st_exclusoes")
+        .select("uf, item, segmento, cest_prefixo, ncm_prefixo, descricao, condicao, somente_fabricante_uf, confianca, fonte_titulo, fonte_url, vigencia_inicio, vigencia_fim")
+        .eq("ativo", true)
+        .order("uf")
+        .order("segmento")
+        .order("cest_prefixo")
+        .range(de, ate),
+    ),
   ])
-    .then(([empresas, achados, execucoes, catalogo]) => ({ empresas, achados, execucoes, catalogo, erro: null as string | null }))
-    .catch((e: unknown) => ({ empresas: [], achados: [], execucoes: [], catalogo: [], erro: mensagemErro(e) }));
+    .then(([empresas, achados, execucoes, catalogo, exclusoesSt]) => ({ empresas, achados, execucoes, catalogo, exclusoesSt, erro: null as string | null }))
+    .catch((e: unknown) => ({ empresas: [], achados: [], execucoes: [], catalogo: [], exclusoesSt: [], erro: mensagemErro(e) }));
   const { data: speds } = await s.supabase.rpc("sped_carteira");
   const ultimosSped = (speds ?? []) as unknown as {
     empresa_id: string;
@@ -74,6 +85,9 @@ export default async function AuditorFiscalCarteira() {
   const comAchados = linhas.filter((l) => l.r && (l.r.economia > 0 || l.r.paraRevisar || l.r.riscos)).length;
   const grupos = new Map<string, typeof resultado.catalogo>();
   for (const c of resultado.catalogo) grupos.set(c.grupo, [...(grupos.get(c.grupo) ?? []), c]);
+  const segmentosSt = new Map<string, typeof resultado.exclusoesSt>();
+  for (const l of resultado.exclusoesSt) segmentosSt.set(`${l.uf}|${l.segmento}`, [...(segmentosSt.get(`${l.uf}|${l.segmento}`) ?? []), l]);
+  const cest = (c: string) => [c.slice(0, 2), c.slice(2, 5), c.slice(5, 7)].filter(Boolean).join(".");
 
   return (
     <>
@@ -239,6 +253,72 @@ export default async function AuditorFiscalCarteira() {
               </div>
             </details>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpenCheck className="size-4" /> Produtos que saíram da ST por regra do Estado
+          </CardTitle>
+          <CardDescription>
+            Na compra interna da indústria fabricante do próprio Estado (CFOP 5.101 ou 5.401 na nota do fornecedor), estes produtos não têm mais
+            ICMS-ST; a compra de outro estado continua com ST. O auditor usa a lista para não acusar &ldquo;ICMS-ST pago de novo&rdquo; quando a venda
+            tributada está correta, apontar o ICMS-ST cobrado depois da mudança e a venda emitida como ST, e lembrar do estoque na data. Linhas
+            &ldquo;conferir&rdquo;: o texto oficial do Anexo XXI não pôde ser conferido; confira o CEST de cada produto.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {segmentosSt.size ? (
+            [...segmentosSt.entries()].map(([chave, linhasSt]) => (
+              <details key={chave} className="rounded-lg border border-border">
+                <summary className="cursor-pointer px-3 py-2 text-sm font-medium">
+                  {linhasSt[0].uf} — {(ROTULO_SEGMENTO_ST[linhasSt[0].segmento as SegmentoExclusaoSt] ?? linhasSt[0].segmento).replace(/^./, (l) => l.toUpperCase())}{" "}
+                  ({/ a | e /.test(linhasSt[0].item) ? "itens" : "item"} {linhasSt[0].item.replace(/ do Anexo XXI$/, "")}, desde{" "}
+                  {formatarData(linhasSt[0].vigencia_inicio)})
+                </summary>
+                <div className="overflow-x-auto px-3 pb-3">
+                  <Table>
+                    <THead>
+                      <Tr>
+                        <Th>CEST</Th>
+                        <Th>Produto</Th>
+                        <Th className="hidden md:table-cell">Norma</Th>
+                      </Tr>
+                    </THead>
+                    <TBody>
+                      {linhasSt.map((l) => (
+                        <Tr key={`${l.cest_prefixo}-${l.ncm_prefixo ?? ""}-${l.vigencia_inicio}`}>
+                          <Td className="font-mono text-xs">
+                            {cest(l.cest_prefixo)}
+                            {l.cest_prefixo.length < 7 ? "…" : ""}
+                            {l.ncm_prefixo ? <span className="block text-muted-foreground">NCM {l.ncm_prefixo}…</span> : null}
+                            {l.confianca === "conferir" ? <Badge variante="alerta" className="ml-1">conferir</Badge> : null}
+                          </Td>
+                          <Td className="text-sm">
+                            {l.descricao}
+                            {l.condicao ? <span className="block text-xs text-muted-foreground">{l.condicao}</span> : null}
+                            {l.vigencia_fim ? <span className="block text-xs text-muted-foreground">Até {formatarData(l.vigencia_fim)}</span> : null}
+                          </Td>
+                          <Td className="hidden text-xs md:table-cell">
+                            {l.fonte_url ? (
+                              <a href={l.fonte_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                                {l.fonte_titulo}
+                              </a>
+                            ) : (
+                              l.fonte_titulo
+                            )}
+                          </Td>
+                        </Tr>
+                      ))}
+                    </TBody>
+                  </Table>
+                </div>
+              </details>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">Nenhuma regra estadual cadastrada.</p>
+          )}
         </CardContent>
       </Card>
     </>

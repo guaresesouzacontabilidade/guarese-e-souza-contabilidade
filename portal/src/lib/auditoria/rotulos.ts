@@ -52,6 +52,7 @@ export const ROTULO_ACAO: Record<string, string> = {
 export const ROTULO_ENTIDADE: Record<string, string> = {
   auditor_achados: "achado do auditor fiscal",
   auditor_ncm_monofasico: "catálogo de produtos monofásicos",
+  auditor_st_exclusoes: "lista de produtos fora da ST no Estado",
   xml_lotes: "lote de XML",
   maquininha_adquirentes: "catálogo de adquirentes",
   maquininha_contratos: "contrato de maquininha",

@@ -178,6 +178,19 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"auditor_st_exclusoes": {
+                  Row: {
+                    "ativo": boolean,"cest_prefixo": string,"condicao": string | null,"confianca": string,"created_at": string,"descricao": string,"fonte_titulo": string,"fonte_url": string | null,"id": string,"item": string,"ncm_prefixo": string | null,"segmento": string,"somente_fabricante_uf": boolean,"uf": string,"updated_at": string,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cest_prefixo": string,"condicao"?: string | null,"confianca"?: string,"created_at"?: string,"descricao": string,"fonte_titulo": string,"fonte_url"?: string | null,"id"?: string,"item": string,"ncm_prefixo"?: string | null,"segmento": string,"somente_fabricante_uf"?: boolean,"uf": string,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cest_prefixo"?: string,"condicao"?: string | null,"confianca"?: string,"created_at"?: string,"descricao"?: string,"fonte_titulo"?: string,"fonte_url"?: string | null,"id"?: string,"item"?: string,"ncm_prefixo"?: string | null,"segmento"?: string,"somente_fabricante_uf"?: boolean,"uf"?: string,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"auditoria": {
                   Row: {
                     "acao": string,"dados_antes": Json | null,"dados_depois": Json | null,"detalhes": Json | null,"empresa_id": string | null,"entidade": string,"entidade_id": string | null,"id": number,"ip": string | null,"ocorrido_em": string,"user_agent": string | null,"user_email": string | null,"user_id": string | null

@@ -317,6 +317,12 @@ O menu **Auditor fiscal** do escritório mostra, para a carteira toda, a **poss�
    - **PIS/Cofins na revenda de monofásicos** (Lucro Presumido e Real): valor destacado nas notas onde o certo é alíquota zero (CST 04).
    - **ICMS próprio em produto com ST** (regime normal).
    - Riscos: **venda como ST sem compra com ST**, **notas de venda sem IBS/CBS** (obrigatório desde 03/08/2026 no regime normal e a partir de 01/01/2027 no Simples), **alíquota de teste do IBS/CBS** diferente (0,9% e 0,1% em 2026) e **NCM inválido**.
+   - **Produtos que saíram da ST por regra do Estado** (hoje, o Tocantins — Decreto nº 6.996/2025 e alterações): bebidas frias desde 01/07/2025, tintas e vernizes (item 4.4) e produtos de higiene (itens 16.1 a 16.8 e 16.10 a 16.12) ficam fora da ST **só na compra interna da indústria fabricante do Tocantins** (CFOP 5.101 ou 5.401 na nota do fornecedor); a compra de outro estado continua com ST. O auditor:
+     - deixa como **conferir** o "ICMS-ST no DAS" (ou o "ICMS em produto com ST") quando o produto também já vem sem ST da indústria do Estado — a venda tributada pode estar certa;
+     - aponta o **ICMS-ST cobrado por indústria do Estado depois da mudança** (oportunidade: o valor retido pode ser recuperado; fale com o fornecedor);
+     - aponta a **venda emitida como ST** de produto que a empresa já compra sem ST (risco: no Simples o ICMS entra no DAS com CSOSN 102; no regime normal, CST 00 com débito);
+     - lembra do **estoque na data da mudança** (inventário no Bloco H com motivo 02 e art. 46-D do RICMS/TO) quando houve compra com ST da indústria do Estado nos 6 meses anteriores.
+     A lista usada (CEST, itens, datas e norma) fica no fim da página do auditor da carteira; as linhas estão marcadas **conferir** porque o texto oficial do Anexo XXI não pôde ser conferido — o administrador pode ajustá-las.
    - **Notas de serviço (NFS-e)** emitidas pela empresa:
      - **ISS retido no DAS** (Simples): serviços com ISS retido pelo tomador. Sobre essa receita não há ISS no DAS (LC 123/2006, art. 21, § 4º, VII); mostra quanto o DAS cobrou a mais **se** a receita não foi informada como "com retenção" no PGDAS-D (receita × alíquota efetiva × parte do ISS na faixa, até 5%).
      - **ISS retido acima ou abaixo da alíquota do Simples**: a alíquota da retenção deve ser a parte do ISS na alíquota efetiva do mês anterior (art. 21, § 4º, I). Acima, a diferença foi paga a mais ao município (dá para pedir de volta); abaixo, a diferença continua devida em guia do município (risco).

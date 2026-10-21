@@ -1,10 +1,11 @@
 import Decimal from "decimal.js";
 import { ANEXOS_SIMPLES, type Fonte } from "@/lib/calculos/tabelas";
 import { centavos, dec, formatarMoeda } from "@/lib/dinheiro";
-import { somarMeses } from "@/lib/competencia";
+import { somarMeses, ultimoDiaDoMes } from "@/lib/competencia";
 import { formatarCompetencia, formatarData } from "@/lib/formatos";
 import { classificarNcm, ROTULO_GRUPO, type GrupoMonofasico, type LinhaCatalogo } from "./catalogo";
-import { cfopCompraNaEntrada, cfopDevolucaoNaEntrada, cfopRevenda, cfopVenda, cfopVendaSt } from "./cfop";
+import { cfopCompraNaEntrada, cfopDevolucaoNaEntrada, cfopRevenda, cfopVenda, cfopVendaProducaoInterna, cfopVendaSt } from "./cfop";
+import { exclusaoSt, ROTULO_SEGMENTO_ST, somenteDigitos, type ExclusaoSt } from "./st-estadual";
 import { FONTES, OBRIGACAO_IBS_CBS, PIS_COFINS_ESTIMADO, REPARTICAO_SIMPLES, TESTE_2026 } from "./tabelas";
 
 /**
@@ -85,6 +86,9 @@ export interface EntradaAuditoria {
   catalogo: LinhaCatalogo[];
   /** Notas de venda sem o grupo IBS/CBS no mês (contagem exata, do banco); sem ela, conta pelos grupos de itens. */
   semIbsCbs?: (competencia: string) => { total: number; apos_normal: number } | null;
+  /** Estado da empresa e produtos que saíram da ST por regra desse Estado (tabela auditor_st_exclusoes). */
+  uf?: string | null;
+  exclusoesSt?: ExclusaoSt[];
 }
 
 export type TipoAchado = "oportunidade" | "risco" | "informativo";
@@ -180,11 +184,31 @@ interface Evidencias {
   stNcmCest: Set<string>;
   stNcm: Set<string>;
   semStNcm: Set<string>;
+  /** Comprado sem ST da indústria do próprio Estado, já fora da ST pela regra estadual (GTIN e NCM:CEST). */
+  exclGtin: Set<string>;
+  exclNcmCest: Set<string>;
 }
 
-function evidencias(grupos: GrupoItens[]): Evidencias {
-  const ev: Evidencias = { monoGtin: new Set(), monoNcm: new Set(), stGtin: new Set(), stNcmCest: new Set(), stNcm: new Set(), semStNcm: new Set() };
-  for (const g of grupos) {
+const competenciaDe = (g: GrupoItens) => `${String(g.competencia).slice(0, 7)}-01`;
+const chaveNcmCest = (g: GrupoItens) => `${g.ncm}:${somenteDigitos(g.cest)}`;
+
+/**
+ * Compra interna da indústria do próprio Estado de produto que, na data,
+ * estava fora da ST pela regra estadual (na nota do fornecedor: CFOP 5.101,
+ * 5.401...). Sem a exigência da indústria, basta a compra ser interna.
+ */
+function exclusaoNaCompra(g: GrupoItens, e: EntradaAuditoria, data: string): ExclusaoSt | null {
+  if (g.operacao !== "entrada" || !/^5\d{3}$/.test((g.cfop ?? "").trim())) return null;
+  const exc = exclusaoSt(g.cest, g.ncm, data, e.uf ?? null, e.exclusoesSt ?? []);
+  return exc && (!exc.somente_fabricante_uf || cfopVendaProducaoInterna(g.cfop)) ? exc : null;
+}
+
+function evidencias(e: EntradaAuditoria): Evidencias {
+  const ev: Evidencias = {
+    monoGtin: new Set(), monoNcm: new Set(), stGtin: new Set(), stNcmCest: new Set(), stNcm: new Set(), semStNcm: new Set(),
+    exclGtin: new Set(), exclNcmCest: new Set(),
+  };
+  for (const g of e.grupos) {
     if (g.operacao !== "entrada" || !cfopCompraNaEntrada(g.cfop)) continue;
     if (g.cst_pis === "04" || g.cst_cofins === "04") {
       if (g.gtin) ev.monoGtin.add(g.gtin);
@@ -196,9 +220,20 @@ function evidencias(grupos: GrupoItens[]): Evidencias {
         ev.stNcm.add(g.ncm);
         if (g.cest) ev.stNcmCest.add(`${g.ncm}:${g.cest}`);
       }
-    } else if (g.ncm && compraSemSt(g)) ev.semStNcm.add(g.ncm);
+    } else if (g.ncm && compraSemSt(g)) {
+      ev.semStNcm.add(g.ncm);
+      if (exclusaoNaCompra(g, e, ultimoDiaDoMes(competenciaDe(g)))) {
+        if (g.gtin) ev.exclGtin.add(g.gtin);
+        if (g.cest) ev.exclNcmCest.add(chaveNcmCest(g));
+      }
+    }
   }
   return ev;
+}
+
+/** O produto (ou o NCM e CEST) foi comprado sem ST da indústria do Estado depois da exclusão estadual. */
+function compradoForaDaSt(g: GrupoItens, ev: Evidencias) {
+  return Boolean((g.gtin && ev.exclGtin.has(g.gtin)) || (g.ncm && g.cest && ev.exclNcmCest.has(chaveNcmCest(g))));
 }
 
 interface ClasseMonofasico {
@@ -244,6 +279,24 @@ function evidenciaSt(g: GrupoItens, ev: Evidencias): { confianca: Confianca; mot
   return null;
 }
 
+/**
+ * Evidência de ST para uma venda tributada normalmente: se o produto saiu da
+ * ST no Estado e também foi comprado sem ST da indústria local, a venda
+ * tributada pode estar certa (só o estoque antigo ou de outro estado tem ST).
+ */
+function evidenciaStVenda(g: GrupoItens, ev: Evidencias, e: EntradaAuditoria): { confianca: Confianca; motivo: string } | null {
+  const st = evidenciaSt(g, ev);
+  if (!st) return null;
+  const exc = exclusaoSt(g.cest, g.ncm, ultimoDiaDoMes(competenciaDe(g)), e.uf ?? null, e.exclusoesSt ?? []);
+  if (!exc || !compradoForaDaSt(g, ev)) return st;
+  return {
+    confianca: "conferir",
+    motivo:
+      `${st.motivo}, mas também foi comprado sem ST de indústria do ${exc.uf} ` +
+      `(${ROTULO_SEGMENTO_ST[exc.segmento]}: fora da ST desde ${formatarData(exc.inicio)}) — a venda tributada pode estar correta`,
+  };
+}
+
 // -----------------------------------------------------------------------------
 // Simples Nacional: faixa, alíquota efetiva e partilha
 // -----------------------------------------------------------------------------
@@ -273,7 +326,7 @@ function memoriaSimples(s: MesSimples, ef: NonNullable<ReturnType<typeof aliquot
 // Auditoria
 // -----------------------------------------------------------------------------
 export function auditar(e: EntradaAuditoria): AchadoCalculado[] {
-  const ev = evidencias(e.grupos);
+  const ev = evidencias(e);
   const porMes = new Map<string, GrupoItens[]>();
   for (const g of e.grupos) {
     const c = `${String(g.competencia).slice(0, 7)}-01`;
@@ -297,10 +350,15 @@ export function auditar(e: EntradaAuditoria): AchadoCalculado[] {
       achados.push(...icmsStRegimeNormal(c, vendas, ev, e));
     }
     achados.push(...vendaStSemCompraSt(c, vendas, ev, e));
+    if (e.exclusoesSt?.length) {
+      achados.push(...stRetidaForaDaSt(c, grupos, e));
+      achados.push(...vendaStForaDaSt(c, regime, vendas, ev, e));
+    }
     achados.push(...ibsCbsAusente(c, regime, vendas, e.semIbsCbs?.(c) ?? null));
     achados.push(...ibsCbsAliquota(c, vendas));
     achados.push(...ncmInvalido(c, vendas));
   }
+  achados.push(...estoqueSaidaSt(e));
   return achados;
 }
 
@@ -378,14 +436,13 @@ function stSimples(
   ev: Evidencias,
   e: EntradaAuditoria,
 ): AchadoCalculado[] {
-  void e;
   if (!s) return [];
   const marcadas = vendas
     .filter((g) => !vendaComoSt(g))
-    .map((g) => ({ g, st: evidenciaSt(g, ev) }))
+    .map((g) => ({ g, st: evidenciaStVenda(g, ev, e) }))
     .filter((x) => x.st);
   if (!marcadas.length) return [];
-  const devolvidas = devolucoes.filter((g) => !vendaComoSt(g) && evidenciaSt(g, ev));
+  const devolvidas = devolucoes.filter((g) => !vendaComoSt(g) && evidenciaStVenda(g, ev, e));
   const bruto = marcadas.reduce((t, x) => t.plus(num(x.g.valor)), new Decimal(0));
   const devolvido = devolvidas.reduce((t, g) => t.plus(num(g.valor)), new Decimal(0));
   const receita = centavos(Decimal.max(0, bruto.minus(devolvido)));
@@ -483,10 +540,9 @@ function monofasicoRegimeNormal(c: string, regime: string, vendas: GrupoItens[],
 
 // ICMS próprio destacado em mercadoria que já teve o ICMS retido (regime normal)
 function icmsStRegimeNormal(c: string, vendas: GrupoItens[], ev: Evidencias, e: EntradaAuditoria): AchadoCalculado[] {
-  void e;
   const marcadas = vendas
     .filter((g) => ["00", "20"].includes(g.cst_icms ?? "") && num(g.icms).gt(0))
-    .map((g) => ({ g, st: evidenciaSt(g, ev) }))
+    .map((g) => ({ g, st: evidenciaStVenda(g, ev, e) }))
     .filter((x) => x.st);
   if (!marcadas.length) return [];
   const valor = centavos(marcadas.reduce((t, x) => t.plus(num(x.g.icms)), new Decimal(0)));
@@ -520,11 +576,14 @@ function icmsStRegimeNormal(c: string, vendas: GrupoItens[], ev: Evidencias, e: 
 }
 
 // Venda como ST de produto comprado sem ST (risco) --------------------------------
+/** Venda emitida como ST de um NCM que, no portal, só foi comprado sem ST. */
+function vendaStSoComprasSemSt(g: GrupoItens, ev: Evidencias) {
+  return vendaComoSt(g) && Boolean(g.ncm) && !evidenciaSt(g, ev) && ev.semStNcm.has(g.ncm!) && !ev.stNcm.has(g.ncm!);
+}
+
 function vendaStSemCompraSt(c: string, vendas: GrupoItens[], ev: Evidencias, e: EntradaAuditoria): AchadoCalculado[] {
   void e;
-  const marcadas = vendas.filter(
-    (g) => vendaComoSt(g) && g.ncm && !evidenciaSt(g, ev) && ev.semStNcm.has(g.ncm) && !ev.stNcm.has(g.ncm),
-  );
+  const marcadas = vendas.filter((g) => vendaStSoComprasSemSt(g, ev));
   if (!marcadas.length) return [];
   const receita = centavos(marcadas.reduce((t, g) => t.plus(num(g.valor)), new Decimal(0)));
   if (receita.lte(0)) return [];
@@ -551,6 +610,172 @@ function vendaStSemCompraSt(c: string, vendas: GrupoItens[], ev: Evidencias, e: 
       fontes: [FONTES.st],
     },
   ];
+}
+
+// Produtos que saíram da ST por regra do Estado -----------------------------------
+function descreverExclusoes(lista: ExclusaoSt[]) {
+  const marcos = [...new Map(lista.map((l) => [`${l.segmento}|${l.inicio}`, l])).values()];
+  return {
+    uf: marcos[0].uf,
+    segmentos: [...new Set(marcos.map((l) => ROTULO_SEGMENTO_ST[l.segmento]))].join(", "),
+    desde: marcos.map((l) => `${ROTULO_SEGMENTO_ST[l.segmento]} desde ${formatarData(l.inicio)}`).join("; "),
+    itens: [...new Set(marcos.map((l) => l.item))].join("; "),
+    confianca: marcos.reduce<Confianca>((acc, l) => pior(acc, l.confianca), "alta"),
+    fontes: marcos.map((l) => l.fonte),
+  };
+}
+const motivoExclusao = (g: GrupoItens, exc: ExclusaoSt) => `CFOP ${g.cfop ?? "—"}, CEST ${g.cest ?? "—"} — ${exc.descricao}`;
+
+/** Compra da indústria do Estado com ICMS-ST retido depois que o produto saiu da ST (oportunidade). */
+function stRetidaForaDaSt(c: string, grupos: GrupoItens[], e: EntradaAuditoria): AchadoCalculado[] {
+  // O portal agrupa as notas por mês: só conta o mês inteiro já dentro da exclusão
+  const marcadas = grupos
+    .filter((g) => cfopCompraNaEntrada(g.cfop) && num(g.icms_st).gt(0))
+    .map((g) => ({ g, exc: exclusaoNaCompra(g, e, c) }))
+    .filter((x): x is { g: GrupoItens; exc: ExclusaoSt } => x.exc !== null);
+  if (!marcadas.length) return [];
+  const st = centavos(marcadas.reduce((t, x) => t.plus(num(x.g.icms_st)), new Decimal(0)));
+  const compras = centavos(marcadas.reduce((t, x) => t.plus(num(x.g.valor)), new Decimal(0)));
+  if (st.lt("0.01")) return [];
+  const d = descreverExclusoes(marcadas.map((x) => x.exc));
+  const prazo = prazoRestituicao(c);
+  const itens = marcadas.reduce((t, x) => t + x.g.itens, 0);
+  return [
+    {
+      regra: "st_retida_fora_da_st",
+      chave: `st_retida_fora_da_st:${c.slice(0, 7)}`,
+      competencia: c,
+      tipo: "oportunidade",
+      confianca: d.confianca,
+      titulo: `ICMS-ST cobrado por indústria do ${d.uf} em produto que saiu da ST — ${mes(c)}`,
+      resumo:
+        `Em ${mesLongo(c)}, a empresa comprou ${moeda(compras)} de indústrias do ${d.uf} em produtos que saíram da substituição tributária ` +
+        `(${d.segmentos}), e as notas vieram com ICMS-ST retido: ${moeda(st)}. Pela regra do Estado, a venda interna da indústria local desses ` +
+        `produtos não tem mais ST (${d.desde}). Confira o CEST no Anexo XXI vigente e fale com o fornecedor: se a retenção foi indevida, ele corrige ` +
+        `as próximas notas e o valor retido pode ser recuperado com o pedido de restituição à SEFAZ (com a prova de quem suportou o imposto), ` +
+        `até ${formatarData(prazo)}.`,
+      valor_base: compras.toFixed(2),
+      valor_estimado: st.toFixed(2),
+      memoria: [
+        { rotulo: "Compras de indústrias do Estado com ICMS-ST retido", valor: `${moeda(compras)} (${itens} ${itens === 1 ? "item" : "itens"})` },
+        { rotulo: "ICMS-ST retido nessas notas", valor: moeda(st) },
+        { rotulo: "Produtos (lista de ST do Estado)", valor: d.itens },
+        { rotulo: "Fora da ST", valor: d.desde },
+        { rotulo: "Condição da regra", valor: "Venda interna da indústria fabricante do Estado (CFOP 5.101 a 5.122, 5.401 ou 5.402 na nota do fornecedor)" },
+        { rotulo: "Prazo para pedir a restituição", valor: formatarData(prazo) },
+      ],
+      referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: motivoExclusao(x.g, x.exc) }))),
+      fontes: fontesUnicas([...d.fontes, FONTES.restituicao]),
+    },
+  ];
+}
+
+/** Venda como ST de produto que a empresa já compra sem ST da indústria do Estado (risco). */
+function vendaStForaDaSt(c: string, regime: string | null, vendas: GrupoItens[], ev: Evidencias, e: EntradaAuditoria): AchadoCalculado[] {
+  const data = ultimoDiaDoMes(c);
+  const marcadas = vendas
+    // Quando o NCM só foi comprado sem ST, o achado geral (st_sem_compra_st) já aponta a venda
+    .filter((g) => vendaComoSt(g) && compradoForaDaSt(g, ev) && !vendaStSoComprasSemSt(g, ev))
+    .map((g) => ({ g, exc: exclusaoSt(g.cest, g.ncm, data, e.uf ?? null, e.exclusoesSt ?? []) }))
+    .filter((x): x is { g: GrupoItens; exc: ExclusaoSt } => x.exc !== null);
+  if (!marcadas.length) return [];
+  const receita = centavos(marcadas.reduce((t, x) => t.plus(num(x.g.valor)), new Decimal(0)));
+  if (receita.lte(0)) return [];
+  const d = descreverExclusoes(marcadas.map((x) => x.exc));
+  const simplesNacional = regime === "simples_nacional";
+  const s = simplesNacional ? e.simples(c) : null;
+  const ef = s ? aliquotaEfetiva(s.anexo, s.rbt12) : null;
+  const icmsDas = ef?.reparticao.icms ? centavos(receita.times(ef.efetiva).times(dec(ef.reparticao.icms)).div(100)) : null;
+  const correto = simplesNacional
+    ? "o ICMS entra no DAS (CSOSN 102, sem separar a receita como ST no PGDAS-D)"
+    : regime && REGIME_NORMAL.has(regime)
+      ? "há débito de ICMS na venda (CST 00), com o crédito da compra"
+      : "o ICMS da venda segue a regra normal";
+  return [
+    {
+      regra: "venda_st_fora_da_st",
+      chave: `venda_st_fora_da_st:${c.slice(0, 7)}`,
+      competencia: c,
+      tipo: "risco",
+      confianca: "conferir",
+      titulo: `Produto que saiu da ST vendido como ST — ${mes(c)}`,
+      resumo:
+        `Em ${mesLongo(c)}, ${moeda(receita)} em vendas de ${d.segmentos} saíram como se o ICMS já tivesse sido pago por substituição tributária ` +
+        `(CFOP 5.405, CST 60 ou CSOSN 500), mas a empresa também comprou esses produtos sem ST de indústria do ${d.uf}, depois que saíram da ST ` +
+        `(${d.desde}). Só o estoque comprado com ST (antes da mudança ou de outro estado) pode sair assim; no restante, ${correto}. ` +
+        `Confira o estoque e o cadastro fiscal dos produtos no sistema de vendas.`,
+      valor_base: receita.toFixed(2),
+      valor_estimado: null,
+      memoria: [
+        { rotulo: "Vendas emitidas como ST desses produtos", valor: moeda(receita) },
+        { rotulo: "Produtos (lista de ST do Estado)", valor: d.itens },
+        { rotulo: "Fora da ST", valor: d.desde },
+        ...(s && ef && icmsDas
+          ? [
+              ...memoriaSimples(s, ef),
+              {
+                rotulo: "ICMS do DAS sobre essa receita, se nada dela tinha ST",
+                valor: `${moeda(receita)} × ${pct(ef.efetiva)} × ${pctTexto(ef.reparticao.icms!)} = ${moeda(icmsDas)}`,
+              },
+            ]
+          : []),
+      ],
+      referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: `vendido como ST; comprado sem ST de indústria do ${x.exc.uf} (${motivoExclusao(x.g, x.exc)})` }))),
+      fontes: fontesUnicas([...d.fontes, simplesNacional ? FONTES.segregacao : null]),
+    },
+  ];
+}
+
+/** Estoque na data em que o produto saiu da ST: compras com ST da indústria do Estado nos 6 meses anteriores (informativo). */
+function estoqueSaidaSt(e: EntradaAuditoria): AchadoCalculado[] {
+  const marcos = new Map<string, ExclusaoSt[]>();
+  for (const l of e.exclusoesSt ?? []) {
+    if (l.uf !== e.uf) continue;
+    const k = `${l.segmento}|${l.inicio}`;
+    marcos.set(k, [...(marcos.get(k) ?? []), l]);
+  }
+  const achados: AchadoCalculado[] = [];
+  for (const linhas of marcos.values()) {
+    const inicio = linhas[0].inicio;
+    const c = `${inicio.slice(0, 7)}-01`;
+    if (c < e.inicio || c > e.fim) continue;
+    const desde = somarMeses(c, -6);
+    const so = { ...e, exclusoesSt: linhas };
+    const marcadas = e.grupos
+      .filter((g) => competenciaDe(g) >= desde && competenciaDe(g) < c && cfopCompraNaEntrada(g.cfop) && compraComSt(g))
+      .map((g) => ({ g, exc: exclusaoNaCompra(g, so, inicio) }))
+      .filter((x): x is { g: GrupoItens; exc: ExclusaoSt } => x.exc !== null);
+    if (!marcadas.length) continue;
+    const valor = centavos(marcadas.reduce((t, x) => t.plus(num(x.g.valor)), new Decimal(0)));
+    const st = centavos(marcadas.reduce((t, x) => t.plus(num(x.g.icms_st)), new Decimal(0)));
+    const d = descreverExclusoes(linhas);
+    const procedimento =
+      d.uf === "TO" ? "siga os procedimentos do art. 46-D do RICMS/TO para esse estoque (art. 46, § 4º)" : "siga a regra de estoque da legislação do Estado";
+    achados.push({
+      regra: "estoque_saida_st",
+      chave: `estoque_saida_st:${c.slice(0, 7)}:${linhas[0].segmento}`,
+      competencia: c,
+      tipo: "informativo",
+      confianca: "conferir",
+      titulo: `Estoque na saída da ST (${d.segmentos}) — ${mes(c)}`,
+      resumo:
+        `Desde ${formatarData(inicio)}, ${d.segmentos} vendidos por indústria do ${d.uf} estão fora da substituição tributária. Nos 6 meses ` +
+        `anteriores, a empresa comprou ${moeda(valor)} desses produtos de indústrias do Estado com ICMS-ST retido${st.gt(0) ? ` (${moeda(st)})` : ""}. ` +
+        `Se havia estoque na data, faça o inventário (EFD, Bloco H, motivo 02 — mudança na forma de tributação) e ${procedimento}: ` +
+        `as vendas desse estoque passam à apuração normal do ICMS.`,
+      valor_base: valor.toFixed(2),
+      valor_estimado: null,
+      memoria: [
+        { rotulo: `Compras com ST de indústrias do Estado (${mes(desde)} a ${mes(somarMeses(c, -1))})`, valor: moeda(valor) },
+        ...(st.gt(0) ? [{ rotulo: "ICMS-ST retido nessas compras", valor: moeda(st) }] : []),
+        { rotulo: "Produtos (lista de ST do Estado)", valor: d.itens },
+        { rotulo: "Fora da ST", valor: d.desde },
+      ],
+      referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: motivoExclusao(x.g, x.exc) }))),
+      fontes: fontesUnicas(d.fontes),
+    });
+  }
+  return achados;
 }
 
 // Reforma tributária: grupo IBS/CBS ausente nas notas de venda (risco) ------------
