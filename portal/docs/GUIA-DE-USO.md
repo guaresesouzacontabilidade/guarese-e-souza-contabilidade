@@ -441,3 +441,6 @@ Não. As declarações e os pagamentos continuam nos sistemas oficiais; o portal
 
 **Os lembretes e avisos por WhatsApp funcionam?**
 Somente depois de configurada a integração oficial do WhatsApp Business (veja `CONFIGURACAO.md`). Enquanto isso, a integração aparece como desconectada e nada é enviado por WhatsApp. Depois de ativada, os avisos só vão para clientes que autorizaram, e cada um pode desligar em **Minha conta → Avisos**.
+
+**Como regravar os vídeos de apresentação para clientes?**
+Os vídeos usam só a demonstração (Padaria Pão Dourado, dados fictícios) e cada um também é um teste: o robô confere se a função funcionou e marca o vídeo como reprovado se algo falhar. Com o portal local rodando com os dados de `npm run seed:demo` (de preferência compilado com `NEXT_PUBLIC_AMBIENTE=demonstracao`) e a fila sendo processada (`npm run worker`), rode `npm run videos:gravar -- <pasta>`; para regravar só alguns, acrescente parte do nome (ex.: `03 07`). Saem os MP4 (1280×720), uma capa de cada e o `relatorio.json` com as conferências. Precisa do `ffmpeg`. O roteiro de cada vídeo fica em `scripts/videos/cenas.mjs`. O script recusa o endereço do portal oficial.

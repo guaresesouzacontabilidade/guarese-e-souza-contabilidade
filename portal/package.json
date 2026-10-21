@@ -14,7 +14,8 @@
     "db:tipos": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts",
     "criar-admin": "tsx scripts/criar-admin.ts",
     "seed:demo": "tsx --conditions=react-server scripts/seed-demo.ts",
-    "worker": "tsx scripts/worker.ts"
+    "worker": "tsx scripts/worker.ts",
+    "videos:gravar": "node scripts/videos/gravar.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
