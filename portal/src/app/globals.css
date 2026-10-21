@@ -376,6 +376,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* Bolinhas que percorrem a órbita da tela de entrada (animação do próprio SVG) */
+  .ponto-orbita {
+    display: none;
+  }
 }
 
 @media print {
