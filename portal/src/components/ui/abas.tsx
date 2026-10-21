@@ -15,7 +15,7 @@ export function AbasLink({ abas, ativa, className }: { abas: { valor: string; ro
                 aria-current={ativo ? "page" : undefined}
                 className={cn(
                   "-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm transition-colors",
-                  ativo ? "border-primary font-semibold text-titulo" : "border-transparent text-muted-foreground hover:text-foreground",
+                  ativo ? "border-primary font-semibold text-titulo [border-image:var(--gradiente-marca)_1]" : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 {a.rotulo}

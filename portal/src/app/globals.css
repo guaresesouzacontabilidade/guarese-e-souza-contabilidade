@@ -1,108 +1,143 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/space-grotesk";
 
 /* Modo escuro controlado pela classe .dark (next-themes) */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* =============================================================================
    Identidade visual — Portal Guarese's ON
-   Fundo branco, marrom-escuro (títulos, menus, botões), cinza-claro e bege
-   (fundos secundários e divisórias), verde/amarelo/vermelho para indicadores.
+   Dois modos do mesmo visual: "Luz" (claro) e "Aurora" (escuro). Violeta e
+   ciano como cores de destaque (degradê nos botões principais, no menu ativo
+   e nos gráficos), fundo com brilhos suaves, títulos em Space Grotesk e
+   verde/âmbar/vermelho para indicadores. Contraste de texto de pelo menos
+   4,5:1 nos dois modos.
    ============================================================================= */
 :root {
-  --background: #ffffff;
-  --foreground: #1f1a17;
+  --background: #f5f7ff;
+  --fundo-app:
+    radial-gradient(1100px 520px at 100% -10%, rgba(91, 61, 245, 0.1), transparent 60%),
+    radial-gradient(900px 480px at 0% -5%, rgba(6, 182, 212, 0.09), transparent 55%), #f5f7ff;
+  --fundo-heroi:
+    radial-gradient(640px 420px at 25% 35%, rgba(91, 61, 245, 0.2), transparent 65%),
+    radial-gradient(560px 360px at 90% 90%, rgba(6, 182, 212, 0.18), transparent 60%), #eef1ff;
+  --foreground: #1a2238;
   --card: #ffffff;
-  --card-foreground: #1f1a17;
-  --muted: #f5f3f0;
-  --muted-foreground: #6b625b;
-  --bege: #f1e8dc;
-  --bege-forte: #e6d6c2;
-  --border: #e7e2dc;
-  --input: #d9d1c7;
-  --primary: #4a2c1d;
-  --primary-hover: #3a2216;
+  --card-foreground: #1a2238;
+  --muted: #eef1fa;
+  --muted-foreground: #55607a;
+  --bege: #eef0ff;
+  --bege-forte: #e0e4ff;
+  --border: #e3e8f5;
+  --input: #cfd7ea;
+  --primary: #5b3df5;
+  --primary-hover: #4a2ee0;
   --primary-foreground: #ffffff;
-  --secondary: #f3ece3;
-  --secondary-hover: #ebe0d2;
-  --secondary-foreground: #4a2c1d;
-  --ring: #8b5e3c;
-  --titulo: #4a2c1d;
+  --secondary: #eeebff;
+  --secondary-hover: #e2ddff;
+  --secondary-foreground: #3b23d6;
+  --ring: #5b3df5;
+  --titulo: #0b1020;
 
-  --sidebar: #3d2518;
-  --sidebar-foreground: #f3e9dd;
-  --sidebar-muted: #c9b5a2;
-  --sidebar-ativo: #5b3a28;
-  --sidebar-borda: #523424;
+  /* Degradê da marca (botões principais, avatar) e brilho */
+  --gradiente: linear-gradient(135deg, #5b3df5 0%, #0e7490 100%);
+  --gradiente-texto: #ffffff;
+  --gradiente-marca: linear-gradient(135deg, #5b3df5 0%, #06b6d4 100%);
+  --brilho: 0 10px 24px -12px rgba(91, 61, 245, 0.55);
+  --sombra-card: 0 1px 2px rgba(16, 24, 64, 0.04), 0 12px 32px -20px rgba(40, 50, 120, 0.22);
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #2a3350;
+  --sidebar-muted: #5b6684;
+  --sidebar-ativo: #eeebff;
+  --sidebar-ativo-fundo: linear-gradient(90deg, rgba(91, 61, 245, 0.14), rgba(6, 182, 212, 0.08));
+  --sidebar-ativo-borda: rgba(91, 61, 245, 0.3);
+  --sidebar-ativo-texto: #3b23d6;
+  --sidebar-borda: #e3e8f5;
 
   --sucesso: #15803d;
-  --sucesso-bg: #e8f6ec;
+  --sucesso-bg: #e7f7ec;
   --sucesso-fg: #14532d;
-  --alerta: #a16207;
-  --alerta-bg: #fef6d8;
-  --alerta-fg: #713f12;
-  --perigo: #b91c1c;
-  --perigo-bg: #fdecec;
-  --perigo-fg: #7f1d1d;
-  --info: #1d4ed8;
-  --info-bg: #e8effd;
-  --info-fg: #1e3a8a;
+  --alerta: #b45309;
+  --alerta-bg: #fef3dc;
+  --alerta-fg: #78350f;
+  --perigo: #be123c;
+  --perigo-bg: #fde8ee;
+  --perigo-fg: #881337;
+  --info: #0e7490;
+  --info-bg: #e0f6fa;
+  --info-fg: #164e63;
 
-  --grafico-1: #6b3f26;
-  --grafico-2: #c08a5b;
-  --grafico-3: #15803d;
-  --grafico-4: #b91c1c;
-  --grafico-5: #a16207;
-  --grafico-6: #475569;
+  --grafico-1: #5b3df5;
+  --grafico-2: #06b6d4;
+  --grafico-3: #16a34a;
+  --grafico-4: #e11d48;
+  --grafico-5: #f59e0b;
+  --grafico-6: #64748b;
 
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   color-scheme: light;
 }
 
 .dark {
-  --background: #141110;
-  --foreground: #f3eee8;
-  --card: #1b1714;
-  --card-foreground: #f3eee8;
-  --muted: #211c19;
-  --muted-foreground: #b3a99f;
-  --bege: #2a231e;
-  --bege-forte: #3a3029;
-  --border: #352e29;
-  --input: #463c35;
-  --primary: #d9b892;
-  --primary-hover: #e6caa8;
-  --primary-foreground: #1b120d;
-  --secondary: #2a231e;
-  --secondary-hover: #342b25;
-  --secondary-foreground: #f0e2d0;
-  --ring: #d9b892;
-  --titulo: #ecd6bd;
+  --background: #070a12;
+  --fundo-app:
+    radial-gradient(1100px 560px at 100% -12%, rgba(124, 92, 255, 0.22), transparent 60%),
+    radial-gradient(900px 500px at 0% -6%, rgba(34, 211, 238, 0.12), transparent 55%), #070a12;
+  --fundo-heroi:
+    radial-gradient(640px 420px at 25% 35%, rgba(124, 92, 255, 0.34), transparent 65%),
+    radial-gradient(560px 360px at 90% 90%, rgba(34, 211, 238, 0.2), transparent 60%), #0a0e1c;
+  --foreground: #e8ecf8;
+  --card: #0d1222;
+  --card-foreground: #e8ecf8;
+  --muted: #121a2e;
+  --muted-foreground: #94a3b8;
+  --bege: #141b33;
+  --bege-forte: #1c2442;
+  --border: #1f2742;
+  --input: #2a3456;
+  --primary: #a78bfa;
+  --primary-hover: #c4b5fd;
+  --primary-foreground: #0b0820;
+  --secondary: #18203a;
+  --secondary-hover: #202a4a;
+  --secondary-foreground: #ddd6fe;
+  --ring: #a78bfa;
+  --titulo: #ffffff;
 
-  --sidebar: #181311;
-  --sidebar-foreground: #f0e6da;
-  --sidebar-muted: #a8998b;
-  --sidebar-ativo: #2f241e;
-  --sidebar-borda: #2a211c;
+  --gradiente: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+  --gradiente-texto: #070a12;
+  --gradiente-marca: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+  --brilho: 0 12px 30px -12px rgba(139, 92, 246, 0.7);
+  --sombra-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 20px 40px -28px rgba(0, 0, 0, 0.8);
+
+  --sidebar: #0a0e1c;
+  --sidebar-foreground: #c7cee6;
+  --sidebar-muted: #8c97b5;
+  --sidebar-ativo: #18203a;
+  --sidebar-ativo-fundo: linear-gradient(90deg, rgba(124, 92, 255, 0.3), rgba(34, 211, 238, 0.1));
+  --sidebar-ativo-borda: rgba(139, 92, 246, 0.55);
+  --sidebar-ativo-texto: #ffffff;
+  --sidebar-borda: #161d33;
 
   --sucesso: #4ade80;
-  --sucesso-bg: #0f2a19;
+  --sucesso-bg: #0e2a1a;
   --sucesso-fg: #bbf7d0;
-  --alerta: #facc15;
-  --alerta-bg: #2d260b;
+  --alerta: #fbbf24;
+  --alerta-bg: #2b230b;
   --alerta-fg: #fde68a;
-  --perigo: #f87171;
-  --perigo-bg: #331313;
-  --perigo-fg: #fecaca;
-  --info: #93c5fd;
-  --info-bg: #0f1d33;
-  --info-fg: #bfdbfe;
+  --perigo: #fb7185;
+  --perigo-bg: #33121c;
+  --perigo-fg: #fecdd3;
+  --info: #67e8f9;
+  --info-bg: #0b2430;
+  --info-fg: #a5f3fc;
 
-  --grafico-1: #d9b892;
-  --grafico-2: #8c6a4c;
+  --grafico-1: #a78bfa;
+  --grafico-2: #22d3ee;
   --grafico-3: #4ade80;
-  --grafico-4: #f87171;
-  --grafico-5: #facc15;
+  --grafico-4: #fb7185;
+  --grafico-5: #fbbf24;
   --grafico-6: #94a3b8;
   color-scheme: dark;
 }
@@ -130,6 +165,8 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar-ativo: var(--sidebar-ativo);
+  --color-sidebar-ativo-borda: var(--sidebar-ativo-borda);
+  --color-sidebar-ativo-texto: var(--sidebar-ativo-texto);
   --color-sidebar-borda: var(--sidebar-borda);
   --color-sucesso: var(--sucesso);
   --color-sucesso-bg: var(--sucesso-bg);
@@ -144,6 +181,7 @@
   --color-info-bg: var(--info-bg);
   --color-info-fg: var(--info-fg);
   --font-sans: "Inter Variable", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --font-titulo: "Space Grotesk Variable", "Inter Variable", "Segoe UI", system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -158,7 +196,8 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    background: var(--background);
+    background: var(--fundo-app);
+    background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
     font-feature-settings: "tnum" 0;
@@ -167,6 +206,8 @@
   h2,
   h3 {
     color: var(--titulo);
+    font-family: var(--font-titulo);
+    letter-spacing: -0.015em;
   }
   :focus-visible {
     outline: 2px solid var(--ring);
@@ -178,11 +219,92 @@
   }
 }
 
+/* -----------------------------------------------------------------------------
+   Movimento: cada tela entra suavemente (os blocos aparecem em cascata) e a
+   ilustração da tela de entrada gira e flutua. Quem desliga as animações no
+   aparelho vê tudo parado (regra de movimento reduzido no fim do arquivo).
+   ----------------------------------------------------------------------------- */
+@keyframes entrada {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes flutuar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes respirar {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@utility animar-entrada {
+  animation: entrada 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+/* Blocos da página em cascata (cabeçalho, indicadores, cartões...) */
+@utility cascata {
+  & > * {
+    animation: entrada 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  & > *:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  & > *:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  & > *:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+  & > *:nth-child(5) {
+    animation-delay: 0.2s;
+  }
+  & > *:nth-child(n + 6) {
+    animation-delay: 0.25s;
+  }
+}
+@utility flutuar {
+  animation: flutuar 6s ease-in-out infinite;
+}
+@utility respirar {
+  animation: respirar 3.5s ease-in-out infinite;
+}
+@utility girar-lento {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: girar 48s linear infinite;
+}
+@utility girar-reverso {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: girar 80s linear infinite reverse;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
@@ -190,5 +312,8 @@
 @media print {
   .nao-imprimir {
     display: none !important;
+  }
+  body {
+    background: #ffffff;
   }
 }

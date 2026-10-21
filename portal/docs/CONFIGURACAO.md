@@ -161,7 +161,9 @@ No Supabase Pro, o script também limita a sessão a 24 horas e encerra após 8 
 
 ## 10. Logomarca
 
-A logomarca oficial (ON com a seta, “Guarese’s” e “CONTABILIDADE”) foi vetorizada a partir da arte enviada pelo escritório (`docs/marca/logo-original.jpg`) e está em três versões em `public/marca/`: vertical (tela de entrada), horizontal (menu) e símbolo (ícone do navegador, em `src/app/icon.svg`). Nos relatórios em PDF ela vem de `src/lib/marca/logo.ts`. A cor acompanha o tema: marrom no fundo claro e clara no menu e no modo escuro.
+A logomarca oficial (ON com a seta, “Guarese’s” e “CONTABILIDADE”) foi vetorizada a partir da arte enviada pelo escritório (`docs/marca/logo-original.jpg`) e está em três versões em `public/marca/`: vertical, horizontal (menu e tela de entrada) e símbolo (ícone do navegador, em `src/app/icon.svg`, e centro da ilustração da tela de entrada). Nos relatórios em PDF ela vem de `src/lib/marca/logo.ts`. No portal ela é pintada com o degradê violeta → ciano do visual.
+
+**Visual do portal (Luz e Aurora).** As cores ficam todas em `src/app/globals.css`: o modo claro (“Luz”) em `:root` e o escuro (“Aurora”) em `.dark`, com o degradê dos botões principais (`--gradiente`), o fundo com brilhos (`--fundo-app`), as cores dos gráficos (`--grafico-1` a `--grafico-6`) e as de alerta. Os títulos usam a fonte Space Grotesk e o texto, Inter (as duas instaladas pelo `npm`, sem chamar serviços externos). Cada tela entra com uma animação curta (`cascata` no `app-shell`); quem desliga as animações no aparelho vê tudo parado. Cada pessoa escolhe claro, escuro ou “igual ao sistema” no ícone do topo. Os e-mails e os PDFs continuam com as cores antigas da marca.
 
 ## 11. Obrigações e prazos (camada operacional)
 

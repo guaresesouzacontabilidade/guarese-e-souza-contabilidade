@@ -19,7 +19,7 @@ export function SubNavegacao({ itens, className }: { itens: { rotulo: string; hr
                 aria-current={ativo ? "page" : undefined}
                 className={cn(
                   "-mb-px inline-flex items-center border-b-2 px-3 py-2.5 text-sm transition-colors",
-                  ativo ? "border-primary font-semibold text-titulo" : "border-transparent text-muted-foreground hover:text-foreground",
+                  ativo ? "border-primary font-semibold text-titulo [border-image:var(--gradiente-marca)_1]" : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 {i.rotulo}

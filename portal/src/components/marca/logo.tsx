@@ -19,8 +19,8 @@ const VERSOES = {
 /**
  * Logomarca do escritório (GUARESE'S ON CONTABILIDADE). Usa a logo enviada em
  * Configurações quando existir; caso contrário, a logomarca oficial em vetor,
- * que acompanha a cor do texto (clara no menu escuro e no modo escuro).
- * Proporções sempre preservadas.
+ * que acompanha a cor do texto (clara no menu escuro e no modo escuro) ou é
+ * pintada com o degradê da marca ("gradiente"). Proporções sempre preservadas.
  */
 export function Logo({
   logoUrl,
@@ -29,7 +29,7 @@ export function Logo({
   className,
 }: {
   logoUrl?: string | null;
-  tom?: "escuro" | "claro";
+  tom?: "escuro" | "claro" | "gradiente" | "branco";
   versao?: keyof typeof VERSOES;
   className?: string;
 }) {
@@ -42,7 +42,11 @@ export function Logo({
     <span
       role="img"
       aria-label={versao === "simbolo" ? "Guarese's ON" : "Guarese's ON Contabilidade"}
-      className={cn("inline-block h-10 max-w-full shrink-0 bg-current", tom === "claro" ? "text-sidebar-foreground" : "text-titulo", className)}
+      className={cn(
+        "inline-block h-10 max-w-full shrink-0 bg-current",
+        { claro: "text-sidebar-foreground", escuro: "text-titulo", branco: "text-white", gradiente: "[background-image:var(--gradiente-marca)]" }[tom],
+        className,
+      )}
       style={{ aspectRatio: v.proporcao, WebkitMask: mascara, mask: mascara }}
     />
   );

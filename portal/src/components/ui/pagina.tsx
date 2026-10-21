@@ -24,7 +24,7 @@ export function CabecalhoPagina({
             <ChevronLeft className="size-3.5" /> {voltar.rotulo}
           </Link>
         ) : null}
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{titulo}</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{titulo}</h1>
         {descricao ? <p className="text-sm text-muted-foreground">{descricao}</p> : null}
       </div>
       {acoes ? <div className="flex flex-wrap items-center gap-2">{acoes}</div> : null}
@@ -104,18 +104,35 @@ export function Indicador({
     perigo: "text-perigo",
     info: "text-info",
   };
+  const chips = {
+    neutro: "bg-secondary text-primary",
+    sucesso: "bg-sucesso-bg text-sucesso",
+    alerta: "bg-alerta-bg text-alerta",
+    perigo: "bg-perigo-bg text-perigo",
+    info: "bg-info-bg text-info",
+  };
   const conteudo = (
-    <div className={cn("h-full rounded-xl border border-border bg-card p-4 shadow-sm transition-colors", href && "hover:border-primary/40 hover:bg-muted/40", className)}>
+    <div
+      className={cn(
+        "h-full rounded-2xl border border-border bg-card p-4 shadow-[var(--sombra-card)] transition-[transform,border-color,box-shadow] duration-200",
+        href && "hover:-translate-y-0.5 hover:border-primary/40",
+        className,
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{rotulo}</p>
-        {Icone ? <Icone className="size-4 text-muted-foreground" /> : null}
+        {Icone ? (
+          <span className={cn("-mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg", chips[tom])}>
+            <Icone className="size-4" />
+          </span>
+        ) : null}
       </div>
-      <p className={cn("mt-2 text-2xl font-bold numero", cores[tom])}>{valor}</p>
+      <p className={cn("mt-2 font-titulo text-2xl font-bold tracking-tight numero", cores[tom])}>{valor}</p>
       {detalhe ? <div className="mt-1 text-xs text-muted-foreground">{detalhe}</div> : null}
     </div>
   );
   return href ? (
-    <Link href={href} className="block h-full rounded-xl focus-visible:outline-2 focus-visible:outline-ring">
+    <Link href={href} className="block h-full rounded-2xl focus-visible:outline-2 focus-visible:outline-ring">
       {conteudo}
     </Link>
   ) : (

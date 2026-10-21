@@ -14,8 +14,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/painel",
     scope: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#4a2c1d",
+    background_color: "#f5f7ff",
+    theme_color: "#5b3df5",
     icons: [
       { src: "/marca/icone-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/marca/icone-512.png", sizes: "512x512", type: "image/png", purpose: "any" },

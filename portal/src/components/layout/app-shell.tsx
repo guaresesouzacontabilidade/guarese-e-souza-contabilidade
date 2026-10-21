@@ -92,9 +92,9 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
   );
 
   return (
-    <div className="min-h-dvh bg-background lg:pl-72">
+    <div className="min-h-dvh lg:pl-72">
       {/* Menu lateral fixo (computador) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-sidebar text-sidebar-foreground lg:flex nao-imprimir">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-sidebar-borda bg-sidebar text-sidebar-foreground lg:flex nao-imprimir">
         {conteudoMenu}
       </aside>
       {/* Menu em gaveta (tablet e celular) */}
@@ -102,7 +102,7 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
         <div className="flex h-full flex-col">{conteudoMenu}</div>
       </Gaveta>
 
-      <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-border bg-background/95 px-3 backdrop-blur sm:px-5 nao-imprimir">
+      <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-border bg-background/70 px-3 backdrop-blur-xl sm:px-5 nao-imprimir">
         <Button variante="fantasma" tamanho="icone" className="lg:hidden" aria-label="Abrir menu" onClick={() => setMenuAberto(true)}>
           <IconeMenu className="size-5" />
         </Button>
@@ -115,7 +115,10 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
       </header>
 
       <main id="conteudo" className="mx-auto w-full max-w-7xl px-3 pb-24 pt-4 sm:px-5 sm:pt-6 lg:pb-10">
-        {children}
+        {/* A cada tela nova, os blocos entram suavemente em cascata */}
+        <div key={caminho} className="cascata">
+          {children}
+        </div>
       </main>
 
       {!equipe && empresaAtual ? <NavegacaoInferior empresa={empresaAtual} caminho={caminho} abrirMenu={() => setMenuAberto(true)} /> : null}
@@ -131,8 +134,10 @@ function LinkMenu({ item, caminho }: { item: ItemMenu; caminho: string }) {
       href={item.href}
       aria-current={ativo ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-        ativo ? "bg-sidebar-ativo font-semibold text-white dark:text-sidebar-foreground" : "text-sidebar-foreground/85 hover:bg-sidebar-ativo/60",
+        "flex items-center gap-3 rounded-xl border px-3 py-2 text-sm transition-[background-color,color,border-color,transform] duration-200",
+        ativo
+          ? "border-sidebar-ativo-borda font-semibold text-sidebar-ativo-texto [background:var(--sidebar-ativo-fundo)]"
+          : "border-transparent text-sidebar-foreground/85 hover:translate-x-0.5 hover:bg-sidebar-ativo/70 hover:text-sidebar-foreground",
       )}
     >
       <Icone className="size-4 shrink-0" />
@@ -165,7 +170,7 @@ function MenuLateral({
               <Logo logoUrl={logoUrl} className="h-9" />
             </span>
           ) : (
-            <Logo tom="claro" className="h-10" />
+            <Logo tom="gradiente" className="h-10" />
           )}
         </Link>
       </div>
@@ -476,7 +481,10 @@ function MenuUsuario({ usuario }: { usuario: Props["usuario"] }) {
   return (
     <Menu>
       <MenuGatilho asChild>
-        <button className="ml-1 flex size-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground" aria-label="Menu do usuário">
+        <button
+          className="ml-1 flex size-9 items-center justify-center rounded-full bg-primary [background-image:var(--gradiente)] text-sm font-semibold text-[color:var(--gradiente-texto)] shadow-[var(--brilho)] transition-transform duration-200 hover:scale-105"
+          aria-label="Menu do usuário"
+        >
           {iniciais || <UserCircle className="size-5" />}
         </button>
       </MenuGatilho>
@@ -516,7 +524,7 @@ function NavegacaoInferior({ empresa, caminho, abrirMenu }: { empresa: EmpresaMe
   );
   if (!p.has("documentos.enviar") && itens.length < 2) return null;
   return (
-    <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur lg:hidden nao-imprimir">
+    <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/80 backdrop-blur-xl lg:hidden nao-imprimir">
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {itens.slice(0, 4).map((i) => {
           const ativo = itemAtivo(caminho, i);

@@ -6,10 +6,10 @@ import Link from "next/link";
 export default async function LayoutPublico({ children }: { children: React.ReactNode }) {
   const esc = await obterEscritorioPublico();
   return (
-    <div className="flex min-h-dvh flex-col bg-muted/60">
+    <div className="flex min-h-dvh flex-col">
       <BannerAmbiente />
       <main className="flex flex-1 items-center justify-center px-4 py-8 sm:py-12">{children}</main>
-      <footer className="border-t border-border bg-card px-4 py-5 text-center text-xs leading-relaxed text-muted-foreground">
+      <footer className="border-t border-border bg-card/70 px-4 py-5 text-center text-xs leading-relaxed text-muted-foreground backdrop-blur-xl">
         <p className="font-medium text-foreground">{esc.nome_fantasia}</p>
         <p>
           {esc.razao_social} — CNPJ {formatarCnpj(esc.cnpj)}
