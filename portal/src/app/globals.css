@@ -2,16 +2,17 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/space-grotesk";
 
-/* Modo escuro controlado pela classe .dark (next-themes) */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Temas escuros controlados pela classe .dark ou .bronze (next-themes) */
+@custom-variant dark (&:where(.dark, .dark *, .bronze, .bronze *));
 
 /* =============================================================================
    Identidade visual — Portal Guarese's ON
-   Dois modos do mesmo visual: "Luz" (claro) e "Aurora" (escuro). Violeta e
-   ciano como cores de destaque (degradê nos botões principais, no menu ativo
-   e nos gráficos), fundo com brilhos suaves, títulos em Space Grotesk e
+   Três temas: "Luz" (claro) e "Aurora" (escuro), com violeta e ciano como
+   cores de destaque, e "Bronze" (escuro), com as cores da marca modernizadas
+   (dourado e cobre, com verde-água). Degradê nos botões principais, no menu
+   ativo e nos gráficos, fundo com brilhos suaves, títulos em Space Grotesk e
    verde/âmbar/vermelho para indicadores. Contraste de texto de pelo menos
-   4,5:1 nos dois modos.
+   4,5:1 nos três temas.
    ============================================================================= */
 :root {
   --background: #f5f7ff;
@@ -43,6 +44,8 @@
   --gradiente: linear-gradient(135deg, #5b3df5 0%, #0e7490 100%);
   --gradiente-texto: #ffffff;
   --gradiente-marca: linear-gradient(135deg, #5b3df5 0%, #06b6d4 100%);
+  /* Fundo do selo com o símbolo branco (tela de entrada) */
+  --gradiente-selo: linear-gradient(135deg, #5b3df5 0%, #06b6d4 100%);
   --brilho: 0 10px 24px -12px rgba(91, 61, 245, 0.55);
   --sombra-card: 0 1px 2px rgba(16, 24, 64, 0.04), 0 12px 32px -20px rgba(40, 50, 120, 0.22);
 
@@ -108,6 +111,7 @@
   --gradiente: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
   --gradiente-texto: #070a12;
   --gradiente-marca: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+  --gradiente-selo: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
   --brilho: 0 12px 30px -12px rgba(139, 92, 246, 0.7);
   --sombra-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 20px 40px -28px rgba(0, 0, 0, 0.8);
 
@@ -139,6 +143,71 @@
   --grafico-4: #fb7185;
   --grafico-5: #fbbf24;
   --grafico-6: #94a3b8;
+  color-scheme: dark;
+}
+
+/* Bronze: as cores da marca (marrom, dourado e cobre) modernizadas, com verde-água */
+.bronze {
+  --background: #0e0b09;
+  --fundo-app:
+    radial-gradient(1100px 540px at 100% -12%, rgba(224, 169, 109, 0.2), transparent 60%),
+    radial-gradient(900px 480px at 0% -6%, rgba(45, 212, 191, 0.09), transparent 55%), #0e0b09;
+  --fundo-heroi:
+    radial-gradient(640px 420px at 25% 35%, rgba(224, 169, 109, 0.3), transparent 65%),
+    radial-gradient(560px 360px at 90% 90%, rgba(45, 212, 191, 0.14), transparent 60%), #120d0a;
+  --foreground: #f5ede4;
+  --card: #17120e;
+  --card-foreground: #f5ede4;
+  --muted: #1d1712;
+  --muted-foreground: #b3a394;
+  --bege: #241b14;
+  --bege-forte: #2e231a;
+  --border: #2c2219;
+  --input: #3d2f23;
+  --primary: #f0b979;
+  --primary-hover: #f5c994;
+  --primary-foreground: #1a110b;
+  --secondary: #241b14;
+  --secondary-hover: #2e231a;
+  --secondary-foreground: #f5d9b8;
+  --ring: #f0b979;
+  --titulo: #fff6ec;
+
+  --gradiente: linear-gradient(135deg, #f0b979 0%, #c97a3d 100%);
+  --gradiente-texto: #1a110b;
+  --gradiente-marca: linear-gradient(135deg, #f5c994 0%, #c97a3d 100%);
+  --gradiente-selo: linear-gradient(135deg, #b87333 0%, #5a3420 100%);
+  --brilho: 0 12px 30px -12px rgba(224, 150, 80, 0.6);
+  --sombra-card: inset 0 1px 0 rgba(255, 240, 220, 0.04), 0 20px 40px -28px rgba(0, 0, 0, 0.85);
+
+  --sidebar: #120d0a;
+  --sidebar-foreground: #e9dccd;
+  --sidebar-muted: #a8988a;
+  --sidebar-ativo: #241b14;
+  --sidebar-ativo-fundo: linear-gradient(90deg, rgba(224, 169, 109, 0.26), rgba(45, 212, 191, 0.08));
+  --sidebar-ativo-borda: rgba(224, 169, 109, 0.5);
+  --sidebar-ativo-texto: #fff6ec;
+  --sidebar-borda: #221a13;
+
+  --sucesso: #86efac;
+  --sucesso-bg: #10261a;
+  --sucesso-fg: #bbf7d0;
+  --alerta: #fbbf24;
+  --alerta-bg: #2b220b;
+  --alerta-fg: #fde68a;
+  --perigo: #f87171;
+  --perigo-bg: #331414;
+  --perigo-fg: #fecaca;
+  --info: #5eead4;
+  --info-bg: #0b2622;
+  --info-fg: #99f6e4;
+
+  --grafico-1: #f0b979;
+  --grafico-2: #2dd4bf;
+  --grafico-3: #86efac;
+  --grafico-4: #f87171;
+  --grafico-5: #fbbf24;
+  --grafico-6: #a8988a;
   color-scheme: dark;
 }
 

@@ -10,6 +10,7 @@ import {
   Building2,
   Check,
   ChevronsUpDown,
+  Gem,
   LogOut,
   Menu as IconeMenu,
   Moon,
@@ -451,17 +452,28 @@ function AlternarTema() {
   return (
     <Menu>
       <MenuGatilho asChild>
-        <Button variante="fantasma" tamanho="icone" aria-label="Tema claro ou escuro">
-          {montado && theme === "dark" ? <Moon className="size-5" /> : montado && theme === "light" ? <Sun className="size-5" /> : <Monitor className="size-5" />}
+        <Button variante="fantasma" tamanho="icone" aria-label="Aparência do portal (clara, escura ou bronze)">
+          {montado && theme === "dark" ? (
+            <Moon className="size-5" />
+          ) : montado && theme === "light" ? (
+            <Sun className="size-5" />
+          ) : montado && theme === "bronze" ? (
+            <Gem className="size-5" />
+          ) : (
+            <Monitor className="size-5" />
+          )}
         </Button>
       </MenuGatilho>
       <MenuConteudo>
         <MenuRotulo>Aparência</MenuRotulo>
         <MenuItem onSelect={() => setTheme("light")}>
-          <Sun /> Clara
+          <Sun /> Clara (Luz)
         </MenuItem>
         <MenuItem onSelect={() => setTheme("dark")}>
-          <Moon /> Escura
+          <Moon /> Escura (Aurora)
+        </MenuItem>
+        <MenuItem onSelect={() => setTheme("bronze")}>
+          <Gem /> Bronze
         </MenuItem>
         <MenuItem onSelect={() => setTheme("system")}>
           <Monitor /> Igual ao sistema

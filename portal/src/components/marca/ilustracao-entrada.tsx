@@ -40,7 +40,7 @@ export function IlustracaoEntrada({ className }: { className?: string }) {
         </g>
         <circle cx="260" cy="150" r="86" fill="none" style={{ stroke: "var(--border)" }} />
       </svg>
-      <div className="absolute left-1/2 top-1/2 flex size-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[28px] [background-image:var(--gradiente-marca)] shadow-[var(--brilho)]">
+      <div className="absolute left-1/2 top-1/2 flex size-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[28px] [background-image:var(--gradiente-selo)] shadow-[var(--brilho)]">
         <Logo versao="simbolo" tom="branco" className="h-9" />
       </div>
       {CARTOES.map((c) => {
