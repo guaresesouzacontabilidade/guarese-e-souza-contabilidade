@@ -24,7 +24,7 @@ export default async function Comprovante({ params, searchParams }: PageProps<"/
     .maybeSingle();
   if (!v) notFound();
   const [{ data: e }, { data: cfg }] = await Promise.all([
-    s.supabase.from("empresas").select("razao_social, nome_fantasia, documento, logradouro, numero, bairro, cidade, uf, cep, telefone").eq("id", v.empresa_id).maybeSingle(),
+    s.supabase.from("empresas").select("razao_social, nome_fantasia, documento, logradouro, numero, bairro, cidade, uf, cep, telefone, logo_path, logo_atualizado_em, demonstracao").eq("id", v.empresa_id).maybeSingle(),
     s.supabase.from("gestao_config").select("mensagem_comprovante").eq("empresa_id", v.empresa_id).maybeSingle(),
   ]);
   if (!e) notFound();
@@ -48,6 +48,15 @@ export default async function Comprovante({ params, searchParams }: PageProps<"/
       </div>
       <main className={`mx-auto bg-white p-3 font-mono text-black ${a4 ? "max-w-[190mm] text-[13px]" : "max-w-[76mm] text-[11px]"} leading-snug`}>
         <header className="text-center">
+          {e.logo_path ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/empresas/${v.empresa_id}/logo${e.logo_atualizado_em ? `?v=${encodeURIComponent(e.logo_atualizado_em)}` : ""}`}
+              alt={`Logo de ${e.nome_fantasia ?? e.razao_social}`}
+              className={`mx-auto mb-1 w-auto object-contain ${a4 ? "max-h-20 max-w-[60mm]" : "max-h-14 max-w-[50mm]"}`}
+            />
+          ) : null}
+          {e.demonstracao ? <p className="mb-1 border border-black px-1 text-[0.85em] font-bold">DEMONSTRAÇÃO — DADOS FICTÍCIOS</p> : null}
           <p className="text-[1.15em] font-bold uppercase">{e.nome_fantasia ?? e.razao_social}</p>
           {e.nome_fantasia ? <p>{e.razao_social}</p> : null}
           <p>CNPJ {formatarDocumento(e.documento)}</p>

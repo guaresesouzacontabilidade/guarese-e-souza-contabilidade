@@ -16,7 +16,10 @@ import { totalCartao, valorDaForma, type RelatorioCaixa, type VendaDoCaixa } fro
 export interface DadosPdfCaixa {
   relatorio: RelatorioCaixa;
   empresa: { nome: string; razao: string; documento: string };
+  /** Logo da empresa cliente (cadastro da empresa). */
   logo: { dados: string } | null;
+  /** Logo enviada pelo escritório (sem ela, a logomarca oficial). */
+  logoEscritorio: { dados: string } | null;
   geradoEm: string;
 }
 
@@ -148,13 +151,15 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
 
   const conteudo: Content[] = [
     {
+      // Logo do escritório à esquerda; a da empresa à direita, com a razão social e o CNPJ
       columns: [
-        { width: "*", stack: [d.logo ? { image: d.logo.dados, fit: [130, 42] } : { text: d.empresa.nome, bold: true, fontSize: 13, color: COR.marrom }] },
+        { width: "*", stack: [d.logoEscritorio ? { image: d.logoEscritorio.dados, fit: [140, 40] } : { svg: logoHorizontalSvg(COR.marrom), width: 132 }] },
         {
           width: "auto",
           alignment: "right",
           stack: [
-            { text: d.empresa.razao, bold: true, fontSize: 9, color: COR.marrom },
+            ...(d.logo ? [{ image: d.logo.dados, fit: [130, 34], alignment: "right", margin: [0, 0, 0, 2] } as Content] : []),
+            { text: d.empresa.razao, bold: true, fontSize: d.logo ? 8 : 9, color: COR.marrom },
             { text: formatarDocumento(d.empresa.documento), fontSize: 8, color: COR.cinza },
           ],
         },
@@ -285,8 +290,7 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
     footer: (pagina: number, total: number) => ({
       margin: [40, 12, 40, 0],
       columns: [
-        { svg: logoHorizontalSvg(COR.cinza), width: 70 },
-        { text: `Gerado em ${formatarDataHora(d.geradoEm)} pelo Portal Guarese's ON · os valores entram automaticamente no Financeiro e na contabilidade`, fontSize: 6.5, color: COR.cinza, margin: [8, 3, 0, 0] },
+        { text: `Gerado em ${formatarDataHora(d.geradoEm)} pelo Portal Guarese's ON · os valores entram automaticamente no Financeiro e na contabilidade`, fontSize: 6.5, color: COR.cinza, margin: [0, 3, 0, 0] },
         { text: `Página ${pagina} de ${total}`, alignment: "right", fontSize: 7, color: COR.cinza, width: 60, margin: [0, 3, 0, 0] },
       ],
     }),

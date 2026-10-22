@@ -3,6 +3,7 @@ import type { Content } from "pdfmake/interfaces";
 import { sessaoApi } from "@/lib/auth/sessao";
 import { formatarDataHora } from "@/lib/formatos";
 import { montarCabecalho, nomeArquivo } from "@/lib/relatorios/cabecalho";
+import { logosDaEmpresa } from "@/lib/marca/logos-relatorio";
 import { blocoDre, blocoFluxo, blocoIndicadores, blocoLimitacoes, blocoProjecao, blocoTexto, gerarPdf } from "@/lib/relatorios/pdf";
 import { bufferPlanilha, novaPasta, planilhaDre, planilhaFluxo, planilhaIndicadores, planilhaProjecao } from "@/lib/relatorios/excel";
 import { lerSnapshot, TIPOS_RELATORIO, type TipoRelatorio } from "@/lib/relatorios/snapshot";
@@ -58,6 +59,7 @@ export async function GET(req: NextRequest, { params }: RouteContext<"/api/relat
         periodo: `${TIPOS_RELATORIO[tipo]?.rotulo ?? tipo}${rascunho ? " (rascunho)" : ` · versão ${rel.versao}`}`,
         situacao: rascunho ? "Rascunho" : rel.situacao === "revisado" ? "Revisado pelo escritório" : "Preliminar",
         geradoEm: formatarDataHora(rel.publicado_em ?? rel.atualizado_em),
+        logos: await logosDaEmpresa(s.supabase, (await s.supabase.from("empresas").select("logo_path").eq("id", rel.empresa_id).maybeSingle()).data?.logo_path),
       };
       planilhaIndicadores(wb, info, completo || tipo === "resumo_executivo" ? dados.indicadores : [], [...resumo, ...(rel.comentarios_contador ? ["", "Comentários do contador:", rel.comentarios_contador] : []), ...limitacoes.map((l) => `Limitação: ${l}`)]);
       if (completo || tipo === "dre") planilhaDre(wb, info, dados.dre);

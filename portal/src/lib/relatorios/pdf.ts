@@ -21,7 +21,8 @@ export interface Cabecalho {
   subtitulo: string;
   empresa: { nome: string; documento: string };
   escritorio: { nome: string; razao: string; cnpj: string; email: string | null; endereco: string };
-  logo?: { dados: string } | null; // data URL (png/jpeg) da logo enviada
+  logo?: { dados: string } | null; // data URL (png/jpeg) da logo enviada pelo escritório
+  logoCliente?: { dados: string } | null; // logo da empresa cliente (cadastro da empresa)
   situacao: "preliminar" | "revisado" | "rascunho";
   geradoEm: string;
   observacao?: string;
@@ -63,19 +64,22 @@ export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buf
     : { svg: logoHorizontalSvg(COR.marrom), width: 132 };
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
-    pageMargins: [40, 78, 40, 56],
+    pageMargins: [40, 84, 40, 56],
     info: { title: `${cab.titulo} — ${cab.empresa.nome}`, author: cab.escritorio.nome, creator: "Portal Guarese's ON" },
     watermark: cab.situacao === "revisado" ? undefined : { text: cab.situacao === "rascunho" ? "RASCUNHO" : "PRELIMINAR", opacity: 0.06, bold: true, fontSize: 80 },
+    // Logo do escritório à esquerda; à direita, a logo do cliente (quando cadastrada) com o nome e o CNPJ
     header: () => ({
-      margin: [40, 22, 40, 0],
+      margin: [40, 20, 40, 0],
       columns: [
         { width: "*", stack: [marca] },
         {
           width: "auto",
           alignment: "right",
+          margin: [0, cab.logoCliente ? 0 : 6, 0, 0],
           stack: [
-            { text: cab.empresa.nome, bold: true, fontSize: 9, color: COR.marrom },
-            { text: cab.empresa.documento, fontSize: 8, color: COR.cinza },
+            ...(cab.logoCliente ? [{ image: cab.logoCliente.dados, fit: [120, 30], alignment: "right", margin: [0, 0, 0, 2] } as Content] : []),
+            { text: cab.empresa.nome, bold: true, fontSize: cab.logoCliente ? 7.5 : 9, color: COR.marrom },
+            { text: cab.empresa.documento, fontSize: cab.logoCliente ? 7 : 8, color: COR.cinza },
           ],
         },
       ],

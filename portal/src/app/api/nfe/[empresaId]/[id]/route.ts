@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { obterEmpresasDoUsuario, sessaoApi } from "@/lib/auth/sessao";
 import { dadosRequisicao } from "@/lib/requisicao";
 import { gerarDanfe } from "@/lib/nfe-emissao/danfe";
+import { logoDoCliente } from "@/lib/marca/logos-relatorio";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -54,7 +55,9 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/nfe/[empresa
   }
   const nome = `NFe-${n.numero}-${n.chave}`;
   if (formato === "xml") return new NextResponse(n.xml_autorizado, { headers: cabecalhoXml(nome) });
-  const pdf = await gerarDanfe(n.xml_autorizado, { cancelada: n.situacao === "cancelada" });
+  // A logo do DANFE é a do emitente (a empresa), quando cadastrada
+  const logo = await logoDoCliente(s.supabase, acesso.logo_path);
+  const pdf = await gerarDanfe(n.xml_autorizado, { cancelada: n.situacao === "cancelada", logo: logo?.dados ?? null });
   return new NextResponse(new Uint8Array(pdf), {
     headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${nome}.pdf"`, "Cache-Control": "no-store" },
   });

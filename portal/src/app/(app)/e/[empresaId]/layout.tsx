@@ -1,5 +1,7 @@
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { Alerta } from "@/components/ui/feedback";
+import { CabecalhoImpressao } from "@/components/layout/cabecalho-impressao";
+import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -10,9 +12,10 @@ export default async function LayoutEmpresa({ children, params }: LayoutProps<"/
     const { notFound } = await import("next/navigation");
     notFound();
   }
-  const ctx = await obterContextoEmpresa(empresaId);
+  const [ctx, escritorio] = await Promise.all([obterContextoEmpresa(empresaId), obterEscritorioPublico()]);
   return (
     <>
+      <CabecalhoImpressao logoEscritorioUrl={escritorio.logoUrl} empresa={ctx.acesso} />
       {ctx.acesso.demonstracao ? (
         <Alerta tom="alerta" className="mb-4" titulo="Empresa de demonstração">
           Os dados desta empresa são fictícios e servem apenas para apresentação do portal.

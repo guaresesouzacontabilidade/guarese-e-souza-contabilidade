@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sessaoApi } from "@/lib/auth/sessao";
-import { logoCliente } from "@/lib/declaracoes/carregar";
+import { logosDaEmpresa } from "@/lib/marca/logos-relatorio";
 import { carregarRelatorioCaixa } from "@/lib/gestao/dados";
 import { gerarPdfRelatorioCaixa } from "@/lib/gestao/pdf";
 import { nomeArquivo } from "@/lib/relatorios/cabecalho";
@@ -22,10 +22,12 @@ export async function GET(req: NextRequest, { params }: RouteContext<"/api/loja/
     .eq("id", relatorio.sessao.empresa_id)
     .maybeSingle();
   if (!empresa) return new NextResponse("Caixa não encontrado.", { status: 404 });
+  const logos = await logosDaEmpresa(s.supabase, empresa.logo_path);
   const arquivo = await gerarPdfRelatorioCaixa({
     relatorio,
     empresa: { nome: empresa.nome_fantasia ?? empresa.razao_social, razao: empresa.razao_social, documento: empresa.documento },
-    logo: await logoCliente(s.supabase, empresa.logo_path),
+    logo: logos.cliente,
+    logoEscritorio: logos.escritorio,
     geradoEm: new Date().toISOString(),
   });
   const nome = nomeArquivo(["caixa", empresa.nome_fantasia ?? empresa.razao_social, relatorio.sessao.data, relatorio.sessao.caixa_nome], "pdf");

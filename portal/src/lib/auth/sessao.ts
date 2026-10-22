@@ -87,6 +87,9 @@ export interface EmpresaAcesso {
   demonstracao: boolean;
   /** Gestão da loja (caixa, vendas e estoque) ligada para a empresa. */
   loja: boolean;
+  /** Logo da empresa (armazenamento privado) e quando foi trocada. */
+  logo_path: string | null;
+  logo_atualizado_em: string | null;
   papel: "admin" | "equipe" | "cliente_titular" | "cliente_colaborador";
   permissoes: Set<Permissao>;
 }
@@ -95,7 +98,7 @@ export interface EmpresaAcesso {
 export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> => {
   const s = await obterSessao();
   if (!s?.perfil) return [];
-  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, gestao:gestao_config(ativa)";
+  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, logo_path, logo_atualizado_em, gestao:gestao_config(ativa)";
   type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja"> & { gestao: { ativa: boolean } | null };
   const comLoja = ({ gestao, ...e }: Linha) => ({ ...e, loja: gestao?.ativa === true });
   if (s.perfil.tipo === "admin") {

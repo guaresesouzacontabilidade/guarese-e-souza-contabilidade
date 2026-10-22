@@ -7,6 +7,8 @@
  * e um orçamento em aberto. Tudo é feito pelas mesmas funções do portal,
  * com cada pessoa fictícia entrando com a própria sessão.
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 function cnpjValido(base12: string) {
@@ -79,6 +81,16 @@ const PRODUTOS: Produto[] = [
   { chave: "prego", descricao: "Prego 17 x 27 com cabeça (kg)", grupo: "Ferragens", ncm: "73170090", unidade: "KG", preco: "18.9", custo: "11.5", estoque: "0", minimo: "10" },
 ];
 
+/** Logo fictícia da madeireira (para mostrar as duas logos nos relatórios). Só envia se ainda não houver. */
+async function semearLogoLoja(admin: SupabaseClient, empresaId: string) {
+  const { data: e } = await admin.from("empresas").select("logo_path").eq("id", empresaId).single();
+  if (e?.logo_path) return;
+  const bytes = readFileSync(join(__dirname, "arquivos-demo", "logo-madeireira.png"));
+  const caminho = `${empresaId}/logo-${Date.now()}.png`;
+  ok("logo: envio", await admin.storage.from("empresas-logos").upload(caminho, bytes, { contentType: "image/png", upsert: false }));
+  ok("logo: cadastro", await admin.from("empresas").update({ logo_path: caminho, logo_atualizado_em: new Date().toISOString() }).eq("id", empresaId));
+}
+
 /** NF-e da madeireira (desligada: sem certificado, nenhuma nota vai à SEFAZ). Só cria o que falta. */
 async function semearNfeLoja(admin: SupabaseClient, empresaId: string) {
   const { count } = await admin.from("nfe_config").select("empresa_id", { count: "exact", head: true }).eq("empresa_id", empresaId);
@@ -148,6 +160,7 @@ export async function semearLoja(
   const { data: existente } = await admin.from("empresas").select("id").eq("documento", documento).maybeSingle();
   if (existente) {
     await semearNfeLoja(admin, existente.id);
+    await semearLogoLoja(admin, existente.id);
     return false;
   }
 
@@ -332,6 +345,7 @@ export async function semearLoja(
   );
 
   await semearNfeLoja(admin, empresaId);
+  await semearLogoLoja(admin, empresaId);
 
   await dono.auth.signOut();
   await balcao.auth.signOut();

@@ -6,6 +6,7 @@ import { formatarDataHora } from "@/lib/formatos";
 import { carregarDre, carregarFluxo, carregarPainel, carregarProjecao } from "@/lib/relatorios/dados";
 import { lerPeriodo } from "@/lib/relatorios/periodo";
 import { montarCabecalho, nomeArquivo, situacaoPeriodo } from "@/lib/relatorios/cabecalho";
+import { logosDaEmpresa } from "@/lib/marca/logos-relatorio";
 import { blocoDre, blocoFluxo, blocoIndicadores, blocoProjecao, gerarPdf } from "@/lib/relatorios/pdf";
 import { bufferPlanilha, novaPasta, planilhaDre, planilhaFluxo, planilhaIndicadores, planilhaProjecao } from "@/lib/relatorios/excel";
 
@@ -62,6 +63,7 @@ export async function GET(req: NextRequest) {
         periodo: periodo.rotulo,
         situacao: situacao === "revisado" ? "Revisado pelo escritório" : "Preliminar — os números ainda podem mudar",
         geradoEm: formatarDataHora(new Date().toISOString()),
+        logos: await logosDaEmpresa(s.supabase, acesso.logo_path),
       };
       if (tipo === "painel") {
         const p = await carregarPainel(s.supabase, empresaId, periodo, hoje);

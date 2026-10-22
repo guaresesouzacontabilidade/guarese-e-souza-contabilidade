@@ -1,6 +1,9 @@
 import "server-only";
 import ExcelJS from "exceljs";
 import { dec } from "@/lib/dinheiro";
+import { dimensoesImagem } from "@/lib/imagens";
+import { LOGO_ESCRITORIO_PNG } from "@/lib/marca/logo-png";
+import type { ImagemEmbutida } from "@/lib/marca/logos-relatorio";
 import type { ResultadoDre } from "./dre";
 import { GRUPOS_FLUXO, type Projecao, type ResultadoFluxo } from "./fluxo";
 import type { Indicador } from "./indicadores";
@@ -17,6 +20,34 @@ export interface InfoPlanilha {
   periodo: string;
   situacao: string;
   geradoEm: string;
+  /** Logos do topo: a do escritório (sem ela, a logomarca oficial) e a do cliente. */
+  logos?: { escritorio: ImagemEmbutida | null; cliente: ImagemEmbutida | null };
+}
+
+/** Coloca a imagem no tamanho máximo da caixa, sem distorcer. */
+function encaixar(dados: string, caixa: { largura: number; altura: number }) {
+  const bytes = Buffer.from(dados.slice(dados.indexOf(",") + 1), "base64");
+  const d = dimensoesImagem(bytes);
+  if (!d || !d.largura || !d.altura) return null;
+  const escala = Math.min(caixa.largura / d.largura, caixa.altura / d.altura);
+  return {
+    extensao: (dados.startsWith("data:image/png") ? "png" : "jpeg") as "png" | "jpeg",
+    largura: Math.round(d.largura * escala),
+    altura: Math.round(d.altura * escala),
+  };
+}
+
+/** Linha 1 da planilha: logo do escritório à esquerda e a do cliente à direita. */
+function logosNoTopo(ws: ExcelJS.Worksheet, info: InfoPlanilha, colunas: number) {
+  ws.getRow(1).height = 36;
+  const imagens: { dados: string; coluna: number }[] = [{ dados: info.logos?.escritorio?.dados ?? LOGO_ESCRITORIO_PNG, coluna: 0 }];
+  if (info.logos?.cliente) imagens.push({ dados: info.logos.cliente.dados, coluna: Math.max(1, colunas - 1) });
+  for (const img of imagens) {
+    const e = encaixar(img.dados, { largura: 170, altura: 42 });
+    if (!e) continue;
+    const id = ws.workbook.addImage({ base64: img.dados, extension: e.extensao });
+    ws.addImage(id, { tl: { col: img.coluna, row: 0.1 }, ext: { width: e.largura, height: e.altura } });
+  }
 }
 
 export function novaPasta() {
@@ -27,6 +58,8 @@ export function novaPasta() {
 }
 
 function cabecalho(ws: ExcelJS.Worksheet, info: InfoPlanilha, colunas: string[], larguras: number[]) {
+  ws.addRow([]);
+  logosNoTopo(ws, info, colunas.length);
   ws.addRow([info.titulo]).font = { bold: true, size: 14, color: { argb: MARROM } };
   ws.addRow([`${info.empresa} — ${info.periodo}`]).font = { size: 10 };
   ws.addRow([`${info.situacao} · gerado em ${info.geradoEm}`]).font = { size: 9, italic: true, color: { argb: "FF6B625B" } };
@@ -39,7 +72,7 @@ function cabecalho(ws: ExcelJS.Worksheet, info: InfoPlanilha, colunas: string[],
   });
   r.getCell(1).alignment = { horizontal: "left", vertical: "middle" };
   larguras.forEach((l, i) => (ws.getColumn(i + 1).width = l));
-  ws.views = [{ state: "frozen", xSplit: 1, ySplit: 5 }];
+  ws.views = [{ state: "frozen", xSplit: 1, ySplit: 6 }];
 }
 
 const num = (v: string | number | null | undefined) => dec(v ?? 0).toNumber();

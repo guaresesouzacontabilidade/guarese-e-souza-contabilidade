@@ -2,24 +2,10 @@ import "server-only";
 import type { ContextoEmpresa } from "@/lib/auth/sessao";
 import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
 import { formatarCep, formatarDocumento } from "@/lib/formatos";
+import { logoDoCliente, logoEmbutida } from "@/lib/marca/logos-relatorio";
 import type { Cabecalho } from "./pdf";
 
 type Cliente = ContextoEmpresa["supabase"];
-
-/** Logo enviada pelo escritório como data URL (PNG/JPEG) para embutir no PDF. */
-export async function logoEmbutida(url: string | null) {
-  if (!url) return null;
-  try {
-    const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(5000) });
-    const tipo = r.headers.get("content-type") ?? "";
-    if (!r.ok || !/image\/(png|jpe?g)/.test(tipo)) return null;
-    const bytes = Buffer.from(await r.arrayBuffer());
-    if (bytes.length > 2_000_000) return null;
-    return { dados: `data:${tipo.split(";")[0]};base64,${bytes.toString("base64")}` };
-  } catch {
-    return null;
-  }
-}
 
 export async function montarCabecalho(
   supabase: Cliente,
@@ -27,7 +13,7 @@ export async function montarCabecalho(
   dados: { titulo: string; subtitulo: string; situacao: Cabecalho["situacao"]; geradoEm?: string; observacao?: string },
 ): Promise<Cabecalho> {
   const [{ data: empresa }, escritorio] = await Promise.all([
-    supabase.from("empresas").select("razao_social, nome_fantasia, documento").eq("id", empresaId).maybeSingle(),
+    supabase.from("empresas").select("razao_social, nome_fantasia, documento, logo_path").eq("id", empresaId).maybeSingle(),
     obterEscritorioPublico(),
   ]);
   const endereco = [
@@ -44,6 +30,7 @@ export async function montarCabecalho(
     empresa: { nome: empresa?.razao_social ?? "Empresa", documento: empresa ? formatarDocumento(empresa.documento) : "" },
     escritorio: { nome: escritorio.nome_fantasia, razao: escritorio.razao_social, cnpj: escritorio.cnpj, email: escritorio.email, endereco },
     logo: await logoEmbutida(escritorio.logoUrl),
+    logoCliente: await logoDoCliente(supabase, empresa?.logo_path),
     situacao: dados.situacao,
     geradoEm: dados.geradoEm ?? new Date().toISOString(),
     observacao: dados.observacao,

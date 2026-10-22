@@ -2,6 +2,7 @@ import "server-only";
 import type { ClienteAdmin } from "@/lib/supabase/admin";
 import { enviarEmail } from "@/lib/email/enviar";
 import { formatarMoeda } from "@/lib/dinheiro";
+import { logoDoCliente } from "@/lib/marca/logos-relatorio";
 import { gerarDanfe } from "./danfe";
 
 /**
@@ -17,9 +18,10 @@ export async function enviarParaDestinatario(admin: ClienteAdmin, emissaoId: str
   if (!cfg?.enviar_email_destinatario) return false;
   const email = ((e.dados as Record<string, unknown>)?.destinatario as { email?: string | null } | undefined)?.email;
   if (!email) return false;
-  const { data: emp } = await admin.from("empresas").select("razao_social, nome_fantasia").eq("id", e.empresa_id).maybeSingle();
+  const { data: emp } = await admin.from("empresas").select("razao_social, nome_fantasia, logo_path").eq("id", e.empresa_id).maybeSingle();
   const emitente = emp?.nome_fantasia?.trim() || emp?.razao_social || "Emitente";
-  const pdf = await gerarDanfe(e.xml_autorizado);
+  const logo = await logoDoCliente(admin, emp?.logo_path);
+  const pdf = await gerarDanfe(e.xml_autorizado, { logo: logo?.dados ?? null });
   const nome = `NFe-${e.numero}-${e.chave}`;
   const r = await enviarEmail(
     email,

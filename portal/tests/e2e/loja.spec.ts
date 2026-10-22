@@ -128,6 +128,11 @@ test("dono: venda pelas peças com troco, comprovante, estoque, Financeiro e rel
   expect(pdf.status()).toBe(200);
   expect(pdf.headers()["content-type"]).toBe("application/pdf");
   expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+
+  // Logo da empresa (usada nos relatórios impressos e no comprovante)
+  const logo = await page.request.get(`/api/empresas/${empresaId}/logo`);
+  expect(logo.status()).toBe(200);
+  expect(logo.headers()["content-type"]).toBe("image/png");
 });
 
 test("dono: venda a prazo exige cliente e gera uma conta a receber por parcela", async ({ page }) => {
@@ -235,4 +240,5 @@ test("isolamento: cliente de outra empresa não vê a loja da madeireira", async
     const r = await page.goto(`/impressao/venda/${vendaDinheiro}`);
     expect(r?.status()).toBe(404);
   }
+  expect((await page.request.get(`/api/empresas/${empresaId}/logo`)).status()).toBe(404);
 });

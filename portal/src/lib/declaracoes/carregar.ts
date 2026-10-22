@@ -1,9 +1,8 @@
 import "server-only";
 import type { ContextoEmpresa } from "@/lib/auth/sessao";
 import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
-import { logoEmbutida } from "@/lib/relatorios/cabecalho";
+import { logoDoCliente as logoCliente, logoEmbutida } from "@/lib/marca/logos-relatorio";
 import { formatarCep, formatarTelefone } from "@/lib/formatos";
-import { tipoImagem } from "@/lib/imagens";
 import type { DeclaracaoPdf } from "./pdf";
 
 type Cliente = ContextoEmpresa["supabase"];
@@ -17,16 +16,6 @@ const endereco = (e: { logradouro: string | null; numero: string | null; complem
   ]
     .filter(Boolean)
     .join(", ");
-
-/** Logo do cliente (armazenamento privado), lida com as regras de acesso de quem pediu. */
-export async function logoCliente(supabase: Cliente, caminho: string | null): Promise<{ dados: string } | null> {
-  if (!caminho) return null;
-  const { data } = await supabase.storage.from("empresas-logos").download(caminho);
-  if (!data || data.size > 2_000_000) return null;
-  const bytes = new Uint8Array(await data.arrayBuffer());
-  const tipo = tipoImagem(bytes);
-  return tipo ? { dados: `data:${tipo};base64,${Buffer.from(bytes).toString("base64")}` } : null;
-}
 
 /** Monta os dados do PDF de uma declaração (null quando a pessoa não pode vê-la). */
 export async function carregarDeclaracaoPdf(supabase: Cliente, id: string): Promise<{ pdf: DeclaracaoPdf; empresaId: string; nomeEmpresa: string } | null> {
