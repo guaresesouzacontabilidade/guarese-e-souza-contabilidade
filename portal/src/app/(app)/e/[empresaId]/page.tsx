@@ -12,6 +12,7 @@ import { STATUS_CHECKLIST, STATUS_DOCUMENTO } from "@/lib/rotulos";
 import { calcularPrevisao, type DadosPrevisao } from "@/lib/calculos/previsao";
 import { situacaoVencimento } from "@/lib/vencimentos/rotulos";
 import { Alerta, Progresso } from "@/components/ui/feedback";
+import { MarcaEmpresa } from "@/components/empresas/marca-empresa";
 
 export const metadata: Metadata = { title: "Visão geral" };
 
@@ -82,13 +83,21 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
   return (
     <div className="space-y-6">
       <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">{ctx.equipe ? "Empresa" : `Olá, ${primeiroNome}!`}</p>
-          <h1 className="truncate text-xl font-bold text-titulo sm:text-2xl">{nomeEmpresa}</h1>
-          <p className="text-sm text-muted-foreground">
-            {acesso.razao_social !== nomeEmpresa ? `${acesso.razao_social} · ` : ""}
-            {formatarDocumento(acesso.documento)}
-          </p>
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+          <MarcaEmpresa
+            nome={nomeEmpresa}
+            logo={acesso.logo_path ? `/api/empresas/${empresaId}/logo?v=${encodeURIComponent(acesso.logo_atualizado_em ?? "1")}` : null}
+            tamanho="lg"
+            className="self-start sm:self-center"
+          />
+          <div className="min-w-0">
+            <p className="text-sm text-muted-foreground">{ctx.equipe ? "Empresa" : `Olá, ${primeiroNome}!`}</p>
+            <h1 className="truncate text-xl font-bold text-titulo sm:text-2xl">{nomeEmpresa}</h1>
+            <p className="text-sm text-muted-foreground">
+              {acesso.razao_social !== nomeEmpresa ? `${acesso.razao_social} · ` : ""}
+              {formatarDocumento(acesso.documento)}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {ctx.pode("documentos.enviar") ? (

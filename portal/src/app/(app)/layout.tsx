@@ -26,6 +26,8 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           loja: e.loja,
           modalidade: e.gestao_modalidade,
           cte: e.cte,
+          // A versão no endereço troca a imagem guardada no navegador quando a logo muda
+          logo: e.logo_path ? `/api/empresas/${e.id}/logo?v=${encodeURIComponent(e.logo_atualizado_em ?? "1")}` : null,
         }))}
         logoUrl={escritorio.logoUrl}
         naoLidas={naoLidas.count ?? 0}

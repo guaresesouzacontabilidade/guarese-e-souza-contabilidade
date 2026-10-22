@@ -57,6 +57,8 @@ export interface EmpresaMenu {
   modalidade: "loja" | "notas" | null;
   /** CT-e configurado pelo escritório (ligado ou em conferência). */
   cte?: boolean;
+  /** Endereço da logo da empresa (rota protegida), quando cadastrada. */
+  logo?: string | null;
 }
 
 export function menuEscritorio(admin: boolean): ItemMenu[] {

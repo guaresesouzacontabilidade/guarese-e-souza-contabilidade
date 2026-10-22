@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/marca/logo";
+import { MarcaEmpresa } from "@/components/empresas/marca-empresa";
 import { Button } from "@/components/ui/button";
 import { Gaveta } from "@/components/ui/dialog";
 import { Menu, MenuConteudo, MenuGatilho, MenuItem, MenuRotulo, MenuSeparador, Popover, PopoverConteudo, PopoverGatilho } from "@/components/ui/menu";
@@ -186,9 +187,13 @@ function MenuLateral({
         ) : null}
         {empresa && (!equipe || empresaNaUrl) ? (
           <div className="space-y-1">
-            <p className="truncate px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted" title={empresa.nome}>
-              {equipe ? `Empresa: ${empresa.nome}` : empresa.nome}
-            </p>
+            {/* A empresa em destaque, com a logo do cadastro (ou as iniciais) */}
+            <div className="mb-2 space-y-2 rounded-xl border border-sidebar-borda bg-sidebar-ativo/40 p-2.5">
+              <MarcaEmpresa nome={empresa.nome} logo={empresa.logo ?? null} tamanho="md" />
+              <p className="truncate px-0.5 text-xs font-semibold text-sidebar-foreground" title={empresa.nome}>
+                {equipe ? `Empresa: ${empresa.nome}` : empresa.nome}
+              </p>
+            </div>
             {menuEmpresa(empresa, equipe).map((i) => (
               <LinkMenu key={i.href} item={i} caminho={caminho} />
             ))}
@@ -229,9 +234,13 @@ function SeletorEmpresa({
 
   if (!equipe && empresas.length <= 1) {
     return atual ? (
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-titulo">{atual.nome}</p>
-        <p className="truncate text-xs text-muted-foreground">{formatarDocumento(atual.documento)}</p>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <MarcaEmpresa nome={atual.nome} logo={atual.logo ?? null} />
+        {/* No celular, com logo, o topo mostra só a logo (o nome já está nela e no início) */}
+        <div className={cn("min-w-0", atual.logo && "hidden sm:block")}>
+          <p className="truncate text-sm font-semibold text-titulo">{atual.nome}</p>
+          <p className="truncate text-xs text-muted-foreground">{formatarDocumento(atual.documento)}</p>
+        </div>
       </div>
     ) : null;
   }
@@ -250,7 +259,7 @@ function SeletorEmpresa({
           className="flex min-w-0 max-w-[60vw] items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-left hover:bg-muted sm:max-w-sm"
           aria-label="Selecionar empresa"
         >
-          <Building2 className="size-4 shrink-0 text-primary" />
+          {atual ? <MarcaEmpresa nome={atual.nome} logo={atual.logo ?? null} className="h-7 min-w-7" /> : <Building2 className="size-4 shrink-0 text-primary" />}
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold text-titulo">{atual ? atual.nome : "Selecionar empresa"}</span>
             {atual ? <span className="block truncate text-xs text-muted-foreground">{formatarDocumento(atual.documento)}</span> : null}
@@ -290,6 +299,8 @@ function SeletorEmpresa({
                 onClick={() => trocar(e.id)}
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm hover:bg-muted"
               >
+                {/* Clientes têm poucas empresas: a lista mostra a logo de cada uma */}
+                {!equipe ? <MarcaEmpresa nome={e.nome} logo={e.logo ?? null} className="h-8 min-w-8" /> : null}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{e.nome}</span>
                   <span className="block truncate text-xs text-muted-foreground">
