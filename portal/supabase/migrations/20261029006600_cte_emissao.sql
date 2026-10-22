@@ -487,8 +487,14 @@ declare
   v_emit uuid := nullif(p_dados ->> 'emitente_id', '')::uuid;
   v_rntrc text := nullif(upper(regexp_replace(coalesce(p_dados ->> 'rntrc', ''), '[^0-9A-Za-z]', '', 'g')), '');
   v_serie int := coalesce(nullif(p_dados ->> 'serie', '')::int, 1);
+  -- Próximo número (quem já emitia CT-e em outro programa continua a numeração)
+  v_prox_h bigint := coalesce(nullif(p_dados ->> 'proximo_numero_homologacao', '')::bigint, 1);
+  v_prox_p bigint := coalesce(nullif(p_dados ->> 'proximo_numero_producao', '')::bigint, 1);
 begin
   perform app.exigir(p_empresa_id, 'cte.configurar');
+  if v_prox_h not between 1 and 999999999 or v_prox_p not between 1 and 999999999 then
+    raise exception 'Próximo número do CT-e inválido (1 a 999.999.999).';
+  end if;
   if exists (select 1 from public.empresas where id = p_empresa_id and demonstracao) and v_ativa and v_ambiente = 'producao' then
     raise exception 'Empresa de demonstração não emite CT-e em produção.';
   end if;
@@ -531,10 +537,10 @@ begin
     raise exception 'Já há CT-e emitido na série %. Para mudar de série, fale com o suporte do portal.', v_atual.serie;
   end if;
   insert into public.cte_config as c (
-    empresa_id, ativa, ambiente, crt, emitente_id, serie, rntrc, autorizar_escritorio_xml, informacoes_padrao,
-    autorizacao_texto, autorizado_por, autorizado_em, atualizado_por
+    empresa_id, ativa, ambiente, crt, emitente_id, serie, proximo_numero_homologacao, proximo_numero_producao, rntrc, autorizar_escritorio_xml,
+    informacoes_padrao, autorizacao_texto, autorizado_por, autorizado_em, atualizado_por
   ) values (
-    p_empresa_id, v_ativa, v_ambiente, coalesce((p_dados ->> 'crt')::smallint, 3), v_emit, v_serie, v_rntrc,
+    p_empresa_id, v_ativa, v_ambiente, coalesce((p_dados ->> 'crt')::smallint, 3), v_emit, v_serie, v_prox_h, v_prox_p, v_rntrc,
     coalesce((p_dados ->> 'autorizar_escritorio_xml')::boolean, true),
     nullif(trim(p_dados ->> 'informacoes_padrao'), ''),
     coalesce(v_aut, v_atual.autorizacao_texto),
@@ -548,6 +554,9 @@ begin
     crt = excluded.crt,
     emitente_id = excluded.emitente_id,
     serie = excluded.serie,
+    -- A numeração só anda para a frente (números já usados não voltam)
+    proximo_numero_homologacao = greatest(c.proximo_numero_homologacao, excluded.proximo_numero_homologacao),
+    proximo_numero_producao = greatest(c.proximo_numero_producao, excluded.proximo_numero_producao),
     rntrc = excluded.rntrc,
     autorizar_escritorio_xml = excluded.autorizar_escritorio_xml,
     informacoes_padrao = excluded.informacoes_padrao,

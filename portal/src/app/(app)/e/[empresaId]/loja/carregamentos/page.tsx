@@ -86,7 +86,7 @@ export default async function PaginaCarregamentos({ params, searchParams }: Page
           </Button>
         }
       />
-      <NavegacaoCarregamentos empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
+      <NavegacaoCarregamentos empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} cte={ctx.acesso.cte && ctx.pode("cte.emitir")} />
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador
           rotulo="Aguardando carregar"

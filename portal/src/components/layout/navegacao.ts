@@ -32,6 +32,7 @@ import {
   Boxes,
   Banknote,
   Truck,
+  Route,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -54,6 +55,8 @@ export interface EmpresaMenu {
   loja: boolean;
   /** Modalidade da gestão: loja completa ou só notas e transporte. */
   modalidade: "loja" | "notas" | null;
+  /** CT-e configurado pelo escritório (ligado ou em conferência). */
+  cte?: boolean;
 }
 
 export function menuEscritorio(admin: boolean): ItemMenu[] {
@@ -67,6 +70,7 @@ export function menuEscritorio(admin: boolean): ItemMenu[] {
     { rotulo: "Notas automáticas", href: "/escritorio/notas-automaticas", icone: CloudDownload },
     { rotulo: "Notas de serviço emitidas", href: "/escritorio/notas-servico", icone: ReceiptText },
     { rotulo: "Notas de produto emitidas", href: "/escritorio/notas-produto", icone: PackageCheck },
+    { rotulo: "CT-e emitidos", href: "/escritorio/cte", icone: Route },
     { rotulo: "Apuração do ICMS", href: "/escritorio/icms", icone: Landmark },
     { rotulo: "Auditor fiscal", href: "/escritorio/auditor-fiscal", icone: ScanSearch },
     { rotulo: "Maquininhas", href: "/escritorio/maquininhas", icone: CreditCard },
@@ -103,6 +107,8 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   if (p.has("documentos.enviar")) itens.push({ rotulo: "Enviar documentos", href: `${base}/enviar`, icone: Upload });
   if (p.has("nfse.emitir") || p.has("nfse.configurar")) itens.push({ rotulo: "Emitir nota de serviço", href: `${base}/notas-servico`, icone: ReceiptText });
   if (p.has("nfe.emitir") || p.has("nfe.configurar")) itens.push({ rotulo: "Emitir nota de produto", href: `${base}/notas-produto`, icone: PackageCheck });
+  // CT-e: para a equipe sempre; para o cliente, quando o escritório configurou o CT-e (transportadoras)
+  if (p.has("cte.configurar") || (p.has("cte.emitir") && empresa.cte)) itens.push({ rotulo: "Emitir CT-e (frete)", href: `${base}/cte`, icone: Route });
   if (p.has("documentos.ver")) {
     itens.push({ rotulo: equipe ? "Documentos" : "Meus documentos", href: `${base}/documentos`, icone: FolderOpen });
     itens.push({ rotulo: "Pendências", href: `${base}/pendencias`, icone: ListChecks });

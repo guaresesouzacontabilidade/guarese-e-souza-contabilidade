@@ -7,7 +7,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(26);
+select plan(28);
 
 \ir 00_setup.sql.inc
 
@@ -133,7 +133,20 @@ select lives_ok($$select public.cte_carta_correcao(current_setting('testes.cte1'
   'observação corrigida por carta de correção');
 reset role;
 
--- 7. Isolamento
+-- 7. Quem já emitia CT-e em outro programa continua a numeração (que só anda para a frente)
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+set local role authenticated;
+select public.cte_configurar(current_setting('testes.empresa_a')::uuid, jsonb_build_object('ativa', true, 'crt', 3, 'ambiente', 'homologacao',
+  'emitente_id', current_setting('testes.emitente'), 'serie', 1, 'rntrc', '01234567', 'proximo_numero_homologacao', 1500, 'proximo_numero_producao', 820));
+select is((select proximo_numero_homologacao || '/' || proximo_numero_producao from public.cte_config where empresa_id = current_setting('testes.empresa_a')::uuid),
+  '1500/820', 'o escritório informa o próximo número de cada ambiente');
+select public.cte_configurar(current_setting('testes.empresa_a')::uuid, jsonb_build_object('ativa', true, 'crt', 3, 'ambiente', 'homologacao',
+  'emitente_id', current_setting('testes.emitente'), 'serie', 1, 'rntrc', '01234567', 'proximo_numero_homologacao', 2, 'proximo_numero_producao', 1));
+select is((select proximo_numero_homologacao || '/' || proximo_numero_producao from public.cte_config where empresa_id = current_setting('testes.empresa_a')::uuid),
+  '1500/820', 'número já passado não volta');
+reset role;
+
+-- 8. Isolamento
 select pg_temp.como('00000000-0000-0000-0000-0000000000c1');
 set local role authenticated;
 select is((select count(*)::int from public.cte_emissoes) + (select count(*)::int from public.cte_operacoes) + (select count(*)::int from public.cte_config), 0,

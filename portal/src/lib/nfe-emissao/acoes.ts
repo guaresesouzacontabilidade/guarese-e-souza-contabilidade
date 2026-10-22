@@ -37,6 +37,13 @@ async function contexto(empresaId: string, permissao: "nfe.emitir" | "nfe.config
   return ctx.pode(permissao) ? ctx : null;
 }
 
+/** Cadastro de clientes (destinatários): compartilhado entre quem emite NF-e e quem emite CT-e. */
+async function contextoCadastro(empresaId: string) {
+  if (!UUID.test(empresaId)) return null;
+  const ctx = await obterContextoEmpresa(empresaId);
+  return ctx.pode("nfe.emitir") || ctx.pode("cte.emitir") ? ctx : null;
+}
+
 function numerosValidos(campos: Record<string, string | null>): string | null {
   for (const [nome, v] of Object.entries(campos)) if (v === "invalido") return nome;
   return null;
@@ -211,7 +218,7 @@ export interface CnpjReceita {
 
 /** Nome e endereço de um CNPJ nos dados abertos da Receita (a inscrição estadual não vem: é preciso pedir ao cliente). */
 export async function buscarCnpj(empresaId: string, cnpj: string): Promise<ResultadoAcao<CnpjReceita>> {
-  const ctx = await contexto(empresaId, "nfe.emitir");
+  const ctx = await contextoCadastro(empresaId);
   if (!ctx) return falha("Sem permissão para emitir notas desta empresa.");
   try {
     const r = await consultarCnpjReceita(cnpj);
@@ -237,14 +244,14 @@ export async function buscarCnpj(empresaId: string, cnpj: string): Promise<Resul
 
 /** Municípios de uma UF (tabela do IBGE), para o endereço do cliente. */
 export async function municipiosDaUf(empresaId: string, uf: string): Promise<{ ibge: string; nome: string }[]> {
-  const ctx = await contexto(empresaId, "nfe.emitir");
+  const ctx = await contextoCadastro(empresaId);
   if (!ctx || !/^[A-Z]{2}$/.test(uf)) return [];
   const { data } = await ctx.supabase.from("municipios").select("ibge, nome").eq("uf", uf).order("nome").limit(1000);
   return data ?? [];
 }
 
 export async function salvarDestinatario(empresaId: string, id: string | null, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao<{ id: string }>> {
-  const ctx = await contexto(empresaId, "nfe.emitir");
+  const ctx = await contextoCadastro(empresaId);
   if (!ctx) return falha("Sem permissão para cadastrar clientes desta empresa.");
   const { data, error } = await ctx.supabase.rpc("nfe_destinatario_salvar", {
     p_empresa_id: empresaId,

@@ -28,7 +28,10 @@ import {
   urlServicoCte,
   type ConexaoSefazCte,
 } from "@/lib/cte-emissao/sefaz";
+import { lerNfeParaCte } from "@/lib/cte-emissao/nfe-origem";
+import { nfeAssinada } from "@/lib/nfe-emissao/nfe";
 import { CHAVE_NFE_MILHO, freteMilho } from "./apoio/cte-ficticio";
+import { vendaMilho } from "./apoio/nfe-ficticia";
 
 /**
  * CT-e modelo 57 (leiaute 4.00, esquemas PL_CTe_400 da NT 2026.002 v1.01 em
@@ -235,6 +238,24 @@ describe("XML do CT-e 4.00", () => {
       expect(validar(trecho(canc.xml, "evCancCTe"), "evCancCTe_v4.00.xsd")).toBe("ok");
       expect(validar(trecho(cce.xml, "evCCeCTe"), "evCCeCTe_v4.00.xsd")).toBe("ok");
     }
+  });
+});
+
+describe("CT-e a partir da NF-e da carga", () => {
+  it("lê do XML da nota o remetente, o destinatário, o produto, o peso, o valor e quem paga o frete", () => {
+    const nfe = nfeAssinada({ ...vendaMilho, ambiente: "producao" }, chaves);
+    const d = lerNfeParaCte(nfe.xml)!;
+    expect(d.chave).toBe(nfe.chave);
+    expect(d.remetente).toMatchObject({ tipo: "cnpj", documento: "11444777000161", indicador_ie: 1, inscricao_estadual: "131234567", municipio_ibge: "5100201", uf: "MT" });
+    expect(d.destinatario).toMatchObject({ documento: "12345678000195", nome: "Granja Exemplo S.A.", indicador_ie: 1, municipio_ibge: "5218805", uf: "GO", email: "compras@granja.test" });
+    expect(d.produto).toBe("Milho em grãos");
+    expect(d.pesoKg).toBe("30000");
+    expect(d.valor).toBe("34500.00");
+    expect(d.modalidadeFrete).toBe(0);
+    // Nota de teste: o nome do destinatário vem trocado pela SEFAZ (o portal não cadastra com esse nome)
+    expect(lerNfeParaCte(nfeAssinada(vendaMilho, chaves).xml)!.destinatario!.nome).toMatch(/HOMOLOGACAO/);
+    expect(lerNfeParaCte("<!DOCTYPE x><NFe/>")).toBeNull();
+    expect(lerNfeParaCte("<qualquer/>")).toBeNull();
   });
 });
 

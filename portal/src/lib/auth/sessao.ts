@@ -89,6 +89,8 @@ export interface EmpresaAcesso {
   loja: boolean;
   /** Modalidade da gestão ligada: loja completa ou só notas e transporte (null quando desligada). */
   gestao_modalidade: "loja" | "notas" | null;
+  /** CT-e configurado pelo escritório para a empresa (ligado ou em conferência; visível a quem emite ou configura o CT-e). */
+  cte: boolean;
   /** Logo da empresa (armazenamento privado) e quando foi trocada. */
   logo_path: string | null;
   logo_atualizado_em: string | null;
@@ -100,10 +102,14 @@ export interface EmpresaAcesso {
 export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> => {
   const s = await obterSessao();
   if (!s?.perfil) return [];
-  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, logo_path, logo_atualizado_em, gestao:gestao_config(ativa, modalidade)";
-  type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja" | "gestao_modalidade"> & { gestao: { ativa: boolean; modalidade: string } | null };
-  const comLoja = ({ gestao, ...e }: Linha) => ({
+  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, logo_path, logo_atualizado_em, gestao:gestao_config(ativa, modalidade), cte_config(emitente_id, rntrc)";
+  type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja" | "gestao_modalidade" | "cte"> & {
+    gestao: { ativa: boolean; modalidade: string } | null;
+    cte_config: { emitente_id: string | null; rntrc: string | null } | null;
+  };
+  const comLoja = ({ gestao, cte_config, ...e }: Linha) => ({
     ...e,
+    cte: Boolean(cte_config?.emitente_id && cte_config.rntrc),
     loja: gestao?.ativa === true,
     gestao_modalidade: gestao?.ativa ? (gestao.modalidade === "notas" ? ("notas" as const) : ("loja" as const)) : null,
   });

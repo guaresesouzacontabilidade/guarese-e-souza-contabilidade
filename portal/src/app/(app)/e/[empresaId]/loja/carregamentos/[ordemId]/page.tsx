@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileDown, FileText, Pencil } from "lucide-react";
+import { FileDown, FileText, Pencil, Route } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { FRETE_POR_CONTA, STATUS_ORDEM, formatarKg, mostrarPlaca, notaVale, quantidadePelaPesagem, type StatusOrdem } from "@/lib/gestao/carregamentos";
 import { formatarQuantidade } from "@/lib/gestao/rotulos";
 import { SITUACAO_NFE } from "@/lib/nfe-emissao/rotulos";
+import { SITUACAO_CTE, type SituacaoCte } from "@/lib/cte-emissao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarData, formatarDataHora, formatarDocumento } from "@/lib/formatos";
 
@@ -25,7 +26,8 @@ export default async function PaginaOrdem({ params }: PageProps<"/e/[empresaId]/
   if (!UUID.test(ordemId)) notFound();
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.carrega) return <CarregamentosIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
-  const [{ data: o }, { data: nfeCfg }, { data: padrao }] = await Promise.all([
+  const emiteCte = ctx.acesso.cte && ctx.pode("cte.emitir");
+  const [{ data: o }, { data: nfeCfg }, { data: padrao }, { data: ctes }] = await Promise.all([
     ctx.supabase
       .from("ordens_carregamento")
       .select(
@@ -37,6 +39,10 @@ export default async function PaginaOrdem({ params }: PageProps<"/e/[empresaId]/
     ctx.supabase.from("nfe_config").select("ativa").eq("empresa_id", empresaId).maybeSingle(),
     // Inscrição que vende quando a ordem não escolhe outra (configurações da gestão)
     ctx.supabase.from("gestao_config").select("emitente:nfe_emitentes(nome, inscricao_estadual)").eq("empresa_id", empresaId).maybeSingle(),
+    // CT-e emitidos a partir desta ordem (quando a empresa também emite CT-e)
+    emiteCte
+      ? ctx.supabase.from("cte_emissoes").select("id, numero, situacao").eq("empresa_id", empresaId).eq("origem->>ordem_id", ordemId).order("created_at")
+      : Promise.resolve({ data: [] as { id: string; numero: number; situacao: string }[] }),
   ]);
   if (!o) notFound();
 
@@ -89,11 +95,18 @@ export default async function PaginaOrdem({ params }: PageProps<"/e/[empresaId]/
                 </Link>
               </Button>
             ) : null}
+            {emiteCte && !cancelada && [0, 1, 2].includes(o.frete_por_conta) ? (
+              <Button asChild variante="contorno">
+                <Link href={`/e/${empresaId}/cte/nova?ordem=${o.id}`}>
+                  <Route /> Emitir CT-e
+                </Link>
+              </Button>
+            ) : null}
             {editavel ? <CancelarOrdem empresaId={empresaId} ordemId={o.id} placa={o.placa} /> : null}
           </div>
         }
       />
-      <NavegacaoCarregamentos empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
+      <NavegacaoCarregamentos empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} cte={ctx.acesso.cte && ctx.pode("cte.emitir")} />
 
       {cancelada ? (
         <Alerta tom="perigo" titulo="Ordem cancelada" className="mb-4">
@@ -233,6 +246,14 @@ export default async function PaginaOrdem({ params }: PageProps<"/e/[empresaId]/
             ) : (
               <p className="text-muted-foreground">Ainda sem NF-e. Emita depois da pesagem: a quantidade sai do peso líquido da balança.</p>
             )}
+            {(ctes ?? []).map((c) => (
+              <p key={c.id}>
+                <Link href={`/e/${empresaId}/cte/${c.id}`} className="font-semibold hover:underline">
+                  CT-e nº {c.numero}
+                </Link>{" "}
+                <Badge variante={SITUACAO_CTE[c.situacao as SituacaoCte]?.tom ?? "neutro"}>{SITUACAO_CTE[c.situacao as SituacaoCte]?.rotulo ?? c.situacao}</Badge>
+              </p>
+            ))}
             <p className="text-xs text-muted-foreground">
               A ordem de carregamento é um documento de controle interno: não substitui a NF-e nem os documentos do transporte (MDF-e ou CT-e, quando exigidos).
             </p>

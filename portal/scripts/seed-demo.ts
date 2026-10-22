@@ -28,7 +28,7 @@ import { semearIcms } from "./demo-icms";
 import { semearNfse } from "./demo-nfse";
 import { semearNfe } from "./demo-nfe";
 import { semearLoja } from "./demo-loja";
-import { semearGraos } from "./demo-graos";
+import { semearCteGraos, semearGraos } from "./demo-graos";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
@@ -271,6 +271,9 @@ async function main() {
     })
   ) {
     console.log("  Comercial de grãos fictícia (MT) na modalidade notas e transporte: ordens de carregamento, pesagem e cadastros da NF-e (desligada)");
+  }
+  if (await semearCteGraos(admin)) {
+    console.log("  CT-e da comercial de grãos: configuração e operações do frete (emissão desligada; formulário em modo de conferência)");
   }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");

@@ -28,7 +28,7 @@ export default async function EditarOrdem({ params }: PageProps<"/e/[empresaId]/
   return (
     <>
       <CabecalhoPagina titulo={`Alterar a ordem nº ${o.numero}`} voltar={{ href: voltar, rotulo: `Ordem nº ${o.numero}` }} />
-      <NavegacaoCarregamentos empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
+      <NavegacaoCarregamentos empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} cte={ctx.acesso.cte && ctx.pode("cte.emitir")} />
       {o.status === "cancelada" || notaAtiva ? (
         <Alerta tom="alerta">
           {o.status === "cancelada" ? "Esta ordem foi cancelada e não pode mais ser alterada." : "Esta ordem já tem NF-e e não pode mais ser alterada."}

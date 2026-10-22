@@ -19,13 +19,14 @@ export function NavegacaoLoja({ empresaId, configurar }: { empresaId: string; co
 }
 
 /** Abas da modalidade "notas e transporte". */
-export function NavegacaoCarregamentos({ empresaId, configurar }: { empresaId: string; configurar: boolean }) {
+export function NavegacaoCarregamentos({ empresaId, configurar, cte }: { empresaId: string; configurar: boolean; cte?: boolean }) {
   const base = `/e/${empresaId}/loja`;
   const itens = [
     { rotulo: "Ordens de carregamento", href: `${base}/carregamentos`, exato: true },
     { rotulo: "Nova ordem", href: `${base}/carregamentos/nova` },
     { rotulo: "Notas emitidas", href: `/e/${empresaId}/notas-produto`, exato: true },
   ];
+  if (cte) itens.push({ rotulo: "CT-e (frete)", href: `/e/${empresaId}/cte`, exato: true });
   if (configurar) itens.push({ rotulo: "Configurações", href: `${base}/configuracoes` });
   return <SubNavegacao itens={itens} />;
 }

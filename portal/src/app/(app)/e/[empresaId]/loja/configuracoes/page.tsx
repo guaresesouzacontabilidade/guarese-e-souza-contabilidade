@@ -30,7 +30,7 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
             : "Caixa, vendas, estoque e notas ligados à contabilidade. Serviço opcional, contratado com o escritório."
         }
       />
-      {ctx.lojaAtiva ? ctx.notas ? <NavegacaoCarregamentos empresaId={empresaId} configurar /> : <NavegacaoLoja empresaId={empresaId} configurar /> : null}
+      {ctx.lojaAtiva ? ctx.notas ? <NavegacaoCarregamentos empresaId={empresaId} configurar cte={ctx.acesso.cte && ctx.pode("cte.emitir")} /> : <NavegacaoLoja empresaId={empresaId} configurar /> : null}
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardContent className="pt-5">

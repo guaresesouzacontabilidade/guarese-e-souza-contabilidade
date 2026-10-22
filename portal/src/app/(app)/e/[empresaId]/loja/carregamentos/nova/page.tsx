@@ -25,7 +25,7 @@ export default async function NovaOrdem({ params }: PageProps<"/e/[empresaId]/lo
           rotulo: "Ordens de carregamento",
         }}
       />
-      <NavegacaoCarregamentos empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
+      <NavegacaoCarregamentos empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} cte={ctx.acesso.cte && ctx.pode("cte.emitir")} />
       {opcoes.produtos.length ? (
         <Card>
           <CardContent className="pt-5">

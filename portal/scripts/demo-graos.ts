@@ -8,6 +8,11 @@
  * DESLIGADA: a demonstração não tem certificado digital e nenhuma nota vai à
  * SEFAZ. As ordens são feitas pelas mesmas funções do portal, com a sessão da
  * pessoa fictícia.
+ *
+ * CT-e (a empresa também transporta, como a VAP): configuração com o armazém,
+ * um RNTRC fictício e duas operações do frete, com a emissão DESLIGADA (sem
+ * certificado). O formulário abre em modo de conferência: calcula o frete e
+ * não envia nada à SEFAZ.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -323,5 +328,57 @@ export async function semearGraos(
   ok("cancelar a ordem", await balanca.rpc("carregamento_cancelar", { p_id: cancelada, p_motivo: "Comprador remarcou o caminhão para a semana que vem. (DEMONSTRAÇÃO)" }));
 
   await semearLogoGraos(admin, empresaId);
+  return true;
+}
+
+/** CT-e da comercial de grãos (idempotente: só cria o que falta). */
+export async function semearCteGraos(admin: SupabaseClient): Promise<boolean> {
+  const { data: emp } = await admin.from("empresas").select("id").eq("documento", cnpjValido("557770880001")).maybeSingle();
+  if (!emp) return false;
+  const { data: cfg } = await admin.from("cte_config").select("empresa_id").eq("empresa_id", emp.id).maybeSingle();
+  if (cfg) return false;
+  const { data: armazem } = await admin.from("nfe_emitentes").select("id").eq("empresa_id", emp.id).order("created_at").limit(1).maybeSingle();
+  if (!armazem) return false;
+  ok(
+    "CT-e: configuração",
+    await admin.from("cte_config").insert({
+      empresa_id: emp.id,
+      ativa: false,
+      ambiente: "homologacao",
+      crt: 3,
+      emitente_id: armazem.id,
+      serie: 1,
+      rntrc: "12345678",
+      informacoes_padrao: "CT-e de DEMONSTRAÇÃO: dados fictícios, sem valor fiscal.",
+    }),
+  );
+  ok(
+    "CT-e: operações do frete",
+    await admin.from("cte_operacoes").insert([
+      {
+        empresa_id: emp.id,
+        nome: "Frete de grãos para outro estado (DEMO)",
+        natureza: "PRESTACAO DE SERVICO DE TRANSPORTE",
+        destino: "interestadual",
+        cfop: "6353",
+        icms_cst: "00",
+        icms_aliquota: 12,
+        ibscbs_cclass_trib: "000001",
+        informacoes: "Operação de DEMONSTRAÇÃO: regras fictícias, sem valor fiscal.",
+      },
+      {
+        empresa_id: emp.id,
+        nome: "Frete de grãos dentro de MT (DEMO)",
+        natureza: "PRESTACAO DE SERVICO DE TRANSPORTE",
+        destino: "interna",
+        cfop: "5353",
+        icms_cst: "90",
+        icms_aliquota: 12,
+        icms_credito_presumido: 20,
+        ibscbs_cclass_trib: "000001",
+        informacoes: "Operação de DEMONSTRAÇÃO: crédito presumido fictício, sem valor fiscal.",
+      },
+    ]),
+  );
   return true;
 }

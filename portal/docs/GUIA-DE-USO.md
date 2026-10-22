@@ -135,7 +135,21 @@ Modalidade da gestão para quem vende soja, milho e outros grãos e só precisa 
 4. **Emitir NF-e**: abre a nota já preenchida com o comprador, a quantidade pelo **peso líquido**, o preço, o frete, a transportadora, a placa e o RNTRC, e a pesagem nas informações complementares. Confira a operação e o pagamento e envie. A ordem fica **Com NF-e** e não muda mais (se a nota for cancelada ou descartada, a ordem pode ser corrigida e ganhar outra nota).
 - **Cancelar ordem**: com o motivo; o número continua reservado e o PDF passa a sair com a marca "CANCELADA". Ordem com NF-e válida não é cancelada (cancele a nota antes).
 - **Quem pode**: quem tem a permissão **Emitir nota de produto** (ex.: o operador da balança).
-- A ordem é um **controle interno**: não substitui a NF-e nem os documentos do transporte. Quem transporta a própria carga em MT precisa do **MDF-e**; quem presta frete para terceiros, do **CT-e** — ainda não emitidos pelo portal.
+- A ordem é um **controle interno**: não substitui a NF-e nem os documentos do transporte. Quem transporta a própria carga em MT precisa do **MDF-e** (não emitido pelo portal); quem presta frete para terceiros, do **CT-e** (veja abaixo).
+- **Emitir CT-e** (empresa que também transporta, com o CT-e configurado): abre o CT-e com o comprador como destinatário, quem paga o frete pela modalidade da ordem, a NF-e da ordem, o produto, o **peso da balança** e a placa nas observações. Transporte próprio (quem vende leva a própria mercadoria) não precisa de CT-e.
+
+### Emitir CT-e (frete — transportadoras)
+Para transportadoras com a emissão configurada pelo escritório (menu **Emitir CT-e (frete)**). O CT-e é o documento do frete rodoviário: modelo 57, leiaute 4.00, com o ICMS do frete e o IBS/CBS calculados pelas regras do escritório.
+1. **Preencher pela NF-e**: digite a chave de acesso (44 números) de uma NF-e da carga que está no portal (emitida pela empresa, enviada ao portal ou trazida pela busca automática de notas). O **remetente** (quem emitiu a nota), o **destinatário**, o produto, o **peso** e o **valor da carga** vêm da nota; quem ainda não está cadastrado é cadastrado sozinho. Repita para cada nota da mesma carga (os pesos e valores somam).
+2. **Partes**: escolha a **operação do frete** (CFOP e impostos definidos pelo escritório), o remetente (o botão **A própria empresa** cadastra a transportadora como remetente, quando a carga é dela), o destinatário e **quem paga o frete** (remetente — CIF; destinatário — FOB; ou outra empresa). O cadastro de participantes é o mesmo dos clientes da NF-e.
+3. **Trajeto**: começa na cidade do remetente e termina na do destinatário; marque **coletada/entregue em outra cidade** quando o caminhão carrega ou descarrega em outro lugar. A prestação precisa começar no estado da transportadora.
+4. **Valor do frete**: o valor total e, se quiser, os componentes (frete peso, pedágio...) — a soma precisa bater. **Valor a receber** vazio = o valor total.
+5. **Conferir e emitir**: o portal mostra o CFOP, o trajeto, quem paga, o ICMS (base, alíquota e valor, ou crédito presumido), o IBS e a CBS de teste de 2026 e o valor do frete. Confirme para enviar à SEFAZ. Em segundos aparece **Autorizado**, com o **DACTE (PDF)** e o **XML**.
+- **Rejeitado**: veja o motivo, clique em **Corrigir e enviar de novo** (mesmo número) ou **Descarte** (o número é inutilizado pelo escritório). **Sem resposta**: o portal tenta de novo sozinho, consultando antes, para nunca emitir duas vezes.
+- **Cancelar CT-e**: em regra até 7 dias depois da autorização e antes do início do transporte, com o motivo (15 a 255 letras).
+- **Carta de correção**: no CT-e ela é **campo a campo**: escolha o campo (observações, produto predominante, outras características, valor da carga ou RNTRC) e o valor certo. Não corrige valores do frete, impostos, partes nem datas.
+- **Emissão desconectada**: enquanto o escritório não liga a emissão (certificado digital e credenciamento na SEFAZ), o formulário abre em **modo de conferência**: calcula o frete e não envia nada.
+- **Quem pode**: quem tem a permissão **Emitir CT-e** (o empresário, por padrão).
 
 ### Meus documentos
 Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, folha, relatórios). Cada documento mostra a situação, o histórico e as versões. Baixar ou visualizar fica registrado.
@@ -398,6 +412,17 @@ Para ligar a emissão de uma empresa ou produtor (menu da empresa → **Emitir n
 - **Guias da nota**: ao autorizar, o portal calcula cada guia (ICMS da operação, ICMS do frete, DIFAL, FCP e contribuições) e mostra na nota como **A gerar**, com o caminho: na SEFAZ-MT, "Recolhimento prévio ICMS – Posto Fiscal" com a chave da nota (o portal tem o botão **Copiar a chave**); outro estado, GNRE. Gere a guia no site oficial, clique em **Anexar a guia gerada** e envie o PDF: ela entra nos documentos como guia e na agenda de pagamentos do cliente. **Não se aplica** dispensa a guia (com o motivo). A SEFAZ-MT não oferece serviço para sistemas gerarem o DAR, e a GNRE automática fica **desconectada** até o escritório credenciar o portal no Portal GNRE — por isso a guia oficial é gerada no site.
 - Em produção, cada nota autorizada entra sozinha nos documentos fiscais da empresa (previsão, auditor, lote de XML). As notas de teste não entram.
 - **Notas de produto emitidas** (menu do escritório) mostra, por empresa, as notas do mês, as recusadas e pendentes, as **guias a gerar** e a situação do certificado.
+
+### Emissão de CT-e — transportadoras (configurar e acompanhar)
+Menu da empresa → **Emitir CT-e (frete) → Configurar emissão**:
+1. **Certificado digital A1** da empresa (em Notas automáticas) e **credenciamento** da transportadora como emissora de CT-e na SEFAZ do estado.
+2. **Estabelecimento que emite**: a inscrição estadual e o endereço (o mesmo cadastro da NF-e). A prestação começa no estado dele (o caso de frete que começa em outro estado — CFOP 5932/6932 — ainda não é emitido pelo portal).
+3. **RNTRC** (registro na ANTT, 8 números), **série** e o **próximo número**: se a empresa já emitia CT-e em outro programa (caso da VAP), informe o número seguinte ao último emitido; a numeração só anda para a frente.
+4. **Operações do frete**: CFOP (5.35x/6.35x, por tipo de tomador), ICMS (CST 00, 20 com redução, 40/41/51, 60 pago pelo tomador, 90 com crédito presumido, ou Simples Nacional) e **IBS/CBS** (classificação da tabela oficial — o ambiente de teste da SEFAZ já exige; transporte com tributação normal: 000001). Frete para não contribuinte de outro estado (partilha do ICMS) ainda não é emitido pelo portal.
+5. **Autorização do cliente** registrada e a emissão ligada **no ambiente de teste**. Use **Testar conexão com a SEFAZ**, emita um CT-e de teste, confira o DACTE e só então passe para **produção**.
+- Em produção, cada CT-e autorizado (e cada evento) entra sozinho nos documentos fiscais da empresa. Os de teste não entram.
+- **CT-e emitidos** (menu do escritório) mostra, por empresa, os CT-e do mês, os valores e os rejeitados ou sem resposta.
+- O **MDF-e** (manifesto da viagem) não é emitido pelo portal.
 
 ### Gestão da loja (ligar para um cliente)
 No menu da empresa → **Gestão da loja** (ou **Loja → Configurações**): marque **Gestão da loja ligada**, escolha como a empresa emite nota e salve. O portal cria o plano de contas, se faltar, e as contas **Caixa da loja**, **Banco (PIX e transferências)** e **Maquininha de cartão** no Financeiro. Ajuste se a empresa vende a prazo, o desconto máximo do vendedor, a validade dos orçamentos e a mensagem do comprovante. Depois, cadastre os produtos com o cliente (NCM e unidade conferidos pelo escritório) e lance o estoque inicial (Entrada ou Inventário). As vendas aparecem no Financeiro com origem "venda", prontas para a conciliação e o fechamento.
