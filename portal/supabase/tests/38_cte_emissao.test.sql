@@ -35,7 +35,7 @@ select lives_ok($$select public.cte_configurar(current_setting('testes.empresa_a
 select is((select rntrc from public.cte_config where empresa_id = current_setting('testes.empresa_a')::uuid), '01234567', 'RNTRC com 8 números');
 select throws_like($$select public.cte_operacao_salvar(current_setting('testes.empresa_a')::uuid, null, '{"nome": "Frete", "natureza": "Prestação de serviço de transporte",
   "destino": "interestadual", "cfop": "6353", "icms_cst": "00", "icms_aliquota": 12}'::jsonb)$$, '%classificação do IBS/CBS%',
-  'regime normal exige a classificação do IBS/CBS');
+  'a operação do frete exige a classificação do IBS/CBS');
 select throws_like($$select public.cte_operacao_salvar(current_setting('testes.empresa_a')::uuid, null, '{"nome": "Frete", "natureza": "Prestação de serviço de transporte",
   "destino": "interestadual", "cfop": "6353", "icms_cst": "sn", "ibscbs_cclass_trib": "000001"}'::jsonb)$$, '%fora do Simples%',
   'regime normal não usa o ICMS do Simples');

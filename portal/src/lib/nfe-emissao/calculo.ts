@@ -484,7 +484,7 @@ function grupoIbs(vBC: Dec, aliquota: Dec, reducao: number | null, diferimento: 
   return { pAliq: aliquota, pRed, pAliqEfet, pDif, vDif, valor: bruto - vDif };
 }
 
-function calcularIbsCbs(regra: RegraIbsCbs, vBC: Dec, ano: number): IbsCbsCalculado {
+export function calcularIbsCbs(regra: RegraIbsCbs, vBC: Dec, ano: number): IbsCbsCalculado {
   const cst = regra.cst;
   const ind = CST_IBSCBS[cst] ?? erro(`CST ${cst} do IBS/CBS não aceito na emissão pelo portal.`);
   if (!/^\d{6}$/.test(regra.classificacao) || regra.classificacao.slice(0, 3) !== cst) {

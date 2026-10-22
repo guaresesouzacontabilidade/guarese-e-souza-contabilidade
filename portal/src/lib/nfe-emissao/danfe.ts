@@ -45,21 +45,21 @@ function val(o: unknown, ...caminho: string[]): string | null {
   return String(atual);
 }
 
-const documento = (d: string | null) => {
+export const documento = (d: string | null) => {
   if (!d) return "";
   if (/^[0-9A-Z]{14}$/.test(d)) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
   if (/^\d{11}$/.test(d)) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
   return d;
 };
-const cep = (c: string | null) => (c && /^\d{8}$/.test(c) ? `${c.slice(0, 5)}-${c.slice(5)}` : (c ?? ""));
-const num = (v: string | null, casas = 2) =>
+export const cep = (c: string | null) => (c && /^\d{8}$/.test(c) ? `${c.slice(0, 5)}-${c.slice(5)}` : (c ?? ""));
+export const num = (v: string | null, casas = 2) =>
   v == null || v === "" ? "" : Number(v).toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
 const qtd = (v: string | null) => (v == null ? "" : Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 4 }));
 const unit = (v: string | null) => (v == null ? "" : Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 10 }));
-const data = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}/.test(v) ? `${v.slice(8, 10)}/${v.slice(5, 7)}/${v.slice(0, 4)}` : "");
-const hora = (v: string | null) => (v && /T\d{2}:\d{2}:\d{2}/.test(v) ? v.slice(11, 19) : "");
+export const data = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}/.test(v) ? `${v.slice(8, 10)}/${v.slice(5, 7)}/${v.slice(0, 4)}` : "");
+export const hora = (v: string | null) => (v && /T\d{2}:\d{2}:\d{2}/.test(v) ? v.slice(11, 19) : "");
 const numeroNota = (n: string | null) => (n ? n.padStart(9, "0").replace(/^(\d{3})(\d{3})(\d{3})$/, "$1.$2.$3") : "");
-const chaveFormatada = (c: string) => c.replace(/(.{4})/g, "$1 ").trim();
+export const chaveFormatada = (c: string) => c.replace(/(.{4})/g, "$1 ").trim();
 
 const MOD_FRETE: Record<string, string> = {
   "0": "0-Por conta do Remetente",
@@ -70,7 +70,7 @@ const MOD_FRETE: Record<string, string> = {
   "9": "9-Sem Ocorrência de Transporte",
 };
 
-function campo(rotulo: string, valor: string | null | undefined, extra: Obj = {}): TableCell {
+export function campo(rotulo: string, valor: string | null | undefined, extra: Obj = {}): TableCell {
   const { alinhar, ...resto } = extra as { alinhar?: string } & Obj;
   return {
     stack: [
@@ -80,10 +80,10 @@ function campo(rotulo: string, valor: string | null | undefined, extra: Obj = {}
     ...resto,
   } as TableCell;
 }
-const vazio = (): TableCell => ({ text: "" });
-const tituloBloco = (t: string): Content => ({ text: t, bold: true, fontSize: 6.5, margin: [0, 4, 0, 1] });
+export const vazio = (): TableCell => ({ text: "" });
+export const tituloBloco = (t: string): Content => ({ text: t, bold: true, fontSize: 6.5, margin: [0, 4, 0, 1] });
 
-function grade(widths: (string | number)[], linhas: TableCell[][]): ContentTable {
+export function grade(widths: (string | number)[], linhas: TableCell[][]): ContentTable {
   return {
     table: { widths, body: linhas, dontBreakRows: true },
     layout: { hLineWidth: () => 0.5, vLineWidth: () => 0.5, paddingLeft: () => 2, paddingRight: () => 2, paddingTop: () => 1, paddingBottom: () => 1 },

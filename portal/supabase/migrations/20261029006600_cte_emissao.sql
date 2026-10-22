@@ -350,7 +350,7 @@ create table public.cte_operacoes (
   -- Crédito presumido/outorgado (percentual sobre o ICMS), informado no grupo do CST 60 ou 90
   icms_credito_presumido numeric(5, 2) check (icms_credito_presumido is null or icms_credito_presumido between 0 and 100),
   icms_beneficio text check (icms_beneficio is null or icms_beneficio ~ '^([!-ÿ]{8}|[!-ÿ]{10}|SEM CBENEF)$'),
-  -- IBS/CBS (classificação oficial; exigida no regime normal)
+  -- IBS/CBS (classificação oficial)
   ibscbs_cclass_trib text references public.nfe_cclass_trib(cclass_trib),
   ibscbs_diferimento numeric(5, 2) check (ibscbs_diferimento is null or ibscbs_diferimento between 0 and 100),
   -- Base do IBS/CBS sem o ICMS do frete
@@ -581,8 +581,9 @@ begin
   if coalesce(v_crt, 3) not in (1, 4) and v_cst = 'sn' then
     raise exception 'Empresa fora do Simples Nacional: escolha o CST do ICMS da operação.';
   end if;
-  if coalesce(v_crt, 3) = 3 and v_class is null then
-    raise exception 'No regime normal, a operação precisa da classificação do IBS/CBS.';
+  -- O ambiente de teste da SEFAZ já exige o grupo do IBS/CBS no CT-e (NT 2026.002, regra 001), em qualquer regime
+  if v_class is null then
+    raise exception 'A operação precisa da classificação do IBS/CBS (cClassTrib).';
   end if;
   if v_class is not null and not exists (select 1 from public.nfe_cclass_trib where cclass_trib = v_class) then
     raise exception 'Classificação do IBS/CBS inexistente na tabela oficial.';
@@ -713,8 +714,8 @@ begin
   if v_op.ibscbs_cclass_trib is not null then
     select * into v_cl from public.nfe_cclass_trib where cclass_trib = v_op.ibscbs_cclass_trib;
   end if;
-  if v_cfg.crt = 3 and v_cl.cclass_trib is null then
-    raise exception 'A operação "%" está sem a classificação do IBS/CBS (obrigatória no regime normal). Fale com o escritório.', v_op.nome;
+  if v_cl.cclass_trib is null then
+    raise exception 'A operação "%" está sem a classificação do IBS/CBS. Fale com o escritório.', v_op.nome;
   end if;
 
   -- Remetente e destinatário da carga; tomador (quem paga o frete)
