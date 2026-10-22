@@ -170,8 +170,10 @@ export async function semearGraos(
           cfop: "5102",
           icms_cst: "00",
           icms_aliquota: 12,
-          pis_cst: "08",
-          cofins_cst: "08",
+          pis_cst: "01",
+          pis_aliquota: 1.65,
+          cofins_cst: "01",
+          cofins_aliquota: 7.6,
           ibscbs_cclass_trib: "200036",
           informacoes: "Operação de DEMONSTRAÇÃO: regras fictícias, sem valor fiscal.",
         },
@@ -183,8 +185,10 @@ export async function semearGraos(
           cfop: "6102",
           icms_cst: "00",
           icms_aliquota: 12,
-          pis_cst: "08",
-          cofins_cst: "08",
+          pis_cst: "01",
+          pis_aliquota: 1.65,
+          cofins_cst: "01",
+          cofins_aliquota: 7.6,
           ibscbs_cclass_trib: "200036",
           informacoes: "Operação de DEMONSTRAÇÃO: regras fictícias, sem valor fiscal.",
         },
@@ -329,6 +333,26 @@ export async function semearGraos(
 
   await semearLogoGraos(admin, empresaId);
   return true;
+}
+
+/**
+ * PIS e Cofins na venda de grãos: a comercial é do Lucro Real e a venda de
+ * milho e soja é tributada (CST 01, 1,65% e 7,6%). Corrige as operações da
+ * demonstração criadas antes, que saíam sem incidência.
+ */
+export async function corrigirPisCofinsGraos(admin: SupabaseClient): Promise<boolean> {
+  const { data: emp } = await admin.from("empresas").select("id").eq("documento", cnpjValido("557770880001")).maybeSingle();
+  if (!emp) return false;
+  const corrigidas = ok(
+    "NF-e: PIS e Cofins das vendas",
+    await admin
+      .from("nfe_operacoes")
+      .update({ pis_cst: "01", pis_aliquota: 1.65, cofins_cst: "01", cofins_aliquota: 7.6 })
+      .eq("empresa_id", emp.id)
+      .eq("pis_cst", "08")
+      .select("id"),
+  ) as { id: string }[] | null;
+  return Boolean(corrigidas?.length);
 }
 
 /** CT-e da comercial de grãos (idempotente: só cria o que falta). */

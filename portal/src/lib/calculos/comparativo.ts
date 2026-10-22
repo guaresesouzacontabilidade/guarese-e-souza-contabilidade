@@ -3,7 +3,7 @@ import { centavos, dec, formatarMoeda } from "@/lib/dinheiro";
 import { somarMeses } from "@/lib/competencia";
 import { formatarCompetencia } from "@/lib/formatos";
 import { REGIMES } from "@/lib/rotulos";
-import { basesPresuncao, dasSimples, folhaDoMes, irpjSobre, proLabores, receitaDoMes, type DadosPrevisao, type ParametrosCalculo, type ReceitaMes } from "./previsao";
+import { baseCreditoPisCofins, basesPresuncao, dasSimples, folhaDoMes, irpjSobre, proLabores, receitaDoMes, type DadosPrevisao, type ParametrosCalculo, type ReceitaMes } from "./previsao";
 import { CBS_IBS_2026, FOLHA, FONTE_SIMPLES, IRPJ_CSLL, LC224, PIS_COFINS, SIMPLES, type Fonte } from "./tabelas";
 
 /**
@@ -339,7 +339,7 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
   addFonte(PIS_COFINS.fonteNaoCumulativo);
   const creditoBase = meses.map((c) => {
     const m = porMes.get(c);
-    return premissas.creditosPisCofins && m ? Decimal.max(0, dec(m.compras).minus(dec(m.icms_compras))) : ZERO;
+    return premissas.creditosPisCofins && m ? baseCreditoPisCofins(m) : ZERO;
   });
   const pisNc = comSaldoCredor(
     basePisCofins.map((b) => b.times(PIS_COFINS.naoCumulativo.pis).div(CEM)),

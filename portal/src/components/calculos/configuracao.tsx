@@ -149,7 +149,7 @@ export function FormParametros({ empresaId, regime, parametros }: { empresaId: s
       >
         Aplicar o acréscimo da LC 224/2025 (Lucro Presumido)
       </Marcar>
-      <Marcar nome="creditos_pis_cofins" marcado={p.creditos_pis_cofins} ajuda="Lucro Real: descontar créditos de PIS/Cofins sobre as compras das notas de entrada.">
+      <Marcar nome="creditos_pis_cofins" marcado={p.creditos_pis_cofins} ajuda="Lucro Real: descontar créditos de PIS/Cofins sobre as compras das notas de entrada de pessoa jurídica com PIS/Cofins (compra de produtor pessoa física não gera crédito).">
         Créditos de PIS/Cofins sobre compras
       </Marcar>
       <div className="grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">

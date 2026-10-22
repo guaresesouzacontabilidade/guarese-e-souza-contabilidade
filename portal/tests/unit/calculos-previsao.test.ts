@@ -158,6 +158,18 @@ describe("previsão de impostos", () => {
     expect(valor(sem, "irpj")).toBe("114000.00");
   });
 
+  it("Lucro Real: compra de produtor pessoa física (ou sem PIS/Cofins) não gera crédito", () => {
+    // Venda de milho de 100.000; compras de 80.000, das quais só 30.000 de pessoa jurídica com PIS/Cofins
+    const atual = { vendas: 100000, compras: 80000, compras_credito_pis: 30000, icms_compras_credito_pis: 0, notas_saida: 3, notas_entrada: 4 };
+    const p = calcularPrevisao(dados("lucro_real", [mes("2026-09-01", atual)]));
+    expect(valor(p, "pis")).toBe("1155.00"); // 1.650 − 30.000 × 1,65%
+    expect(valor(p, "cofins")).toBe("5320.00"); // 7.600 − 30.000 × 7,6%
+    expect(p.linhas.find((l) => l.chave === "pis")?.detalhes).toContain("Compras sem direito a crédito (produtor pessoa física ou sem PIS/Cofins): R$ 50.000,00.");
+    // Dados antigos, sem a separação: todas as compras creditam
+    const antigo = calcularPrevisao(dados("lucro_real", [mes("2026-09-01", { vendas: 100000, compras: 80000, notas_saida: 3 })]));
+    expect(valor(antigo, "pis")).toBe("330.00");
+  });
+
   it("folha fora do Simples: INSS patronal, RAT, terceiros, descontos e FGTS", () => {
     const p = calcularPrevisao(
       dados("lucro_presumido", [mes("2026-08-01", { servicos: 10000, notas_saida: 1 })], {

@@ -108,6 +108,9 @@ export const CST_PIS_COFINS: Record<string, string> = {
   "99": "99 - Outras operações",
 };
 
+/** CST do PIS/Cofins que não cobram as contribuições na saída (monofásico, ST, alíquota zero, isenção, sem incidência e suspensão). */
+export const SEM_PIS_COFINS = ["04", "05", "06", "07", "08", "09"];
+
 export const TIPO_CONTRIBUICAO = {
   upf_por_tonelada: "% da UPF por tonelada (ex.: FETHAB)",
   valor_por_tonelada: "R$ por tonelada",

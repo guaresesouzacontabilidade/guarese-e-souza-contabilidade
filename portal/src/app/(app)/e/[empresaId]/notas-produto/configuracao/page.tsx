@@ -10,6 +10,7 @@ import {
   FormConfiguracaoNfe,
   OperacoesNfe,
   ProdutosNfe,
+  type PisCofinsPadrao,
   type ClasseIbsCbs,
   type ConfigNfe,
   type EmitenteNfe,
@@ -18,7 +19,7 @@ import {
 } from "@/components/nfe/configuracao";
 import { mensagemErro } from "@/lib/acoes";
 import { formatarData } from "@/lib/formatos";
-import { certificadoValido } from "@/lib/nfe-emissao/rotulos";
+import { SEM_PIS_COFINS, certificadoValido } from "@/lib/nfe-emissao/rotulos";
 
 export const metadata: Metadata = { title: "Configurar emissão de NF-e" };
 
@@ -69,6 +70,12 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
     return { ...e, municipio: m?.nome ?? null, uf: m?.uf ?? null, proximo_numero_homologacao: Number(e.proximo_numero_homologacao), proximo_numero_producao: Number(e.proximo_numero_producao) };
   });
   const listaOperacoes = (operacoes ?? []).map((o) => ({ ...o, contribuicoes: Array.isArray(o.contribuicoes) ? o.contribuicoes : [] })) as unknown as OperacaoNfe[];
+  // PIS e Cofins das vendas: Lucro Real (não cumulativo) 1,65% e 7,6%; Lucro Presumido (cumulativo) 0,65% e 3%
+  const pisCofins: PisCofinsPadrao =
+    pessoaFisica || simples ? null : emp?.regime_tributario === "lucro_real" ? { pis: 1.65, cofins: 7.6 } : emp?.regime_tributario === "lucro_presumido" ? { pis: 0.65, cofins: 3 } : null;
+  const operacoesSemPisCofins = pisCofins
+    ? listaOperacoes.filter((o) => o.ativa && o.finalidade === 1 && (SEM_PIS_COFINS.includes(o.pis_cst) || SEM_PIS_COFINS.includes(o.cofins_cst)))
+    : [];
   const operacoesSemRegra = listaOperacoes.filter((o) => o.ativa && (simples ? !["101", "102", "103", "300", "400", "900"].includes(o.icms_cst) : ["101", "102", "103", "300", "400", "900"].includes(o.icms_cst) || (atual.crt === 3 && !o.ibscbs_cclass_trib)));
 
   return (
@@ -119,6 +126,15 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
         </Alerta>
       ) : null}
 
+      {operacoesSemPisCofins.length ? (
+        <Alerta tom="alerta" className="mb-4" titulo="Operações de venda sem PIS e Cofins">
+          {operacoesSemPisCofins.map((o) => `${o.nome} (PIS ${o.pis_cst} / Cofins ${o.cofins_cst})`).join(", ")}: as notas saem sem PIS e Cofins. Para empresa do{" "}
+          {emp?.regime_tributario === "lucro_real" ? "Lucro Real" : "Lucro Presumido"}, a venda comum (inclusive de milho e soja em grão) é tributada: CST 01 com{" "}
+          {String(pisCofins!.pis).replace(".", ",")}% e {String(pisCofins!.cofins).replace(".", ",")}%. Mantenha só se a venda for isenta, com alíquota zero, suspensa ou sem
+          incidência.
+        </Alerta>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <Card>
           <CardHeader>
@@ -163,7 +179,7 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <OperacoesNfe empresaId={empresaId} operacoes={listaOperacoes} simples={simples} classes={(classes ?? []) as ClasseIbsCbs[]} />
+          <OperacoesNfe empresaId={empresaId} operacoes={listaOperacoes} simples={simples} pisCofins={pisCofins} classes={(classes ?? []) as ClasseIbsCbs[]} />
         </CardContent>
       </Card>
     </>

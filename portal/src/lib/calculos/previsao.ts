@@ -38,6 +38,9 @@ export interface MesDados {
   icms_devolucoes: Num;
   compras: Num;
   icms_compras: Num;
+  /** Compras que dão crédito de PIS/Cofins: de pessoa jurídica e com as contribuições (sem produtor pessoa física, alíquota zero, suspensão...). */
+  compras_credito_pis?: Num;
+  icms_compras_credito_pis?: Num;
   servicos: Num;
   servicos_retido: Num;
   iss_destacado: Num;
@@ -562,12 +565,18 @@ function pisCofinsCumulativo(ctx: Ctx) {
   });
 }
 
+/** Base do crédito de PIS/Cofins do mês: compras que dão direito (sem o ICMS). Dados antigos sem a separação usam todas as compras. */
+export function baseCreditoPisCofins(m: Pick<MesDados, "compras" | "icms_compras" | "compras_credito_pis" | "icms_compras_credito_pis">) {
+  return Decimal.max(0, dec(m.compras_credito_pis ?? m.compras).minus(dec(m.icms_compras_credito_pis ?? m.icms_compras)));
+}
+
 function pisCofinsNaoCumulativo(ctx: Ctx) {
   const { receita, p } = ctx;
   addFonte(ctx, PIS_COFINS.fonteNaoCumulativo);
   const m = ctx.mes(ctx.comp);
   const base = Decimal.max(0, receita.total.minus(receita.icmsVendas));
-  const credito = p.creditos_pis_cofins && m ? Decimal.max(0, dec(m.compras).minus(dec(m.icms_compras))) : new Decimal(0);
+  const credito = p.creditos_pis_cofins && m ? baseCreditoPisCofins(m) : new Decimal(0);
+  const semCredito = m ? Decimal.max(0, dec(m.compras).minus(dec(m.compras_credito_pis ?? m.compras))) : new Decimal(0);
   for (const [chave, nome, aliquota] of [
     ["pis", "PIS", PIS_COFINS.naoCumulativo.pis],
     ["cofins", "Cofins", PIS_COFINS.naoCumulativo.cofins],
@@ -578,11 +587,12 @@ function pisCofinsNaoCumulativo(ctx: Ctx) {
     const det = [`Débito: base ${moeda(base)} × ${pctNum(aliquota)} = ${moeda(centavos(debito))}`];
     if (receita.icmsVendas.gt(0)) det.push(`A base já exclui o ICMS destacado nas vendas (${moeda(receita.icmsVendas)}).`);
     if (cred.gt(0)) det.push(`(−) Créditos sobre compras das notas de entrada: ${moeda(credito)} × ${pctNum(aliquota)} = ${moeda(centavos(cred))}`);
+    if (p.creditos_pis_cofins && semCredito.gt(0)) det.push(`Compras sem direito a crédito (produtor pessoa física ou sem PIS/Cofins): ${moeda(semCredito)}.`);
     if (saldo.lt(0)) det.push(`Créditos maiores que o débito: saldo credor de ${moeda(centavos(saldo.abs()))} para os próximos meses.`);
     addLinha(ctx, { chave, tributo: nome, guia: "DARF", grupo: "pagar", valor: Decimal.max(0, saldo), detalhes: det, obrigacao: "PIS_COFINS" });
   }
   ctx.avisos.push(
-    "PIS/Cofins não cumulativos: a previsão considera créditos só sobre as compras das notas de entrada. Créditos de energia, aluguéis, fretes e depreciação entram na apuração do escritório.",
+    "PIS/Cofins não cumulativos: a previsão considera créditos só sobre as compras das notas de entrada de pessoa jurídica com PIS/Cofins. Compras de produtor pessoa física não geram crédito básico; o crédito presumido da agroindústria (Lei 10.925/2004) e os créditos de energia, aluguéis, fretes e depreciação entram na apuração do escritório.",
   );
 }
 

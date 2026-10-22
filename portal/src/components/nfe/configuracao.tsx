@@ -18,6 +18,7 @@ import {
   CRT,
   CST_PIS_COFINS,
   DESTINO,
+  SEM_PIS_COFINS,
   FINALIDADE,
   MODO_FUNRURAL,
   ORIGENS,
@@ -124,6 +125,9 @@ export interface ClasseIbsCbs {
   p_red_ibs: number;
   p_red_cbs: number;
 }
+
+/** Alíquotas básicas do PIS e da Cofins pelo regime da empresa (null: Simples Nacional ou produtor pessoa física). */
+export type PisCofinsPadrao = { pis: number; cofins: number } | null;
 
 /** Número do banco no padrão brasileiro para os campos ("12.5" → "12,5"). */
 const num = (v: number | string | null | undefined) => (v === null || v === undefined || v === "" ? "" : String(v).replace(".", ","));
@@ -697,17 +701,22 @@ function FormOperacao({
   empresaId,
   operacao,
   simples,
+  pisCofins,
   classes,
   aoSalvar,
 }: {
   empresaId: string;
   operacao?: OperacaoNfe;
   simples: boolean;
+  pisCofins: PisCofinsPadrao;
   classes: ClasseIbsCbs[];
   aoSalvar: () => void;
 }) {
   const [modelo, setModelo] = React.useState<ModeloOperacao | null>(null);
-  const base = { ...operacao, ...(modelo ?? {}) } as Partial<OperacaoNfe>;
+  // Operação nova no regime normal: a venda já vem com o PIS e a Cofins tributados (alíquota básica do regime)
+  const padraoPis: Partial<OperacaoNfe> =
+    !operacao && pisCofins ? { pis_cst: "01", cofins_cst: "01", pis_aliquota: pisCofins.pis, cofins_aliquota: pisCofins.cofins, excluir_icms_pis_cofins: true } : {};
+  const base = { ...padraoPis, ...operacao, ...(modelo ?? {}) } as Partial<OperacaoNfe>;
   return (
     <div className="space-y-4">
       {!operacao ? (
@@ -722,7 +731,16 @@ function FormOperacao({
           </Select>
         </Campo>
       ) : null}
-      <CamposOperacao key={modelo?.nome ?? "inicial"} empresaId={empresaId} id={operacao?.id ?? null} base={base} simples={simples} classes={classes} aoSalvar={aoSalvar} />
+      <CamposOperacao
+        key={modelo?.nome ?? "inicial"}
+        empresaId={empresaId}
+        id={operacao?.id ?? null}
+        base={base}
+        simples={simples}
+        regimeNormal={Boolean(pisCofins)}
+        classes={classes}
+        aoSalvar={aoSalvar}
+      />
     </div>
   );
 }
@@ -732,6 +750,7 @@ function CamposOperacao({
   id,
   base,
   simples,
+  regimeNormal,
   classes,
   aoSalvar,
 }: {
@@ -739,6 +758,8 @@ function CamposOperacao({
   id: string | null;
   base: Partial<OperacaoNfe>;
   simples: boolean;
+  /** Empresa do Lucro Real ou Presumido (paga PIS e Cofins sobre as vendas). */
+  regimeNormal: boolean;
   classes: ClasseIbsCbs[];
   aoSalvar: () => void;
 }) {
@@ -959,6 +980,13 @@ function CamposOperacao({
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox name="excluir_icms_pis_cofins" defaultChecked={base.excluir_icms_pis_cofins ?? true} /> Tirar o ICMS da base do PIS e da Cofins (Tema 69 do STF)
               </label>
+              {regimeNormal && (SEM_PIS_COFINS.includes(pis) || SEM_PIS_COFINS.includes(cofins)) ? (
+                <Alerta tom="alerta">
+                  Com este CST a nota sai <strong>sem PIS e Cofins</strong>. Use só quando a venda for de fato isenta, com alíquota zero, suspensa ou sem incidência (ex.:
+                  suspensão da Lei 10.925/2004 na venda de cerealista para agroindústria). A venda comum de milho e soja em grão por empresa do Lucro Real ou Presumido é
+                  tributada: CST 01 com a alíquota do regime.
+                </Alerta>
+              ) : null}
             </fieldset>
 
             <fieldset className="space-y-4 rounded-lg border border-border p-3 sm:p-4">
@@ -1027,7 +1055,20 @@ function CamposOperacao({
   );
 }
 
-export function OperacoesNfe({ empresaId, operacoes, simples, classes }: { empresaId: string; operacoes: OperacaoNfe[]; simples: boolean; classes: ClasseIbsCbs[] }) {
+export function OperacoesNfe({
+  empresaId,
+  operacoes,
+  simples,
+  pisCofins = null,
+  classes,
+}: {
+  empresaId: string;
+  operacoes: OperacaoNfe[];
+  simples: boolean;
+  /** Alíquotas básicas do PIS e da Cofins do regime (operações novas já vêm tributadas). */
+  pisCofins?: PisCofinsPadrao;
+  classes: ClasseIbsCbs[];
+}) {
   const [editando, setEditando] = React.useState<OperacaoNfe | "novo" | null>(null);
   return (
     <div className="space-y-3">
@@ -1048,7 +1089,9 @@ export function OperacoesNfe({ empresaId, operacoes, simples, classes }: { empre
                   </p>
                   <p className="text-muted-foreground">
                     CFOP {o.cfop} — ICMS {o.icms_cst}
-                    {o.icms_aliquota != null ? ` ${num(o.icms_aliquota)}%` : ""} — PIS {o.pis_cst} / Cofins {o.cofins_cst}
+                    {o.icms_aliquota != null ? ` ${num(o.icms_aliquota)}%` : ""} — PIS {o.pis_cst}
+                    {o.pis_aliquota != null && !SEM_PIS_COFINS.includes(o.pis_cst) ? ` ${num(o.pis_aliquota)}%` : ""} / Cofins {o.cofins_cst}
+                    {o.cofins_aliquota != null && !SEM_PIS_COFINS.includes(o.cofins_cst) ? ` ${num(o.cofins_aliquota)}%` : ""}
                     {o.ibscbs_cclass_trib ? ` — IBS/CBS ${o.ibscbs_cclass_trib}` : ""}
                     {o.incide_funrural ? " — FUNRURAL" : ""}
                   </p>
@@ -1070,7 +1113,14 @@ export function OperacoesNfe({ empresaId, operacoes, simples, classes }: { empre
       <Dialog open={editando !== null} onOpenChange={(v) => !v && setEditando(null)}>
         <DialogContent largura="xl" titulo={editando === "novo" ? "Nova operação" : "Editar operação"} descricao="Regras fiscais aplicadas em toda nota emitida com esta operação.">
           {editando !== null ? (
-            <FormOperacao empresaId={empresaId} operacao={editando === "novo" ? undefined : editando} simples={simples} classes={classes} aoSalvar={() => setEditando(null)} />
+            <FormOperacao
+              empresaId={empresaId}
+              operacao={editando === "novo" ? undefined : editando}
+              simples={simples}
+              pisCofins={pisCofins}
+              classes={classes}
+              aoSalvar={() => setEditando(null)}
+            />
           ) : null}
         </DialogContent>
       </Dialog>
