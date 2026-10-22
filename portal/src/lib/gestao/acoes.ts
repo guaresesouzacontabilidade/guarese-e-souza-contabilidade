@@ -6,6 +6,7 @@ import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { lerValorBR } from "@/lib/dinheiro";
 import type { Json } from "@/lib/supabase/database.types";
 import type { FormaPagamento } from "./rotulos";
+import { emitirNfeDaVenda, nfeNaVenda } from "./nfe-venda";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -43,6 +44,15 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
     const v = texto(fd, c);
     if (v && !UUID.test(v)) return falha("Conta inválida.");
     if (v) dados[c] = v;
+  }
+  // NF-e na hora da venda (os campos só vêm quando a empresa tem a emissão de NF-e configurada)
+  if (fd.has("nfe_operacao_id")) {
+    for (const c of ["nfe_operacao_id", "nfe_emitente_id"]) {
+      const v = texto(fd, c);
+      if (v && !UUID.test(v)) return falha("Escolha inválida para a NF-e.");
+      dados[c] = v;
+    }
+    dados.nfe_marcada_padrao = fd.get("nfe_marcada_padrao") === "on";
   }
   if (ctx.equipe) {
     dados.ativa = fd.get("ativa") === "on";
@@ -247,7 +257,17 @@ function normalizarItens(itens: ItemVendaEntrada[]) {
   }));
 }
 
-export async function finalizarVenda(empresaId: string, venda: VendaEntrada): Promise<ResultadoAcao<{ id: string; numero: number; troco: number; total: number }>> {
+export interface ResultadoNfeVenda {
+  ok: boolean;
+  id?: string;
+  mensagem: string;
+}
+
+export async function finalizarVenda(
+  empresaId: string,
+  venda: VendaEntrada,
+  opcoes: { emitirNfe?: boolean } = {},
+): Promise<ResultadoAcao<{ id: string; numero: number; troco: number; total: number; nfe?: ResultadoNfeVenda }>> {
   if (!UUID.test(empresaId) || !venda.sessao_id || !UUID.test(venda.sessao_id)) return falha("Abra o caixa antes de vender.");
   const ctx = await exigirPermissao(empresaId, "gestao.vender");
   if (venda.pagamentos?.some((p) => p.primeiro_vencimento && !DATA.test(p.primeiro_vencimento))) return falha("Vencimento inválido.");
@@ -276,6 +296,17 @@ export async function finalizarVenda(empresaId: string, venda: VendaEntrada): Pr
   if (error) return falha(mensagemErro(error));
   revalidarLoja(empresaId);
   const r = data as { id: string; numero: number; troco: number; total: number };
+  // NF-e na hora da venda: a venda já está gravada; se a nota não sair, a venda continua valendo
+  if (opcoes.emitirNfe) {
+    try {
+      const nfe = await nfeNaVenda(ctx.supabase, empresaId, ctx.pode("nfe.emitir"));
+      const resultado = nfe.configurada ? await emitirNfeDaVenda(ctx.supabase, empresaId, r.id, nfe) : { ok: false, mensagem: "Seu acesso não inclui a emissão de NF-e desta empresa." };
+      return sucesso(`Venda nº ${r.numero} concluída.`, { ...r, nfe: resultado });
+    } catch (e) {
+      console.error("Falha ao emitir a NF-e da venda", e);
+      return sucesso(`Venda nº ${r.numero} concluída.`, { ...r, nfe: { ok: false, mensagem: "A venda foi concluída, mas a NF-e não pôde ser enviada agora. Emita pela venda." } });
+    }
+  }
   return sucesso(`Venda nº ${r.numero} concluída.`, r);
 }
 
@@ -309,4 +340,18 @@ export async function cancelarVenda(empresaId: string, vendaId: string, motivo: 
   if (error) return falha(mensagemErro(error));
   revalidarLoja(empresaId);
   return sucesso("Cancelado.");
+}
+
+/** Situação da NF-e emitida na hora da venda (para o caixa acompanhar até a autorização). */
+export async function situacaoNfeDaVenda(
+  empresaId: string,
+  nfeId: string,
+): Promise<{ situacao: string; numero: number; serie: number; motivo: string | null } | null> {
+  if (!UUID.test(empresaId) || !UUID.test(nfeId)) return null;
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  const { data } = await ctx.supabase.from("nfe_emissoes").select("situacao, numero, serie, mensagens").eq("id", nfeId).eq("empresa_id", empresaId).maybeSingle();
+  if (!data) return null;
+  const msgs = (Array.isArray(data.mensagens) ? data.mensagens : []) as { codigo?: string; descricao?: string }[];
+  const ultima = msgs.at(-1);
+  return { situacao: data.situacao, numero: Number(data.numero), serie: data.serie, motivo: ultima?.descricao ? `${ultima.codigo ? `${ultima.codigo} — ` : ""}${ultima.descricao}` : null };
 }

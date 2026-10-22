@@ -230,6 +230,77 @@ test("NF-e da venda: sem certificado a emissão fica desconectada e nada é envi
   await expect(page.getByText("Emissão desconectada")).toBeVisible();
 });
 
+test("NF-e na hora da venda: completa o endereço do cliente, conclui e a nota sai ligada à venda (sem rede: nada vai à SEFAZ)", async ({ page }) => {
+  test.setTimeout(300_000);
+  test.skip(process.env.NOTAS_AUTOMATICAS_SEM_REDE !== "1", "Só roda com as consultas fiscais desligadas neste ambiente.");
+  const { data: emp } = await servico!.from("empresas").select("documento").eq("id", empresaId).single();
+  const { data: joao } = await servico!.from("contrapartes").select("documento").eq("empresa_id", empresaId).ilike("nome", "João Carpinteiro%").single();
+  const limpar = async () => {
+    await servico!.from("nfe_config").update({ ativa: false, autorizacao_texto: null, autorizado_em: null }).eq("empresa_id", empresaId);
+    await servico!.from("certificados_digitais").delete().eq("empresa_id", empresaId).eq("titular", "CERTIFICADO FICTICIO (E2E)");
+    await servico!.from("jobs").delete().eq("empresa_id", empresaId).eq("tipo", "emitir_nfe");
+  };
+  await limpar();
+  await servico!.from("nfe_destinatarios").delete().eq("empresa_id", empresaId).eq("documento", joao!.documento);
+  // Emissão ligada só neste teste, com um certificado FICTÍCIO (sem rede, nada é enviado à SEFAZ)
+  await servico!.from("certificados_digitais").insert({
+    empresa_id: empresaId,
+    titular: "CERTIFICADO FICTICIO (E2E)",
+    documento: emp!.documento,
+    impressao_digital: "E".repeat(64),
+    valido_de: new Date(Date.now() - 86_400_000).toISOString(),
+    valido_ate: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    autorizacao: "autorizacao_escrita",
+    autorizacao_texto: "Teste automático (E2E).",
+  });
+  await servico!.from("nfe_config").update({ ativa: true, autorizacao_texto: "Teste automático (E2E).", autorizado_em: new Date().toISOString() }).eq("empresa_id", empresaId);
+  try {
+    await entrar(page, `madeireira@${DOMINIO}`);
+    await caixaAberto(page, "Caixa 1");
+    const caixinha = page.getByLabel("Emitir NF-e ao concluir a venda");
+    await expect(caixinha).toBeEnabled();
+    await caixinha.check();
+    await adicionar(page, "mourão", /Mourão de eucalipto/);
+    await page.locator('input[id^="q-"]').first().fill("2");
+    await page.getByLabel("Buscar cliente").fill("João Carpinteiro");
+    await page.getByRole("button", { name: /João Carpinteiro/ }).click();
+
+    // O cliente ainda não tem endereço para a nota: completa ali mesmo
+    await expect(page.getByText("Falta o endereço do cliente para a nota.")).toBeVisible();
+    await page.getByRole("button", { name: "Completar endereço" }).click();
+    const dialogo = page.getByRole("dialog");
+    await dialogo.locator("#d-lgr").fill("Rua Fictícia dos Testes");
+    await dialogo.locator("#d-nro").fill("10");
+    await dialogo.locator("#d-bairro").fill("Centro");
+    await dialogo.locator("#d-mun-uf").selectOption("TO");
+    await expect(dialogo.locator('#d-mun option[value="1718204"]')).toHaveCount(1, { timeout: 30_000 });
+    await dialogo.locator("#d-mun").selectOption("1718204");
+    await dialogo.locator("#d-cep").fill("77500000");
+    await dialogo.getByRole("button", { name: /Salvar/ }).click();
+    await expect(page.getByText("Falta o endereço do cliente para a nota.")).toHaveCount(0, { timeout: 30_000 });
+
+    await page.getByRole("group", { name: "Formas de pagamento" }).getByRole("button", { name: /PIX/ }).click();
+    await page.getByRole("button", { name: "Concluir venda e emitir NF-e" }).click();
+    const concluida = page.getByRole("dialog");
+    await expect(concluida).toContainText("concluída", { timeout: 60_000 });
+    await expect(concluida).toContainText("NF-e");
+    const venda = (await concluida.getByRole("link", { name: "Ver a venda" }).getAttribute("href"))!.split("/").pop()!;
+    await expect(concluida.getByRole("link", { name: "Ver a nota" })).toBeVisible();
+
+    // A nota ficou ligada à venda, no ambiente de teste da SEFAZ (homologação)
+    const { data: v } = await servico!.from("vendas").select("nfe_emissao_id").eq("id", venda).single();
+    expect(v!.nfe_emissao_id).toBeTruthy();
+    const { data: n } = await servico!.from("nfe_emissoes").select("ambiente, valor_total, destinatario_nome").eq("id", v!.nfe_emissao_id!).single();
+    expect(n!.ambiente).toBe("homologacao");
+    expect(Number(n!.valor_total)).toBe(56);
+    // Sem rede, a SEFAZ nunca responde: o caixa mostra a situação real (nada é fingido)
+    await expect(concluida.getByText(/Sem resposta|Emitindo|Enviando à SEFAZ|Rejeitada/).first()).toBeVisible({ timeout: 60_000 });
+    await expect(concluida.getByText("Autorizada")).toHaveCount(0);
+  } finally {
+    await limpar();
+  }
+});
+
 test("isolamento: cliente de outra empresa não vê a loja da madeireira", async ({ page }) => {
   await entrar(page, `cliente@${DOMINIO}`);
   for (const rota of ["/loja", "/loja/vender", "/loja/caixa", "/loja/produtos", `/loja/vendas/${vendaDinheiro || "00000000-0000-0000-0000-000000000000"}`]) {

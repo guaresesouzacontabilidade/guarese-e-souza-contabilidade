@@ -13,9 +13,12 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
   const { empresaId } = await params;
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.equipe && !ctx.gerente) return <LojaIndisponivel empresaId={empresaId} equipe={false} ativa={ctx.lojaAtiva} />;
-  const [{ data: cfg }, { data: contas }] = await Promise.all([
+  const [{ data: cfg }, { data: contas }, { data: nfeCfg }, { data: operacoes }, { data: emitentes }] = await Promise.all([
     ctx.supabase.from("gestao_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("contas_financeiras").select("id, nome, tipo").eq("empresa_id", empresaId).eq("ativa", true).neq("tipo", "cartao_credito").order("nome"),
+    ctx.supabase.from("nfe_config").select("ativa").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("nfe_operacoes").select("id, nome, cfop").eq("empresa_id", empresaId).eq("ativa", true).order("nome"),
+    ctx.supabase.from("nfe_emitentes").select("id, nome, inscricao_estadual, serie").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
   return (
     <>
@@ -31,6 +34,15 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
               empresaId={empresaId}
               equipe={ctx.equipe}
               contas={contas ?? []}
+              nfe={
+                nfeCfg && (operacoes?.length || emitentes?.length)
+                  ? {
+                      ativa: nfeCfg.ativa,
+                      operacoes: (operacoes ?? []).map((o) => ({ id: o.id, nome: o.nome, cfop: o.cfop })),
+                      emitentes: (emitentes ?? []).map((e) => ({ id: e.id, nome: e.nome, inscricao: e.inscricao_estadual, serie: e.serie })),
+                    }
+                  : null
+              }
               config={
                 cfg
                   ? {
@@ -44,6 +56,9 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
                       conta_dinheiro_id: cfg.conta_dinheiro_id,
                       conta_pix_id: cfg.conta_pix_id,
                       conta_cartao_id: cfg.conta_cartao_id,
+                      nfe_operacao_id: cfg.nfe_operacao_id,
+                      nfe_emitente_id: cfg.nfe_emitente_id,
+                      nfe_marcada_padrao: cfg.nfe_marcada_padrao,
                     }
                   : null
               }

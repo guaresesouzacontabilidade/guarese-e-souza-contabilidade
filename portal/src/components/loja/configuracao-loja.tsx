@@ -17,6 +17,15 @@ export interface ConfigLoja {
   conta_dinheiro_id: string | null;
   conta_pix_id: string | null;
   conta_cartao_id: string | null;
+  nfe_operacao_id: string | null;
+  nfe_emitente_id: string | null;
+  nfe_marcada_padrao: boolean;
+}
+
+export interface OpcoesNfeLoja {
+  operacoes: { id: string; nome: string; cfop: string }[];
+  emitentes: { id: string; nome: string; inscricao: string; serie: number }[];
+  ativa: boolean;
 }
 
 export function FormConfigLoja({
@@ -24,11 +33,14 @@ export function FormConfigLoja({
   config,
   contas,
   equipe,
+  nfe,
 }: {
   empresaId: string;
   config: ConfigLoja | null;
   contas: { id: string; nome: string; tipo: string }[];
   equipe: boolean;
+  /** Opções da NF-e da empresa (null quando a empresa não tem a emissão de NF-e configurada). */
+  nfe: OpcoesNfeLoja | null;
 }) {
   const c = config;
   const opcoesConta = (atual: string | null) => (
@@ -126,6 +138,45 @@ export function FormConfigLoja({
               <Alerta tom="info">As contas são criadas automaticamente quando a gestão da loja for ligada.</Alerta>
             )}
           </section>
+
+          {nfe ? (
+            <section className="space-y-4">
+              <h2 className="font-semibold">NF-e na hora da venda</h2>
+              <p className="text-sm text-muted-foreground">
+                No caixa, a caixinha <strong>Emitir NF-e</strong> envia a nota à SEFAZ assim que a venda é concluída, com os itens, o frete, o desconto e o pagamento da venda.
+                {nfe.ativa ? "" : " A emissão de NF-e desta empresa ainda está desligada: a caixinha aparece desativada até o escritório ligar (certificado digital e autorização)."}
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo rotulo="Operação da nota (regras fiscais)" htmlFor="nfe_operacao_id" ajuda="Cadastrada pelo escritório em Emitir nota de produto.">
+                  <Select id="nfe_operacao_id" name="nfe_operacao_id" defaultValue={c?.nfe_operacao_id ?? ""}>
+                    <option value="">{nfe.operacoes.length === 1 ? `Automática (${nfe.operacoes[0].nome})` : "Escolha..."}</option>
+                    {nfe.operacoes.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.nome} — CFOP {o.cfop}
+                      </option>
+                    ))}
+                  </Select>
+                </Campo>
+                <Campo rotulo="Quem emite (inscrição e série)" htmlFor="nfe_emitente_id">
+                  <Select id="nfe_emitente_id" name="nfe_emitente_id" defaultValue={c?.nfe_emitente_id ?? ""}>
+                    <option value="">{nfe.emitentes.length === 1 ? `Automático (${nfe.emitentes[0].nome})` : "Escolha..."}</option>
+                    {nfe.emitentes.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.nome} — IE {e.inscricao} · série {e.serie}
+                      </option>
+                    ))}
+                  </Select>
+                </Campo>
+              </div>
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox name="nfe_marcada_padrao" defaultChecked={c?.nfe_marcada_padrao ?? false} className="mt-0.5" />
+                <span>
+                  Deixar &quot;Emitir NF-e&quot; já marcado em toda venda
+                  <span className="block text-muted-foreground">Para quem emite nota em quase todas as vendas. Dá para desmarcar na hora, venda por venda.</span>
+                </span>
+              </label>
+            </section>
+          ) : null}
 
           <div className="flex justify-end">
             <BotaoEnviar pendente={pendente}>Salvar configurações</BotaoEnviar>

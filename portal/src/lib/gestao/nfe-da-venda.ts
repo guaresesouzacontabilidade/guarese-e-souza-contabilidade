@@ -55,7 +55,9 @@ export async function pedidoDaVenda(supabase: Cliente, empresaId: string, vendaI
   const pagamentos = [...(v.venda_pagamentos ?? [])].sort((a, b) => dec(b.valor).comparedTo(dec(a.valor)));
   const principal = pagamentos[0];
   const forma = (principal?.forma ?? "outro") as FormaPagamento;
-  const aPrazo = forma === "a_prazo" && principal?.primeiro_vencimento;
+  // As duplicatas da nota precisam somar o total: só vão quando a venda inteira foi a prazo
+  const aPrazo = forma === "a_prazo";
+  const duplicatas = aPrazo && pagamentos.length === 1 && principal?.primeiro_vencimento;
   const informacoes = [`Venda nº ${v.numero}.`];
   if (pagamentos.length > 1) {
     informacoes.push(`Pagamento: ${pagamentos.map((p) => `${FORMAS_PAGAMENTO[p.forma as FormaPagamento]} ${formatarMoeda(p.valor)}`).join(" + ")}.`);
@@ -75,8 +77,8 @@ export async function pedidoDaVenda(supabase: Cliente, empresaId: string, vendaI
       pagamento: {
         forma: TPAG[forma],
         descricao: forma === "outro" ? "Outros" : undefined,
-        a_prazo: Boolean(aPrazo),
-        parcelas: aPrazo
+        a_prazo: aPrazo,
+        parcelas: duplicatas
           ? parcelasDoPrazo(principal.valor, principal.parcelas, principal.primeiro_vencimento!, principal.intervalo_dias ?? 30).map((p) => ({ vencimento: p.vencimento, valor: p.valor.toFixed(2) }))
           : [],
       },

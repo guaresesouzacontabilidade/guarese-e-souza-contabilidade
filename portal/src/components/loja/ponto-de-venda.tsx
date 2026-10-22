@@ -4,18 +4,20 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Banknote, CreditCard, FileText, Loader2, Plus, QrCode, Receipt, Search, ShoppingCart, Trash2, UserPlus, UserRound, Wallet, X } from "lucide-react";
+import { Banknote, CreditCard, FileCheck2, FileText, Loader2, MapPin, Plus, QrCode, Receipt, Search, ShoppingCart, Trash2, UserPlus, UserRound, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Campo, Input, Select } from "@/components/ui/form";
+import { Campo, Checkbox, Input, Select } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Alerta } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import { formatarDocumento } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
-import { finalizarVenda, salvarClienteLoja, salvarOrcamento, type VendaEntrada } from "@/lib/gestao/acoes";
-import { FORMAS_PAGAMENTO, formatarQuantidade, modoMedida, quantidadePorPecas, secaoPeca, type FormaPagamento, un } from "@/lib/gestao/rotulos";
+import { finalizarVenda, salvarClienteLoja, salvarOrcamento, situacaoNfeDaVenda, type ResultadoNfeVenda, type VendaEntrada } from "@/lib/gestao/acoes";
+import { FORMAS_PAGAMENTO, formatarQuantidade, modoMedida, quantidadePorPecas, secaoPeca, un, type FormaPagamento, type NfeNaVenda } from "@/lib/gestao/rotulos";
+import { EM_ANDAMENTO, SITUACAO_NFE, type SituacaoNfe } from "@/lib/nfe-emissao/rotulos";
+import { FormDestinatario, type Destinatario } from "@/components/nfe/cadastros";
 
 export interface ProdutoPdv {
   id: string;
@@ -109,6 +111,7 @@ export function PontoDeVenda({
   clientes: clientesIniciais,
   permitirPrazo,
   orcamento,
+  nfe,
 }: {
   empresaId: string;
   sessaoId: string;
@@ -117,6 +120,8 @@ export function PontoDeVenda({
   clientes: ClientePdv[];
   permitirPrazo: boolean;
   orcamento: OrcamentoInicial | null;
+  /** NF-e na hora da venda (caixinha "Emitir NF-e"). */
+  nfe: NfeNaVenda;
 }) {
   const router = useRouter();
   const porId = React.useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
@@ -138,7 +143,10 @@ export function PontoDeVenda({
   const [entrega, setEntrega] = React.useState(orcamento?.entrega ?? "");
   const [pagamentos, setPagamentos] = React.useState<Pagamento[]>([]);
   const [enviando, setEnviando] = React.useState<"venda" | "orcamento" | null>(null);
-  const [concluida, setConcluida] = React.useState<{ id: string; numero: number; troco: number; total: number } | null>(null);
+  const [concluida, setConcluida] = React.useState<{ id: string; numero: number; troco: number; total: number; nfe?: ResultadoNfeVenda } | null>(null);
+  const [emitirNfe, setEmitirNfe] = React.useState(nfe.disponivel && nfe.marcadaPadrao);
+  const [comEndereco, setComEndereco] = React.useState(() => new Set(nfe.documentosComEndereco));
+  const [enderecoNfe, setEnderecoNfe] = React.useState(false);
   const [novoCliente, setNovoCliente] = React.useState(false);
   const buscaRef = React.useRef<HTMLInputElement>(null);
 
@@ -227,12 +235,24 @@ export function PontoDeVenda({
     };
   }
 
+  const docCliente = cliente?.documento ?? null;
+  const pendenciaNfe = !emitirNfe
+    ? null
+    : !cliente
+      ? "Para a NF-e, escolha ou cadastre o cliente (com CPF ou CNPJ)."
+      : !docCliente
+        ? "O cliente não tem CPF/CNPJ no cadastro. Cadastre-o de novo com o documento para a nota."
+        : !comEndereco.has(docCliente)
+          ? "Falta o endereço do cliente para a nota."
+          : null;
+
   async function concluir() {
     if (!linhas.length) return toast.error("Adicione pelo menos um produto.");
+    if (pendenciaNfe) return toast.error(`${pendenciaNfe} Ou desmarque "Emitir NF-e".`);
     if (!pagamentos.length) return toast.error("Escolha a forma de pagamento.");
     if (!falta.isZero()) return toast.error(falta.gt(0) ? `Falta informar ${formatarMoeda(falta)} no pagamento.` : `Os pagamentos passam do total em ${formatarMoeda(falta.negated())}.`);
     setEnviando("venda");
-    const r = await finalizarVenda(empresaId, montarVenda());
+    const r = await finalizarVenda(empresaId, montarVenda(), { emitirNfe });
     setEnviando(null);
     if (!r.ok || !r.dados) return toast.error(r.mensagem ?? "Não foi possível concluir a venda.");
     setConcluida(r.dados);
@@ -252,6 +272,7 @@ export function PontoDeVenda({
 
   function novaVenda() {
     setConcluida(null);
+    setEmitirNfe(nfe.disponivel && nfe.marcadaPadrao);
     setLinhas([]);
     setPagamentos([]);
     setCliente(null);
@@ -520,8 +541,29 @@ export function PontoDeVenda({
               </div>
             </details>
 
+            {nfe.configurada ? (
+              <div className="space-y-2 rounded-lg border border-border p-2.5 text-sm">
+                <label className="flex items-center gap-2 font-medium">
+                  <Checkbox checked={emitirNfe} disabled={!nfe.disponivel} onChange={(e) => setEmitirNfe(e.target.checked)} aria-label="Emitir NF-e ao concluir a venda" />
+                  <FileCheck2 className="size-4 text-primary" /> Emitir NF-e ao concluir
+                  {nfe.ambiente === "homologacao" && nfe.disponivel ? <Badge variante="alerta">teste</Badge> : null}
+                </label>
+                {!nfe.disponivel ? <p className="text-xs text-muted-foreground">{nfe.motivo}</p> : null}
+                {pendenciaNfe ? (
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-alerta-fg">
+                    <span>{pendenciaNfe}</span>
+                    {docCliente && !comEndereco.has(docCliente) ? (
+                      <Button variante="contorno" tamanho="sm" onClick={() => setEnderecoNfe(true)}>
+                        <MapPin /> Completar endereço
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <Button className="h-12 w-full text-base" onClick={concluir} disabled={enviando !== null || !linhas.length}>
-              {enviando === "venda" ? <Loader2 className="animate-spin" /> : <Receipt />} Concluir venda
+              {enviando === "venda" ? <Loader2 className="animate-spin" /> : <Receipt />} {emitirNfe ? "Concluir venda e emitir NF-e" : "Concluir venda"}
             </Button>
             <div className="flex gap-2">
               <Button variante="contorno" className="flex-1" onClick={guardarOrcamento} disabled={enviando !== null || !linhas.length}>
@@ -545,6 +587,22 @@ export function PontoDeVenda({
         }}
       />
 
+      <Dialog open={enderecoNfe} onOpenChange={setEnderecoNfe}>
+        <DialogContent titulo="Endereço do cliente para a NF-e" descricao="Fica cadastrado para as próximas notas deste cliente." largura="lg">
+          {cliente && docCliente ? (
+            <FormDestinatario
+              empresaId={empresaId}
+              inicial={destinatarioInicial(cliente, docCliente)}
+              aoSalvar={() => {
+                setComEndereco((s) => new Set(s).add(docCliente));
+                setEnderecoNfe(false);
+                toast.success("Endereço cadastrado. Já dá para emitir a NF-e.");
+              }}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={Boolean(concluida)} onOpenChange={(v) => !v && novaVenda()}>
         <DialogContent titulo={concluida ? `Venda nº ${concluida.numero} concluída` : "Venda concluída"} descricao="O estoque e o financeiro já foram atualizados.">
           {concluida ? (
@@ -554,6 +612,7 @@ export function PontoDeVenda({
                 <p className="font-titulo text-3xl font-bold numero">{formatarMoeda(concluida.total)}</p>
                 {Number(concluida.troco) > 0 ? <p className="mt-1 text-lg font-semibold text-primary">Troco: {formatarMoeda(concluida.troco)}</p> : null}
               </div>
+              {concluida.nfe ? <NfeDaVendaConcluida empresaId={empresaId} vendaId={concluida.id} nfe={concluida.nfe} /> : null}
               <div className="flex flex-wrap justify-end gap-2">
                 <Button variante="contorno" asChild>
                   <Link href={`/impressao/venda/${concluida.id}`} target="_blank">
@@ -616,5 +675,96 @@ function NovoCliente({ aberto, aoFechar, empresaId, aoCriar }: { aberto: boolean
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Dados do cliente do caixa para começar o cadastro do endereço da NF-e. */
+function destinatarioInicial(c: ClientePdv, documento: string): Destinatario {
+  const cpf = documento.length === 11;
+  return {
+    id: "",
+    tipo: cpf ? "cpf" : "cnpj",
+    documento,
+    nome: c.nome.slice(0, 60),
+    indicador_ie: cpf ? 9 : 1,
+    inscricao_estadual: null,
+    logradouro: "",
+    numero: "",
+    complemento: null,
+    bairro: "",
+    municipio_ibge: null,
+    uf: null,
+    municipio: null,
+    codigo_pais: null,
+    pais: null,
+    cidade_exterior: null,
+    cep: null,
+    telefone: c.telefone,
+    email: null,
+  };
+}
+
+/** Situação da NF-e enviada ao concluir a venda: acompanha até a SEFAZ responder. */
+function NfeDaVendaConcluida({ empresaId, vendaId, nfe }: { empresaId: string; vendaId: string; nfe: ResultadoNfeVenda }) {
+  const [estado, setEstado] = React.useState<{ situacao: string; numero: number; serie: number; motivo: string | null } | null>(null);
+  React.useEffect(() => {
+    if (!nfe.ok || !nfe.id) return;
+    let vivo = true;
+    let tentativas = 0;
+    const consultar = async () => {
+      const r = await situacaoNfeDaVenda(empresaId, nfe.id!);
+      if (!vivo) return;
+      if (r) setEstado(r);
+      tentativas++;
+      if (tentativas < 40 && (!r || EM_ANDAMENTO.includes(r.situacao as SituacaoNfe))) window.setTimeout(consultar, 3000);
+    };
+    consultar();
+    return () => {
+      vivo = false;
+    };
+  }, [empresaId, nfe.ok, nfe.id]);
+
+  if (!nfe.ok || !nfe.id) {
+    return (
+      <Alerta tom="alerta" titulo="A venda foi concluída, mas a NF-e não saiu">
+        {nfe.mensagem}{" "}
+        <Link href={`/e/${empresaId}/notas-produto/nova?venda=${vendaId}`} className="underline">
+          Emitir pela venda
+        </Link>
+      </Alerta>
+    );
+  }
+  const sit = estado ? SITUACAO_NFE[estado.situacao as SituacaoNfe] : null;
+  const andamento = !estado || EM_ANDAMENTO.includes(estado.situacao as SituacaoNfe);
+  return (
+    <div className="space-y-2 rounded-xl border border-border p-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-2 font-medium">
+          <FileCheck2 className="size-4 text-primary" />
+          NF-e{estado ? ` nº ${estado.numero}` : ""}
+        </span>
+        {andamento ? (
+          <Badge variante="info">
+            <Loader2 className="animate-spin" /> Enviando à SEFAZ
+          </Badge>
+        ) : sit ? (
+          <Badge variante={sit.tom}>{sit.rotulo}</Badge>
+        ) : null}
+      </div>
+      {estado && !andamento ? <p className="text-xs text-muted-foreground">{sit?.ajuda}</p> : null}
+      {estado?.motivo && !andamento && estado.situacao !== "autorizada" ? <p className="text-xs text-perigo">{estado.motivo}</p> : null}
+      <div className="flex flex-wrap gap-2">
+        {estado?.situacao === "autorizada" ? (
+          <Button asChild tamanho="sm">
+            <a href={`/api/nfe/${empresaId}/${nfe.id}`} target="_blank" rel="noopener">
+              <FileText /> Imprimir DANFE
+            </a>
+          </Button>
+        ) : null}
+        <Button asChild variante="contorno" tamanho="sm">
+          <Link href={`/e/${empresaId}/notas-produto/${nfe.id}`}>Ver a nota</Link>
+        </Button>
+      </div>
+    </div>
   );
 }

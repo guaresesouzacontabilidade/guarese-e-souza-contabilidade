@@ -9,6 +9,7 @@ import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loj
 import { AbrirCaixa } from "@/components/loja/formularios-caixa";
 import { PontoDeVenda, type ClientePdv, type OrcamentoInicial, type ProdutoPdv } from "@/components/loja/ponto-de-venda";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
+import { nfeNaVenda } from "@/lib/gestao/nfe-venda";
 import { formatarDataHora } from "@/lib/formatos";
 
 export const metadata: Metadata = { title: "Vender" };
@@ -77,7 +78,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
   }
 
   const orcamentoId = typeof sp.orcamento === "string" && UUID.test(sp.orcamento) ? sp.orcamento : null;
-  const [produtosR, clientesR, cfgR, orcR] = await Promise.all([
+  const [produtosR, clientesR, cfgR, orcR, nfe] = await Promise.all([
     ctx.supabase
       .from("nfe_produtos")
       .select("id, codigo, descricao, unidade, gtin, grupo, valor_unitario, estoque_atual, controla_estoque, espessura_cm, largura_cm, comprimento_m")
@@ -103,6 +104,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
           .eq("tipo", "orcamento")
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    nfeNaVenda(ctx.supabase, empresaId, ctx.pode("nfe.emitir")),
   ]);
 
   const produtos: ProdutoPdv[] = (produtosR.data ?? []).map((p) => ({
@@ -185,6 +187,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
         clientes={clientes}
         permitirPrazo={cfgR.data?.permitir_venda_prazo ?? true}
         orcamento={orcamento}
+        nfe={nfe}
       />
     </>
   );

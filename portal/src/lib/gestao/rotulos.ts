@@ -114,3 +114,18 @@ export function parcelasDoPrazo(valor: Decimal.Value, parcelas: number, primeiro
 export function un(u: string | null | undefined) {
   return u === "M3" ? "m³" : u === "M2" ? "m²" : u === "M" || u === "ML" ? "m" : (u ?? "");
 }
+
+/** Situação da NF-e na hora da venda, para o caixa. */
+export interface NfeNaVenda {
+  /** A empresa tem a emissão de NF-e configurada (mesmo que desligada). */
+  configurada: boolean;
+  /** Dá para emitir agora (emissão ligada, operação e inscrição definidas). */
+  disponivel: boolean;
+  motivo: string | null;
+  ambiente: "homologacao" | "producao" | null;
+  marcadaPadrao: boolean;
+  emitenteId: string | null;
+  operacaoId: string | null;
+  /** CPF/CNPJ dos clientes que já têm o endereço cadastrado para a nota. */
+  documentosComEndereco: string[];
+}
