@@ -19,7 +19,7 @@ const endereco = (e: { logradouro: string | null; numero: string | null; complem
     .join(", ");
 
 /** Logo do cliente (armazenamento privado), lida com as regras de acesso de quem pediu. */
-async function logoCliente(supabase: Cliente, caminho: string | null): Promise<{ dados: string } | null> {
+export async function logoCliente(supabase: Cliente, caminho: string | null): Promise<{ dados: string } | null> {
   if (!caminho) return null;
   const { data } = await supabase.storage.from("empresas-logos").download(caminho);
   if (!data || data.size > 2_000_000) return null;

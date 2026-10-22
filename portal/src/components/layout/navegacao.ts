@@ -27,6 +27,10 @@ import {
   FileSignature,
   Landmark,
   ReceiptText,
+  Store,
+  ShoppingCart,
+  Boxes,
+  Banknote,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -45,6 +49,8 @@ export interface EmpresaMenu {
   papel: string;
   permissoes: Permissao[];
   demonstracao: boolean;
+  /** Gestão da loja ligada para a empresa. */
+  loja: boolean;
 }
 
 export function menuEscritorio(admin: boolean): ItemMenu[] {
@@ -80,6 +86,15 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   const p = new Set(empresa.permissoes);
   const base = `/e/${empresa.id}`;
   const itens: ItemMenu[] = [{ rotulo: "Visão geral", href: base, icone: Home, exato: true }];
+  if (empresa.loja && p.has("gestao.vender")) {
+    itens.push({ rotulo: "Loja", href: `${base}/loja`, icone: Store, exato: true });
+    itens.push({ rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart });
+    itens.push({ rotulo: "Caixa do dia", href: `${base}/loja/caixa`, icone: Banknote });
+    itens.push({ rotulo: "Produtos e estoque", href: `${base}/loja/produtos`, icone: Boxes });
+    itens.push({ rotulo: "Vendas e orçamentos", href: `${base}/loja/vendas`, icone: ReceiptText });
+  } else if (equipe && p.has("gestao.gerenciar")) {
+    itens.push({ rotulo: "Gestão da loja", href: `${base}/loja/configuracoes`, icone: Store });
+  }
   if (p.has("documentos.enviar")) itens.push({ rotulo: "Enviar documentos", href: `${base}/enviar`, icone: Upload });
   if (p.has("nfse.emitir") || p.has("nfse.configurar")) itens.push({ rotulo: "Emitir nota de serviço", href: `${base}/notas-servico`, icone: ReceiptText });
   if (p.has("nfe.emitir") || p.has("nfe.configurar")) itens.push({ rotulo: "Emitir nota de produto", href: `${base}/notas-produto`, icone: PackageCheck });

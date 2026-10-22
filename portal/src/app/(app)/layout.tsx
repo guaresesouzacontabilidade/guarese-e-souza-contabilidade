@@ -23,6 +23,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           papel: e.papel,
           permissoes: [...e.permissoes],
           demonstracao: e.demonstracao,
+          loja: e.loja,
         }))}
         logoUrl={escritorio.logoUrl}
         naoLidas={naoLidas.count ?? 0}

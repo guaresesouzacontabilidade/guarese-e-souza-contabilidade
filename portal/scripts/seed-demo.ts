@@ -27,6 +27,7 @@ import { semearSped } from "./demo-sped";
 import { semearIcms } from "./demo-icms";
 import { semearNfse } from "./demo-nfse";
 import { semearNfe } from "./demo-nfe";
+import { semearLoja } from "./demo-loja";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
@@ -248,6 +249,17 @@ async function main() {
   if (await semearNfe(admin, comoAdmin, { dominio: DOMINIO, contadorId: idEquipe, inicioAtendimento: competencia(-12) })) {
     console.log("  Produtor rural fictício com a emissão de NF-e configurada (desligada: a demonstração não tem certificado digital)");
   }
+  if (
+    await semearLoja(admin, comoAdmin, { url, publica }, {
+      dominio: DOMINIO,
+      contadorId: idEquipe,
+      inicioAtendimento: competencia(-12),
+      garantirUsuario: (email, nome) => garantirUsuario(admin, email, nome, "cliente", senha),
+      permissoesTitular: titular,
+    })
+  ) {
+    console.log("  Madeireira fictícia com a gestão da loja: produtos, estoque, caixas, vendas (à vista e a prazo) e orçamento");
+  }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);
@@ -255,8 +267,9 @@ async function main() {
   console.log(`  Cliente 1:      cliente@${DOMINIO}  (somente Padaria)`);
   console.log(`  Cliente 2:      cliente2@${DOMINIO} (somente Oficina)`);
   console.log(`  Colaborador:    colaborador@${DOMINIO} (Padaria, acesso restrito)`);
+  console.log(`  Madeireira:     madeireira@${DOMINIO} (dono) e balcao@${DOMINIO} (só vende no caixa)`);
   console.log(MANTER_SENHAS ? "  Senhas: mantidas (não foram alteradas)" : `  Senha de todos: ${senha}`);
-  console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}, Fazenda Exemplo (DEMO) — só a equipe\n`);
+  console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}, Fazenda Exemplo (DEMO) — só a equipe, Madeireira Reflorestar (DEMO)\n`);
 }
 
 main().catch((e) => {

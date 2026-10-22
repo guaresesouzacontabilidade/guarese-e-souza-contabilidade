@@ -85,6 +85,8 @@ export interface EmpresaAcesso {
   regime_tributario: string;
   ativa: boolean;
   demonstracao: boolean;
+  /** Gestão da loja (caixa, vendas e estoque) ligada para a empresa. */
+  loja: boolean;
   papel: "admin" | "equipe" | "cliente_titular" | "cliente_colaborador";
   permissoes: Set<Permissao>;
 }
@@ -93,10 +95,12 @@ export interface EmpresaAcesso {
 export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> => {
   const s = await obterSessao();
   if (!s?.perfil) return [];
-  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao";
+  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, gestao:gestao_config(ativa)";
+  type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja"> & { gestao: { ativa: boolean } | null };
+  const comLoja = ({ gestao, ...e }: Linha) => ({ ...e, loja: gestao?.ativa === true });
   if (s.perfil.tipo === "admin") {
     const { data } = await s.supabase.from("empresas").select(campos).order("razao_social");
-    return (data ?? []).map((e) => ({ ...e, papel: "admin" as const, permissoes: new Set(TODAS_PERMISSOES) }));
+    return ((data ?? []) as unknown as Linha[]).map((e) => ({ ...comLoja(e), papel: "admin" as const, permissoes: new Set(TODAS_PERMISSOES) }));
   }
   const { data } = await s.supabase
     .from("empresa_membros")
@@ -105,7 +109,7 @@ export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> =
     .eq("ativo", true);
   return (data ?? [])
     .map((m) => {
-      const e = m.empresa as unknown as Omit<EmpresaAcesso, "papel" | "permissoes">;
+      const e = comLoja(m.empresa as unknown as Linha);
       return { ...e, papel: m.papel as EmpresaAcesso["papel"], permissoes: new Set(m.permissoes as Permissao[]) };
     })
     .sort((a, b) => (a.nome_fantasia ?? a.razao_social).localeCompare(b.nome_fantasia ?? b.razao_social, "pt-BR"));
