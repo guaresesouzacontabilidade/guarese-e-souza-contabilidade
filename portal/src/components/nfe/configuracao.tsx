@@ -983,7 +983,8 @@ function CamposOperacao({
               {regimeNormal && (SEM_PIS_COFINS.includes(pis) || SEM_PIS_COFINS.includes(cofins)) ? (
                 <Alerta tom="alerta">
                   Com este CST a nota sai <strong>sem PIS e Cofins</strong>. Use só quando a venda for de fato isenta, com alíquota zero, suspensa ou sem incidência (ex.:
-                  suspensão da Lei 10.925/2004 na venda de cerealista para agroindústria). A venda comum de milho e soja em grão por empresa do Lucro Real ou Presumido é
+                  exportação ou venda com fim específico de exportação, CFOP 7.xxx e 5.501/6.501; suspensão da Lei 10.925/2004 na venda de cerealista para
+                  agroindústria). A venda comum de milho e soja em grão por empresa do Lucro Real ou Presumido é
                   tributada: CST 01 com a alíquota do regime.
                 </Alerta>
               ) : null}

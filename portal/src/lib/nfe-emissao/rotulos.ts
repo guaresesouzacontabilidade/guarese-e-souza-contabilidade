@@ -111,6 +111,12 @@ export const CST_PIS_COFINS: Record<string, string> = {
 /** CST do PIS/Cofins que não cobram as contribuições na saída (monofásico, ST, alíquota zero, isenção, sem incidência e suspensão). */
 export const SEM_PIS_COFINS = ["04", "05", "06", "07", "08", "09"];
 
+/** Exportação (7.xxx) e venda com fim específico de exportação (5.501, 5.502, 6.501, 6.502): sem PIS/Cofins por lei. */
+export function cfopExportacao(cfop: string) {
+  const c = cfop.replace(/\D/g, "");
+  return c.startsWith("7") || ["5501", "5502", "6501", "6502"].includes(c);
+}
+
 export const TIPO_CONTRIBUICAO = {
   upf_por_tonelada: "% da UPF por tonelada (ex.: FETHAB)",
   valor_por_tonelada: "R$ por tonelada",

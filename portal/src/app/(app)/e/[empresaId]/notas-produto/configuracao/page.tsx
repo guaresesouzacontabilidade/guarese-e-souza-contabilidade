@@ -19,7 +19,7 @@ import {
 } from "@/components/nfe/configuracao";
 import { mensagemErro } from "@/lib/acoes";
 import { formatarData } from "@/lib/formatos";
-import { SEM_PIS_COFINS, certificadoValido } from "@/lib/nfe-emissao/rotulos";
+import { SEM_PIS_COFINS, certificadoValido, cfopExportacao } from "@/lib/nfe-emissao/rotulos";
 
 export const metadata: Metadata = { title: "Configurar emissão de NF-e" };
 
@@ -74,7 +74,7 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
   const pisCofins: PisCofinsPadrao =
     pessoaFisica || simples ? null : emp?.regime_tributario === "lucro_real" ? { pis: 1.65, cofins: 7.6 } : emp?.regime_tributario === "lucro_presumido" ? { pis: 0.65, cofins: 3 } : null;
   const operacoesSemPisCofins = pisCofins
-    ? listaOperacoes.filter((o) => o.ativa && o.finalidade === 1 && (SEM_PIS_COFINS.includes(o.pis_cst) || SEM_PIS_COFINS.includes(o.cofins_cst)))
+    ? listaOperacoes.filter((o) => o.ativa && o.finalidade === 1 && !cfopExportacao(o.cfop) && (SEM_PIS_COFINS.includes(o.pis_cst) || SEM_PIS_COFINS.includes(o.cofins_cst)))
     : [];
   const operacoesSemRegra = listaOperacoes.filter((o) => o.ativa && (simples ? !["101", "102", "103", "300", "400", "900"].includes(o.icms_cst) : ["101", "102", "103", "300", "400", "900"].includes(o.icms_cst) || (atual.crt === 3 && !o.ibscbs_cclass_trib)));
 
