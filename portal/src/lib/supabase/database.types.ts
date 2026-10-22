@@ -1,4 +1,3 @@
-
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
@@ -245,6 +244,74 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "lancamentos"
       referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"caixa_movimentos": {
+                  Row: {
+                    "conta_id": string | null,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"motivo": string,"sessao_id": string,"tipo": string,"transferencia_id": string | null,"valor": number
+                  }
+                  Insert: {
+                    "conta_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"motivo": string,"sessao_id": string,"tipo": string,"transferencia_id"?: string | null,"valor": number
+                  }
+                  Update: {
+                    "conta_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"motivo"?: string,"sessao_id"?: string,"tipo"?: string,"transferencia_id"?: string | null,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "caixa_movimentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "caixa_movimentos_empresa_id_conta_id_fkey"
+      columns: ["empresa_id","conta_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "caixa_movimentos_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "caixa_movimentos_transferencia_id_fkey"
+      columns: ["transferencia_id"]
+isOneToOne: false
+      referencedRelation: "transferencias"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"caixa_sessoes": {
+                  Row: {
+                    "aberto_em": string,"caixa_nome": string,"data": string,"diferenca": number | null,"empresa_id": string,"fechado_em": string | null,"fechado_por": string | null,"id": string,"observacao_fechamento": string | null,"operador_id": string,"resumo": Json | null,"status": string,"valor_abertura": number,"valor_contado": number | null,"valor_esperado": number | null
+                  }
+                  Insert: {
+                    "aberto_em"?: string,"caixa_nome"?: string,"data"?: string,"diferenca"?: number | null,"empresa_id": string,"fechado_em"?: string | null,"fechado_por"?: string | null,"id"?: string,"observacao_fechamento"?: string | null,"operador_id"?: string,"resumo"?: Json | null,"status"?: string,"valor_abertura"?: number,"valor_contado"?: number | null,"valor_esperado"?: number | null
+                  }
+                  Update: {
+                    "aberto_em"?: string,"caixa_nome"?: string,"data"?: string,"diferenca"?: number | null,"empresa_id"?: string,"fechado_em"?: string | null,"fechado_por"?: string | null,"id"?: string,"observacao_fechamento"?: string | null,"operador_id"?: string,"resumo"?: Json | null,"status"?: string,"valor_abertura"?: number,"valor_contado"?: number | null,"valor_esperado"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "caixa_sessoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "caixa_sessoes_fechado_por_fkey"
+      columns: ["fechado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "caixa_sessoes_operador_id_fkey"
+      columns: ["operador_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
     }
                   ]
                 },"calculo_ajustes": {
@@ -1394,6 +1461,37 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"estoque_movimentos": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"custo_medio_apos": number,"custo_unitario": number | null,"documento_fiscal_id": string | null,"empresa_id": string,"id": string,"observacao": string | null,"produto_id": string,"quantidade": number,"saldo_apos": number,"tipo": string,"venda_id": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"custo_medio_apos": number,"custo_unitario"?: number | null,"documento_fiscal_id"?: string | null,"empresa_id": string,"id"?: string,"observacao"?: string | null,"produto_id": string,"quantidade": number,"saldo_apos": number,"tipo": string,"venda_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"custo_medio_apos"?: number,"custo_unitario"?: number | null,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"produto_id"?: string,"quantidade"?: number,"saldo_apos"?: number,"tipo"?: string,"venda_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estoque_movimentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_movimentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_movimentos_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"estoques": {
                   Row: {
                     "competencia": string,"created_at": string,"documento_id": string | null,"empresa_id": string,"fonte": string | null,"id": string,"informado_por": string | null,"observacao": string | null,"valor_estoque_final": number
@@ -1559,6 +1657,55 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "municipios"
       referencedColumns: ["ibge"]
+    }
+                  ]
+                },"gestao_config": {
+                  Row: {
+                    "ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"empresa_id": string,"mensagem_comprovante": string | null,"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id": string,"mensagem_comprovante"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
+                  }
+                  Update: {
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id"?: string,"mensagem_comprovante"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gestao_config_ativada_por_fkey"
+      columns: ["ativada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_empresa_id_conta_cartao_id_fkey"
+      columns: ["empresa_id","conta_cartao_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "gestao_config_empresa_id_conta_dinheiro_id_fkey"
+      columns: ["empresa_id","conta_dinheiro_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "gestao_config_empresa_id_conta_pix_id_fkey"
+      columns: ["empresa_id","conta_pix_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "gestao_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
     }
                   ]
                 },"guia_pagamentos": {
@@ -2400,13 +2547,13 @@ isOneToOne: false
                   ]
                 },"nfe_produtos": {
                   Row: {
-                    "ativo": boolean,"cest": string | null,"codigo": string,"created_at": string,"descricao": string,"empresa_id": string,"gtin": string | null,"id": string,"ncm": string,"origem": number,"peso_kg": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
+                    "ativo": boolean,"cest": string | null,"codigo": string,"comprimento_m": number | null,"controla_estoque": boolean,"created_at": string,"custo_medio": number,"descricao": string,"empresa_id": string,"espessura_cm": number | null,"estoque_atual": number,"estoque_minimo": number | null,"grupo": string | null,"gtin": string | null,"id": string,"largura_cm": number | null,"ncm": string,"origem": number,"peso_kg": number | null,"preco_custo": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
                   }
                   Insert: {
-                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"created_at"?: string,"descricao": string,"empresa_id": string,"gtin"?: string | null,"id"?: string,"ncm": string,"origem"?: number,"peso_kg"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
+                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao": string,"empresa_id": string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm": string,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
                   }
                   Update: {
-                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"created_at"?: string,"descricao"?: string,"empresa_id"?: string,"gtin"?: string | null,"id"?: string,"ncm"?: string,"origem"?: number,"peso_kg"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
+                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao"?: string,"empresa_id"?: string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm"?: string,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
                   }
                   Relationships: [
                     {
@@ -3327,6 +3474,105 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"venda_itens": {
+                  Row: {
+                    "codigo": string,"comprimento_m": number | null,"custo_unitario": number | null,"desconto": number,"descricao": string,"empresa_id": string,"id": string,"ordem": number,"pecas": number | null,"preco_tabela": number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"venda_id": string
+                  }
+                  Insert: {
+                    "codigo": string,"comprimento_m"?: number | null,"custo_unitario"?: number | null,"desconto"?: number,"descricao": string,"empresa_id": string,"id"?: string,"ordem": number,"pecas"?: number | null,"preco_tabela"?: number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"venda_id": string
+                  }
+                  Update: {
+                    "codigo"?: string,"comprimento_m"?: number | null,"custo_unitario"?: number | null,"desconto"?: number,"descricao"?: string,"empresa_id"?: string,"id"?: string,"ordem"?: number,"pecas"?: number | null,"preco_tabela"?: number | null,"preco_unitario"?: number,"produto_id"?: string,"quantidade"?: number,"total"?: number,"unidade"?: string,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_itens_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_itens_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venda_pagamentos": {
+                  Row: {
+                    "empresa_id": string,"forma": string,"id": string,"intervalo_dias": number | null,"lancamentos": (string)[],"parcelas": number,"primeiro_vencimento": string | null,"valor": number,"valor_recebido": number | null,"venda_id": string
+                  }
+                  Insert: {
+                    "empresa_id": string,"forma": string,"id"?: string,"intervalo_dias"?: number | null,"lancamentos"?: (string)[],"parcelas"?: number,"primeiro_vencimento"?: string | null,"valor": number,"valor_recebido"?: number | null,"venda_id": string
+                  }
+                  Update: {
+                    "empresa_id"?: string,"forma"?: string,"id"?: string,"intervalo_dias"?: number | null,"lancamentos"?: (string)[],"parcelas"?: number,"primeiro_vencimento"?: string | null,"valor"?: number,"valor_recebido"?: number | null,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_pagamentos_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vendas": {
+                  Row: {
+                    "cancelada_em": string | null,"cancelada_por": string | null,"cliente_documento": string | null,"cliente_id": string | null,"cliente_nome": string | null,"cliente_telefone": string | null,"created_at": string,"data": string,"desconto": number,"empresa_id": string,"entrega": string | null,"frete": number,"id": string,"motivo_cancelamento": string | null,"nfe_emissao_id": string | null,"numero": number,"observacao": string | null,"orcamento_id": string | null,"sessao_id": string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco": number,"updated_at": string,"validade": string | null,"vendedor_id": string | null
+                  }
+                  Insert: {
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id": string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacao"?: string | null,"orcamento_id"?: string | null,"sessao_id"?: string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                  }
+                  Update: {
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id"?: string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacao"?: string | null,"orcamento_id"?: string | null,"sessao_id"?: string | null,"status"?: string,"subtotal"?: number,"tipo"?: string,"total"?: number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vendas_cancelada_por_fkey"
+      columns: ["cancelada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_empresa_id_cliente_id_fkey"
+      columns: ["empresa_id","cliente_id"]
+isOneToOne: false
+      referencedRelation: "contrapartes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vendas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vendas_nfe_emissao_id_fkey"
+      columns: ["nfe_emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_orcamento_id_fkey"
+      columns: ["orcamento_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_vendedor_id_fkey"
+      columns: ["vendedor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"xml_lote_itens": {
                   Row: {
                     "arquivo": string,"caminho": string | null,"dados": NonNullable<Json>,"documento_id": string | null,"lote_id": string,"ordem": number,"parte": number | null
@@ -3649,6 +3895,48 @@ isOneToOne: false
                            },
 "gerar_tarefas":
 { Args: { "p_competencia": string,"p_empresa_id"?: string }; Returns: number
+                           },
+"gestao_caixa_abrir":
+{ Args: { "p_caixa_nome": string,"p_empresa_id": string,"p_valor_abertura": number }; Returns: string
+                           },
+"gestao_caixa_fechar":
+{ Args: { "p_observacao": string,"p_sessao_id": string,"p_valor_contado": number }; Returns: Json
+                           },
+"gestao_caixa_movimento":
+{ Args: { "p_conta_id": string,"p_motivo": string,"p_sessao_id": string,"p_tipo": string,"p_valor": number }; Returns: string
+                           },
+"gestao_caixa_resumo":
+{ Args: { "p_sessao_id": string }; Returns: Json
+                           },
+"gestao_cliente_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"gestao_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"gestao_entrada_nota":
+{ Args: { "p_documento_fiscal_id": string,"p_empresa_id": string,"p_itens": Json }; Returns: number
+                           },
+"gestao_estoque_lancar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"gestao_inventario":
+{ Args: { "p_empresa_id": string,"p_itens": Json,"p_observacao": string }; Returns: number
+                           },
+"gestao_orcamento_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: Json
+                           },
+"gestao_produto_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"gestao_venda_cancelar":
+{ Args: { "p_motivo": string,"p_venda_id": string }; Returns: undefined
+                           },
+"gestao_venda_finalizar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"gestao_venda_vincular_nfe":
+{ Args: { "p_nfe_id": string,"p_venda_id": string }; Returns: undefined
                            },
 "icms_carteira":
 { Args: { "p_competencia": string }; Returns: Json

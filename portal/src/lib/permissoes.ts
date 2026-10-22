@@ -30,6 +30,8 @@ export const TODAS_PERMISSOES = [
   "nfse.configurar",
   "nfe.emitir",
   "nfe.configurar",
+  "gestao.vender",
+  "gestao.gerenciar",
 ] as const;
 
 export type Permissao = (typeof TODAS_PERMISSOES)[number];
@@ -143,6 +145,21 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
     ],
   },
   {
+    grupo: "Gestão da loja",
+    itens: [
+      {
+        chave: "gestao.vender",
+        rotulo: "Vender no caixa",
+        descricao: "Abrir e fechar o próprio caixa, vender, fazer orçamentos, sangrias e suprimentos (só nas empresas com a gestão da loja contratada).",
+      },
+      {
+        chave: "gestao.gerenciar",
+        rotulo: "Gerenciar a loja",
+        descricao: "Cadastrar produtos e preços, lançar estoque e inventário, cancelar vendas, dar descontos sem limite, ver os relatórios e as configurações da loja.",
+      },
+    ],
+  },
+  {
     grupo: "Comunicação",
     itens: [{ chave: "mensagens.usar", rotulo: "Mensagens", descricao: "Usar a central de mensagens." }],
   },
@@ -155,6 +172,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
     "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir", "nfe.emitir",
+    "gestao.vender", "gestao.gerenciar",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
 };
