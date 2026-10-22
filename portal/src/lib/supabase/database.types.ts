@@ -1661,13 +1661,13 @@ isOneToOne: false
                   ]
                 },"gestao_config": {
                   Row: {
-                    "ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"empresa_id": string,"mensagem_comprovante": string | null,"nfe_emitente_id": string | null,"nfe_marcada_padrao": boolean,"nfe_operacao_id": string | null,"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number
+                    "ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"empresa_id": string,"mensagem_comprovante": string | null,"nfe_emitente_id": string | null,"modalidade": string,"nfe_marcada_padrao": boolean,"proximo_numero_ordem": number,"nfe_operacao_id": string | null,"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number
                   }
                   Insert: {
-                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id": string,"mensagem_comprovante"?: string | null,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id": string,"mensagem_comprovante"?: string | null,"nfe_emitente_id"?: string | null,"modalidade"?: string,"nfe_marcada_padrao"?: boolean,"proximo_numero_ordem"?: number,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
                   }
                   Update: {
-                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id"?: string,"mensagem_comprovante"?: string | null,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id"?: string,"mensagem_comprovante"?: string | null,"nfe_emitente_id"?: string | null,"modalidade"?: string,"nfe_marcada_padrao"?: boolean,"proximo_numero_ordem"?: number,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
                   }
                   Relationships: [
                     {
@@ -2890,6 +2890,73 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"ordens_carregamento": {
+                  Row: {
+                    "carregado_em": string | null,"cancelada_em": string | null,"cancelada_por": string | null,"contrato": string | null,"created_at": string,"criado_por": string | null,"data_emissao": string,"destinatario_documento": string | null,"destinatario_id": string | null,"destinatario_nome": string,"emitente_id": string | null,"empresa_id": string,"frete_por_conta": number,"id": string,"impureza": number | null,"local_carregamento": string | null,"local_descarga": string | null,"motivo_cancelamento": string | null,"motorista_cpf": string | null,"motorista_nome": string | null,"nfe_emissao_id": string | null,"numero": number,"observacoes": string | null,"operacao_id": string | null,"peso_bruto_kg": number | null,"peso_liquido_kg": number | null,"peso_previsto_kg": number | null,"placa": string | null,"placa_uf": string | null,"placas_reboque": (string)[],"preco_unitario": number | null,"produto_descricao": string,"produto_id": string,"quantidade": number,"rntrc": string | null,"status": string,"tara_kg": number | null,"ticket_balanca": string | null,"transportador_documento": string | null,"transportador_id": string | null,"transportador_nome": string | null,"umidade": number | null,"unidade": string,"updated_at": string,"validade": string | null
+                  }
+                  Insert: {
+                    "carregado_em"?: string | null,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"contrato"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_emissao"?: string,"destinatario_documento"?: string | null,"destinatario_id"?: string | null,"destinatario_nome": string,"emitente_id"?: string | null,"empresa_id": string,"frete_por_conta"?: number,"id"?: string,"impureza"?: number | null,"local_carregamento"?: string | null,"local_descarga"?: string | null,"motivo_cancelamento"?: string | null,"motorista_cpf"?: string | null,"motorista_nome"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacoes"?: string | null,"operacao_id"?: string | null,"peso_bruto_kg"?: number | null,"peso_liquido_kg"?: number | null,"peso_previsto_kg"?: number | null,"placa"?: string | null,"placa_uf"?: string | null,"placas_reboque"?: (string)[],"preco_unitario"?: number | null,"produto_descricao": string,"produto_id": string,"quantidade": number,"rntrc"?: string | null,"status"?: string,"tara_kg"?: number | null,"ticket_balanca"?: string | null,"transportador_documento"?: string | null,"transportador_id"?: string | null,"transportador_nome"?: string | null,"umidade"?: number | null,"unidade": string,"updated_at"?: string,"validade"?: string | null
+                  }
+                  Update: {
+                    "carregado_em"?: string | null,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"contrato"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_emissao"?: string,"destinatario_documento"?: string | null,"destinatario_id"?: string | null,"destinatario_nome"?: string,"emitente_id"?: string | null,"empresa_id"?: string,"frete_por_conta"?: number,"id"?: string,"impureza"?: number | null,"local_carregamento"?: string | null,"local_descarga"?: string | null,"motivo_cancelamento"?: string | null,"motorista_cpf"?: string | null,"motorista_nome"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacoes"?: string | null,"operacao_id"?: string | null,"peso_bruto_kg"?: number | null,"peso_liquido_kg"?: number | null,"peso_previsto_kg"?: number | null,"placa"?: string | null,"placa_uf"?: string | null,"placas_reboque"?: (string)[],"preco_unitario"?: number | null,"produto_descricao"?: string,"produto_id"?: string,"quantidade"?: number,"rntrc"?: string | null,"status"?: string,"tara_kg"?: number | null,"ticket_balanca"?: string | null,"transportador_documento"?: string | null,"transportador_id"?: string | null,"transportador_nome"?: string | null,"umidade"?: number | null,"unidade"?: string,"updated_at"?: string,"validade"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ordens_carregamento_cancelada_por_fkey"
+      columns: ["cancelada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_destinatario_id_fkey"
+      columns: ["destinatario_id"]
+isOneToOne: false
+      referencedRelation: "nfe_destinatarios"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_emitente_id_fkey"
+      columns: ["emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_nfe_emissao_id_fkey"
+      columns: ["nfe_emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_operacao_id_fkey"
+      columns: ["operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_transportador_id_fkey"
+      columns: ["transportador_id"]
+isOneToOne: false
+      referencedRelation: "nfe_transportadores"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"perfis": {
                   Row: {
                     "aceite_termos_em": string | null,"aceite_termos_versao": string | null,"anonimizado_em": string | null,"ativo": boolean,"cargo": string | null,"created_at": string,"email": string,"id": string,"nome": string,"preferencias": NonNullable<Json>,"telefone": string | null,"tipo": string,"ultimo_acesso_em": string | null,"updated_at": string
@@ -3934,6 +4001,18 @@ isOneToOne: false
                            },
 "gestao_venda_finalizar":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"carregamento_cancelar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"carregamento_pesagem":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: number
+                           },
+"carregamento_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: Json
+                           },
+"carregamento_vincular_nfe":
+{ Args: { "p_id": string,"p_nfe_id": string }; Returns: undefined
                            },
 "gestao_venda_vincular_nfe":
 { Args: { "p_nfe_id": string,"p_venda_id": string }; Returns: undefined
