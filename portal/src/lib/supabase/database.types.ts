@@ -990,6 +990,136 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"cte_config": {
+                  Row: {
+                    "ambiente": string,"ativa": boolean,"atualizado_por": string | null,"autorizacao_texto": string | null,"autorizado_em": string | null,"autorizado_por": string | null,"autorizar_escritorio_xml": boolean,"created_at": string,"crt": number,"emitente_id": string | null,"empresa_id": string,"informacoes_padrao": string | null,"proximo_numero_homologacao": number,"proximo_numero_producao": number,"rntrc": string | null,"serie": number,"updated_at": string
+                  }
+                  Insert: {
+                    "ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"autorizar_escritorio_xml"?: boolean,"created_at"?: string,"crt"?: number,"emitente_id"?: string | null,"empresa_id": string,"informacoes_padrao"?: string | null,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"rntrc"?: string | null,"serie"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"autorizar_escritorio_xml"?: boolean,"created_at"?: string,"crt"?: number,"emitente_id"?: string | null,"empresa_id"?: string,"informacoes_padrao"?: string | null,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"rntrc"?: string | null,"serie"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cte_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_config_autorizado_por_fkey"
+      columns: ["autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_config_emitente_id_fkey"
+      columns: ["emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cte_emissoes": {
+                  Row: {
+                    "ambiente": string,"autorizada_em": string | null,"cancelada_em": string | null,"chave": string | null,"codigo_numerico": string,"created_at": string,"dados": Json,"descartada_em": string | null,"documento_id": string | null,"emitida_em": string | null,"empresa_id": string,"id": string,"mensagens": Json | null,"municipio_fim": string,"municipio_inicio": string,"natureza": string,"nfe_chaves": (string)[],"numero": number,"operacao_id": string | null,"origem": Json | null,"pedido": Json,"pedido_por": string | null,"peso_kg": number | null,"protocolo": string | null,"serie": number,"situacao": string,"tentativas": number,"tomador_documento": string | null,"tomador_nome": string,"totais": Json | null,"uf_fim": string,"uf_inicio": string,"ultimo_envio_em": string | null,"updated_at": string,"valor_carga": number | null,"valor_total": number,"xml_assinado": string | null,"xml_autorizado": string | null
+                  }
+                  Insert: {
+                    "ambiente": string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"chave"?: string | null,"codigo_numerico": string,"created_at"?: string,"dados": Json,"descartada_em"?: string | null,"documento_id"?: string | null,"emitida_em"?: string | null,"empresa_id": string,"id"?: string,"mensagens"?: Json | null,"municipio_fim": string,"municipio_inicio": string,"natureza": string,"nfe_chaves"?: (string)[],"numero": number,"operacao_id"?: string | null,"origem"?: Json | null,"pedido": Json,"pedido_por"?: string | null,"peso_kg"?: number | null,"protocolo"?: string | null,"serie": number,"situacao"?: string,"tentativas"?: number,"tomador_documento"?: string | null,"tomador_nome": string,"totais"?: Json | null,"uf_fim": string,"uf_inicio": string,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor_carga"?: number | null,"valor_total": number,"xml_assinado"?: string | null,"xml_autorizado"?: string | null
+                  }
+                  Update: {
+                    "ambiente"?: string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"chave"?: string | null,"codigo_numerico"?: string,"created_at"?: string,"dados"?: Json,"descartada_em"?: string | null,"documento_id"?: string | null,"emitida_em"?: string | null,"empresa_id"?: string,"id"?: string,"mensagens"?: Json | null,"municipio_fim"?: string,"municipio_inicio"?: string,"natureza"?: string,"nfe_chaves"?: (string)[],"numero"?: number,"operacao_id"?: string | null,"origem"?: Json | null,"pedido"?: Json,"pedido_por"?: string | null,"peso_kg"?: number | null,"protocolo"?: string | null,"serie"?: number,"situacao"?: string,"tentativas"?: number,"tomador_documento"?: string | null,"tomador_nome"?: string,"totais"?: Json | null,"uf_fim"?: string,"uf_inicio"?: string,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor_carga"?: number | null,"valor_total"?: number,"xml_assinado"?: string | null,"xml_autorizado"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cte_emissoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_emissoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_emissoes_operacao_id_fkey"
+      columns: ["operacao_id"]
+isOneToOne: false
+      referencedRelation: "cte_operacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_emissoes_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cte_eventos": {
+                  Row: {
+                    "correcoes": Json | null,"created_at": string,"emissao_id": string,"empresa_id": string,"id": string,"mensagens": Json | null,"pedido_por": string | null,"protocolo": string | null,"registrado_em": string | null,"sequencia": number,"situacao": string,"tentativas": number,"texto": string,"tipo": string,"updated_at": string,"xml": string | null
+                  }
+                  Insert: {
+                    "correcoes"?: Json | null,"created_at"?: string,"emissao_id": string,"empresa_id": string,"id"?: string,"mensagens"?: Json | null,"pedido_por"?: string | null,"protocolo"?: string | null,"registrado_em"?: string | null,"sequencia": number,"situacao"?: string,"tentativas"?: number,"texto": string,"tipo": string,"updated_at"?: string,"xml"?: string | null
+                  }
+                  Update: {
+                    "correcoes"?: Json | null,"created_at"?: string,"emissao_id"?: string,"empresa_id"?: string,"id"?: string,"mensagens"?: Json | null,"pedido_por"?: string | null,"protocolo"?: string | null,"registrado_em"?: string | null,"sequencia"?: number,"situacao"?: string,"tentativas"?: number,"texto"?: string,"tipo"?: string,"updated_at"?: string,"xml"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cte_eventos_emissao_id_fkey"
+      columns: ["emissao_id"]
+isOneToOne: false
+      referencedRelation: "cte_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_eventos_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cte_operacoes": {
+                  Row: {
+                    "ativa": boolean,"cfop": string,"created_at": string,"destino": string,"empresa_id": string,"excluir_icms_base_ibscbs": boolean,"ibscbs_cclass_trib": string | null,"ibscbs_diferimento": number | null,"icms_aliquota": number | null,"icms_beneficio": string | null,"icms_credito_presumido": number | null,"icms_cst": string,"icms_reducao": number | null,"id": string,"informacoes": string | null,"natureza": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"cfop": string,"created_at"?: string,"destino": string,"empresa_id": string,"excluir_icms_base_ibscbs"?: boolean,"ibscbs_cclass_trib"?: string | null,"ibscbs_diferimento"?: number | null,"icms_aliquota"?: number | null,"icms_beneficio"?: string | null,"icms_credito_presumido"?: number | null,"icms_cst": string,"icms_reducao"?: number | null,"id"?: string,"informacoes"?: string | null,"natureza": string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"cfop"?: string,"created_at"?: string,"destino"?: string,"empresa_id"?: string,"excluir_icms_base_ibscbs"?: boolean,"ibscbs_cclass_trib"?: string | null,"ibscbs_diferimento"?: number | null,"icms_aliquota"?: number | null,"icms_beneficio"?: string | null,"icms_credito_presumido"?: number | null,"icms_cst"?: string,"icms_reducao"?: number | null,"id"?: string,"informacoes"?: string | null,"natureza"?: string,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cte_operacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_operacoes_ibscbs_cclass_trib_fkey"
+      columns: ["ibscbs_cclass_trib"]
+isOneToOne: false
+      referencedRelation: "nfe_cclass_trib"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"declaracoes_faturamento": {
                   Row: {
                     "assinada_em": string | null,"assinada_path": string | null,"assinada_por": string | null,"assinatura_digital": boolean | null,"cancelada_em": string | null,"cancelada_por": string | null,"cidade": string,"contador_crc": string,"contador_nome": string,"criado_em": string,"criado_por": string | null,"data_declaracao": string,"empresa_id": string,"finalidade": string | null,"id": string,"meses": NonNullable<Json>,"motivo_cancelamento": string | null,"observacao": string | null,"periodo_fim": string,"periodo_inicio": string,"representante_cargo": string | null,"representante_cpf": string | null,"representante_nome": string,"situacao": string,"total": number,"uf": string | null
@@ -4013,6 +4143,33 @@ isOneToOne: false
                            },
 "carregamento_vincular_nfe":
 { Args: { "p_id": string,"p_nfe_id": string }; Returns: undefined
+                           },
+"cte_cancelar":
+{ Args: { "p_id": string,"p_justificativa": string }; Returns: undefined
+                           },
+"cte_carta_correcao":
+{ Args: { "p_correcoes": Json,"p_id": string }; Returns: undefined
+                           },
+"cte_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"cte_descartar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"cte_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id"?: string }; Returns: Json
+                           },
+"cte_operacao_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"cte_previa":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"cte_tentar_de_novo":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"cte_avisar":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "gestao_venda_vincular_nfe":
 { Args: { "p_nfe_id": string,"p_venda_id": string }; Returns: undefined

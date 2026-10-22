@@ -32,6 +32,8 @@ export const TODAS_PERMISSOES = [
   "nfe.configurar",
   "gestao.vender",
   "gestao.gerenciar",
+  "cte.emitir",
+  "cte.configurar",
 ] as const;
 
 export type Permissao = (typeof TODAS_PERMISSOES)[number];
@@ -47,6 +49,7 @@ export const PERMISSOES_EXCLUSIVAS_EQUIPE: Permissao[] = [
   "auditor.gerenciar",
   "nfse.configurar",
   "nfe.configurar",
+  "cte.configurar",
 ];
 
 export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotulo: string; descricao: string }[] }[] = [
@@ -145,6 +148,21 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
     ],
   },
   {
+    grupo: "Conhecimento de transporte (CT-e)",
+    itens: [
+      {
+        chave: "cte.emitir",
+        rotulo: "Emitir CT-e",
+        descricao: "Emitir CT-e do frete com as operações cadastradas pelo escritório, cadastrar clientes, cancelar e corrigir (carta de correção).",
+      },
+      {
+        chave: "cte.configurar",
+        rotulo: "Configurar o CT-e",
+        descricao: "Escolher o estabelecimento, a série e o RNTRC, cadastrar as operações do frete (CFOP, ICMS e IBS/CBS) e ligar a emissão.",
+      },
+    ],
+  },
+  {
     grupo: "Gestão da loja",
     itens: [
       {
@@ -172,7 +190,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
     "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir", "nfe.emitir",
-    "gestao.vender", "gestao.gerenciar",
+    "gestao.vender", "gestao.gerenciar", "cte.emitir",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
 };
