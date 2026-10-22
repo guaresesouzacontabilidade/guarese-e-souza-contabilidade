@@ -454,7 +454,9 @@ async function dominioProducao(projetoId: string, padrao: string) {
   if (DOMINIO) return `https://${DOMINIO}`;
   try {
     const d = await vc<{ domains: { name: string }[] }>(`/v9/projects/${projetoId}/domains`);
-    const nome = d.domains.map((x) => x.name).find((n) => n.endsWith(".vercel.app")) ?? d.domains[0]?.name;
+    const nomes = d.domains.map((x) => x.name);
+    // Domínio próprio (ex.: portal.onguaresescontabilidade.com.br) tem prioridade sobre o endereço da Vercel
+    const nome = nomes.find((n) => !n.endsWith(".vercel.app")) ?? nomes.find((n) => n.endsWith(".vercel.app")) ?? nomes[0];
     return nome ? `https://${nome}` : padrao;
   } catch {
     return padrao;
