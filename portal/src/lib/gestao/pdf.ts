@@ -43,7 +43,7 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
   const { sessao: s, resumo: r, vendas, movimentos, produtos } = d.relatorio;
   const fechado = s.status === "fechado";
   const concluidas = vendas.filter((v) => v.status === "concluida");
-  const ticket = concluidas.length ? dec(r.vendas_total).div(concluidas.length) : dec(0);
+  const media = concluidas.length ? dec(r.vendas_total).div(concluidas.length) : dec(0);
 
   const cab = (textos: string[], direita: number[] = []): TableCell[] =>
     textos.map((t, i) => ({ text: t, bold: true, fontSize: 8, color: "#ffffff", fillColor: COR.marrom, alignment: direita.includes(i) ? "right" : "left" }));
@@ -57,7 +57,7 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
 
   // Destaques do dia
   const destaques: [string, string, string?][] = [
-    ["Total vendido", R$(r.vendas_total), `${r.vendas_quantidade} venda(s) · ticket médio ${R$(ticket)}`],
+    ["Total vendido", R$(r.vendas_total), `${r.vendas_quantidade} venda(s) · média de ${R$(media)} por venda`],
     ["Dinheiro", R$(valorDaForma(r, "dinheiro")), `${r.por_forma?.dinheiro?.vendas ?? 0} venda(s)`],
     ["PIX", R$(valorDaForma(r, "pix")), `${r.por_forma?.pix?.vendas ?? 0} venda(s)`],
     ["Cartão", R$(totalCartao(r)), `débito ${R$(valorDaForma(r, "cartao_debito"))} · crédito ${R$(valorDaForma(r, "cartao_credito"))}`],

@@ -29,7 +29,7 @@ export function PainelCaixa({
   const pdf = `/api/loja/caixa/${s.id}/relatorio`;
   const diferenca = s.diferenca != null ? dec(s.diferenca) : null;
   const esperado = Number(r.dinheiro_esperado ?? 0);
-  const ticket = r.vendas_quantidade ? dec(r.vendas_total).div(r.vendas_quantidade) : dec(0);
+  const media = r.vendas_quantidade ? dec(r.vendas_total).div(r.vendas_quantidade) : dec(0);
 
   return (
     <div className="space-y-4">
@@ -63,7 +63,7 @@ export function PainelCaixa({
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <Indicador rotulo="Total vendido" valor={formatarMoeda(r.vendas_total)} detalhe={`${r.vendas_quantidade} venda(s) · ticket ${formatarMoeda(ticket)}`} icone={ShoppingCart} />
+        <Indicador rotulo="Total vendido" valor={formatarMoeda(r.vendas_total)} detalhe={`${r.vendas_quantidade} venda(s) · média de ${formatarMoeda(media)} por venda`} icone={ShoppingCart} />
         <Indicador rotulo="Dinheiro" valor={formatarMoeda(valorDaForma(r, "dinheiro"))} detalhe={`${r.por_forma?.dinheiro?.vendas ?? 0} venda(s)`} icone={Banknote} tom="sucesso" />
         <Indicador rotulo="PIX" valor={formatarMoeda(valorDaForma(r, "pix"))} detalhe={`${r.por_forma?.pix?.vendas ?? 0} venda(s)`} icone={QrCode} tom="info" />
         <Indicador

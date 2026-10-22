@@ -96,7 +96,7 @@ export default async function PaginaVendas({ params, searchParams }: PageProps<"
       {tipo === "venda" ? (
         <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Indicador rotulo="Vendido no período" valor={formatarMoeda(totalPeriodo)} detalhe={`${qtd} venda(s) concluída(s)`} icone={Receipt} />
-          <Indicador rotulo="Ticket médio" valor={formatarMoeda(qtd ? totalPeriodo.div(qtd) : 0)} icone={ShoppingCart} tom="info" />
+          <Indicador rotulo="Média por venda" valor={formatarMoeda(qtd ? totalPeriodo.div(qtd) : 0)} icone={ShoppingCart} tom="info" />
           <Indicador rotulo="Vendido a prazo" valor={formatarMoeda(prazo)} detalhe="em contas a receber" icone={Wallet} tom="alerta" />
           <Indicador rotulo="À vista" valor={formatarMoeda(totalPeriodo.minus(prazo))} detalhe="dinheiro, PIX e cartão" icone={FileText} tom="sucesso" />
         </div>
