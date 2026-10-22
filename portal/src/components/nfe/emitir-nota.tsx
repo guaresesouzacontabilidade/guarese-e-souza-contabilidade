@@ -95,6 +95,7 @@ export function EmitirNota({
   inicial,
   corrigir,
   vendaId,
+  ordemId,
 }: {
   empresaId: string;
   ambiente: "homologacao" | "producao";
@@ -107,6 +108,8 @@ export function EmitirNota({
   corrigir?: { id: string; numero: number } | null;
   /** Venda da loja que deu origem à nota (fica ligada a ela). */
   vendaId?: string | null;
+  /** Ordem de carregamento que deu origem à nota (fica faturada). */
+  ordemId?: string | null;
 }) {
   const router = useRouter();
   // Chave das linhas novas (as iniciais usam a posição)
@@ -260,7 +263,7 @@ export function EmitirNota({
       return;
     }
     setOcupado("emitir");
-    const r = await emitirNota(empresaId, { ...p, confirmar_repetida: repetida }, corrigir?.id ?? null, vendaId ?? null);
+    const r = await emitirNota(empresaId, { ...p, confirmar_repetida: repetida }, corrigir?.id ?? null, vendaId ?? null, ordemId ?? null);
     setOcupado(null);
     if (r.ok && r.dados?.id) {
       toast.success(r.mensagem ?? "Nota enviada à SEFAZ.");

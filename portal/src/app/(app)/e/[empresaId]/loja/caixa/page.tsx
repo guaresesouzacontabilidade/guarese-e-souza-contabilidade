@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: "Caixa do dia" };
 export default async function PaginaCaixa({ params }: PageProps<"/e/[empresaId]/loja/caixa">) {
   const { empresaId } = await params;
   const ctx = await obterContextoLoja(empresaId);
-  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} />;
+  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
 
   const [{ data: abertos }, { data: historico }] = await Promise.all([
     ctx.supabase

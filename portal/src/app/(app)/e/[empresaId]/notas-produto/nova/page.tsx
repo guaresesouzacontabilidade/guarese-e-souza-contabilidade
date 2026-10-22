@@ -8,6 +8,7 @@ import { EmitirNota, type OpcaoOperacao } from "@/components/nfe/emitir-nota";
 import { parametro } from "@/lib/busca";
 import type { PedidoNfe } from "@/lib/nfe-emissao/acoes";
 import { pedidoDaVenda } from "@/lib/gestao/nfe-da-venda";
+import { pedidoDaOrdem } from "@/lib/gestao/nfe-da-ordem";
 
 export const metadata: Metadata = { title: "Emitir NF-e" };
 
@@ -62,11 +63,23 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
   const vendaParam = parametro(sp, "venda");
   const daVenda = !origemId && vendaParam && UUID.test(vendaParam) ? await pedidoDaVenda(ctx.supabase, empresaId, vendaParam) : null;
   if (daVenda) inicial = daVenda.pedido;
+  // Nota a partir de uma ordem de carregamento (grãos: peso da balança e transporte)
+  const ordemParam = parametro(sp, "ordem");
+  const daOrdem = !origemId && !daVenda && ordemParam && UUID.test(ordemParam) ? await pedidoDaOrdem(ctx.supabase, empresaId, ordemParam) : null;
+  if (daOrdem) inicial = daOrdem.pedido;
 
   return (
     <>
       <CabecalhoPagina
-        titulo={corrigir ? `Corrigir a NF-e nº ${corrigir.numero}` : daVenda ? `Emitir NF-e da venda nº ${daVenda.numero}` : "Emitir NF-e"}
+        titulo={
+          corrigir
+            ? `Corrigir a NF-e nº ${corrigir.numero}`
+            : daVenda
+              ? `Emitir NF-e da venda nº ${daVenda.numero}`
+              : daOrdem
+                ? `Emitir NF-e da ordem de carregamento nº ${daOrdem.numero}`
+                : "Emitir NF-e"
+        }
         descricao="Escolha a operação, o cliente e os produtos. O portal calcula os impostos e mostra os valores para você conferir antes de enviar à SEFAZ."
         voltar={{ href: base, rotulo: "Notas de produto" }}
       />
@@ -79,6 +92,22 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
             </Link>
           </Alerta>
           {daVenda.avisos.map((a) => (
+            <Alerta key={a} tom="alerta">
+              {a}
+            </Alerta>
+          ))}
+        </div>
+      ) : null}
+      {daOrdem ? (
+        <div className="mb-4 space-y-2">
+          <Alerta tom="info" titulo={`Comprador, produto, peso e transporte vieram da ordem nº ${daOrdem.numero}`}>
+            A quantidade é o peso líquido da balança na unidade do produto. Confira a operação, o preço e a forma de pagamento antes de enviar. Ao emitir, a
+            ordem fica ligada à nota.{" "}
+            <Link href={`/e/${empresaId}/loja/carregamentos/${ordemParam}`} className="underline">
+              Ver a ordem
+            </Link>
+          </Alerta>
+          {daOrdem.avisos.map((a) => (
             <Alerta key={a} tom="alerta">
               {a}
             </Alerta>
@@ -113,6 +142,7 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
             inicial={inicial}
             corrigir={corrigir}
             vendaId={daVenda ? vendaParam : null}
+            ordemId={daOrdem ? ordemParam : null}
           />
         </CardContent>
       </Card>

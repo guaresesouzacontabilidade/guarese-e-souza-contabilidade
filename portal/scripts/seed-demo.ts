@@ -28,6 +28,7 @@ import { semearIcms } from "./demo-icms";
 import { semearNfse } from "./demo-nfse";
 import { semearNfe } from "./demo-nfe";
 import { semearLoja } from "./demo-loja";
+import { semearGraos } from "./demo-graos";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
@@ -260,6 +261,17 @@ async function main() {
   ) {
     console.log("  Madeireira fictícia com a gestão da loja: produtos, estoque, caixas, vendas (à vista e a prazo) e orçamento");
   }
+  if (
+    await semearGraos(admin, comoAdmin, { url, publica }, {
+      dominio: DOMINIO,
+      contadorId: idEquipe,
+      inicioAtendimento: competencia(-12),
+      garantirUsuario: (email, nome) => garantirUsuario(admin, email, nome, "cliente", senha),
+      permissoesTitular: titular,
+    })
+  ) {
+    console.log("  Comercial de grãos fictícia (MT) na modalidade notas e transporte: ordens de carregamento, pesagem e cadastros da NF-e (desligada)");
+  }
 
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);
@@ -268,8 +280,9 @@ async function main() {
   console.log(`  Cliente 2:      cliente2@${DOMINIO} (somente Oficina)`);
   console.log(`  Colaborador:    colaborador@${DOMINIO} (Padaria, acesso restrito)`);
   console.log(`  Madeireira:     madeireira@${DOMINIO} (dono) e balcao@${DOMINIO} (só vende no caixa)`);
+  console.log(`  Grãos:          graos@${DOMINIO} (dono) e balanca@${DOMINIO} (ordens de carregamento e pesagem)`);
   console.log(MANTER_SENHAS ? "  Senhas: mantidas (não foram alteradas)" : `  Senha de todos: ${senha}`);
-  console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}, Fazenda Exemplo (DEMO) — só a equipe, Madeireira Reflorestar (DEMO)\n`);
+  console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}, Fazenda Exemplo (DEMO) — só a equipe, Madeireira Reflorestar (DEMO), Grãos Cerrado (DEMO)\n`);
 }
 
 main().catch((e) => {

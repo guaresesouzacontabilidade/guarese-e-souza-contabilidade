@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AlertTriangle, Banknote, CreditCard, FileText, QrCode, Receipt, ShoppingCart, Wallet } from "lucide-react";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,8 @@ export const metadata: Metadata = { title: "Loja" };
 export default async function PainelLoja({ params }: PageProps<"/e/[empresaId]/loja">) {
   const { empresaId } = await params;
   const ctx = await obterContextoLoja(empresaId);
-  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} />;
+  if (ctx.lojaAtiva && ctx.notas) redirect(`/e/${empresaId}/loja/carregamentos`);
+  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
   const hoje = hojeLocal();
   const inicioMes = hoje.slice(0, 8) + "01";
   const [{ data: vendasMes }, { data: abertos }, produtos, { data: orcamentos }, receber] = await Promise.all([

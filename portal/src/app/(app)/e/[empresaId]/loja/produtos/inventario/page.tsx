@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Inventário" };
 export default async function PaginaInventario({ params }: PageProps<"/e/[empresaId]/loja/produtos/inventario">) {
   const { empresaId } = await params;
   const ctx = await obterContextoLoja(empresaId);
-  if (!ctx.gerente) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} />;
+  if (!ctx.gerente) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
   const produtos = await carregarProdutosLoja(ctx.supabase, empresaId, { ativos: true });
   return (
     <>

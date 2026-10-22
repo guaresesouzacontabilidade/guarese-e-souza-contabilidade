@@ -33,13 +33,14 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
   if (!UUID.test(empresaId)) return falha("Empresa inválida.");
   const ctx = await exigirPermissao(empresaId, "empresa.ver");
   if (!ctx.equipe && !ctx.pode("gestao.gerenciar")) return falha("Você não tem permissão para configurar a loja.");
-  const dados: Record<string, unknown> = {
-    permitir_estoque_negativo: fd.get("permitir_estoque_negativo") === "on",
-    permitir_venda_prazo: fd.get("permitir_venda_prazo") === "on",
-    desconto_maximo_operador: numero(texto(fd, "desconto_maximo_operador")),
-    validade_orcamento_dias: Number(texto(fd, "validade_orcamento_dias")) || 15,
-    mensagem_comprovante: texto(fd, "mensagem_comprovante").slice(0, 500),
-  };
+  const dados: Record<string, unknown> = { mensagem_comprovante: texto(fd, "mensagem_comprovante").slice(0, 500) };
+  // Preferências do caixa: só vêm no formulário da loja completa (na modalidade "notas" ficam como estão)
+  if (fd.has("validade_orcamento_dias")) {
+    dados.permitir_estoque_negativo = fd.get("permitir_estoque_negativo") === "on";
+    dados.permitir_venda_prazo = fd.get("permitir_venda_prazo") === "on";
+    dados.desconto_maximo_operador = numero(texto(fd, "desconto_maximo_operador"));
+    dados.validade_orcamento_dias = Number(texto(fd, "validade_orcamento_dias")) || 15;
+  }
   for (const c of ["conta_dinheiro_id", "conta_pix_id", "conta_cartao_id"]) {
     const v = texto(fd, c);
     if (v && !UUID.test(v)) return falha("Conta inválida.");
@@ -52,12 +53,14 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
       if (v && !UUID.test(v)) return falha("Escolha inválida para a NF-e.");
       dados[c] = v;
     }
-    dados.nfe_marcada_padrao = fd.get("nfe_marcada_padrao") === "on";
+    if (fd.has("validade_orcamento_dias")) dados.nfe_marcada_padrao = fd.get("nfe_marcada_padrao") === "on";
   }
   if (ctx.equipe) {
     dados.ativa = fd.get("ativa") === "on";
     const perfil = texto(fd, "perfil_fiscal");
     if (perfil) dados.perfil_fiscal = perfil;
+    const modalidade = texto(fd, "modalidade");
+    if (modalidade === "loja" || modalidade === "notas") dados.modalidade = modalidade;
   }
   const { error } = await ctx.supabase.rpc("gestao_configurar", { p_empresa_id: empresaId, p_dados: dados as Json });
   if (error) return falha(mensagemErro(error));

@@ -532,9 +532,11 @@ function NavegacaoInferior({ empresa, caminho, abrirMenu }: { empresa: EmpresaMe
   const p = new Set(empresa.permissoes);
   const base = `/e/${empresa.id}`;
   const itens = menuEmpresa(empresa, false).filter((i) =>
-    (empresa.loja
-      ? [base, `${base}/loja/vender`, `${base}/loja/caixa`, `${base}/enviar`]
-      : [base, `${base}/enviar`, `${base}/pendencias`, `${base}/financeiro`]
+    (empresa.loja && empresa.modalidade === "notas"
+      ? [base, `${base}/loja/carregamentos`, `${base}/notas-produto`, `${base}/enviar`]
+      : empresa.loja
+        ? [base, `${base}/loja/vender`, `${base}/loja/caixa`, `${base}/enviar`]
+        : [base, `${base}/enviar`, `${base}/pendencias`, `${base}/financeiro`]
     ).includes(i.href),
   );
   if (!p.has("documentos.enviar") && itens.length < 2) return null;

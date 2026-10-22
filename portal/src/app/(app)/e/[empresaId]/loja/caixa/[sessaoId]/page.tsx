@@ -15,7 +15,7 @@ export default async function PaginaSessaoCaixa({ params }: PageProps<"/e/[empre
   const { empresaId, sessaoId } = await params;
   if (!UUID.test(sessaoId)) notFound();
   const ctx = await obterContextoLoja(empresaId);
-  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} />;
+  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
   const relatorio = await carregarRelatorioCaixa(ctx.supabase, sessaoId);
   if (!relatorio || relatorio.sessao.empresa_id !== empresaId) notFound();
   const podeOperar = relatorio.sessao.status === "aberto" && (relatorio.sessao.operador_id === ctx.sessao.usuarioId || ctx.gerente);

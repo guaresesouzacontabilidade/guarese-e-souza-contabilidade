@@ -21,7 +21,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
   const { empresaId } = await params;
   const sp = await searchParams;
   const ctx = await obterContextoLoja(empresaId);
-  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} />;
+  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
 
   const todos = await carregarProdutosLoja(ctx.supabase, empresaId);
   const grupos = [...new Set(todos.map((p) => p.grupo).filter((g): g is string => Boolean(g)))].sort((a, b) => a.localeCompare(b, "pt-BR"));

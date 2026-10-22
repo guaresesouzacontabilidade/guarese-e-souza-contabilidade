@@ -85,8 +85,10 @@ export interface EmpresaAcesso {
   regime_tributario: string;
   ativa: boolean;
   demonstracao: boolean;
-  /** Gestão da loja (caixa, vendas e estoque) ligada para a empresa. */
+  /** Gestão ligada para a empresa (em qualquer modalidade). */
   loja: boolean;
+  /** Modalidade da gestão ligada: loja completa ou só notas e transporte (null quando desligada). */
+  gestao_modalidade: "loja" | "notas" | null;
   /** Logo da empresa (armazenamento privado) e quando foi trocada. */
   logo_path: string | null;
   logo_atualizado_em: string | null;
@@ -98,9 +100,13 @@ export interface EmpresaAcesso {
 export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> => {
   const s = await obterSessao();
   if (!s?.perfil) return [];
-  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, logo_path, logo_atualizado_em, gestao:gestao_config(ativa)";
-  type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja"> & { gestao: { ativa: boolean } | null };
-  const comLoja = ({ gestao, ...e }: Linha) => ({ ...e, loja: gestao?.ativa === true });
+  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, logo_path, logo_atualizado_em, gestao:gestao_config(ativa, modalidade)";
+  type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja" | "gestao_modalidade"> & { gestao: { ativa: boolean; modalidade: string } | null };
+  const comLoja = ({ gestao, ...e }: Linha) => ({
+    ...e,
+    loja: gestao?.ativa === true,
+    gestao_modalidade: gestao?.ativa ? (gestao.modalidade === "notas" ? ("notas" as const) : ("loja" as const)) : null,
+  });
   if (s.perfil.tipo === "admin") {
     const { data } = await s.supabase.from("empresas").select(campos).order("razao_social");
     return ((data ?? []) as unknown as Linha[]).map((e) => ({ ...comLoja(e), papel: "admin" as const, permissoes: new Set(TODAS_PERMISSOES) }));

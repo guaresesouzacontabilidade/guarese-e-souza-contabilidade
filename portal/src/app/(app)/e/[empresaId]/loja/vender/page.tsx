@@ -21,7 +21,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
   const { empresaId } = await params;
   const sp = await searchParams;
   const ctx = await obterContextoLoja(empresaId);
-  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} />;
+  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
 
   const { data: abertos } = await ctx.supabase
     .from("caixa_sessoes")

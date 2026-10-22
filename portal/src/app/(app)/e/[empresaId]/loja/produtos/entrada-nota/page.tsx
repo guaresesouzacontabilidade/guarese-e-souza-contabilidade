@@ -22,7 +22,7 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
   const { empresaId } = await params;
   const sp = await searchParams;
   const ctx = await obterContextoLoja(empresaId);
-  if (!ctx.gerente) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} />;
+  if (!ctx.gerente) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
   const base = `/e/${empresaId}/loja/produtos/entrada-nota`;
   const notaId = typeof sp.nota === "string" && UUID.test(sp.nota) ? sp.nota : null;
 

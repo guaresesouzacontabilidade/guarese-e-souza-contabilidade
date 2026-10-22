@@ -31,7 +31,7 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
   const { empresaId, vendaId } = await params;
   if (!UUID.test(vendaId)) notFound();
   const ctx = await obterContextoLoja(empresaId);
-  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} />;
+  if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
 
   const { data: v } = await ctx.supabase
     .from("vendas")

@@ -24,6 +24,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           permissoes: [...e.permissoes],
           demonstracao: e.demonstracao,
           loja: e.loja,
+          modalidade: e.gestao_modalidade,
         }))}
         logoUrl={escritorio.logoUrl}
         naoLidas={naoLidas.count ?? 0}

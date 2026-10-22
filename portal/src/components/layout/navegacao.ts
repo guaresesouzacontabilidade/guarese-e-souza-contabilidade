@@ -31,6 +31,7 @@ import {
   ShoppingCart,
   Boxes,
   Banknote,
+  Truck,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -51,6 +52,8 @@ export interface EmpresaMenu {
   demonstracao: boolean;
   /** Gestão da loja ligada para a empresa. */
   loja: boolean;
+  /** Modalidade da gestão: loja completa ou só notas e transporte. */
+  modalidade: "loja" | "notas" | null;
 }
 
 export function menuEscritorio(admin: boolean): ItemMenu[] {
@@ -86,7 +89,9 @@ export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {
   const p = new Set(empresa.permissoes);
   const base = `/e/${empresa.id}`;
   const itens: ItemMenu[] = [{ rotulo: "Visão geral", href: base, icone: Home, exato: true }];
-  if (empresa.loja && p.has("gestao.vender")) {
+  if (empresa.loja && empresa.modalidade === "notas") {
+    if (p.has("nfe.emitir")) itens.push({ rotulo: "Ordens de carregamento", href: `${base}/loja/carregamentos`, icone: Truck });
+  } else if (empresa.loja && p.has("gestao.vender")) {
     itens.push({ rotulo: "Loja", href: `${base}/loja`, icone: Store, exato: true });
     itens.push({ rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart });
     itens.push({ rotulo: "Caixa do dia", href: `${base}/loja/caixa`, icone: Banknote });

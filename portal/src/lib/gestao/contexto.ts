@@ -5,11 +5,16 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 export async function obterContextoLoja(empresaId: string) {
   const ctx = await obterContextoEmpresa(empresaId);
   const ativa = ctx.acesso.loja;
+  const notas = ctx.acesso.gestao_modalidade === "notas";
   return {
     ...ctx,
     lojaAtiva: ativa,
-    vende: ativa && ctx.pode("gestao.vender"),
+    /** Modalidade "notas e transporte": sem caixa, vendas e estoque; só ordens de carregamento e notas. */
+    notas,
+    vende: ativa && !notas && ctx.pode("gestao.vender"),
     gerente: ativa && ctx.pode("gestao.gerenciar"),
+    /** Faz ordens de carregamento (modalidade notas, com a permissão de emitir NF-e). */
+    carrega: ativa && notas && ctx.pode("nfe.emitir"),
   };
 }
 
