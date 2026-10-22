@@ -79,6 +79,59 @@ const PRODUTOS: Produto[] = [
   { chave: "prego", descricao: "Prego 17 x 27 com cabeça (kg)", grupo: "Ferragens", ncm: "73170090", unidade: "KG", preco: "18.9", custo: "11.5", estoque: "0", minimo: "10" },
 ];
 
+/** NF-e da madeireira (desligada: sem certificado, nenhuma nota vai à SEFAZ). Só cria o que falta. */
+async function semearNfeLoja(admin: SupabaseClient, empresaId: string) {
+  const { count } = await admin.from("nfe_config").select("empresa_id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  if (count) return;
+  // NF-e configurada para as vendas em que o cliente pede nota, mas DESLIGADA:
+  // a demonstração não tem certificado digital e nenhuma nota vai à SEFAZ.
+  ok("NF-e: configuração", await admin.from("nfe_config").insert({ empresa_id: empresaId, ativa: false, ambiente: "homologacao", crt: 1, presenca: 1, enviar_email_destinatario: false }));
+  ok(
+    "NF-e: emitente",
+    await admin.from("nfe_emitentes").insert({
+      empresa_id: empresaId,
+      nome: "Madeireira Reflorestar (DEMO)",
+      inscricao_estadual: "290000000",
+      logradouro: "Avenida Fictícia das Madeiras",
+      numero: "1500",
+      bairro: "Setor Industrial",
+      municipio_ibge: "1718204",
+      cep: "77500000",
+      serie: 1,
+    }),
+  );
+  ok(
+    "NF-e: operação",
+    await admin.from("nfe_operacoes").insert({
+      empresa_id: empresaId,
+      nome: "Venda de madeira no Tocantins (Simples Nacional) (DEMO)",
+      natureza: "VENDA DE MERCADORIA",
+      destino: "interna",
+      cfop: "5102",
+      icms_cst: "102",
+      pis_cst: "49",
+      cofins_cst: "49",
+      informacoes: "Documento emitido por ME ou EPP optante pelo Simples Nacional. Operação de DEMONSTRAÇÃO, sem valor fiscal.",
+    }),
+  );
+  ok(
+    "NF-e: destinatário",
+    await admin.from("nfe_destinatarios").insert({
+      empresa_id: empresaId,
+      tipo: "cnpj",
+      documento: cnpjValido("556667770001"),
+      nome: "CONSTRUTORA HORIZONTE EXEMPLO LTDA (DEMO)",
+      indicador_ie: 9,
+      logradouro: "Rua Fictícia",
+      numero: "200",
+      bairro: "Centro",
+      municipio_ibge: "1718204",
+      cep: "77500000",
+    }),
+  );
+
+}
+
 export async function semearLoja(
   admin: SupabaseClient,
   comoAdmin: SupabaseClient,
@@ -93,7 +146,10 @@ export async function semearLoja(
 ): Promise<boolean> {
   const documento = cnpjValido("334445550001");
   const { data: existente } = await admin.from("empresas").select("id").eq("documento", documento).maybeSingle();
-  if (existente) return false;
+  if (existente) {
+    await semearNfeLoja(admin, existente.id);
+    return false;
+  }
 
   const empresaId = ok(
     "empresa",
@@ -274,6 +330,8 @@ export async function semearLoja(
       },
     }),
   );
+
+  await semearNfeLoja(admin, empresaId);
 
   await dono.auth.signOut();
   await balcao.auth.signOut();

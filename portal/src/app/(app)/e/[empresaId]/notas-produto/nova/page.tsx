@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmitirNota, type OpcaoOperacao } from "@/components/nfe/emitir-nota";
 import { parametro } from "@/lib/busca";
 import type { PedidoNfe } from "@/lib/nfe-emissao/acoes";
+import { pedidoDaVenda } from "@/lib/gestao/nfe-da-venda";
 
 export const metadata: Metadata = { title: "Emitir NF-e" };
 
@@ -57,13 +58,33 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
     }
   }
 
+  // Nota a partir de uma venda da loja (quando o cliente pede a nota)
+  const vendaParam = parametro(sp, "venda");
+  const daVenda = !origemId && vendaParam && UUID.test(vendaParam) ? await pedidoDaVenda(ctx.supabase, empresaId, vendaParam) : null;
+  if (daVenda) inicial = daVenda.pedido;
+
   return (
     <>
       <CabecalhoPagina
-        titulo={corrigir ? `Corrigir a NF-e nº ${corrigir.numero}` : "Emitir NF-e"}
+        titulo={corrigir ? `Corrigir a NF-e nº ${corrigir.numero}` : daVenda ? `Emitir NF-e da venda nº ${daVenda.numero}` : "Emitir NF-e"}
         descricao="Escolha a operação, o cliente e os produtos. O portal calcula os impostos e mostra os valores para você conferir antes de enviar à SEFAZ."
         voltar={{ href: base, rotulo: "Notas de produto" }}
       />
+      {daVenda ? (
+        <div className="mb-4 space-y-2">
+          <Alerta tom="info" titulo={`Itens, frete, desconto e pagamento vieram da venda nº ${daVenda.numero}`}>
+            Confira a operação e os impostos antes de enviar. Ao emitir, a venda fica ligada à nota.{" "}
+            <Link href={`/e/${empresaId}/loja/vendas/${vendaParam}`} className="underline">
+              Ver a venda
+            </Link>
+          </Alerta>
+          {daVenda.avisos.map((a) => (
+            <Alerta key={a} tom="alerta">
+              {a}
+            </Alerta>
+          ))}
+        </div>
+      ) : null}
       <Card>
         <CardContent>
           <EmitirNota
@@ -91,6 +112,7 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
             transportadores={(transportadores ?? []).map((t) => ({ id: t.id, nome: t.nome, documento: t.documento, placa: t.placa, placaUf: t.placa_uf, rntc: t.rntc }))}
             inicial={inicial}
             corrigir={corrigir}
+            vendaId={daVenda ? vendaParam : null}
           />
         </CardContent>
       </Card>

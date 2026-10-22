@@ -216,6 +216,15 @@ test("dono: cancela a venda, o estoque volta e o recebimento é cancelado", asyn
   expect(lancs).toEqual([{ situacao: "cancelado" }]);
 });
 
+test("NF-e da venda: sem certificado a emissão fica desconectada e nada é enviado", async ({ page }) => {
+  await entrar(page, `madeireira@${DOMINIO}`);
+  const { data: v } = await servico!.from("vendas").select("id").eq("empresa_id", empresaId).eq("tipo", "venda").eq("status", "concluida").limit(1).single();
+  await page.goto(`/e/${empresaId}/loja/vendas/${v!.id}`);
+  await page.getByRole("link", { name: /Emitir NF-e desta venda/ }).click();
+  await page.waitForURL(/notas-produto\/nova\?venda=/);
+  await expect(page.getByText("Emissão desconectada")).toBeVisible();
+});
+
 test("isolamento: cliente de outra empresa não vê a loja da madeireira", async ({ page }) => {
   await entrar(page, `cliente@${DOMINIO}`);
   for (const rota of ["/loja", "/loja/vender", "/loja/caixa", "/loja/produtos", `/loja/vendas/${vendaDinheiro || "00000000-0000-0000-0000-000000000000"}`]) {

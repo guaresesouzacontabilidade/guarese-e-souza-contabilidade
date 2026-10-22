@@ -112,6 +112,21 @@ Quando o escritório liga a emissão, a nota fiscal eletrônica de venda (modelo
 - **Guias**: depois da autorização, o escritório gera a guia oficial (DAR da SEFAZ-MT pela chave da nota, DARE ou GNRE) e anexa o PDF; ela aparece na sua **Agenda de pagamentos**, com o "paguei". Em MT, o ICMS da venda para outro estado de quem não tem regime especial é pago **antes da saída** da mercadoria.
 - Enquanto o escritório testa, as notas saem no **ambiente de teste** da SEFAZ ("sem valor fiscal").
 
+### Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)
+Serviço opcional do escritório. Quando ligado, o menu ganha **Loja**, **Vender**, **Caixa do dia**, **Produtos e estoque** e **Vendas e orçamentos**. Tudo o que é vendido aqui **baixa o estoque** e **entra no Financeiro** sozinho (à vista como recebido, a prazo como conta a receber), e o escritório recebe tudo pronto para a contabilidade.
+1. **Abrir o caixa**: em **Vender**, informe o nome do caixa (ex.: Caixa 1) e o **troco inicial** que está na gaveta.
+2. **Vender**: busque o produto pelo nome, código ou código de barras (Enter adiciona). Para madeira vendida em **m³**, digite as **peças** e o **comprimento**: o portal calcula os m³ pelas medidas da peça (ex.: 10 caibros 5 × 6 cm de 3 m = 0,09 m³). Ajuste preço e desconto se precisar.
+3. **Cliente**: busque no cadastro, digite só o nome ou cadastre na hora (botão ao lado). Venda **a prazo** exige o cliente.
+4. **Pagamento**: toque na forma (Dinheiro, PIX, Débito, Crédito, A prazo) — dá para dividir em mais de uma. Em dinheiro, digite quanto o cliente entregou e o portal mostra o **troco**. A prazo: escolha as parcelas e o 1º vencimento.
+5. **Concluir venda**: abre o **comprovante** para imprimir (bobina de 80 mm ou folha A4 — "não é documento fiscal"). **Salvar orçamento** guarda a proposta com validade; depois, em **Vendas e orçamentos**, use **Vender este orçamento**.
+- **Sangria** (retirar dinheiro da gaveta, ex.: depósito no banco) e **Suprimento** (colocar troco): em **Caixa do dia**. Escolhendo a conta de destino, o Financeiro registra a transferência sozinho.
+- **Fechar o caixa**: conte o dinheiro da gaveta e informe o total. O portal compara com o que deveria ter (troco inicial + vendas em dinheiro + suprimentos − sangrias) e mostra **sobra** ou **falta**.
+- **Relatório do dia (PDF)**: em **Caixa do dia**, com cada venda (o que foi vendido e a forma de pagamento), o resumo por **dinheiro, PIX, cartão e a prazo**, as sangrias e suprimentos, a conferência da gaveta e o total por produto. Com o caixa aberto, sai como "parcial".
+- **Produtos e estoque**: cadastro com NCM, unidade, preço de venda, custo, estoque mínimo e, para madeira, as medidas da peça. **Entrada ou saída** (produção, perda), **Entrada por nota** (a nota de compra que chegou ao portal dá entrada com o custo do XML) e **Inventário** (digite o que foi contado; o portal ajusta a diferença). O custo médio é calculado sozinho.
+- **Cancelar uma venda**: só quem gerencia a loja, e enquanto o caixa da venda estiver aberto. O estoque volta e o recebimento é cancelado no Financeiro.
+- **NF-e da venda**: quando o cliente pedir nota, abra a venda e clique em **Emitir NF-e desta venda** — a nota abre preenchida com os itens, frete, desconto, pagamento e o cliente (se já estiver cadastrado como destinatário). Precisa da emissão de NF-e ligada pelo escritório (certificado digital). A **NFC-e** (cupom fiscal) depende do credenciamento na SEFAZ-TO e do código CSC e fica desligada até lá.
+- **Quem pode**: o responsável pela empresa vende e gerencia. Para um funcionário do balcão, dê só a permissão **Vender no caixa** (ele não cancela vendas, não muda preços além do desconto permitido e não mexe no estoque).
+
 ### Meus documentos
 Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, folha, relatórios). Cada documento mostra a situação, o histórico e as versões. Baixar ou visualizar fica registrado.
 
@@ -374,6 +389,9 @@ Para ligar a emissão de uma empresa ou produtor (menu da empresa → **Emitir n
 - Em produção, cada nota autorizada entra sozinha nos documentos fiscais da empresa (previsão, auditor, lote de XML). As notas de teste não entram.
 - **Notas de produto emitidas** (menu do escritório) mostra, por empresa, as notas do mês, as recusadas e pendentes, as **guias a gerar** e a situação do certificado.
 
+### Gestão da loja (ligar para um cliente)
+No menu da empresa → **Gestão da loja** (ou **Loja → Configurações**): marque **Gestão da loja ligada**, escolha como a empresa emite nota e salve. O portal cria o plano de contas, se faltar, e as contas **Caixa da loja**, **Banco (PIX e transferências)** e **Maquininha de cartão** no Financeiro. Ajuste se a empresa vende a prazo, o desconto máximo do vendedor, a validade dos orçamentos e a mensagem do comprovante. Depois, cadastre os produtos com o cliente (NCM e unidade conferidos pelo escritório) e lance o estoque inicial (Entrada ou Inventário). As vendas aparecem no Financeiro com origem "venda", prontas para a conciliação e o fechamento.
+
 ### Maquininhas da carteira
 O menu **Maquininhas** do escritório mostra, no mês escolhido, quanto cada empresa teve cobrado acima do contrato, as vendas sem taxa cadastrada e os relatórios que esperam a conferência das colunas. Em cada empresa → **Maquininhas**:
 - **Formato novo**: quando chega um relatório que o portal ainda não conhece, a equipe recebe um aviso. Abra o relatório, confira a adquirente (sugerida pelo nome do arquivo) e qual coluna é cada informação — o portal sugere e mostra na hora como vai ler as primeiras vendas. Com **Lembrar este formato** marcado, os próximos relatórios iguais **de qualquer empresa** entram sozinhos (quando quem confere é o cliente, o formato vale só para a empresa dele).
@@ -444,3 +462,6 @@ Somente depois de configurada a integração oficial do WhatsApp Business (veja 
 
 **Como regravar os vídeos de apresentação para clientes?**
 Os vídeos usam só a demonstração (Padaria Pão Dourado, dados fictícios) e cada um também é um teste: o robô confere se a função funcionou e marca o vídeo como reprovado se algo falhar. Com o portal local rodando com os dados de `npm run seed:demo` (de preferência compilado com `NEXT_PUBLIC_AMBIENTE=demonstracao`) e a fila sendo processada (`npm run worker`), rode `npm run videos:gravar -- <pasta>`; para regravar só alguns, acrescente parte do nome (ex.: `03 07`). Saem os MP4 (1280×720), uma capa de cada e o `relatorio.json` com as conferências. Precisa do `ffmpeg`. O roteiro de cada vídeo fica em `scripts/videos/cenas.mjs`. O script recusa o endereço do portal oficial.
+
+**A gestão da loja funciona sem internet? E a NFC-e?**
+O caixa precisa de internet (cada venda é gravada na hora no banco, com o estoque e o Financeiro). Um modo para continuar vendendo sem internet está nos próximos passos. A NFC-e (cupom fiscal eletrônico) depende do credenciamento da empresa na SEFAZ-TO e do código CSC; até lá, o portal emite o **comprovante não fiscal** e a **NF-e** de quem pedir nota (com o certificado digital), e nada é enviado como se fosse cupom fiscal.

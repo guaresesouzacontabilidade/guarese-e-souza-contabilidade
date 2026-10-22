@@ -383,7 +383,12 @@ export async function previaNota(empresaId: string, pedido: PedidoNfe): Promise<
 }
 
 /** Emite (ou corrige e envia de novo, com o mesmo número, a nota rejeitada `corrigir`). */
-export async function emitirNota(empresaId: string, pedido: PedidoNfe, corrigir?: string | null): Promise<ResultadoAcao<{ id?: string; repetida?: boolean }>> {
+export async function emitirNota(
+  empresaId: string,
+  pedido: PedidoNfe,
+  corrigir?: string | null,
+  vendaId?: string | null,
+): Promise<ResultadoAcao<{ id?: string; repetida?: boolean }>> {
   const ctx = await contexto(empresaId, "nfe.emitir");
   if (!ctx) return falha("Sem permissão para emitir notas desta empresa.");
   const p = esquemaPedido.safeParse(pedido);
@@ -399,6 +404,11 @@ export async function emitirNota(empresaId: string, pedido: PedidoNfe, corrigir?
   }
   processarFilaDepois({ tipos: ["emitir_nfe"], limite: 5 });
   const r = data as { id: string; numero: number };
+  // Nota feita a partir de uma venda da loja: a venda fica ligada à nota
+  if (vendaId && UUID.test(vendaId)) {
+    const { error: eVinculo } = await ctx.supabase.rpc("gestao_venda_vincular_nfe", { p_venda_id: vendaId, p_nfe_id: r.id });
+    if (eVinculo) return sucesso(`Nota nº ${r.numero} enviada à SEFAZ. Não foi possível ligá-la à venda: ${mensagemErro(eVinculo)}`, { id: r.id });
+  }
   return sucesso(`Nota nº ${r.numero} enviada à SEFAZ.`, { id: r.id });
 }
 

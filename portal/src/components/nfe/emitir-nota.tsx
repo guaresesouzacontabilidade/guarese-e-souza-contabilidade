@@ -94,6 +94,7 @@ export function EmitirNota({
   transportadores: transportadoresIniciais,
   inicial,
   corrigir,
+  vendaId,
 }: {
   empresaId: string;
   ambiente: "homologacao" | "producao";
@@ -104,12 +105,14 @@ export function EmitirNota({
   transportadores: OpcaoTransportador[];
   inicial?: PedidoNfe | null;
   corrigir?: { id: string; numero: number } | null;
+  /** Venda da loja que deu origem à nota (fica ligada a ela). */
+  vendaId?: string | null;
 }) {
   const router = useRouter();
   // Chave das linhas novas (as iniciais usam a posição)
   const seq = React.useRef(10_000);
-  const [emitenteId, setEmitenteId] = React.useState(inicial?.emitente_id ?? (emitentes.length === 1 ? emitentes[0].id : ""));
-  const [operacaoId, setOperacaoId] = React.useState(inicial?.operacao_id ?? (operacoes.length === 1 ? operacoes[0].id : ""));
+  const [emitenteId, setEmitenteId] = React.useState(inicial?.emitente_id || (emitentes.length === 1 ? emitentes[0].id : ""));
+  const [operacaoId, setOperacaoId] = React.useState(inicial?.operacao_id || (operacoes.length === 1 ? operacoes[0].id : ""));
   const [destinatarioId, setDestinatarioId] = React.useState(inicial?.destinatario_id ?? "");
   const [destinatarios, setDestinatarios] = React.useState(destinatariosIniciais);
   const [transportadores, setTransportadores] = React.useState(transportadoresIniciais);
@@ -257,7 +260,7 @@ export function EmitirNota({
       return;
     }
     setOcupado("emitir");
-    const r = await emitirNota(empresaId, { ...p, confirmar_repetida: repetida }, corrigir?.id ?? null);
+    const r = await emitirNota(empresaId, { ...p, confirmar_repetida: repetida }, corrigir?.id ?? null, vendaId ?? null);
     setOcupado(null);
     if (r.ok && r.dados?.id) {
       toast.success(r.mensagem ?? "Nota enviada à SEFAZ.");

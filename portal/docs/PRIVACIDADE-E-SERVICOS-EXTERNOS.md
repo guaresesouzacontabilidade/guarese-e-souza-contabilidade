@@ -153,3 +153,10 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **Quem vê**: quem tem a permissão de emitir NF-e da empresa (o empresário, por padrão) e a equipe. Configurar a emissão e anexar as guias é só da equipe; ligar exige a autorização do cliente registrada.
 - **Sem inteligência artificial**: a nota é calculada e montada por regras fixas do leiaute oficial e das operações cadastradas pelo escritório; nenhum dado vai para serviço de IA.
 - **Demonstração**: não tem certificado; a emissão fica desligada, nada é enviado e o produtor rural de exemplo é fictício.
+
+## 19. Gestão da loja (caixa, vendas e estoque)
+
+- **Onde roda**: dentro do portal e do banco de dados. **Nada é enviado** à SEFAZ, a adquirentes, a bancos, a serviços externos ou a inteligência artificial. O comprovante é **não fiscal** (traz "NÃO É DOCUMENTO FISCAL"); a NF-e de uma venda só sai pelo módulo de NF-e, com o certificado digital, quando ligado pelo escritório. A NFC-e fica **desconectada** até o credenciamento da empresa na SEFAZ-TO e o cadastro do CSC.
+- **O que guarda**: produtos (descrição, NCM, preços, custos, medidas e estoque), movimentos do estoque, caixas (abertura, sangrias, suprimentos, contagem do fechamento), vendas e orçamentos (itens, valores, forma de pagamento, parcelas e vendedor) e, do cliente da venda, o nome, o CPF/CNPJ e o telefone quando informados — os mesmos dados do cadastro de clientes do Financeiro. Não guarda número de cartão.
+- **Quem vê**: só pessoas da própria empresa com a permissão "Vender no caixa" ou "Gerenciar a loja", e a equipe vinculada à empresa. Clientes de outras empresas não veem nada (regra no banco, além da tela). O balconista não cancela vendas, não mexe no estoque nem nas configurações.
+- **Integração contábil**: cada venda vira lançamento no Financeiro (à vista como recebido na conta configurada, a prazo como conta a receber por parcela); sangrias com conta escolhida viram transferências. O cancelamento devolve o estoque e cancela os lançamentos.
