@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowDownUp, ClipboardCheck, PackagePlus, Pencil } from "lucide-react";
 import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CampoValor } from "@/components/ui/campo-valor";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -353,35 +354,122 @@ export interface ItemNota {
   numero_item: number;
   codigo: string | null;
   descricao: string | null;
+  ncm: string | null;
+  gtin: string | null;
   unidade: string | null;
   quantidade: string | null;
   valor_unitario: string | null;
   valor_total: string | null;
+  valor_desconto: string | null;
 }
 
-/** Entrada pela nota de compra: liga cada item do XML a um produto da loja. */
-export function EntradaPorNota({ empresaId, documentoId, itens, produtos }: { empresaId: string; documentoId: string; itens: ItemNota[]; produtos: ProdutoLoja[] }) {
+/** Vínculo guardado: este código do fornecedor é este produto da loja. */
+export interface VinculoNota {
+  codigo: string;
+  produto_id: string;
+  fator: string;
+}
+
+type OrigemSugestao = "vinculo" | "gtin" | "codigo" | null;
+
+interface LinhaEntrada {
+  item: ItemNota;
+  /** id do produto, "novo" (criar a partir do item) ou "" (não dar entrada) */
+  escolha: string;
+  origem: OrigemSugestao;
+  fator: string;
+  quantidade: string;
+  custo: string;
+  lembrar: boolean;
+  novo: { descricao: string; ncm: string; unidade: string; preco: string; grupo: string };
+}
+
+const ORIGEM: Record<Exclude<OrigemSugestao, null>, string> = {
+  vinculo: "Ligado na nota anterior",
+  gtin: "Mesmo código de barras",
+  codigo: "Mesmo código ou nome",
+};
+
+/** Quantidade e custo na unidade da loja: quantidade da nota × fator; custo = valor do item (sem desconto) ÷ quantidade. */
+function converter(item: ItemNota, fatorTexto: string) {
+  const fator = lerValorBR(fatorTexto);
+  const qtdNota = item.quantidade ? new Decimal(item.quantidade) : null;
+  if (!fator || fator.lte(0) || !qtdNota || qtdNota.lte(0)) return null;
+  const qtd = qtdNota.times(fator).toDecimalPlaces(4);
+  const valor = new Decimal(item.valor_total ?? 0).minus(item.valor_desconto ?? 0);
+  const custo = qtd.gt(0) ? Decimal.max(valor, 0).div(qtd).toDecimalPlaces(4) : new Decimal(0);
+  return { quantidade: formatarQuantidade(qtd), custo: formatarQuantidade(custo) };
+}
+
+/** Entrada pela nota de compra: liga cada item do XML a um produto da loja (ou cria o produto) e lembra o vínculo. */
+export function EntradaPorNota({
+  empresaId,
+  documentoId,
+  itens,
+  produtos,
+  vinculos,
+}: {
+  empresaId: string;
+  documentoId: string;
+  itens: ItemNota[];
+  produtos: ProdutoLoja[];
+  vinculos: VinculoNota[];
+}) {
   const router = useRouter();
-  const sugerir = (i: ItemNota) => {
-    const d = (i.descricao ?? "").toLowerCase();
-    return produtos.find((p) => p.codigo === i.codigo || p.descricao.toLowerCase() === d)?.id ?? "";
-  };
-  const [linhas, setLinhas] = React.useState(() =>
-    itens.map((i) => ({
-      item: i,
-      produto_id: sugerir(i),
-      quantidade: i.quantidade ? formatarQuantidade(i.quantidade) : "",
-      custo: i.valor_unitario ? formatarMoeda(new Decimal(i.valor_unitario).toDecimalPlaces(4), { semSimbolo: true }) : "",
-    })),
+  const [linhas, setLinhas] = React.useState<LinhaEntrada[]>(() =>
+    itens.map((i) => {
+      const codigo = (i.codigo ?? "").trim();
+      const d = (i.descricao ?? "").toLowerCase();
+      const v = vinculos.find((x) => x.codigo === codigo && produtos.some((p) => p.id === x.produto_id));
+      const porGtin = i.gtin && /^\d{8,14}$/.test(i.gtin) ? produtos.filter((p) => p.gtin === i.gtin) : [];
+      const porCodigo = produtos.find((p) => p.codigo === codigo || p.descricao.toLowerCase() === d);
+      const [escolha, origem, fator]: [string, OrigemSugestao, string] = v
+        ? [v.produto_id, "vinculo", formatarQuantidade(v.fator, 6)]
+        : porGtin.length === 1
+          ? [porGtin[0].id, "gtin", "1"]
+          : porCodigo
+            ? [porCodigo.id, "codigo", "1"]
+            : ["", null, "1"];
+      const conv = converter(i, fator);
+      const unidadeItem = (i.unidade ?? "").trim().toUpperCase();
+      return {
+        item: i,
+        escolha,
+        origem,
+        fator,
+        quantidade: conv?.quantidade ?? "",
+        custo: conv?.custo ?? (i.valor_unitario ? formatarQuantidade(i.valor_unitario) : ""),
+        lembrar: true,
+        novo: {
+          descricao: (i.descricao ?? "").slice(0, 120),
+          ncm: (i.ncm ?? "").replace(/\D/g, "").slice(0, 8),
+          unidade: UNIDADES_LOJA.some((u) => u.valor === unidadeItem) ? unidadeItem : "UN",
+          preco: "",
+          grupo: "",
+        },
+      };
+    }),
   );
   const [enviando, setEnviando] = React.useState(false);
+  const mudar = (n: number, m: Partial<LinhaEntrada>) => setLinhas((ls) => ls.map((x, i) => (i === n ? { ...x, ...m } : x)));
+  const mudarFator = (n: number, fator: string) =>
+    setLinhas((ls) => ls.map((x, i) => (i === n ? { ...x, fator, ...(converter(x.item, fator) ?? {}) } : x)));
+  const escolhidas = linhas.filter((l) => l.escolha);
 
   async function salvar() {
     setEnviando(true);
     const r = await darEntradaNota(
       empresaId,
       documentoId,
-      linhas.filter((l) => l.produto_id).map((l) => ({ produto_id: l.produto_id, quantidade: l.quantidade, custo_unitario: l.custo })),
+      escolhidas.map((l) => ({
+        numero_item: l.item.numero_item,
+        produto_id: l.escolha === "novo" ? null : l.escolha,
+        novo: l.escolha === "novo" ? { descricao: l.novo.descricao, ncm: l.novo.ncm, unidade: l.novo.unidade, valor_unitario: l.novo.preco, grupo: l.novo.grupo } : null,
+        quantidade: l.quantidade,
+        custo_unitario: l.custo,
+        fator: l.fator,
+        lembrar: l.lembrar,
+      })),
     );
     setEnviando(false);
     if (r.ok) {
@@ -394,68 +482,115 @@ export function EntradaPorNota({ empresaId, documentoId, itens, produtos }: { em
   return (
     <div className="space-y-4">
       <Alerta tom="info">
-        Ligue cada item da nota a um produto da loja. Se a unidade da nota for diferente (ex.: a nota em peças e a loja em m³), ajuste a quantidade e o custo
-        para a unidade da loja. Itens sem produto escolhido ficam de fora.
+        Ligue cada item da nota a um produto da loja, ou crie o produto a partir do item. Se a nota vem em outra unidade (ex.: caixa e a loja vende por
+        quilo), informe quantas unidades da loja vêm em uma da nota: a quantidade e o custo se ajustam sozinhos. Com “Lembrar” marcado, a próxima nota deste
+        fornecedor já vem ligada.
       </Alerta>
-      <Table>
-        <THead>
-          <tr>
-            <Th>Item da nota</Th>
-            <Th>Produto da loja</Th>
-            <Th className="w-32 text-right">Quantidade</Th>
-            <Th className="w-36 text-right">Custo unitário</Th>
-          </tr>
-        </THead>
-        <TBody>
-          {linhas.map((l, n) => {
-            const p = produtos.find((x) => x.id === l.produto_id);
-            return (
-              <Tr key={l.item.numero_item}>
-                <Td>
+      <ul className="space-y-3">
+        {linhas.map((l, n) => {
+          const id = l.item.numero_item;
+          const p = produtos.find((x) => x.id === l.escolha);
+          const unLoja = l.escolha === "novo" ? l.novo.unidade : p?.unidade;
+          return (
+            <li key={id} className="rounded-xl border border-border p-4" data-item={id}>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
                   <p className="font-medium">{l.item.descricao}</p>
                   <p className="text-xs text-muted-foreground">
+                    {l.item.codigo ? `Cód. ${l.item.codigo} · ` : ""}
                     {formatarQuantidade(l.item.quantidade)} {un(l.item.unidade)} × {formatarMoeda(l.item.valor_unitario)} = {formatarMoeda(l.item.valor_total)}
                   </p>
-                </Td>
-                <Td>
+                </div>
+                {l.origem && l.escolha && l.escolha !== "novo" ? <Badge variante="sucesso">{ORIGEM[l.origem]}</Badge> : null}
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Campo rotulo="Produto da loja" htmlFor={`produto-${id}`} className="lg:col-span-1">
                   <Select
-                    aria-label={`Produto do item ${l.item.numero_item}`}
-                    value={l.produto_id}
-                    onChange={(e) => setLinhas((ls) => ls.map((x, i) => (i === n ? { ...x, produto_id: e.target.value } : x)))}
+                    id={`produto-${id}`}
+                    aria-label={`Produto do item ${id}`}
+                    value={l.escolha}
+                    onChange={(e) => mudar(n, { escolha: e.target.value, origem: null })}
                   >
                     <option value="">Não dar entrada</option>
+                    <option value="novo">+ Criar produto novo com este item</option>
                     {produtos.map((x) => (
                       <option key={x.id} value={x.id}>
                         {x.descricao} ({un(x.unidade)})
                       </option>
                     ))}
                   </Select>
-                </Td>
-                <Td>
+                </Campo>
+                <Campo rotulo={`1 ${un(l.item.unidade) || "unidade"} da nota =`} htmlFor={`fator-${id}`} ajuda={unLoja ? `${un(unLoja)} da loja` : undefined}>
                   <Input
-                    aria-label={`Quantidade do item ${l.item.numero_item}`}
-                    value={l.quantidade}
-                    onChange={(e) => setLinhas((ls) => ls.map((x, i) => (i === n ? { ...x, quantidade: e.target.value } : x)))}
+                    id={`fator-${id}`}
+                    aria-label={`Fator do item ${id}`}
+                    value={l.fator}
+                    onChange={(e) => mudarFator(n, e.target.value)}
                     inputMode="decimal"
                     className="text-right"
+                    disabled={!l.escolha}
                   />
-                  {p ? <span className="text-xs text-muted-foreground">{un(p.unidade)}</span> : null}
-                </Td>
-                <Td>
-                  <CampoValor
-                    aria-label={`Custo do item ${l.item.numero_item}`}
-                    valorInicial={l.custo}
-                    aoMudar={(v) => setLinhas((ls) => ls.map((x, i) => (i === n ? { ...x, custo: v } : x)))}
+                </Campo>
+                <Campo rotulo={`Quantidade${unLoja ? ` (${un(unLoja)})` : ""}`} htmlFor={`qtd-${id}`}>
+                  <Input
+                    id={`qtd-${id}`}
+                    aria-label={`Quantidade do item ${id}`}
+                    value={l.quantidade}
+                    onChange={(e) => mudar(n, { quantidade: e.target.value })}
+                    inputMode="decimal"
+                    className="text-right"
+                    disabled={!l.escolha}
                   />
-                </Td>
-              </Tr>
-            );
-          })}
-        </TBody>
-      </Table>
+                </Campo>
+                <Campo rotulo={`Custo por ${unLoja ? un(unLoja) : "unidade"} (R$)`} htmlFor={`custo-${id}`}>
+                  <Input
+                    id={`custo-${id}`}
+                    aria-label={`Custo do item ${id}`}
+                    value={l.custo}
+                    onChange={(e) => mudar(n, { custo: e.target.value })}
+                    inputMode="decimal"
+                    className="text-right"
+                    disabled={!l.escolha}
+                  />
+                </Campo>
+              </div>
+              {l.escolha === "novo" ? (
+                <div className="mt-3 grid gap-3 rounded-lg bg-muted/40 p-3 sm:grid-cols-2 lg:grid-cols-5">
+                  <Campo rotulo="Nome na loja" htmlFor={`novo-desc-${id}`} className="sm:col-span-2" obrigatorio>
+                    <Input id={`novo-desc-${id}`} value={l.novo.descricao} maxLength={120} onChange={(e) => mudar(n, { novo: { ...l.novo, descricao: e.target.value } })} />
+                  </Campo>
+                  <Campo rotulo="NCM" htmlFor={`novo-ncm-${id}`} obrigatorio>
+                    <Input id={`novo-ncm-${id}`} value={l.novo.ncm} inputMode="numeric" maxLength={10} onChange={(e) => mudar(n, { novo: { ...l.novo, ncm: e.target.value } })} />
+                  </Campo>
+                  <Campo rotulo="Unidade na loja" htmlFor={`novo-un-${id}`} obrigatorio>
+                    <Select id={`novo-un-${id}`} value={l.novo.unidade} onChange={(e) => mudar(n, { novo: { ...l.novo, unidade: e.target.value } })}>
+                      {UNIDADES_LOJA.map((u) => (
+                        <option key={u.valor} value={u.valor}>
+                          {u.rotulo}
+                        </option>
+                      ))}
+                    </Select>
+                  </Campo>
+                  <Campo rotulo={`Preço de venda (por ${un(l.novo.unidade)})`} htmlFor={`novo-preco-${id}`} obrigatorio>
+                    <CampoValor id={`novo-preco-${id}`} aria-label={`Preço de venda do item ${id}`} aoMudar={(v) => mudar(n, { novo: { ...l.novo, preco: v } })} />
+                  </Campo>
+                </div>
+              ) : null}
+              {l.escolha && l.item.codigo ? (
+                <label className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Checkbox checked={l.lembrar} onChange={(e) => mudar(n, { lembrar: e.target.checked })} aria-label={`Lembrar o item ${id}`} />
+                  Lembrar: o código {l.item.codigo} deste fornecedor é{" "}
+                  {l.escolha === "novo" ? "o produto novo" : (p?.descricao ?? "este produto")}
+                  {lerValorBR(l.fator)?.eq(1) === false ? ` (1 ${un(l.item.unidade)} = ${l.fator} ${un(unLoja)})` : ""}
+                </label>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
       <div className="flex justify-end">
-        <Button onClick={salvar} disabled={enviando || !linhas.some((l) => l.produto_id)}>
-          {enviando ? "Registrando..." : "Dar entrada no estoque"}
+        <Button onClick={salvar} disabled={enviando || !escolhidas.length}>
+          {enviando ? "Registrando..." : `Dar entrada no estoque (${escolhidas.length} ${escolhidas.length === 1 ? "item" : "itens"})`}
         </Button>
       </div>
     </div>

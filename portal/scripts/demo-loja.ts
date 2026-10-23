@@ -6,10 +6,17 @@
  * cartão e a prazo, sangria e suprimento), o caixa da tarde aberto pelo dono
  * e um orçamento em aberto. Tudo é feito pelas mesmas funções do portal,
  * com cada pessoa fictícia entrando com a própria sessão.
+ *
+ * Estoque pelas notas de compra: a entrada automática ligada, os itens de um
+ * fornecedor fictício já ligados aos produtos (nota que entra sozinha) e a
+ * nota de outro fornecedor com caixa de prego (1 caixa = 12 kg) e um item novo,
+ * esperando a conferência do dono.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { dvChave } from "../src/lib/fiscal/chave";
+import { enviar } from "./demo-documentos";
 
 function cnpjValido(base12: string) {
   const calc = (b: string, pesos: number[]) => {
@@ -144,6 +151,125 @@ async function semearNfeLoja(admin: SupabaseClient, empresaId: string) {
 
 }
 
+// ------------------------------------------------------------- notas de compra
+const MARCA_COMPRAS = "DEMO-ESTOQUE";
+const REFLORESTADORA = { cnpj: cnpjValido("889990000001"), nome: "REFLORESTADORA ARAGUAIA LTDA (FICTICIA)" };
+const FERRAGENS = { cnpj: cnpjValido("889990000002"), nome: "FERRAGENS DO CERRADO LTDA (FICTICIA)" };
+
+interface ItemCompra {
+  codigo: string;
+  descricao: string;
+  ncm: string;
+  unidade: string;
+  qtd: number;
+  unit: number;
+}
+
+/** XML fictício (homologação) de uma nota de compra do Simples para a madeireira. */
+function notaCompra(o: { emitente: { cnpj: string; nome: string }; dest: string; numero: number; data: string; itens: ItemCompra[] }) {
+  const dec = (v: number) => v.toFixed(2);
+  const aamm = o.data.slice(2, 4) + o.data.slice(5, 7);
+  const cNF = String(30000000 + o.numero * 7907).slice(-8);
+  const base = `17${aamm}${o.emitente.cnpj}55001${String(o.numero).padStart(9, "0")}1${cNF}`;
+  const chave = `${base}${dvChave(base)}`;
+  let vProd = 0;
+  const dets = o.itens
+    .map((it, i) => {
+      const valor = Math.round(it.qtd * it.unit * 100) / 100;
+      vProd += valor;
+      return (
+        `<det nItem="${i + 1}"><prod><cProd>${it.codigo}</cProd><cEAN>SEM GTIN</cEAN><xProd>${it.descricao}</xProd><NCM>${it.ncm}</NCM><CFOP>5102</CFOP>` +
+        `<uCom>${it.unidade}</uCom><qCom>${it.qtd.toFixed(4)}</qCom><vUnCom>${it.unit.toFixed(10)}</vUnCom><vProd>${dec(valor)}</vProd><cEANTrib>SEM GTIN</cEANTrib>` +
+        `<uTrib>${it.unidade}</uTrib><qTrib>${it.qtd.toFixed(4)}</qTrib><vUnTrib>${it.unit.toFixed(10)}</vUnTrib><indTot>1</indTot></prod>` +
+        `<imposto><ICMS><ICMSSN102><orig>0</orig><CSOSN>102</CSOSN></ICMSSN102></ICMS>` +
+        `<PIS><PISOutr><CST>49</CST><vBC>0.00</vBC><pPIS>0.0000</pPIS><vPIS>0.00</vPIS></PISOutr></PIS>` +
+        `<COFINS><COFINSOutr><CST>49</CST><vBC>0.00</vBC><pCOFINS>0.0000</pCOFINS><vCOFINS>0.00</vCOFINS></COFINSOutr></COFINS></imposto></det>`
+      );
+    })
+    .join("");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe Id="NFe${chave}" versao="4.00">
+      <ide><cUF>17</cUF><cNF>${cNF}</cNF><natOp>Venda de mercadoria</natOp><mod>55</mod><serie>1</serie><nNF>${o.numero}</nNF><dhEmi>${o.data}T09:00:00-03:00</dhEmi><tpNF>1</tpNF><idDest>1</idDest><cMunFG>1718204</cMunFG><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>${chave.slice(-1)}</cDV><tpAmb>2</tpAmb><finNFe>1</finNFe><indFinal>0</indFinal><indPres>1</indPres></ide>
+      <emit><CNPJ>${o.emitente.cnpj}</CNPJ><xNome>${o.emitente.nome}</xNome><enderEmit><xLgr>Rua Ficticia</xLgr><nro>200</nro><xBairro>Centro</xBairro><cMun>1718204</cMun><xMun>Porto Nacional</xMun><UF>TO</UF></enderEmit><IE>290000002</IE><CRT>1</CRT></emit>
+      <dest><CNPJ>${o.dest}</CNPJ><xNome>MADEIREIRA REFLORESTAR EXEMPLO LTDA (FICTICIA)</xNome><enderDest><xLgr>Avenida Ficticia das Madeiras</xLgr><nro>1500</nro><xBairro>Setor Industrial</xBairro><cMun>1718204</cMun><xMun>Porto Nacional</xMun><UF>TO</UF></enderDest><indIEDest>1</indIEDest><IE>290000098</IE></dest>
+      ${dets}
+      <total><ICMSTot><vBC>0.00</vBC><vICMS>0.00</vICMS><vICMSDeson>0.00</vICMSDeson><vFCP>0.00</vFCP><vBCST>0.00</vBCST><vST>0.00</vST><vFCPST>0.00</vFCPST><vFCPSTRet>0.00</vFCPSTRet><vProd>${dec(vProd)}</vProd><vFrete>0.00</vFrete><vSeg>0.00</vSeg><vDesc>0.00</vDesc><vII>0.00</vII><vIPI>0.00</vIPI><vIPIDevol>0.00</vIPIDevol><vPIS>0.00</vPIS><vCOFINS>0.00</vCOFINS><vOutro>0.00</vOutro><vNF>${dec(vProd)}</vNF></ICMSTot></total>
+      <transp><modFrete>9</modFrete></transp>
+      <pag><detPag><tPag>15</tPag><vPag>${dec(vProd)}</vPag></detPag></pag>
+    </infNFe>
+  </NFe>
+  <protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><verAplic>DEMONSTRACAO</verAplic><chNFe>${chave}</chNFe><dhRecbto>${o.data}T09:00:05-03:00</dhRecbto><nProt>3172600${String(o.numero).padStart(8, "0")}</nProt><digVal>ZGVtbw==</digVal><cStat>100</cStat><xMotivo>Autorizado o uso da NF-e (ambiente de homologacao)</xMotivo></infProt></protNFe>
+</nfeProc>
+`;
+}
+
+/**
+ * Estoque pelas notas de compra (uma vez só): liga a entrada automática, guarda os
+ * itens da reflorestadora ligados ao mourão e ao poste e envia duas notas pelo
+ * caminho normal (Enviar documentos). Na fila, a da reflorestadora entra sozinha
+ * no estoque; a das ferragens (caixa de prego e um item novo) espera a conferência.
+ */
+async function semearComprasLoja(admin: SupabaseClient, conexao: { url: string; publica: string }, empresaId: string, emailDono: string) {
+  const { count } = await admin.from("documentos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).like("nome_original", `${MARCA_COMPRAS}%`);
+  if (count) return false;
+  const { data: empresa } = await admin.from("empresas").select("documento").eq("id", empresaId).single();
+  const { data: produtos } = await admin.from("nfe_produtos").select("id, descricao").eq("empresa_id", empresaId);
+  const produto = (inicio: string) => produtos?.find((p) => p.descricao.startsWith(inicio))?.id;
+  const mourao = produto("Mourão de eucalipto");
+  const poste = produto("Poste de eucalipto");
+  if (!empresa?.documento || !mourao || !poste) return false;
+
+  ok("ligar a entrada automática", await admin.from("gestao_config").update({ entrada_automatica: true }).eq("empresa_id", empresaId));
+  ok(
+    "itens da reflorestadora ligados",
+    await admin.from("estoque_vinculos").upsert(
+      [
+        { empresa_id: empresaId, fornecedor_documento: REFLORESTADORA.cnpj, codigo_fornecedor: "MT-220", produto_id: mourao, fator: 1, descricao_fornecedor: "MOURAO EUCALIPTO TRATADO 2,20M", unidade_fornecedor: "UN" },
+        { empresa_id: empresaId, fornecedor_documento: REFLORESTADORA.cnpj, codigo_fornecedor: "PT-7M", produto_id: poste, fator: 1, descricao_fornecedor: "POSTE EUCALIPTO TRATADO 7M", unidade_fornecedor: "UN" },
+      ],
+      { onConflict: "empresa_id,fornecedor_documento,codigo_fornecedor" },
+    ),
+  );
+
+  const dono = await entrarComo(admin, conexao, emailDono);
+  const subir = async (nome: string, data: string, xml: string) =>
+    enviar(dono, admin, empresaId, { comp: `${data.slice(0, 7)}-01`, categoria: "nfe_entrada_xml", nome: `${MARCA_COMPRAS} ${nome}.xml`, mime: "application/xml", bytes: Buffer.from(xml, "utf8"), itemId: null });
+  const d1 = hojeMais(-3);
+  await subir(
+    "Compra reflorestadora",
+    d1,
+    notaCompra({
+      emitente: REFLORESTADORA,
+      dest: empresa.documento,
+      numero: 4101,
+      data: d1,
+      itens: [
+        { codigo: "MT-220", descricao: "MOURAO EUCALIPTO TRATADO 2,20M", ncm: "44031200", unidade: "UN", qtd: 100, unit: 15.5 },
+        { codigo: "PT-7M", descricao: "POSTE EUCALIPTO TRATADO 7M", ncm: "44031200", unidade: "UN", qtd: 6, unit: 225 },
+      ],
+    }),
+  );
+  const d2 = hojeMais(-1);
+  await subir(
+    "Compra ferragens",
+    d2,
+    notaCompra({
+      emitente: FERRAGENS,
+      dest: empresa.documento,
+      numero: 7302,
+      data: d2,
+      itens: [
+        { codigo: "PRG1727-CX", descricao: "PREGO 17X27 C/ CABECA CX 12KG", ncm: "73170090", unidade: "CX", qtd: 5, unit: 132 },
+        { codigo: "DOB3-ZN", descricao: "DOBRADICA 3 POL ZINCADA", ncm: "83021000", unidade: "UN", qtd: 24, unit: 4.8 },
+      ],
+    }),
+  );
+  await dono.auth.signOut();
+  return true;
+}
+
 export async function semearLoja(
   admin: SupabaseClient,
   comoAdmin: SupabaseClient,
@@ -161,6 +287,9 @@ export async function semearLoja(
   if (existente) {
     await semearNfeLoja(admin, existente.id);
     await semearLogoLoja(admin, existente.id);
+    if (await semearComprasLoja(admin, conexao, existente.id, `madeireira@${opcoes.dominio}`)) {
+      console.log("  Madeireira: entrada automática ligada e notas de compra fictícias enviadas (a leitura e a entrada no estoque rodam na fila)");
+    }
     return false;
   }
 
@@ -346,6 +475,7 @@ export async function semearLoja(
 
   await semearNfeLoja(admin, empresaId);
   await semearLogoLoja(admin, empresaId);
+  await semearComprasLoja(admin, conexao, empresaId, `madeireira@${opcoes.dominio}`);
 
   await dono.auth.signOut();
   await balcao.auth.signOut();

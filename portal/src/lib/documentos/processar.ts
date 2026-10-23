@@ -151,6 +151,12 @@ export async function registrarXml(admin: ClienteAdmin, documentoId: string, dad
       p_dados: dados as never,
     });
     if (erroLeitura) console.error(`[xml] leitura completa não gravada (${registro.documento_fiscal_id}):`, erroLeitura.message);
+    // Nota de compra de loja com a entrada automática ligada: entra sozinha no estoque se todos os
+    // itens já estiverem ligados a produtos (senão o gerente é avisado). Nunca derruba o processamento.
+    if (dados.operacao === "entrada") {
+      const { error: erroEstoque } = await admin.rpc("estoque_entrada_automatica", { p_documento_fiscal_id: registro.documento_fiscal_id });
+      if (erroEstoque) console.error(`[xml] entrada automática no estoque falhou (${registro.documento_fiscal_id}):`, erroEstoque.message);
+    }
   }
   return registro;
 }

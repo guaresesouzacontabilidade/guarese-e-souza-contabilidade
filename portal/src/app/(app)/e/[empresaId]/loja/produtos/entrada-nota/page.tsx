@@ -3,12 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FileInput } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { EntradaPorNota } from "@/components/loja/produtos";
+import { BotaoEntradaAutomatica } from "@/components/loja/entrada-automatica";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { carregarProdutosLoja } from "@/lib/gestao/dados";
 import { formatarMoeda } from "@/lib/dinheiro";
@@ -29,11 +30,19 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
   if (notaId) {
     const [{ data: nota }, { data: itens }, produtos, { count: jaLancada }] = await Promise.all([
       ctx.supabase.from("documentos_fiscais").select("id, numero, serie, emitente_nome, emitente_documento, data_emissao, valor_total, operacao").eq("id", notaId).eq("empresa_id", empresaId).maybeSingle(),
-      ctx.supabase.from("documento_fiscal_itens").select("numero_item, codigo, descricao, unidade, quantidade, valor_unitario, valor_total").eq("documento_fiscal_id", notaId).order("numero_item"),
+      ctx.supabase
+        .from("documento_fiscal_itens")
+        .select("numero_item, codigo, descricao, ncm, gtin, unidade, quantidade, valor_unitario, valor_total, valor_desconto")
+        .eq("documento_fiscal_id", notaId)
+        .order("numero_item"),
       carregarProdutosLoja(ctx.supabase, empresaId, { ativos: true }),
       ctx.supabase.from("estoque_movimentos").select("id", { count: "exact", head: true }).eq("documento_fiscal_id", notaId),
     ]);
     if (!nota || nota.operacao !== "entrada") notFound();
+    const fornecedor = (nota.emitente_documento ?? "").replace(/[^0-9A-Za-z]/g, "").toUpperCase();
+    const { data: vinculos } = fornecedor
+      ? await ctx.supabase.from("estoque_vinculos").select("codigo_fornecedor, produto_id, fator").eq("empresa_id", empresaId).eq("fornecedor_documento", fornecedor).limit(5000)
+      : { data: [] };
     return (
       <>
         <CabecalhoPagina
@@ -51,14 +60,18 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
                 empresaId={empresaId}
                 documentoId={nota.id}
                 produtos={produtos}
+                vinculos={(vinculos ?? []).map((v) => ({ codigo: v.codigo_fornecedor, produto_id: v.produto_id, fator: String(v.fator) }))}
                 itens={(itens ?? []).map((i) => ({
                   numero_item: i.numero_item,
                   codigo: i.codigo,
                   descricao: i.descricao,
+                  ncm: i.ncm,
+                  gtin: i.gtin,
                   unidade: i.unidade,
                   quantidade: i.quantidade == null ? null : String(i.quantidade),
                   valor_unitario: i.valor_unitario == null ? null : String(i.valor_unitario),
                   valor_total: i.valor_total == null ? null : String(i.valor_total),
+                  valor_desconto: i.valor_desconto == null ? null : String(i.valor_desconto),
                 }))}
               />
             )}
@@ -68,7 +81,7 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
     );
   }
 
-  const [{ data: notas }, { data: lancadas }] = await Promise.all([
+  const [{ data: notas }, { data: lancadas }, { data: cfg }, { count: qtdVinculos }] = await Promise.all([
     ctx.supabase
       .from("documentos_fiscais")
       .select("id, numero, emitente_nome, data_emissao, valor_total, modelo")
@@ -79,7 +92,10 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
       .order("data_emissao", { ascending: false })
       .limit(100),
     ctx.supabase.from("estoque_movimentos").select("documento_fiscal_id").eq("empresa_id", empresaId).not("documento_fiscal_id", "is", null).limit(10000),
+    ctx.supabase.from("gestao_config").select("entrada_automatica").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("estoque_vinculos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId),
   ]);
+  const automatica = cfg?.entrada_automatica === true;
   const feitas = new Set((lancadas ?? []).map((m) => m.documento_fiscal_id));
   return (
     <>
@@ -89,6 +105,24 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
         voltar={{ href: `/e/${empresaId}/loja/produtos`, rotulo: "Produtos e estoque" }}
       />
       <NavegacaoLoja empresaId={empresaId} configurar />
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            Entrada automática <Badge variante={automatica ? "sucesso" : "neutro"}>{automatica ? "Ligada" : "Desligada"}</Badge>
+          </CardTitle>
+          <CardDescription>
+            {automatica
+              ? "Quando chega uma nota de compra e todos os itens já estão ligados a produtos da loja, ela entra sozinha no estoque (quantidade × fator e custo da nota) e você recebe um aviso. Nota com item novo fica aqui esperando a sua conferência."
+              : "Ligada, a nota de compra que chegar com todos os itens já ligados a produtos da loja entra sozinha no estoque, e você recebe um aviso. Os itens ficam ligados quando você dá entrada numa nota do fornecedor com “Lembrar” marcado."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <BotaoEntradaAutomatica empresaId={empresaId} ligada={automatica} />
+          <Link href={`${base}/vinculos`} className="text-sm font-medium text-primary hover:underline">
+            Itens de fornecedor ligados ({qtdVinculos ?? 0})
+          </Link>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Notas de compra recebidas</CardTitle>

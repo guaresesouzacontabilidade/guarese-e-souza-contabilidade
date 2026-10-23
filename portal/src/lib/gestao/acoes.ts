@@ -145,20 +145,78 @@ export async function registrarInventario(empresaId: string, itens: { produto_id
   return sucesso(n ? `Inventário registrado: ${n} produto(s) ajustado(s).` : "Inventário conferido: nenhum ajuste foi preciso.");
 }
 
-export async function darEntradaNota(
-  empresaId: string,
-  documentoFiscalId: string,
-  itens: { produto_id: string; quantidade: string; custo_unitario: string }[],
-): Promise<ResultadoAcao> {
+/** Um item da nota de compra na entrada do estoque (quantidade e custo já na unidade da loja). */
+export interface ItemEntradaNota {
+  numero_item: number;
+  /** Produto da loja; vazio com `novo` cria o produto a partir do item. */
+  produto_id: string | null;
+  novo: { descricao: string; ncm: string; unidade: string; valor_unitario: string; grupo?: string } | null;
+  quantidade: string;
+  custo_unitario: string;
+  /** Quantas unidades da loja vêm em uma unidade da nota (1 caixa = 12 kg → 12). */
+  fator: string;
+  /** Guarda o vínculo para a próxima nota do mesmo fornecedor. */
+  lembrar: boolean;
+}
+
+export async function darEntradaNota(empresaId: string, documentoFiscalId: string, itens: ItemEntradaNota[]): Promise<ResultadoAcao> {
   if (!UUID.test(empresaId) || !UUID.test(documentoFiscalId)) return falha("Nota inválida.");
   const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
-  const lista = itens
-    .filter((i) => UUID.test(i.produto_id))
-    .map((i) => ({ produto_id: i.produto_id, quantidade: numero(i.quantidade), custo_unitario: numero(i.custo_unitario) }));
-  const { data, error } = await ctx.supabase.rpc("gestao_entrada_nota", { p_empresa_id: empresaId, p_documento_fiscal_id: documentoFiscalId, p_itens: lista });
+  if (!Array.isArray(itens) || itens.length > 990) return falha("Itens inválidos.");
+  const lista = [];
+  for (const i of itens) {
+    const rotulo = `Item ${Number(i.numero_item) || "?"}`;
+    const base = {
+      numero_item: Number.isInteger(i.numero_item) ? i.numero_item : null,
+      quantidade: numero(String(i.quantidade ?? "")),
+      custo_unitario: numero(String(i.custo_unitario ?? "")),
+      fator: numero(String(i.fator ?? "")) ?? "1",
+      lembrar: i.lembrar !== false,
+    };
+    if (!base.quantidade || Number(base.quantidade) <= 0) return falha(`${rotulo}: informe a quantidade.`);
+    if (base.custo_unitario === null) return falha(`${rotulo}: informe o custo.`);
+    if (Number(base.fator) <= 0) return falha(`${rotulo}: o fator de conversão precisa ser maior que zero.`);
+    if (i.novo) {
+      const descricao = String(i.novo.descricao ?? "").trim();
+      const ncm = String(i.novo.ncm ?? "").replace(/\D/g, "");
+      const unidade = String(i.novo.unidade ?? "").trim().toUpperCase();
+      const preco = numero(String(i.novo.valor_unitario ?? ""));
+      if (descricao.length < 2 || descricao.length > 120) return falha(`${rotulo}: descreva o produto novo (2 a 120 letras).`);
+      if (!/^\d{8}$/.test(ncm)) return falha(`${rotulo}: o NCM do produto novo tem 8 números.`);
+      if (!unidade || unidade.length > 6) return falha(`${rotulo}: escolha a unidade do produto novo.`);
+      if (!preco || Number(preco) <= 0) return falha(`${rotulo}: informe o preço de venda do produto novo.`);
+      const grupo = String(i.novo.grupo ?? "").trim();
+      lista.push({ ...base, novo: { descricao, ncm, unidade, valor_unitario: preco, grupo: grupo || null, controla_estoque: true } });
+    } else if (i.produto_id && UUID.test(i.produto_id)) {
+      lista.push({ ...base, produto_id: i.produto_id });
+    }
+  }
+  if (!lista.length) return falha("Escolha o produto de pelo menos um item da nota.");
+  const { data, error } = await ctx.supabase.rpc("gestao_entrada_nota", { p_empresa_id: empresaId, p_documento_fiscal_id: documentoFiscalId, p_itens: lista as Json });
   if (error) return falha(mensagemErro(error));
   revalidarLoja(empresaId);
   return sucesso(`Entrada registrada: ${data} item(ns) da nota no estoque.`);
+}
+
+/** Liga ou desliga a entrada automática das notas de compra no estoque. */
+export async function definirEntradaAutomatica(empresaId: string, ligada: boolean): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const { error } = await ctx.supabase.rpc("gestao_entrada_automatica_definir", { p_empresa_id: empresaId, p_ligada: ligada === true });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  return sucesso(ligada ? "Entrada automática ligada." : "Entrada automática desligada.");
+}
+
+/** Esquece o vínculo de um item do fornecedor (a próxima nota volta a pedir conferência). */
+export async function apagarVinculoEstoque(empresaId: string, vinculoId: string): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId) || !UUID.test(vinculoId)) return falha("Registro inválido.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const { error, count } = await ctx.supabase.from("estoque_vinculos").delete({ count: "exact" }).eq("id", vinculoId).eq("empresa_id", empresaId);
+  if (error) return falha(mensagemErro(error));
+  if (!count) return falha("Vínculo não encontrado.");
+  revalidarLoja(empresaId);
+  return sucesso("Vínculo apagado. A próxima nota com este item vai pedir conferência.");
 }
 
 // -----------------------------------------------------------------------------

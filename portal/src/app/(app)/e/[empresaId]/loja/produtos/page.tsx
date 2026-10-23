@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, Boxes, ClipboardCheck, FileInput, PackageX, Warehouse } from "lucide-react";
+import { AlertTriangle, Boxes, ClipboardCheck, FileInput, FileSpreadsheet, PackageX, Warehouse } from "lucide-react";
 import { CabecalhoPagina, Indicador, urlCom } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,11 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
               <Button asChild variante="contorno">
                 <Link href={`${base}/inventario`}>
                   <ClipboardCheck /> Inventário
+                </Link>
+              </Button>
+              <Button asChild variante="contorno">
+                <Link href={`${base}/importar`}>
+                  <FileSpreadsheet /> Importar planilha
                 </Link>
               </Button>
               <DialogoProduto empresaId={empresaId} grupos={grupos} />
