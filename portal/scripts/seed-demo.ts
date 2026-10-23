@@ -282,6 +282,26 @@ async function main() {
     console.log("  CT-e da comercial de grãos: configuração e operações do frete (emissão desligada; formulário em modo de conferência)");
   }
 
+  // Ferramentas de cada empresa fictícia (só na primeira vez: o que o usuário mudar na demonstração fica)
+  const ferramentasDemo: [string, string[]][] = [
+    ["MADEIREIRA REFLORESTAR%", ["cte", "nfse"]],
+    ["COMERCIAL DE GRAOS CERRADO%", ["nfse"]],
+    ["PADARIA PAO DOURADO%", ["cte"]],
+    ["OFICINA MECANICA EXEMPLO%", ["cte"]],
+  ];
+  let personalizadas = 0;
+  for (const [nome, desligadas] of ferramentasDemo) {
+    const { data } = await admin
+      .from("empresas")
+      .update({ ferramentas_desligadas: desligadas })
+      .ilike("razao_social", nome)
+      .eq("demonstracao", true)
+      .is("ferramentas_alteradas_em", null)
+      .select("id");
+    personalizadas += data?.length ?? 0;
+  }
+  if (personalizadas) console.log(`  Ferramentas personalizadas em ${personalizadas} empresa(s) fictícia(s) (ex.: madeireira sem CT-e)`);
+
   console.log("\nDados de DEMONSTRAÇÃO prontos (todos fictícios):");
   console.log(`  Administrador:  admin@${DOMINIO}`);
   console.log(`  Equipe:         contador@${DOMINIO}`);

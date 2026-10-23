@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 import { TODAS_PERMISSOES, type Permissao } from "@/lib/permissoes";
+import { permissoesComFerramentas } from "@/lib/empresas/ferramentas";
 
 export type Perfil = Database["public"]["Tables"]["perfis"]["Row"];
 export type Empresa = Database["public"]["Tables"]["empresas"]["Row"];
@@ -94,6 +95,8 @@ export interface EmpresaAcesso {
   /** Logo da empresa (armazenamento privado) e quando foi trocada. */
   logo_path: string | null;
   logo_atualizado_em: string | null;
+  /** Ferramentas desligadas pelo escritório para a empresa (somem do menu, do painel e das telas). */
+  ferramentas_desligadas: string[];
   papel: "admin" | "equipe" | "cliente_titular" | "cliente_colaborador";
   permissoes: Set<Permissao>;
 }
@@ -102,7 +105,8 @@ export interface EmpresaAcesso {
 export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> => {
   const s = await obterSessao();
   if (!s?.perfil) return [];
-  const campos = "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, logo_path, logo_atualizado_em, gestao:gestao_config(ativa, modalidade), cte_config(emitente_id, rntrc)";
+  const campos =
+    "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, logo_path, logo_atualizado_em, ferramentas_desligadas, gestao:gestao_config(ativa, modalidade), cte_config(emitente_id, rntrc)";
   type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja" | "gestao_modalidade" | "cte"> & {
     gestao: { ativa: boolean; modalidade: string } | null;
     cte_config: { emitente_id: string | null; rntrc: string | null } | null;
@@ -115,7 +119,11 @@ export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> =
   });
   if (s.perfil.tipo === "admin") {
     const { data } = await s.supabase.from("empresas").select(campos).order("razao_social");
-    return ((data ?? []) as unknown as Linha[]).map((e) => ({ ...comLoja(e), papel: "admin" as const, permissoes: new Set(TODAS_PERMISSOES) }));
+    return ((data ?? []) as unknown as Linha[]).map((e) => ({
+      ...comLoja(e),
+      papel: "admin" as const,
+      permissoes: permissoesComFerramentas(new Set(TODAS_PERMISSOES), e.ferramentas_desligadas ?? []),
+    }));
   }
   const { data } = await s.supabase
     .from("empresa_membros")
@@ -125,7 +133,12 @@ export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> =
   return (data ?? [])
     .map((m) => {
       const e = comLoja(m.empresa as unknown as Linha);
-      return { ...e, papel: m.papel as EmpresaAcesso["papel"], permissoes: new Set(m.permissoes as Permissao[]) };
+      return {
+        ...e,
+        papel: m.papel as EmpresaAcesso["papel"],
+        // As permissões das ferramentas desligadas pelo escritório não valem nesta empresa
+        permissoes: permissoesComFerramentas(new Set(m.permissoes as Permissao[]), e.ferramentas_desligadas ?? []),
+      };
     })
     .sort((a, b) => (a.nome_fantasia ?? a.razao_social).localeCompare(b.nome_fantasia ?? b.razao_social, "pt-BR"));
 });

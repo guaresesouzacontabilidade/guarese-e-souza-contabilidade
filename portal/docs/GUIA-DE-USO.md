@@ -456,6 +456,13 @@ Na empresa → **Declarações → Nova declaração de faturamento**:
 
 A **logo da empresa** se envia em **Empresas → (a empresa) → Dados cadastrais → Logo da empresa** (PNG ou JPG, até 2 MB; prefira fundo transparente). Ela fica guardada de forma privada: só quem acessa a empresa a vê.
 
+### Ferramentas de cada empresa (personalizar o portal do cliente)
+Em **Empresas → (empresa) → Ferramentas**, marque só o que aquela empresa usa: emitir nota de serviço, nota de produto (com as ordens de carregamento e a NF-e da venda da loja), CT-e, notas automáticas, agenda de pagamentos, vencimentos, contas e fluxo de caixa, maquininhas, conciliação, fechamento, cálculos e previsão, auditor fiscal, relatórios, declarações e solicitações. Clique em **Salvar ferramentas**.
+- A ferramenta desmarcada **some do menu, do painel e dos atalhos** da empresa — para o cliente e para a equipe. Quem abrir o endereço da tela vê o aviso de ferramenta desligada (a equipe, com o atalho para religar).
+- **Nada é apagado**: notas, configurações e certificados continuam guardados e voltam quando a ferramenta for ligada de novo.
+- Só a equipe do escritório liga e desliga; o banco recusa a mudança vinda do cliente, mesmo de quem pode editar o cadastro.
+- Sempre ligados: início, documentos, pendências, mensagens e configurações. A loja e as ordens de carregamento continuam em **Gestão da loja**.
+
 ### Cadastrar uma empresa nova (administrador)
 1. **Empresas → Nova empresa**: digite o **CNPJ** e clique na **lupa** ao lado. O portal busca os dados abertos da Receita Federal e preenche razão social, nome fantasia, CNAE e atividade principal, endereço, telefone e e-mail; sugere o **regime** (MEI ou Simples pela opção registrada na Receita; Presumido ou Real pela última tributação declarada) e mostra a situação cadastral (aviso em vermelho se não estiver ATIVA), abertura, natureza jurídica, porte, atividades secundárias e o quadro de sócios. Marque se quer **cadastrar os sócios como contatos**. Confira, complete o que faltar (inscrições, contador responsável, serviços contratados) e salve. O município do IBGE (usado nos prazos municipais) é preenchido sozinho. Na edição da empresa, a lupa atualiza os dados (o regime só é preenchido se estiver em branco). O plano de contas gerencial e o checklist padrão são criados sozinhos. A base da Receita é atualizada uma vez por mês: empresas abertas há poucas semanas podem ainda não aparecer — aí é só preencher à mão.
 2. Na empresa: **Contas bancárias** (contas, saldos iniciais, cartões) e **Checklist mensal** (ajuste os documentos e prazos).

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { grupoAtivo, gruposEmpresa, gruposEscritorio, menuEmpresa, type EmpresaMenu } from "@/components/layout/navegacao";
 import { diasDaSemana } from "@/components/painel/blocos";
 import type { Permissao } from "@/lib/permissoes";
+import { ferramentaDaRota, permissoesComFerramentas } from "@/lib/empresas/ferramentas";
 
 const ID = "11111111-1111-4111-8111-111111111111";
 
@@ -52,5 +53,30 @@ describe("semana do painel", () => {
     expect(dias.filter((d) => d.hoje).map((d) => d.numero)).toEqual([23]);
     // Domingo pertence à semana que começou na segunda anterior
     expect(diasDaSemana("2026-10-25")[0].data).toBe("2026-10-19");
+  });
+});
+
+describe("ferramentas por empresa", () => {
+  it("ferramenta desligada tira as permissões dela (o resto continua)", () => {
+    const p = permissoesComFerramentas(new Set<Permissao>(["cte.emitir", "cte.configurar", "nfe.emitir", "documentos.ver"]), ["cte"]);
+    expect([...p].sort()).toEqual(["documentos.ver", "nfe.emitir"]);
+    expect(permissoesComFerramentas(new Set<Permissao>(["financeiro.ver"]), [])).toEqual(new Set(["financeiro.ver"]));
+  });
+
+  it("rota de ferramenta desligada (com as telas internas)", () => {
+    expect(ferramentaDaRota("/cte/nova", ["cte"])).toBe("cte");
+    expect(ferramentaDaRota("/loja/carregamentos/abc", ["nfe"])).toBe("nfe");
+    expect(ferramentaDaRota("/cte-algo", ["cte"])).toBeNull();
+    expect(ferramentaDaRota("/agenda", ["cte"])).toBeNull();
+  });
+
+  it("o menu da empresa esconde o que o escritório desligou", () => {
+    const madeireira = empresa(["documentos.ver", "documentos.enviar", "mensagens.usar"], { desligadas: ["agenda", "solicitacoes"] });
+    const grupos = gruposEmpresa(madeireira, false);
+    expect(grupos.find((g) => g.id === "pagamentos")!.itens.map((i) => i.rotulo)).toEqual(["Vencimentos"]);
+    expect(grupos.find((g) => g.id === "falar")!.itens.map((i) => i.rotulo)).toEqual(["Mensagens"]);
+    // Grupo que fica vazio some
+    const semPagamentos = gruposEmpresa(empresa(["documentos.ver"], { desligadas: ["agenda", "vencimentos"] }), false);
+    expect(semPagamentos.some((g) => g.id === "pagamentos")).toBe(false);
   });
 });

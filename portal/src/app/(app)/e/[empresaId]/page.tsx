@@ -13,6 +13,7 @@ import { MarcaEmpresa } from "@/components/empresas/marca-empresa";
 import { BarrasMeses, Bloco, CabecaDia, diasDaSemana, Estatistica, GradeBlocos, Medidor, Selo } from "@/components/painel/blocos";
 import { NumeroAnimado } from "@/components/painel/numero-animado";
 import { cn } from "@/lib/utils";
+import type { Ferramenta } from "@/lib/empresas/ferramentas";
 
 export const metadata: Metadata = { title: "Visão geral" };
 
@@ -33,13 +34,18 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
   const semana = diasDaSemana(hoje);
   const verDocs = ctx.pode("documentos.ver");
   const conversar = ctx.pode("mensagens.usar");
+  // Ferramentas desligadas pelo escritório não aparecem no painel
+  const ligada = (f: Ferramenta) => !acesso.ferramentas_desligadas.includes(f);
+  const verAgenda = verDocs && ligada("agenda");
+  const verVencimentos = verDocs && ligada("vencimentos");
+  const verSolicitacoes = conversar && ligada("solicitacoes");
 
   const [resumo, itens, guiasRes, conversas, aguardando, pedidos, dadosPrevisao, vencendo, saidas, entradas] = await Promise.all([
     verDocs ? ctx.supabase.rpc("resumo_checklist", { p_empresa_id: empresaId, p_competencia: comp }) : Promise.resolve({ data: null }),
     verDocs
       ? ctx.supabase.from("checklist_itens").select("id, titulo, prazo, status, competencia").eq("empresa_id", empresaId).in("status", ["pendente", "correcao"]).order("prazo").limit(30)
       : Promise.resolve({ data: [] }),
-    verDocs
+    verAgenda
       ? ctx.supabase
           .from("documentos")
           .select("id, titulo, nome_original, vencimento, valor, pagamento:guia_pagamentos!guia_pagamentos_guia_fk(pago_em)")
@@ -64,11 +70,11 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
           .eq("status", "aberta")
           .eq("aguardando", ctx.equipe ? "escritorio" : "cliente")
       : Promise.resolve({ count: 0 }),
-    conversar
+    verSolicitacoes
       ? ctx.supabase.from("solicitacoes").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).in("status", ["aberta", "em_andamento", "aguardando_cliente"])
       : Promise.resolve({ count: 0 }),
     ctx.pode("calculos.ver") ? ctx.supabase.rpc("dados_previsao_impostos", { p_empresa_id: empresaId, p_competencia: comp }) : Promise.resolve({ data: null }),
-    verDocs
+    verVencimentos
       ? ctx.supabase.from("vencimentos").select("id, descricao, validade").eq("empresa_id", empresaId).eq("situacao", "ativo").lte("validade", somarDias(hoje, 30)).order("validade").limit(6)
       : Promise.resolve({ data: [] }),
     verDocs
@@ -271,7 +277,7 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
           </Bloco>
         ) : null}
 
-        {verDocs ? (
+        {verAgenda ? (
           <Bloco
             titulo={proxima ? "Próximo pagamento" : "Pagamentos"}
             destaque
@@ -352,9 +358,13 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
               <p className="text-sm text-muted-foreground">Nenhuma conversa em aberto.</p>
             )}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-2 text-sm">
-              <Link href={`${base}/solicitacoes`} className="text-muted-foreground hover:text-foreground hover:underline">
-                {pedidos.count ? `${pedidos.count} solicitação(ões) em andamento` : "Solicitações"}
-              </Link>
+              {verSolicitacoes ? (
+                <Link href={`${base}/solicitacoes`} className="text-muted-foreground hover:text-foreground hover:underline">
+                  {pedidos.count ? `${pedidos.count} solicitação(ões) em andamento` : "Solicitações"}
+                </Link>
+              ) : (
+                <span />
+              )}
               <Link href={`${base}/mensagens`} className="font-semibold text-primary hover:underline">
                 Abrir conversas
               </Link>
@@ -408,7 +418,7 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
         ) : null}
 
         {verDocs ? (
-          <Bloco titulo="Notas do mês" href={`${base}/notas-automaticas`} rotuloLink="Abrir notas automáticas">
+          <Bloco titulo="Notas do mês" href={ligada("notas_automaticas") ? `${base}/notas-automaticas` : undefined} rotuloLink="Abrir notas automáticas">
             <dl className="space-y-2 text-sm">
               <div className="flex items-baseline justify-between border-b border-border pb-2">
                 <dt className="text-muted-foreground">Notas de saída</dt>
@@ -428,7 +438,12 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
         ) : null}
 
         {verDocs ? (
-          <Bloco titulo="Esta semana" largura={3} href={`${base}/agenda`} rotuloLink="Abrir a agenda de pagamentos">
+          <Bloco
+            titulo="Esta semana"
+            largura={3}
+            href={verAgenda ? `${base}/agenda` : `${base}/pendencias`}
+            rotuloLink={verAgenda ? "Abrir a agenda de pagamentos" : "Abrir pendências"}
+          >
             {/* No celular: só os dias com algo marcado, um embaixo do outro */}
             <ul className="space-y-2 sm:hidden">
               {semana

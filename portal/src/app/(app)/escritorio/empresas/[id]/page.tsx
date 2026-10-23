@@ -21,7 +21,8 @@ import { ModelosChecklist, type ModeloChecklist } from "@/components/checklist/m
 import { formatarDocumento } from "@/lib/formatos";
 import { REGIMES } from "@/lib/rotulos";
 import type { Permissao } from "@/lib/permissoes";
-import { alterarSituacaoEmpresa, atualizarEmpresa } from "../acoes";
+import { alterarSituacaoEmpresa, atualizarEmpresa, salvarFerramentas } from "../acoes";
+import { FerramentasEmpresa } from "@/components/empresas/ferramentas";
 
 export const metadata: Metadata = { title: "Empresa" };
 
@@ -44,6 +45,7 @@ export default async function PaginaEmpresa({ params, searchParams }: PageProps<
     { valor: "usuarios", rotulo: "Usuários e permissões", href: `/escritorio/empresas/${id}?aba=usuarios` },
     { valor: "contas", rotulo: "Contas bancárias", href: `/escritorio/empresas/${id}?aba=contas` },
     { valor: "checklist", rotulo: "Checklist mensal", href: `/escritorio/empresas/${id}?aba=checklist` },
+    { valor: "ferramentas", rotulo: "Ferramentas", href: `/escritorio/empresas/${id}?aba=ferramentas` },
   ];
 
   let conteudo: React.ReactNode = null;
@@ -107,6 +109,18 @@ export default async function PaginaEmpresa({ params, searchParams }: PageProps<
         equipe={equipe ?? []}
         podeGerenciar={ctx.pode("checklist.gerenciar")}
       />
+    );
+  } else if (aba === "ferramentas") {
+    conteudo = (
+      <Card>
+        <CardHeader>
+          <CardTitle>Ferramentas desta empresa</CardTitle>
+          <CardDescription>Personalize o portal da empresa com o que ela precisa (ex.: uma madeireira sem CT-e, uma transportadora sem maquininhas).</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FerramentasEmpresa acao={salvarFerramentas.bind(null, id)} desligadas={empresa.ferramentas_desligadas ?? []} podeEditar={ctx.pode("empresa.editar")} />
+        </CardContent>
+      </Card>
     );
   } else {
     const receita = empresa.dados_receita ? DadosReceitaSchema.safeParse(empresa.dados_receita) : null;

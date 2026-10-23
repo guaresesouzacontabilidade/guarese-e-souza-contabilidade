@@ -37,6 +37,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
+import { ferramentaDaRota } from "@/lib/empresas/ferramentas";
 
 export interface ItemMenu {
   rotulo: string;
@@ -60,6 +61,8 @@ export interface EmpresaMenu {
   cte?: boolean;
   /** Endereço da logo da empresa (rota protegida), quando cadastrada. */
   logo?: string | null;
+  /** Ferramentas desligadas pelo escritório (somem do menu). */
+  desligadas?: string[];
 }
 
 export interface GrupoMenu {
@@ -212,7 +215,11 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     { id: "falar", rotulo: "Falar com o escritório", icone: MessagesSquare, itens: falar },
     { id: "configuracoes", rotulo: "Configurações", icone: Settings, itens: configuracoes },
   ];
-  return grupos.filter((g) => g.itens.length > 0);
+  // Ferramentas desligadas pelo escritório saem do menu (as permissões delas já não valem)
+  const desligadas = empresa.desligadas ?? [];
+  return grupos
+    .map((g) => (desligadas.length ? { ...g, itens: g.itens.filter((i) => !i.href.startsWith(base) || !ferramentaDaRota(i.href.slice(base.length), desligadas)) } : g))
+    .filter((g) => g.itens.length > 0);
 }
 
 /** Todos os itens, na ordem dos grupos. */

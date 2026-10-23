@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { exigirAdmin, exigirEquipe, obterContextoEmpresa } from "@/lib/auth/sessao";
+import { FERRAMENTAS } from "@/lib/empresas/ferramentas";
 import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { somenteDigitos, validarCnpj, validarCpf } from "@/lib/formatos";
 import { ErroConsultaCnpj, consultarCnpjReceita, funcaoDoSocio, regimeSugerido, DadosReceitaSchema, type DadosReceita } from "@/lib/empresas/receita";
@@ -169,6 +170,20 @@ export async function atualizarEmpresa(empresaId: string, _anterior: ResultadoAc
   if (receita) await aplicarDadosReceita(ctx.supabase, empresaId, receita);
   revalidatePath(`/escritorio/empresas/${empresaId}`);
   return sucesso("Dados da empresa atualizados.");
+}
+
+/** Ferramentas da empresa: o que não vier marcado fica desligado (só a equipe; o banco confere de novo). */
+export async function salvarFerramentas(empresaId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  await exigirEquipe();
+  const ctx = await obterContextoEmpresa(empresaId);
+  if (!ctx.pode("empresa.editar")) return falha("Você não tem permissão para editar esta empresa.");
+  const ligadas = new Set(fd.getAll("ligadas").map(String));
+  const desligadas = FERRAMENTAS.map((f) => f.chave).filter((c) => !ligadas.has(c));
+  const { error } = await ctx.supabase.from("empresas").update({ ferramentas_desligadas: desligadas }).eq("id", empresaId);
+  if (error) return falha(mensagemErro(error));
+  // O menu de todas as telas depende das ferramentas
+  revalidatePath("/", "layout");
+  return sucesso(desligadas.length ? `Ferramentas salvas: ${desligadas.length} desligada(s) para esta empresa.` : "Ferramentas salvas: todas ligadas.");
 }
 
 export async function alterarSituacaoEmpresa(empresaId: string, ativa: boolean): Promise<ResultadoAcao> {
