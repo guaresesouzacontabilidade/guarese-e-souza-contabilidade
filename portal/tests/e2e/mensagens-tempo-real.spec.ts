@@ -47,11 +47,13 @@ test("mensagens chegam na hora para o cliente e para o escritório", async ({ pa
   // Cliente responde → aparece para o escritório sem recarregar
   await cliente.getByLabel("Sua resposta").fill("Mensagem do cliente ao vivo");
   await cliente.getByRole("button", { name: "Enviar" }).click();
-  await expect(escritorio.getByText("Mensagem do cliente ao vivo")).toBeVisible({ timeout: 15_000 });
+  await expect(escritorio.getByRole("list", { name: "Mensagens" }).getByText("Mensagem do cliente ao vivo")).toBeVisible({ timeout: 15_000 });
 
   // Escritório responde → aparece para o cliente sem recarregar
   await escritorio.getByLabel("Sua resposta").fill("Resposta do escritório ao vivo");
   await escritorio.getByRole("button", { name: "Enviar" }).click();
-  await expect(cliente.getByText("Resposta do escritório ao vivo")).toBeVisible({ timeout: 15_000 });
+  await expect(cliente.getByRole("list", { name: "Mensagens" }).getByText("Resposta do escritório ao vivo")).toBeVisible({ timeout: 15_000 });
+  // Quem está na própria conversa não recebe o aviso flutuante repetindo a mensagem
+  await expect(cliente.getByRole("region", { name: /Notifications/ }).getByText("Resposta do escritório ao vivo")).toHaveCount(0);
   await contexto.close();
 });

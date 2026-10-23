@@ -453,6 +453,8 @@ function SinoNotificacoes({ naoLidasIniciais, usuarioId, chavePush }: { naoLidas
       // Com os avisos ativos neste aparelho, o próprio sistema já mostra a notificação.
       if (document.visibilityState !== "visible" || avisosAtivosParaUsuario(usuarioId)) return;
       const link = n.link;
+      // Quem já está na tela do aviso (ex.: a própria conversa) vê a novidade ali mesmo
+      if (link && new URL(link, window.location.origin).pathname === window.location.pathname) return;
       toast(n.titulo, {
         id: `aviso-${n.id}`,
         description: n.corpo ?? undefined,

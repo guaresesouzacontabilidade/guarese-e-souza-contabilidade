@@ -169,13 +169,13 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
   return (
     <div className="space-y-5">
       <section className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-        <div className="flex min-w-0 items-center gap-4">
+        <div className="flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center">
           <MarcaEmpresa
             nome={nomeEmpresa}
             logo={acesso.logo_path ? `/api/empresas/${empresaId}/logo?v=${encodeURIComponent(acesso.logo_atualizado_em ?? "1")}` : null}
             tamanho="lg"
           />
-          <div className="min-w-0">
+          <div className="w-full min-w-0 sm:w-auto">
             <p className="text-sm text-muted-foreground">
               {ctx.equipe ? "Empresa" : `Olá, ${primeiroNome}!`} · {formatarDocumento(acesso.documento)}
             </p>

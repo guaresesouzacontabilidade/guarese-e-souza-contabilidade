@@ -188,17 +188,19 @@ test("nota de compra: fator da caixa, produto criado do item e entrada automáti
     [`NV-${sufixo}`, 1],
   ]);
 
-  // Entrada automática: desliga e liga pela tela (vale o estado que estiver)
+  // Entrada automática: desliga (se estiver ligada) e liga pela tela, conferindo o banco a cada clique
+  const ligadaNoBanco = async () =>
+    (await servico!.from("gestao_config").select("entrada_automatica").eq("empresa_id", empresaId).single()).data!.entrada_automatica;
   await page.goto(`/e/${empresaId}/loja/produtos/entrada-nota`);
-  for (let i = 0; i < 2; i++) {
-    const ligada = await page.getByRole("button", { name: "Desligar a entrada automática" }).isVisible();
-    await page.getByRole("button", { name: ligada ? "Desligar a entrada automática" : "Ligar a entrada automática" }).click();
-    await expect(page.getByRole("button", { name: ligada ? "Ligar a entrada automática" : "Desligar a entrada automática" })).toBeVisible({ timeout: 30_000 });
+  if (await ligadaNoBanco()) {
+    await page.getByRole("button", { name: "Desligar a entrada automática" }).click();
+    await expect.poll(ligadaNoBanco, { timeout: 30_000 }).toBe(false);
+    await expect(page.getByRole("button", { name: "Ligar a entrada automática" })).toBeVisible({ timeout: 30_000 });
   }
-  if (await page.getByRole("button", { name: "Ligar a entrada automática" }).isVisible()) {
-    await page.getByRole("button", { name: "Ligar a entrada automática" }).click();
-    await expect(page.getByRole("button", { name: "Desligar a entrada automática" })).toBeVisible({ timeout: 30_000 });
-  }
+  await page.getByRole("button", { name: "Ligar a entrada automática" }).click();
+  await expect.poll(ligadaNoBanco, { timeout: 30_000 }).toBe(true);
+  await expect(page.getByRole("button", { name: "Desligar a entrada automática" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Ligada", { exact: true })).toBeVisible();
 
   // A próxima nota do mesmo fornecedor entra sozinha (o processamento das notas chama esta função)
   const seguinte = await criarNota(`8${sufixo.slice(0, 3)}`, [
@@ -212,7 +214,7 @@ test("nota de compra: fator da caixa, produto criado do item e entrada automáti
   // Apagar o vínculo: a nota seguinte volta a pedir conferência
   await page.getByRole("link", { name: /Itens de fornecedor ligados/ }).click();
   page.once("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Apagar o vínculo de PREGO 17X27 CX 12KG (TESTE)" }).first().click();
+  await page.getByRole("row").filter({ hasText: `Cód. CX-${sufixo}` }).getByRole("button", { name: /Apagar o vínculo/ }).click();
   await expect(page.getByText("Vínculo apagado.", { exact: false })).toBeVisible({ timeout: 30_000 });
   const outra = await criarNota(`7${sufixo.slice(0, 3)}`, [
     { codigo: `CX-${sufixo}`, descricao: "PREGO 17X27 CX 12KG (TESTE)", ncm: "73170090", unidade: "CX", quantidade: 1, valor_total: 138 },

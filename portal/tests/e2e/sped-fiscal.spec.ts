@@ -50,7 +50,11 @@ test("equipe confere o SPED com os XML; arquivo retificado passa a valer; client
 
   // Conferência da EFD de demonstração
   await expect(page.getByRole("heading", { name: "Conferência do SPED Fiscal" })).toBeVisible();
-  await expect(page.getByText("Nota emitida e não escriturada")).toBeVisible();
+  // Se a EFD foi conferida antes de algum XML da demonstração chegar, a equipe confere de novo
+  if (!(await page.getByText("Nota emitida e não escriturada").isVisible())) {
+    await page.getByRole("button", { name: "Conferir de novo" }).first().click();
+  }
+  await expect(page.getByText("Nota emitida e não escriturada")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByText("ICMS diferente do destacado")).toBeVisible();
   await expect(page.getByText("Possível crédito de ICMS não aproveitado")).toBeVisible();
   await expect(page.getByText("Nota escriturada sem XML no portal")).toBeVisible();

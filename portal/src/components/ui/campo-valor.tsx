@@ -17,8 +17,10 @@ export const CampoValor = React.forwardRef<
     permitirNegativo?: boolean;
   }
 >(({ className, valorInicial, aoMudar, permitirNegativo = false, ...props }, ref) => {
-  const inicial = valorInicial === null || valorInicial === undefined || valorInicial === "" ? "" : formatarMoeda(valorInicial, { semSimbolo: true });
-  const [texto, setTexto] = React.useState(inicial);
+  // O valor inicial só é lido na montagem (depois o texto é do campo)
+  const [texto, setTexto] = React.useState(() =>
+    valorInicial === null || valorInicial === undefined || valorInicial === "" ? "" : formatarMoeda(valorInicial, { semSimbolo: true }),
+  );
   return (
     <div className="relative">
       <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>

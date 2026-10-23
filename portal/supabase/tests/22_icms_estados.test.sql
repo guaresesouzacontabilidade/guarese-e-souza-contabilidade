@@ -53,12 +53,17 @@ select is_empty($$ update public.icms_uf set aliquota_observacao = 'alterado' wh
 select throws_ok($$ select public.icms_uf_propor_regra('SP') $$, '42501', 'Acesso negado.', 'cliente não propõe regra');
 reset role;
 
+-- O AM com um prazo diferente do que estiver validado, para haver o que propor (desfeito no fim)
+update public.icms_uf set vencimento_dia = case when vencimento_dia = 28 then 27 else 28 end where uf = 'AM' and vencimento_situacao = 'conferido';
+
 -- Equipe: não altera; não propõe prazo a conferir nem duplica proposta
 select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
 set local role authenticated;
 select is_empty($$ update public.icms_uf set aliquota_observacao = 'alterado' where uf = 'SP' returning uf $$, 'equipe não altera (só o administrador)');
 select throws_ok($$ select public.icms_uf_propor_regra('TO') $$, 'P0001',
   'Confira o prazo do ICMS de TO na legislação antes de propor a regra.', 'prazo a conferir não vira regra');
+-- Garante uma proposta pendente do AM, qualquer que seja o estado do banco (a regra pode já ter sido validada)
+do $$ begin perform public.icms_uf_propor_regra('AM'); exception when others then null; end $$;
 select throws_ok($$ select public.icms_uf_propor_regra('AM') $$, 'P0001',
   'Já existe uma proposta de regra do ICMS para este estado aguardando validação.', 'não duplica proposta pendente');
 reset role;
@@ -98,8 +103,9 @@ $$;
 select set_config('testes.proposta_ba', pg_temp.proposta_de('BA')::text, true);
 select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
 set local role authenticated;
-select lives_ok($$ select public.validar_atualizacao_normativa(current_setting('testes.proposta_ba')::uuid);
-                   select public.aplicar_atualizacao_normativa(current_setting('testes.proposta_ba')::uuid) $$,
+-- (se a regra da Bahia já foi validada antes neste banco, não há proposta a validar)
+select lives_ok($$ select public.validar_atualizacao_normativa(p) from (select nullif(current_setting('testes.proposta_ba'), '')::uuid as p) x where p is not null;
+                   select public.aplicar_atualizacao_normativa(p) from (select nullif(current_setting('testes.proposta_ba'), '')::uuid as p) x where p is not null $$,
   'administrador valida e aplica a regra da Bahia');
 reset role;
 select set_config('testes.regra_ba', (select r.id::text from public.obrigacao_regras r join public.obrigacoes o on o.id = r.obrigacao_id

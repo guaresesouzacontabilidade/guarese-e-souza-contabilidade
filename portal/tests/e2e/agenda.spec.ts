@@ -29,7 +29,14 @@ test("cliente informa o pagamento de uma guia com comprovante", async ({ page })
   await page.goto(`${empresa}/agenda`);
   await expect(page.getByRole("heading", { name: "Agenda de pagamentos" })).toBeVisible();
   const linha = page.locator("li.py-3", { hasText: /FGTS — / }).filter({ has: page.getByRole("button", { name: "Paguei" }) }).first();
-  await expect(linha).toBeVisible();
+  // A demonstração pode já ter o FGTS do mês pago: desfaz antes (e no fim volta a deixar pago)
+  const jaPaga = page.locator("li.py-3", { hasText: /FGTS — / }).filter({ hasText: /Pago em/ }).first();
+  const estavaPaga = (await linha.count()) === 0 && (await jaPaga.count()) > 0;
+  if (estavaPaga) {
+    await jaPaga.getByRole("button", { name: "Desfazer" }).click();
+    await expect(page.getByText("Pagamento desfeito.")).toBeVisible({ timeout: 30_000 });
+  }
+  await expect(linha).toBeVisible({ timeout: 30_000 });
   await linha.getByRole("button", { name: "Paguei" }).click();
 
   const dialogo = page.getByRole("dialog");
@@ -43,7 +50,9 @@ test("cliente informa o pagamento de uma guia com comprovante", async ({ page })
   const paga = page.locator("li.py-3", { hasText: /FGTS — / }).filter({ hasText: /Pago em/ }).first();
   await expect(paga).toContainText("comprovante enviado");
 
-  // Desfaz para manter a demonstração como estava
-  await paga.getByRole("button", { name: "Desfazer" }).click();
-  await expect(page.getByText("Pagamento desfeito.")).toBeVisible({ timeout: 30_000 });
+  // Desfaz para manter a demonstração como estava (se a guia já estava paga, fica paga)
+  if (!estavaPaga) {
+    await paga.getByRole("button", { name: "Desfazer" }).click();
+    await expect(page.getByText("Pagamento desfeito.")).toBeVisible({ timeout: 30_000 });
+  }
 });

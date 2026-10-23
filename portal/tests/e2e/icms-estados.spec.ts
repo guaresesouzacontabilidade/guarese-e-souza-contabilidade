@@ -31,14 +31,15 @@ test("ICMS por estado: consulta, matriz interestadual e edição só pelo admini
   await page.waitForURL(/\/escritorio\/obrigacoes\/icms$/);
   await expect(page.getByRole("heading", { name: "ICMS por estado" })).toBeVisible();
 
-  // Tabela: Tocantins com 20% conferidos e prazo a conferir; Bahia com dia 9 aguardando validação
+  // Tabela: Tocantins com 20% conferidos e prazo a conferir; Bahia com dia 9 e a regra proposta
   const to = page.locator("#uf-TO");
   await expect(to).toContainText("20%");
   await expect(to).toContainText("Conferida na lei");
   await expect(to).toContainText("A conferir");
   const ba = page.locator("#uf-BA");
   await expect(ba).toContainText("Dia 9 do mês seguinte");
-  await expect(ba).toContainText("Regra aguardando validação");
+  // A regra da Bahia começa aguardando validação; o administrador pode já tê-la validado
+  await expect(ba).toContainText(/Regra (aguardando validação|validada)/);
   await expect(page.locator("#uf-MS")).toContainText("Datas do calendário fiscal do estado");
 
   // Consulta entre estados

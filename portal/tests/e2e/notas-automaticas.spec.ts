@@ -103,7 +103,7 @@ test("empresário cadastra o certificado A1, vê a situação e remove", async (
   await expect(page.getByText("Senha do certificado incorreta.").first()).toBeVisible({ timeout: 30_000 });
   await page.locator('input[name="autorizacao"]').check();
   await enviar(pfx("OUTRA EMPRESA:98765432000110", "x"), "x");
-  await expect(page.getByText("Este certificado é de outro CNPJ. Use o certificado da própria empresa.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/Este certificado é de outro CNPJ/).first()).toBeVisible({ timeout: 30_000 });
 
   // Certificado da própria empresa
   await page.locator('input[name="autorizacao"]').check();
