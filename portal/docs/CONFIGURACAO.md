@@ -147,10 +147,10 @@ Aplicado automaticamente pelo script de publicação (confira em **Supabase → 
 - Senha com no mínimo 10 caracteres, com letras maiúsculas, minúsculas e números.
 - Verificação em duas etapas por aplicativo autenticador (TOTP) habilitada.
 - Endereço do site e endereços de retorno permitidos (**URL Configuration**).
-- Renovação de sessão com rotação de token; links de convite válidos por 24 horas.
+- Renovação de sessão com rotação de token; links enviados por e-mail (convite e redefinição de senha) válidos por 1 hora.
 - Modelos de e-mail em português.
 
-No Supabase Pro, o script também limita a sessão a 24 horas e encerra após 8 horas sem uso.
+No Supabase Pro, o script também encerra a sessão depois de 8 horas sem uso.
 
 ## 9. Domínio próprio
 

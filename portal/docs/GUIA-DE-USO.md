@@ -13,7 +13,7 @@ Manual prático para a equipe do escritório e para os clientes. Os nomes em **n
 
 Esqueceu a senha? Na tela de entrada, use **Esqueci minha senha**.
 
-**Ao fechar o portal, a sessão é encerrada.** Fechadas todas as abas (ou o aplicativo no celular), quem abrir o portal de novo precisa entrar com a senha (e o código das duas etapas, se ativado). Recarregar a página, abrir o portal em outra aba ou trocar de aplicativo e voltar não desconecta. Além disso, a sessão termina depois de 8 horas sem uso ou 24 horas no total, e o portal recusa senhas que já apareceram em vazamentos conhecidos na internet.
+**Ao fechar o portal, a sessão é encerrada.** Fechadas todas as abas (ou o aplicativo no celular), quem abrir o portal de novo precisa entrar com a senha (e o código das duas etapas, se ativado). Recarregar a página, abrir o portal em outra aba ou trocar de aplicativo e voltar não desconecta. Além disso, a sessão termina depois de 8 horas sem uso, os links de convite e de troca de senha valem 1 hora (vencido, use “Esqueci minha senha” ou peça ao escritório para reenviar o acesso), e o portal recusa senhas que já apareceram em vazamentos conhecidos na internet.
 
 ### Minha conta
 

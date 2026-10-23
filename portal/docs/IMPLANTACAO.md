@@ -118,7 +118,7 @@ Quando o escritório decidir usar com clientes de verdade:
 
    Com domínio próprio, acrescente `--dominio portal.seudominio.com.br` e, no Registro.br, crie um registro **CNAME** apontando para `cname.vercel-dns.com`.
 
-5. O script mostra um **link de uso único** (válido por 24 horas) para o administrador criar a senha.
+5. O script mostra um **link de uso único** (válido por 1 hora) para o administrador criar a senha.
 6. Apague as duas chaves.
 
 ### Primeiro acesso em produção — lista de conferência

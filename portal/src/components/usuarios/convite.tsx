@@ -14,10 +14,10 @@ import { convidarUsuario, type DadosConvite } from "@/lib/usuarios/acoes";
 import { SeletorPermissoes } from "./seletor-permissoes";
 
 export function LinkCompartilhavel({ link, nome }: { link: string; nome?: string }) {
-  const texto = `Olá${nome ? `, ${nome.split(" ")[0]}` : ""}! Este é o seu link de acesso ao Portal Guarese's ON (uso único): ${link}`;
+  const texto = `Olá${nome ? `, ${nome.split(" ")[0]}` : ""}! Este é o seu link de acesso ao Portal Guarese's ON (uso único, vale por 1 hora): ${link}`;
   return (
     <div className="space-y-2 rounded-lg border border-border bg-muted p-3">
-      <p className="text-xs text-muted-foreground">Link de acesso (uso único). Compartilhe somente com o convidado:</p>
+      <p className="text-xs text-muted-foreground">Link de acesso (uso único, vale por 1 hora). Compartilhe somente com o convidado:</p>
       <code className="block break-all rounded bg-card p-2 text-xs">{link}</code>
       <div className="flex flex-wrap gap-2">
         <Button tamanho="sm" variante="contorno" onClick={() => navigator.clipboard.writeText(link).then(() => toast.success("Link copiado."))}>

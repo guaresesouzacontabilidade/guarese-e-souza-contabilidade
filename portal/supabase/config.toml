@@ -233,7 +233,7 @@ max_frequency = "1s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 86400
+otp_expiry = 3600
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -288,7 +288,7 @@ max_frequency = "5s"
 # Configure logged in session timeouts.
 [auth.sessions]
 # Force log out after the specified duration.
-timebox = "24h"
+# timebox = "24h"
 # Force log out if the user has been inactive longer than the specified duration.
 inactivity_timeout = "8h"
 

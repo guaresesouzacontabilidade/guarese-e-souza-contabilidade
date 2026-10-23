@@ -56,7 +56,7 @@ async function enviarConviteEmail(email: string, nome: string, link: string, emp
       "Clique no botão abaixo para definir sua senha e ativar o acesso.",
     ],
     botao: { texto: "Ativar meu acesso", url: link },
-    aviso: "Este link é pessoal e de uso único. Se você não esperava este convite, ignore esta mensagem.",
+    aviso: "Este link é pessoal, de uso único e vale por 1 hora. Se ele vencer, peça ao escritório para reenviar o acesso. Se você não esperava este convite, ignore esta mensagem.",
   });
   return r.enviado ? { status: "enviado" as const, erro: null } : { status: "falhou" as const, erro: r.motivo === "falhou" ? r.erro ?? null : null };
 }

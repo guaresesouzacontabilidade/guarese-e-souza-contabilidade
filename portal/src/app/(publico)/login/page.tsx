@@ -12,7 +12,7 @@ const AVISOS: Record<string, string> = {
   sessao: "Sua sessão foi encerrada. Entre novamente.",
   saiu: "Você saiu do portal com segurança.",
   fechado: "Por segurança, a sessão foi encerrada porque o portal foi fechado. Entre novamente.",
-  link: "O link utilizado é inválido ou expirou. Solicite um novo.",
+  link: "O link utilizado é inválido ou passou do prazo (os links valem 1 hora). Use “Esqueci minha senha” ou peça ao escritório um novo link de acesso.",
   senha: "Senha definida com sucesso. Entre com sua nova senha.",
 };
 

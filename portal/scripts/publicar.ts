@@ -231,7 +231,8 @@ async function configurarLogin(ref: string, site: string) {
     external_anonymous_users_enabled: false,
     mailer_autoconfirm: false,
     mailer_secure_email_change_enabled: true,
-    mailer_otp_exp: 86400,
+    // Links enviados por e-mail (convite, redefinição de senha) valem 1 hora
+    mailer_otp_exp: 3600,
     password_min_length: 10,
     password_required_characters: "abcdefghijklmnopqrstuvwxyz:ABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789",
     mfa_totp_enroll_enabled: true,
@@ -280,10 +281,10 @@ async function configurarLogin(ref: string, site: string) {
     aviso(`Modelos de e-mail não aplicados (${(e as Error).message.slice(0, 160)}). O portal funciona; ajuste depois em Authentication → Emails.`);
   }
   try {
-    await sb(`/projects/${ref}/config/auth`, { method: "PATCH", body: JSON.stringify({ sessions_timebox: 86400, sessions_inactivity_timeout: 28800 }) });
-    ok("Limite de sessão (24 h) e de inatividade (8 h) aplicados.");
+    await sb(`/projects/${ref}/config/auth`, { method: "PATCH", body: JSON.stringify({ sessions_timebox: 0, sessions_inactivity_timeout: 28800 }) });
+    ok("Sessão encerrada depois de 8 h sem uso.");
   } catch {
-    aviso("Limites de duração de sessão são recurso de planos pagos do Supabase — mantidos os padrões no plano gratuito.");
+    aviso("Encerrar a sessão por inatividade é recurso de planos pagos do Supabase — mantido o padrão no plano gratuito.");
   }
   try {
     // Recusa senhas que já apareceram em vazamentos públicos (HaveIBeenPwned; só a parte inicial do hash é consultada)
@@ -557,8 +558,8 @@ async function main() {
   if (PRODUCAO) {
     console.log(` Portal publicado (PRODUÇÃO — dados reais): ${site}`);
     console.log(` Supabase: projeto ${ref} (região São Paulo)`);
-    if (conviteEnviado) console.log(` Convite para o administrador definir a senha enviado para ${ADMIN_EMAIL} (vale 24 h; confira também o spam).`);
-    else if (linkAdmin) console.log(` Link para o administrador definir a senha (uso único, vale 24 h):\n ${linkAdmin}`);
+    if (conviteEnviado) console.log(` Convite para o administrador definir a senha enviado para ${ADMIN_EMAIL} (vale 1 h; confira também o spam).`);
+    else if (linkAdmin) console.log(` Link para o administrador definir a senha (uso único, vale 1 h):\n ${linkAdmin}`);
     console.log(` Próximos passos: ative a verificação em duas etapas${configuracaoEmail() ? "" : ", configure o e-mail (SMTP)"} e cadastre as empresas.`);
   } else {
     console.log(` Portal publicado (DEMONSTRAÇÃO, dados fictícios): ${site}`);
