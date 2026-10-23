@@ -32,8 +32,16 @@ No canto superior direito (iniciais do nome) → **Minha conta**:
 
 Depois de entrar, aparece a área da sua empresa. Se você tiver acesso a mais de uma, troque no seletor de empresa no topo da tela.
 
+**O menu é agrupado**: as telas que andam juntas ficam no mesmo grupo — **Notas** (ou **Notas e transporte**), **Documentos**, **Pagamentos e prazos**, **Financeiro**, **Impostos e relatórios**, **Falar com o escritório** e **Configurações** (e **Loja**, para quem usa a gestão da loja). Toque no grupo para abrir; o grupo da tela atual já vem aberto. Dentro de uma tela, as outras do mesmo grupo aparecem como abas no topo (ex.: em Documentos: *Enviar documentos · Meus documentos · Pendências*). No celular, o rodapé tem os grupos do dia a dia e o botão **Mais** abre o menu completo.
+
 ### Visão geral
-Resumo do mês: documentos que faltam, prazos, avisos do escritório e, quando liberado, a saúde financeira.
+O resumo do mês em blocos:
+- no topo, o **faturamento** do mês (com a variação sobre o mês anterior), os **impostos previstos** e os **documentos entregues**;
+- **Documentos do mês**: o medidor do que já foi entregue e o que o escritório ainda precisa, com o botão de enviar;
+- **Próximo pagamento** (o bloco em destaque): a próxima guia a pagar, quanto falta para vencer e os botões *Ver guia* e *Já paguei* — sem guia, aparece "Tudo em dia";
+- **Falar com o escritório**: as últimas conversas e as solicitações em andamento;
+- **Faturamento** dos últimos 12 meses em barras (o mês de trabalho em destaque) e os **impostos do mês** por tributo (a previsão aparece quando os documentos do mês chegaram);
+- **Notas do mês** (saída e entrada), **Esta semana** (guias, documentos a enviar e vencimentos de cada dia) e **Atalhos** para o que você mais usa.
 
 ### Enviar documentos
 1. Escolha o **tipo de documento** (ex.: XML de notas de saída, extrato bancário, folha de ponto) e o **mês de referência**.
@@ -220,7 +228,9 @@ Converse com o escritório por assunto, com anexos. Com a conversa aberta, as re
 
 ## 3. Para a equipe do escritório
 
-O menu **Escritório** mostra a carteira inteira; ao escolher uma empresa no seletor, aparece a área daquela empresa (com as mesmas telas do cliente e as ferramentas da equipe).
+O menu **Escritório** mostra a carteira inteira, em grupos: **Visão geral**, **Empresas**, **Atendimento** (documentos recebidos, pendências, solicitações e mensagens), **Prazos** (obrigações, vencimentos e fechamentos), **Notas fiscais** (automáticas, de serviço, de produto e CT-e), **Fiscal** (apuração do ICMS, auditor fiscal e maquininhas), **Financeiro** (financeiro da carteira, conciliação e relatórios) e **Escritório** (equipe, configurações e auditoria). Ao escolher uma empresa no seletor, aparece a área daquela empresa (com os mesmos grupos do cliente e as ferramentas da equipe, como o cadastro em **Configurações**).
+
+A **Visão geral da carteira** resume tudo em blocos: o medidor das **obrigações do mês** (atrasadas, da semana, esperando o cliente e concluídas), **Atenção hoje** (o que está atrasado, certificados vencendo e documentos recebidos após o fechamento), a **caixa de entrada**, a **entrega de documentos** da competência de trabalho (com as empresas mais atrasadas), o **fechamento do mês**, a **economia encontrada** pelo auditor fiscal (valor estimado), os **prazos da semana** por dia, as **tarefas da equipe** e os **clientes por cidade**. Cada bloco tem a seta que abre a tela completa.
 
 ### Rotina do mês, passo a passo
 

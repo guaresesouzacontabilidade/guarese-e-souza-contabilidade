@@ -9,6 +9,7 @@ import {
   Bell,
   Building2,
   Check,
+  ChevronDown,
   ChevronsUpDown,
   Gem,
   LogOut,
@@ -28,7 +29,7 @@ import { Gaveta } from "@/components/ui/dialog";
 import { Menu, MenuConteudo, MenuGatilho, MenuItem, MenuRotulo, MenuSeparador, Popover, PopoverConteudo, PopoverGatilho } from "@/components/ui/menu";
 import { formatarDocumento, formatarRelativo } from "@/lib/formatos";
 import { ROTULO_PAPEL } from "@/lib/permissoes";
-import { itemAtivo, menuEmpresa, menuEscritorio, type EmpresaMenu, type ItemMenu } from "./navegacao";
+import { grupoAtivo, gruposEmpresa, gruposEscritorio, itemAtivo, type EmpresaMenu, type GrupoMenu, type ItemMenu } from "./navegacao";
 import { listarNotificacoes, marcarNotificacoesLidas, type NotificacaoResumo } from "./acoes-layout";
 import { criarClienteNavegador } from "@/lib/supabase/client";
 import { ConviteAvisos } from "@/components/notificacoes/avisos";
@@ -82,6 +83,13 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
     return empresas.find((e) => e.id === id) ?? (equipe ? null : empresas[0] ?? null);
   }, [idNaUrl, idCookie, empresas, equipe]);
 
+  // Grupo da página atual: as outras telas do grupo aparecem como abas no topo
+  const grupoDaPagina = useMemo(() => {
+    if (idNaUrl && empresaAtual) return grupoAtivo(caminho, gruposEmpresa(empresaAtual, equipe));
+    if (equipe && caminho.startsWith("/escritorio")) return grupoAtivo(caminho, gruposEscritorio(usuario.tipo === "admin"));
+    return null;
+  }, [idNaUrl, empresaAtual, equipe, caminho, usuario.tipo]);
+
   const conteudoMenu = (
     <MenuLateral
       equipe={equipe}
@@ -117,6 +125,7 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
       </header>
 
       <main id="conteudo" className="mx-auto w-full max-w-7xl px-3 pb-24 pt-4 sm:px-5 sm:pt-6 lg:pb-10">
+        {grupoDaPagina && grupoDaPagina.itens.length > 1 ? <AbasGrupo grupo={grupoDaPagina} caminho={caminho} /> : null}
         {/* A cada tela nova, os blocos entram suavemente em cascata */}
         <div key={caminho} className="cascata">
           {children}
@@ -128,7 +137,7 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
   );
 }
 
-function LinkMenu({ item, caminho }: { item: ItemMenu; caminho: string }) {
+function LinkMenu({ item, caminho, subitem = false }: { item: ItemMenu; caminho: string; subitem?: boolean }) {
   const ativo = itemAtivo(caminho, item);
   const Icone = item.icone;
   return (
@@ -136,15 +145,104 @@ function LinkMenu({ item, caminho }: { item: ItemMenu; caminho: string }) {
       href={item.href}
       aria-current={ativo ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-xl border px-3 py-2 text-sm transition-[background-color,color,border-color,transform] duration-200",
+        "flex items-center gap-3 rounded-xl border text-sm transition-[background-color,color,border-color,transform] duration-200",
+        subitem ? "px-3 py-1.5" : "px-3 py-2",
         ativo
           ? "border-sidebar-ativo-borda font-semibold text-sidebar-ativo-texto [background:var(--sidebar-ativo-fundo)]"
           : "border-transparent text-sidebar-foreground/85 hover:translate-x-0.5 hover:bg-sidebar-ativo/70 hover:text-sidebar-foreground",
       )}
     >
-      <Icone className="size-4 shrink-0" />
+      {subitem ? null : <Icone className="size-4 shrink-0" />}
       <span className="truncate">{item.rotulo}</span>
     </Link>
+  );
+}
+
+/** Grupos do menu: o grupo da página atual fica aberto; os outros abrem com um toque. */
+function GruposMenu({ grupos, caminho, prefixo }: { grupos: GrupoMenu[]; caminho: string; prefixo: string }) {
+  const ativo = grupoAtivo(caminho, grupos)?.id ?? null;
+  const [abertos, setAbertos] = useState<string[]>(() => (ativo ? [ativo] : []));
+  // Ao entrar numa tela de outro grupo, ele abre sozinho
+  const [ativoAnterior, setAtivoAnterior] = useState(ativo);
+  if (ativo !== ativoAnterior) {
+    setAtivoAnterior(ativo);
+    if (ativo && !abertos.includes(ativo)) setAbertos([...abertos, ativo]);
+  }
+  return (
+    <div className="space-y-0.5">
+      {grupos.map((g) => {
+        if (g.itens.length === 1) return <LinkMenu key={g.id} item={{ ...g.itens[0], rotulo: g.rotulo, icone: g.icone }} caminho={caminho} />;
+        const aberto = abertos.includes(g.id);
+        const temAtivo = g.id === ativo;
+        const Icone = g.icone;
+        const idLista = `menu-${prefixo}-${g.id}`;
+        return (
+          <div key={g.id}>
+            <button
+              type="button"
+              aria-expanded={aberto}
+              aria-controls={idLista}
+              onClick={() => setAbertos(aberto ? abertos.filter((x) => x !== g.id) : [...abertos, g.id])}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition-[background-color,color,border-color] duration-200",
+                temAtivo && !aberto
+                  ? "border-sidebar-ativo-borda font-semibold text-sidebar-ativo-texto [background:var(--sidebar-ativo-fundo)]"
+                  : "border-transparent text-sidebar-foreground/85 hover:bg-sidebar-ativo/70 hover:text-sidebar-foreground",
+                temAtivo && "font-semibold",
+              )}
+            >
+              <Icone className="size-4 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">{g.rotulo}</span>
+              <ChevronDown className={cn("size-4 shrink-0 text-sidebar-muted transition-transform duration-200", aberto && "rotate-180")} />
+            </button>
+            {aberto ? (
+              <ul id={idLista} className="animar-entrada my-0.5 ml-[1.15rem] space-y-0.5 border-l border-sidebar-borda pl-2">
+                {g.itens.map((i) => (
+                  <li key={i.href}>
+                    <LinkMenu item={i} caminho={caminho} subitem />
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Abas do grupo no topo da página: as telas que andam juntas ficam a um toque. */
+function AbasGrupo({ grupo, caminho }: { grupo: GrupoMenu; caminho: string }) {
+  const Icone = grupo.icone;
+  // O item mais específico é o atual (ex.: /loja/carregamentos não marca /loja)
+  const atual = grupo.itens.filter((i) => itemAtivo(caminho, i)).sort((a, b) => b.href.length - a.href.length)[0];
+  return (
+    <nav aria-label={`Telas de ${grupo.rotulo}`} className="-mx-3 mb-4 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0 nao-imprimir">
+      <ul className="flex min-w-max items-center gap-1.5">
+        <li className="mr-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Icone className="size-3.5" aria-hidden /> {grupo.rotulo}
+        </li>
+        {grupo.itens.map((i) => {
+          const ativo = i === atual;
+          const ItemIcone = i.icone;
+          return (
+            <li key={i.href}>
+              <Link
+                href={i.href}
+                aria-current={ativo ? "page" : undefined}
+                className={cn(
+                  "inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors",
+                  ativo ? "border-transparent bg-primary font-semibold text-primary-foreground shadow-sm" : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                )}
+              >
+                <ItemIcone className="size-4" aria-hidden />
+                {i.rotulo}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
 
@@ -180,9 +278,7 @@ function MenuLateral({
         {equipe ? (
           <div className="space-y-1">
             <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted">Escritório</p>
-            {menuEscritorio(admin).map((i) => (
-              <LinkMenu key={i.href} item={i} caminho={caminho} />
-            ))}
+            <GruposMenu grupos={gruposEscritorio(admin)} caminho={caminho} prefixo="escritorio" />
           </div>
         ) : null}
         {empresa && (!equipe || empresaNaUrl) ? (
@@ -194,12 +290,7 @@ function MenuLateral({
                 {equipe ? `Empresa: ${empresa.nome}` : empresa.nome}
               </p>
             </div>
-            {menuEmpresa(empresa, equipe).map((i) => (
-              <LinkMenu key={i.href} item={i} caminho={caminho} />
-            ))}
-            {equipe ? (
-              <LinkMenu item={{ rotulo: "Cadastro da empresa", href: `/escritorio/empresas/${empresa.id}`, icone: Building2 }} caminho={caminho} />
-            ) : null}
+            <GruposMenu grupos={gruposEmpresa(empresa, equipe)} caminho={caminho} prefixo="empresa" />
           </div>
         ) : null}
       </nav>
@@ -539,40 +630,52 @@ function MenuUsuario({ usuario }: { usuario: Props["usuario"] }) {
   );
 }
 
+/** Rótulos curtos das abas do rodapé no celular. */
+const ABA_CURTA: Record<string, string> = {
+  inicio: "Início",
+  loja: "Loja",
+  notas: "Notas",
+  documentos: "Documentos",
+  pagamentos: "Pagamentos",
+  financeiro: "Financeiro",
+  falar: "Escritório",
+};
+
 function NavegacaoInferior({ empresa, caminho, abrirMenu }: { empresa: EmpresaMenu; caminho: string; abrirMenu: () => void }) {
-  const p = new Set(empresa.permissoes);
-  const base = `/e/${empresa.id}`;
-  const itens = menuEmpresa(empresa, false).filter((i) =>
-    (empresa.loja && empresa.modalidade === "notas"
-      ? [base, `${base}/loja/carregamentos`, `${base}/notas-produto`, `${base}/enviar`]
-      : empresa.loja
-        ? [base, `${base}/loja/vender`, `${base}/loja/caixa`, `${base}/enviar`]
-        : [base, `${base}/enviar`, `${base}/pendencias`, `${base}/financeiro`]
-    ).includes(i.href),
-  );
-  if (!p.has("documentos.enviar") && itens.length < 2) return null;
+  const grupos = gruposEmpresa(empresa, false);
+  // Os grupos mais usados no dia a dia; o resto fica em "Mais"
+  const abas = ["inicio", "loja", "notas", "documentos", "pagamentos", "financeiro", "falar"]
+    .map((id) => grupos.find((g) => g.id === id))
+    .filter((g): g is GrupoMenu => Boolean(g))
+    .slice(0, 4);
+  if (abas.length < 2) return null;
+  const ativo = grupoAtivo(caminho, grupos);
   return (
     <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/80 backdrop-blur-xl lg:hidden nao-imprimir">
       <ul className="mx-auto grid max-w-md grid-cols-5">
-        {itens.slice(0, 4).map((i) => {
-          const ativo = itemAtivo(caminho, i);
-          const Icone = i.icone;
+        {abas.map((g) => {
+          const atual = ativo?.id === g.id;
+          const Icone = g.icone;
           return (
-            <li key={i.href}>
+            <li key={g.id}>
               <Link
-                href={i.href}
-                aria-current={ativo ? "page" : undefined}
-                className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", ativo ? "font-semibold text-primary" : "text-muted-foreground")}
+                href={g.itens[0].href}
+                aria-current={atual ? "page" : undefined}
+                className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", atual ? "font-semibold text-primary" : "text-muted-foreground")}
               >
-                <Icone className="size-5" />
-                <span className="truncate">{i.rotulo.replace("Enviar documentos", "Enviar").replace("Visão geral", "Início")}</span>
+                <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition-colors", atual && "bg-primary/12")}>
+                  <Icone className="size-5" />
+                </span>
+                <span className="truncate">{ABA_CURTA[g.id] ?? g.rotulo}</span>
               </Link>
             </li>
           );
         })}
         <li>
           <button onClick={abrirMenu} className="flex w-full flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground">
-            <MoreHorizontal className="size-5" />
+            <span className="flex h-7 w-12 items-center justify-center">
+              <MoreHorizontal className="size-5" />
+            </span>
             Mais
           </button>
         </li>

@@ -56,6 +56,7 @@ test("equipe analisa e publica; o cliente vê a oportunidade; a equipe retira", 
   const cliente = await ctxCliente.newPage();
   await entrar(cliente, `cliente@${DOMINIO}`);
   await cliente.waitForURL(/\/e\/[0-9a-f-]{36}/, { timeout: 90_000 });
+  await cliente.getByRole("button", { name: "Impostos e relatórios" }).first().click();
   await cliente.getByRole("link", { name: "Economia de impostos" }).first().click();
   await expect(cliente.getByRole("heading", { name: "Economia de impostos" })).toBeVisible();
   await expect(cliente.getByText(/impostos que podem ter sido pagos a mais/).first()).toBeVisible();

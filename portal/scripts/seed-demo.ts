@@ -28,7 +28,7 @@ import { semearIcms } from "./demo-icms";
 import { semearNfse } from "./demo-nfse";
 import { semearNfe } from "./demo-nfe";
 import { semearLoja } from "./demo-loja";
-import { corrigirPisCofinsGraos, semearCteGraos, semearGraos } from "./demo-graos";
+import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
 carregarEnv();
@@ -274,6 +274,9 @@ async function main() {
   }
   if (await corrigirPisCofinsGraos(admin)) {
     console.log("  Comercial de grãos: vendas com PIS 1,65% e Cofins 7,6% (Lucro Real)");
+  }
+  if (await semearPainelGraos(admin, comoAdmin)) {
+    console.log("  Comercial de grãos: faturamento dos últimos meses e checklist de documentos (valores fictícios)");
   }
   if (await semearCteGraos(admin)) {
     console.log("  CT-e da comercial de grãos: configuração e operações do frete (emissão desligada; formulário em modo de conferência)");

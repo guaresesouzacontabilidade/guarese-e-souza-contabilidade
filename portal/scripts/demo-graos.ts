@@ -406,3 +406,53 @@ export async function semearCteGraos(admin: SupabaseClient): Promise<boolean> {
   );
   return true;
 }
+
+/** Primeiro dia do mês, deslocado em meses a partir do mês atual (AAAA-MM-01). */
+function competenciaDemo(deslocamentoMeses: number) {
+  const d = new Date();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + deslocamentoMeses);
+  return d.toISOString().slice(0, 8) + "01";
+}
+
+/**
+ * Painel da comercial de grãos: receita informada dos últimos meses (faturamento
+ * e previsão de impostos) e o checklist dos documentos. Valores fictícios, com a
+ * safra concentrando as vendas. Idempotente: não sobrescreve o que já existe.
+ */
+export async function semearPainelGraos(admin: SupabaseClient, comoAdmin: SupabaseClient): Promise<boolean> {
+  const { data: emp } = await admin.from("empresas").select("id").eq("documento", cnpjValido("557770880001")).maybeSingle();
+  if (!emp) return false;
+  const { count } = await admin.from("calculo_meses").select("empresa_id", { count: "exact", head: true }).eq("empresa_id", emp.id);
+  if (count) return false;
+
+  ok(
+    "Cálculos: parâmetros",
+    await admin
+      .from("calculo_parametros")
+      .upsert({ empresa_id: emp.id, anexo_mercadorias: "I", anexo_servicos: "III", aliquota_iss: null, pro_labore: 8000, socios_pro_labore: 2, rat: 2, fap: 1, terceiros: 5.8 }, {
+        onConflict: "empresa_id",
+        ignoreDuplicates: true,
+      }),
+  );
+  // 26 meses até o mês passado (o comparativo de regimes usa 24)
+  const vendas = [
+    610000, 540000, 720000, 980000, 1250000, 1390000, 1180000, 860000, 700000, 650000, 720000, 810000, 690000, 610000, 790000, 1040000, 1320000, 1460000,
+    1270000, 940000, 760000, 820000, 880000, 960000, 1080000, 1150000,
+  ];
+  ok(
+    "Cálculos: receita informada",
+    await admin.from("calculo_meses").upsert(
+      vendas.map((v, i) => ({
+        empresa_id: emp.id,
+        competencia: competenciaDemo(i - vendas.length),
+        receita_mercadorias: v,
+        receita_servicos: 0,
+        observacao: "Valores fictícios de demonstração.",
+      })),
+      { onConflict: "empresa_id,competencia", ignoreDuplicates: true },
+    ),
+  );
+  for (const d of [-2, -1, 0]) await comoAdmin.rpc("gerar_checklist_competencia", { p_empresa_id: emp.id, p_competencia: competenciaDemo(d) });
+  return true;
+}

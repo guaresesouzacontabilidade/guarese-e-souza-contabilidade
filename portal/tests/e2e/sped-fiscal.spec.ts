@@ -43,7 +43,7 @@ test("equipe confere o SPED com os XML; arquivo retificado passa a valer; client
   const { ano, mes, ultimo } = mesPassado();
   await entrar(page, `contador@${DOMINIO}`);
   await page.goto("/escritorio/auditor-fiscal");
-  const quadro = page.locator("div.rounded-xl", { hasText: "SPED Fiscal × XML" }).first();
+  const quadro = page.locator("div.rounded-2xl", { hasText: "SPED Fiscal × XML" }).first();
   await quadro.getByRole("link", { name: /Oficina Exemplo/ }).click();
   await page.waitForURL(/\/e\/[0-9a-f-]{36}\/auditor-fiscal\/sped/);
   const empresa = page.url().match(/\/e\/([0-9a-f-]{36})/)![1];

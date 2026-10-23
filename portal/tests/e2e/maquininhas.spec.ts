@@ -64,7 +64,8 @@ test("relatório no formato conhecido entra sozinho e aponta a taxa acima do con
   await cliente.waitForURL(/\/e\/[0-9a-f-]{36}/, { timeout: 90_000 });
   const empresa = cliente.url().match(/\/e\/([0-9a-f-]{36})/)![1];
 
-  // O menu da empresa leva às maquininhas; o botão "Enviar relatório" já escolhe o tipo do documento
+  // O menu da empresa (grupo Financeiro) leva às maquininhas; o botão "Enviar relatório" já escolhe o tipo do documento
+  await cliente.getByRole("button", { name: "Financeiro" }).first().click();
   await cliente.getByRole("link", { name: "Maquininhas" }).first().click();
   await cliente.waitForURL(/\/maquininhas/);
   await cliente.getByRole("link", { name: /Enviar relatório/ }).click();
@@ -104,6 +105,8 @@ test("relatório no formato conhecido entra sozinho e aponta a taxa acima do con
   const colab = await ctxColab.newPage();
   await entrar(colab, `colaborador@${DOMINIO}`);
   await colab.goto(`/e/${empresa}`);
+  const grupoFinanceiro = colab.getByRole("button", { name: "Financeiro" });
+  if (await grupoFinanceiro.count()) await grupoFinanceiro.first().click();
   await expect(colab.getByRole("link", { name: "Maquininhas" })).toHaveCount(0);
   await colab.goto(`/e/${empresa}/maquininhas`);
   await expect(colab.getByText("Seu acesso não inclui a conferência das maquininhas desta empresa.")).toBeVisible();
@@ -206,7 +209,7 @@ test("equipe cadastra um contrato de frota com a taxa e depois exclui", async ({
   await dialogo.getByRole("button", { name: "Cadastrar contrato" }).click();
   await expect(page.getByText(/Contrato cadastrado/)).toBeVisible({ timeout: 30_000 });
 
-  const cartao = page.locator("div.rounded-xl", { hasText: nome }).first();
+  const cartao = page.locator("div.rounded-2xl", { hasText: nome }).first();
   await expect(cartao).toContainText("Frota e combustível");
   await expect(cartao).toContainText("Frota / combustível");
   await expect(cartao).toContainText("2,5%");

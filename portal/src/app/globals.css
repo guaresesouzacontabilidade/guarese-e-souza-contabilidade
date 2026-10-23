@@ -368,6 +368,34 @@
   animation: girar 80s linear infinite reverse;
 }
 
+/* Painel em blocos: barras que crescem, medidor que enche e cartões que sobem ao passar o mouse */
+@keyframes crescer {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes encher-medidor {
+  from {
+    stroke-dashoffset: 270.2;
+  }
+}
+@utility barra-cresce {
+  transform-origin: bottom;
+  animation: crescer 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@utility medidor-enche {
+  animation: encher-medidor 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@utility bloco-sobe {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--foreground) 10%, transparent);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
