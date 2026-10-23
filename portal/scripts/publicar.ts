@@ -281,10 +281,16 @@ async function configurarLogin(ref: string, site: string) {
     aviso(`Modelos de e-mail não aplicados (${(e as Error).message.slice(0, 160)}). O portal funciona; ajuste depois em Authentication → Emails.`);
   }
   try {
-    await sb(`/projects/${ref}/config/auth`, { method: "PATCH", body: JSON.stringify({ sessions_timebox: 0, sessions_inactivity_timeout: 28800 }) });
+    // Valor em horas (a API do Supabase recusa segundos)
+    await sb(`/projects/${ref}/config/auth`, { method: "PATCH", body: JSON.stringify({ sessions_inactivity_timeout: 8 }) });
     ok("Sessão encerrada depois de 8 h sem uso.");
-  } catch {
-    aviso("Encerrar a sessão por inatividade é recurso de planos pagos do Supabase — mantido o padrão no plano gratuito.");
+  } catch (e) {
+    const motivo = (e as Error).message;
+    aviso(
+      /plan|tier|entitle/i.test(motivo)
+        ? "Encerrar a sessão por inatividade é recurso de planos pagos do Supabase — mantido o padrão no plano gratuito."
+        : `Encerramento da sessão por inatividade não aplicado (${motivo.slice(0, 160)}).`,
+    );
   }
   try {
     // Recusa senhas que já apareceram em vazamentos públicos (HaveIBeenPwned; só a parte inicial do hash é consultada)
