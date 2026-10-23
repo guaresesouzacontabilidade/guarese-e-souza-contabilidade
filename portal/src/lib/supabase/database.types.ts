@@ -3337,6 +3337,25 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"sessoes_portal": {
+                  Row: {
+                    "bloqueada_em": string | null,"created_at": string,"manter_ate": string,"session_id": string,"tentativas": number,"user_id": string
+                  }
+                  Insert: {
+                    "bloqueada_em"?: string | null,"created_at"?: string,"manter_ate": string,"session_id": string,"tentativas"?: number,"user_id": string
+                  }
+                  Update: {
+                    "bloqueada_em"?: string | null,"created_at"?: string,"manter_ate"?: string,"session_id"?: string,"tentativas"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sessoes_portal_user_id_fkey"
+      columns: ["user_id"]
+      isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"solicitacao_eventos": {
                   Row: {
                     "comentario": string | null,"empresa_id": string,"id": number,"ocorrido_em": string,"solicitacao_id": string,"status_anterior": string | null,"status_novo": string | null,"tipo": string,"usuario_id": string | null
@@ -4591,6 +4610,15 @@ isOneToOne: false
                            },
 "salvar_rascunho_relatorio":
 { Args: { "p_comentarios": string,"p_competencia": string,"p_dados": Json,"p_empresa_id": string,"p_fim": string,"p_id": string,"p_inicio": string,"p_limitacoes": Json,"p_resumo": string,"p_tipo": string,"p_titulo": string }; Returns: string
+                           },
+"sessao_desbloqueio":
+{ Args: { "p_senha_ok": boolean,"p_session_id": string,"p_user_id": string }; Returns: number
+                           },
+"sessao_manter_hoje":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"sessao_portal_fechado":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "seguranca_usuarios":
 { Args: Record<PropertyKey, never>; Returns: {

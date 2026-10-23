@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
@@ -15,6 +16,8 @@ export interface EstadoAcesso {
   ativo?: boolean;
   tipo?: "admin" | "equipe" | "cliente";
   sessao_valida?: boolean;
+  /** Sessão mantida no dia e travada porque o portal foi fechado (volta com a senha). */
+  sessao_bloqueada?: boolean;
   aal?: "aal1" | "aal2";
   tem_fator_verificado?: boolean;
   exige_2fa?: boolean;
@@ -53,6 +56,10 @@ export async function exigirSessao(): Promise<Sessao & { perfil: Perfil }> {
   const s = await obterSessao();
   if (!s) redirect("/login");
   const e = s.estado;
+  if (e.sessao_bloqueada) {
+    const caminho = (await headers()).get("x-caminho");
+    redirect(caminho ? `/desbloquear?proximo=${encodeURIComponent(caminho)}` : "/desbloquear");
+  }
   if (!s.perfil || e.ativo === false) redirect("/auth/sair?motivo=inativo");
   if (e.sessao_valida === false) redirect("/auth/sair?motivo=sessao");
   if (e.tem_fator_verificado && e.aal !== "aal2") redirect("/mfa");

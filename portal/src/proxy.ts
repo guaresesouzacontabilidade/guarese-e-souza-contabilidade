@@ -8,7 +8,8 @@ import { COOKIE_PRESENCA } from "@/lib/auth/presenca";
  *  2. protege as rotas privadas (sem sessão → /login; 2FA pendente → /mfa);
  *  3. encerra a sessão quando o portal foi fechado (nenhuma aba renovou o
  *     sinal de "portal aberto" — veja lib/auth/presenca) antes de mostrar
- *     qualquer página;
+ *     qualquer página — ou, se a pessoa confirmou o código e pediu para não
+ *     ser perguntada de novo no dia, TRAVA a sessão até ela digitar a senha;
  *  4. aplica cabeçalhos de segurança e a política de conteúdo (CSP) com nonce.
  * A autorização efetiva acontece no servidor (ações) e no banco (RLS).
  */
@@ -23,10 +24,10 @@ const ROTAS_PUBLICAS = [
   "/api/saude",
 ];
 
-const ROTAS_SEM_EXIGENCIA_MFA = ["/mfa", "/auth/sair", "/auth/confirm", "/definir-senha", "/redefinir-senha"];
+const ROTAS_SEM_EXIGENCIA_MFA = ["/mfa", "/auth/sair", "/auth/confirm", "/definir-senha", "/redefinir-senha", "/desbloquear"];
 
 /** Rotas que não dependem do sinal de "portal aberto" (a própria saída e as rotinas do servidor). */
-const ROTAS_SEM_PRESENCA = ["/auth/sair", "/api/cron/", "/api/saude"];
+const ROTAS_SEM_PRESENCA = ["/auth/sair", "/api/cron/", "/api/saude", "/desbloquear"];
 
 function rotaPublica(caminho: string) {
   return caminho === "/" ? false : ROTAS_PUBLICAS.some((r) => caminho === r || caminho.startsWith(r));
@@ -119,11 +120,22 @@ export async function proxy(request: NextRequest) {
     return r;
   };
 
-  // Portal fechado: nenhuma aba aberta renovou o sinal. Encerra a sessão antes de mostrar qualquer coisa.
+  // Portal fechado: nenhuma aba aberta renovou o sinal. Antes de mostrar qualquer coisa, trava a
+  // sessão mantida no dia (volta com a senha, sem o código) ou encerra a sessão.
   if (logado && !request.cookies.get(COOKIE_PRESENCA)?.value && !ROTAS_SEM_PRESENCA.some((r) => caminho.startsWith(r))) {
-    if (!ehApi) return aplicarCabecalhos(redirecionar("/auth/sair", { motivo: "fechado" }), csp);
-    await supabase?.auth.signOut({ scope: "local" });
-    const negado = NextResponse.json({ erro: "Sessão encerrada: o portal foi fechado. Entre novamente." }, { status: 401 });
+    const { data: situacao } = (await supabase?.rpc("sessao_portal_fechado")) ?? { data: null };
+    const travada = situacao === "bloqueada";
+    if (!ehApi) {
+      return aplicarCabecalhos(
+        travada ? redirecionar("/desbloquear", { proximo: caminho + request.nextUrl.search }) : redirecionar("/auth/sair", { motivo: "fechado" }),
+        csp,
+      );
+    }
+    if (!travada) await supabase?.auth.signOut({ scope: "local" });
+    const negado = NextResponse.json(
+      { erro: travada ? "Sessão travada: o portal foi fechado. Digite a senha para continuar." : "Sessão encerrada: o portal foi fechado. Entre novamente." },
+      { status: 401 },
+    );
     for (const c of resposta.cookies.getAll()) negado.cookies.set(c);
     return aplicarCabecalhos(negado, null);
   }

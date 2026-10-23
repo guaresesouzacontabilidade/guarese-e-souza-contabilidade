@@ -9,7 +9,8 @@ import { criarClienteNavegador } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Campo, Input } from "@/components/ui/form";
 import { Alerta, Carregando } from "@/components/ui/feedback";
-import { registrarAcessoMfa } from "./acoes-mfa";
+import { manterSessaoHoje, registrarAcessoMfa } from "./acoes-mfa";
+import { LembrarHoje } from "./lembrar-hoje";
 
 export function CadastrarMfa({ proximo }: { proximo: string }) {
   const router = useRouter();
@@ -17,6 +18,7 @@ export function CadastrarMfa({ proximo }: { proximo: string }) {
   const [codigo, setCodigo] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [lembrar, setLembrar] = useState(true);
 
   useEffect(() => {
     let cancelado = false;
@@ -57,6 +59,7 @@ export function CadastrarMfa({ proximo }: { proximo: string }) {
       return;
     }
     await registrarAcessoMfa("mfa_ativado");
+    if (lembrar) await manterSessaoHoje();
     toast.success("Verificação em duas etapas ativada.");
     router.replace(proximo);
     router.refresh();
@@ -102,6 +105,7 @@ export function CadastrarMfa({ proximo }: { proximo: string }) {
           required
         />
       </Campo>
+      <LembrarHoje marcado={lembrar} aoMudar={setLembrar} />
       <Button type="submit" className="w-full" disabled={ocupado || codigo.replace(/\D/g, "").length !== 6}>
         <ShieldCheck />
         {ocupado ? "Ativando..." : "Ativar verificação em duas etapas"}

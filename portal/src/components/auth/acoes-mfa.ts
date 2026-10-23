@@ -20,3 +20,13 @@ export async function registrarAcessoMfa(evento?: "mfa_ativado" | "mfa_removido"
   }
   await supabase.rpc("registrar_login", { p_ip: ip ?? undefined, p_user_agent: userAgent ?? undefined });
 }
+
+/**
+ * Depois do código: mantém esta sessão até o fim do dia neste aparelho. Ao
+ * fechar o portal ela fica travada e volta só com a senha (sem o código).
+ */
+export async function manterSessaoHoje(): Promise<boolean> {
+  const supabase = await criarClienteServidor();
+  const { error } = await supabase.rpc("sessao_manter_hoje");
+  return !error;
+}

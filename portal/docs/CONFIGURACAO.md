@@ -145,7 +145,7 @@ Aplicado automaticamente pelo script de publicação (confira em **Supabase → 
 
 - Cadastro público **desligado** (só entra quem for convidado).
 - Senha com no mínimo 10 caracteres, com letras maiúsculas, minúsculas e números.
-- Verificação em duas etapas por aplicativo autenticador (TOTP) habilitada.
+- Verificação em duas etapas por aplicativo autenticador (TOTP) habilitada; o código pode ser pedido uma vez por dia por aparelho (a sessão confirmada fica travada ao fechar o portal e volta com a senha).
 - Endereço do site e endereços de retorno permitidos (**URL Configuration**).
 - Renovação de sessão com rotação de token; links enviados por e-mail (convite e redefinição de senha) válidos por 1 hora.
 - Modelos de e-mail em português.

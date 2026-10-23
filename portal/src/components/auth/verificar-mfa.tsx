@@ -7,7 +7,8 @@ import { criarClienteNavegador } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Campo, Input } from "@/components/ui/form";
 import { Alerta } from "@/components/ui/feedback";
-import { registrarAcessoMfa } from "./acoes-mfa";
+import { manterSessaoHoje, registrarAcessoMfa } from "./acoes-mfa";
+import { LembrarHoje } from "./lembrar-hoje";
 
 export function VerificarMfa({ proximo }: { proximo: string }) {
   const router = useRouter();
@@ -15,6 +16,7 @@ export function VerificarMfa({ proximo }: { proximo: string }) {
   const [codigo, setCodigo] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [lembrar, setLembrar] = useState(true);
 
   useEffect(() => {
     const supabase = criarClienteNavegador();
@@ -42,6 +44,7 @@ export function VerificarMfa({ proximo }: { proximo: string }) {
       return;
     }
     await registrarAcessoMfa();
+    if (lembrar) await manterSessaoHoje();
     router.replace(proximo);
     router.refresh();
   }
@@ -64,6 +67,7 @@ export function VerificarMfa({ proximo }: { proximo: string }) {
           required
         />
       </Campo>
+      <LembrarHoje marcado={lembrar} aoMudar={setLembrar} />
       <Button type="submit" className="w-full" disabled={ocupado || !fatorId || codigo.replace(/\D/g, "").length !== 6}>
         <ShieldCheck />
         {ocupado ? "Verificando..." : "Verificar"}

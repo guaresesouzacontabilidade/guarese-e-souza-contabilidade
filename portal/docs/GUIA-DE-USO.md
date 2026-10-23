@@ -9,11 +9,11 @@ Manual prático para a equipe do escritório e para os clientes. Os nomes em **n
 1. A pessoa recebe um **convite** (por e-mail ou por um link enviado pelo escritório). O portal não tem cadastro aberto: só entra quem foi convidado.
 2. Ao abrir o link, cria a própria senha (mínimo de 10 caracteres, com letras maiúsculas, minúsculas e números).
 3. Lê e aceita os **Termos de uso** e a **Política de privacidade**.
-4. Recomendado: em **Minha conta → Verificação em duas etapas → Ativar agora**, cadastrar um aplicativo autenticador (Google Authenticator ou Microsoft Authenticator). A partir daí, cada novo acesso pede a senha e um código de 6 números do aplicativo.
+4. Recomendado: em **Minha conta → Verificação em duas etapas → Ativar agora**, cadastrar um aplicativo autenticador (Google Authenticator ou Microsoft Authenticator). A partir daí, cada novo acesso pede a senha e um código de 6 números do aplicativo. Na tela do código, a opção **“Não pedir o código de novo hoje neste aparelho”** (já marcada) faz o código ser pedido **uma vez por dia**: até o fim do dia, ao fechar e abrir o portal nesse aparelho, só a senha é pedida. Desmarque em computador compartilhado.
 
 Esqueceu a senha? Na tela de entrada, use **Esqueci minha senha**.
 
-**Ao fechar o portal, a sessão é encerrada.** Fechadas todas as abas (ou o aplicativo no celular), quem abrir o portal de novo precisa entrar com a senha (e o código das duas etapas, se ativado). Recarregar a página, abrir o portal em outra aba ou trocar de aplicativo e voltar não desconecta. Além disso, a sessão termina depois de 8 horas sem uso, os links de convite e de troca de senha valem 1 hora (vencido, use “Esqueci minha senha” ou peça ao escritório para reenviar o acesso), e o portal recusa senhas que já apareceram em vazamentos conhecidos na internet.
+**Ao fechar o portal, a sessão é encerrada.** Fechadas todas as abas (ou o aplicativo no celular), quem abrir o portal de novo precisa entrar com a senha (e o código das duas etapas, se ativado — ou só a senha, se o código já foi confirmado hoje neste aparelho com a opção marcada; nesse caso a sessão fica **travada** até a senha ser digitada, e 5 senhas erradas encerram a sessão). Recarregar a página, abrir o portal em outra aba ou trocar de aplicativo e voltar não desconecta. Além disso, a sessão termina depois de 8 horas sem uso, os links de convite e de troca de senha valem 1 hora (vencido, use “Esqueci minha senha” ou peça ao escritório para reenviar o acesso), e o portal recusa senhas que já apareceram em vazamentos conhecidos na internet.
 
 ### Minha conta
 
