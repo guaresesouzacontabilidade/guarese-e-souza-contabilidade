@@ -5,7 +5,7 @@ import { categoriaDoXml, lerXmlFiscal } from "@/lib/fiscal/xml";
 import { registrarXml, resumoXml } from "@/lib/documentos/processar";
 import { competenciaAtual } from "@/lib/competencia";
 
-export type OrigemAutomatica = "sefaz" | "adn" | "emissao" | "emissao_nfe" | "emissao_cte";
+export type OrigemAutomatica = "sefaz" | "adn" | "emissao" | "emissao_nfe" | "emissao_cte" | "estoque";
 
 const ROTULO_ORIGEM: Record<OrigemAutomatica, string> = {
   sefaz: "Obtido automaticamente na SEFAZ (Ambiente Nacional da NF-e).",
@@ -13,6 +13,7 @@ const ROTULO_ORIGEM: Record<OrigemAutomatica, string> = {
   emissao: "Nota emitida pelo portal no Emissor Nacional da NFS-e.",
   emissao_nfe: "NF-e emitida pelo portal (autorizada pela SEFAZ).",
   emissao_cte: "CT-e emitido pelo portal (autorizado pela SEFAZ).",
+  estoque: "Enviado pela loja na entrada de mercadorias (importar nota).",
 };
 
 function competenciaDe(data: string | null | undefined) {
@@ -25,11 +26,22 @@ function competenciaDe(data: string | null | undefined) {
  * fiscal, sugestões) e devolve o documento. Se a nota ou o evento já estiver
  * no portal (enviado pelo cliente, por exemplo), não duplica. Nota ou evento
  * de mês anterior ao mês inicial da busca (`desde`, AAAA-MM-01) é ignorado:
- * nada é guardado.
+ * nada é guardado. Com `enviadoPor`, o documento fica como enviado por essa
+ * pessoa (XML importado na entrada de mercadorias da loja, que já lança a nota
+ * no estoque: por isso a entrada automática não roda aqui).
  */
 export async function importarXmlAutomatico(
   admin: ClienteAdmin,
-  p: { empresaId: string; documentoEmpresa: string; xml: string; nome: string; origem: OrigemAutomatica; categoriaPadrao: string; desde?: string | null },
+  p: {
+    empresaId: string;
+    documentoEmpresa: string;
+    xml: string;
+    nome: string;
+    origem: OrigemAutomatica;
+    categoriaPadrao: string;
+    desde?: string | null;
+    enviadoPor?: string | null;
+  },
 ): Promise<{ situacao: "importado" | "ja_existia" | "ignorado"; documentoId: string | null; chave: string | null; competencia: string }> {
   const lido = lerXmlFiscal(p.xml, { documento: p.documentoEmpresa });
   const chave = lido.sucesso ? lido.dados.chave_acesso : null;
@@ -69,10 +81,10 @@ export async function importarXmlAutomatico(
     storage_path: caminho,
     upload_status: "concluido",
     status: "recebido",
-    origem: "automatica",
+    origem: p.enviadoPor ? "upload" : "automatica",
     verificacao_status: "ok",
     verificacao_detalhes: ROTULO_ORIGEM[p.origem],
-    enviado_por: null,
+    enviado_por: p.enviadoPor ?? null,
     enviado_em: agora,
     processamento_status: "processando",
   });
@@ -89,7 +101,7 @@ export async function importarXmlAutomatico(
     mime: "application/xml",
     tamanho: bytes.length,
     sha256: hash,
-    enviado_por: null,
+    enviado_por: p.enviadoPor ?? null,
     upload_concluido_em: agora,
     verificacao_status: "ok",
     verificacao_detalhes: ROTULO_ORIGEM[p.origem],
@@ -102,7 +114,7 @@ export async function importarXmlAutomatico(
       .eq("id", id);
     return { situacao: "importado", documentoId: id, chave: null, competencia: comp };
   }
-  const registro = await registrarXml(admin, id, lido.dados);
+  const registro = await registrarXml(admin, id, lido.dados, { semEntradaAutomatica: p.origem === "estoque" });
   await admin
     .from("documentos")
     .update({

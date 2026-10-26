@@ -42,7 +42,7 @@ export default async function PaginaVinculos({ params }: PageProps<"/e/[empresaI
       <CabecalhoPagina
         titulo="Itens de fornecedor ligados"
         descricao="Cada linha diz: este item do fornecedor é este produto da loja. A nota seguinte já vem ligada (e, com a entrada automática, entra sozinha). Apague um vínculo errado para voltar a conferir."
-        voltar={{ href: `/e/${empresaId}/loja/produtos/entrada-nota`, rotulo: "Entrada por nota" }}
+        voltar={{ href: `/e/${empresaId}/loja/produtos/entrada-nota`, rotulo: "Entrada de mercadorias" }}
       />
       <NavegacaoLoja empresaId={empresaId} configurar />
       <Card>

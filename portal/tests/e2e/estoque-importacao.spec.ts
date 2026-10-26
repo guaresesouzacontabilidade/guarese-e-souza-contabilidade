@@ -193,13 +193,13 @@ test("nota de compra: fator da caixa, produto criado do item e entrada automáti
     (await servico!.from("gestao_config").select("entrada_automatica").eq("empresa_id", empresaId).single()).data!.entrada_automatica;
   await page.goto(`/e/${empresaId}/loja/produtos/entrada-nota`);
   if (await ligadaNoBanco()) {
-    await page.getByRole("button", { name: "Desligar a entrada automática" }).click();
+    await page.getByRole("button", { name: "Desligar a entrada automática", exact: true }).click();
     await expect.poll(ligadaNoBanco, { timeout: 30_000 }).toBe(false);
-    await expect(page.getByRole("button", { name: "Ligar a entrada automática" })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("button", { name: "Ligar a entrada automática", exact: true })).toBeVisible({ timeout: 30_000 });
   }
-  await page.getByRole("button", { name: "Ligar a entrada automática" }).click();
+  await page.getByRole("button", { name: "Ligar a entrada automática", exact: true }).click();
   await expect.poll(ligadaNoBanco, { timeout: 30_000 }).toBe(true);
-  await expect(page.getByRole("button", { name: "Desligar a entrada automática" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Desligar a entrada automática", exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Ligada", { exact: true })).toBeVisible();
 
   // A próxima nota do mesmo fornecedor entra sozinha (o processamento das notas chama esta função)

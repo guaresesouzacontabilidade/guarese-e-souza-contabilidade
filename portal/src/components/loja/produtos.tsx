@@ -195,7 +195,7 @@ export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: s
           <ArrowDownUp /> Entrada ou saída
         </Button>
       </DialogTrigger>
-      <DialogContent titulo="Entrada ou saída de estoque" descricao="Para compras com nota, use “Entrada por nota”: o custo vem certinho do XML." largura="lg">
+      <DialogContent titulo="Entrada ou saída de estoque" descricao="Para compras com nota, use “Entrada de mercadorias”: importe o XML ou o PDF e o custo vem certinho da nota." largura="lg">
         <FormularioAcao acao={lancarEstoque.bind(null, empresaId)} aoSucesso={() => setAberto(false)} className="space-y-4">
           {({ estado, pendente }) => (
             <>

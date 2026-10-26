@@ -54,7 +54,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
               <LancarEstoque empresaId={empresaId} produtos={ativos} />
               <Button asChild variante="contorno">
                 <Link href={`${base}/entrada-nota`}>
-                  <FileInput /> Entrada por nota
+                  <FileInput /> Entrada de mercadorias
                 </Link>
               </Button>
               <Button asChild variante="contorno">
