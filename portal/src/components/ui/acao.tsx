@@ -63,7 +63,7 @@ export function FormularioAcao({
 
 export function BotaoEnviar({ pendente, children, textoPendente = "Salvando...", ...props }: ButtonProps & { pendente: boolean; textoPendente?: string }) {
   return (
-    <Button type="submit" disabled={pendente || props.disabled} {...props}>
+    <Button type="submit" {...props} disabled={pendente || props.disabled}>
       {pendente ? <Loader2 className="animate-spin" /> : null}
       {pendente ? textoPendente : children}
     </Button>

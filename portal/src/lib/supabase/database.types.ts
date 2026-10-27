@@ -4676,6 +4676,8 @@ isOneToOne: false
 { Args: { "p_limpeza": string,"p_motivo": string,"p_quarto_id": string }; Returns: undefined
                            },"hotel_quarto_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },"hotel_quartos_lote":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
                            },"hotel_reserva_cancelar":
 { Args: { "p_motivo": string,"p_no_show": boolean,"p_reserva_id": string }; Returns: undefined
                            },"hotel_reserva_salvar":

@@ -1,13 +1,22 @@
 "use client";
 
 import * as React from "react";
-import { BedDouble, CalendarPlus, DoorOpen, Pencil, Sparkles, Trash2, Wrench } from "lucide-react";
+import { BedDouble, CalendarPlus, DoorOpen, ListPlus, Pencil, Sparkles, Trash2, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { CampoValor } from "@/components/ui/campo-valor";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
-import { colocarEmManutencao, excluirTarifa, mudarLimpeza, salvarCategoria, salvarConfiguracaoHotel, salvarQuarto, salvarTarifa } from "@/lib/hotel/acoes";
+import {
+  cadastrarQuartosEmLote,
+  colocarEmManutencao,
+  excluirTarifa,
+  mudarLimpeza,
+  salvarCategoria,
+  salvarConfiguracaoHotel,
+  salvarQuarto,
+  salvarTarifa,
+} from "@/lib/hotel/acoes";
 import type { Limpeza } from "@/lib/hotel/rotulos";
 
 export interface CategoriaForm {
@@ -140,6 +149,107 @@ export function DialogoQuarto({ empresaId, categorias, quarto }: { empresaId: st
               ) : null}
               <div className="flex justify-end">
                 <BotaoEnviar pendente={pendente}>Salvar quarto</BotaoEnviar>
+              </div>
+            </>
+          )}
+        </FormularioAcao>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Números da faixa (com os zeros à esquerda do primeiro), sem os que o hotel não tem. */
+function numerosDaFaixa(inicio: string, fim: string, pular: string): string[] {
+  if (!/^\d{1,5}$/.test(inicio) || !/^\d{1,5}$/.test(fim)) return [];
+  const [a, b] = [Number(inicio), Number(fim)];
+  if (b < a || b - a + 1 > 200) return [];
+  const largura = inicio.length > 1 && inicio.startsWith("0") ? inicio.length : 0;
+  const fora = new Set((pular.match(/\d{1,5}/g) ?? []).map(Number));
+  const lista: string[] = [];
+  for (let n = a; n <= b; n++) if (!fora.has(n)) lista.push(largura ? String(n).padStart(largura, "0") : String(n));
+  return lista;
+}
+
+function resumirNumeros(lista: string[]) {
+  return lista.length > 12 ? `${lista.slice(0, 6).join(", ")} … ${lista.slice(-3).join(", ")}` : lista.join(", ");
+}
+
+/** Vários quartos de uma vez: do 101 ao 120, da mesma categoria. */
+export function DialogoQuartosLote({ empresaId, categorias, existentes }: { empresaId: string; categorias: { id: string; nome: string }[]; existentes: string[] }) {
+  const [aberto, setAberto] = React.useState(false);
+  const [faixa, setFaixa] = React.useState({ inicio: "", fim: "", pular: "" });
+  const numeros = numerosDaFaixa(faixa.inicio, faixa.fim, faixa.pular);
+  const jaTem = new Set(existentes.map((n) => n.toUpperCase()));
+  const novos = numeros.filter((n) => !jaTem.has(n));
+  const repetidos = numeros.filter((n) => jaTem.has(n));
+  const mudar = (campo: keyof typeof faixa) => (e: React.ChangeEvent<HTMLInputElement>) => setFaixa((f) => ({ ...f, [campo]: e.target.value }));
+  return (
+    <Dialog
+      open={aberto}
+      onOpenChange={(v) => {
+        setAberto(v);
+        if (!v) setFaixa({ inicio: "", fim: "", pular: "" });
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variante="contorno" disabled={!categorias.length}>
+          <ListPlus /> Cadastrar vários quartos
+        </Button>
+      </DialogTrigger>
+      <DialogContent titulo="Cadastrar vários quartos" descricao="Informe o primeiro e o último número. Todos ficam na mesma categoria; depois dá para ajustar cada quarto no lápis.">
+        <FormularioAcao
+          acao={cadastrarQuartosEmLote.bind(null, empresaId)}
+          aoSucesso={() => {
+            setAberto(false);
+            setFaixa({ inicio: "", fim: "", pular: "" });
+          }}
+          className="space-y-4"
+        >
+          {({ estado, pendente }) => (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo rotulo="Do número" htmlFor="ql-inicio" obrigatorio erro={estado.erros?.inicio}>
+                  <Input id="ql-inicio" name="inicio" inputMode="numeric" maxLength={5} placeholder="101" value={faixa.inicio} onChange={mudar("inicio")} />
+                </Campo>
+                <Campo rotulo="Até o número" htmlFor="ql-fim" obrigatorio erro={estado.erros?.fim}>
+                  <Input id="ql-fim" name="fim" inputMode="numeric" maxLength={5} placeholder="120" value={faixa.fim} onChange={mudar("fim")} />
+                </Campo>
+                <Campo rotulo="Categoria" htmlFor="ql-cat" obrigatorio erro={estado.erros?.categoria_id}>
+                  <Select id="ql-cat" name="categoria_id" defaultValue={categorias.length === 1 ? categorias[0].id : ""}>
+                    <option value="">Escolha...</option>
+                    {categorias.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nome}
+                      </option>
+                    ))}
+                  </Select>
+                </Campo>
+                <Campo rotulo="Andar" htmlFor="ql-andar">
+                  <Input id="ql-andar" name="andar" maxLength={20} placeholder="1º andar" />
+                </Campo>
+              </div>
+              <Campo rotulo="Camas" htmlFor="ql-camas">
+                <Input id="ql-camas" name="camas" maxLength={120} placeholder="1 casal + 1 solteiro" />
+              </Campo>
+              <Campo rotulo="Números que não existem no hotel" htmlFor="ql-pular" ajuda="Opcional. Separe por vírgula. Ex.: 113, 213.">
+                <Input id="ql-pular" name="pular" maxLength={500} placeholder="113" value={faixa.pular} onChange={mudar("pular")} />
+              </Campo>
+              {numeros.length ? (
+                <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm" aria-live="polite">
+                  {novos.length ? (
+                    <p>
+                      Vai cadastrar <strong>{novos.length}</strong> {novos.length === 1 ? "quarto" : "quartos"}: {resumirNumeros(novos)}
+                    </p>
+                  ) : (
+                    <p>Todos esses quartos já existem.</p>
+                  )}
+                  {repetidos.length ? <p className="mt-1 text-muted-foreground">Já existem e ficam como estão: {resumirNumeros(repetidos)}</p> : null}
+                </div>
+              ) : null}
+              <div className="flex justify-end">
+                <BotaoEnviar pendente={pendente} disabled={!novos.length}>
+                  Cadastrar quartos
+                </BotaoEnviar>
               </div>
             </>
           )}

@@ -71,6 +71,8 @@ let quartoUsado = "";
 test.beforeAll(async () => {
   const { data } = await servico!.from("empresas").select("id").ilike("razao_social", "HOTEL RIO TOCANTINS%").eq("demonstracao", true).single();
   empresaId = data!.id;
+  // Quartos 9xx de execuções anteriores do teste de cadastro em lote
+  await servico!.from("hotel_quartos").delete().eq("empresa_id", empresaId).like("numero", "9__");
   // Sobras de execuções interrompidas deste teste: libera os quartos
   const { data: teste } = await servico!.from("hotel_hospedes").select("id").eq("empresa_id", empresaId).like("nome", "Hóspede Teste %");
   const ids = (teste ?? []).map((h) => h.id);
@@ -89,6 +91,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   if (quartoUsado) await servico!.from("hotel_quartos").update({ limpeza: "limpo" }).eq("id", quartoUsado);
   if (empresaId) await servico!.from("gestao_config").update({ modalidade: "hotel", ativa: true }).eq("empresa_id", empresaId);
+  if (empresaId) await servico!.from("hotel_quartos").delete().eq("empresa_id", empresaId).like("numero", "9__");
 });
 
 test("escritório: liga a gestão do hotel pela tela (a modalidade escolhida é gravada)", async ({ page }) => {
@@ -197,4 +200,22 @@ test("o dono vê os relatórios; cliente de outra empresa não vê o hotel", asy
   const resposta = await page.goto(`/e/${empresaId}/hotel`);
   expect(resposta?.status()).toBe(404);
   expect((await page.request.get(`/api/hotel/${empresaId}/reservas/${reservaId}?doc=conta`)).status()).toBe(403);
+});
+
+test("dono: cadastra vários quartos de uma vez (faixa, pulando um número)", async ({ page }) => {
+  test.setTimeout(120_000);
+  await entrar(page, `hotel@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/hotel/quartos`);
+  await page.getByRole("button", { name: "Cadastrar vários quartos" }).click();
+  const dialogo = page.getByRole("dialog");
+  await dialogo.locator("#ql-inicio").fill("901");
+  await dialogo.locator("#ql-fim").fill("905");
+  await dialogo.locator("#ql-pular").fill("903");
+  await dialogo.locator("#ql-cat").selectOption({ index: 1 });
+  await dialogo.locator("#ql-andar").fill("9º andar");
+  await expect(dialogo.getByText("Vai cadastrar 4 quartos: 901, 902, 904, 905")).toBeVisible();
+  await dialogo.getByRole("button", { name: "Cadastrar quartos" }).click();
+  await expect(page.getByText("4 quartos cadastrados (901 a 905).")).toBeVisible({ timeout: 30_000 });
+  const { data } = await servico!.from("hotel_quartos").select("numero, andar, limpeza").eq("empresa_id", empresaId).like("numero", "9__").order("numero");
+  expect(data).toEqual(["901", "902", "904", "905"].map((numero) => ({ numero, andar: "9º andar", limpeza: "limpo" })));
 });

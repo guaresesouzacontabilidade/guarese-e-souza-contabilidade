@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alerta } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
-import { BotaoExcluirTarifa, BotoesLimpeza, DialogoCategoria, DialogoQuarto, DialogoTarifa } from "@/components/hotel/cadastros";
+import { BotaoExcluirTarifa, BotoesLimpeza, DialogoCategoria, DialogoQuarto, DialogoQuartosLote, DialogoTarifa } from "@/components/hotel/cadastros";
 import { obterContextoHotel } from "@/lib/hotel/contexto";
 import { carregarCategorias, carregarQuartos } from "@/lib/hotel/dados";
 import { LIMPEZA, VARIANTE_LIMPEZA, diaMes } from "@/lib/hotel/rotulos";
@@ -45,7 +45,14 @@ export default async function PaginaQuartos({ params }: PageProps<"/e/[empresaId
       <CabecalhoPagina
         titulo="Quartos e governança"
         descricao="A situação de limpeza de cada quarto. Quarto sujo ou em manutenção não recebe check-in; no check-out, o quarto vai sozinho para a limpeza."
-        acoes={ctx.gerente ? <DialogoQuarto empresaId={empresaId} categorias={catAtivas} /> : undefined}
+        acoes={
+          ctx.gerente ? (
+            <>
+              <DialogoQuartosLote empresaId={empresaId} categorias={catAtivas} existentes={quartos.map((q) => q.numero)} />
+              <DialogoQuarto empresaId={empresaId} categorias={catAtivas} />
+            </>
+          ) : undefined
+        }
       />
       <div className="mb-4 flex flex-wrap gap-2 text-sm">
         {(["limpo", "sujo", "em_limpeza", "manutencao"] as const).map((l) => (

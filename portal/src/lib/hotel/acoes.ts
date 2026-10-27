@@ -128,6 +128,35 @@ export async function salvarQuarto(empresaId: string, quartoId: string | null, _
   });
 }
 
+/** Vários quartos de uma vez: faixa de números (ex.: 101 a 120), pulando os que não existem no hotel. */
+export async function cadastrarQuartosEmLote(empresaId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  return executar(async () => {
+    const ctx = await contexto(empresaId, true);
+    const inicio = texto(fd, "inicio");
+    const fim = texto(fd, "fim");
+    const categoria = texto(fd, "categoria_id");
+    const erros: Record<string, string[]> = {};
+    if (!/^\d{1,5}$/.test(inicio)) erros.inicio = ["Só algarismos (ex.: 101)."];
+    if (!/^\d{1,5}$/.test(fim)) erros.fim = ["Só algarismos (ex.: 120)."];
+    else if (!erros.inicio && Number(fim) < Number(inicio)) erros.fim = ["Precisa ser maior ou igual ao primeiro."];
+    else if (!erros.inicio && Number(fim) - Number(inicio) + 1 > 200) erros.fim = ["No máximo 200 quartos de cada vez."];
+    if (!UUID.test(categoria)) erros.categoria_id = ["Escolha a categoria."];
+    if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
+    const { data, error } = await ctx.supabase.rpc("hotel_quartos_lote", {
+      p_empresa_id: empresaId,
+      p_dados: { categoria_id: categoria, inicio, fim, pular: texto(fd, "pular").slice(0, 500), andar: texto(fd, "andar").slice(0, 20), camas: texto(fd, "camas").slice(0, 120) },
+    });
+    if (error) return falha(mensagemErro(error));
+    revalidarHotel(empresaId);
+    const r = (data ?? {}) as { criados?: string[]; existentes?: string[] };
+    const criados = r.criados ?? [];
+    const existentes = r.existentes ?? [];
+    const ja = existentes.length ? ` Já existiam e ficaram como estavam: ${existentes.join(", ")}.` : "";
+    if (!criados.length) return falha(`Nenhum quarto novo.${ja}`);
+    return sucesso(`${criados.length} ${criados.length === 1 ? "quarto cadastrado" : "quartos cadastrados"} (${criados[0]} a ${criados[criados.length - 1]}).${ja}`);
+  });
+}
+
 export async function salvarTarifa(empresaId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   return executar(async () => {
     const ctx = await contexto(empresaId, true);
