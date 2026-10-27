@@ -59,6 +59,8 @@ export interface EmpresaMenu {
   modalidade: "loja" | "notas" | null;
   /** CT-e configurado pelo escritório (ligado ou em conferência). */
   cte?: boolean;
+  /** Tem caminhões cadastrados (rentabilidade da frota). */
+  frota?: boolean;
   /** Endereço da logo da empresa (rota protegida), quando cadastrada. */
   logo?: string | null;
   /** Ferramentas desligadas pelo escritório (somem do menu). */
@@ -187,6 +189,10 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     pagamentos.push({ rotulo: "Vencimentos", href: `${base}/vencimentos`, icone: CalendarX2 });
   }
   if (p.has("financeiro.ver")) financeiro.push({ rotulo: "Contas e fluxo de caixa", href: `${base}/financeiro`, icone: Wallet });
+  // Rentabilidade da frota: transportadoras (CT-e, transporte ou caminhões cadastrados); a equipe vê em todas
+  if (p.has("financeiro.ver") && (equipe || empresa.frota || empresa.cte || transporte)) {
+    financeiro.push({ rotulo: "Rentabilidade da frota", href: `${base}/frota`, icone: Truck });
+  }
   if (p.has("maquininhas.ver")) financeiro.push({ rotulo: "Maquininhas", href: `${base}/maquininhas`, icone: CreditCard });
   if (p.has("conciliacao.executar")) financeiro.push({ rotulo: "Conciliação", href: `${base}/conciliacao`, icone: GitCompareArrows });
   if (p.has("fechamento.gerenciar")) financeiro.push({ rotulo: "Fechamento", href: `${base}/fechamento`, icone: CalendarCheck });

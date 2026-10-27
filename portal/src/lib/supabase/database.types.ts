@@ -1845,6 +1845,87 @@ isOneToOne: false
       referencedColumns: ["ibge"]
     }
                   ]
+                },"frota_despesas": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"data": string,"descricao": string,"documento": string | null,"empresa_id": string,"fornecedor": string | null,"grupo": string,"id": string,"km": number | null,"litros": number | null,"valor": number,"veiculo_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"data": string,"descricao": string,"documento"?: string | null,"empresa_id": string,"fornecedor"?: string | null,"grupo": string,"id"?: string,"km"?: number | null,"litros"?: number | null,"valor": number,"veiculo_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"data"?: string,"descricao"?: string,"documento"?: string | null,"empresa_id"?: string,"fornecedor"?: string | null,"grupo"?: string,"id"?: string,"km"?: number | null,"litros"?: number | null,"valor"?: number,"veiculo_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "frota_despesas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "frota_despesas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "frota_despesas_veiculo_id_fkey"
+      columns: ["veiculo_id"]
+isOneToOne: false
+      referencedRelation: "frota_veiculos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"frota_veiculos": {
+                  Row: {
+                    "ativo": boolean,"created_at": string,"custo_motorista_mensal": number,"depreciacao_mensal": number,"descricao": string,"empresa_id": string,"financiamento_mensal": number,"id": string,"km_inicial": number | null,"outros_fixos_mensal": number,"placa": string,"seguro_mensal": number,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"created_at"?: string,"custo_motorista_mensal"?: number,"depreciacao_mensal"?: number,"descricao": string,"empresa_id": string,"financiamento_mensal"?: number,"id"?: string,"km_inicial"?: number | null,"outros_fixos_mensal"?: number,"placa": string,"seguro_mensal"?: number,"tipo"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"created_at"?: string,"custo_motorista_mensal"?: number,"depreciacao_mensal"?: number,"descricao"?: string,"empresa_id"?: string,"financiamento_mensal"?: number,"id"?: string,"km_inicial"?: number | null,"outros_fixos_mensal"?: number,"placa"?: string,"seguro_mensal"?: number,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "frota_veiculos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"frota_viagens": {
+                  Row: {
+                    "comissao_motorista": number,"created_at": string,"criado_por": string | null,"cte_numero": string | null,"data": string,"destinatario": string | null,"destino": string | null,"empresa_id": string,"icms": number,"id": string,"mercadoria": string | null,"motorista": string | null,"origem": string | null,"outras_deducoes": number,"peso_kg": number | null,"quebra": number,"remetente": string | null,"valor_frete": number,"veiculo_id": string
+                  }
+                  Insert: {
+                    "comissao_motorista"?: number,"created_at"?: string,"criado_por"?: string | null,"cte_numero"?: string | null,"data": string,"destinatario"?: string | null,"destino"?: string | null,"empresa_id": string,"icms"?: number,"id"?: string,"mercadoria"?: string | null,"motorista"?: string | null,"origem"?: string | null,"outras_deducoes"?: number,"peso_kg"?: number | null,"quebra"?: number,"remetente"?: string | null,"valor_frete": number,"veiculo_id": string
+                  }
+                  Update: {
+                    "comissao_motorista"?: number,"created_at"?: string,"criado_por"?: string | null,"cte_numero"?: string | null,"data"?: string,"destinatario"?: string | null,"destino"?: string | null,"empresa_id"?: string,"icms"?: number,"id"?: string,"mercadoria"?: string | null,"motorista"?: string | null,"origem"?: string | null,"outras_deducoes"?: number,"peso_kg"?: number | null,"quebra"?: number,"remetente"?: string | null,"valor_frete"?: number,"veiculo_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "frota_viagens_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "frota_viagens_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "frota_viagens_veiculo_id_fkey"
+      columns: ["veiculo_id"]
+isOneToOne: false
+      referencedRelation: "frota_veiculos"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"gestao_config": {
                   Row: {
                     "margem_entrada": number | null,"ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"entrada_automatica": boolean,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"empresa_id": string,"mensagem_comprovante": string | null,"nfe_emitente_id": string | null,"modalidade": string,"nfe_marcada_padrao": boolean,"proximo_numero_ordem": number,"nfe_operacao_id": string | null,"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number
