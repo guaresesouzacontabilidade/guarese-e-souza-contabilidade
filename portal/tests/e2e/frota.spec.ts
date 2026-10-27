@@ -4,7 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Rentabilidade da frota (transportadora fictícia da demonstração):
- *  - o dono vê a frase do mês, o ranking dos caminhões e abre um caminhão;
+ *  - o dono vê a síntese do período, o ranking dos veículos e abre um veículo;
  *  - o abastecimento com o km digitado com um número a mais é barrado na hora,
  *    com a explicação (nada é gravado);
  *  - o PDF sai; cliente de outra empresa não vê a frota.
@@ -49,18 +49,19 @@ test.beforeAll(async () => {
   empresaId = data!.id;
 });
 
-test("o dono vê o lucro de verdade, abre um caminhão e o km digitado errado é barrado", async ({ page }) => {
+test("o dono vê o resultado líquido, abre um veículo e o km digitado errado é barrado", async ({ page }) => {
   test.setTimeout(180_000);
   await entrar(page, `transportadora@${DOMINIO}`);
   await page.goto(`/e/${empresaId}/frota`);
   await expect(page.getByRole("heading", { name: "Rentabilidade da frota" })).toBeVisible();
-  await expect(page.getByText(/a frota fez \d+ viagens, rodou [\d.]+ km, faturou R\$/)).toBeVisible();
-  await expect(page.getByText("Caminhões do melhor para o pior")).toBeVisible();
+  await expect(page.getByText(/a frota realizou \d+ viagens, percorreu [\d.]+ km, faturou R\$ [\d.,]+ e apresentou resultado líquido/)).toBeVisible();
+  await expect(page.getByText("Ranking de resultado por veículo")).toBeVisible();
+  await expect(page.getByText(/Análise gerencial ·/)).toBeVisible();
 
   // Abre o caminhão do Volvo
   await page.getByRole("link", { name: /RTA-4B21/ }).first().click();
-  await expect(page.getByText(/O caminhão RTA-4B21 fez \d+ viage/)).toBeVisible();
-  await expect(page.getByText("Resultado do mês, linha por linha")).toBeVisible();
+  await expect(page.getByText(/o veículo RTA-4B21 realizou \d+ viage/)).toBeVisible();
+  await expect(page.getByText("Demonstrativo de resultado do veículo")).toBeVisible();
 
   // Km com um número a mais (3.440.057 no lugar de 344.057): o portal barra
   const { count: antes } = await servico!.from("frota_despesas").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);

@@ -11,7 +11,7 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { CAMPOS_VEICULO } from "@/lib/frota/dados";
 
-export const metadata: Metadata = { title: "Caminhões" };
+export const metadata: Metadata = { title: "Veículos da frota" };
 
 const TIPOS: Record<string, string> = { cavalo: "Cavalo mecânico", truck: "Truck", toco: "Toco", carreta: "Carreta", utilitario: "Utilitário", outro: "Outro" };
 
@@ -25,8 +25,8 @@ export default async function PaginaVeiculos({ params }: PageProps<"/e/[empresaI
   return (
     <>
       <CabecalhoPagina
-        titulo="Caminhões"
-        descricao="Cada caminhão com os custos fixos do mês. Eles entram no lucro de verdade, mesmo nos meses sem viagem."
+        titulo="Veículos da frota"
+        descricao="Cada veículo com os custos fixos do mês. Eles entram no resultado líquido, inclusive nos meses sem viagem."
         voltar={{ href: `/e/${empresaId}/frota`, rotulo: "Rentabilidade da frota" }}
         acoes={podeEditar ? <DialogoVeiculo empresaId={empresaId} /> : null}
       />
@@ -79,7 +79,7 @@ export default async function PaginaVeiculos({ params }: PageProps<"/e/[empresaI
               </Table>
             </div>
           ) : (
-            <EstadoVazio icone={Truck} titulo="Nenhum caminhão cadastrado" descricao="Cadastre o primeiro caminhão para começar." />
+            <EstadoVazio icone={Truck} titulo="Nenhum veículo cadastrado" descricao="Cadastre o primeiro veículo para começar." />
           )}
         </CardContent>
       </Card>

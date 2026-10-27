@@ -73,7 +73,7 @@ function montarCascata(degraus: DegrauCascata[]) {
 export function GraficoCascata({ degraus }: { degraus: DegrauCascata[] }) {
   const dados = montarCascata(degraus);
   return (
-    <Caixa titulo="Do frete ao lucro" descricao="Barra azul: o que entrou. Laranja: o que saiu. Verde: o que sobrou de verdade (vermelho se faltou).">
+    <Caixa titulo="Formação do resultado" descricao="Do faturamento ao resultado líquido: valores deduzidos em cada etapa (verde: resultado positivo; vermelho: negativo).">
       <BarChart data={dados} margin={{ top: 20, right: 8, left: 4, bottom: 0 }}>
         <CartesianGrid stroke={GRADE} strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="nome" tick={{ fontSize: 11, fill: TEXTO }} tickLine={false} axisLine={false} interval={0} />
@@ -102,7 +102,7 @@ export function GraficoConsumo({ pontos, minimo, maximo }: { pontos: { data: str
   const dados = pontos.map((p) => ({ ...p, rotulo: `${p.data.slice(8, 10)}/${p.data.slice(5, 7)}` }));
   const topo = Math.max(maximo + 0.5, ...dados.map((d) => d.media));
   return (
-    <Caixa titulo="Consumo em cada abastecimento (km/l)" descricao="A faixa verde é o normal para caminhão. Ponto vermelho: confira o km ou os litros daquele lançamento." altura={240}>
+    <Caixa titulo="Consumo por abastecimento (km/l)" descricao="A faixa destacada indica o consumo esperado. Pontos em vermelho indicam lançamentos a conferir." altura={240}>
       <LineChart data={dados} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
         <CartesianGrid stroke={GRADE} strokeDasharray="3 3" vertical={false} />
         <ReferenceArea y1={minimo} y2={maximo} fill="var(--sucesso)" fillOpacity={0.08} />
@@ -124,16 +124,16 @@ export function GraficoConsumo({ pontos, minimo, maximo }: { pontos: { data: str
   );
 }
 
-/** Lucro de verdade de cada caminhão (do melhor para o pior). */
+/** Resultado líquido de cada veículo (do maior para o menor). */
 export function GraficoRanking({ dados }: { dados: { placa: string; lucro: number }[] }) {
   if (!dados.length) return null;
   return (
-    <Caixa titulo="Lucro de verdade por caminhão" descricao="Do que mais deu lucro para o que menos deu." altura={Math.max(160, dados.length * 46 + 40)}>
+    <Caixa titulo="Resultado líquido por veículo" descricao="Do maior para o menor resultado do período." altura={Math.max(160, dados.length * 46 + 40)}>
       <BarChart data={dados} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
         <CartesianGrid stroke={GRADE} strokeDasharray="3 3" horizontal={false} />
         <XAxis type="number" tickFormatter={compacto} tick={{ fontSize: 11, fill: TEXTO }} tickLine={false} axisLine={false} />
         <YAxis type="category" dataKey="placa" tick={{ fontSize: 12, fill: "var(--foreground)" }} tickLine={false} axisLine={false} width={72} />
-        <Tooltip contentStyle={ESTILO_DICA} formatter={(v) => [formatarMoeda(Number(v)), "Lucro"]} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
+        <Tooltip contentStyle={ESTILO_DICA} formatter={(v) => [formatarMoeda(Number(v)), "Resultado líquido"]} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
         <ReferenceLine x={0} stroke={TEXTO} />
         <Bar dataKey="lucro" radius={[6, 6, 6, 6]} maxBarSize={28}>
           {dados.map((d, i) => (

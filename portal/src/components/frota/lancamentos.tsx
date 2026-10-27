@@ -43,7 +43,7 @@ export function NovaViagem({ empresaId, veiculos, veiculoPadrao, hoje }: { empre
           <Route /> Lançar viagem
         </Button>
       </DialogTrigger>
-      <DialogContent titulo="Lançar viagem (frete)" descricao="Um lançamento por CT-e. A comissão do motorista e o ICMS saem do frete no resultado." largura="lg">
+      <DialogContent titulo="Lançar viagem (frete)" descricao="Um lançamento por CT-e. A comissão do motorista e os tributos são deduzidos do faturamento no resultado." largura="lg">
         <FormularioAcao acao={lancarViagem.bind(null, empresaId)} aoSucesso={() => setAberto(false)} className="space-y-4">
           {({ estado, pendente }) => (
             <>
@@ -199,7 +199,7 @@ export function DialogoVeiculo({ empresaId, veiculo }: { empresaId: string; veic
       </DialogTrigger>
       <DialogContent
         titulo={veiculo ? `Caminhão ${placaFormatada(veiculo.placa)}` : "Cadastrar caminhão"}
-        descricao="Os custos fixos do mês entram no lucro de verdade, mesmo nos meses sem viagem."
+        descricao="Os custos fixos do mês entram no resultado líquido, inclusive nos meses sem viagem."
         largura="lg"
       >
         <FormularioAcao acao={salvarVeiculo.bind(null, empresaId, veiculo?.id ?? null)} aoSucesso={() => setAberto(false)} className="space-y-4">

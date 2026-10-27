@@ -46,7 +46,7 @@ const abastecimento = (id: string, data: string, km: number, litros: number, val
 });
 
 describe("rentabilidade da frota", () => {
-  it("lucro de verdade desconta comissão, despesas, fixos e rateio", () => {
+  it("resultado líquido desconta comissão, despesas, fixos e rateio", () => {
     const r = calcularVeiculo(veiculo, [viagem("1", 30000), viagem("2", 20000)], [abastecimento("a", "2026-09-03", 341000, 500, 3100), abastecimento("b", "2026-09-10", 342100, 500, 3100)], {
       kmAntes: 340000,
       fatorFixos: 1,
@@ -64,12 +64,12 @@ describe("rentabilidade da frota", () => {
     expect(r.semaforo).toBe("verde");
   });
 
-  it("aponta média fora do normal (litros digitados errado) e prejuízo", () => {
+  it("aponta média fora da faixa (litros digitados errado) e resultado negativo", () => {
     const r = calcularVeiculo(veiculo, [viagem("1", 5000)], [abastecimento("a", "2026-09-03", 341000, 100, 620)], { kmAntes: 340000, fatorFixos: 1, rateio: 0 });
     expect(r.despesas[0].media).toBe(10);
-    expect(r.despesas[0].alerta).toMatch(/fora do normal/);
+    expect(r.despesas[0].alerta).toMatch(/fora da faixa esperada/);
     expect(r.semaforo).toBe("vermelho");
-    expect(r.alertas.join(" ")).toMatch(/prejuízo/);
+    expect(r.alertas.join(" ")).toMatch(/Resultado negativo/);
   });
 
   it("rateia o escritório pela parte de cada caminhão no frete e divide cada R$ 100", () => {

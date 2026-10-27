@@ -2,17 +2,17 @@ import Decimal from "decimal.js";
 import { dec } from "@/lib/dinheiro";
 
 /**
- * Rentabilidade da frota: o resultado de verdade de cada caminhão no mês.
+ * Rentabilidade da frota: o resultado líquido de cada veículo no período.
  *
  *   Frete (faturamento)
  *   − deduções do frete (ICMS, quebra, carga/descarga)
  *   − comissão do motorista
  *   − despesas do caminhão (combustível, Arla, pneus, manutenção, pedágio, taxas)
- *   = sobra das viagens (o que os relatórios comuns chamam de "lucro")
+ *   = margem de contribuição das viagens
  *   − custos fixos do mês (salário e encargos do motorista, depreciação ou
  *     parcela, seguro, rastreador/IPVA)
  *   − rateio do escritório (despesas administrativas, pela parte do frete)
- *   = lucro de verdade
+ *   = resultado líquido
  *
  * O km rodado vem do hodômetro informado nos abastecimentos (o banco não deixa
  * o km voltar nem saltar); a média km/l usa o método do tanque cheio.
@@ -94,7 +94,7 @@ export interface ResultadoVeiculo {
   comissao: number;
   porGrupo: Record<GrupoDespesa, number>;
   despesasVariaveis: number;
-  /** Sobra das viagens, antes dos custos fixos (o "lucro" dos relatórios comuns). */
+  /** Margem de contribuição das viagens (antes dos custos fixos e do rateio). */
   sobraViagens: number;
   fixos: { motorista: number; depreciacao: number; financiamento: number; seguro: number; outros: number; total: number };
   rateio: number;
@@ -190,7 +190,7 @@ export function calcularVeiculo(
           if (lt > 0) media = Math.round((rodado / lt) * 100) / 100;
           if (!primeiraSemBase) litrosMedia = litrosMedia.plus(lt);
           if (media !== null && (media < MEDIA_MIN || media > MEDIA_MAX)) {
-            alerta = `Média de ${media.toLocaleString("pt-BR")} km/l fora do normal (${MEDIA_MIN.toLocaleString("pt-BR")} a ${MEDIA_MAX.toLocaleString("pt-BR")}): confira o km ou os litros.`;
+            alerta = `Média de ${media.toLocaleString("pt-BR")} km/l fora da faixa esperada (${MEDIA_MIN.toLocaleString("pt-BR")} a ${MEDIA_MAX.toLocaleString("pt-BR")} km/l): conferir o km ou os litros.`;
           }
         }
         primeiraSemBase = false;
@@ -212,13 +212,13 @@ export function calcularVeiculo(
   const receitaKm = kmRodado ? Number(faturamentoD.dividedBy(kmRodado).toFixed(2)) : null;
   const lucroKm = kmRodado ? Number(lucroD.dividedBy(kmRodado).toFixed(2)) : null;
 
-  if (faturamento === 0 && fixosTotal.gt(0)) alertas.push("Caminhão parado no período: sem frete, mas os custos fixos continuam.");
-  if (lucro < 0 && faturamento > 0) alertas.push("Deu prejuízo: o frete não cobriu os custos. Veja o preço por km e o consumo.");
-  if (semKm) alertas.push(`${semKm} abastecimento(s) sem o km do hodômetro: o km rodado e a média ficam incompletos.`);
+  if (faturamento === 0 && fixosTotal.gt(0)) alertas.push("Veículo sem faturamento no período; os custos fixos permanecem.");
+  if (lucro < 0 && faturamento > 0) alertas.push("Resultado negativo: o faturamento não cobriu os custos do período. Recomenda-se revisar o valor do frete por km e o consumo.");
+  if (semKm) alertas.push(`${semKm} abastecimento(s) sem registro do hodômetro: o km percorrido e a média de consumo ficam incompletos.`);
   const foraDaMedia = calculadas.filter((c) => c.alerta).length;
-  if (foraDaMedia) alertas.push(`${foraDaMedia} abastecimento(s) com média fora do normal: confira o km e os litros.`);
+  if (foraDaMedia) alertas.push(`${foraDaMedia} abastecimento(s) com média de consumo fora da faixa esperada: recomenda-se conferir o km e os litros lançados.`);
   if (porGrupoD.combustivel.gt(0) && faturamentoD.gt(0) && porGrupoD.combustivel.dividedBy(faturamentoD).gt(0.5)) {
-    alertas.push("O combustível passou de 50% do frete: confira o preço do frete e o consumo.");
+    alertas.push("Combustível acima de 50% do faturamento: recomenda-se revisar o valor do frete e o consumo.");
   }
 
   return {
@@ -327,17 +327,17 @@ export function calcularFrota(
   };
 }
 
-/** Para onde foi cada R$ 100 de frete (fatias que somam 100, a última é o lucro ou o prejuízo). */
+/** Composição de cada R$ 100 de faturamento (fatias que somam 100; a última é o resultado líquido). */
 export function cadaCem(r: Pick<ResultadoVeiculo, "faturamento" | "deducoes" | "comissao" | "porGrupo" | "despesasVariaveis" | "fixos" | "rateio" | "lucro">) {
   if (r.faturamento <= 0) return [];
   const pct = (v: number) => Math.round((v / r.faturamento) * 1000) / 10;
   const outras = r.despesasVariaveis - r.porGrupo.combustivel - r.porGrupo.arla;
   return [
-    { chave: "combustivel", rotulo: "Combustível e Arla", valor: pct(r.porGrupo.combustivel + r.porGrupo.arla) },
+    { chave: "combustivel", rotulo: "Combustível e Arla 32", valor: pct(r.porGrupo.combustivel + r.porGrupo.arla) },
     { chave: "motorista", rotulo: "Motorista (comissão, salário e encargos)", valor: pct(r.comissao + r.fixos.motorista) },
-    { chave: "caminhao", rotulo: "Caminhão (pneus, manutenção, parcela, seguro)", valor: pct(outras + r.fixos.total - r.fixos.motorista) },
-    { chave: "impostos", rotulo: "Impostos e descontos do frete", valor: pct(r.deducoes.total) },
-    { chave: "escritorio", rotulo: "Escritório (rateio)", valor: pct(r.rateio) },
-    { chave: "lucro", rotulo: r.lucro >= 0 ? "Lucro" : "Prejuízo", valor: pct(r.lucro) },
+    { chave: "caminhao", rotulo: "Veículo (pneus, manutenção, pedágio, financiamento, seguro)", valor: pct(outras + r.fixos.total - r.fixos.motorista) },
+    { chave: "impostos", rotulo: "Tributos e deduções do frete", valor: pct(r.deducoes.total) },
+    { chave: "escritorio", rotulo: "Despesas administrativas (rateio)", valor: pct(r.rateio) },
+    { chave: "lucro", rotulo: r.lucro >= 0 ? "Resultado líquido" : "Resultado líquido (negativo)", valor: pct(r.lucro) },
   ].filter((f) => f.valor !== 0);
 }

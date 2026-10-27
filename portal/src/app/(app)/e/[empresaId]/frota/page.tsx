@@ -13,6 +13,7 @@ import { GraficoComposicao } from "@/components/relatorios/graficos";
 import { GraficoCascata, GraficoConsumo, GraficoRanking } from "@/components/frota/graficos";
 import { DialogoVeiculo, ExcluirLancamento, NovaDespesa, NovaViagem } from "@/components/frota/lancamentos";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
+import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
 import { hojeISO } from "@/lib/competencia";
 import { formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import { formatarData, nomeMes } from "@/lib/formatos";
@@ -34,10 +35,10 @@ function deslocarMes(mes: string, d: number) {
 }
 
 const SEMAFORO = {
-  verde: { cor: "bg-sucesso", texto: "Lucro bom", variante: "sucesso" as const },
-  amarelo: { cor: "bg-alerta", texto: "Lucro apertado", variante: "alerta" as const },
-  vermelho: { cor: "bg-perigo", texto: "Prejuízo", variante: "perigo" as const },
-  parado: { cor: "bg-muted-foreground", texto: "Parado", variante: "neutro" as const },
+  verde: { cor: "bg-sucesso", texto: "Margem saudável", variante: "sucesso" as const },
+  amarelo: { cor: "bg-alerta", texto: "Margem reduzida", variante: "alerta" as const },
+  vermelho: { cor: "bg-perigo", texto: "Resultado negativo", variante: "perigo" as const },
+  parado: { cor: "bg-muted-foreground", texto: "Sem faturamento", variante: "neutro" as const },
 };
 
 const CORES_CEM: Record<string, string> = {
@@ -49,12 +50,12 @@ const CORES_CEM: Record<string, string> = {
   lucro: "bg-sucesso",
 };
 
-/** Frase do resultado, em português do dia a dia. */
+/** Síntese do resultado do período. */
 function frase(r: Pick<ResultadoVeiculo, "faturamento" | "lucro" | "margem" | "km">, quem: string, viagens: number) {
-  if (r.faturamento === 0) return `${quem} não teve frete no mês — só os custos fixos (${formatarMoeda(-r.lucro)}).`;
-  const resultado = r.lucro >= 0 ? `deu lucro de verdade de ${formatarMoeda(r.lucro)}` : `deu prejuízo de ${formatarMoeda(-r.lucro)}`;
-  const km = r.km.rodado ? `, rodou ${numero(r.km.rodado)} km` : "";
-  return `${quem} fez ${viagens} viage${viagens === 1 ? "m" : "ns"}${km}, faturou ${formatarMoeda(r.faturamento)} e ${resultado} (${pct(r.margem)} do frete).`;
+  if (r.faturamento === 0) return `${quem} não teve faturamento no período; os custos fixos somaram ${formatarMoeda(-r.lucro)}.`;
+  const resultado = r.lucro >= 0 ? `apresentou resultado líquido de ${formatarMoeda(r.lucro)}` : `apresentou resultado líquido negativo de ${formatarMoeda(-r.lucro)}`;
+  const km = r.km.rodado ? `, percorreu ${numero(r.km.rodado)} km` : "";
+  return `${quem} realizou ${viagens} viage${viagens === 1 ? "m" : "ns"}${km}, faturou ${formatarMoeda(r.faturamento)} e ${resultado} (margem líquida de ${pct(r.margem)}).`;
 }
 
 function CadaCem({ fatias }: { fatias: ReturnType<typeof cadaCem> }) {
@@ -64,11 +65,11 @@ function CadaCem({ fatias }: { fatias: ReturnType<typeof cadaCem> }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>De cada R$ 100 de frete, para onde foi o dinheiro</CardTitle>
-        <CardDescription>A barra inteira é o frete. Cada cor é uma parte dele.</CardDescription>
+        <CardTitle>Composição de cada R$ 100 de faturamento</CardTitle>
+        <CardDescription>Distribuição do faturamento entre custos, despesas e resultado líquido.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex h-9 w-full overflow-hidden rounded-full border border-border" role="img" aria-label="Divisão do frete">
+        <div className="flex h-9 w-full overflow-hidden rounded-full border border-border" role="img" aria-label="Composição do faturamento">
           {positivas.map((f) => (
             <div key={f.chave} className={cn("h-full", CORES_CEM[f.chave])} style={{ width: `${Math.min(f.valor, 100)}%` }} title={`${f.rotulo}: R$ ${numero(f.valor, 2)}`} />
           ))}
@@ -84,7 +85,7 @@ function CadaCem({ fatias }: { fatias: ReturnType<typeof cadaCem> }) {
         </ul>
         {prejuizo ? (
           <Alerta tom="perigo">
-            Os custos passaram do frete: para cada R$ 100 de frete faltaram R$ {numero(-prejuizo.valor, 2)}.
+            Os custos superaram o faturamento: para cada R$ 100 faturados, o resultado foi negativo em R$ {numero(-prejuizo.valor, 2)}.
           </Alerta>
         ) : null}
       </CardContent>
@@ -114,6 +115,7 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
     for (const [k, v] of Object.entries(atual)) if (v) q.set(k, v);
     return `${base}?${q.toString()}`;
   };
+  const escritorio = await obterEscritorioPublico();
   const opcoes = dados.todos.filter((v) => v.ativo).map((v) => ({ id: v.id, placa: v.placa, descricao: v.descricao }));
   const t = frota.total;
   const foco = sel ?? null;
@@ -125,14 +127,14 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
     <>
       <CabecalhoPagina
         titulo="Rentabilidade da frota"
-        descricao="Quanto cada caminhão deu de lucro de verdade no mês — com motorista, parcela, seguro e escritório na conta, e o km conferido."
+        descricao="Análise gerencial do resultado de cada veículo no período, considerando custos variáveis, custos fixos e despesas administrativas, com conferência do hodômetro."
         acoes={
           <>
             {podeLancar ? <NovaViagem empresaId={empresaId} veiculos={opcoes} veiculoPadrao={sel?.veiculo.id} hoje={hoje} /> : null}
             {podeLancar ? <NovaDespesa empresaId={empresaId} veiculos={opcoes} veiculoPadrao={sel?.veiculo.id} hoje={hoje} /> : null}
             <Button asChild variante="contorno">
               <Link href={`${base}/veiculos`}>
-                <Truck /> Caminhões
+                <Truck /> Veículos
               </Link>
             </Button>
             {dados.veiculos.length ? (
@@ -151,8 +153,8 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
           <CardContent className="pt-5">
             <EstadoVazio
               icone={Truck}
-              titulo="Nenhum caminhão cadastrado"
-              descricao="Cadastre os caminhões com os custos fixos do mês (motorista, parcela, seguro) e lance as viagens e as despesas."
+              titulo="Nenhum veículo cadastrado"
+              descricao="Cadastre os veículos com os custos fixos do mês (motorista, financiamento, seguro) e lance as viagens e as despesas."
             />
             {podeLancar ? (
               <div className="mt-4 flex justify-center">
@@ -184,7 +186,7 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
                 <input type="hidden" name="mes" value={mes} />
                 {sel ? <input type="hidden" name="veiculo" value={sel.veiculo.id} /> : null}
                 <label className="text-sm">
-                  <span className="mb-1 block text-xs font-medium text-muted-foreground">Despesas do escritório no mês (para dividir entre os caminhões)</span>
+                  <span className="mb-1 block text-xs font-medium text-muted-foreground">Despesas administrativas do mês (rateio proporcional ao faturamento)</span>
                   <Input name="rateio" defaultValue={rateioTexto} inputMode="decimal" placeholder="Ex.: 12.000,00" className="w-56" />
                 </label>
                 <Button type="submit" variante="contorno">
@@ -197,7 +199,7 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
                 href={link({ veiculo: null })}
                 className={cn("rounded-full border px-3 py-1.5 text-sm font-medium", !sel ? "border-primary bg-secondary text-primary" : "border-border hover:border-primary/40")}
               >
-                Frota toda
+                Frota completa
               </Link>
               {frota.veiculos.map((r) => (
                 <Link
@@ -218,9 +220,10 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
           {/* A frase do mês */}
           <Card className="overflow-hidden">
             <CardContent className="space-y-3 pt-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Análise gerencial · {escritorio.nome_fantasia}</p>
               {sel ? (
                 <Link href={link({ veiculo: null })} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-                  <ArrowLeft className="size-4" /> Voltar para a frota toda
+                  <ArrowLeft className="size-4" /> Voltar para a frota completa
                 </Link>
               ) : null}
               <div className="flex flex-wrap items-center gap-2">
@@ -228,32 +231,44 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
                 {sel ? <span className="text-sm text-muted-foreground">{sel.veiculo.descricao}</span> : null}
               </div>
               <p className="font-titulo text-xl font-semibold leading-snug text-titulo sm:text-2xl">
-                {frase(alvo, sel ? `O caminhão ${placa(sel.veiculo.placa)}` : `Em ${nomeDoMes(mes)}, a frota`, viagensFoco)}
+                {frase(alvo, sel ? `No período, o veículo ${placa(sel.veiculo.placa)}` : `Em ${nomeDoMes(mes)}, a frota`, viagensFoco)}
               </p>
               {alvo.faturamento > 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Sem contar o salário do motorista, a parcela, o seguro e o escritório — como fazem os relatórios comuns — pareceria um lucro de{" "}
-                  <strong className="text-foreground">{formatarMoeda(alvo.sobraViagens)}</strong> ({pct(alvo.faturamento ? Math.round((alvo.sobraViagens / alvo.faturamento) * 1000) / 10 : null)}).
-                  A diferença de <strong className="text-foreground">{formatarMoeda(alvo.sobraViagens - alvo.lucro)}</strong> é custo que esses relatórios não mostram.
-                </p>
+                <div className="grid gap-3 border-t border-border pt-3 text-sm sm:grid-cols-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Margem de contribuição das viagens</p>
+                    <p className="numero font-semibold">
+                      {formatarMoeda(alvo.sobraViagens)}{" "}
+                      <span className="font-normal text-muted-foreground">({pct(Math.round((alvo.sobraViagens / alvo.faturamento) * 1000) / 10)})</span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Custos fixos do período</p>
+                    <p className="numero font-semibold">{formatarMoeda(alvo.fixos.total)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Despesas administrativas (rateio)</p>
+                    <p className="numero font-semibold">{alvo.rateio ? formatarMoeda(alvo.rateio) : "Não informadas"}</p>
+                  </div>
+                </div>
               ) : null}
               {fator < 1 && fator > 0 ? (
-                <p className="text-xs text-muted-foreground">Mês em andamento: os custos fixos entram só pelos dias até hoje ({Math.round(fator * 100)}% do mês).</p>
+                <p className="text-xs text-muted-foreground">Período em andamento: custos fixos considerados proporcionalmente até a data de hoje ({Math.round(fator * 100)}% do mês).</p>
               ) : null}
             </CardContent>
           </Card>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <Indicador rotulo="Faturamento (frete)" valor={formatarMoeda(alvo.faturamento)} icone={Wallet} detalhe={`${viagensFoco} viage${viagensFoco === 1 ? "m" : "ns"}`} />
+            <Indicador rotulo="Faturamento" valor={formatarMoeda(alvo.faturamento)} icone={Wallet} detalhe={`${viagensFoco} viage${viagensFoco === 1 ? "m" : "ns"}`} />
             <Indicador
-              rotulo="Lucro de verdade"
+              rotulo="Resultado líquido"
               valor={formatarMoeda(alvo.lucro)}
               tom={alvo.lucro >= 0 ? "sucesso" : "perigo"}
               icone={TrendingUp}
-              detalhe={`${pct(alvo.margem)} do frete`}
+              detalhe={`Margem líquida de ${pct(alvo.margem)}`}
             />
-            <Indicador rotulo="Custo por km" valor={alvo.custoKm === null ? "—" : formatarMoeda(alvo.custoKm)} icone={Route} detalhe={alvo.receitaKm === null ? "Lance o km nos abastecimentos" : `Frete por km: ${formatarMoeda(alvo.receitaKm)}`} />
-            <Indicador rotulo="Km rodado" valor={numero(alvo.km.rodado)} icone={Gauge} detalhe={`${numero(alvo.litros, 0)} litros de diesel`} />
+            <Indicador rotulo="Custo por km" valor={alvo.custoKm === null ? "—" : formatarMoeda(alvo.custoKm)} icone={Route} detalhe={alvo.receitaKm === null ? "Requer o km dos abastecimentos" : `Faturamento por km: ${formatarMoeda(alvo.receitaKm)}`} />
+            <Indicador rotulo="Km percorrido" valor={numero(alvo.km.rodado)} icone={Gauge} detalhe={`${numero(alvo.litros, 0)} litros de diesel`} />
             <Indicador
               rotulo="Média de consumo"
               valor={alvo.mediaKmL === null ? "—" : `${numero(alvo.mediaKmL, 2)} km/l`}
@@ -270,8 +285,8 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
                 <GraficoRanking dados={frota.veiculos.map((r) => ({ placa: placa(r.veiculo.placa), lucro: r.lucro }))} />
                 <Card>
                   <CardHeader>
-                    <CardTitle>Caminhões do melhor para o pior</CardTitle>
-                    <CardDescription>Clique num caminhão para ver as viagens, os abastecimentos e para onde foi o dinheiro.</CardDescription>
+                    <CardTitle>Ranking de resultado por veículo</CardTitle>
+                    <CardDescription>Do maior para o menor resultado líquido. Selecione um veículo para ver o detalhamento.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {frota.veiculos.map((r, i) => (
@@ -288,12 +303,12 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
                           </span>
                           <span className="block text-xs text-muted-foreground">
                             {r.viagens.length} viage{r.viagens.length === 1 ? "m" : "ns"} · {numero(r.km.rodado)} km · custo {r.custoKm === null ? "—" : formatarMoeda(r.custoKm)}/km
-                            {r.alertas.length ? ` · ${r.alertas.length} alerta(s)` : ""}
+                            {r.alertas.length ? ` · ${r.alertas.length} ponto(s) de atenção` : ""}
                           </span>
                         </span>
                         <span className="text-right">
                           <span className={cn("block numero font-semibold", r.lucro >= 0 ? "text-sucesso" : "text-perigo")}>{formatarMoeda(r.lucro)}</span>
-                          <span className="block text-xs text-muted-foreground">{pct(r.margem)} do frete</span>
+                          <span className="block text-xs text-muted-foreground">Margem {pct(r.margem)}</span>
                         </span>
                       </Link>
                     ))}
@@ -304,7 +319,7 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="size-5 text-alerta" /> O que merece atenção
+                      <AlertTriangle className="size-5 text-alerta" /> Pontos de atenção
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -336,13 +351,13 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
 function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; empresaId: string; podeLancar: boolean }) {
   const outrasDespesas = r.despesasVariaveis - r.porGrupo.combustivel - r.porGrupo.arla;
   const degraus = [
-    { nome: "Frete", valor: r.faturamento, tipo: "inicio" as const },
-    { nome: "Impostos", valor: r.deducoes.total, tipo: "saida" as const },
+    { nome: "Faturamento", valor: r.faturamento, tipo: "inicio" as const },
+    { nome: "Tributos", valor: r.deducoes.total, tipo: "saida" as const },
     { nome: "Motorista", valor: r.comissao + r.fixos.motorista, tipo: "saida" as const },
     { nome: "Combustível", valor: r.porGrupo.combustivel + r.porGrupo.arla, tipo: "saida" as const },
-    { nome: "Caminhão", valor: outrasDespesas + r.fixos.total - r.fixos.motorista, tipo: "saida" as const },
-    ...(r.rateio ? [{ nome: "Escritório", valor: r.rateio, tipo: "saida" as const }] : []),
-    { nome: r.lucro >= 0 ? "Lucro" : "Prejuízo", valor: r.lucro, tipo: "fim" as const },
+    { nome: "Veículo", valor: outrasDespesas + r.fixos.total - r.fixos.motorista, tipo: "saida" as const },
+    ...(r.rateio ? [{ nome: "Administrativo", valor: r.rateio, tipo: "saida" as const }] : []),
+    { nome: "Resultado", valor: r.lucro, tipo: "fim" as const },
   ];
   const composicao = [
     ...Object.entries(r.porGrupo)
@@ -350,31 +365,31 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
       .map(([g, v]) => ({ nome: GRUPOS_DESPESA[g as keyof typeof GRUPOS_DESPESA], valor: v })),
     ...(r.comissao ? [{ nome: "Comissão do motorista", valor: r.comissao }] : []),
     ...(r.fixos.motorista ? [{ nome: "Salário e encargos do motorista", valor: r.fixos.motorista }] : []),
-    ...(r.fixos.financiamento + r.fixos.depreciacao ? [{ nome: "Parcela e depreciação", valor: r.fixos.financiamento + r.fixos.depreciacao }] : []),
-    ...(r.fixos.seguro + r.fixos.outros ? [{ nome: "Seguro, rastreador e IPVA", valor: r.fixos.seguro + r.fixos.outros }] : []),
+    ...(r.fixos.financiamento + r.fixos.depreciacao ? [{ nome: "Financiamento e depreciação", valor: r.fixos.financiamento + r.fixos.depreciacao }] : []),
+    ...(r.fixos.seguro + r.fixos.outros ? [{ nome: "Seguro, rastreamento e IPVA", valor: r.fixos.seguro + r.fixos.outros }] : []),
   ].sort((a, b) => b.valor - a.valor);
   const consumo = r.despesas.filter((d) => d.media !== null).map((d) => ({ data: d.data, media: d.media! }));
   const linhas: { rotulo: string; valor: number; destaque?: boolean; ajuda?: string }[] = [
-    { rotulo: "Frete das viagens", valor: r.faturamento, destaque: true },
-    { rotulo: "(−) ICMS, quebra e descontos do frete", valor: -r.deducoes.total },
+    { rotulo: "Faturamento (fretes)", valor: r.faturamento, destaque: true },
+    { rotulo: "(−) Tributos, quebras e deduções do frete", valor: -r.deducoes.total },
     { rotulo: "(−) Comissão do motorista", valor: -r.comissao },
     ...Object.entries(r.porGrupo)
       .filter(([, v]) => v > 0)
       .map(([g, v]) => ({ rotulo: `(−) ${GRUPOS_DESPESA[g as keyof typeof GRUPOS_DESPESA]}`, valor: -v })),
-    { rotulo: "= Sobra das viagens", valor: r.sobraViagens, destaque: true, ajuda: "O que os relatórios comuns chamam de lucro." },
+    { rotulo: "= Margem de contribuição", valor: r.sobraViagens, destaque: true, ajuda: "Faturamento menos deduções, comissão e despesas variáveis." },
     { rotulo: "(−) Salário e encargos do motorista", valor: -r.fixos.motorista },
     { rotulo: "(−) Parcela do financiamento", valor: -r.fixos.financiamento },
     { rotulo: "(−) Depreciação", valor: -r.fixos.depreciacao },
     { rotulo: "(−) Seguro", valor: -r.fixos.seguro },
-    { rotulo: "(−) Rastreador, IPVA e outros", valor: -r.fixos.outros },
-    ...(r.rateio ? [{ rotulo: "(−) Despesas do escritório (rateio)", valor: -r.rateio }] : []),
-    { rotulo: r.lucro >= 0 ? "= Lucro de verdade" : "= Prejuízo", valor: r.lucro, destaque: true },
+    { rotulo: "(−) Rastreamento, IPVA e outros", valor: -r.fixos.outros },
+    ...(r.rateio ? [{ rotulo: "(−) Despesas administrativas (rateio)", valor: -r.rateio }] : []),
+    { rotulo: "= Resultado líquido", valor: r.lucro, destaque: true },
   ].filter((l) => l.destaque || l.valor !== 0);
 
   return (
     <div className="space-y-5">
       {r.alertas.length ? (
-        <Alerta tom="alerta" titulo="O que merece atenção neste caminhão">
+        <Alerta tom="alerta" titulo="Pontos de atenção do veículo">
           <ul className="list-disc pl-5">
             {r.alertas.map((a) => (
               <li key={a}>{a}</li>
@@ -389,8 +404,8 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
       <div className="grid gap-4 xl:grid-cols-[1fr_1.2fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Resultado do mês, linha por linha</CardTitle>
-            <CardDescription>Do frete ao lucro de verdade.</CardDescription>
+            <CardTitle>Demonstrativo de resultado do veículo</CardTitle>
+            <CardDescription>Do faturamento ao resultado líquido do período.</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -401,7 +416,7 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
                       {l.rotulo}
                       {l.ajuda ? <span className="block text-xs font-normal text-muted-foreground">{l.ajuda}</span> : null}
                     </Td>
-                    <Td className={cn("whitespace-nowrap text-right numero", l.destaque && "font-semibold", l.destaque && l.valor < 0 && "text-perigo", l.rotulo.startsWith("= Lucro") && "text-sucesso")}>
+                    <Td className={cn("whitespace-nowrap text-right numero", l.destaque && "font-semibold", l.destaque && l.valor < 0 && "text-perigo", l.rotulo === "= Resultado líquido" && (l.valor >= 0 ? "text-sucesso" : "text-perigo"))}>
                       {formatarMoeda(l.valor)}
                     </Td>
                     <Td className="w-16 text-right text-xs text-muted-foreground numero">{r.faturamento ? pct(Math.round((l.valor / r.faturamento) * 1000) / 10) : ""}</Td>
@@ -411,12 +426,12 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
             </Table>
           </CardContent>
         </Card>
-        {consumo.length >= 2 ? <GraficoConsumo pontos={consumo} minimo={1.2} maximo={4.5} /> : <Card><CardContent className="pt-5 text-sm text-muted-foreground">Lance o km do hodômetro nos abastecimentos para ver a média de consumo.</CardContent></Card>}
+        {consumo.length >= 2 ? <GraficoConsumo pontos={consumo} minimo={1.2} maximo={4.5} /> : <Card><CardContent className="pt-5 text-sm text-muted-foreground">A média de consumo requer o registro do hodômetro nos abastecimentos.</CardContent></Card>}
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Viagens do mês ({r.viagens.length})</CardTitle>
+          <CardTitle>Viagens do período ({r.viagens.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {r.viagens.length ? (
@@ -430,7 +445,7 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
                     <Th>Carga e motorista</Th>
                     <Th className="text-right">Frete</Th>
                     <Th className="text-right">Comissão</Th>
-                    <Th className="text-right">ICMS e descontos</Th>
+                    <Th className="text-right">Tributos e deduções</Th>
                     {podeLancar ? <Th /> : null}
                   </tr>
                 </THead>
@@ -462,7 +477,7 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
               </Table>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma viagem lançada neste mês.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma viagem registrada no período.</p>
           )}
         </CardContent>
       </Card>
@@ -470,7 +485,7 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
       <Card>
         <CardHeader>
           <CardTitle>Abastecimentos e despesas ({r.despesas.length})</CardTitle>
-          <CardDescription>A média de cada abastecimento é o km rodado desde o anterior dividido pelos litros (tanque cheio).</CardDescription>
+          <CardDescription>A média de cada abastecimento considera o km percorrido desde o abastecimento anterior e os litros abastecidos (método do tanque cheio).</CardDescription>
         </CardHeader>
         <CardContent>
           {r.despesas.length ? (
@@ -482,7 +497,7 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
                     <Th>Despesa</Th>
                     <Th className="text-right">Litros</Th>
                     <Th className="text-right">Km</Th>
-                    <Th className="text-right">Rodou</Th>
+                    <Th className="text-right">Percorrido</Th>
                     <Th className="text-right">Média</Th>
                     <Th className="text-right">Valor</Th>
                     {podeLancar ? <Th /> : null}
@@ -513,7 +528,7 @@ function DetalheVeiculo({ r, empresaId, podeLancar }: { r: ResultadoVeiculo; emp
               </Table>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma despesa lançada neste mês.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma despesa registrada no período.</p>
           )}
         </CardContent>
       </Card>

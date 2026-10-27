@@ -37,58 +37,58 @@ function tabela(cab: string[], linhas: TableCell[][], widths: (string | number)[
 }
 
 function frase(r: Pick<ResultadoVeiculo, "faturamento" | "lucro" | "margem" | "km">, quem: string, viagens: number) {
-  if (r.faturamento === 0) return `${quem} não teve frete no mês — só os custos fixos (${moeda(-r.lucro)}).`;
-  const resultado = r.lucro >= 0 ? `deu lucro de verdade de ${moeda(r.lucro)}` : `deu prejuízo de ${moeda(-r.lucro)}`;
-  return `${quem} fez ${viagens} viage${viagens === 1 ? "m" : "ns"}${r.km.rodado ? `, rodou ${num(r.km.rodado)} km` : ""}, faturou ${moeda(r.faturamento)} e ${resultado} (${pct(r.margem)} do frete).`;
+  if (r.faturamento === 0) return `${quem} não teve faturamento no período; os custos fixos somaram ${moeda(-r.lucro)}.`;
+  const resultado = r.lucro >= 0 ? `apresentou resultado líquido de ${moeda(r.lucro)}` : `apresentou resultado líquido negativo de ${moeda(-r.lucro)}`;
+  return `${quem} realizou ${viagens} viage${viagens === 1 ? "m" : "ns"}${r.km.rodado ? `, percorreu ${num(r.km.rodado)} km` : ""}, faturou ${moeda(r.faturamento)} e ${resultado} (margem líquida de ${pct(r.margem)}).`;
 }
 
 function resultadoLinhas(r: ResultadoVeiculo): TableCell[][] {
   const linhas: [string, number, boolean][] = [
-    ["Frete das viagens", r.faturamento, true],
-    ["(−) ICMS, quebra e descontos do frete", -r.deducoes.total, false],
+    ["Faturamento (fretes)", r.faturamento, true],
+    ["(−) Tributos, quebras e deduções do frete", -r.deducoes.total, false],
     ["(−) Comissão do motorista", -r.comissao, false],
     ...Object.entries(r.porGrupo)
       .filter(([, v]) => v > 0)
       .map(([g, v]) => [`(−) ${GRUPOS_DESPESA[g as keyof typeof GRUPOS_DESPESA]}`, -v, false] as [string, number, boolean]),
-    ["= Sobra das viagens (o \"lucro\" dos relatórios comuns)", r.sobraViagens, true],
+    ["= Margem de contribuição", r.sobraViagens, true],
     ["(−) Salário e encargos do motorista", -r.fixos.motorista, false],
     ["(−) Parcela do financiamento", -r.fixos.financiamento, false],
     ["(−) Depreciação", -r.fixos.depreciacao, false],
     ["(−) Seguro", -r.fixos.seguro, false],
-    ["(−) Rastreador, IPVA e outros", -r.fixos.outros, false],
-    ["(−) Despesas do escritório (rateio)", -r.rateio, false],
-    [r.lucro >= 0 ? "= Lucro de verdade" : "= Prejuízo", r.lucro, true],
+    ["(−) Rastreamento, IPVA e outros", -r.fixos.outros, false],
+    ["(−) Despesas administrativas (rateio)", -r.rateio, false],
+    ["= Resultado líquido", r.lucro, true],
   ];
   return linhas
     .filter(([, v, d]) => d || v !== 0)
     .map(([rotulo, v, d]) => [
       { text: rotulo, bold: d },
-      { text: moeda(v), bold: d, alignment: "right", color: d && rotulo.startsWith("= ") && rotulo !== "= Sobra das viagens (o \"lucro\" dos relatórios comuns)" ? (v >= 0 ? COR.verde : COR.vermelho) : undefined },
+      { text: moeda(v), bold: d, alignment: "right", color: rotulo === "= Resultado líquido" ? (v >= 0 ? COR.verde : COR.vermelho) : undefined },
       { text: r.faturamento ? pct(Math.round((v / r.faturamento) * 1000) / 10) : "", alignment: "right", color: COR.cinza },
     ]);
 }
 
 function blocoVeiculo(r: ResultadoVeiculo, primeiro: boolean): Content[] {
   const blocos: Content[] = [
-    { text: `Caminhão ${placa(r.veiculo.placa)} — ${r.veiculo.descricao}`, style: "secao", ...(primeiro ? {} : { pageBreak: "before" as const }) },
-    { text: frase(r, `O caminhão ${placa(r.veiculo.placa)}`, r.viagens.length), bold: true, fontSize: 10, color: r.lucro >= 0 ? COR.marrom : COR.vermelho, margin: [0, 0, 0, 6] },
+    { text: `Veículo ${placa(r.veiculo.placa)} — ${r.veiculo.descricao}`, style: "secao", ...(primeiro ? {} : { pageBreak: "before" as const }) },
+    { text: frase(r, `No período, o veículo ${placa(r.veiculo.placa)}`, r.viagens.length), bold: true, fontSize: 10, color: r.lucro >= 0 ? COR.marrom : COR.vermelho, margin: [0, 0, 0, 6] },
     tabela(
-      ["Km rodado", "Média", "Custo por km", "Frete por km", "Lucro por km"],
+      ["Km percorrido", "Média de consumo", "Custo por km", "Faturamento por km", "Resultado por km"],
       [[num(r.km.rodado), r.mediaKmL === null ? "—" : `${num(r.mediaKmL, 2)} km/l`, r.custoKm === null ? "—" : moeda(r.custoKm), r.receitaKm === null ? "—" : moeda(r.receitaKm), r.lucroKm === null ? "—" : moeda(r.lucroKm)]],
       ["*", "*", "*", "*", "*"],
       [0, 1, 2, 3, 4],
     ),
-    { text: "Resultado do mês, linha por linha", bold: true, color: COR.marrom, margin: [0, 2, 0, 3] },
-    tabela(["Linha", "Valor", "% do frete"], resultadoLinhas(r), ["*", 90, 55], [1, 2]),
+    { text: "Demonstrativo de resultado do veículo", bold: true, color: COR.marrom, margin: [0, 2, 0, 3] },
+    tabela(["Descrição", "Valor", "% do faturamento"], resultadoLinhas(r), ["*", 90, 70], [1, 2]),
   ];
   if (r.alertas.length) {
-    blocos.push({ text: "O que merece atenção", bold: true, color: COR.amarelo, margin: [0, 2, 0, 2] }, { ul: r.alertas, fontSize: 8, margin: [0, 0, 0, 6] });
+    blocos.push({ text: "Pontos de atenção", bold: true, color: COR.amarelo, margin: [0, 2, 0, 2] }, { ul: r.alertas, fontSize: 8, margin: [0, 0, 0, 6] });
   }
   if (r.viagens.length) {
     blocos.push(
-      { text: `Viagens (${r.viagens.length})`, bold: true, color: COR.marrom, margin: [0, 2, 0, 3] },
+      { text: `Viagens do período (${r.viagens.length})`, bold: true, color: COR.marrom, margin: [0, 2, 0, 3] },
       tabela(
-        ["Data", "CT-e", "Rota", "Carga / motorista", "Frete", "Comissão", "Descontos"],
+        ["Data", "CT-e", "Rota", "Carga / motorista", "Frete", "Comissão", "Deduções"],
         r.viagens.map((v) => [
           formatarData(v.data),
           v.cte_numero ?? "—",
@@ -107,7 +107,7 @@ function blocoVeiculo(r: ResultadoVeiculo, primeiro: boolean): Content[] {
     blocos.push(
       { text: `Abastecimentos e despesas (${r.despesas.length})`, bold: true, color: COR.marrom, margin: [0, 2, 0, 3] },
       tabela(
-        ["Data", "Despesa", "Litros", "Km", "Rodou", "Média", "Valor"],
+        ["Data", "Despesa", "Litros", "Km", "Percorrido", "Média", "Valor"],
         r.despesas.map((d) => {
           const cor = d.alerta ? COR.vermelho : undefined;
           return [
@@ -120,7 +120,7 @@ function blocoVeiculo(r: ResultadoVeiculo, primeiro: boolean): Content[] {
             moeda(d.valor),
           ];
         }),
-        [44, "*", 40, 48, 38, 34, 56],
+        [44, "*", 40, 48, 44, 34, 56],
         [2, 3, 4, 5, 6],
       ),
     );
@@ -152,18 +152,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ empr
     const blocos: Content[] = [];
     if (!veiculoId) {
       blocos.push(
-        { text: frase(t, `Em ${nomeDoMes.toLowerCase()}, a frota`, t.viagens), bold: true, fontSize: 11, color: t.lucro >= 0 ? COR.marrom : COR.vermelho, margin: [0, 2, 0, 4] },
+        { text: frase(t, `Em ${nomeDoMes.toLowerCase()}, a frota`, t.viagens), bold: true, fontSize: 11, color: t.lucro >= 0 ? COR.marrom : COR.vermelho, margin: [0, 2, 0, 6] },
         t.faturamento > 0
-          ? {
-              text: `Sem contar o salário do motorista, a parcela, o seguro e o escritório — como fazem os relatórios comuns — pareceria um lucro de ${moeda(t.sobraViagens)}. A diferença de ${moeda(t.sobraViagens - t.lucro)} é custo que esses relatórios não mostram.`,
-              fontSize: 8.5,
-              color: COR.cinza,
-              margin: [0, 0, 0, 8],
-            }
+          ? tabela(
+              ["Margem de contribuição", "Custos fixos do período", "Despesas administrativas (rateio)", "Resultado líquido"],
+              [[
+                `${moeda(t.sobraViagens)} (${pct(Math.round((t.sobraViagens / t.faturamento) * 1000) / 10)})`,
+                moeda(t.fixos.total),
+                t.rateio ? moeda(t.rateio) : "Não informadas",
+                { text: `${moeda(t.lucro)} (${pct(t.margem)})`, bold: true, alignment: "right", color: t.lucro >= 0 ? COR.verde : COR.vermelho },
+              ]],
+              ["*", "*", "*", "*"],
+              [0, 1, 2, 3],
+            )
           : { text: "" },
-        { text: "Resumo por caminhão (do melhor para o pior)", style: "secao" },
+        { text: "Ranking de resultado por veículo", style: "secao" },
         tabela(
-          ["Caminhão", "Viagens", "Km", "Frete", "Sobra das viagens", "Custos fixos", "Lucro de verdade", "% do frete", "Custo/km"],
+          ["Veículo", "Viagens", "Km", "Faturamento", "Margem de contribuição", "Custos fixos e rateio", "Resultado líquido", "Margem líquida", "Custo/km"],
           [
             ...frota.veiculos.map((r): TableCell[] => [
               { text: `${placa(r.veiculo.placa)}\n${r.veiculo.descricao}`, fontSize: 7 },
@@ -177,7 +182,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ empr
               r.custoKm === null ? "—" : moeda(r.custoKm),
             ]),
             [
-              { text: "Frota toda", bold: true },
+              { text: "Frota completa", bold: true },
               { text: String(t.viagens), bold: true, alignment: "right" },
               { text: num(t.km.rodado), bold: true, alignment: "right" },
               { text: moeda(t.faturamento), bold: true, alignment: "right" },
@@ -191,25 +196,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ empr
           ["*", 34, 40, 58, 58, 52, 60, 38, 40],
           [1, 2, 3, 4, 5, 6, 7, 8],
         ),
-        { text: "De cada R$ 100 de frete, para onde foi o dinheiro", style: "secao" },
+        { text: "Composição de cada R$ 100 de faturamento", style: "secao" },
         tabela(
-          ["Parte", "De cada R$ 100"],
+          ["Componente", "Valor a cada R$ 100"],
           cadaCem(t).map((f) => [f.rotulo, { text: `R$ ${num(f.valor, 2)}`, alignment: "right", bold: f.chave === "lucro", color: f.chave === "lucro" ? (f.valor >= 0 ? COR.verde : COR.vermelho) : undefined }]),
           ["*", 90],
           [1],
         ),
       );
       const alertas = frota.veiculos.flatMap((r) => r.alertas.map((a) => `${placa(r.veiculo.placa)}: ${a}`));
-      if (alertas.length) blocos.push({ text: "O que merece atenção", style: "secao" }, { ul: alertas, fontSize: 8.5 });
+      if (alertas.length) blocos.push({ text: "Pontos de atenção", style: "secao" }, { ul: alertas, fontSize: 8.5 });
     }
     selecionados.forEach((r, i) => blocos.push(...blocoVeiculo(r, Boolean(veiculoId) && i === 0)));
 
     const cab = await montarCabecalho(s.supabase, empresaId, {
-      titulo: veiculoId && selecionados[0] ? `Rentabilidade do caminhão ${placa(selecionados[0].veiculo.placa)}` : "Rentabilidade da frota",
-      subtitulo: `${nomeDoMes.charAt(0).toUpperCase()}${nomeDoMes.slice(1)}${fator > 0 && fator < 1 ? ` — mês em andamento (até ${formatarData(hoje)})` : ""}${rateioTotal ? ` — com ${moeda(rateioTotal)} de despesas do escritório rateadas` : ""}`,
+      titulo: veiculoId && selecionados[0] ? `Relatório de rentabilidade — veículo ${placa(selecionados[0].veiculo.placa)}` : "Relatório de rentabilidade da frota",
+      subtitulo: `${nomeDoMes.charAt(0).toUpperCase()}${nomeDoMes.slice(1)}${fator > 0 && fator < 1 ? ` — período em andamento (até ${formatarData(hoje)})` : ""}${rateioTotal ? ` — despesas administrativas de ${moeda(rateioTotal)} rateadas pelo faturamento` : ""}`,
       situacao: "preliminar",
       observacao:
-        "Lucro de verdade = frete − ICMS, quebra e descontos − comissão − despesas do caminhão − custos fixos do mês (motorista, parcela, depreciação, seguro, outros) − rateio do escritório. Km pelo hodômetro dos abastecimentos; média pelo tanque cheio.",
+        "Análise gerencial elaborada pelo escritório. Resultado líquido = faturamento − tributos e deduções do frete − comissão − despesas variáveis do veículo − custos fixos do período (motorista, financiamento, depreciação, seguro e outros) − rateio das despesas administrativas. Km pelo hodômetro informado nos abastecimentos; consumo pelo método do tanque cheio.",
     });
     const arquivo = await gerarPdf(cab, blocos);
     const nome = nomeArquivo(["rentabilidade-frota", acesso.nome_fantasia || acesso.razao_social, mes], "pdf");
