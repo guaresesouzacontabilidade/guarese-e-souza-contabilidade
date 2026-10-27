@@ -257,12 +257,13 @@ describe("NFS-e: DPS com as partes da NT 009", () => {
     expect(assinaturaConfere(xml)).toBe(true);
   });
 
-  it("produção restrita hoje (finalidade e CST no trib; sem os campos do Simples; indDest ainda no IBSCBS): passa no esquema dessa etapa", () => {
+  it("produção restrita hoje (finalidade, CST no trib e NBS antes da descrição; sem os campos do Simples; indDest ainda no IBSCBS): passa no esquema dessa etapa", () => {
     const { xml } = dpsAssinada({ ...nt009, variante: undefined }, chaves);
     expect(xml).toContain("<tpEmit>1</tpEmit><finNFSe>0</finNFSe><cLocEmi>");
     expect(xml).toContain("<regApTribSN>1</regApTribSN><regEspTrib>0</regEspTrib>");
     expect(xml).not.toContain("<cAtvSN>");
-    expect(xml).toContain("</xDescServ><cNBS>113022100</cNBS></cServ>");
+    expect(xml).toContain("<cNBS>113022100</cNBS><xDescServ>");
+    expect(xml).toMatch(/<\/xDescServ><\/cServ>/);
     expect(xml).toContain(
       "<IBSCBS><cIndOp>100301</cIndOp><indDest>0</indDest><valores><trib><CST>200</CST><cClassTrib>200052</cClassTrib><gIBSCBS></gIBSCBS></trib></valores></IBSCBS>",
     );
@@ -325,6 +326,15 @@ describe("NFS-e: DPS com as partes da NT 009", () => {
       descricao: `Falha no esquema XML do DF-e. (The element 'IBSCBS' ${ns} has invalid child element 'indDest' ${ns}. List of possible elements expected: 'tpOper, gRefNFSe, tpEnteGov, imovel, valores' ${ns}.)`,
     };
     expect(ajustarVariante(VARIANTE_PADRAO.homologacao, [indDestNaRaiz])).toEqual({ ...VARIANTE_PADRAO.homologacao, indDestNaRaiz: true });
+    // Hotel, DPS 1 de 27/10/2026: NBS depois da descrição, sem lista do que era esperado (a descrição já é o último campo)
+    const nbsDepoisDaDescricao = {
+      codigo: "E1235",
+      descricao: "Falha no esquema XML do DF-e.",
+      complemento: `The element 'cServ' ${ns} has invalid child element 'cNBS' ${ns}.`,
+    };
+    const ordemAntiga = { ...VARIANTE_PADRAO.homologacao, cServNovaOrdem: false };
+    expect(ajustarVariante(ordemAntiga, [nbsDepoisDaDescricao])).toEqual({ ...ordemAntiga, cServNovaOrdem: true });
+    expect(ajustarVariante({ ...ordemAntiga, cServNovaOrdem: true }, [nbsDepoisDaDescricao])).toBeNull();
     expect(ajustarVariante(LEIAUTE_1_01, [{ codigo: "E0855", descricao: "É obrigatório declarar informações de IBS/CBS quando a data de competência for igual ou posterior a 01/10/2026." }])).toEqual({
       ...LEIAUTE_1_01,
       ibscbs: true,

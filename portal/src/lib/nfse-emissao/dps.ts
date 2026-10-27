@@ -64,8 +64,9 @@ export const LEIAUTE_NT009: VarianteLeiaute = { finNFSe: true, ibscbs: true, sim
 /** Ponto de partida de cada ambiente (o emissor guarda o que aprender com as recusas). */
 export const VARIANTE_PADRAO: Record<AmbienteNfse, VarianteLeiaute> = {
   producao: LEIAUTE_1_01,
-  // Produção restrita em 20/10/2026: finNFSe e CST no trib já valem; Simples (2.4), indDest na raiz e a nova ordem ainda não
-  homologacao: { finNFSe: true, ibscbs: true, simples: false, cServNovaOrdem: false, indDestNaRaiz: false, cstNoTrib: true },
+  // Produção restrita em 20/10/2026: finNFSe e CST no trib já valem; Simples (2.4) e indDest na raiz ainda não.
+  // Em 27/10/2026 recusou o NBS depois da descrição: a nova ordem do cServ já vale
+  homologacao: { finNFSe: true, ibscbs: true, simples: false, cServNovaOrdem: true, indDestNaRaiz: false, cstNoTrib: true },
 };
 
 /**
@@ -103,6 +104,8 @@ export function ajustarVariante(v: VarianteLeiaute, erros: { codigo: string; des
       else if (pai === "IBSCBS" && esperados.includes("indDest")) r = com({ indDestNaRaiz: false });
       else if (pai === "IBSCBS" && filho === "indDest") r = com({ indDestNaRaiz: true });
       else if (pai === "cServ" && filho === "cNBS" && esperados.includes("xDescServ")) r = com({ cServNovaOrdem: false });
+      // Nada esperado depois da descrição: na nova ordem ela é o último campo do cServ
+      else if (pai === "cServ" && ["cNBS", "cAtvSN", "cIntContrib"].includes(filho) && !esperados.length) r = com({ cServNovaOrdem: true });
       else if (pai === "cServ" && filho === "xDescServ" && esperados.some((x) => ["cNBS", "cAtvSN", "cIntContrib"].includes(x))) r = com({ cServNovaOrdem: true });
       else if (pai === "trib" && filho === "CST") r = com({ cstNoTrib: false });
       else if (pai === "trib" && filho === "gIBSCBS" && esperados.includes("CST")) r = com({ cstNoTrib: true });
