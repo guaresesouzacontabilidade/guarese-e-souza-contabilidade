@@ -16,13 +16,13 @@ import { gerarSugestoes } from "../src/lib/conciliacao/motor";
 
 export type PerfilDemo = "padaria" | "oficina";
 
-interface Pagamento {
+export interface Pagamento {
   dia: number; // dia do pagamento no mês
   juros?: number;
   registrar: boolean; // pagamento já registrado no sistema (baixa)
   extrato?: { descricao: string; valor?: number; documento?: string }; // linha no extrato do banco
 }
-interface Item {
+export interface Item {
   tipo: "receber" | "pagar";
   descricao: string;
   categoria: string; // código do plano de contas
@@ -32,7 +32,7 @@ interface Item {
   numero?: string;
   pago?: Pagamento;
 }
-interface ContraparteDemo {
+export interface ContraparteDemo {
   chave: string;
   nome: string;
   documento?: string;
@@ -230,6 +230,13 @@ const OFICINA = {
   ],
 };
 
+/** Roteiro de uma empresa fictícia: contrapartes, contas de cada mês (M-2, M-1 e M) e compras no cartão em M-2. */
+export interface ModeloFinanceiro {
+  contrapartes: ContraparteDemo[];
+  itens(m: number, docs: Map<string, string | undefined>): Item[];
+  compras: { dia: number; descricao: string; categoria: string; contraparte?: string; valor: number }[];
+}
+
 interface Linha {
   data: string;
   valor: number;
@@ -239,10 +246,10 @@ interface Linha {
 }
 
 /** Cria o movimento financeiro fictício. `usuario` é um cliente autenticado como administrador de demonstração. */
-export async function semearFinanceiro(admin: SupabaseClient, usuario: SupabaseClient, empresaId: string, perfil: PerfilDemo) {
+export async function semearFinanceiro(admin: SupabaseClient, usuario: SupabaseClient, empresaId: string, perfil: PerfilDemo | ModeloFinanceiro) {
   const { count } = await admin.from("lancamentos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
   if (count) return false;
-  const modelo = perfil === "padaria" ? PADARIA : OFICINA;
+  const modelo: ModeloFinanceiro = perfil === "padaria" ? PADARIA : perfil === "oficina" ? OFICINA : perfil;
 
   const { data: contas } = await admin.from("contas_financeiras").select("id, tipo, saldo_inicial").eq("empresa_id", empresaId);
   const banco = contas?.find((c) => c.tipo === "conta_corrente");

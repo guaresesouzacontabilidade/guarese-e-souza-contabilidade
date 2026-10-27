@@ -29,6 +29,7 @@ import { semearNfse } from "./demo-nfse";
 import { semearNfe } from "./demo-nfe";
 import { semearLoja } from "./demo-loja";
 import { semearFrota } from "./demo-frota";
+import { semearTransportadoraCompleta } from "./demo-transportadora";
 import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
@@ -290,6 +291,8 @@ async function main() {
   ) {
     console.log("  Transportadora fictícia com 4 caminhões, viagens e despesas de dois meses (rentabilidade da frota)");
   }
+  const transportadora = await semearTransportadoraCompleta(admin, comoAdmin, { url, publica }, { dono: `transportadora@${DOMINIO}`, equipe: `contador@${DOMINIO}` });
+  if (transportadora.length) console.log(`  Transportadora fictícia: ${transportadora.join(", ")}`);
   if (await semearCteGraos(admin)) {
     console.log("  CT-e da comercial de grãos: configuração e operações do frete (emissão desligada; formulário em modo de conferência)");
   }
@@ -322,7 +325,7 @@ async function main() {
   console.log(`  Colaborador:    colaborador@${DOMINIO} (Padaria, acesso restrito)`);
   console.log(`  Madeireira:     madeireira@${DOMINIO} (dono) e balcao@${DOMINIO} (só vende no caixa)`);
   console.log(`  Grãos:          graos@${DOMINIO} (dono) e balanca@${DOMINIO} (ordens de carregamento e pesagem)`);
-  console.log(`  Transportadora: transportadora@${DOMINIO} (dono; rentabilidade da frota)`);
+  console.log(`  Transportadora: transportadora@${DOMINIO} (dono; frota, ordens de carregamento, CT-e em conferência, financeiro e documentos)`);
   console.log(MANTER_SENHAS ? "  Senhas: mantidas (não foram alteradas)" : `  Senha de todos: ${senha}`);
   console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}, Fazenda Exemplo (DEMO) — só a equipe, Madeireira Reflorestar (DEMO), Grãos Cerrado (DEMO)\n`);
 }
