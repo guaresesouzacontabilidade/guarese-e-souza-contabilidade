@@ -7,6 +7,7 @@ import { lerValorBR } from "@/lib/dinheiro";
 import type { Json } from "@/lib/supabase/database.types";
 import type { FormaPagamento } from "./rotulos";
 import { emitirNfeDaVenda, nfeNaVenda } from "./nfe-venda";
+import { MODALIDADES_GESTAO } from "./carregamentos";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -59,14 +60,16 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
     dados.ativa = fd.get("ativa") === "on";
     const perfil = texto(fd, "perfil_fiscal");
     if (perfil) dados.perfil_fiscal = perfil;
+    // Qualquer modalidade da lista (loja, notas e transporte, hotel)
     const modalidade = texto(fd, "modalidade");
-    if (modalidade === "loja" || modalidade === "notas") dados.modalidade = modalidade;
+    if (Object.hasOwn(MODALIDADES_GESTAO, modalidade)) dados.modalidade = modalidade;
   }
   const { error } = await ctx.supabase.rpc("gestao_configurar", { p_empresa_id: empresaId, p_dados: dados as Json });
   if (error) return falha(mensagemErro(error));
   revalidarLoja(empresaId);
   revalidatePath(`/e/${empresaId}`, "layout");
-  return sucesso(ctx.equipe && dados.ativa ? "Gestão da loja ligada e configurada." : "Configurações salvas.");
+  if (!(ctx.equipe && dados.ativa)) return sucesso("Configurações salvas.");
+  return sucesso(dados.modalidade === "hotel" ? "Gestão do hotel ligada e configurada." : "Gestão da loja ligada e configurada.");
 }
 
 // -----------------------------------------------------------------------------

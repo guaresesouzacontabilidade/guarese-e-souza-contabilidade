@@ -85,9 +85,26 @@ test.beforeAll(async () => {
   }
 });
 
-// O quarto usado volta a ficar limpo (a demonstração continua com quartos livres)
+// O quarto usado volta a ficar limpo e o hotel continua na modalidade hotel (a demonstração segue igual)
 test.afterAll(async () => {
   if (quartoUsado) await servico!.from("hotel_quartos").update({ limpeza: "limpo" }).eq("id", quartoUsado);
+  if (empresaId) await servico!.from("gestao_config").update({ modalidade: "hotel", ativa: true }).eq("empresa_id", empresaId);
+});
+
+test("escritório: liga a gestão do hotel pela tela (a modalidade escolhida é gravada)", async ({ page }) => {
+  test.setTimeout(120_000);
+  // Começa como se a empresa estivesse na loja comum
+  await servico!.from("gestao_config").update({ modalidade: "loja" }).eq("empresa_id", empresaId);
+  await entrar(page, `contador@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/loja/configuracoes`);
+  await page.locator("#modalidade").selectOption("hotel");
+  await page.locator('input[name="ativa"]').check();
+  await page.getByRole("button", { name: "Salvar configurações" }).click();
+  await expect(page.getByText("Gestão do hotel ligada e configurada.")).toBeVisible({ timeout: 30_000 });
+  const { data } = await servico!.from("gestao_config").select("ativa, modalidade").eq("empresa_id", empresaId).single();
+  expect(data).toEqual({ ativa: true, modalidade: "hotel" });
+  await page.goto(`/e/${empresaId}/hotel`);
+  await expect(page.getByRole("heading", { name: "Painel do hotel" })).toBeVisible();
 });
 
 test("recepção: reserva com check-in na hora, consumo, pagamento e check-out", async ({ page }) => {
