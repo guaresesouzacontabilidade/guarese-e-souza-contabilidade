@@ -34,6 +34,11 @@ import {
   Truck,
   Route,
   Inbox,
+  BedDouble,
+  CalendarRange,
+  DoorOpen,
+  UtensilsCrossed,
+  ConciergeBell,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -55,8 +60,8 @@ export interface EmpresaMenu {
   demonstracao: boolean;
   /** Gestão da loja ligada para a empresa. */
   loja: boolean;
-  /** Modalidade da gestão: loja completa ou só notas e transporte. */
-  modalidade: "loja" | "notas" | null;
+  /** Modalidade da gestão: loja completa, só notas e transporte ou hotel. */
+  modalidade: "loja" | "notas" | "hotel" | null;
   /** CT-e configurado pelo escritório (ligado ou em conferência). */
   cte?: boolean;
   /** Tem caminhões cadastrados (rentabilidade da frota). */
@@ -155,6 +160,8 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
   const p = new Set(empresa.permissoes);
   const base = `/e/${empresa.id}`;
   const transporte = empresa.loja && empresa.modalidade === "notas";
+  const hotel = empresa.loja && empresa.modalidade === "hotel";
+  const hospedagem: ItemMenu[] = [];
   const loja: ItemMenu[] = [];
   const notas: ItemMenu[] = [];
   const documentos: ItemMenu[] = [];
@@ -166,6 +173,21 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
 
   if (transporte) {
     if (p.has("nfe.emitir")) notas.push({ rotulo: "Ordens de carregamento", href: `${base}/loja/carregamentos`, icone: Truck });
+  } else if (hotel && p.has("gestao.vender")) {
+    // Hotel: recepção, governança e conta do hóspede; a loja vira o restaurante e bar
+    hospedagem.push({ rotulo: "Painel do hotel", href: `${base}/hotel`, icone: BedDouble, exato: true });
+    hospedagem.push({ rotulo: "Mapa de reservas", href: `${base}/hotel/mapa`, icone: CalendarRange });
+    hospedagem.push({ rotulo: "Reservas e hospedagens", href: `${base}/hotel/reservas`, icone: ConciergeBell });
+    hospedagem.push({ rotulo: "Hóspedes", href: `${base}/hotel/hospedes`, icone: Users });
+    hospedagem.push({ rotulo: "Quartos e governança", href: `${base}/hotel/quartos`, icone: DoorOpen });
+    hospedagem.push({ rotulo: "Lançar consumo no quarto", href: `${base}/hotel/consumo`, icone: UtensilsCrossed });
+    if (p.has("gestao.gerenciar")) hospedagem.push({ rotulo: "Relatórios do hotel", href: `${base}/hotel/relatorios`, icone: FileBarChart });
+    loja.push({ rotulo: "Painel do restaurante", href: `${base}/loja`, icone: Store, exato: true });
+    loja.push({ rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart });
+    loja.push({ rotulo: "Caixa do dia", href: `${base}/loja/caixa`, icone: Banknote });
+    loja.push({ rotulo: "Produtos e estoque", href: `${base}/loja/produtos`, icone: Boxes });
+    loja.push({ rotulo: "Vendas", href: `${base}/loja/vendas`, icone: ReceiptText });
+    if (p.has("gestao.gerenciar")) configuracoes.push({ rotulo: "Configurações do hotel", href: `${base}/hotel/configuracoes`, icone: BedDouble });
   } else if (empresa.loja && p.has("gestao.vender")) {
     loja.push({ rotulo: "Loja", href: `${base}/loja`, icone: Store, exato: true });
     loja.push({ rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart });
@@ -212,7 +234,8 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
 
   const grupos: GrupoMenu[] = [
     { id: "inicio", rotulo: "Início", icone: Home, itens: [{ rotulo: "Início", href: base, icone: Home, exato: true }] },
-    { id: "loja", rotulo: "Loja", icone: Store, itens: loja },
+    { id: "hotel", rotulo: "Hotel", icone: BedDouble, itens: hospedagem },
+    { id: "loja", rotulo: hotel ? "Restaurante e bar" : "Loja", icone: hotel ? UtensilsCrossed : Store, itens: loja },
     { id: "notas", rotulo: transporte ? "Notas e transporte" : "Notas", icone: transporte ? Truck : ReceiptText, itens: notas },
     { id: "documentos", rotulo: "Documentos", icone: FolderOpen, itens: documentos },
     { id: "pagamentos", rotulo: "Pagamentos e prazos", icone: CalendarDays, itens: pagamentos },

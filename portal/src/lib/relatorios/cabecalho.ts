@@ -10,7 +10,7 @@ type Cliente = ContextoEmpresa["supabase"];
 export async function montarCabecalho(
   supabase: Cliente,
   empresaId: string,
-  dados: { titulo: string; subtitulo: string; situacao: Cabecalho["situacao"]; geradoEm?: string; observacao?: string },
+  dados: { titulo: string; subtitulo: string; situacao: Cabecalho["situacao"]; geradoEm?: string; observacao?: string; notaFinal?: string | null },
 ): Promise<Cabecalho> {
   const [{ data: empresa }, escritorio] = await Promise.all([
     supabase.from("empresas").select("razao_social, nome_fantasia, documento, logo_path").eq("id", empresaId).maybeSingle(),
@@ -34,6 +34,7 @@ export async function montarCabecalho(
     situacao: dados.situacao,
     geradoEm: dados.geradoEm ?? new Date().toISOString(),
     observacao: dados.observacao,
+    notaFinal: dados.notaFinal,
   };
 }
 

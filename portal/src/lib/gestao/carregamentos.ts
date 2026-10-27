@@ -30,6 +30,7 @@ export const FRETE_POR_CONTA: Record<number, string> = {
 export const MODALIDADES_GESTAO = {
   loja: "Loja completa (caixa, vendas, estoque e notas)",
   notas: "Notas e transporte (ordens de carregamento e NF-e, sem caixa)",
+  hotel: "Hotel e pousada (reservas, quartos, conta do hóspede, restaurante e bar)",
 } as const;
 
 /** Situações em que a NF-e da ordem não vale mais (a ordem pode ser corrigida e ganhar outra nota). */

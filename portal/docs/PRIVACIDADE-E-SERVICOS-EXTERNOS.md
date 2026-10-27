@@ -48,6 +48,7 @@ Se um dia algum recurso de IA externa for adotado, ele deverá ser documentado a
 | Dados financeiros e contábeis | lançamentos, contas, conciliações, relatórios | execução de contrato; obrigação legal |
 | Comunicação | mensagens e anexos trocados com o escritório | execução de contrato |
 | Colaboradores das empresas (área Cálculos) | nome, cargo, data de admissão e saída, salário, adicionais fixos, número de dependentes para o IR, férias vencidas e saldo do FGTS informado — **sem CPF nem documentos pessoais** | execução de contrato (o cliente é o controlador dos dados dos seus empregados; o escritório atua como operador); cumprimento de obrigação legal |
+| Hóspedes dos hotéis (gestão do hotel) | nome, CPF ou outro documento, nascimento, gênero, nacionalidade, profissão, telefone, e-mail, endereço e os dados da viagem (motivo, transporte, placa, procedência e destino), estadias, consumo e pagamentos | cumprimento de obrigação legal (Ficha Nacional de Registro de Hóspedes, Lei nº 11.771/2008) e execução de contrato (o hotel é o controlador; o escritório atua como operador) |
 | Auditoria | quem fez o quê e quando | obrigação legal; legítimo interesse |
 
 ## 5. Medidas de segurança
@@ -180,3 +181,12 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **Quem vê**: quem tem a permissão de emitir CT-e da empresa (o empresário, por padrão) e a equipe. Configurar a emissão é só da equipe; ligar exige o certificado válido e a autorização do cliente registrada. Clientes de outras empresas não veem nada (regra no banco, além da tela).
 - **Sem inteligência artificial**: o CT-e é calculado e montado por regras fixas do leiaute oficial e das operações do frete cadastradas pelo escritório; nenhum dado vai para serviço de IA.
 - **Demonstração**: não tem certificado; a emissão fica desligada (o formulário só confere os valores), nada é enviado e as empresas são fictícias.
+
+## 22. Gestão do hotel (reservas e hóspedes)
+
+- **Onde roda**: tudo dentro do portal. **Nada é enviado** a sites de reserva (Booking, Expedia...), ao Ministério do Turismo, a serviços externos ou a inteligência artificial. A origem da reserva é só um rótulo informado pela recepção.
+- **O que guarda**: a ficha de cada hóspede (os dados pedidos na FNRH) e os acompanhantes, as reservas e estadias, a conta (diárias, consumo, serviços, descontos) e os pagamentos — sem número de cartão. Cada pagamento vira lançamento no Financeiro da empresa.
+- **Quem vê**: só pessoas da própria empresa com a permissão "Vender no caixa" (recepção) ou "Gerenciar a loja" (gerente) e a equipe vinculada à empresa. Clientes de outras empresas não veem nada (regra no banco, além da tela). Ninguém altera as tabelas diretamente: tudo passa pelas funções do portal, que conferem a empresa, a permissão e a situação da reserva; as alterações ficam no registro de atividades.
+- **Ficha de registro (FNRH)**: sai em PDF para conferência e assinatura. O envio ao sistema do Ministério do Turismo é feito pelo próprio hotel, fora do portal.
+- **Exclusão**: o gerente exclui o cadastro de quem não tem hospedagem registrada. A ficha de quem se hospedou fica guardada junto com a hospedagem, pelo prazo da obrigação legal.
+- **Demonstração**: o hotel, os hóspedes (CPF gerado só para teste), as reservas e os pagamentos da demonstração são fictícios.

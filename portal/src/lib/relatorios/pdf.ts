@@ -23,9 +23,12 @@ export interface Cabecalho {
   escritorio: { nome: string; razao: string; cnpj: string; email: string | null; endereco: string };
   logo?: { dados: string } | null; // data URL (png/jpeg) da logo enviada pelo escritório
   logoCliente?: { dados: string } | null; // logo da empresa cliente (cadastro da empresa)
-  situacao: "preliminar" | "revisado" | "rascunho";
+  /** "documento": comprovante emitido pela própria empresa (recibo, ficha), sem a marca de relatório gerencial. */
+  situacao: "preliminar" | "revisado" | "rascunho" | "documento";
   geradoEm: string;
   observacao?: string;
+  /** Nota no fim do documento (o padrão é a dos relatórios gerenciais). */
+  notaFinal?: string | null;
 }
 
 const FONTES_PADRAO = new Set(["Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique"]);
@@ -66,7 +69,7 @@ export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buf
     pageSize: "A4",
     pageMargins: [40, 84, 40, 56],
     info: { title: `${cab.titulo} — ${cab.empresa.nome}`, author: cab.escritorio.nome, creator: "Portal Guarese's ON" },
-    watermark: cab.situacao === "revisado" ? undefined : { text: cab.situacao === "rascunho" ? "RASCUNHO" : "PRELIMINAR", opacity: 0.06, bold: true, fontSize: 80 },
+    watermark: cab.situacao === "revisado" || cab.situacao === "documento" ? undefined : { text: cab.situacao === "rascunho" ? "RASCUNHO" : "PRELIMINAR", opacity: 0.06, bold: true, fontSize: 80 },
     // Logo do escritório à esquerda; à direita, a logo do cliente (quando cadastrada) com o nome e o CNPJ
     header: () => ({
       margin: [40, 20, 40, 0],
@@ -107,20 +110,29 @@ export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buf
       { text: cab.titulo, style: "titulo" },
       { text: cab.subtitulo, style: "subtitulo", margin: [0, 2, 0, 4] },
       {
-        text: [
-          { text: cab.situacao === "revisado" ? "Revisado pelo escritório" : cab.situacao === "rascunho" ? "Rascunho — não publicado" : "Preliminar — os números ainda podem mudar", bold: true, color: cab.situacao === "revisado" ? COR.verde : COR.amarelo },
-          { text: ` · Gerado em ${formatarDataHora(cab.geradoEm)}`, color: COR.cinza },
-        ],
+        text:
+          cab.situacao === "documento"
+            ? [{ text: `Emitido em ${formatarDataHora(cab.geradoEm)}`, color: COR.cinza }]
+            : [
+                { text: cab.situacao === "revisado" ? "Revisado pelo escritório" : cab.situacao === "rascunho" ? "Rascunho — não publicado" : "Preliminar — os números ainda podem mudar", bold: true, color: cab.situacao === "revisado" ? COR.verde : COR.amarelo },
+                { text: ` · Gerado em ${formatarDataHora(cab.geradoEm)}`, color: COR.cinza },
+              ],
         fontSize: 8,
         margin: [0, 0, 0, 8],
       },
       ...(cab.observacao ? [{ text: cab.observacao, style: "nota", margin: [0, 0, 0, 6] } as Content] : []),
       ...conteudo,
-      {
-        text: "Relatório gerencial elaborado com base nas informações e documentos enviados pela empresa e registrados no Portal Guarese's ON. Não substitui as demonstrações contábeis oficiais.",
-        style: "nota",
-        margin: [0, 18, 0, 0],
-      },
+      ...((cab.notaFinal === undefined ? cab.situacao !== "documento" : cab.notaFinal)
+        ? [
+            {
+              text:
+                cab.notaFinal ??
+                "Relatório gerencial elaborado com base nas informações e documentos enviados pela empresa e registrados no Portal Guarese's ON. Não substitui as demonstrações contábeis oficiais.",
+              style: "nota",
+              margin: [0, 18, 0, 0],
+            } as Content,
+          ]
+        : []),
     ],
   };
   return pm.createPdf(doc).getBuffer();

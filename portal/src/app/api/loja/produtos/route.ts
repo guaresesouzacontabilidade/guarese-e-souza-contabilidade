@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const empresaId = req.nextUrl.searchParams.get("empresa") ?? "";
   if (!UUID.test(empresaId)) return new NextResponse("Empresa inválida.", { status: 400 });
   const empresa = (await obterEmpresasDoUsuario()).find((e) => e.id === empresaId);
-  if (!empresa || !empresa.loja || empresa.gestao_modalidade !== "loja" || !empresa.permissoes.has("gestao.gerenciar")) {
+  if (!empresa || !empresa.loja || empresa.gestao_modalidade === "notas" || !empresa.permissoes.has("gestao.gerenciar")) {
     return new NextResponse("Acesso negado.", { status: 403 });
   }
   const atuais = req.nextUrl.searchParams.get("tipo") === "atuais";

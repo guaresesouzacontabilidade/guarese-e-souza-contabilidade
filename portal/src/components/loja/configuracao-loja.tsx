@@ -10,7 +10,7 @@ import { MODALIDADES_GESTAO } from "@/lib/gestao/carregamentos";
 
 export interface ConfigLoja {
   ativa: boolean;
-  modalidade: "loja" | "notas";
+  modalidade: "loja" | "notas" | "hotel";
   perfil_fiscal: string;
   permitir_estoque_negativo: boolean;
   permitir_venda_prazo: boolean;
@@ -46,8 +46,9 @@ export function FormConfigLoja({
   nfe: OpcoesNfeLoja | null;
 }) {
   const c = config;
-  const [modalidade, setModalidade] = React.useState<"loja" | "notas">(c?.modalidade ?? "loja");
+  const [modalidade, setModalidade] = React.useState<"loja" | "notas" | "hotel">(c?.modalidade ?? "loja");
   const notas = modalidade === "notas";
+  const hotel = modalidade === "hotel";
   const opcoesConta = (atual: string | null) => (
     <>
       {!atual ? <option value="">Criar automaticamente</option> : null}
@@ -72,12 +73,23 @@ export function FormConfigLoja({
                   <span className="block text-muted-foreground">
                     {notas
                       ? "Libera as ordens de carregamento ligadas à NF-e. Não cria caixa nem contas da loja."
-                      : "Libera o caixa, as vendas, o estoque e os orçamentos. Ao ligar, o portal cria as contas “Caixa da loja”, “Banco (PIX e transferências)” e “Maquininha de cartão” no Financeiro, se ainda não existirem."}
+                      : hotel
+                        ? "Libera reservas, quartos, check-in e check-out, a conta do hóspede e o restaurante e bar (caixa, produtos e estoque). Ao ligar, o portal cria as contas “Caixa da recepção”, “Banco (PIX e transferências)” e “Maquininha de cartão” no Financeiro, se ainda não existirem."
+                        : "Libera o caixa, as vendas, o estoque e os orçamentos. Ao ligar, o portal cria as contas “Caixa da loja”, “Banco (PIX e transferências)” e “Maquininha de cartão” no Financeiro, se ainda não existirem."}
                   </span>
                 </span>
               </label>
-              <Campo rotulo="Modalidade" htmlFor="modalidade" ajuda="Notas e transporte: para quem vende grãos (soja, milho) e só precisa das notas e dos carregamentos.">
-                <Select id="modalidade" name="modalidade" value={modalidade} onChange={(e) => setModalidade(e.target.value === "notas" ? "notas" : "loja")}>
+              <Campo
+                rotulo="Modalidade"
+                htmlFor="modalidade"
+                ajuda="Notas e transporte: para quem vende grãos e só precisa das notas e dos carregamentos. Hotel: para hotéis e pousadas (reservas, quartos, conta do hóspede e restaurante)."
+              >
+                <Select
+                  id="modalidade"
+                  name="modalidade"
+                  value={modalidade}
+                  onChange={(e) => setModalidade(e.target.value === "notas" || e.target.value === "hotel" ? e.target.value : "loja")}
+                >
                   {Object.entries(MODALIDADES_GESTAO).map(([v, r]) => (
                     <option key={v} value={v}>
                       {r}
@@ -136,9 +148,11 @@ export function FormConfigLoja({
               </section>
 
               <section className="space-y-4">
-                <h2 className="font-semibold">Para onde vai o dinheiro de cada venda</h2>
+                <h2 className="font-semibold">{hotel ? "Para onde vai o dinheiro (hospedagens e restaurante)" : "Para onde vai o dinheiro de cada venda"}</h2>
                 <p className="text-sm text-muted-foreground">
-                  As vendas à vista entram como recebidas nestas contas do Financeiro (a contabilidade recebe tudo pronto). As vendas a prazo viram contas a receber.
+                  {hotel
+                    ? "Os pagamentos das hospedagens e as vendas do restaurante entram como recebidos nestas contas do Financeiro (a contabilidade recebe tudo pronto). O faturado para empresas vira conta a receber."
+                    : "As vendas à vista entram como recebidas nestas contas do Financeiro (a contabilidade recebe tudo pronto). As vendas a prazo viram contas a receber."}
                 </p>
                 {contas.length || c?.ativa ? (
                   <div className="grid gap-4 sm:grid-cols-3">

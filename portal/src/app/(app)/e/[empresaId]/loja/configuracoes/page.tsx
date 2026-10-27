@@ -51,7 +51,7 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
                 cfg
                   ? {
                       ativa: cfg.ativa,
-                      modalidade: cfg.modalidade === "notas" ? "notas" : "loja",
+                      modalidade: cfg.modalidade === "notas" || cfg.modalidade === "hotel" ? cfg.modalidade : "loja",
                       perfil_fiscal: cfg.perfil_fiscal,
                       permitir_estoque_negativo: cfg.permitir_estoque_negativo,
                       permitir_venda_prazo: cfg.permitir_venda_prazo,
@@ -86,6 +86,15 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
           </div>
         ) : (
             <div className="space-y-3">
+              {ctx.hotel ? (
+                <Alerta tom="info" titulo="Hotel">
+                  Os horários de check-in e check-out, a taxa de serviço e a política de cancelamento ficam em{" "}
+                  <Link href={`/e/${empresaId}/hotel/configuracoes`} className="underline">
+                    Configurações do hotel
+                  </Link>
+                  . Aqui ficam as contas do Financeiro e as preferências do restaurante e bar.
+                </Alerta>
+              ) : null}
               <Alerta tom="info" titulo="Quem pode usar">
                 O responsável pela empresa já tem acesso. Para um funcionário do balcão, convide-o em{" "}
                 <Link href={`/e/${empresaId}/configuracoes`} className="underline">

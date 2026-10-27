@@ -95,8 +95,8 @@ export interface EmpresaAcesso {
   demonstracao: boolean;
   /** Gestão ligada para a empresa (em qualquer modalidade). */
   loja: boolean;
-  /** Modalidade da gestão ligada: loja completa ou só notas e transporte (null quando desligada). */
-  gestao_modalidade: "loja" | "notas" | null;
+  /** Modalidade da gestão ligada: loja completa, só notas e transporte ou hotel (null quando desligada). */
+  gestao_modalidade: "loja" | "notas" | "hotel" | null;
   /** CT-e configurado pelo escritório para a empresa (ligado ou em conferência; visível a quem emite ou configura o CT-e). */
   cte: boolean;
   /** Caminhões cadastrados na rentabilidade da frota (visível a quem vê o financeiro). */
@@ -126,7 +126,7 @@ export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> =
     cte: Boolean(cte_config?.emitente_id && cte_config.rntrc),
     frota: (frota_veiculos?.[0]?.count ?? 0) > 0,
     loja: gestao?.ativa === true,
-    gestao_modalidade: gestao?.ativa ? (gestao.modalidade === "notas" ? ("notas" as const) : ("loja" as const)) : null,
+    gestao_modalidade: gestao?.ativa ? (gestao.modalidade === "notas" ? ("notas" as const) : gestao.modalidade === "hotel" ? ("hotel" as const) : ("loja" as const)) : null,
   });
   if (s.perfil.tipo === "admin") {
     const { data } = await s.supabase.from("empresas").select(campos).order("razao_social");
