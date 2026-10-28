@@ -67,6 +67,9 @@ function LinhasApuracao({ a }: { a: ApuracaoE110 }) {
   );
 }
 
+// O robô do DAR (SEFAZ-MT) faz várias chamadas ao site da SEFAZ numa ação
+export const maxDuration = 60;
+
 export default async function PaginaEfd({ params, searchParams }: PageProps<"/e/[empresaId]/calculos/efd">) {
   const { empresaId } = await params;
   const sp = await searchParams;
