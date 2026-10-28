@@ -158,6 +158,12 @@ export interface DadosIcms {
   vencimentos: { codigo: string; vencimento: string | null }[];
   /** NF-e recebidas no mês só em resumo (sem o XML completo): ficam fora do cálculo. */
   sem_xml?: NotaSemXmlDados[];
+  /**
+   * Crédito presumido do transportador nos CT-e emitidos (ex.: Mato Grosso, 20% do
+   * ICMS devido nas prestações interestaduais), quando configurado na EFD da
+   * empresa: valor do mês somado CT-e a CT-e, como nos registros D197.
+   */
+  credito_presumido_cte?: { percentual: Num; codigo: string; ctes: number; icms: Num; valor: Num } | null;
 }
 
 export interface NotaSemXmlDados {
@@ -240,6 +246,8 @@ export interface ApuracaoPropria {
   estornosCredito: Decimal;
   creditos: Decimal;
   outrosCreditos: Decimal;
+  /** Crédito presumido dos CT-e emitidos (ajuste por documento, D197 na EFD). */
+  creditoPresumido: Decimal;
   estornosDebito: Decimal;
   saldoAnterior: Decimal;
   origemSaldo: "informado" | "mes_anterior" | "sem_informacao";
@@ -651,6 +659,8 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
     const outrosDebitos = lanc("outro_debito");
     const estornosCredito = lanc("estorno_credito");
     const outrosCreditos = lanc("outro_credito");
+    const presumido = dados.credito_presumido_cte;
+    const creditoPresumido = centavos(presumido?.valor ?? 0);
     const estornosDebito = lanc("estorno_debito");
     const deducoes = lanc("deducao");
 
@@ -670,7 +680,7 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
     }
 
     const totalDebitos = debitos.plus(outrosDebitos).plus(estornosCredito);
-    const totalCreditos = creditos.plus(outrosCreditos).plus(estornosDebito).plus(saldoAnterior);
+    const totalCreditos = creditos.plus(outrosCreditos).plus(creditoPresumido).plus(estornosDebito).plus(saldoAnterior);
     const saldo = totalDebitos.minus(totalCreditos);
     const saldoDevedor = Decimal.max(0, saldo);
     const aRecolher = Decimal.max(0, saldoDevedor.minus(deducoes));
@@ -681,6 +691,7 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
       estornosCredito,
       creditos: centavos(creditos),
       outrosCreditos,
+      creditoPresumido,
       estornosDebito,
       saldoAnterior,
       origemSaldo,
@@ -698,6 +709,9 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
       ...(estornosCredito.gt(0) ? [`(+) Estornos de crédito: ${moeda(estornosCredito)}`] : []),
       `(−) Créditos das entradas: ${moeda(centavos(creditos))}`,
       ...(outrosCreditos.gt(0) ? [`(−) Outros créditos: ${moeda(outrosCreditos)}`] : []),
+      ...(creditoPresumido.gt(0)
+        ? [`(−) Crédito presumido do transporte (${pctTxt(dec(presumido!.percentual))} do ICMS de ${presumido!.ctes} CT-e interestaduais): ${moeda(creditoPresumido)}`]
+        : []),
       ...(estornosDebito.gt(0) ? [`(−) Estornos de débito: ${moeda(estornosDebito)}`] : []),
       ...(saldoAnterior.gt(0) ? [`(−) Saldo credor do mês anterior: ${moeda(saldoAnterior)}`] : []),
       ...(deducoes.gt(0) ? [`(−) Deduções: ${moeda(deducoes)}`] : []),
@@ -869,7 +883,7 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
       linha("Outros débitos (ajustes)", p.outrosDebitos, s.ajustes_debito),
       linha("Estornos de crédito", p.estornosCredito, s.estornos_credito),
       linha("Créditos", p.creditos, s.creditos),
-      linha("Outros créditos (ajustes)", p.outrosCreditos, s.ajustes_credito),
+      linha("Outros créditos (ajustes)", p.outrosCreditos.plus(p.creditoPresumido), s.ajustes_credito),
       linha("Estornos de débito", p.estornosDebito, s.estornos_debito),
       linha("Saldo credor do mês anterior", p.saldoAnterior, s.saldo_credor_anterior),
       linha("Deduções", p.deducoes, s.deducoes),
@@ -903,6 +917,7 @@ export function resultadoParaGuardar(r: ResultadoIcms): ResultadoGuardado {
           estornos_credito: p.estornosCredito.toFixed(2),
           creditos: p.creditos.toFixed(2),
           outros_creditos: p.outrosCreditos.toFixed(2),
+          credito_presumido: p.creditoPresumido.toFixed(2),
           estornos_debito: p.estornosDebito.toFixed(2),
           saldo_anterior: p.saldoAnterior.toFixed(2),
           deducoes: p.deducoes.toFixed(2),

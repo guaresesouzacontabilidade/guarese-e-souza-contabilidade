@@ -642,6 +642,14 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
   const unidades = new Set<string>();
   const regC: string[][] = [];
   const regD: string[][] = [];
+  // Crédito presumido do transportador (ajuste por documento: D195/D197, tabela 5.3 do estado)
+  const presumido = icms.dados.credito_presumido_cte ?? null;
+  const pctPresumido = presumido ? dec(presumido.percentual) : ZERO;
+  const codigoPresumido = presumido && /^[A-Z]{2}\d{8}$/.test(presumido.codigo) ? presumido.codigo : null;
+  const OBS_PRESUMIDO = "000001";
+  let ajCredDoc = ZERO;
+  let ctesPresumido = 0;
+  let ctesInterestaduais = 0;
   const debitos = { notas: ZERO };
   const creditos = { notas: ZERO };
   const somaOprDoc: { nota: string; doc: Decimal; opr: Decimal }[] = [];
@@ -993,8 +1001,35 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
       munDest,
     ]);
     regD.push(["D190", `0${cst}`, cfop, numeroCampo(aliq), numeroCampo(valor), numeroCampo(bc), numeroCampo(vIcms), numeroCampo(redBc), ""]);
+    // CT-e próprio interestadual com ICMS: crédito presumido calculado no documento
+    const interestadual = k?.uf_ini && k?.uf_fim ? k.uf_ini !== k.uf_fim : cfop.startsWith("6");
+    if (p && vIcms.gt(0) && interestadual) ctesInterestaduais++;
+    if (p && codigoPresumido && pctPresumido.gt(0) && vIcms.gt(0) && interestadual) {
+      const credito = centavos(vIcms.times(pctPresumido).div(CEM));
+      ajCredDoc = ajCredDoc.plus(credito);
+      ctesPresumido++;
+      regD.push(["D195", OBS_PRESUMIDO, ""]);
+      regD.push([
+        "D197",
+        codigoPresumido,
+        textoCampo(`Crédito presumido de ${numeroCampo(pctPresumido).replace(/,00$/, "")}% do ICMS devido na prestação interestadual`, 255),
+        "",
+        numeroCampo(vIcms),
+        numeroCampo(pctPresumido),
+        numeroCampo(credito),
+        "",
+      ]);
+    }
   }
 
+  if (ufEmpresa === "MT" && ctesInterestaduais && !codigoPresumido) {
+    add({
+      id: "credito_presumido",
+      nivel: "aviso",
+      titulo: "Transportadora de Mato Grosso: crédito presumido de 20% não configurado",
+      detalhe: `Há ${ctesInterestaduais} CT-e interestaduais com ICMS. Se a empresa usa o crédito presumido de 20% do ICMS devido (RICMS/MT, Anexo VI, art. 18), configure ao lado (20% e código MT10001003): o portal lança o ajuste em cada CT-e (registros D195/D197).`,
+    });
+  }
   if (semMunicipio) {
     add({
       id: "municipios",
@@ -1028,7 +1063,8 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
   const saldoAnterior = centavos(res.propria?.saldoAnterior ?? ZERO);
   const totDeb = centavos(debitos.notas);
   const totCred = centavos(creditos.notas);
-  const expressao = totDeb.plus(ajDeb).plus(estCred).minus(totCred.plus(ajCred).plus(estDeb).plus(saldoAnterior));
+  const ajCredDocumentos = centavos(ajCredDoc);
+  const expressao = totDeb.plus(ajDeb).plus(estCred).minus(totCred.plus(ajCredDocumentos).plus(ajCred).plus(estDeb).plus(saldoAnterior));
   const saldoDevedor = Decimal.max(0, expressao);
   const aRecolher = Decimal.max(0, saldoDevedor.minus(deducoes));
   const credorTransportar = Decimal.max(0, expressao.minus(deducoes).neg());
@@ -1038,7 +1074,7 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
     ajustes_debito: ajDeb.toFixed(2),
     estornos_credito: estCred.toFixed(2),
     creditos: totCred.toFixed(2),
-    ajustes_credito_documentos: "0.00",
+    ajustes_credito_documentos: ajCredDocumentos.toFixed(2),
     ajustes_credito: ajCred.toFixed(2),
     estornos_debito: estDeb.toFixed(2),
     saldo_credor_anterior: saldoAnterior.toFixed(2),
@@ -1175,6 +1211,7 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
     );
     for (const [unidade, fator] of it.conversoes) a.registrar("0220", unidade, numeroCampo(fator, 6), "");
   }
+  if (ctesPresumido) a.registrar("0460", OBS_PRESUMIDO, "Crédito presumido do prestador de serviço de transporte nas prestações interestaduais");
   a.registrar("0990", String(a.linhasDoBloco("0") + 1));
 
   // Bloco B (somente o Distrito Federal tem informações de ISS)
@@ -1201,7 +1238,7 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
     numeroCampo(ajDeb),
     numeroCampo(estCred),
     numeroCampo(totCred),
-    numeroCampo(0),
+    numeroCampo(ajCredDocumentos),
     numeroCampo(ajCred),
     numeroCampo(estDeb),
     numeroCampo(saldoAnterior),

@@ -419,6 +419,53 @@ describe("EFD ICMS/IPI: arquivo do mês", () => {
   });
 });
 
+describe("EFD ICMS/IPI: crédito presumido do transportador (MT)", () => {
+  it("CT-e emitido interestadual: D195/D197 com 20% do ICMS, 0460 e o ajuste no E110", () => {
+    const { dados, icms } = cenario();
+    const emitido: NotaEfdDados = {
+      ...dados.notas.find((n) => n.modelo === "57")!,
+      id: "00000000-0000-0000-0000-0000000000ff",
+      numero: "900",
+      operacao: "saida",
+      emitente_documento: CNPJ,
+      destinatario_documento: CLIENTE.documento,
+      destinatario_nome: CLIENTE.nome,
+      valor_total: "1000.00",
+      cfops: ["6353"],
+      tributos: { icms: "120.00" },
+      complemento: complemento(EMPRESA_P, CLIENTE, {
+        mod_frete: null,
+        cte: { toma: "3", tp_cte: "0", tp_serv: "0", cmun_ini: "5103403", uf_ini: "MT", cmun_fim: "3550308", uf_fim: "SP", cst: "00", bc_icms: "1000.00", p_icms: "12.00", icms: "120.00", p_red_bc: null, valor_prestacao: "1000.00", valor_receber: "1000.00", chave_substituida: null },
+      }),
+    };
+    dados.notas.push(emitido);
+    const dadosIcms = { ...icms.dados, saidas: [...icms.dados.saidas, { cfop: "6353", notas: 1, valor: 1000, base: 1000, icms: 120 }], credito_presumido_cte: { percentual: "20.00", codigo: "MT10001003", ctes: 1, icms: "120.00", valor: "24.00" } };
+    const resultado = calcularIcms(dadosIcms);
+    expect(resultado.propria?.creditoPresumido.toFixed(2)).toBe("24.00");
+    const r = gerarEfd(dados, { dados: dadosIcms, resultado }, OPCOES);
+    const arq = r.conteudo!;
+    const linhas = arq.split("\r\n");
+    const i = linhas.findIndex((l) => l.startsWith("|D100|1|0|"));
+    expect(linhas.slice(i + 1, i + 4)).toEqual([
+      "|D190|000|6353|12,00|1000,00|1000,00|120,00|0,00||",
+      "|D195|000001||",
+      "|D197|MT10001003|Crédito presumido de 20% do ICMS devido na prestação interestadual||120,00|20,00|24,00||",
+    ]);
+    expect(registros(arq, "0460")).toEqual([["0460", "000001", "Crédito presumido do prestador de serviço de transporte nas prestações interestaduais"]]);
+    // Débitos 612 + 120; créditos 186; ajuste por documento 24; outros créditos 50 → 472 a recolher
+    expect(registros(arq, "E110")[0].slice(1, 8)).toEqual(["732,00", "0,00", "0,00", "0,00", "186,00", "24,00", "50,00"]);
+    expect(r.resumo.apuracao.a_recolher).toBe("472.00");
+    expect(resultado.propria?.aRecolher.toFixed(2)).toBe("472.00");
+    expect(r.pendencias.find((p) => p.id === "diferenca_apuracao")).toBeUndefined();
+  });
+  it("transportadora de MT sem o crédito configurado recebe o aviso", () => {
+    const { dados, icms } = cenario();
+    const cte = dados.notas.find((n) => n.modelo === "57")!;
+    dados.notas.push({ ...cte, id: "00000000-0000-0000-0000-0000000000fe", operacao: "saida", emitente_documento: CNPJ, cfops: ["6353"], tributos: { icms: "36.00" }, complemento: { ...cte.complemento!, cte: { ...cte.complemento!.cte!, uf_fim: "GO" } } });
+    expect(gerarEfd(dados, icms, OPCOES).pendencias.find((p) => p.id === "credito_presumido")?.nivel).toBe("aviso");
+  });
+});
+
 describe("EFD ICMS/IPI: pendências", () => {
   it("bloqueia sem o CPF do contador, sem vencimento e com lançamento sem código", () => {
     const { dados, icms } = cenario();

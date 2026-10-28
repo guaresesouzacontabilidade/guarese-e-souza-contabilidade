@@ -16,7 +16,20 @@ export function BotaoRelerEfd({ empresaId, competencia }: { empresaId: string; c
 }
 
 /** Perfil e código de receita do ICMS (E116), guardados para os próximos meses. */
-export function FormConfiguracaoEfd({ empresaId, perfil, codigoReceita, uf }: { empresaId: string; perfil: string; codigoReceita: string | null; uf: string | null }) {
+export function FormConfiguracaoEfd({
+  empresaId,
+  perfil,
+  codigoReceita,
+  uf,
+  presumido,
+}: {
+  empresaId: string;
+  perfil: string;
+  codigoReceita: string | null;
+  uf: string | null;
+  /** Crédito presumido nos CT-e emitidos (percentual e código da tabela 5.3), quando configurado. */
+  presumido: { percentual: string; codigo: string } | null;
+}) {
   return (
     <FormularioAcao acao={salvarConfiguracaoEfd.bind(null, empresaId)} className="space-y-3">
       {({ estado, pendente }) => (
@@ -38,6 +51,22 @@ export function FormConfiguracaoEfd({ empresaId, perfil, codigoReceita, uf }: { 
               <Input id="efd-cod-rec" name="codigo_receita" defaultValue={codigoReceita ?? ""} maxLength={20} placeholder={uf === "MT" ? "Ex.: 1112" : ""} />
             </Campo>
           </div>
+          <fieldset className="space-y-2 rounded-lg border border-border p-3">
+            <legend className="px-1 text-sm font-medium">Crédito presumido nos CT-e emitidos (transportadora)</legend>
+            <p className="text-xs text-muted-foreground">
+              {uf === "MT"
+                ? "Mato Grosso: 20% do ICMS devido nas prestações interestaduais (RICMS/MT, Anexo VI, art. 18), código MT10001003. Vazio: não usa."
+                : "Só se a legislação do estado conceder e pedir o ajuste em cada CT-e (tabela 5.3). Vazio: não usa."}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Campo rotulo="Percentual (%)" htmlFor="efd-presumido-pct" erro={estado.erros?.credito_presumido_cte}>
+                <Input id="efd-presumido-pct" name="credito_presumido_cte" inputMode="decimal" defaultValue={presumido?.percentual.replace(".", ",") ?? ""} placeholder={uf === "MT" ? "20" : ""} maxLength={6} />
+              </Campo>
+              <Campo rotulo="Código do ajuste (tabela 5.3)" htmlFor="efd-presumido-cod" erro={estado.erros?.credito_presumido_codigo}>
+                <Input id="efd-presumido-cod" name="credito_presumido_codigo" defaultValue={presumido?.codigo ?? ""} placeholder={uf === "MT" ? "MT10001003" : ""} maxLength={12} className="uppercase" />
+              </Campo>
+            </div>
+          </fieldset>
           <div className="flex justify-end">
             <BotaoEnviar pendente={pendente} variante="secundario">
               Salvar configuração

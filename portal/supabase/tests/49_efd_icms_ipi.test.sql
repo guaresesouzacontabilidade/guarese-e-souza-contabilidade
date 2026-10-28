@@ -7,7 +7,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(33);
+select plan(37);
 
 \ir 00_setup.sql.inc
 select set_config('request.jwt.claims', '', true);
@@ -151,6 +151,18 @@ select is((select s ->> 'icms' from jsonb_array_elements(public.dados_apuracao_i
             where s ->> 'cfop' = '6353'), '36', 'ICMS do CT-e emitido nos débitos da apuração');
 select is((select s ->> 'base' from jsonb_array_elements(public.dados_apuracao_icms(current_setting('testes.empresa_a')::uuid, '2026-09-01') -> 'saidas') s
             where s ->> 'cfop' = '6353'), '300.00', 'com a base do CT-e');
+
+-- 7. Crédito presumido do transportador (MT: 20% do ICMS dos CT-e interestaduais)
+select throws_ok($$select public.efd_salvar_configuracao(current_setting('testes.empresa_a')::uuid, '{"perfil": "A", "credito_presumido_cte": "20"}')$$,
+                 'P0001', null, 'percentual sem o código do ajuste é recusado');
+select throws_ok($$select public.efd_salvar_configuracao(current_setting('testes.empresa_a')::uuid,
+                   '{"perfil": "A", "credito_presumido_cte": "20", "credito_presumido_codigo": "TO10001003"}')$$,
+                 'P0001', null, 'código de outro estado é recusado');
+select lives_ok($$select public.efd_salvar_configuracao(current_setting('testes.empresa_a')::uuid,
+                  '{"perfil": "A", "codigo_receita": "1112", "credito_presumido_cte": "20", "credito_presumido_codigo": "MT10001003"}')$$,
+                'equipe configura o crédito presumido');
+select is(public.dados_apuracao_icms(current_setting('testes.empresa_a')::uuid, '2026-09-01') #>> '{credito_presumido_cte,valor}', '7.20',
+          'crédito do mês: 20% do ICMS do CT-e interestadual');
 reset role;
 
 select * from finish();

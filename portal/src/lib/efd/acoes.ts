@@ -73,9 +73,22 @@ export async function salvarConfiguracaoEfd(empresaId: string, _anterior: Result
   const ctx = await exigirPermissao(empresaId, "calculos.gerenciar");
   const perfil = texto(fd, "perfil").toUpperCase() || "A";
   const codigo = texto(fd, "codigo_receita");
+  const pctTexto = texto(fd, "credito_presumido_cte").replace(",", ".");
+  const ajuste = texto(fd, "credito_presumido_codigo").toUpperCase().replace(/[\s.\-]/g, "");
   if (!["A", "B", "C"].includes(perfil)) return falha("Perfil inválido.", { perfil: ["Escolha o perfil."] });
   if (codigo && !/^[0-9A-Za-z.\-]{1,20}$/.test(codigo)) return falha("Código de receita inválido.", { codigo_receita: ["Use só números (ex.: 1112)."] });
-  const { error } = await ctx.supabase.rpc("efd_salvar_configuracao", { p_empresa_id: empresaId, p_dados: { perfil, codigo_receita: codigo || null } as never });
+  const pct = pctTexto ? Number(pctTexto) : null;
+  if (pctTexto && (!Number.isFinite(pct) || pct! <= 0 || pct! > 100)) {
+    return falha("Percentual inválido.", { credito_presumido_cte: ["Informe de 0,01 a 100 (ex.: 20)."] });
+  }
+  if (ajuste && !/^[A-Z]{2}\d{8}$/.test(ajuste)) return falha("Código do ajuste inválido.", { credito_presumido_codigo: ["10 caracteres: UF + 8 números (ex.: MT10001003)."] });
+  if (Boolean(pct) !== Boolean(ajuste)) {
+    return falha("Informe o percentual e o código do ajuste (ou deixe os dois vazios).", { credito_presumido_codigo: ["Preencha os dois campos ou nenhum."] });
+  }
+  const { error } = await ctx.supabase.rpc("efd_salvar_configuracao", {
+    p_empresa_id: empresaId,
+    p_dados: { perfil, codigo_receita: codigo || null, credito_presumido_cte: pct, credito_presumido_codigo: ajuste || null } as never,
+  });
   if (error) return falha(mensagemErro(error));
   revalidar(empresaId);
   return sucesso("Configuração da EFD salva.");

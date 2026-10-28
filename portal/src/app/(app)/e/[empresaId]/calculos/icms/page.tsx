@@ -305,15 +305,26 @@ export default async function ApuracaoIcms({ params, searchParams }: PageProps<"
                       ["(+) Estornos de crédito", res.propria.estornosCredito, null],
                       ["(−) Créditos das entradas", res.propria.creditos, null],
                       ["(−) Outros créditos", res.propria.outrosCreditos, null],
+                      ["(−) Crédito presumido do transporte (CT-e)", res.propria.creditoPresumido, "presumido"],
                       ["(−) Estornos de débito", res.propria.estornosDebito, null],
                       ["(−) Saldo credor do mês anterior", res.propria.saldoAnterior, "saldo"],
                       ["Saldo devedor", res.propria.saldoDevedor, null],
                       ["(−) Deduções", res.propria.deducoes, null],
                     ] as const
-                  ).map(([rotulo, valor, tipo]) => (
+                  )
+                    .filter(([, , tipo]) => tipo !== "presumido" || dados.credito_presumido_cte)
+                    .map(([rotulo, valor, tipo]) => (
                     <div key={rotulo} className="flex flex-wrap items-baseline justify-between gap-x-4 border-b border-border pb-2">
                       <dt className="text-muted-foreground">
                         {rotulo}
+                        {tipo === "presumido" && dados.credito_presumido_cte ? (
+                          <span className="block text-xs">
+                            {String(dados.credito_presumido_cte.percentual).replace(".", ",")}% do ICMS de {dados.credito_presumido_cte.ctes} CT-e interestaduais emitidos · configurado em{" "}
+                            <Link href={`${base}/calculos/efd?competencia=${comp.slice(0, 7)}`} className="underline">
+                              EFD ICMS/IPI
+                            </Link>
+                          </span>
+                        ) : null}
                         {tipo === "saldo" ? (
                           <span className="block text-xs">
                             {res.propria!.origemSaldo === "informado"

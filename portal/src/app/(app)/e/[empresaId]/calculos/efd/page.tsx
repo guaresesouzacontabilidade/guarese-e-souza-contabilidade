@@ -39,6 +39,7 @@ function LinhasApuracao({ a }: { a: ApuracaoE110 }) {
     ["(+) Outros débitos (E111)", a.ajustes_debito],
     ["(+) Estornos de crédito (E111)", a.estornos_credito],
     ["(−) Créditos das entradas (C190 e D190)", a.creditos],
+    ["(−) Ajustes por documento (D197: crédito presumido)", a.ajustes_credito_documentos],
     ["(−) Outros créditos (E111)", a.ajustes_credito],
     ["(−) Estornos de débito (E111)", a.estornos_debito],
     ["(−) Saldo credor do mês anterior", a.saldo_credor_anterior],
@@ -281,7 +282,13 @@ export default async function PaginaEfd({ params, searchParams }: PageProps<"/e/
                 <CardTitle className="text-base">Configuração da EFD da empresa</CardTitle>
               </CardHeader>
               <CardContent>
-                <FormConfiguracaoEfd empresaId={empresaId} perfil={dados.config?.perfil ?? "A"} codigoReceita={dados.config?.codigo_receita ?? null} uf={dados.empresa.uf} />
+                <FormConfiguracaoEfd
+                  empresaId={empresaId}
+                  perfil={dados.config?.perfil ?? "A"}
+                  codigoReceita={dados.config?.codigo_receita ?? null}
+                  uf={dados.empresa.uf}
+                  presumido={icms.dados.credito_presumido_cte ? { percentual: String(icms.dados.credito_presumido_cte.percentual), codigo: icms.dados.credito_presumido_cte.codigo } : null}
+                />
               </CardContent>
             </Card>
             <Card>

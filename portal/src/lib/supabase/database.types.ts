@@ -1394,13 +1394,13 @@ isOneToOne: false
                   ]
                 },"efd_configuracoes": {
                   Row: {
-                    "atualizado_por": string | null,"codigo_receita": string | null,"empresa_id": string,"perfil": string,"updated_at": string
+                    "atualizado_por": string | null,"codigo_receita": string | null,"credito_presumido_codigo": string | null,"credito_presumido_cte": number | null,"empresa_id": string,"perfil": string,"updated_at": string
                   }
                   Insert: {
-                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"empresa_id": string,"perfil"?: string,"updated_at"?: string
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"credito_presumido_codigo"?: string | null,"credito_presumido_cte"?: number | null,"empresa_id": string,"perfil"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"empresa_id"?: string,"perfil"?: string,"updated_at"?: string
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"credito_presumido_codigo"?: string | null,"credito_presumido_cte"?: number | null,"empresa_id"?: string,"perfil"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
