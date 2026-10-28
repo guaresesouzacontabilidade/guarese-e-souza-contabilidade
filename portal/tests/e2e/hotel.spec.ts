@@ -67,6 +67,7 @@ let empresaId = "";
 let reservaId = "";
 
 let quartoUsado = "";
+let anexoId = "";
 
 test.beforeAll(async () => {
   const { data } = await servico!.from("empresas").select("id").ilike("razao_social", "HOTEL RIO TOCANTINS%").eq("demonstracao", true).single();
@@ -155,11 +156,15 @@ test("recepção: reserva com check-in na hora, consumo, pagamento e check-out",
 
   // Check-out com saldo: o portal não deixa
   // (recebe o valor sugerido, que é o saldo da conta, e fecha)
+  // (recebe o valor sugerido no PIX, com a foto do comprovante)
   await page.getByRole("button", { name: "Receber pagamento" }).click();
   const dialogo = page.getByRole("dialog");
   await expect(dialogo.getByLabel("Valor")).not.toHaveValue("");
+  await dialogo.locator('input[aria-label="Escolher arquivo do comprovante"]').setInputFiles("scripts/arquivos-demo/comprovante-pix-demo.png");
+  await expect(dialogo.getByText("comprovante-pix-demo.png")).toBeVisible();
   await dialogo.getByRole("button", { name: "Registrar" }).click();
-  await expect(dialogo).toBeHidden({ timeout: 30_000 });
+  await expect(dialogo).toBeHidden({ timeout: 60_000 });
+  await expect(page.getByRole("link", { name: "Comprovante", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Check-out" }).click();
   await page.getByRole("button", { name: "Fazer check-out" }).click();
   await expect(page.getByText("Encerrada", { exact: true }).first()).toBeVisible({ timeout: 30_000 });
@@ -174,6 +179,29 @@ test("recepção: reserva com check-in na hora, consumo, pagamento e check-out",
   const { data: itens } = await servico!.from("hotel_conta_itens").select("tipo, total").eq("reserva_id", reservaId).is("cancelado_em", null);
   const total = (itens ?? []).reduce((s, i) => s + Number(i.total), 0);
   expect(Number(lancs![0].valor_previsto)).toBeCloseTo(total, 2);
+
+  // O comprovante ficou guardado (confirmado, na pasta da empresa) e abre para a recepção
+  const { data: pags } = await servico!.from("hotel_pagamentos").select("id").eq("reserva_id", reservaId);
+  const { data: anexos } = await servico!
+    .from("hotel_pagamento_anexos")
+    .select("id, caminho, mime, confirmado_em")
+    .in(
+      "pagamento_id",
+      (pags ?? []).map((p) => p.id),
+    );
+  expect(anexos!.length).toBe(1);
+  expect(anexos![0].confirmado_em).not.toBeNull();
+  expect(anexos![0].caminho.startsWith(`${empresaId}/`)).toBe(true);
+  anexoId = anexos![0].id;
+  const arquivo = await page.request.get(`/api/hotel/${empresaId}/comprovantes/${anexoId}`);
+  expect(arquivo.status()).toBe(200);
+  expect(arquivo.headers()["content-type"]).toContain("image/png");
+
+  // No caixa da recepção: os recebimentos do hotel com o comprovante (e o aviso de quem está sem)
+  await page.goto(`/e/${empresaId}/loja/caixa`);
+  await expect(page.getByText("Recebimentos do hotel")).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Comprovante/ }).first()).toBeVisible();
+  await expect(page.getByText("Sem comprovante").first()).toBeVisible();
 
   // Ficha do hóspede em PDF; a recepção não vê os relatórios
   const ficha = await page.request.get(`/api/hotel/${empresaId}/reservas/${reservaId}?doc=ficha`);
@@ -200,6 +228,7 @@ test("o dono vê os relatórios; cliente de outra empresa não vê o hotel", asy
   const resposta = await page.goto(`/e/${empresaId}/hotel`);
   expect(resposta?.status()).toBe(404);
   expect((await page.request.get(`/api/hotel/${empresaId}/reservas/${reservaId}?doc=conta`)).status()).toBe(403);
+  if (anexoId) expect((await page.request.get(`/api/hotel/${empresaId}/comprovantes/${anexoId}`, { maxRedirects: 0 })).status()).toBe(403);
 });
 
 test("dono: cadastra vários quartos de uma vez (faixa, pulando um número)", async ({ page }) => {

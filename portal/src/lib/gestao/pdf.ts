@@ -5,7 +5,8 @@ import { COR, carregarPdfMake } from "@/lib/relatorios/pdf";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarData, formatarDataHora, formatarDocumento } from "@/lib/formatos";
 import { FORMAS_PAGAMENTO, ORDEM_FORMAS, formatarQuantidade, hora, un } from "./rotulos";
-import { totalCartao, valorDaForma, type RelatorioCaixa, type VendaDoCaixa } from "./dados";
+import { FORMAS_COM_COMPROVANTE, totalCartao, valorDaForma, type RelatorioCaixa, type VendaDoCaixa } from "./dados";
+import { FORMAS_PAGAMENTO_HOTEL, type FormaPagamentoHotel } from "@/lib/hotel/rotulos";
 
 /**
  * Relatório do dia do caixa em PDF: resumo por forma de pagamento, conferência
@@ -43,7 +44,8 @@ function textoItem(i: VendaDoCaixa["itens"][number]): string {
 
 export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> {
   const pm = await carregarPdfMake();
-  const { sessao: s, resumo: r, vendas, movimentos, produtos } = d.relatorio;
+  const { sessao: s, resumo: r, vendas, movimentos, produtos, hotel } = d.relatorio;
+  const hotelDinheiro = Number(r.hotel_por_forma?.dinheiro?.valor ?? 0);
   const fechado = s.status === "fechado";
   const concluidas = vendas.filter((v) => v.status === "concluida");
   const media = concluidas.length ? dec(r.vendas_total).div(concluidas.length) : dec(0);
@@ -109,6 +111,7 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
   const gaveta: TableCell[][] = [
     ["Troco inicial (abertura)", { text: R$(r.abertura), alignment: "right" }],
     ["+ Vendas em dinheiro (já descontado o troco)", { text: R$(valorDaForma(r, "dinheiro")), alignment: "right" }],
+    ...(hotelDinheiro ? [["+ Hospedagens em dinheiro", { text: R$(hotelDinheiro), alignment: "right" }] as TableCell[]] : []),
     [`+ Suprimentos (${r.qtd_suprimentos})`, { text: R$(r.suprimentos), alignment: "right" }],
     [`− Sangrias (${r.qtd_sangrias})`, { text: R$(r.sangrias), alignment: "right" }],
     [{ text: "= Dinheiro que deve estar na gaveta", bold: true, fillColor: COR.bege }, { text: R$(r.dinheiro_esperado), alignment: "right", bold: true, fillColor: COR.bege }],
@@ -218,6 +221,49 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
           fontSize: 7.5,
         }
       : { text: "Nenhuma venda neste caixa.", color: COR.cinza, fontSize: 8.5 },
+    ...(hotel.length
+      ? ([
+          { text: "Recebimentos do hotel", fontSize: 11, bold: true, color: COR.marrom, margin: [0, 14, 0, 5] },
+          {
+            table: {
+              headerRows: 1,
+              dontBreakRows: true,
+              widths: [28, 70, "*", 80, 70, 56],
+              body: [
+                cab(["Hora", "Reserva", "Hóspede", "Forma", "Comprovante", "Valor"], [5]),
+                ...hotel.map((h): TableCell[] => {
+                  const cor = h.estornado ? COR.cinza : undefined;
+                  const comprovante = h.estornado
+                    ? { text: "Estornado", color: COR.vermelho, bold: true }
+                    : h.comprovantes.length
+                      ? { text: h.comprovantes.length > 1 ? `Sim (${h.comprovantes.length})` : "Sim", color: COR.verde }
+                      : FORMAS_COM_COMPROVANTE.has(h.forma)
+                        ? { text: "Sem comprovante", color: COR.amarelo, bold: true }
+                        : { text: "—", color: COR.cinza };
+                  return [
+                    { text: hora(h.hora), color: cor },
+                    { text: `Nº ${h.reserva_numero ?? "—"}${h.quarto ? ` · qto ${h.quarto}` : ""}`, color: cor },
+                    { text: h.hospede ?? "", color: cor },
+                    { text: `${FORMAS_PAGAMENTO_HOTEL[h.forma as FormaPagamentoHotel] ?? h.forma}${h.sinal ? " (sinal)" : ""}`, color: cor },
+                    comprovante,
+                    { text: R$(h.valor), alignment: "right", bold: true, noWrap: true, color: cor, decoration: h.estornado ? "lineThrough" : undefined },
+                  ];
+                }),
+                [
+                  { text: "Total recebido do hotel", bold: true, fillColor: COR.bege, colSpan: 5 },
+                  {},
+                  {},
+                  {},
+                  {},
+                  { text: R$(r.hotel_total ?? 0), alignment: "right", bold: true, fillColor: COR.bege, noWrap: true },
+                ],
+              ],
+            },
+            layout: layoutTabela,
+            fontSize: 7.5,
+          },
+        ] as Content[])
+      : []),
     { text: "Sangrias e suprimentos", fontSize: 11, bold: true, color: COR.marrom, margin: [0, 14, 0, 5] },
     movimentos.length
       ? {

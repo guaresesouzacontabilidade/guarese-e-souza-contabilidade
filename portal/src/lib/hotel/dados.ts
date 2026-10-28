@@ -214,7 +214,13 @@ export async function carregarReserva(supabase: Supa, empresaId: string, reserva
   if (!r) return null;
   const [{ data: itens }, { data: pagamentos }, { data: acomp }, { data: resumo }] = await Promise.all([
     supabase.from("hotel_conta_itens").select("*").eq("reserva_id", reservaId).order("data").order("created_at"),
-    supabase.from("hotel_pagamentos").select("*, contraparte:contrapartes!hotel_pagamentos_empresa_id_contraparte_id_fkey(nome)").eq("reserva_id", reservaId).order("created_at"),
+    supabase
+      .from("hotel_pagamentos")
+      .select(
+        "*, contraparte:contrapartes!hotel_pagamentos_empresa_id_contraparte_id_fkey(nome), sessao:caixa_sessoes!hotel_pagamentos_empresa_id_sessao_id_fkey(status), anexos:hotel_pagamento_anexos!hotel_pagamento_anexos_empresa_id_pagamento_id_fkey(id, nome, mime, enviado_por, confirmado_em, created_at)",
+      )
+      .eq("reserva_id", reservaId)
+      .order("created_at"),
     supabase.from("hotel_reserva_hospedes").select("hospede:hotel_hospedes!hotel_reserva_hospedes_empresa_id_hospede_id_fkey(*)").eq("reserva_id", reservaId),
     supabase.rpc("hotel_conta_resumo", { p_reserva_id: reservaId }),
   ]);

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Alerta } from "@/components/ui/feedback";
 import { Table, TBody, TFoot, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
+import { AnexarComprovante, ComprovantesDoPagamento } from "@/components/hotel/comprovantes";
 import {
   BotaoCheckout,
   CancelarItem,
@@ -277,11 +278,33 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
                           {p.adiantamento ? <Badge className="ml-1">Sinal</Badge> : null}
                           {p.forma === "faturado" ? <span className="block text-xs text-muted-foreground">{p.contraparte?.nome} · vence {p.vencimento ? formatarData(p.vencimento) : ""}</span> : null}
                           {p.cancelado_em ? <span className="block text-xs no-underline">Estornado: {p.motivo_cancelamento}</span> : p.observacao ? <span className="block text-xs text-muted-foreground">{p.observacao}</span> : null}
+                          <ComprovantesDoPagamento
+                            empresaId={empresaId}
+                            comprovantes={(p.anexos ?? [])
+                              .filter((a) => a.confirmado_em)
+                              .sort((a, b) => a.created_at.localeCompare(b.created_at))
+                              .map((a) => ({
+                                id: a.id,
+                                nome: a.nome,
+                                mime: a.mime,
+                                podeExcluir: ctx.gerente || (a.enviado_por === ctx.sessao.usuarioId && p.sessao?.status !== "fechado"),
+                              }))}
+                          />
                         </Td>
                         <Td className="text-right numero">{formatarMoeda(p.valor)}</Td>
-                        {ctx.gerente && aberta ? (
-                          <Td className="w-10">{!p.cancelado_em ? <EstornarPagamento empresaId={empresaId} pagamentoId={p.id} descricao={`${FORMAS_PAGAMENTO_HOTEL[p.forma as keyof typeof FORMAS_PAGAMENTO_HOTEL]} de ${formatarMoeda(p.valor)}`} /> : null}</Td>
-                        ) : null}
+                        <Td className="w-20 whitespace-nowrap text-right">
+                          {!p.cancelado_em && p.forma !== "faturado" ? (
+                            <AnexarComprovante
+                              empresaId={empresaId}
+                              pagamentoId={p.id}
+                              descricao={`${FORMAS_PAGAMENTO_HOTEL[p.forma as keyof typeof FORMAS_PAGAMENTO_HOTEL]} de ${formatarMoeda(p.valor)}`}
+                              jaSalvos={(p.anexos ?? []).filter((a) => a.confirmado_em).length}
+                            />
+                          ) : null}
+                          {ctx.gerente && aberta && !p.cancelado_em ? (
+                            <EstornarPagamento empresaId={empresaId} pagamentoId={p.id} descricao={`${FORMAS_PAGAMENTO_HOTEL[p.forma as keyof typeof FORMAS_PAGAMENTO_HOTEL]} de ${formatarMoeda(p.valor)}`} />
+                          ) : null}
+                        </Td>
                       </Tr>
                     ))}
                   </TBody>

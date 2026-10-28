@@ -468,14 +468,15 @@ export async function registrarPagamento(empresaId: string, reservaId: string, _
       if (!DATA.test(texto(fd, "vencimento"))) erros.vencimento = ["Informe o vencimento da fatura."];
     }
     if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
-    const { error } = await ctx.supabase.rpc("hotel_pagamento_registrar", {
+    const { data: id, error } = await ctx.supabase.rpc("hotel_pagamento_registrar", {
       p_reserva_id: reservaId,
       p_dados: { forma, valor: v, contraparte_id: texto(fd, "contraparte_id"), vencimento: texto(fd, "vencimento"), observacao: texto(fd, "observacao").slice(0, 300) },
     });
     if (error) return falha(mensagemErro(error));
     revalidarHotel(empresaId);
     revalidatePath(`/e/${empresaId}/loja`, "layout");
-    return sucesso(forma === "faturado" ? "Fatura lançada no Financeiro (a receber)." : "Pagamento registrado e lançado no Financeiro.");
+    // O id volta para a tela enviar o comprovante (foto do PIX, do cartão) junto
+    return sucesso(forma === "faturado" ? "Fatura lançada no Financeiro (a receber)." : "Pagamento registrado e lançado no Financeiro.", { id });
   });
 }
 

@@ -170,7 +170,10 @@ export async function semearHotel(
   const { data: existente } = await admin.from("empresas").select("id").eq("documento", documento).maybeSingle();
   if (existente) {
     const { count } = await admin.from("hotel_quartos").select("id", { count: "exact", head: true }).eq("empresa_id", existente.id);
-    if (count) return false;
+    if (count) {
+      await anexarComprovanteDemo(admin, existente.id);
+      return false;
+    }
   }
   const empresaId =
     (existente?.id as string | undefined) ??
@@ -557,7 +560,7 @@ export async function semearHotel(
       );
     }
     ok("lavanderia", await recepcao.rpc("hotel_servico_lancar", { p_reserva_id: hospedados.find((x) => x.quarto === "201")!.id, p_dados: { tipo: "servico", descricao: "Lavanderia (4 peças)", valor: "48", setor: "lavanderia" } }));
-    // Sinais pagos na reserva
+    // Sinais pagos na reserva: o PIX do 205 com a foto do comprovante (fictício); o cartão do 201 fica sem, para a conferência do caixa mostrar o aviso
     ok("sinal 205", await recepcao.rpc("hotel_pagamento_registrar", { p_reserva_id: hospedados.find((x) => x.quarto === "205")!.id, p_dados: { forma: "pix", valor: "400" } }));
     ok("sinal 201", await recepcao.rpc("hotel_pagamento_registrar", { p_reserva_id: hospedados.find((x) => x.quarto === "201")!.id, p_dados: { forma: "cartao_credito", valor: "329" } }));
 
@@ -634,6 +637,8 @@ export async function semearHotel(
     await recepcao.auth.signOut({ scope: "local" });
   }
 
+  await anexarComprovanteDemo(admin, empresaId);
+
   // Logo fictícia
   const { data: e } = await admin.from("empresas").select("logo_path").eq("id", empresaId).single();
   if (!e?.logo_path) {
@@ -642,4 +647,42 @@ export async function semearHotel(
     ok("logo: cadastro", await admin.from("empresas").update({ logo_path: caminho, logo_atualizado_em: new Date().toISOString() }).eq("id", empresaId));
   }
   return true;
+}
+
+/**
+ * Foto fictícia do comprovante do PIX do sinal do quarto 205 (marcada como
+ * demonstração), para a conta do hóspede e a conferência do caixa. O cartão do
+ * 201 fica sem comprovante, para o caixa mostrar o aviso. Só anexa uma vez.
+ */
+export async function anexarComprovanteDemo(admin: SupabaseClient, empresaId: string) {
+  const { count } = await admin.from("hotel_pagamento_anexos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  if (count) return;
+  const { data: pagamentos } = await admin
+    .from("hotel_pagamentos")
+    .select("id, recebido_por, reserva:hotel_reservas!hotel_pagamentos_empresa_id_reserva_id_fkey(status, quarto:hotel_quartos!hotel_reservas_empresa_id_quarto_id_fkey(numero))")
+    .eq("empresa_id", empresaId)
+    .eq("forma", "pix")
+    .is("cancelado_em", null)
+    .order("created_at", { ascending: false });
+  type Pag = { id: string; recebido_por: string | null; reserva: { status: string; quarto: { numero: string } | null } | null };
+  const lista = (pagamentos ?? []) as unknown as Pag[];
+  const pag = lista.find((p) => p.reserva?.quarto?.numero === "205" && p.reserva.status === "hospedado") ?? lista[0];
+  if (!pag) return;
+  const foto = readFileSync(join(__dirname, "arquivos-demo", "comprovante-pix-demo.png"));
+  const caminho = `${empresaId}/${pag.id}/${crypto.randomUUID()}.png`;
+  ok("comprovante: envio", await admin.storage.from("hotel-comprovantes").upload(caminho, foto, { contentType: "image/png", upsert: false }));
+  ok(
+    "comprovante: registro",
+    await admin.from("hotel_pagamento_anexos").insert({
+      empresa_id: empresaId,
+      pagamento_id: pag.id,
+      caminho,
+      nome: "comprovante-pix-quarto-205.png",
+      mime: "image/png",
+      tamanho: foto.length,
+      origem: "camera",
+      enviado_por: pag.recebido_por,
+      confirmado_em: new Date().toISOString(),
+    }),
+  );
 }

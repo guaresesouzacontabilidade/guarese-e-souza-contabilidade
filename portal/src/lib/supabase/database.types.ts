@@ -2081,6 +2081,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"hotel_pagamento_anexos": {
+                  Row: {
+                    "caminho": string,"confirmado_em": string | null,"created_at": string,"empresa_id": string,"enviado_por": string | null,"id": string,"mime": string,"nome": string,"origem": string,"pagamento_id": string,"tamanho": number
+                  }
+                  Insert: {
+                    "caminho": string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"mime": string,"nome": string,"origem"?: string,"pagamento_id": string,"tamanho": number
+                  }
+                  Update: {
+                    "caminho"?: string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"mime"?: string,"nome"?: string,"origem"?: string,"pagamento_id"?: string,"tamanho"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_pagamento_anexos_empresa_id_pagamento_id_fkey"
+      columns: ["empresa_id","pagamento_id"]
+isOneToOne: false
+      referencedRelation: "hotel_pagamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_pagamento_anexos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"hotel_pagamentos": {
                   Row: {
                     "adiantamento": boolean,"cancelado_em": string | null,"cancelado_por": string | null,"contraparte_id": string | null,"created_at": string,"data": string,"empresa_id": string,"forma": string,"id": string,"lancamento_id": string | null,"motivo_cancelamento": string | null,"observacao": string | null,"recebido_por": string | null,"reserva_id": string,"sessao_id": string | null,"valor": number,"vencimento": string | null
@@ -4656,6 +4681,12 @@ isOneToOne: false
 { Args: { "p_dados": Json,"p_reserva_id": string }; Returns: undefined
                            },"hotel_checkout":
 { Args: { "p_reserva_id": string }; Returns: Json
+                           },"hotel_comprovante_confirmar":
+{ Args: { "p_anexo_id": string }; Returns: undefined
+                           },"hotel_comprovante_excluir":
+{ Args: { "p_anexo_id": string }; Returns: string
+                           },"hotel_comprovante_iniciar":
+{ Args: { "p_dados": Json,"p_pagamento_id": string }; Returns: Json
                            },"hotel_configurar":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
                            },"hotel_consumo_lancar":

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Banknote, CreditCard, FileDown, QrCode, ShoppingCart, Wallet } from "lucide-react";
+import { Banknote, BedDouble, CreditCard, FileDown, QrCode, ShoppingCart, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,9 @@ import { EstadoVazio } from "@/components/ui/feedback";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarData, formatarDataHora } from "@/lib/formatos";
 import { FORMAS_PAGAMENTO, formatarQuantidade, hora, un } from "@/lib/gestao/rotulos";
-import { totalCartao, valorDaForma, type RelatorioCaixa } from "@/lib/gestao/dados";
+import { FORMAS_COM_COMPROVANTE, totalCartao, valorDaForma, type RelatorioCaixa } from "@/lib/gestao/dados";
+import { FORMAS_PAGAMENTO_HOTEL, type FormaPagamentoHotel } from "@/lib/hotel/rotulos";
+import { ComprovantesDoPagamento } from "@/components/hotel/comprovantes";
 import { FecharCaixa, MovimentoCaixa, type ContaOpcao } from "./formularios-caixa";
 
 /** Caixa (aberto ou fechado): resumo, gaveta, vendas uma a uma, sangrias e produtos. */
@@ -24,7 +26,10 @@ export function PainelCaixa({
   podeOperar: boolean;
   contas: ContaOpcao[];
 }) {
-  const { sessao: s, resumo: r, vendas, movimentos, produtos } = relatorio;
+  const { sessao: s, resumo: r, vendas, movimentos, produtos, hotel } = relatorio;
+  const hotelDinheiro = Number(r.hotel_por_forma?.dinheiro?.valor ?? 0);
+  const hotelValidos = hotel.filter((h) => !h.estornado);
+  const semComprovante = hotelValidos.filter((h) => FORMAS_COM_COMPROVANTE.has(h.forma) && !h.comprovantes.length).length;
   const aberto = s.status === "aberto";
   const pdf = `/api/loja/caixa/${s.id}/relatorio`;
   const diferenca = s.diferenca != null ? dec(s.diferenca) : null;
@@ -58,7 +63,7 @@ export function PainelCaixa({
               <FileDown /> {aberto ? "Relatório até agora (PDF)" : "Relatório do dia (PDF)"}
             </a>
           </Button>
-          {aberto && podeOperar ? <FecharCaixa empresaId={empresaId} sessaoId={s.id} esperado={esperado} /> : null}
+          {aberto && podeOperar ? <FecharCaixa empresaId={empresaId} sessaoId={s.id} esperado={esperado} semComprovante={semComprovante} /> : null}
         </div>
       </div>
 
@@ -76,62 +81,132 @@ export function PainelCaixa({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Vendas, uma por uma</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {vendas.length ? (
-              <Table>
-                <THead>
-                  <tr>
-                    <Th>Nº</Th>
-                    <Th>Hora</Th>
-                    <Th>Cliente e itens</Th>
-                    <Th>Pagamento</Th>
-                    <Th className="text-right">Total</Th>
-                  </tr>
-                </THead>
-                <TBody>
-                  {vendas.map((v) => (
-                    <Tr key={v.id} className={v.status === "cancelada" ? "opacity-60" : undefined}>
-                      <Td className="align-top font-semibold">
-                        <Link href={`/e/${empresaId}/loja/vendas/${v.id}`} className="hover:underline">
-                          {v.numero}
-                        </Link>
-                      </Td>
-                      <Td className="align-top text-muted-foreground numero">{hora(v.hora)}</Td>
-                      <Td className="align-top">
-                        <p className="font-medium">{v.cliente ?? "Consumidor"}</p>
-                        <ul className="text-xs text-muted-foreground">
-                          {v.itens.map((i, n) => (
-                            <li key={n} className={v.status === "cancelada" ? "line-through" : undefined}>
-                              {i.pecas ? `${formatarQuantidade(i.pecas, 3)} pç = ` : ""}
-                              {formatarQuantidade(i.quantidade)} {un(i.unidade)} {i.descricao}
-                            </li>
+        <div className="min-w-0 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Vendas, uma por uma</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {vendas.length ? (
+                <Table>
+                  <THead>
+                    <tr>
+                      <Th>Nº</Th>
+                      <Th>Hora</Th>
+                      <Th>Cliente e itens</Th>
+                      <Th>Pagamento</Th>
+                      <Th className="text-right">Total</Th>
+                    </tr>
+                  </THead>
+                  <TBody>
+                    {vendas.map((v) => (
+                      <Tr key={v.id} className={v.status === "cancelada" ? "opacity-60" : undefined}>
+                        <Td className="align-top font-semibold">
+                          <Link href={`/e/${empresaId}/loja/vendas/${v.id}`} className="hover:underline">
+                            {v.numero}
+                          </Link>
+                        </Td>
+                        <Td className="align-top text-muted-foreground numero">{hora(v.hora)}</Td>
+                        <Td className="align-top">
+                          <p className="font-medium">{v.cliente ?? "Consumidor"}</p>
+                          <ul className="text-xs text-muted-foreground">
+                            {v.itens.map((i, n) => (
+                              <li key={n} className={v.status === "cancelada" ? "line-through" : undefined}>
+                                {i.pecas ? `${formatarQuantidade(i.pecas, 3)} pç = ` : ""}
+                                {formatarQuantidade(i.quantidade)} {un(i.unidade)} {i.descricao}
+                              </li>
+                            ))}
+                          </ul>
+                          {v.status === "cancelada" ? <Badge variante="perigo">Cancelada</Badge> : null}
+                        </Td>
+                        <Td className="align-top text-xs">
+                          {v.pagamentos.map((p, n) => (
+                            <p key={n}>
+                              {FORMAS_PAGAMENTO[p.forma]} {formatarMoeda(p.valor)}
+                              {p.parcelas > 1 ? ` em ${p.parcelas}x` : ""}
+                            </p>
                           ))}
-                        </ul>
-                        {v.status === "cancelada" ? <Badge variante="perigo">Cancelada</Badge> : null}
-                      </Td>
-                      <Td className="align-top text-xs">
-                        {v.pagamentos.map((p, n) => (
-                          <p key={n}>
-                            {FORMAS_PAGAMENTO[p.forma]} {formatarMoeda(p.valor)}
-                            {p.parcelas > 1 ? ` em ${p.parcelas}x` : ""}
-                          </p>
-                        ))}
-                        {dec(v.troco).gt(0) ? <p className="text-muted-foreground">troco {formatarMoeda(v.troco)}</p> : null}
-                      </Td>
-                      <Td className="whitespace-nowrap align-top text-right font-semibold numero">{formatarMoeda(v.total)}</Td>
-                    </Tr>
-                  ))}
-                </TBody>
-              </Table>
-            ) : (
-              <EstadoVazio icone={ShoppingCart} titulo="Nenhuma venda ainda" descricao={aberto ? "As vendas deste caixa aparecem aqui assim que forem concluídas." : undefined} />
-            )}
-          </CardContent>
-        </Card>
+                          {dec(v.troco).gt(0) ? <p className="text-muted-foreground">troco {formatarMoeda(v.troco)}</p> : null}
+                        </Td>
+                        <Td className="whitespace-nowrap align-top text-right font-semibold numero">{formatarMoeda(v.total)}</Td>
+                      </Tr>
+                    ))}
+                  </TBody>
+                </Table>
+              ) : (
+                <EstadoVazio icone={ShoppingCart} titulo="Nenhuma venda ainda" descricao={aberto ? "As vendas deste caixa aparecem aqui assim que forem concluídas." : undefined} />
+              )}
+            </CardContent>
+          </Card>
+
+          {hotel.length ? (
+            <Card>
+              <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <BedDouble className="size-5" /> Recebimentos do hotel
+                </CardTitle>
+                <span className="text-sm text-muted-foreground">
+                  {hotelValidos.length} recebimento(s) · {formatarMoeda(r.hotel_total ?? 0)}
+                </span>
+              </CardHeader>
+              <CardContent>
+                {semComprovante ? (
+                  <p className="mb-3 rounded-lg border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm">
+                    {semComprovante === 1 ? "1 recebimento em PIX, cartão ou transferência está" : `${semComprovante} recebimentos em PIX, cartão ou transferência estão`} sem
+                    comprovante. Anexe pelo clipe na conta do hóspede antes de fechar o caixa.
+                  </p>
+                ) : hotelValidos.some((h) => FORMAS_COM_COMPROVANTE.has(h.forma)) ? (
+                  <p className="mb-3 text-sm text-sucesso">Todos os recebimentos em PIX, cartão ou transferência têm comprovante.</p>
+                ) : null}
+                <Table>
+                  <THead>
+                    <tr>
+                      <Th className="hidden sm:table-cell">Hora</Th>
+                      <Th>Reserva</Th>
+                      <Th>Forma e comprovante</Th>
+                      <Th className="text-right">Valor</Th>
+                    </tr>
+                  </THead>
+                  <TBody>
+                    {hotel.map((h) => (
+                      <Tr key={h.id} className={h.estornado ? "opacity-60" : undefined}>
+                        <Td className="hidden align-top text-muted-foreground numero sm:table-cell">{hora(h.hora)}</Td>
+                        <Td className="align-top">
+                          <span className="block text-xs text-muted-foreground sm:hidden">{hora(h.hora)}</span>
+                          {h.reserva_id ? (
+                            <Link href={`/e/${empresaId}/hotel/reservas/${h.reserva_id}`} className="font-medium hover:underline">
+                              Nº {h.reserva_numero}
+                              {h.quarto ? ` · quarto ${h.quarto}` : ""}
+                            </Link>
+                          ) : (
+                            "—"
+                          )}
+                          <span className="block text-xs text-muted-foreground">{h.hospede ?? ""}</span>
+                        </Td>
+                        <Td className="align-top">
+                          {FORMAS_PAGAMENTO_HOTEL[h.forma as FormaPagamentoHotel] ?? h.forma}
+                          {h.sinal ? <Badge className="ml-1">Sinal</Badge> : null}
+                          {h.estornado ? (
+                            <Badge variante="perigo" className="ml-1">
+                              Estornado
+                            </Badge>
+                          ) : h.comprovantes.length ? (
+                            <ComprovantesDoPagamento empresaId={empresaId} comprovantes={h.comprovantes.map((c) => ({ ...c, podeExcluir: false }))} />
+                          ) : FORMAS_COM_COMPROVANTE.has(h.forma) ? (
+                            <span className="mt-1 block">
+                              <Badge variante="alerta">Sem comprovante</Badge>
+                            </span>
+                          ) : null}
+                        </Td>
+                        <Td className={`whitespace-nowrap align-top text-right font-semibold numero ${h.estornado ? "line-through" : ""}`}>{formatarMoeda(h.valor)}</Td>
+                      </Tr>
+                    ))}
+                  </TBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
 
         <div className="space-y-4">
           <Card>
@@ -142,6 +217,7 @@ export function PainelCaixa({
               <dl className="space-y-1.5 text-sm">
                 <Linha rotulo="Troco inicial" valor={formatarMoeda(r.abertura)} />
                 <Linha rotulo="+ Vendas em dinheiro" valor={formatarMoeda(valorDaForma(r, "dinheiro"))} />
+                {hotelDinheiro ? <Linha rotulo="+ Hospedagens em dinheiro" valor={formatarMoeda(hotelDinheiro)} /> : null}
                 <Linha rotulo={`+ Suprimentos (${r.qtd_suprimentos})`} valor={formatarMoeda(r.suprimentos)} />
                 <Linha rotulo={`− Sangrias (${r.qtd_sangrias})`} valor={formatarMoeda(r.sangrias)} />
                 <div className="border-t border-border pt-1.5">

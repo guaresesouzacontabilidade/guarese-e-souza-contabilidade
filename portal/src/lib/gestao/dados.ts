@@ -22,6 +22,24 @@ export interface ResumoCaixa {
   dinheiro_esperado: number;
   contado?: number;
   diferenca?: number;
+  /** Recebimentos do hotel neste caixa (quando a empresa usa a gestão do hotel) */
+  hotel_total?: number;
+  hotel_por_forma?: Record<string, { valor: number; quantidade: number }>;
+}
+
+/** Recebimento do hotel feito com este caixa aberto, com os comprovantes anexados. */
+export interface RecebimentoHotelCaixa {
+  id: string;
+  hora: string;
+  forma: string;
+  valor: string;
+  sinal: boolean;
+  estornado: boolean;
+  reserva_id: string | null;
+  reserva_numero: number | null;
+  quarto: string | null;
+  hospede: string | null;
+  comprovantes: { id: string; nome: string; mime: string }[];
 }
 
 export interface VendaDoCaixa {
@@ -82,6 +100,7 @@ export interface RelatorioCaixa {
   vendas: VendaDoCaixa[];
   movimentos: MovimentoDoCaixa[];
   produtos: ProdutoVendidoNoDia[];
+  hotel: RecebimentoHotelCaixa[];
 }
 
 const nome = (p: unknown) => (p as { nome?: string } | null)?.nome ?? null;
@@ -101,7 +120,7 @@ export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string
     .maybeSingle();
   if (!s) return null;
 
-  const [resumoAoVivo, vendasR, movR] = await Promise.all([
+  const [resumoAoVivo, vendasR, movR, hotelR] = await Promise.all([
     s.status === "aberto" ? supabase.rpc("gestao_caixa_resumo", { p_sessao_id: sessaoId }) : Promise.resolve({ data: s.resumo }),
     supabase
       .from("vendas")
@@ -114,6 +133,14 @@ export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string
     supabase
       .from("caixa_movimentos")
       .select("id, tipo, valor, motivo, created_at, conta:contas_financeiras(nome), autor:perfis!caixa_movimentos_criado_por_fkey(nome)")
+      .eq("sessao_id", sessaoId)
+      .order("created_at"),
+    // Hotel: recebimentos das hospedagens neste caixa e os comprovantes (só aparece para quem usa o hotel)
+    supabase
+      .from("hotel_pagamentos")
+      .select(
+        "id, created_at, forma, valor, adiantamento, cancelado_em, reserva:hotel_reservas!hotel_pagamentos_empresa_id_reserva_id_fkey(id, numero, quarto:hotel_quartos!hotel_reservas_empresa_id_quarto_id_fkey(numero), hospede:hotel_hospedes!hotel_reservas_empresa_id_hospede_id_fkey(nome)), anexos:hotel_pagamento_anexos!hotel_pagamento_anexos_empresa_id_pagamento_id_fkey(id, nome, mime, confirmado_em, created_at)",
+      )
       .eq("sessao_id", sessaoId)
       .order("created_at"),
   ]);
@@ -180,6 +207,23 @@ export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string
     quem: nome(m.autor),
   }));
 
+  const hotel: RecebimentoHotelCaixa[] = (hotelR.data ?? []).map((p) => ({
+    id: p.id,
+    hora: p.created_at,
+    forma: p.forma,
+    valor: String(p.valor),
+    sinal: p.adiantamento,
+    estornado: Boolean(p.cancelado_em),
+    reserva_id: p.reserva?.id ?? null,
+    reserva_numero: p.reserva?.numero ?? null,
+    quarto: p.reserva?.quarto?.numero ?? null,
+    hospede: p.reserva?.hospede?.nome ?? null,
+    comprovantes: (p.anexos ?? [])
+      .filter((a) => a.confirmado_em)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+      .map((a) => ({ id: a.id, nome: a.nome, mime: a.mime })),
+  }));
+
   const resumo = (resumoAoVivo.data ?? {}) as unknown as ResumoCaixa;
   return {
     sessao: {
@@ -203,6 +247,7 @@ export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string
     vendas,
     movimentos,
     produtos,
+    hotel,
   };
 }
 
@@ -258,3 +303,6 @@ export function estoqueBaixo(p: ProdutoLoja) {
   const atual = dec(p.estoque_atual);
   return atual.lte(0) || (p.estoque_minimo != null && atual.lt(dec(p.estoque_minimo)));
 }
+
+/** Formas em que se espera um comprovante (foto do PIX, do cartão, da transferência). */
+export const FORMAS_COM_COMPROVANTE = new Set(["pix", "cartao_debito", "cartao_credito", "transferencia"]);

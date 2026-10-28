@@ -111,7 +111,18 @@ export function MovimentoCaixa({
 }
 
 /** Fechamento: conta o dinheiro da gaveta e compara com o esperado. */
-export function FecharCaixa({ empresaId, sessaoId, esperado }: { empresaId: string; sessaoId: string; esperado: number }) {
+export function FecharCaixa({
+  empresaId,
+  sessaoId,
+  esperado,
+  semComprovante = 0,
+}: {
+  empresaId: string;
+  sessaoId: string;
+  esperado: number;
+  /** Recebimentos do hotel em PIX, cartão ou transferência sem o comprovante anexado */
+  semComprovante?: number;
+}) {
   const [aberto, setAberto] = React.useState(false);
   const [contado, setContado] = React.useState("");
   const valor = lerValorBR(contado);
@@ -130,6 +141,12 @@ export function FecharCaixa({ empresaId, sessaoId, esperado }: { empresaId: stri
               <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
                 Deveria ter na gaveta: <strong className="numero">{formatarMoeda(esperado)}</strong>
               </div>
+              {semComprovante ? (
+                <Alerta tom="alerta">
+                  {semComprovante === 1 ? "1 recebimento do hotel" : `${semComprovante} recebimentos do hotel`} em PIX, cartão ou transferência sem comprovante. Dá para fechar
+                  assim, mas o ideal é anexar antes (clipe na conta do hóspede).
+                </Alerta>
+              ) : null}
               <Campo rotulo="Dinheiro contado" htmlFor="valor_contado" obrigatorio erro={estado.erros?.valor_contado}>
                 <CampoValor id="valor_contado" name="valor_contado" aoMudar={setContado} autoFocus />
               </Campo>

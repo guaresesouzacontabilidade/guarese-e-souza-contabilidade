@@ -23,6 +23,8 @@ import {
   trocarQuarto,
 } from "@/lib/hotel/acoes";
 import { FORMAS_PAGAMENTO_HOTEL, MEIOS_TRANSPORTE, MOTIVOS_VIAGEM, SETORES } from "@/lib/hotel/rotulos";
+import type { ResultadoAcao } from "@/lib/acoes";
+import { SeletorComprovante, enviarComprovantes, type ComprovanteEscolhido } from "./comprovantes";
 
 /** Check-in: confirma os dados da viagem da ficha de registro. */
 export function DialogoCheckin({
@@ -233,8 +235,46 @@ export function DialogoPagamento({
 }) {
   const [aberto, setAberto] = React.useState(false);
   const [forma, setForma] = React.useState("pix");
+  const [comprovantes, setComprovantes] = React.useState<ComprovanteEscolhido[]>([]);
+  const [etapa, setEtapa] = React.useState<string | null>(null);
+  // O pagamento já foi registrado, mas o comprovante não subiu: não deixa registrar de novo
+  const [erroEnvio, setErroEnvio] = React.useState<string | null>(null);
+  const router = useRouter();
+
+  const fechar = () => {
+    comprovantes.forEach((c) => c.previa && URL.revokeObjectURL(c.previa));
+    setComprovantes([]);
+    setErroEnvio(null);
+    setAberto(false);
+  };
+  const aoRegistrar = (estado: ResultadoAcao) => {
+    const id = (estado.dados as { id?: string } | undefined)?.id;
+    if (!comprovantes.length || !id) return fechar();
+    setEtapa("Enviando o comprovante...");
+    enviarComprovantes(empresaId, id, comprovantes, setEtapa)
+      .then(() => {
+        toast.success(comprovantes.length > 1 ? "Comprovantes anexados." : "Comprovante anexado.");
+        fechar();
+      })
+      .catch((e) =>
+        setErroEnvio(
+          `O pagamento foi registrado, mas o comprovante não foi enviado (${e instanceof Error ? e.message : "falha no envio"}). Anexe pelo clipe na lista de pagamentos.`,
+        ),
+      )
+      .finally(() => {
+        setEtapa(null);
+        router.refresh();
+      });
+  };
   return (
-    <Dialog open={aberto} onOpenChange={setAberto}>
+    <Dialog
+      open={aberto}
+      onOpenChange={(v) => {
+        if (etapa) return;
+        if (v) setAberto(true);
+        else fechar();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variante={sinal ? "contorno" : "primario"}>
           <CircleDollarSign /> {sinal ? "Receber sinal" : "Receber pagamento"}
@@ -244,7 +284,15 @@ export function DialogoPagamento({
         titulo={sinal ? "Sinal da reserva" : "Receber pagamento"}
         descricao="O valor entra como recebido no Financeiro, na conta configurada para a forma de pagamento. Com o seu caixa aberto, entra também na conferência do caixa."
       >
-        <FormularioAcao acao={registrarPagamento.bind(null, empresaId, reservaId)} aoSucesso={() => setAberto(false)} className="space-y-4">
+        {erroEnvio ? (
+          <div className="space-y-4">
+            <Alerta tom="alerta">{erroEnvio}</Alerta>
+            <div className="flex justify-end">
+              <Button onClick={fechar}>Fechar</Button>
+            </div>
+          </div>
+        ) : (
+        <FormularioAcao acao={registrarPagamento.bind(null, empresaId, reservaId)} aoSucesso={aoRegistrar} className="space-y-4">
           {({ estado, pendente }) => (
             <>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -283,12 +331,26 @@ export function DialogoPagamento({
               <Campo rotulo="Observação" htmlFor="pg-obs">
                 <Input id="pg-obs" name="observacao" maxLength={300} placeholder={forma.startsWith("cartao") ? "Bandeira e parcelas, ex.: Visa 3x" : ""} />
               </Campo>
-              <div className="flex justify-end">
-                <BotaoEnviar pendente={pendente}>Registrar</BotaoEnviar>
+              {forma !== "faturado" ? (
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium">Comprovante {forma === "dinheiro" ? "(opcional)" : "(recomendado)"}</legend>
+                  <SeletorComprovante itens={comprovantes} aoMudar={setComprovantes} desabilitado={pendente || Boolean(etapa)} />
+                </fieldset>
+              ) : null}
+              <div className="flex items-center justify-end gap-2">
+                {etapa ? (
+                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="size-4 animate-spin" /> {etapa}
+                  </span>
+                ) : null}
+                <BotaoEnviar pendente={pendente} disabled={Boolean(etapa)}>
+                  Registrar
+                </BotaoEnviar>
               </div>
             </>
           )}
         </FormularioAcao>
+        )}
       </DialogContent>
     </Dialog>
   );
