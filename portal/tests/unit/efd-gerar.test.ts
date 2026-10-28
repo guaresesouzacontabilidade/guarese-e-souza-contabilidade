@@ -485,6 +485,13 @@ describe("EFD ICMS/IPI: pendências", () => {
     const com = gerarEfd(dados, icms, { ...OPCOES, confirmadas: ["mes_aberto", "sem_saidas", "sem_xml"] });
     expect(com.conteudo).toBeTruthy();
   });
+  it("recusa código de receita que não é número (ex.: o nome do registro E116)", () => {
+    const { dados, icms } = cenario();
+    dados.config = { perfil: "A", codigo_receita: "E116" };
+    const r = gerarEfd(dados, icms, OPCOES);
+    expect(r.conteudo).toBeNull();
+    expect(r.pendencias.find((p) => p.id === "codigo_receita")).toMatchObject({ nivel: "bloqueio", titulo: "Código de receita do ICMS inválido (E116)" });
+  });
   it("pede a releitura das notas lidas antes do complemento da EFD", () => {
     const { dados, icms } = cenario();
     dados.notas[0].complemento = null;

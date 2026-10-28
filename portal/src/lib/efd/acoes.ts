@@ -76,7 +76,9 @@ export async function salvarConfiguracaoEfd(empresaId: string, _anterior: Result
   const pctTexto = texto(fd, "credito_presumido_cte").replace(",", ".");
   const ajuste = texto(fd, "credito_presumido_codigo").toUpperCase().replace(/[\s.\-]/g, "");
   if (!["A", "B", "C"].includes(perfil)) return falha("Perfil inválido.", { perfil: ["Escolha o perfil."] });
-  if (codigo && !/^[0-9A-Za-z.\-]{1,20}$/.test(codigo)) return falha("Código de receita inválido.", { codigo_receita: ["Use só números (ex.: 1112)."] });
+  if (codigo && !/^\d[\d.\-]{0,19}$/.test(codigo)) {
+    return falha("Código de receita inválido.", { codigo_receita: ["Use só números: o código da guia do ICMS no estado (ex.: 1112). “E116” é o nome do registro, não o código."] });
+  }
   const pct = pctTexto ? Number(pctTexto) : null;
   if (pctTexto && (!Number.isFinite(pct) || pct! <= 0 || pct! > 100)) {
     return falha("Percentual inválido.", { credito_presumido_cte: ["Informe de 0,01 a 100 (ex.: 20)."] });

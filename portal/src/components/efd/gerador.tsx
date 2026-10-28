@@ -46,24 +46,24 @@ export function FormConfiguracaoEfd({
               rotulo="Código de receita do ICMS"
               htmlFor="efd-cod-rec"
               erro={estado.erros?.codigo_receita}
-              ajuda="Do estado, para o ICMS normal (registro E116)."
+              ajuda={uf === "MT" ? "Só números: o código da guia do ICMS normal (Mato Grosso: 1112)." : "Só números: o código da guia do ICMS normal no estado."}
             >
-              <Input id="efd-cod-rec" name="codigo_receita" defaultValue={codigoReceita ?? ""} maxLength={20} placeholder={uf === "MT" ? "Ex.: 1112" : ""} />
+              <Input id="efd-cod-rec" name="codigo_receita" defaultValue={codigoReceita ?? ""} maxLength={20} inputMode="numeric" placeholder={uf === "MT" ? "ex.: 1112" : "ex.: 1000"} />
             </Campo>
           </div>
           <fieldset className="space-y-2 rounded-lg border border-border p-3">
             <legend className="px-1 text-sm font-medium">Crédito presumido nos CT-e emitidos (transportadora)</legend>
             <p className="text-xs text-muted-foreground">
               {uf === "MT"
-                ? "Mato Grosso: 20% do ICMS devido nas prestações interestaduais (RICMS/MT, Anexo VI, art. 18), código MT10001003. Vazio: não usa."
+                ? "Mato Grosso: digite 20 e MT10001003 se a empresa usa o crédito de 20% do ICMS devido nas prestações interestaduais (RICMS/MT, Anexo VI, art. 18). Vazio: não usa."
                 : "Só se a legislação do estado conceder e pedir o ajuste em cada CT-e (tabela 5.3). Vazio: não usa."}
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Campo rotulo="Percentual (%)" htmlFor="efd-presumido-pct" erro={estado.erros?.credito_presumido_cte}>
-                <Input id="efd-presumido-pct" name="credito_presumido_cte" inputMode="decimal" defaultValue={presumido?.percentual.replace(".", ",") ?? ""} placeholder={uf === "MT" ? "20" : ""} maxLength={6} />
+                <Input id="efd-presumido-pct" name="credito_presumido_cte" inputMode="decimal" defaultValue={presumido?.percentual.replace(".", ",") ?? ""} placeholder={uf === "MT" ? "ex.: 20" : ""} maxLength={6} />
               </Campo>
               <Campo rotulo="Código do ajuste (tabela 5.3)" htmlFor="efd-presumido-cod" erro={estado.erros?.credito_presumido_codigo}>
-                <Input id="efd-presumido-cod" name="credito_presumido_codigo" defaultValue={presumido?.codigo ?? ""} placeholder={uf === "MT" ? "MT10001003" : ""} maxLength={12} className="uppercase" />
+                <Input id="efd-presumido-cod" name="credito_presumido_codigo" defaultValue={presumido?.codigo ?? ""} placeholder={uf === "MT" ? "ex.: MT10001003" : ""} maxLength={12} className="uppercase placeholder:normal-case" />
               </Campo>
             </div>
           </fieldset>

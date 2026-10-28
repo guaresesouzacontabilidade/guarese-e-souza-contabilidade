@@ -632,7 +632,9 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
   if (comIpi.length) add({ id: "ipi", nivel: "bloqueio", titulo: `${comIpi.length} ${comIpi.length === 1 ? "venda" : "vendas"} com IPI destacado`, detalhe: "A apuração do IPI (E500) ainda não é gerada pelo portal." });
 
   // E116: vencimento e código de receita
-  const codigoReceita = textoCampo(d.config?.codigo_receita, 20) || null;
+  const codigoInformado = textoCampo(d.config?.codigo_receita, 20) || null;
+  // Código de receita é numérico (código da guia do estado); "E116" e afins não servem
+  const codigoReceita = codigoInformado && /^\d[\d.\-]*$/.test(codigoInformado) ? codigoInformado : null;
 
   // ---------------------------------------------------------------------------
   // Registros
@@ -1113,8 +1115,10 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
     add({
       id: "codigo_receita",
       nivel: "bloqueio",
-      titulo: "Informe o código de receita do ICMS",
-      detalhe: `O registro E116 exige o código de receita do estado (ex.: Mato Grosso, ICMS normal: 1112). Ele fica guardado para os próximos meses.`,
+      titulo: codigoInformado ? `Código de receita do ICMS inválido (${codigoInformado})` : "Informe o código de receita do ICMS",
+      detalhe: codigoInformado
+        ? "O código de receita é o número da guia do ICMS no estado (ex.: Mato Grosso, ICMS normal: 1112), não o nome do registro. Corrija na configuração da EFD."
+        : "O registro E116 exige o código de receita do estado (ex.: Mato Grosso, ICMS normal: 1112). Ele fica guardado para os próximos meses.",
       acao: "codigo_receita",
     });
   }
