@@ -15,6 +15,11 @@ import { parametro, termoBusca } from "@/lib/busca";
 export const metadata: Metadata = { title: "Documentos" };
 const POR_PAGINA = 30;
 
+const SUBFILTROS_NFSE = [
+  { valor: "nfse:tomadas", rotulo: "— NFS-e tomadas (serviços contratados)", operacao: "entrada" },
+  { valor: "nfse:prestadas", rotulo: "— NFS-e prestadas (emitidas pela empresa)", operacao: "saida" },
+] as const;
+
 export default async function PaginaDocumentos({ params, searchParams }: PageProps<"/e/[empresaId]/documentos">) {
   const { empresaId } = await params;
   const sp = await searchParams;
@@ -27,6 +32,8 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
   // Notas trazidas pela busca automática × arquivos enviados pelas pessoas
   const fonte = origem === "cliente" ? parametro(sp, "fonte", ["automatica", "envio"]) : "";
   const categoria = parametro(sp, "categoria");
+  // NFS-e tomadas × prestadas: pela operação da nota lida (entrada = tomada; saída = prestada)
+  const operacaoNfse = SUBFILTROS_NFSE.find((f) => f.valor === categoria)?.operacao ?? null;
   const status = parametro(sp, "status", Object.keys(STATUS_DOCUMENTO));
   const busca = termoBusca(sp.busca);
   const conferir = parametro(sp, "conferir") === "1";
@@ -37,7 +44,7 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
   let q = ctx.supabase
     .from("documentos")
     .select(
-      "id, empresa_id, nome_original, titulo, categoria_codigo, competencia, status, direcao, enviado_em, tamanho, extensao, recebido_apos_fechamento, requer_conferencia, verificacao_status, processamento_status, zip_origem_id, vencimento, valor, versao_atual, sugestao, excluido_em, autor:perfis!documentos_enviado_por_fkey(nome)",
+      "id, empresa_id, nome_original, titulo, categoria_codigo, competencia, status, direcao, enviado_em, tamanho, extensao, recebido_apos_fechamento, requer_conferencia, verificacao_status, processamento_status, zip_origem_id, vencimento, valor, versao_atual, sugestao, excluido_em, autor:perfis!documentos_enviado_por_fkey(nome), fiscal:documentos_fiscais(operacao)",
       { count: "exact" },
     )
     .eq("empresa_id", empresaId)
@@ -49,7 +56,8 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
   if (competencia) q = q.eq("competencia", competencia);
   if (fonte === "automatica") q = q.eq("origem", "automatica");
   else if (fonte === "envio") q = q.neq("origem", "automatica");
-  if (categoria) q = q.eq("categoria_codigo", categoria);
+  if (operacaoNfse) q = q.eq("categoria_codigo", "nfse").eq("fiscal.operacao", operacaoNfse).not("fiscal", "is", null);
+  else if (categoria) q = q.eq("categoria_codigo", categoria);
   if (status && origem === "cliente") q = q.eq("status", status);
   if (busca) q = q.or(`nome_original.ilike.%${busca}%,titulo.ilike.%${busca}%`);
   if (conferir) q = q.eq("requer_conferencia", true);
@@ -65,7 +73,12 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
     empresa_id: d.empresa_id,
     nome: d.nome_original,
     titulo: d.titulo,
-    categoria: nomes.get(d.categoria_codigo) ?? d.categoria_codigo,
+    categoria:
+      d.categoria_codigo === "nfse" && d.fiscal?.[0]?.operacao
+        ? d.fiscal[0].operacao === "entrada"
+          ? "NFS-e tomada"
+          : "NFS-e prestada"
+        : (nomes.get(d.categoria_codigo) ?? d.categoria_codigo),
     competencia: d.competencia,
     status: d.status,
     direcao: d.direcao,
@@ -134,11 +147,18 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
           <option value="">Todas as categorias</option>
           {(categorias ?? [])
             .filter((c) => c.escritorio === (origem === "escritorio"))
-            .map((c) => (
+            .flatMap((c) => [
               <option key={c.codigo} value={c.codigo}>
                 {c.nome}
-              </option>
-            ))}
+              </option>,
+              ...(c.codigo === "nfse"
+                ? SUBFILTROS_NFSE.map((f) => (
+                    <option key={f.valor} value={f.valor}>
+                      {f.rotulo}
+                    </option>
+                  ))
+                : []),
+            ])}
         </Select>
         {origem === "cliente" ? (
           <Select name="fonte" defaultValue={fonte} aria-label="Origem do arquivo">

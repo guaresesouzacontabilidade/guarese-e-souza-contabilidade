@@ -48,6 +48,19 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
   const admin = ctx.acesso.papel === "admin";
   if (!gerenciar && !verDocumentos) return <Alerta tom="alerta">Seu acesso não inclui as notas automáticas desta empresa.</Alerta>;
   const base = `/e/${empresaId}`;
+  // Cada número da tabela abre a lista daquele tipo de nota no mês (Documentos)
+  const verTipo = (competencia: string, quantidade: number, categoria: string, rotulo: string) =>
+    quantidade ? (
+      <Link
+        href={`${base}/documentos?competencia=${competencia.slice(0, 7)}&fonte=automatica&categoria=${encodeURIComponent(categoria)}`}
+        className="text-primary hover:underline"
+        aria-label={`Ver ${rotulo} de ${formatarCompetencia(competencia, true)}`}
+      >
+        {quantidade}
+      </Link>
+    ) : (
+      "—"
+    );
 
   const [{ data: certificado }, { data: config }, { data: execucoes }, { data: resumos }, { data: lotes }, { data: porMes }] = await Promise.all([
     gerenciar
@@ -345,10 +358,10 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                               </span>
                               {antes ? <Badge variante="alerta">Anterior ao mês inicial</Badge> : null}
                             </Td>
-                            <Td className="numero hidden text-right sm:table-cell">{m.nfe_entrada || "—"}</Td>
-                            <Td className="numero hidden text-right sm:table-cell">{m.nfe_saida || "—"}</Td>
-                            <Td className="numero hidden text-right md:table-cell">{m.nfse_prestada || "—"}</Td>
-                            <Td className="numero hidden text-right md:table-cell">{m.nfse_tomada || "—"}</Td>
+                            <Td className="numero hidden text-right sm:table-cell">{verTipo(m.competencia, m.nfe_entrada, "nfe_entrada_xml", "NF-e de entrada")}</Td>
+                            <Td className="numero hidden text-right sm:table-cell">{verTipo(m.competencia, m.nfe_saida, "nfe_saida_xml", "NF-e de saída")}</Td>
+                            <Td className="numero hidden text-right md:table-cell">{verTipo(m.competencia, m.nfse_prestada, "nfse:prestadas", "NFS-e prestadas")}</Td>
+                            <Td className="numero hidden text-right md:table-cell">{verTipo(m.competencia, m.nfse_tomada, "nfse:tomadas", "NFS-e tomadas")}</Td>
                             <Td className="numero hidden text-right lg:table-cell">{m.outros || "—"}</Td>
                             <Td className="numero text-right font-semibold">{m.total}</Td>
                             <Td className="text-right text-sm">
