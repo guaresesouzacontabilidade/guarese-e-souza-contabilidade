@@ -452,10 +452,16 @@ describe("EFD ICMS/IPI: crédito presumido do transportador (MT)", () => {
       "|D197|MT10001003|Crédito presumido de 20% do ICMS devido na prestação interestadual||120,00|20,00|24,00||",
     ]);
     expect(registros(arq, "0460")).toEqual([["0460", "000001", "Crédito presumido do prestador de serviço de transporte nas prestações interestaduais"]]);
-    // Débitos 612 + 120; créditos 186; ajuste por documento 24; outros créditos 50 → 472 a recolher
-    expect(registros(arq, "E110")[0].slice(1, 8)).toEqual(["732,00", "0,00", "0,00", "0,00", "186,00", "24,00", "50,00"]);
-    expect(r.resumo.apuracao.a_recolher).toBe("472.00");
-    expect(resultado.propria?.aRecolher.toFixed(2)).toBe("472.00");
+    // Débitos 612 + 120; ajuste por documento 24. Optante do presumido não usa outros créditos
+    // (Conv. ICMS 106/96): os 186 das compras e os 50 lançados ficam fora → 708 a recolher
+    expect(registros(arq, "E110")[0].slice(1, 8)).toEqual(["732,00", "0,00", "0,00", "0,00", "0,00", "24,00", "0,00"]);
+    expect(registros(arq, "E111")).toEqual([]);
+    expect(registros(arq, "C190").filter((c) => c[2].startsWith("1") || c[2].startsWith("2")).every((c) => c[6] === "0,00")).toBe(true);
+    expect(r.resumo.apuracao.a_recolher).toBe("708.00");
+    expect(resultado.propria?.aRecolher.toFixed(2)).toBe("708.00");
+    expect(resultado.propria?.creditos.toFixed(2)).toBe("0.00");
+    expect(resultado.avisos.some((a) => a.includes("Outros créditos lançados (R$ 50,00) ficaram fora"))).toBe(true);
+    expect(r.pendencias.find((p) => p.id === "outros_creditos_presumido")?.nivel).toBe("aviso");
     expect(r.pendencias.find((p) => p.id === "diferenca_apuracao")).toBeUndefined();
   });
   it("transportadora de MT sem o crédito configurado recebe o aviso", () => {

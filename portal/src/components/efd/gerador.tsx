@@ -55,8 +55,8 @@ export function FormConfiguracaoEfd({
             <legend className="px-1 text-sm font-medium">Crédito presumido nos CT-e emitidos (transportadora)</legend>
             <p className="text-xs text-muted-foreground">
               {uf === "MT"
-                ? "Mato Grosso: digite 20 e MT10001003 se a empresa usa o crédito de 20% do ICMS devido nas prestações interestaduais (RICMS/MT, Anexo VI, art. 18). Vazio: não usa."
-                : "Só se a legislação do estado conceder e pedir o ajuste em cada CT-e (tabela 5.3). Vazio: não usa."}
+                ? "Mato Grosso: digite 20 e MT10001003 se a empresa usa o crédito de 20% do ICMS devido nas prestações interestaduais (RICMS/MT, Anexo VI, art. 18). Com ele, a empresa não usa os créditos das compras, e a escolha vale para o ano todo. Vazio: não usa."
+                : "Só se a legislação do estado conceder e pedir o ajuste em cada CT-e (tabela 5.3). Com ele, a empresa não usa os créditos das compras (Convênio ICMS 106/96). Vazio: não usa."}
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Campo rotulo="Percentual (%)" htmlFor="efd-presumido-pct" erro={estado.erros?.credito_presumido_cte}>

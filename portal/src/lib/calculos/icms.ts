@@ -348,6 +348,13 @@ export function itemComSt(it: ItemEntradaDados): boolean {
   return /^[56]40[1-5]$/.test(it.cfop ?? "") || /^[12]40[1-9]$/.test(it.cfop ?? "");
 }
 
+/**
+ * Quem opta pelo crédito presumido do transporte não aproveita nenhum outro
+ * crédito (Convênio ICMS 106/96, cláusula primeira, § 1º; em MT, RICMS, Anexo
+ * VI, art. 18, § 2º), e a opção só muda no ano seguinte (§ 4º).
+ */
+export const SEM_CREDITO_PRESUMIDO = "Optante do crédito presumido do transporte: não aproveita outros créditos (Convênio ICMS 106/96).";
+
 function modoDe(dados: DadosIcms): ModoIcms {
   const r = dados.empresa.regime;
   if (r && REGIMES_SIMPLES.has(r)) return "simples";
@@ -427,6 +434,11 @@ function calcularNota(ctx: CtxEntradas, nota: NotaEntradaDados): NotaCalculada {
         else credito = icmsDestacado.plus(creditoSimples);
       } else if (destinacao === "uso_consumo") semCredito = "Uso e consumo: sem crédito de ICMS até 2032 (LC 87/1996, art. 33, I).";
       else if (destinacao === "ativo") semCredito = "Ativo imobilizado: o crédito é de 1/48 por mês (CIAP); lance a parcela em “Outros créditos”.";
+      // Transportadora optante do crédito presumido: renuncia a qualquer outro crédito
+      if (dados.credito_presumido_cte && credito.gt(0)) {
+        credito = ZERO;
+        semCredito = SEM_CREDITO_PRESUMIDO;
+      }
     }
 
     // Complementação de alíquota (Simples/MEI) e diferencial de alíquotas
@@ -645,7 +657,9 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
         if (it.creditoSimples.gt(0)) somarGrupo("info:sn", "— dos quais crédito de fornecedores do Simples (CSOSN 101/201/900)", it.creditoSimples, false);
       } else if (icms.gt(0)) {
         const rotulo =
-          it.destinacao === "uso_consumo"
+          it.semCredito === SEM_CREDITO_PRESUMIDO
+            ? "Sem crédito: optante do crédito presumido do transporte"
+            : it.destinacao === "uso_consumo"
             ? "Uso e consumo (sem crédito)"
             : it.destinacao === "ativo"
               ? "Ativo imobilizado (crédito pelo CIAP, 1/48 por mês)"
@@ -658,9 +672,15 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
     const creditos = todosItens.reduce((s, i) => s.plus(i.credito), ZERO);
     const outrosDebitos = lanc("outro_debito");
     const estornosCredito = lanc("estorno_credito");
-    const outrosCreditos = lanc("outro_credito");
     const presumido = dados.credito_presumido_cte;
     const creditoPresumido = centavos(presumido?.valor ?? 0);
+    const outrosCreditosLancados = lanc("outro_credito");
+    const outrosCreditos = presumido ? ZERO : outrosCreditosLancados;
+    if (presumido && outrosCreditosLancados.gt(0)) {
+      avisos.push(
+        `Outros créditos lançados (${moeda(outrosCreditosLancados)}) ficaram fora: quem usa o crédito presumido do transporte não aproveita outros créditos (Convênio ICMS 106/96). Exclua o lançamento ou, se a empresa deixou o crédito presumido, apague a configuração na EFD.`,
+      );
+    }
     const estornosDebito = lanc("estorno_debito");
     const deducoes = lanc("deducao");
 
@@ -707,7 +727,7 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
       `Débitos (ICMS das vendas e demais saídas): ${moeda(centavos(debitos))}`,
       ...(outrosDebitos.gt(0) ? [`(+) Outros débitos: ${moeda(outrosDebitos)}`] : []),
       ...(estornosCredito.gt(0) ? [`(+) Estornos de crédito: ${moeda(estornosCredito)}`] : []),
-      `(−) Créditos das entradas: ${moeda(centavos(creditos))}`,
+      presumido ? "(−) Créditos das entradas: nenhum (optante do crédito presumido do transporte)" : `(−) Créditos das entradas: ${moeda(centavos(creditos))}`,
       ...(outrosCreditos.gt(0) ? [`(−) Outros créditos: ${moeda(outrosCreditos)}`] : []),
       ...(creditoPresumido.gt(0)
         ? [`(−) Crédito presumido do transporte (${pctTxt(dec(presumido!.percentual))} do ICMS de ${presumido!.ctes} CT-e interestaduais): ${moeda(creditoPresumido)}`]

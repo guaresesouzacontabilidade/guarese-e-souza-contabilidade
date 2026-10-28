@@ -542,7 +542,17 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
   }
 
   // Lançamentos: cada um precisa do código de ajuste (E111)
-  const lancamentos = icms.dados.lancamentos.filter((l) => l.tipo !== "guia_extra");
+  // Optante do crédito presumido do transporte não aproveita outros créditos (Conv. ICMS 106/96)
+  const vedaOutrosCreditos = Boolean(icms.dados.credito_presumido_cte);
+  const lancamentos = icms.dados.lancamentos.filter((l) => l.tipo !== "guia_extra" && !(vedaOutrosCreditos && l.tipo === "outro_credito"));
+  if (vedaOutrosCreditos && icms.dados.lancamentos.some((l) => l.tipo === "outro_credito")) {
+    add({
+      id: "outros_creditos_presumido",
+      nivel: "aviso",
+      titulo: "Outros créditos lançados não entram no arquivo",
+      detalhe: "Quem usa o crédito presumido do transporte não aproveita outros créditos (Convênio ICMS 106/96). Exclua o lançamento na Apuração do ICMS ou, se a empresa deixou o crédito presumido, apague a configuração ao lado.",
+    });
+  }
   const semCodigo = lancamentos.filter((l) => !d.lancamentos_codigos[l.id]);
   if (regimeNormal && semCodigo.length) {
     add({
@@ -1029,7 +1039,7 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
       id: "credito_presumido",
       nivel: "aviso",
       titulo: "Transportadora de Mato Grosso: crédito presumido de 20% não configurado",
-      detalhe: `Há ${ctesInterestaduais} CT-e interestaduais com ICMS. Se a empresa usa o crédito presumido de 20% do ICMS devido (RICMS/MT, Anexo VI, art. 18), configure ao lado (20% e código MT10001003): o portal lança o ajuste em cada CT-e (registros D195/D197).`,
+      detalhe: `Há ${ctesInterestaduais} CT-e interestaduais com ICMS. Se a empresa usa o crédito presumido de 20% do ICMS devido (RICMS/MT, Anexo VI, art. 18), configure ao lado (20% e código MT10001003): o portal lança o ajuste em cada CT-e (registros D195/D197) e deixa de usar os créditos das compras (§ 2º). A opção vale para o ano todo (§ 4º): siga a mesma escolha da EFD de meses anteriores.`,
     });
   }
   if (semMunicipio) {
