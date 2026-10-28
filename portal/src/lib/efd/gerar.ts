@@ -456,12 +456,21 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
   const res = icms.resultado;
   if (res.modo === "simples") {
     add({ id: "regime", nivel: "bloqueio", titulo: "Empresa do Simples Nacional", detalhe: "Empresas do Simples Nacional são dispensadas da EFD ICMS/IPI (salvo exigência específica do estado). Confira o regime em Obrigações e prazos → Empresas." });
+  } else if (res.modo === "nao_contribuinte") {
+    add({
+      id: "regime",
+      nivel: "bloqueio",
+      titulo: "Empresa marcada como não contribuinte do ICMS",
+      detalhe: soDigitos(emp.inscricao_estadual)
+        ? "A empresa tem inscrição estadual, mas a caixinha “Contribuinte do ICMS” está desmarcada no perfil dela. Marque a caixinha e clique em “Salvar e atualizar tarefas”."
+        : "A EFD ICMS/IPI é das empresas contribuintes do ICMS (com inscrição estadual). Se a empresa é contribuinte, informe a inscrição estadual no cadastro e marque “Contribuinte do ICMS” no perfil dela.",
+    });
   } else if (res.modo !== "normal") {
     add({
       id: "regime",
       nivel: "bloqueio",
-      titulo: res.modo === "nao_contribuinte" ? "Empresa marcada como não contribuinte do ICMS" : "Regime da empresa não informado",
-      detalhe: "A EFD ICMS/IPI é gerada para empresas do regime normal (Lucro Presumido ou Real) contribuintes do ICMS. Ajuste em Obrigações e prazos → Empresas → Salvar e atualizar tarefas.",
+      titulo: "Regime da empresa não informado",
+      detalhe: "A EFD ICMS/IPI é gerada para empresas do regime normal (Lucro Presumido ou Real). Informe o regime no perfil da empresa e clique em “Salvar e atualizar tarefas”.",
     });
   }
   const versao = versaoLeiaute(Number(fim.slice(0, 4)));

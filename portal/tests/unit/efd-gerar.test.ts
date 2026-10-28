@@ -449,6 +449,11 @@ describe("EFD ICMS/IPI: pendências", () => {
     const { dados, icms } = cenario();
     const simples = calcularIcms({ ...icms.dados, empresa: { ...icms.dados.empresa, regime: "simples_nacional" } });
     expect(gerarEfd(dados, { dados: icms.dados, resultado: simples }, OPCOES).pendencias[0].id).toBe("regime");
+    // Com inscrição estadual, mas marcada como não contribuinte: indica a caixinha do perfil
+    const naoContribuinte = calcularIcms({ ...icms.dados, empresa: { ...icms.dados.empresa, contribuinte_icms: false } });
+    const p = gerarEfd(dados, { dados: icms.dados, resultado: naoContribuinte }, OPCOES).pendencias[0];
+    expect(p).toMatchObject({ id: "regime", nivel: "bloqueio", titulo: "Empresa marcada como não contribuinte do ICMS" });
+    expect(p.detalhe).toContain("“Contribuinte do ICMS” está desmarcada");
     const venda = dados.notas.find((n) => n.operacao === "saida" && !n.cancelada)!;
     venda.tributos = { icms_st: "10.00" };
     expect(gerarEfd(dados, icms, OPCOES).pendencias.find((p) => p.id === "st_substituto")?.nivel).toBe("bloqueio");

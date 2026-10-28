@@ -91,7 +91,14 @@ export default async function PaginaEfd({ params, searchParams }: PageProps<"/e/
   // Prévia: as mesmas contas da geração, com as confirmações dadas, para mostrar pendências e totais
   const previa = gerarEfd(dados, icms, { finalidade: 0, vencimento: vencimentoSugerido, confirmadas: ["mes_aberto", "sem_saidas", "sem_xml", "inventario", "municipios"] });
   const semVencimento = gerarEfd(dados, icms, { finalidade: 0, vencimento: vencimentoSugerido });
-  const pendencias = semVencimento.pendencias.filter((p) => !(p.id === "vencimento" && vencimentoSugerido));
+  // Onde resolver o que depende do cadastro da empresa (telas do escritório)
+  const links: Record<string, PendenciaEfd["link"]> = {
+    regime: { rotulo: "Abrir o perfil da empresa", href: `/escritorio/obrigacoes/empresas/${empresaId}` },
+    empresa: { rotulo: "Abrir o cadastro da empresa", href: `/escritorio/empresas/${empresaId}` },
+  };
+  const pendencias = semVencimento.pendencias
+    .filter((p) => !(p.id === "vencimento" && vencimentoSugerido))
+    .map((p) => (p.link || !links[p.id] ? p : { ...p, link: links[p.id] }));
   const bloqueios = pendencias.filter((p) => p.nivel === "bloqueio" && p.id !== "vencimento");
   const confirmar = pendencias.filter((p) => p.nivel === "confirmar").map((p) => ({ id: p.id, titulo: p.titulo }));
   const aRecolher = Number(previa.resumo.apuracao.a_recolher) > 0;
