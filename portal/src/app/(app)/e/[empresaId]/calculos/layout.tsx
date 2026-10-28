@@ -3,7 +3,7 @@ import { Alerta } from "@/components/ui/feedback";
 import { SubNavegacao } from "@/components/ui/subnav";
 import { GuardaFerramenta } from "@/components/empresas/guarda-ferramenta";
 
-/** Área de cálculos: previsão de impostos, rescisão, colaboradores e (equipe) apuração do ICMS, comparativo de regimes e configuração. */
+/** Área de cálculos: previsão de impostos, rescisão, colaboradores e (equipe) apuração do ICMS, EFD ICMS/IPI, comparativo de regimes e configuração. */
 export default async function LayoutCalculos({ children, params }: LayoutProps<"/e/[empresaId]/calculos">) {
   const { empresaId } = await params;
   const ctx = await obterContextoEmpresa(empresaId);
@@ -18,6 +18,7 @@ export default async function LayoutCalculos({ children, params }: LayoutProps<"
     ...(ctx.pode("calculos.gerenciar")
       ? [
           { rotulo: "Apuração do ICMS", href: `${b}/icms` },
+          { rotulo: "EFD ICMS/IPI", href: `${b}/efd` },
           { rotulo: "Comparativo de regimes", href: `${b}/comparativo` },
           { rotulo: "Configuração", href: `${b}/configuracao` },
         ]

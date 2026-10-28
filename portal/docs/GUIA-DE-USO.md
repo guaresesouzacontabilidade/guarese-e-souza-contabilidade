@@ -372,6 +372,25 @@ Rotina do mês:
 
 O vencimento mostrado é o dia 9 do mês seguinte (calendário fiscal da SEFAZ-TO) ou o prazo da obrigação ICMS em **Obrigações e prazos**, quando houver. O portal **não emite o DARE nem transmite a EFD**: emita as guias no portal da SEFAZ-TO. Por enquanto as regras de complementação e diferencial estão cadastradas só para o **Tocantins**; para empresa de outro estado, calcule à parte e lance como outra guia.
 
+#### EFD ICMS/IPI (gerar o SPED Fiscal no portal)
+Em **Cálculos → EFD ICMS/IPI** (só a equipe vê), o portal monta o arquivo da EFD ICMS/IPI do mês com os XML guardados e a **Apuração do ICMS** — para empresas do Lucro Presumido ou Real contribuintes do ICMS (o Simples Nacional não entrega a EFD). O arquivo segue o Guia Prático da EFD ICMS/IPI 3.2.2 (leiaute 020, de 2026).
+
+O que entra no arquivo:
+- **Notas de compra de terceiros** (NF-e) com os itens (registros C100, C170 e C190), no **enfoque do declarante**: o CFOP e o CST da entrada saem da destinação escolhida na Apuração do ICMS (revenda 1.102/2.102, uso e consumo 1.556/2.556, ativo 1.551/2.551; com ICMS-ST, 1.403/1.407/1.406 e CST 060) e o ICMS só aparece quando dá crédito. O ICMS-ST e o IPI sem crédito entram no valor do item. Fornecedor do Simples com crédito (CSOSN 101) vira CST 090 com o crédito permitido.
+- **Notas emitidas pela empresa** (NF-e e NFC-e) só com o resumo por CST, CFOP e alíquota (C100 e C190); as canceladas, com os campos mínimos. Compras canceladas pelo fornecedor ficam de fora.
+- **CT-e** tomados e emitidos (D100 e D190), com os municípios de início e fim do frete.
+- **Cadastros**: participantes (0150) com endereço e município do XML, unidades (0190) e itens (0200) — o código do item é o do produto da empresa quando ligado no Estoque (com a conversão de unidade no 0220); senão, CNPJ do fornecedor + código dele.
+- **Apuração** (E110) calculada dos registros analíticos, como o PVA confere, com o saldo credor anterior da Apuração do ICMS, cada lançamento como **E111** (com o código de ajuste da tabela 5.1.1 do estado) e a guia do ICMS a recolher no **E116** (vencimento e código de receita).
+- Blocos B, G, H e K sem informações e o 1010 com tudo "N". PIS e Cofins ficam vazios (a empresa entrega a EFD-Contribuições).
+
+Rotina:
+1. Escolha o mês. Se aparecer **Atualizar a leitura das notas**, clique: o portal relê os XML guardados para pegar endereço, município, frete e os dados do CT-e (notas recebidas antes desta versão).
+2. Resolva o que estiver em **vermelho** (ex.: CPF do contador em Escritório → Configurações, inscrição estadual ou município da empresa, código de ajuste de um lançamento, código de receita do ICMS) e marque as confirmações em **amarelo** (ex.: mês sem nota de venda, NF-e só em resumo). Os avisos em **azul** são para conferir no PVA (ex.: Bloco K de atacadista, registros 1400/1601 de Mato Grosso, inventário em fevereiro).
+3. Confira a **prévia da apuração** e clique em **Gerar arquivo da EFD**. Baixe o arquivo (fica no histórico do mês, numa área privada da equipe).
+4. No computador do escritório, importe no **PVA da EFD ICMS/IPI**, valide, assine com o certificado digital e transmita. Depois, envie o arquivo transmitido em Documentos (SPED Fiscal) para a **Conferência do SPED** comparar com os XML.
+
+O portal ainda **não gera**: ICMS-ST como substituto (E200), DIFAL das vendas a consumidor final de outro estado (E300), IPI (E500), inventário (Bloco H), Bloco K com estoque, CIAP (Bloco G), ajustes por documento (C197) e os registros 1400/1601 — quando a empresa tem essas operações, a tela avisa antes. O portal **não transmite** a EFD.
+
 #### Comparativo de regimes (planejamento tributário)
 Em **Cálculos → Comparativo de regimes** (só a equipe vê), o portal mostra quanto a empresa teria pago no **Simples Nacional**, no **Lucro Presumido** e no **Lucro Real** nos 12 meses escolhidos, com os mesmos dados da previsão (notas, receita informada, colaboradores e pró-labore):
 
@@ -410,7 +429,7 @@ Para a conta do Simples ficar exata, preencha em **Cálculos → Configuração*
 
 ### SPED Fiscal × XML (antes de transmitir a EFD)
 Em cada empresa → **Auditor fiscal → SPED Fiscal × XML** (e no quadro do auditor da carteira):
-1. Gere a **EFD ICMS/IPI** do mês no sistema fiscal e envie o arquivo **.txt** (tipo "Arquivos do SPED", pelo botão **Enviar arquivo do SPED**).
+1. Gere a **EFD ICMS/IPI** do mês no sistema fiscal (ou no próprio portal, em **Cálculos → EFD ICMS/IPI**) e envie o arquivo **.txt** (tipo "Arquivos do SPED", pelo botão **Enviar arquivo do SPED**).
 2. O portal lê o arquivo (período, CNPJ, perfil, as notas do registro C100 com os CFOP do C190 e a apuração do ICMS do E110, conforme o Guia Prático da EFD ICMS/IPI 3.2.2) e confere com os XML que já tem da empresa (enviados pelo cliente ou trazidos pelas notas automáticas).
 3. Aparece, separado por gravidade:
    - **Corrigir**: nota **emitida e não escriturada**, nota **cancelada escriturada como regular**, **valor total** ou **ICMS / ICMS-ST / IPI** diferentes do XML e nota **em duplicidade**;
@@ -502,7 +521,7 @@ Em **Empresas → (empresa) → Ferramentas**, marque só o que aquela empresa u
 - A aba **Usuários dos clientes** lista todos os usuários das empresas, com último acesso e situação.
 
 ### Configurações (administrador)
-Dados e logomarca do escritório (inclusive o **contador responsável e o CRC**, que saem nas declarações), verificação em duas etapas obrigatória, limites de envio, lembretes (dias, e-mail e WhatsApp), situação das integrações e LGPD (pedidos dos titulares e prazos de guarda). Detalhes em `CONFIGURACAO.md`.
+Dados e logomarca do escritório (inclusive o **contador responsável e o CRC**, que saem nas declarações, e o **CPF, e-mail e telefone do contador**, exigidos na EFD ICMS/IPI e vistos só pela equipe), verificação em duas etapas obrigatória, limites de envio, lembretes (dias, e-mail e WhatsApp), situação das integrações e LGPD (pedidos dos titulares e prazos de guarda). Detalhes em `CONFIGURACAO.md`.
 
 ### Auditoria (administrador)
 Quem fez o quê e quando: entradas, alterações de cadastro e de permissões, lançamentos, fechamentos, downloads de documentos e de relatórios. Filtre por período, pessoa, empresa e tipo de evento, abra o detalhe para ver o que mudou e exporte em CSV.

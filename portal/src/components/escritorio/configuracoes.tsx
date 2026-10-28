@@ -11,7 +11,7 @@ import { Confirmacao } from "@/components/ui/dialog";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { Logo } from "@/components/marca/logo";
-import { formatarCep, formatarCnpj, formatarCompetencia, formatarData, formatarTelefone } from "@/lib/formatos";
+import { formatarCep, formatarCnpj, formatarCompetencia, formatarCpf, formatarData, formatarTelefone } from "@/lib/formatos";
 import {
   enviarLogo,
   expurgarDocumentos,
@@ -47,7 +47,14 @@ export interface DadosEscritorio {
   contador_crc: string | null;
 }
 
-export function FormDadosEscritorio({ esc }: { esc: DadosEscritorio }) {
+/** CPF e contatos do contador (só a equipe vê): exigidos no registro 0100 da EFD ICMS/IPI. */
+export interface ContadorEscritorio {
+  cpf: string | null;
+  email: string | null;
+  telefone: string | null;
+}
+
+export function FormDadosEscritorio({ esc, contador }: { esc: DadosEscritorio; contador: ContadorEscritorio | null }) {
   return (
     <FormularioAcao acao={salvarDadosEscritorio} className="space-y-6">
       {({ estado, pendente }) => {
@@ -110,12 +117,23 @@ export function FormDadosEscritorio({ esc }: { esc: DadosEscritorio }) {
             </fieldset>
             <fieldset className="grid gap-4 sm:grid-cols-3">
               <legend className="mb-2 text-sm font-semibold text-titulo">Contador responsável</legend>
-              <p className="-mt-1 text-xs text-muted-foreground sm:col-span-3">Sai nas declarações emitidas pelo portal (como a declaração de faturamento), na linha de assinatura do contador.</p>
+              <p className="-mt-1 text-xs text-muted-foreground sm:col-span-3">
+                Sai nas declarações emitidas pelo portal (como a declaração de faturamento) e no arquivo da EFD ICMS/IPI (registro 0100). CPF, e-mail e telefone só a equipe vê.
+              </p>
               <Campo rotulo="Nome" htmlFor="es-contador" erro={erro("contador_nome")} className="sm:col-span-2">
                 <Input id="es-contador" name="contador_nome" defaultValue={esc.contador_nome ?? ""} maxLength={200} />
               </Campo>
               <Campo rotulo="CRC" htmlFor="es-crc" erro={erro("contador_crc")} ajuda="Ex.: TO-012345/O-6">
                 <Input id="es-crc" name="contador_crc" defaultValue={esc.contador_crc ?? ""} maxLength={40} />
+              </Campo>
+              <Campo rotulo="CPF do contador" htmlFor="es-contador-cpf" erro={erro("contador_cpf")}>
+                <Input id="es-contador-cpf" name="contador_cpf" defaultValue={contador?.cpf ? formatarCpf(contador.cpf) : ""} inputMode="numeric" maxLength={14} />
+              </Campo>
+              <Campo rotulo="E-mail do contador" htmlFor="es-contador-email" erro={erro("contador_email")} ajuda="Vazio: usa o e-mail do escritório.">
+                <Input id="es-contador-email" name="contador_email" type="email" defaultValue={contador?.email ?? ""} maxLength={200} />
+              </Campo>
+              <Campo rotulo="Telefone do contador" htmlFor="es-contador-tel" erro={erro("contador_telefone")} ajuda="Vazio: usa o telefone do escritório.">
+                <Input id="es-contador-tel" name="contador_telefone" defaultValue={contador?.telefone ? formatarTelefone(contador.telefone) : ""} inputMode="tel" />
               </Campo>
             </fieldset>
             <fieldset className="grid gap-4">

@@ -5,7 +5,7 @@ import { exigirPermissao } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { lerCompetencia } from "@/lib/competencia";
 import { lerValorBR } from "@/lib/dinheiro";
-import { VERSAO_LEITURA } from "@/lib/fiscal/xml";
+import { VERSAO_LEITURA_ICMS } from "@/lib/fiscal/xml";
 import { processarFilaDepois } from "@/lib/jobs/disparo";
 import { DESTINACOES, TIPOS_LANCAMENTO_ICMS, resultadoParaGuardar, type Destinacao, type TipoLancamentoIcms } from "./icms";
 import { carregarIcms } from "./icms-carregar";
@@ -143,7 +143,7 @@ export async function relerNotasIcms(empresaId: string, competencia: string): Pr
   const comp = lerCompetencia(competencia);
   if (!UUID.test(empresaId) || !comp) return falha("Dados inválidos.");
   const ctx = await exigirPermissao(empresaId, "calculos.gerenciar");
-  const { data, error } = await ctx.supabase.rpc("icms_reler_notas", { p_empresa_id: empresaId, p_competencia: comp, p_versao_leitura: VERSAO_LEITURA });
+  const { data, error } = await ctx.supabase.rpc("icms_reler_notas", { p_empresa_id: empresaId, p_competencia: comp, p_versao_leitura: VERSAO_LEITURA_ICMS });
   if (error) return falha(mensagemErro(error));
   if (!data) return sucesso("Todas as notas do mês já estão com a leitura atual.");
   processarFilaDepois({ tipos: ["reler_notas_mes"] });

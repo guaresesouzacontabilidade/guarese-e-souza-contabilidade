@@ -6,7 +6,7 @@ import { z } from "zod";
 import { exigirAdmin } from "@/lib/auth/sessao";
 import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { emailConfigurado, enviarEmail } from "@/lib/email/enviar";
-import { validarCnpj } from "@/lib/formatos";
+import { validarCnpj, validarCpf } from "@/lib/formatos";
 import { booleano } from "@/lib/validacao";
 
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -77,16 +77,42 @@ const esquemaDados = z.object({
   mensagem_login: z.string().trim().min(10, "Escreva a mensagem de boas-vindas.").max(400),
 });
 
+// CPF e contatos do contador (tabela só da equipe), para a EFD ICMS/IPI
+const esquemaContador = z.object({
+  contador_cpf: z
+    .string()
+    .transform(digitos)
+    .refine((v) => v === "" || validarCpf(v), "CPF inválido.")
+    .transform((v) => v || null),
+  contador_email: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || z.email().safeParse(v).success, "E-mail inválido.")
+    .transform((v) => v || null),
+  contador_telefone: z
+    .string()
+    .transform(digitos)
+    .refine((v) => v === "" || (v.length >= 10 && v.length <= 13), "Telefone inválido.")
+    .transform((v) => v || null),
+});
+
 export async function salvarDadosEscritorio(_anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   const s = await exigirAdmin();
   const bruto = Object.fromEntries(Object.keys(esquemaDados.shape).map((k) => [k, String(fd.get(k) ?? "")]));
   const d = esquemaDados.safeParse(bruto);
   if (!d.success) return falhaValidacao(d.error);
+  const c = esquemaContador.safeParse(Object.fromEntries(Object.keys(esquemaContador.shape).map((k) => [k, String(fd.get(k) ?? "")])));
+  if (!c.success) return falhaValidacao(c.error);
   const { error } = await s.supabase
     .from("escritorio")
     .update({ ...d.data, updated_by: s.usuarioId })
     .eq("id", 1);
   if (error) return falha(mensagemErro(error));
+  const { error: erroContador } = await s.supabase
+    .from("escritorio_contador")
+    .update({ cpf: c.data.contador_cpf, email: c.data.contador_email, telefone: c.data.contador_telefone, updated_by: s.usuarioId })
+    .eq("id", 1);
+  if (erroContador) return falha(mensagemErro(erroContador));
   revalidarTudo();
   return sucesso("Dados do escritório atualizados. A tela de entrada já mostra as novas informações.");
 }

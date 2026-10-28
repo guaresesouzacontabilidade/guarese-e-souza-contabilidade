@@ -20,10 +20,16 @@ export type Operacao = "entrada" | "saida" | "nao_relacionada";
  * retenção do ISS e as retenções federais; a 4, nas NF-e/NFC-e, o frete, o
  * seguro e as outras despesas de cada item, o crédito de ICMS do fornecedor do
  * Simples Nacional (vCredICMSSN), o FCP do item e o DIFAL da venda a
- * consumidor final de outro estado (vICMSUFDest). Notas lidas antes são
- * relidas pelo auditor fiscal (versões 1–2) e pela apuração do ICMS (mês a mês).
+ * consumidor final de outro estado (vICMSUFDest); a 5, o complemento usado na
+ * EFD ICMS/IPI (endereço e município do emitente e do destinatário, frete,
+ * pagamento, data de saída e os dados do CT-e). Notas lidas antes são relidas
+ * pelo auditor fiscal (versões 1–2), pela apuração do ICMS (antes da 4) e pela
+ * EFD (antes da 5), mês a mês.
  */
-export const VERSAO_LEITURA = 4;
+export const VERSAO_LEITURA = 5;
+
+/** Leitura mínima para a apuração do ICMS (frete por item, crédito do Simples, DIFAL de destino). */
+export const VERSAO_LEITURA_ICMS = 4;
 
 export interface ItemNota {
   numero_item: number;
@@ -47,6 +53,61 @@ export interface ItemNota {
    * cst_pis, cst_cofins, cst_ipi, cst_ibscbs, cclasstrib...
    */
   tributos: Record<string, string>;
+}
+
+/** Emitente, destinatário ou tomador como está no XML (cadastro do participante na EFD, registro 0150). */
+export interface ParticipanteNota {
+  documento: string | null;
+  nome: string | null;
+  ie: string | null;
+  uf: string | null;
+  /** Município pelo código do IBGE (7 dígitos). */
+  cmun: string | null;
+  municipio: string | null;
+  cep: string | null;
+  logradouro: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  /** Código do país (Bacen): 1058 Brasil. */
+  pais: string | null;
+  suframa: string | null;
+}
+
+/** Dados do CT-e para a EFD (registros D100 e D190). */
+export interface ComplementoCte {
+  /** Tomador do serviço: 0 remetente, 1 expedidor, 2 recebedor, 3 destinatário, 4 outro. */
+  toma: string | null;
+  tp_cte: string | null;
+  tp_serv: string | null;
+  cmun_ini: string | null;
+  uf_ini: string | null;
+  cmun_fim: string | null;
+  uf_fim: string | null;
+  cst: string | null;
+  bc_icms: string | null;
+  p_icms: string | null;
+  icms: string | null;
+  p_red_bc: string | null;
+  valor_prestacao: string | null;
+  valor_receber: string | null;
+  /** Chave do CT-e substituído (CT-e de substituição). */
+  chave_substituida: string | null;
+}
+
+/** Complemento da leitura (versão 5) usado na EFD ICMS/IPI. */
+export interface ComplementoNota {
+  emitente: ParticipanteNota | null;
+  destinatario: ParticipanteNota | null;
+  /** Data de emissão como escrita no XML (AAAA-MM-DD, horário de quem emitiu). */
+  data_local: string | null;
+  /** Data de saída ou entrada da mercadoria (dhSaiEnt), quando informada. */
+  data_saida: string | null;
+  /** Modalidade do frete: 0 remetente (CIF), 1 destinatário (FOB), 2 terceiros, 3 e 4 transporte próprio, 9 sem frete. */
+  mod_frete: string | null;
+  /** Indicador de pagamento: 0 à vista, 1 a prazo. */
+  ind_pag: string | null;
+  cte: ComplementoCte | null;
 }
 
 export interface SugestaoLancamento {
@@ -102,6 +163,7 @@ export interface NotaLida {
   relacionado_empresa: boolean;
   itens: ItemNota[];
   sugestao: SugestaoLancamento | null;
+  complemento: ComplementoNota;
 }
 
 export interface EventoLido {
@@ -130,6 +192,9 @@ export interface EmpresaReferencia {
 }
 
 const LIMITE_XML = 10 * 1024 * 1024;
+
+/** NFS-e: sem complemento (não entram na EFD ICMS/IPI). */
+const COMPLEMENTO_VAZIO: ComplementoNota = { emitente: null, destinatario: null, data_local: null, data_saida: null, mod_frete: null, ind_pag: null, cte: null };
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -208,6 +273,34 @@ function dataISO(v: unknown): string | null {
   if (!t) return null;
   if (/^\d{4}-\d{2}-\d{2}/.test(t)) return t;
   return null;
+}
+/** Data (AAAA-MM-DD) do jeito que está escrita no XML. */
+function dataLocal(v: unknown): string | null {
+  const t = txt(v);
+  return t && /^\d{4}-\d{2}-\d{2}/.test(t) ? t.slice(0, 10) : null;
+}
+/** Participante (emitente, destinatário, tomador...) com o endereço do grupo informado. */
+function participante(n: unknown, ender: string): ParticipanteNota | null {
+  if (!no(n)) return null;
+  const e = caminho(n, ender);
+  const ie = txt(caminho(n, "IE"));
+  const cep = digitos(caminho(e, "CEP"));
+  const cmun = digitos(caminho(e, "cMun"));
+  return {
+    documento: docDe(n) ?? digitos(caminho(n, "idEstrangeiro")),
+    nome: txt(caminho(n, "xNome")),
+    ie: ie && /\d/.test(ie) ? ie.replace(/[^0-9A-Za-z]/g, "") : null,
+    uf: txt(caminho(e, "UF")),
+    cmun: cmun && cmun.length === 7 ? cmun : null,
+    municipio: txt(caminho(e, "xMun")),
+    cep: cep && cep.length === 8 ? cep : null,
+    logradouro: txt(caminho(e, "xLgr")),
+    numero: txt(caminho(e, "nro")),
+    complemento: txt(caminho(e, "xCpl")),
+    bairro: txt(caminho(e, "xBairro")),
+    pais: digitos(caminho(e, "cPais")),
+    suframa: digitos(caminho(n, "ISUF")),
+  };
 }
 function mesmaRaizCnpj(a: string | null, b: string) {
   return Boolean(a && a.length === 14 && b.length === 14 && a.slice(0, 8) === b.slice(0, 8));
@@ -552,6 +645,15 @@ function lerNfe(nfe: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
     relacionado_empresa: relacionado,
     itens,
     sugestao: null,
+    complemento: {
+      emitente: participante(emit, "enderEmit"),
+      destinatario: participante(dest, "enderDest"),
+      data_local: dataLocal(caminho(ide, "dhEmi")) ?? dataLocal(caminho(ide, "dEmi")),
+      data_saida: dataLocal(caminho(ide, "dhSaiEnt")) ?? dataLocal(caminho(ide, "dSaiEnt")),
+      mod_frete: codigo(caminho(inf, "transp", "modFrete")),
+      ind_pag: codigo(caminho(lista(caminho(inf, "pag", "detPag"))[0], "indPag")) ?? codigo(caminho(ide, "indPag")),
+      cte: null,
+    },
   };
 
   // Sugestão de lançamento (somente NF-e normal, com operação de compra/venda identificável)
@@ -609,15 +711,18 @@ function lerCte(cte: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
   // Tomador do serviço
   let tomadorDoc: string | null = null;
   let tomadorNome: string | null = null;
+  let tomador: ParticipanteNota | null = null;
   const toma3 = txt(caminho(ide, "toma3", "toma")) ?? txt(caminho(ide, "toma03", "toma"));
   const toma4 = caminho(ide, "toma4") ?? caminho(ide, "toma");
   if (toma3 !== null) {
     const ref = [rem, exped, receb, dest][Number(toma3)];
     tomadorDoc = docDe(ref);
     tomadorNome = txt(caminho(ref, "xNome"));
+    tomador = participante(ref, ["enderReme", "enderExped", "enderReceb", "enderDest"][Number(toma3)] ?? "enderToma");
   } else if (no(toma4)) {
     tomadorDoc = docDe(toma4);
     tomadorNome = txt(caminho(toma4, "xNome"));
+    tomador = participante(toma4, "enderToma");
   }
 
   let operacao: Operacao = "nao_relacionada";
@@ -643,6 +748,11 @@ function lerCte(cte: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
   const dataEmissao = dataISO(caminho(ide, "dhEmi"));
   const vICMS = decimal(buscar(caminho(inf, "imp"), "vICMS"));
   const cfop = txt(caminho(ide, "CFOP"));
+  // ICMS do CT-e: ICMS00, ICMS20, ICMS45 (40/41/51), ICMS60, ICMS90, ICMSOutraUF ou ICMSSN
+  const icmsCte = subgrupo(caminho(inf, "imp", "ICMS"));
+  const outraUf = no(caminho(inf, "imp", "ICMS", "ICMSOutraUF"));
+  const simples = no(caminho(inf, "imp", "ICMS", "ICMSSN"));
+  const cstCte = simples ? "90" : outraUf ? "90" : codigo(icmsCte?.CST);
 
   const nota: NotaLida = {
     tipo: "nota",
@@ -685,6 +795,31 @@ function lerCte(cte: unknown, prot: unknown, doc: string): ResultadoLeituraXml {
     relacionado_empresa: relacionado,
     itens: [],
     sugestao: null,
+    complemento: {
+      emitente: participante(emit, "enderEmit"),
+      destinatario: tomador,
+      data_local: dataLocal(caminho(ide, "dhEmi")),
+      data_saida: null,
+      mod_frete: null,
+      ind_pag: null,
+      cte: {
+        toma: toma3 ?? (no(toma4) ? "4" : null),
+        tp_cte: codigo(caminho(ide, "tpCTe")),
+        tp_serv: codigo(caminho(ide, "tpServ")),
+        cmun_ini: digitos(caminho(ide, "cMunIni")),
+        uf_ini: txt(caminho(ide, "UFIni")),
+        cmun_fim: digitos(caminho(ide, "cMunFim")),
+        uf_fim: txt(caminho(ide, "UFFim")),
+        cst: cstCte,
+        bc_icms: decimal(icmsCte?.vBC) ?? decimal(outraUf?.vBCOutraUF),
+        p_icms: decimal(icmsCte?.pICMS) ?? decimal(outraUf?.pICMSOutraUF),
+        icms: decimal(icmsCte?.vICMS) ?? decimal(outraUf?.vICMSOutraUF),
+        p_red_bc: decimal(icmsCte?.pRedBC) ?? decimal(outraUf?.pRedBCOutraUF),
+        valor_prestacao: valorTotal,
+        valor_receber: valorReceber,
+        chave_substituida: digitos(buscar(caminho(inf, "infCTeNorm", "infCteSub"), "chCte")) ?? digitos(buscar(caminho(inf, "infCTeNorm", "infCteSub"), "chCTe")),
+      },
+    },
   };
   if (relacionado && valorReceber && operacao !== "nao_relacionada" && prot_.situacao !== "protocolo_nao_autorizado_no_arquivo") {
     nota.sugestao =
@@ -845,6 +980,7 @@ function lerNfseNacional(nfse: unknown, doc: string): ResultadoLeituraXml {
     relacionado_empresa: relacionado,
     itens: [],
     sugestao: null,
+    complemento: COMPLEMENTO_VAZIO,
   };
   if (relacionado && valorLiq) {
     nota.sugestao = {
@@ -953,6 +1089,7 @@ function lerNfseAbrasf(corpo: unknown, raiz: string, doc: string): ResultadoLeit
     relacionado_empresa: relacionado,
     itens: [],
     sugestao: null,
+    complemento: COMPLEMENTO_VAZIO,
   };
   if (relacionado && valorLiq && !cancelada) {
     nota.sugestao = {

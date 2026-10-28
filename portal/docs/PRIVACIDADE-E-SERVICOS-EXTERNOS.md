@@ -136,6 +136,15 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **Quem vê**: a apuração completa (com fornecedores e itens) é da equipe com a permissão de gerenciar os cálculos. O cliente vê só as guias de ICMS na **Previsão de impostos** da própria empresa.
 - **Registro**: destinações, lançamentos, conferências e reaberturas (com motivo) ficam no registro de atividades.
 
+## 16-A. Gerador da EFD ICMS/IPI
+
+- **Onde roda**: dentro do portal, sobre os XML de notas que o portal já tem, a Apuração do ICMS e o cadastro da empresa e do escritório. **Nada é enviado** à Receita, à SEFAZ, a serviços externos ou a inteligência artificial; o portal não assina nem transmite a EFD (o escritório faz isso no PVA da Receita).
+- **O que guarda**: da leitura dos XML, o endereço, o município e a inscrição estadual do emitente e do destinatário, a modalidade do frete, o indicador de pagamento e os dados do CT-e (municípios do percurso, CST, base e ICMS); a configuração da EFD da empresa (perfil e código de receita); o código de ajuste de cada lançamento da apuração; e cada arquivo gerado (texto da EFD) com o histórico (quem gerou, quando, totais e avisos).
+- **Contador responsável**: o CPF, o e-mail e o telefone do contador (registro 0100) ficam numa tabela que só a equipe do escritório lê e só o administrador altera — o cliente não vê.
+- **Quem vê**: a tela, os dados e o arquivo são só da equipe com a permissão de gerenciar os cálculos da empresa (regra no banco e no armazenamento, além da tela). O arquivo fica num armazenamento privado, na pasta da empresa, e é baixado pelo portal depois de conferir a permissão.
+- **Registro**: configuração, códigos de ajuste e arquivos gerados ficam no registro de atividades.
+- **Demonstração**: a empresa, as notas e o contador (com CPF de teste) da demonstração são fictícios; o arquivo gerado lá não deve ser transmitido.
+
 ## 17. Emissão de NFS-e
 
 - **Serviço externo**: o **Emissor Nacional da NFS-e** (Sefin Nacional, Receita Federal / Comitê Gestor da NFS-e), serviço público oficial. Só recebe dados quando a empresa pede uma nota (ou o cancelamento) e a emissão está ligada.

@@ -1369,13 +1369,13 @@ isOneToOne: false
                   ]
                 },"documentos_fiscais": {
                   Row: {
-                    "avisos": NonNullable<Json>,"cancelada_evento": boolean,"cfops": (string)[],"chave_acesso": string | null,"competencia": string,"consumidor_final": boolean | null,"created_at": string,"crt_emitente": string | null,"data_emissao": string | null,"destinatario_documento": string | null,"destinatario_nome": string | null,"destinatario_uf": string | null,"documento_id": string,"duplicatas": NonNullable<Json>,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"emitente_uf": string | null,"empresa_id": string,"finalidade": string | null,"id": string,"id_destino": string | null,"identificador": string,"ind_ie_dest": string | null,"leitura_versao": number,"modelo": string,"natureza_operacao": string | null,"numero": string | null,"operacao": string,"pagamentos": NonNullable<Json>,"protocolo": Json | null,"relacionado_empresa": boolean,"serie": string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf": string | null,"tributos": NonNullable<Json>,"updated_at": string,"valor_desconto": number | null,"valor_frete": number | null,"valor_outros": number | null,"valor_produtos": number | null,"valor_servicos": number | null,"valor_total": number | null
+                    "avisos": NonNullable<Json>,"cancelada_evento": boolean,"cfops": (string)[],"chave_acesso": string | null,"competencia": string,"complemento": Json | null,"consumidor_final": boolean | null,"created_at": string,"crt_emitente": string | null,"data_emissao": string | null,"destinatario_documento": string | null,"destinatario_nome": string | null,"destinatario_uf": string | null,"documento_id": string,"duplicatas": NonNullable<Json>,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"emitente_uf": string | null,"empresa_id": string,"finalidade": string | null,"id": string,"id_destino": string | null,"identificador": string,"ind_ie_dest": string | null,"leitura_versao": number,"modelo": string,"natureza_operacao": string | null,"numero": string | null,"operacao": string,"pagamentos": NonNullable<Json>,"protocolo": Json | null,"relacionado_empresa": boolean,"serie": string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf": string | null,"tributos": NonNullable<Json>,"updated_at": string,"valor_desconto": number | null,"valor_frete": number | null,"valor_outros": number | null,"valor_produtos": number | null,"valor_servicos": number | null,"valor_total": number | null
                   }
                   Insert: {
-                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia": string,"consumidor_final"?: boolean | null,"created_at"?: string,"crt_emitente"?: string | null,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id": string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id": string,"finalidade"?: string | null,"id"?: string,"id_destino"?: string | null,"identificador": string,"ind_ie_dest"?: string | null,"leitura_versao"?: number,"modelo": string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao": string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
+                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia": string,"complemento"?: Json | null,"consumidor_final"?: boolean | null,"created_at"?: string,"crt_emitente"?: string | null,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id": string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id": string,"finalidade"?: string | null,"id"?: string,"id_destino"?: string | null,"identificador": string,"ind_ie_dest"?: string | null,"leitura_versao"?: number,"modelo": string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao": string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
                   }
                   Update: {
-                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia"?: string,"consumidor_final"?: boolean | null,"created_at"?: string,"crt_emitente"?: string | null,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id"?: string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id"?: string,"finalidade"?: string | null,"id"?: string,"id_destino"?: string | null,"identificador"?: string,"ind_ie_dest"?: string | null,"leitura_versao"?: number,"modelo"?: string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao"?: string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo"?: string,"tipo_documento"?: string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
+                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia"?: string,"complemento"?: Json | null,"consumidor_final"?: boolean | null,"created_at"?: string,"crt_emitente"?: string | null,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id"?: string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id"?: string,"finalidade"?: string | null,"id"?: string,"id_destino"?: string | null,"identificador"?: string,"ind_ie_dest"?: string | null,"leitura_versao"?: number,"modelo"?: string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao"?: string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo"?: string,"tipo_documento"?: string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
                   }
                   Relationships: [
                     {
@@ -1389,6 +1389,56 @@ isOneToOne: false
       columns: ["empresa_id"]
 isOneToOne: false
       referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"efd_configuracoes": {
+                  Row: {
+                    "atualizado_por": string | null,"codigo_receita": string | null,"empresa_id": string,"perfil": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"empresa_id": string,"perfil"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"empresa_id"?: string,"perfil"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "efd_configuracoes_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "efd_configuracoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"efd_geracoes": {
+                  Row: {
+                    "avisos": NonNullable<Json>,"competencia": string,"created_at": string,"empresa_id": string,"finalidade": number,"gerado_por": string | null,"id": string,"linhas": number,"nome_arquivo": string,"resumo": NonNullable<Json>,"sha256": string,"storage_path": string,"tamanho": number
+                  }
+                  Insert: {
+                    "avisos"?: NonNullable<Json>,"competencia": string,"created_at"?: string,"empresa_id": string,"finalidade"?: number,"gerado_por"?: string | null,"id"?: string,"linhas": number,"nome_arquivo": string,"resumo"?: NonNullable<Json>,"sha256": string,"storage_path": string,"tamanho": number
+                  }
+                  Update: {
+                    "avisos"?: NonNullable<Json>,"competencia"?: string,"created_at"?: string,"empresa_id"?: string,"finalidade"?: number,"gerado_por"?: string | null,"id"?: string,"linhas"?: number,"nome_arquivo"?: string,"resumo"?: NonNullable<Json>,"sha256"?: string,"storage_path"?: string,"tamanho"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "efd_geracoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "efd_geracoes_gerado_por_fkey"
+      columns: ["gerado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
       referencedColumns: ["id"]
     }
                   ]
@@ -1590,6 +1640,25 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"escritorio_contador": {
+                  Row: {
+                    "cpf": string | null,"email": string | null,"id": number,"telefone": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  Insert: {
+                    "cpf"?: string | null,"email"?: string | null,"id"?: number,"telefone"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "cpf"?: string | null,"email"?: string | null,"id"?: number,"telefone"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_contador_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"estoque_movimentos": {
                   Row: {
@@ -2441,13 +2510,13 @@ isOneToOne: false
                   ]
                 },"icms_lancamentos": {
                   Row: {
-                    "competencia": string,"created_at": string,"criado_por": string | null,"descricao": string,"empresa_id": string,"id": string,"observacao": string | null,"tipo": string,"valor": number
+                    "codigo_ajuste": string | null,"competencia": string,"created_at": string,"criado_por": string | null,"descricao": string,"empresa_id": string,"id": string,"observacao": string | null,"tipo": string,"valor": number
                   }
                   Insert: {
-                    "competencia": string,"created_at"?: string,"criado_por"?: string | null,"descricao": string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"tipo": string,"valor": number
+                    "codigo_ajuste"?: string | null,"competencia": string,"created_at"?: string,"criado_por"?: string | null,"descricao": string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"tipo": string,"valor": number
                   }
                   Update: {
-                    "competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"tipo"?: string,"valor"?: number
+                    "codigo_ajuste"?: string | null,"competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"tipo"?: string,"valor"?: number
                   }
                   Relationships: [
                     {
@@ -4477,6 +4546,9 @@ isOneToOne: false
 "dados_apuracao_icms":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_versao_leitura"?: number }; Returns: Json
                            },
+"dados_efd_icms_ipi":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
+                           },
 "dados_previsao_impostos":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_meses"?: number }; Returns: Json
                            },
@@ -4562,6 +4634,15 @@ isOneToOne: false
       } },
 "editar_proposta_regra":
 { Args: { "p_fonte_consultada_em": string,"p_fonte_publicada_em": string,"p_fonte_titulo": string,"p_fonte_url": string,"p_id": string,"p_regra": Json,"p_resumo": string,"p_titulo": string }; Returns: undefined
+                           },
+"efd_registrar_geracao":
+{ Args: { "p_competencia": string,"p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"efd_reler_notas":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_versao_leitura": number }; Returns: number
+                           },
+"efd_salvar_configuracao":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
                            },
 "emitir_declaracao_faturamento":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
@@ -4766,6 +4847,9 @@ isOneToOne: false
                            },
 "icms_conferir":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_resultado": Json }; Returns: undefined
+                           },
+"icms_definir_codigo_ajuste":
+{ Args: { "p_codigo": string,"p_lancamento_id": string }; Returns: undefined
                            },
 "icms_definir_destinacao":
 { Args: { "p_destinacao": string,"p_documento_fiscal_id": string,"p_empresa_id": string,"p_fornecedor": string,"p_numero_item": number }; Returns: undefined

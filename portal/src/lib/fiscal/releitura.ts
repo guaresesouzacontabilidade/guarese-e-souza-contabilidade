@@ -37,10 +37,10 @@ const LOTE = 150;
 const SIMULTANEAS = 6;
 
 /**
- * Tarefa "reler_notas_mes": relê as NF-e/NFC-e de uma empresa e competência
- * gravadas com uma leitura anterior à atual (ex.: antes do frete por item e do
- * crédito do Simples, usados na apuração do ICMS). Continua numa nova tarefa
- * quando o tempo acaba.
+ * Tarefa "reler_notas_mes": relê as NF-e, NFC-e e CT-e de uma empresa e
+ * competência gravadas com uma leitura anterior à atual (ex.: antes do frete por
+ * item e do crédito do Simples, usados na apuração do ICMS, ou dos endereços e
+ * municípios usados na EFD). Continua numa nova tarefa quando o tempo acaba.
  */
 export async function executarReleituraMes(admin: ClienteAdmin, job: Job, contexto: ContextoTarefa) {
   const p = job.payload as { empresa_id?: string; competencia?: string; rodada?: number };
@@ -53,7 +53,7 @@ export async function executarReleituraMes(admin: ClienteAdmin, job: Job, contex
       .select("id, documento_id", { count: "exact" })
       .eq("empresa_id", p.empresa_id!)
       .eq("competencia", p.competencia!)
-      .in("modelo", ["55", "65"])
+      .in("modelo", ["55", "65", "57"])
       .lt("leitura_versao", VERSAO_LEITURA);
   const { data: notas, error } = await filtro().limit(LOTE);
   if (error) throw new Error(`Falha ao listar as notas para releitura: ${error.message}`);

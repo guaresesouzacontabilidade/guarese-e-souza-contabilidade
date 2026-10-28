@@ -80,11 +80,20 @@ export default async function SpedFiscal({ params, searchParams }: PageProps<"/e
         descricao="Compara as notas escrituradas na EFD ICMS/IPI com os XML que o portal tem da empresa, antes da transmissão. O portal não transmite nem altera a EFD."
         voltar={{ href: `${base}/auditor-fiscal`, rotulo: "Voltar ao auditor fiscal" }}
         acoes={
-          <Button asChild>
-            <Link href={`${base}/enviar?categoria=sped_fiscal`}>
-              <Upload /> Enviar arquivo do SPED
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {ctx.pode("calculos.gerenciar") ? (
+              <Button asChild variante="secundario">
+                <Link href={`${base}/calculos/efd`}>
+                  <FileCheck2 /> Gerar a EFD no portal
+                </Link>
+              </Button>
+            ) : null}
+            <Button asChild>
+              <Link href={`${base}/enviar?categoria=sped_fiscal`}>
+                <Upload /> Enviar arquivo do SPED
+              </Link>
+            </Button>
+          </div>
         }
       />
       <AtualizarEnquanto ativo={lista.some((a) => a.situacao === "processando")} />
@@ -93,7 +102,7 @@ export default async function SpedFiscal({ params, searchParams }: PageProps<"/e
         <EstadoVazio
           icone={FileCheck2}
           titulo="Nenhum arquivo do SPED ainda"
-          descricao="Gere a EFD ICMS/IPI do mês no sistema fiscal e envie o arquivo .txt (tipo “Arquivos do SPED”). O portal confere as notas escrituradas com os XML recebidos e mostra o que corrigir antes de transmitir."
+          descricao="Gere a EFD ICMS/IPI do mês no sistema fiscal (ou em Cálculos → EFD ICMS/IPI, aqui no portal) e envie o arquivo .txt (tipo “Arquivos do SPED”). O portal confere as notas escrituradas com os XML recebidos e mostra o que corrigir antes de transmitir."
         />
       ) : null}
 

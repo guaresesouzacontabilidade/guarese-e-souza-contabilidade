@@ -96,7 +96,10 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
   let conteudo: React.ReactNode = null;
 
   if (aba === "escritorio") {
-    const publico = await obterEscritorioPublico();
+    const [publico, { data: contador }] = await Promise.all([
+      obterEscritorioPublico(),
+      s.supabase.from("escritorio_contador").select("cpf, email, telefone").eq("id", 1).maybeSingle(),
+    ]);
     conteudo = (
       <div className="grid gap-5 xl:grid-cols-3 [&>*]:min-w-0">
         <Card className="xl:col-span-2">
@@ -105,7 +108,7 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
             <CardDescription>Aparecem na tela de entrada, nos e-mails e no cabeçalho dos relatórios em PDF.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FormDadosEscritorio esc={esc} />
+            <FormDadosEscritorio esc={esc} contador={contador} />
           </CardContent>
         </Card>
         <Card>

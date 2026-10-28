@@ -105,6 +105,28 @@ describe("CT-e", () => {
     expect(n.sugestao?.tipo).toBe("pagar");
     expect(categoriaDoXml(n)).toBe("cte_xml");
   });
+  it("guarda para a EFD os municípios do percurso, o ICMS e o tomador com endereço", () => {
+    const xml = fixture("cte-tomador.xml")
+      .replace("<tpCTe>0</tpCTe>", "<tpCTe>0</tpCTe><tpServ>0</tpServ><cMunIni>1721000</cMunIni><xMunIni>Palmas</xMunIni><UFIni>TO</UFIni><cMunFim>5208707</cMunFim><xMunFim>Goiania</xMunFim><UFFim>GO</UFFim>")
+      .replace("<xNome>EMPRESA A COMERCIO LTDA (FICTICIA)</xNome></rem>", "<xNome>EMPRESA A COMERCIO LTDA (FICTICIA)</xNome><enderReme><xLgr>Rua Teste</xLgr><nro>1</nro><xBairro>Centro</xBairro><cMun>1721000</cMun><xMun>Palmas</xMun><CEP>77000000</CEP><UF>TO</UF></enderReme></rem>");
+    const n = (lerXmlFiscal(xml, EMPRESA) as { dados: NotaLida }).dados;
+    expect(n.complemento.cte).toMatchObject({ toma: "0", tp_cte: "0", cmun_ini: "1721000", uf_fim: "GO", cmun_fim: "5208707", cst: "00", bc_icms: "250.00", p_icms: "12.00", icms: "30.00" });
+    expect(n.complemento.destinatario).toMatchObject({ documento: "11222333000181", cmun: "1721000", cep: "77000000", logradouro: "Rua Teste" });
+    expect(n.complemento.emitente).toMatchObject({ documento: "45612378000184", ie: "1111", uf: "GO" });
+    expect(n.complemento.data_local).toBe("2026-09-18");
+  });
+});
+
+describe("Complemento para a EFD (NF-e)", () => {
+  it("endereço e município do emitente e do destinatário, frete e data como no XML", () => {
+    const n = (lerXmlFiscal(fixture("nfe-saida.xml"), EMPRESA) as { dados: NotaLida }).dados;
+    expect(n.leitura_versao).toBe(5);
+    expect(n.complemento.emitente).toMatchObject({ documento: "11222333000181", ie: "123456789", cmun: "1718204", logradouro: "Rua Teste", numero: "1", bairro: "Centro", uf: "TO" });
+    expect(n.complemento.destinatario).toMatchObject({ documento: "98765432000198", cmun: "1721000", municipio: "Palmas", ie: null });
+    expect(n.complemento.mod_frete).toBe("9");
+    expect(n.complemento.data_local).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(n.complemento.cte).toBeNull();
+  });
 });
 
 describe("NFS-e", () => {
@@ -131,7 +153,7 @@ describe("NFS-e", () => {
   it("padrão nacional (leitura 3): regime do prestador, ISS retido e retenções federais", () => {
     const r = lerXmlFiscal(fixture("nfse-nacional-retencoes.xml"), EMPRESA);
     const n = (r as { dados: NotaLida }).dados;
-    expect(n.leitura_versao).toBe(4);
+    expect(n.leitura_versao).toBe(5);
     expect(n.tributos).toMatchObject({
       iss: "500.00",
       iss_retido: "sim",
@@ -177,7 +199,7 @@ describe("códigos fiscais de cada item (leitura versão 2)", () => {
     const n = (r as { dados: NotaLida }).dados;
     expect(n.avisos).toEqual([]);
     expect(n.operacao).toBe("entrada");
-    expect(n.leitura_versao).toBe(4);
+    expect(n.leitura_versao).toBe(5);
     expect(n).toMatchObject({ crt_emitente: "3", consumidor_final: false, id_destino: "1", ind_ie_dest: "1" });
     expect(n.tributos).toMatchObject({ icms_st: "108.00", ibs: "1.00", cbs: "9.00", base_ibscbs: "1000.00" });
     const [remedio, shampoo, biscoito] = n.itens;

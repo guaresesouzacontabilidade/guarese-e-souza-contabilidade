@@ -2,7 +2,7 @@ import "server-only";
 import Decimal from "decimal.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import { VERSAO_LEITURA } from "@/lib/fiscal/xml";
+import { VERSAO_LEITURA_ICMS } from "@/lib/fiscal/xml";
 import { formatarData } from "@/lib/formatos";
 import { calcularIcms, type DadosIcms, type ResultadoIcms } from "./icms";
 import type { LinhaIcmsPrevisao } from "./previsao";
@@ -18,7 +18,7 @@ export async function carregarIcms(
   const { data, error } = await supabase.rpc("dados_apuracao_icms", {
     p_empresa_id: empresaId,
     p_competencia: competencia,
-    p_versao_leitura: VERSAO_LEITURA,
+    p_versao_leitura: VERSAO_LEITURA_ICMS,
   });
   if (error || !data) return { erro: error?.message ?? "Não foi possível carregar a apuração do ICMS." };
   const dados = data as unknown as DadosIcms;
