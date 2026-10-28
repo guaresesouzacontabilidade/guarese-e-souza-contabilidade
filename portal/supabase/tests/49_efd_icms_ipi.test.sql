@@ -7,7 +7,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(31);
+select plan(33);
 
 \ir 00_setup.sql.inc
 select set_config('request.jwt.claims', '', true);
@@ -131,6 +131,27 @@ select public.atualizar_leitura_xml_fiscal(current_setting('testes.nota')::uuid,
   '{"tipo": "nota", "leitura_versao": 5, "tributos": {"icms": "120"}, "itens": [], "complemento": {"mod_frete": "1", "emitente": {"cmun": "5208707"}}}');
 select is((select complemento ->> 'mod_frete' from public.documentos_fiscais where id = current_setting('testes.nota')::uuid), '1', 'complemento gravado');
 select is((select leitura_versao from public.documentos_fiscais where id = current_setting('testes.nota')::uuid)::int, 5, 'leitura na versão 5');
+
+-- 6. CT-e emitido pela empresa entra nos débitos da Apuração do ICMS (como no D190)
+do $$
+declare v_doc uuid := gen_random_uuid(); v_emp uuid := current_setting('testes.empresa_a')::uuid;
+begin
+  insert into public.documentos (id, empresa_id, direcao, competencia, categoria_codigo, nome_original, extensao, mime, tamanho, sha256,
+                                 versao_atual, storage_path, upload_status, status, origem, verificacao_status)
+  values (v_doc, v_emp, 'cliente', '2026-09-01', 'cte_xml', 'cte-1.xml', 'xml', 'application/xml', 1000, md5('cte') || md5('cte'),
+          1, v_emp::text || '/2026-09/' || v_doc::text || '/v1-cte-1.xml', 'concluido', 'recebido', 'upload', 'ok');
+  insert into public.documentos_fiscais (empresa_id, documento_id, modelo, tipo_documento, identificador, competencia, operacao,
+                                         situacao_arquivo, relacionado_empresa, emitente_documento, cfops, valor_total, tributos, complemento, leitura_versao)
+  values (v_emp, v_doc, '57', 'CT-e', 'cte-1', '2026-09-01', 'saida', 'protocolo_autorizacao_no_arquivo', true, '11444777000161',
+          array['6353'], 300, '{"icms": "36"}', '{"cte": {"bc_icms": "300.00"}}', 5);
+end $$;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a2');
+set local role authenticated;
+select is((select s ->> 'icms' from jsonb_array_elements(public.dados_apuracao_icms(current_setting('testes.empresa_a')::uuid, '2026-09-01') -> 'saidas') s
+            where s ->> 'cfop' = '6353'), '36', 'ICMS do CT-e emitido nos débitos da apuração');
+select is((select s ->> 'base' from jsonb_array_elements(public.dados_apuracao_icms(current_setting('testes.empresa_a')::uuid, '2026-09-01') -> 'saidas') s
+            where s ->> 'cfop' = '6353'), '300.00', 'com a base do CT-e');
+reset role;
 
 select * from finish();
 rollback;

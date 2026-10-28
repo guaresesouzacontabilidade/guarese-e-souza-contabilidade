@@ -1065,7 +1065,7 @@ export function gerarEfd(d: DadosEfd, icms: { dados: DadosIcms; resultado: Resul
         id: "diferenca_apuracao",
         nivel: "aviso",
         titulo: "O arquivo difere da Apuração do ICMS do portal",
-        detalhe: `${diferencas.join("; ")}. Pode ser CT-e emitido pela empresa (a apuração do portal ainda não soma o ICMS dos CT-e próprios), FCP somado ao ICMS, NF-e de cupom (CFOP 5.929) ou nota fora do arquivo: confira antes de transmitir.`,
+        detalhe: `${diferencas.join("; ")}. Pode ser FCP somado ao ICMS, NF-e de cupom (CFOP 5.929), nota fora do arquivo ou a apuração calculada antes de notas novas: confira antes de transmitir.`,
       });
     }
   }
