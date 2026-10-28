@@ -1,6 +1,6 @@
 import "server-only";
 import type { ContextoHotel } from "./contexto";
-import { ATIVAS, type Limpeza, type StatusReserva } from "./rotulos";
+import { ATIVAS, type Limpeza, type NaturezaExtra, type StatusReserva, type UnidadeExtra } from "./rotulos";
 
 type Supa = ContextoHotel["supabase"];
 
@@ -86,6 +86,23 @@ export function paraResumo(r: LinhaReserva): ReservaResumo {
     hospede: r.hospede?.nome ?? "—",
     telefone: r.hospede?.telefone ?? null,
   };
+}
+
+export interface ExtraHotel {
+  id: string;
+  nome: string;
+  natureza: NaturezaExtra;
+  unidade: UnidadeExtra;
+  preco: number;
+  ativo: boolean;
+}
+
+/** Serviços extras com preço fixo (refeições, lavanderia, aluguel...). */
+export async function carregarExtras(supabase: Supa, empresaId: string, apenasAtivos = false): Promise<ExtraHotel[]> {
+  let q = supabase.from("hotel_extras").select("id, nome, natureza, unidade, preco, ativo, ordem").eq("empresa_id", empresaId);
+  if (apenasAtivos) q = q.eq("ativo", true);
+  const { data } = await q.order("ordem").order("nome");
+  return (data ?? []).map((e) => ({ id: e.id, nome: e.nome, natureza: e.natureza as NaturezaExtra, unidade: e.unidade as UnidadeExtra, preco: Number(e.preco), ativo: e.ativo }));
 }
 
 export async function carregarCategorias(supabase: Supa, empresaId: string): Promise<CategoriaHotel[]> {

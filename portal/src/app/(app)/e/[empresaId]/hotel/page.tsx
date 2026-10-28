@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BedDouble, CalendarPlus, DoorOpen, LogIn, LogOut, Settings, Sparkles, UtensilsCrossed, Wallet } from "lucide-react";
+import { BedDouble, CalendarPlus, DoorOpen, LogIn, LogOut, Settings, Soup, Sparkles, UtensilsCrossed, Wallet } from "lucide-react";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,11 @@ export default async function PaginaPainelHotel({ params }: PageProps<"/e/[empre
             <Button asChild variante="contorno">
               <Link href={`${base}/consumo`}>
                 <UtensilsCrossed /> Lançar consumo
+              </Link>
+            </Button>
+            <Button asChild variante="contorno">
+              <Link href={`${base}/extras`}>
+                <Soup /> Serviços extras
               </Link>
             </Button>
             <Button asChild>

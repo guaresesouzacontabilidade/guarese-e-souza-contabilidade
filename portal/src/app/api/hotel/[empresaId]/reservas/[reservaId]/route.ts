@@ -1,13 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { obterEmpresasDoUsuario, sessaoApi } from "@/lib/auth/sessao";
 import { carregarReserva } from "@/lib/hotel/dados";
+import { carregarIdentidadeHotel, gerarDocumentoHotel, paletaDe } from "@/lib/hotel/documento";
 import { blocosConta, blocosFicha } from "@/lib/hotel/pdf";
-import { montarCabecalho, nomeArquivo } from "@/lib/relatorios/cabecalho";
-import { gerarPdf } from "@/lib/relatorios/pdf";
+import { nomeArquivo } from "@/lib/relatorios/cabecalho";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** PDFs da reserva: ficha de registro do hóspede (?doc=ficha) e confirmação/extrato/recibo da conta (?doc=conta). */
+/**
+ * PDFs da reserva, com a identidade do hotel (logo, cor e contatos dele):
+ * ficha de registro do hóspede (?doc=ficha) e confirmação/extrato/recibo da
+ * conta (?doc=conta). `modelo` e `cor` mostram a prévia de outro modelo sem gravar.
+ */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ empresaId: string; reservaId: string }> }) {
   const s = await sessaoApi();
   if (!s) return new NextResponse("Sessão expirada. Entre novamente.", { status: 401 });
@@ -15,23 +19,33 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ empr
   if (!UUID.test(empresaId) || !UUID.test(reservaId)) return new NextResponse("Parâmetros inválidos.", { status: 400 });
   const acesso = (await obterEmpresasDoUsuario()).find((e) => e.id === empresaId);
   if (!acesso || acesso.gestao_modalidade !== "hotel" || !acesso.permissoes.has("gestao.vender")) return new NextResponse("Acesso negado.", { status: 403 });
-  const doc = req.nextUrl.searchParams.get("doc") === "ficha" ? "ficha" : "conta";
+  const sp = req.nextUrl.searchParams;
+  const doc = sp.get("doc") === "ficha" ? "ficha" : "conta";
   try {
-    const [c, { data: cfg }] = await Promise.all([
+    const [c, { data: cfg }, identidade] = await Promise.all([
       carregarReserva(s.supabase, empresaId, reservaId),
       s.supabase.from("hotel_config").select("hora_checkin, hora_checkout, cafe_incluso, politica").eq("empresa_id", empresaId).maybeSingle(),
+      carregarIdentidadeHotel(s.supabase, empresaId, { modelo: sp.get("modelo"), cor: sp.get("cor") }),
     ]);
     if (!c) return new NextResponse("Reserva não encontrada.", { status: 404 });
     const r = c.reserva;
     const aguardando = r.status === "pre_reserva" || r.status === "confirmada";
     const titulo = doc === "ficha" ? "Ficha de registro do hóspede" : aguardando ? "Confirmação de reserva" : r.status === "encerrada" ? "Recibo da conta do hóspede" : "Extrato da conta do hóspede";
-    const cab = await montarCabecalho(s.supabase, empresaId, {
-      titulo,
-      subtitulo: `Reserva nº ${r.numero} — quarto ${r.quarto?.numero ?? ""} — ${r.hospede?.nome ?? ""}`,
-      situacao: "documento",
-      notaFinal: doc === "conta" && r.status === "encerrada" ? "Recibo dos valores pagos pela hospedagem. A nota fiscal de serviço (NFS-e), quando emitida, é enviada à parte." : null,
-    });
-    const arquivo = await gerarPdf(cab, doc === "ficha" ? blocosFicha(c) : blocosConta(c, cfg ?? null));
+    const tons = paletaDe(identidade.modelo, identidade.cor);
+    const arquivo = await gerarDocumentoHotel(
+      identidade,
+      {
+        titulo,
+        subtitulo: `Reserva nº ${r.numero} — quarto ${r.quarto?.numero ?? ""} — ${r.hospede?.nome ?? ""}`,
+        notaFinal:
+          doc === "conta" && r.status === "encerrada"
+            ? "Recibo dos valores pagos pela hospedagem. A nota fiscal de serviço (NFS-e), quando emitida, é enviada à parte."
+            : doc === "conta" && aguardando
+              ? "Obrigado pela preferência! Em caso de dúvida ou alteração, fale com a recepção pelos contatos acima."
+              : null,
+      },
+      doc === "ficha" ? blocosFicha(c, tons) : blocosConta(c, cfg ?? null, tons),
+    );
     const nome = nomeArquivo([doc === "ficha" ? "ficha-hospede" : aguardando ? "confirmacao-reserva" : "conta-hospede", String(r.numero), r.hospede?.nome], "pdf");
     return new NextResponse(new Uint8Array(arquivo), {
       headers: {

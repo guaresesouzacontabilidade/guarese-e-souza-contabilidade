@@ -75,6 +75,8 @@ export interface IndicadoresHotel {
   revpar: number;
   receitaConsumo: number;
   receitaServicos: number;
+  /** Serviços cobrados à parte por tipo (refeições, lavanderia, aluguel...), sem os descontos. */
+  porServico: { setor: string; total: number }[];
   hospedagens: number;
   canceladas: number;
   noShow: number;
@@ -95,7 +97,7 @@ export function calcularIndicadores(entrada: {
   quartos: number;
   reservas: ReservaIndicador[];
   /** Diárias e demais lançamentos da conta no período (data do lançamento). */
-  itens: { tipo: string; total: number; categoria?: string }[];
+  itens: { tipo: string; total: number; categoria?: string; setor?: string | null }[];
   canceladas: number;
   noShow: number;
 }): IndicadoresHotel {
@@ -120,6 +122,7 @@ export function calcularIndicadores(entrada: {
   let receitaDiarias = new Decimal(0);
   let receitaConsumo = new Decimal(0);
   let receitaServicos = new Decimal(0);
+  const servicos = new Map<string, Decimal>();
   let noitesFaturadas = 0;
   for (const i of entrada.itens) {
     if (i.tipo === "diaria") {
@@ -131,7 +134,10 @@ export function calcularIndicadores(entrada: {
         categoria.set(i.categoria, c);
       }
     } else if (i.tipo === "consumo" || i.tipo === "taxa_servico") receitaConsumo = receitaConsumo.plus(i.total);
-    else receitaServicos = receitaServicos.plus(i.total);
+    else {
+      receitaServicos = receitaServicos.plus(i.total);
+      if (i.tipo === "servico") servicos.set(i.setor || "outro", (servicos.get(i.setor || "outro") ?? new Decimal(0)).plus(i.total));
+    }
   }
   const porDia = Array.from({ length: dias }, (_, k) => {
     const data = somarDias(entrada.de, k);
@@ -150,6 +156,7 @@ export function calcularIndicadores(entrada: {
     revpar: quartosNoite ? receitaDiarias.div(quartosNoite).toDecimalPlaces(2).toNumber() : 0,
     receitaConsumo: receitaConsumo.toNumber(),
     receitaServicos: receitaServicos.toNumber(),
+    porServico: [...servicos].map(([setor, t]) => ({ setor, total: t.toNumber() })).sort((a, b) => b.total - a.total),
     hospedagens: ocupando.filter((r) => noitesNoPeriodo(r, entrada.de, entrada.ate) > 0).length,
     canceladas: entrada.canceladas,
     noShow: entrada.noShow,

@@ -39,6 +39,7 @@ import {
   DoorOpen,
   UtensilsCrossed,
   ConciergeBell,
+  Soup,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -181,6 +182,7 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     hospedagem.push({ rotulo: "Hóspedes", href: `${base}/hotel/hospedes`, icone: Users });
     hospedagem.push({ rotulo: "Quartos e governança", href: `${base}/hotel/quartos`, icone: DoorOpen });
     hospedagem.push({ rotulo: "Lançar consumo no quarto", href: `${base}/hotel/consumo`, icone: UtensilsCrossed });
+    hospedagem.push({ rotulo: "Serviços extras", href: `${base}/hotel/extras`, icone: Soup });
     if (p.has("gestao.gerenciar")) hospedagem.push({ rotulo: "Relatórios do hotel", href: `${base}/hotel/relatorios`, icone: FileBarChart });
     loja.push({ rotulo: "Painel do restaurante", href: `${base}/loja`, icone: Store, exato: true });
     loja.push({ rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart });

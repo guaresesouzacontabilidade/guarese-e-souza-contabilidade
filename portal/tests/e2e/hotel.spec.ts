@@ -7,7 +7,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  *  - a recepção faz a reserva de um hóspede novo com check-in na hora, lança
  *    consumo do frigobar, recebe e faz o check-out (a conta fecha, o
  *    pagamento vai para o Financeiro e o quarto vai para a limpeza);
- *  - a ficha do hóspede sai em PDF; a recepção não vê os relatórios;
+ *  - a recepção lança serviço extra (quantidade × preço do cadastro) e anota
+ *    uma observação sobre o hóspede no check-out;
+ *  - a ficha do hóspede sai em PDF com a identidade do hotel; a recepção não vê os relatórios;
+ *  - o dono cadastra serviço extra e escolhe o modelo e a cor dos documentos;
  *  - cliente de outra empresa não vê o hotel.
  */
 const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
@@ -154,6 +157,19 @@ test("recepção: reserva com check-in na hora, consumo, pagamento e check-out",
   await page.goto(`/e/${empresaId}/hotel/reservas/${reservaId}`);
   await expect(page.getByRole("cell", { name: /Água mineral 500 ml/ })).toBeVisible();
 
+  // Serviço extra com preço fixo: 2 marmitas (a recepção só informa a quantidade)
+  await page.locator('a[href*="/hotel/extras?reserva="]').click();
+  await page.waitForURL(/\/hotel\/extras\?reserva=/);
+  await page.getByRole("button", { name: "Mais Marmita", exact: true }).click();
+  await page.getByRole("button", { name: "Mais Marmita", exact: true }).click();
+  await expect(page.getByLabel(/Preço de Marmita/)).toHaveCount(0);
+  await page.getByRole("button", { name: "Lançar na conta do quarto" }).click();
+  await expect(page.getByText(/serviço\(s\) lançado\(s\) na conta do quarto/)).toBeVisible({ timeout: 30_000 });
+  const { data: extras } = await servico!.from("hotel_conta_itens").select("descricao, setor, quantidade, valor_unitario, total").eq("reserva_id", reservaId).not("extra_id", "is", null);
+  expect(extras).toEqual([{ descricao: "Marmita", setor: "alimentacao", quantidade: 2, valor_unitario: 22, total: 44 }]);
+  await page.goto(`/e/${empresaId}/hotel/reservas/${reservaId}`);
+  await expect(page.getByRole("cell", { name: /Marmita/ })).toBeVisible();
+
   // Check-out com saldo: o portal não deixa
   // (recebe o valor sugerido, que é o saldo da conta, e fecha)
   // (recebe o valor sugerido no PIX, com a foto do comprovante)
@@ -165,9 +181,13 @@ test("recepção: reserva com check-in na hora, consumo, pagamento e check-out",
   await dialogo.getByRole("button", { name: "Registrar" }).click();
   await expect(dialogo).toBeHidden({ timeout: 60_000 });
   await expect(page.getByRole("link", { name: "Comprovante", exact: true })).toBeVisible();
+  // Check-out com uma observação sobre o hóspede (fica no cadastro dele)
   await page.getByRole("button", { name: "Check-out" }).click();
+  await page.getByRole("dialog").getByLabel("Observações sobre o hóspede").fill("Pediu a nota no nome da empresa. (teste automático)");
   await page.getByRole("button", { name: "Fazer check-out" }).click();
   await expect(page.getByText("Encerrada", { exact: true }).first()).toBeVisible({ timeout: 30_000 });
+  const { data: hosp } = await servico!.from("hotel_reservas").select("hospede:hotel_hospedes!hotel_reservas_empresa_id_hospede_id_fkey(observacoes)").eq("id", reservaId).single();
+  expect((hosp as unknown as { hospede: { observacoes: string } }).hospede.observacoes).toBe("Pediu a nota no nome da empresa. (teste automático)");
 
   const { data: r } = await servico!.from("hotel_reservas").select("status, quarto_id").eq("id", reservaId).single();
   expect(r!.status).toBe("encerrada");
@@ -207,6 +227,12 @@ test("recepção: reserva com check-in na hora, consumo, pagamento e check-out",
   const ficha = await page.request.get(`/api/hotel/${empresaId}/reservas/${reservaId}?doc=ficha`);
   expect(ficha.status()).toBe(200);
   expect(ficha.headers()["content-type"]).toContain("application/pdf");
+  // Documento do hotel (só a identidade do hotel), também na prévia de outro modelo e cor
+  const recibo = await page.request.get(`/api/hotel/${empresaId}/reservas/${reservaId}?doc=conta&modelo=faixa&cor=%237a1f2b`);
+  expect(recibo.status()).toBe(200);
+  const bruto = (await recibo.body()).toString("latin1");
+  expect(bruto).toContain("(Hotel Rio Tocantins \\(DEMO\\))");
+  expect(bruto).not.toMatch(/Guarese/i);
   expect((await page.request.get(`/api/hotel/${empresaId}/relatorio`)).status()).toBe(403);
   await page.goto(`/e/${empresaId}/hotel/relatorios`);
   await expect(page.getByText("Você não tem acesso ao hotel")).toBeVisible();
@@ -229,6 +255,39 @@ test("o dono vê os relatórios; cliente de outra empresa não vê o hotel", asy
   expect(resposta?.status()).toBe(404);
   expect((await page.request.get(`/api/hotel/${empresaId}/reservas/${reservaId}?doc=conta`)).status()).toBe(403);
   if (anexoId) expect((await page.request.get(`/api/hotel/${empresaId}/comprovantes/${anexoId}`, { maxRedirects: 0 })).status()).toBe(403);
+});
+
+test("dono: cadastra um serviço extra e escolhe o modelo e a cor dos documentos do hotel", async ({ page }) => {
+  test.setTimeout(120_000);
+  await servico!.from("hotel_extras").delete().eq("empresa_id", empresaId).like("nome", "Transfer teste %");
+  const { data: antes } = await servico!.from("hotel_config").select("doc_modelo, doc_cor, doc_whatsapp").eq("empresa_id", empresaId).single();
+  await entrar(page, `hotel@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/hotel/extras`);
+  await page.getByRole("button", { name: "Novo serviço" }).click();
+  const dialogo = page.getByRole("dialog");
+  const nome = `Transfer teste ${Date.now() % 100000}`;
+  await dialogo.locator("#ex-nome").fill(nome);
+  await dialogo.locator("#ex-natureza").selectOption("outro");
+  await dialogo.locator("#ex-unidade").selectOption("uso");
+  await dialogo.locator("#ex-preco").fill("50");
+  await dialogo.getByRole("button", { name: "Salvar serviço" }).click();
+  await expect(page.getByText(`${nome} cadastrado.`)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("cell", { name: nome, exact: true })).toBeVisible();
+  const { data: novo } = await servico!.from("hotel_extras").select("natureza, unidade, preco").eq("empresa_id", empresaId).eq("nome", nome).single();
+  expect(novo).toEqual({ natureza: "outro", unidade: "uso", preco: 50 });
+
+  await page.goto(`/e/${empresaId}/hotel/configuracoes`);
+  await page.getByRole("button", { name: /Faixa colorida/ }).click();
+  await page.getByRole("button", { name: "Cor Vinho" }).click();
+  await page.locator("#doc-whatsapp").fill("(63) 98888-0000");
+  await page.getByRole("button", { name: "Salvar documentos" }).click();
+  await expect(page.getByText("Documentos do hotel atualizados.")).toBeVisible({ timeout: 30_000 });
+  const { data: cfg } = await servico!.from("hotel_config").select("doc_modelo, doc_cor, doc_whatsapp").eq("empresa_id", empresaId).single();
+  expect(cfg).toEqual({ doc_modelo: "faixa", doc_cor: "#7a1f2b", doc_whatsapp: "(63) 98888-0000" });
+
+  // A demonstração volta como estava
+  await servico!.from("hotel_config").update(antes!).eq("empresa_id", empresaId);
+  await servico!.from("hotel_extras").delete().eq("empresa_id", empresaId).like("nome", "Transfer teste %");
 });
 
 test("dono: cadastra vários quartos de uma vez (faixa, pulando um número)", async ({ page }) => {

@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import { ArrowLeftRight, Ban, CircleDollarSign, Loader2, LogIn, LogOut, Minus, Percent, Plus, Search, Trash2, Undo2, UtensilsCrossed, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Campo, Input, Select } from "@/components/ui/form";
+import { Campo, Input, Select, Textarea } from "@/components/ui/form";
 import { CampoValor } from "@/components/ui/campo-valor";
 import { Alerta } from "@/components/ui/feedback";
-import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
+import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import {
   cancelarItemConta,
@@ -33,6 +33,7 @@ export function DialogoCheckin({
   quarto,
   padrao,
   bloqueio,
+  observacoes,
 }: {
   empresaId: string;
   reservaId: string;
@@ -40,6 +41,8 @@ export function DialogoCheckin({
   padrao: { motivo_viagem: string | null; meio_transporte: string | null; placa_veiculo: string | null; procedencia: string | null; destino: string | null };
   /** Motivo que impede o check-in (mostrado antes de tentar). */
   bloqueio?: string | null;
+  /** Observações já anotadas sobre o hóspede (ficam no cadastro dele). */
+  observacoes?: string | null;
 }) {
   const [aberto, setAberto] = React.useState(false);
   return (
@@ -85,6 +88,7 @@ export function DialogoCheckin({
                   <Input id="ci-dest" name="destino" maxLength={120} defaultValue={padrao.destino ?? ""} />
                 </Campo>
               </div>
+              <CampoObservacoesHospede id="ci-obs" padrao={observacoes} erro={estado.erros?.observacoes_hospede} />
               <div className="flex justify-end">
                 <BotaoEnviar pendente={pendente} textoPendente="Fazendo o check-in...">
                   Confirmar check-in
@@ -356,22 +360,53 @@ export function DialogoPagamento({
   );
 }
 
-export function BotaoCheckout({ empresaId, reservaId, saldo }: { empresaId: string; reservaId: string; saldo: number }) {
+/** Observações sobre o hóspede no check-in e no check-out (gravadas no cadastro dele). */
+function CampoObservacoesHospede({ id, padrao, erro }: { id: string; padrao?: string | null; erro?: string[] }) {
   return (
-    <BotaoAcao
-      variante={saldo === 0 ? "sucesso" : "contorno"}
-      acao={fazerCheckout.bind(null, empresaId, reservaId)}
-      confirmar={{
-        titulo: "Fazer o check-out?",
-        descricao:
+    <Campo
+      rotulo="Observações sobre o hóspede"
+      htmlFor={id}
+      erro={erro}
+      ajuda="Opcional. Fica no cadastro do hóspede e aparece nas próximas estadias. Só o hotel vê."
+    >
+      <input type="hidden" name="observacoes_hospede_presente" value="1" />
+      <Textarea id={id} name="observacoes_hospede" rows={3} maxLength={1000} defaultValue={padrao ?? ""} placeholder="Preferências, alergias, cuidados, avisos para a equipe..." />
+    </Campo>
+  );
+}
+
+/** Check-out: fecha a conta (com a chance de anotar algo sobre o hóspede antes). */
+export function BotaoCheckout({ empresaId, reservaId, saldo, observacoes }: { empresaId: string; reservaId: string; saldo: number; observacoes?: string | null }) {
+  const [aberto, setAberto] = React.useState(false);
+  return (
+    <Dialog open={aberto} onOpenChange={setAberto}>
+      <DialogTrigger asChild>
+        <Button variante={saldo === 0 ? "sucesso" : "contorno"}>
+          <LogOut /> Check-out
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        titulo="Fazer o check-out?"
+        descricao={
           saldo === 0
             ? "As diárias até hoje são lançadas na conta, a conta é fechada e o quarto vai para a limpeza."
-            : `A conta ainda tem ${saldo > 0 ? `${formatarMoeda(saldo)} a receber` : `${formatarMoeda(-saldo)} pagos a mais`}. Ajuste os pagamentos antes de fechar.`,
-        textoConfirmar: "Fazer check-out",
-      }}
-    >
-      <LogOut /> Check-out
-    </BotaoAcao>
+            : `A conta ainda tem ${saldo > 0 ? `${formatarMoeda(saldo)} a receber` : `${formatarMoeda(-saldo)} pagos a mais`}. Ajuste os pagamentos antes de fechar.`
+        }
+      >
+        <FormularioAcao acao={fazerCheckout.bind(null, empresaId, reservaId)} aoSucesso={() => setAberto(false)} className="space-y-4">
+          {({ estado, pendente }) => (
+            <>
+              <CampoObservacoesHospede id="co-obs" padrao={observacoes} erro={estado.erros?.observacoes_hospede} />
+              <div className="flex justify-end">
+                <BotaoEnviar pendente={pendente} textoPendente="Fechando a conta...">
+                  Fazer check-out
+                </BotaoEnviar>
+              </div>
+            </>
+          )}
+        </FormularioAcao>
+      </DialogContent>
+    </Dialog>
   );
 }
 

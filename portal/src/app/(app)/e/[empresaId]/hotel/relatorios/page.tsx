@@ -8,7 +8,7 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
 import { obterContextoHotel } from "@/lib/hotel/contexto";
 import { carregarRelatorio, mesAnterior, proximoMes } from "@/lib/hotel/relatorio";
-import { FORMAS_PAGAMENTO_HOTEL, ORIGENS, diaDaSemana, type FormaPagamentoHotel } from "@/lib/hotel/rotulos";
+import { FORMAS_PAGAMENTO_HOTEL, ORIGENS, SETORES, diaDaSemana, type FormaPagamentoHotel } from "@/lib/hotel/rotulos";
 import { hojeLocal } from "@/lib/gestao/contexto";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { nomeMes } from "@/lib/formatos";
@@ -102,11 +102,12 @@ export default async function PaginaRelatoriosHotel({ params, searchParams }: Pa
                 ["Receita de diárias", formatarMoeda(i.receitaDiarias)],
                 ["Consumo (restaurante, bar, frigobar)", formatarMoeda(i.receitaConsumo)],
                 ["Serviços e descontos", formatarMoeda(i.receitaServicos)],
+                ...i.porServico.map((sv) => [`   ${SETORES[sv.setor] ?? sv.setor}`, formatarMoeda(sv.total)]),
                 ["Cancelamentos", String(i.canceladas)],
                 ["Não comparecimentos (no-show)", String(i.noShow)],
               ].map(([r, v]) => (
-                <div key={r} className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">{r}</dt>
+                <div key={r} className={cn("flex justify-between gap-3", r.startsWith("   ") && "pl-4 text-xs")}>
+                  <dt className="text-muted-foreground">{r.trim()}</dt>
                   <dd className="whitespace-nowrap font-medium numero">{v}</dd>
                 </div>
               ))}

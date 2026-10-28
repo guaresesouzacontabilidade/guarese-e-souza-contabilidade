@@ -67,6 +67,32 @@ describe("indicadores do hotel", () => {
     expect(ind.porDia.find((d) => d.data === "2026-09-06")?.ocupados).toBe(1);
     expect(noitesNoPeriodo({ entrada: "2026-08-30", saida: "2026-09-03" }, "2026-09-01", "2026-09-11")).toBe(2);
   });
+
+  it("separa os serviços extras por tipo (refeições, lavanderia, aluguel), sem os descontos", () => {
+    const ind = calcularIndicadores({
+      de: "2026-09-01",
+      ate: "2026-09-02",
+      quartos: 1,
+      reservas: [],
+      itens: [
+        { tipo: "servico", total: 66, setor: "alimentacao" },
+        { tipo: "servico", total: 44, setor: "alimentacao" },
+        { tipo: "servico", total: 62.5, setor: "lavanderia" },
+        { tipo: "servico", total: 360, setor: "locacao" },
+        { tipo: "servico", total: 30, setor: null },
+        { tipo: "desconto", total: -20 },
+      ],
+      canceladas: 0,
+      noShow: 0,
+    });
+    expect(ind.receitaServicos).toBe(542.5);
+    expect(ind.porServico).toEqual([
+      { setor: "locacao", total: 360 },
+      { setor: "alimentacao", total: 110 },
+      { setor: "lavanderia", total: 62.5 },
+      { setor: "outro", total: 30 },
+    ]);
+  });
 });
 
 describe("menu do hotel", () => {

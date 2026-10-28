@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, NotebookPen } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
-import { BotaoExcluirHospede, DialogoHospede } from "@/components/hotel/hospede";
+import { BotaoExcluirHospede, DialogoHospede, DialogoObservacoesHospede } from "@/components/hotel/hospede";
 import { obterContextoHotel } from "@/lib/hotel/contexto";
 import { GENEROS, STATUS_RESERVA, TIPOS_DOCUMENTO, VARIANTE_STATUS, diaMes, noites, type StatusReserva } from "@/lib/hotel/rotulos";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarCep, formatarCpf, formatarData, formatarTelefone } from "@/lib/formatos";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Hóspede" };
 
@@ -80,7 +81,15 @@ export default async function PaginaHospede({ params }: PageProps<"/e/[empresaId
                 </div>
               ))}
             </dl>
-            {h.observacoes ? <p className="mt-3 whitespace-pre-line rounded-lg bg-muted/50 p-3 text-sm">{h.observacoes}</p> : null}
+            <div className={cn("mt-3 rounded-lg p-3 text-sm", h.observacoes ? "border border-alerta/40 bg-alerta-bg/40" : "bg-muted/40")}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <NotebookPen className="size-4 shrink-0" /> Observações
+                </span>
+                <DialogoObservacoesHospede empresaId={empresaId} hospedeId={h.id} nome={h.nome} observacoes={h.observacoes} />
+              </div>
+              {h.observacoes ? <p className="mt-2 whitespace-pre-line">{h.observacoes}</p> : <p className="mt-1 text-xs text-muted-foreground">Nada anotado (só o hotel vê).</p>}
+            </div>
           </CardContent>
         </Card>
         <Card>

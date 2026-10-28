@@ -172,6 +172,7 @@ export async function semearHotel(
     const { count } = await admin.from("hotel_quartos").select("id", { count: "exact", head: true }).eq("empresa_id", existente.id);
     if (count) {
       await anexarComprovanteDemo(admin, existente.id);
+      await semearExtrasDemo(admin, conexao, opcoes.dominio, existente.id);
       return false;
     }
   }
@@ -638,6 +639,7 @@ export async function semearHotel(
   }
 
   await anexarComprovanteDemo(admin, empresaId);
+  await semearExtrasDemo(admin, conexao, opcoes.dominio, empresaId);
 
   // Logo fictícia
   const { data: e } = await admin.from("empresas").select("logo_path").eq("id", empresaId).single();
@@ -685,4 +687,66 @@ export async function anexarComprovanteDemo(admin: SupabaseClient, empresaId: st
       confirmado_em: new Date().toISOString(),
     }),
   );
+}
+
+/**
+ * Serviços extras com preço fixo (marmita, refeição, lavanderia por peça e
+ * aluguel de carro por dia), alguns já lançados na conta de quem está
+ * hospedado, uma observação sobre um hóspede e a cor e os contatos dos
+ * documentos do hotel. Só na primeira vez (o gerente pode mudar tudo depois).
+ */
+export async function semearExtrasDemo(admin: SupabaseClient, conexao: { url: string; publica: string }, dominio: string, empresaId: string) {
+  const { count } = await admin.from("hotel_extras").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  if (count) return;
+  const dono = await sessao(admin, conexao.url, conexao.publica, `hotel@${dominio}`);
+  const recepcao = await sessao(admin, conexao.url, conexao.publica, `recepcao@${dominio}`);
+  try {
+    const extra = new Map<string, string>();
+    for (const [chave, dados] of [
+      ["marmita", { nome: "Marmita", natureza: "alimentacao", unidade: "marmita", preco: "22" }],
+      ["refeicao", { nome: "Refeição executiva", natureza: "alimentacao", unidade: "refeicao", preco: "35" }],
+      ["lavanderia", { nome: "Lavanderia (por peça)", natureza: "lavanderia", unidade: "peca", preco: "12" }],
+      ["carro", { nome: "Aluguel de carro", natureza: "locacao", unidade: "dia", preco: "180" }],
+    ] as [string, Record<string, string>][]) {
+      extra.set(chave, ok(`serviço extra ${chave}`, await dono.rpc("hotel_extra_salvar", { p_empresa_id: empresaId, p_id: null, p_dados: dados })) as string);
+    }
+    ok(
+      "documentos do hotel",
+      await dono.rpc("hotel_documentos_configurar", {
+        p_empresa_id: empresaId,
+        p_dados: { modelo: "classico", cor: "#1f6f4a", whatsapp: "(63) 99999-2222", site: "@hotelriotocantins.demo", cadastur: "00.000000.00.0000-0 (DEMO)" },
+      }),
+    );
+    const { data } = await admin
+      .from("hotel_reservas")
+      .select("id, hospede_id, quarto:hotel_quartos!hotel_reservas_empresa_id_quarto_id_fkey(numero)")
+      .eq("empresa_id", empresaId)
+      .eq("status", "hospedado");
+    const hospedados = (data ?? []) as unknown as { id: string; hospede_id: string; quarto: { numero: string } | null }[];
+    const no = (numero: string, k: number) => hospedados.find((h) => h.quarto?.numero === numero) ?? hospedados[k];
+    const r205 = no("205", 0);
+    const r201 = no("201", 1);
+    if (r205) {
+      ok(
+        "extras 205",
+        await recepcao.rpc("hotel_extras_lancar", {
+          p_reserva_id: r205.id,
+          p_dados: { itens: [{ extra_id: extra.get("marmita"), quantidade: "2" }, { extra_id: extra.get("carro"), quantidade: "2" }] },
+        }),
+      );
+      ok("observação do hóspede", await recepcao.rpc("hotel_hospede_observacoes", { p_hospede_id: r205.hospede_id, p_texto: "Prefere quarto no térreo. Alergia a camarão. (DEMONSTRAÇÃO)" }));
+    }
+    if (r201 && r201.id !== r205?.id) {
+      ok(
+        "extras 201",
+        await recepcao.rpc("hotel_extras_lancar", {
+          p_reserva_id: r201.id,
+          p_dados: { itens: [{ extra_id: extra.get("refeicao"), quantidade: "3" }, { extra_id: extra.get("lavanderia"), quantidade: "5" }] },
+        }),
+      );
+    }
+  } finally {
+    await dono.auth.signOut({ scope: "local" });
+    await recepcao.auth.signOut({ scope: "local" });
+  }
 }

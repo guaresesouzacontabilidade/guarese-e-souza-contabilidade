@@ -76,8 +76,38 @@ export const SETORES: Record<string, string> = {
   frigobar: "Frigobar",
   lavanderia: "Lavanderia",
   recepcao: "Recepção",
+  alimentacao: "Refeições",
+  locacao: "Aluguel",
   outro: "Outro",
 };
+
+/** Serviços extras com preço fixo: o tipo separa a receita para a contabilidade. */
+export type NaturezaExtra = "alimentacao" | "lavanderia" | "locacao" | "outro";
+export const NATUREZAS_EXTRA: Record<NaturezaExtra, { rotulo: string; ajuda: string }> = {
+  alimentacao: { rotulo: "Refeições e marmitas", ajuda: "Alimentação vendida a preço fixo (refeição, marmita, café avulso)." },
+  lavanderia: { rotulo: "Lavanderia", ajuda: "Lavagem e passadoria (por peça, por kg ou por uso)." },
+  locacao: { rotulo: "Aluguel (carro e outros)", ajuda: "Aluguel de carro, bicicleta ou equipamento, por dia ou hora." },
+  outro: { rotulo: "Outros serviços", ajuda: "Transfer, estacionamento, passeio..." },
+};
+
+export type UnidadeExtra = "refeicao" | "marmita" | "unidade" | "peca" | "kg" | "uso" | "dia" | "hora";
+export const UNIDADES_EXTRA: Record<UnidadeExtra, { um: string; varios: string }> = {
+  refeicao: { um: "refeição", varios: "refeições" },
+  marmita: { um: "marmita", varios: "marmitas" },
+  unidade: { um: "unidade", varios: "unidades" },
+  peca: { um: "peça", varios: "peças" },
+  kg: { um: "kg", varios: "kg" },
+  uso: { um: "uso", varios: "usos" },
+  dia: { um: "dia", varios: "dias" },
+  hora: { um: "hora", varios: "horas" },
+};
+
+/** "3 dias", "1 marmita", "2,5 kg". */
+export function quantidadeExtra(qtd: number, unidade: string) {
+  const u = UNIDADES_EXTRA[unidade as UnidadeExtra];
+  const n = qtd.toLocaleString("pt-BR", { maximumFractionDigits: 3 });
+  return u ? `${n} ${qtd === 1 ? u.um : u.varios}` : n;
+}
 
 export const TIPOS_ITEM: Record<string, string> = {
   diaria: "Diária",
@@ -150,3 +180,22 @@ const SEMANA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 export function diaDaSemana(data: string) {
   return SEMANA[new Date(`${data}T12:00:00Z`).getUTCDay()];
 }
+
+/** Documentos entregues ao hóspede (ficha, confirmação, extrato e recibo) com a identidade do hotel. */
+export type ModeloDocumento = "classico" | "faixa" | "economico";
+export const MODELOS_DOCUMENTO: Record<ModeloDocumento, { rotulo: string; descricao: string }> = {
+  classico: { rotulo: "Clássico", descricao: "Logo à esquerda, contatos à direita e uma linha na cor do hotel." },
+  faixa: { rotulo: "Faixa colorida", descricao: "Faixa na cor do hotel no topo, com a logo em destaque." },
+  economico: { rotulo: "Econômico", descricao: "Centralizado, em preto e branco: gasta menos tinta." },
+};
+export const COR_PADRAO_DOCUMENTO = "#1f3b57";
+export const CORES_DOCUMENTO: { cor: string; nome: string }[] = [
+  { cor: "#1f3b57", nome: "Azul-marinho" },
+  { cor: "#1f6f4a", nome: "Verde" },
+  { cor: "#7a1f2b", nome: "Vinho" },
+  { cor: "#4a2c1d", nome: "Marrom" },
+  { cor: "#b45309", nome: "Terracota" },
+  { cor: "#0e7490", nome: "Azul-petróleo" },
+  { cor: "#5b3a8c", nome: "Roxo" },
+  { cor: "#2b2b2b", nome: "Grafite" },
+];

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, FileText, Pencil, Printer, UserRound, UtensilsCrossed } from "lucide-react";
+import { CalendarDays, FileText, NotebookPen, Pencil, Printer, Soup, UserRound, UtensilsCrossed } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Alerta } from "@/components/ui/feedback";
 import { Table, TBody, TFoot, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
 import { AnexarComprovante, ComprovantesDoPagamento } from "@/components/hotel/comprovantes";
+import { DialogoObservacoesHospede } from "@/components/hotel/hospede";
 import {
   BotaoCheckout,
   CancelarItem,
@@ -148,6 +149,7 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
             quarto={r.quarto?.numero ?? ""}
             bloqueio={bloqueioCheckin}
             padrao={{ motivo_viagem: r.motivo_viagem, meio_transporte: r.meio_transporte, placa_veiculo: r.placa_veiculo, procedencia: r.procedencia, destino: r.destino }}
+            observacoes={h?.observacoes}
           />
           <DialogoTrocarQuarto empresaId={empresaId} reservaId={r.id} quartos={opcoesTroca} />
           <DialogoCancelarReserva empresaId={empresaId} reservaId={r.id} podeNoShow={r.entrada <= hoje} />
@@ -162,6 +164,11 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
           <Button asChild variante="contorno" tamanho="sm">
             <Link href={`${base}/consumo?reserva=${r.id}`}>
               <UtensilsCrossed /> Lançar consumo
+            </Link>
+          </Button>
+          <Button asChild variante="contorno" tamanho="sm">
+            <Link href={`${base}/extras?reserva=${r.id}`}>
+              <Soup /> Serviços extras
             </Link>
           </Button>
           <DialogoServico empresaId={empresaId} reservaId={r.id} />
@@ -243,7 +250,7 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
                     <Td colSpan={3} className="font-semibold">
                       Total {status === "encerrada" ? "" : hospedado ? "se sair hoje" : "previsto"}
                     </Td>
-                    <Td className="text-right font-semibold numero">{formatarMoeda(resumo?.total ?? 0)}</Td>
+                    <Td className="whitespace-nowrap text-right font-semibold numero">{formatarMoeda(resumo?.total ?? 0)}</Td>
                     {ctx.gerente && hospedado ? <Td /> : null}
                   </Tr>
                 </TFoot>
@@ -336,7 +343,7 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
               ) : null}
               {hospedado ? (
                 <div className="pt-3">
-                  <BotaoCheckout empresaId={empresaId} reservaId={r.id} saldo={saldo} />
+                  <BotaoCheckout empresaId={empresaId} reservaId={r.id} saldo={saldo} observacoes={h?.observacoes} />
                 </div>
               ) : null}
               {status === "encerrada" ? <p className="pt-2 text-xs text-muted-foreground">Check-out em {formatarDataHora(r.checkout_em)}.</p> : null}
@@ -365,6 +372,19 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
                 <Linha rotulo="Cidade" valor={h?.cidade ? `${h.cidade}${h.uf ? `/${h.uf}` : ""}` : null} />
                 {acompanhantes.length ? <Linha rotulo="Acompanhantes" valor={acompanhantes.map((a) => a.nome).join(", ")} /> : null}
               </dl>
+              <div className={cn("mt-3 rounded-lg p-3 text-sm", h?.observacoes ? "border border-alerta/40 bg-alerta-bg/40" : "bg-muted/40")}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <NotebookPen className="size-4 shrink-0" /> Observações
+                  </span>
+                  {h ? <DialogoObservacoesHospede empresaId={empresaId} hospedeId={r.hospede_id} nome={h.nome} observacoes={h.observacoes} /> : null}
+                </div>
+                {h?.observacoes ? (
+                  <p className="mt-2 whitespace-pre-line">{h.observacoes}</p>
+                ) : (
+                  <p className="mt-1 text-xs text-muted-foreground">Nada anotado. Anote preferências, alergias ou avisos para a equipe (só o hotel vê).</p>
+                )}
+              </div>
               {!h?.cpf && !h?.documento ? (
                 <Alerta tom="alerta" className="mt-3">
                   Falta o documento para a ficha de registro.{" "}

@@ -24,7 +24,7 @@ export async function carregarRelatorio(supabase: Supa, empresaId: string, de: s
       .gt("saida", de),
     supabase
       .from("hotel_conta_itens")
-      .select("tipo, total, reserva:hotel_reservas!hotel_conta_itens_empresa_id_reserva_id_fkey(categoria:hotel_categorias!hotel_reservas_empresa_id_categoria_id_fkey(nome))")
+      .select("tipo, total, setor, reserva:hotel_reservas!hotel_conta_itens_empresa_id_reserva_id_fkey(categoria:hotel_categorias!hotel_reservas_empresa_id_categoria_id_fkey(nome))")
       .eq("empresa_id", empresaId)
       .is("cancelado_em", null)
       .gte("data", de)
@@ -37,7 +37,7 @@ export async function carregarRelatorio(supabase: Supa, empresaId: string, de: s
     ate,
     quartos: quartos ?? 0,
     reservas: (reservas ?? []).map((r) => ({ status: r.status, entrada: r.entrada, saida: r.saida, origem: r.origem, categoria: r.categoria?.nome ?? "—" })),
-    itens: (itens ?? []).map((i) => ({ tipo: i.tipo, total: Number(i.total), categoria: i.reserva?.categoria?.nome })),
+    itens: (itens ?? []).map((i) => ({ tipo: i.tipo, total: Number(i.total), categoria: i.reserva?.categoria?.nome, setor: i.setor })),
     canceladas: (perdidas ?? []).filter((p) => p.status === "cancelada").length,
     noShow: (perdidas ?? []).filter((p) => p.status === "no_show").length,
   });

@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { NotebookPen, Pencil, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Campo, Input, Select, Textarea } from "@/components/ui/form";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
-import { excluirHospede, salvarHospede } from "@/lib/hotel/acoes";
+import { excluirHospede, salvarHospede, salvarObservacoesHospede } from "@/lib/hotel/acoes";
 import { GENEROS, TIPOS_DOCUMENTO } from "@/lib/hotel/rotulos";
 
 export interface HospedeForm {
@@ -105,11 +105,25 @@ export function CamposHospede({ prefixo = "", h, erros, completo = true }: { pre
             <Campo rotulo="CEP" htmlFor={id("cep")} erro={e("cep")}>
               <Input id={id("cep")} name={n("cep")} inputMode="numeric" maxLength={9} defaultValue={h?.cep ?? ""} />
             </Campo>
-            <Campo rotulo="Observações (preferências, alergias)" htmlFor={id("observacoes")} className="sm:col-span-2">
-              <Textarea id={id("observacoes")} name={n("observacoes")} rows={2} maxLength={1000} defaultValue={h?.observacoes ?? ""} />
-            </Campo>
           </div>
         </details>
+      ) : null}
+      {completo ? (
+        <Campo
+          rotulo="Observações sobre o hóspede"
+          htmlFor={id("observacoes")}
+          erro={e("observacoes")}
+          ajuda="Preferências, alergias, cuidados e avisos para a equipe. Só o hotel vê: não sai nos documentos do hóspede."
+        >
+          <Textarea
+            id={id("observacoes")}
+            name={n("observacoes")}
+            rows={3}
+            maxLength={1000}
+            defaultValue={h?.observacoes ?? ""}
+            placeholder="Prefere quarto no térreo. Alergia a camarão. Chega tarde, deixar a chave na portaria."
+          />
+        </Campo>
       ) : null}
     </div>
   );
@@ -147,6 +161,44 @@ export function DialogoHospede({ empresaId, hospede, abrirAoCriar = false }: { e
               <CamposHospede h={hospede} erros={estado.erros} />
               <div className="flex justify-end">
                 <BotaoEnviar pendente={pendente}>Salvar</BotaoEnviar>
+              </div>
+            </>
+          )}
+        </FormularioAcao>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Observações sobre o hóspede (preferências, alergias, cuidados): a recepção anota a qualquer momento. */
+export function DialogoObservacoesHospede({ empresaId, hospedeId, nome, observacoes }: { empresaId: string; hospedeId: string; nome: string; observacoes: string | null }) {
+  const [aberto, setAberto] = React.useState(false);
+  return (
+    <Dialog open={aberto} onOpenChange={setAberto}>
+      <DialogTrigger asChild>
+        <Button variante={observacoes ? "fantasma" : "contorno"} tamanho="sm" aria-label={observacoes ? "Editar as observações sobre o hóspede" : "Anotar observação sobre o hóspede"}>
+          <NotebookPen /> {observacoes ? "Editar" : "Anotar"}
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        titulo={`Observações sobre ${nome}`}
+        descricao="Ficam no cadastro do hóspede e aparecem nas próximas estadias. Só a equipe do hotel vê: não saem nos documentos entregues ao hóspede."
+      >
+        <FormularioAcao acao={salvarObservacoesHospede.bind(null, empresaId, hospedeId)} aoSucesso={() => setAberto(false)} className="space-y-4">
+          {({ estado, pendente }) => (
+            <>
+              <Campo rotulo="Observações" htmlFor="ob-texto" erro={estado.erros?.observacoes}>
+                <Textarea
+                  id="ob-texto"
+                  name="observacoes"
+                  rows={5}
+                  maxLength={1000}
+                  defaultValue={observacoes ?? ""}
+                  placeholder="Prefere quarto no térreo. Alergia a camarão. Pede travesseiro extra."
+                />
+              </Campo>
+              <div className="flex justify-end">
+                <BotaoEnviar pendente={pendente}>Salvar observações</BotaoEnviar>
               </div>
             </>
           )}

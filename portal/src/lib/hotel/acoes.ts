@@ -362,12 +362,34 @@ export async function cancelarReserva(empresaId: string, reservaId: string, _a: 
   });
 }
 
+/**
+ * Observações sobre o hóspede digitadas no check-in ou no check-out: o hóspede
+ * vem da própria reserva (não do navegador) e só grava se o texto mudou.
+ */
+async function gravarObservacoesDaReserva(ctx: Awaited<ReturnType<typeof contexto>>, empresaId: string, reservaId: string, fd?: FormData): Promise<string | null> {
+  if (!fd?.has("observacoes_hospede_presente")) return null;
+  const novo = texto(fd, "observacoes_hospede");
+  if (novo.length > 1000) return "As observações podem ter até 1.000 letras.";
+  const { data: r } = await ctx.supabase
+    .from("hotel_reservas")
+    .select("hospede_id, hospede:hotel_hospedes!hotel_reservas_empresa_id_hospede_id_fkey(observacoes)")
+    .eq("empresa_id", empresaId)
+    .eq("id", reservaId)
+    .maybeSingle();
+  if (!r) return "Reserva não encontrada.";
+  if ((r.hospede?.observacoes ?? "") === novo) return null;
+  const { error } = await ctx.supabase.rpc("hotel_hospede_observacoes", { p_hospede_id: r.hospede_id, p_texto: novo });
+  return error ? mensagemErro(error) : null;
+}
+
 export async function fazerCheckin(empresaId: string, reservaId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   return executar(async () => {
     if (!UUID.test(reservaId)) return falha("Reserva inválida.");
     const ctx = await contexto(empresaId);
     const placa = texto(fd, "placa_veiculo").toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (placa && !/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(placa)) return falha("Placa inválida.", { placa_veiculo: ["Placa no formato ABC1D23 ou ABC1234."] });
+    const erroObs = await gravarObservacoesDaReserva(ctx, empresaId, reservaId, fd);
+    if (erroObs) return falha(erroObs, { observacoes_hospede: [erroObs] });
     const { error } = await ctx.supabase.rpc("hotel_checkin", {
       p_reserva_id: reservaId,
       p_dados: {
@@ -417,6 +439,105 @@ export async function lancarConsumo(
     revalidatePath(`/e/${empresaId}/loja`, "layout");
     const r = data as { itens: number; total: number };
     return sucesso(`${r.itens} item(ns) lançado(s) na conta do quarto.`, { total: Number(r.total) });
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Serviços extras com preço fixo (refeições e marmitas, lavanderia, aluguel de carro...)
+// -----------------------------------------------------------------------------
+export async function salvarExtra(empresaId: string, extraId: string | null, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  return executar(async () => {
+    if (extraId && !UUID.test(extraId)) return falha("Serviço inválido.");
+    const ctx = await contexto(empresaId, true);
+    const nome = texto(fd, "nome");
+    const preco = valor(texto(fd, "preco"));
+    const erros: Record<string, string[]> = {};
+    if (nome.length < 2 || nome.length > 80) erros.nome = ["Dê um nome (2 a 80 letras), ex.: Marmita, Lavanderia por peça, Aluguel de carro."];
+    if (!preco) erros.preco = ["Informe o preço."];
+    if (!texto(fd, "natureza")) erros.natureza = ["Escolha o tipo."];
+    if (!texto(fd, "unidade")) erros.unidade = ["Escolha como é contado."];
+    if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
+    const { error } = await ctx.supabase.rpc("hotel_extra_salvar", {
+      p_empresa_id: empresaId,
+      p_id: extraId as string,
+      p_dados: {
+        nome,
+        natureza: texto(fd, "natureza"),
+        unidade: texto(fd, "unidade"),
+        preco,
+        ativo: !fd.has("ativo_presente") || fd.get("ativo") === "on",
+      },
+    });
+    if (error) return falha(mensagemErro(error));
+    revalidarHotel(empresaId);
+    return sucesso(extraId ? `${nome} atualizado.` : `${nome} cadastrado.`);
+  });
+}
+
+/** Lança os serviços extras na conta do hóspede: quantidade × preço (preço diferente do cadastro só o gerente). */
+export async function lancarExtras(
+  empresaId: string,
+  reservaId: string,
+  itens: { extra_id: string; quantidade: string; valor_unitario?: string | null }[],
+  data?: string | null,
+): Promise<ResultadoAcao<{ itens: number }>> {
+  return executar(async () => {
+    if (!UUID.test(reservaId)) return falha("Escolha o quarto (hóspede).");
+    if (!itens.length) return falha("Escolha pelo menos um serviço.");
+    if (itens.some((i) => !UUID.test(i.extra_id) || !lerValorBR(i.quantidade)?.gt(0))) return falha("Confira as quantidades.");
+    if (itens.some((i) => i.valor_unitario != null && i.valor_unitario !== "" && !valor(i.valor_unitario))) return falha("Confira os preços.");
+    if (data && !DATA.test(data)) return falha("Data inválida.");
+    const ctx = await contexto(empresaId);
+    const { data: n, error } = await ctx.supabase.rpc("hotel_extras_lancar", {
+      p_reserva_id: reservaId,
+      p_dados: {
+        data: data || null,
+        itens: itens.map((i) => ({ extra_id: i.extra_id, quantidade: lerValorBR(i.quantidade)!.toString(), valor_unitario: i.valor_unitario ? valor(i.valor_unitario) : null })),
+      },
+    });
+    if (error) return falha(mensagemErro(error));
+    revalidarHotel(empresaId);
+    return sucesso(`${n} serviço(s) lançado(s) na conta do quarto.`, { itens: Number(n) });
+  });
+}
+
+/** Observações sobre o hóspede (preferências, alergias, cuidados): a recepção atualiza. */
+export async function salvarObservacoesHospede(empresaId: string, hospedeId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  return executar(async () => {
+    if (!UUID.test(hospedeId)) return falha("Hóspede inválido.");
+    const ctx = await contexto(empresaId);
+    const texto_ = texto(fd, "observacoes");
+    if (texto_.length > 1000) return falha("As observações podem ter até 1.000 letras.", { observacoes: ["Até 1.000 letras."] });
+    const { error } = await ctx.supabase.rpc("hotel_hospede_observacoes", { p_hospede_id: hospedeId, p_texto: texto_ });
+    if (error) return falha(mensagemErro(error));
+    revalidarHotel(empresaId);
+    return sucesso("Observações salvas.");
+  });
+}
+
+/** Documentos do hotel (ficha, confirmação, extrato e recibo): modelo, cor e os dados do cabeçalho. */
+export async function salvarDocumentosHotel(empresaId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  return executar(async () => {
+    const ctx = await contexto(empresaId, true);
+    const email = texto(fd, "email");
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return falha("Confira o e-mail.", { email: ["E-mail inválido."] });
+    const { error } = await ctx.supabase.rpc("hotel_documentos_configurar", {
+      p_empresa_id: empresaId,
+      p_dados: {
+        modelo: texto(fd, "modelo"),
+        cor: texto(fd, "cor"),
+        nome: texto(fd, "nome").slice(0, 120),
+        endereco: texto(fd, "endereco").slice(0, 300),
+        telefone: texto(fd, "telefone").slice(0, 40),
+        whatsapp: texto(fd, "whatsapp").slice(0, 40),
+        email: email.slice(0, 200),
+        site: texto(fd, "site").slice(0, 200),
+        cadastur: texto(fd, "cadastur").slice(0, 40),
+      },
+    });
+    if (error) return falha(mensagemErro(error));
+    revalidarHotel(empresaId);
+    return sucesso("Documentos do hotel atualizados.");
   });
 }
 
@@ -493,10 +614,12 @@ export async function estornarPagamento(empresaId: string, pagamentoId: string, 
   });
 }
 
-export async function fazerCheckout(empresaId: string, reservaId: string): Promise<ResultadoAcao> {
+export async function fazerCheckout(empresaId: string, reservaId: string, _a?: ResultadoAcao, fd?: FormData): Promise<ResultadoAcao> {
   return executar(async () => {
     if (!UUID.test(reservaId)) return falha("Reserva inválida.");
     const ctx = await contexto(empresaId);
+    const erroObs = await gravarObservacoesDaReserva(ctx, empresaId, reservaId, fd);
+    if (erroObs) return falha(erroObs, { observacoes_hospede: [erroObs] });
     const { error } = await ctx.supabase.rpc("hotel_checkout", { p_reserva_id: reservaId });
     if (error) return falha(mensagemErro(error));
     revalidarHotel(empresaId);

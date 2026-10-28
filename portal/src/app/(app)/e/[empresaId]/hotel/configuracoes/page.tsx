@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CabecalhoPagina } from "@/components/ui/pagina";
-import { Card, CardContent } from "@/components/ui/card";
+import { FileText } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alerta } from "@/components/ui/feedback";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
 import { FormConfigHotel } from "@/components/hotel/cadastros";
+import { FormDocumentosHotel } from "@/components/hotel/documentos";
+import { LogoEmpresa } from "@/components/empresas/logo-empresa";
 import { obterContextoHotel } from "@/lib/hotel/contexto";
+import { enderecoDoCadastro } from "@/lib/hotel/documento";
+import { formatarTelefone } from "@/lib/formatos";
 
 export const metadata: Metadata = { title: "Configurações do hotel" };
 
@@ -13,10 +18,19 @@ export default async function PaginaConfigHotel({ params }: PageProps<"/e/[empre
   const { empresaId } = await params;
   const ctx = await obterContextoHotel(empresaId);
   if (!ctx.gerente) return <HotelIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativo={ctx.hotelAtivo} />;
-  const { data: cfg } = await ctx.supabase.from("hotel_config").select("*").eq("empresa_id", empresaId).maybeSingle();
+  const [{ data: cfg }, { data: empresa }, { data: ultima }] = await Promise.all([
+    ctx.supabase.from("hotel_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase
+      .from("empresas")
+      .select("razao_social, nome_fantasia, logo_path, logradouro, numero, complemento, bairro, cidade, uf, cep, telefone, email")
+      .eq("id", empresaId)
+      .maybeSingle(),
+    ctx.supabase.from("hotel_reservas").select("id, numero").eq("empresa_id", empresaId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const { data: logo } = empresa?.logo_path ? await ctx.supabase.storage.from("empresas-logos").createSignedUrl(empresa.logo_path, 600) : { data: null };
   return (
     <>
-      <CabecalhoPagina titulo="Configurações do hotel" descricao="Horários, taxa de serviço e as regras que aparecem na confirmação da reserva." />
+      <CabecalhoPagina titulo="Configurações do hotel" descricao="Horários, taxa de serviço, as regras da confirmação da reserva e a aparência dos documentos do hotel." />
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardContent className="pt-5">
@@ -55,6 +69,59 @@ export default async function PaginaConfigHotel({ params }: PageProps<"/e/[empre
           </Alerta>
         </div>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="size-4" /> Documentos do hotel
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            A ficha do hóspede, a confirmação da reserva, o extrato e o recibo da conta saem com a cara do hotel: só a logo dele, a cor escolhida e os contatos abaixo.
+          </p>
+        </CardHeader>
+        <CardContent className="grid gap-6 lg:grid-cols-[1fr_280px]">
+          <FormDocumentosHotel
+            empresaId={empresaId}
+            config={{
+              modelo: cfg?.doc_modelo === "faixa" || cfg?.doc_modelo === "economico" ? cfg.doc_modelo : "classico",
+              cor: cfg?.doc_cor ?? null,
+              nome: cfg?.doc_nome ?? null,
+              endereco: cfg?.doc_endereco ?? null,
+              telefone: cfg?.doc_telefone ?? null,
+              whatsapp: cfg?.doc_whatsapp ?? null,
+              email: cfg?.doc_email ?? null,
+              site: cfg?.doc_site ?? null,
+              cadastur: cfg?.doc_cadastur ?? null,
+            }}
+            padroes={{
+              nome: empresa?.nome_fantasia ?? empresa?.razao_social ?? "",
+              endereco: empresa ? enderecoDoCadastro(empresa) : "",
+              telefone: empresa?.telefone ? formatarTelefone(empresa.telefone) : "",
+              email: empresa?.email ?? "",
+            }}
+            logoUrl={logo?.signedUrl ?? null}
+            previa={ultima ? { reservaId: ultima.id, numero: ultima.numero } : null}
+          />
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Logo do hotel</p>
+            {ctx.pode("empresa.editar") ? (
+              <LogoEmpresa empresaId={empresaId} logoUrl={logo?.signedUrl ?? null} podeEditar />
+            ) : (
+              <>
+                <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border bg-muted p-3">
+                  {logo?.signedUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logo.signedUrl} alt="Logo do hotel" className="max-h-full max-w-full object-contain" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Sem logo</span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">É a logo do cadastro da empresa. Para trocar, envie a imagem (PNG ou JPG) ao escritório.</p>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 }
