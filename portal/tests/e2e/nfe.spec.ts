@@ -50,6 +50,8 @@ test.skip(process.env.NOTAS_AUTOMATICAS_SEM_REDE !== "1", "Só roda com as consu
 let empresaId = "";
 let documento = "";
 
+const OPERACAO_FRETE = "Venda de milho para outro estado (DEMO)";
+
 async function limpar() {
   if (!empresaId) return;
   await servico!.from("nfe_guias").delete().eq("empresa_id", empresaId);
@@ -58,6 +60,7 @@ async function limpar() {
   await servico!.from("nfe_config").update({ ativa: false }).eq("empresa_id", empresaId);
   await servico!.from("certificados_digitais").delete().eq("empresa_id", empresaId).eq("titular", "CERTIFICADO FICTICIO (E2E)");
   await servico!.from("jobs").delete().eq("empresa_id", empresaId).in("tipo", ["emitir_nfe", "evento_nfe"]);
+  await servico!.from("nfe_operacoes").update({ frete_icms_retido: false }).eq("empresa_id", empresaId).eq("nome", OPERACAO_FRETE);
 }
 
 test.beforeAll(async () => {
@@ -119,6 +122,8 @@ test("equipe: com a emissão ligada confere ICMS, FUNRURAL e guia e vê que nada
     .from("nfe_config")
     .update({ ativa: true, autorizacao_texto: "Teste automático (E2E).", autorizado_em: new Date().toISOString() })
     .eq("empresa_id", empresaId);
+  // A operação retém o ICMS do frete (frete de caminhoneiro autônomo contratado pelo vendedor)
+  await servico!.from("nfe_operacoes").update({ frete_icms_retido: true, frete_aliquota: 12, frete_cfop: "6360" }).eq("empresa_id", empresaId).eq("nome", OPERACAO_FRETE);
 
   await entrar(page, `contador@${DOMINIO}`);
   await page.goto(`/e/${empresaId}/notas-produto`);
@@ -131,6 +136,12 @@ test("equipe: com a emissão ligada confere ICMS, FUNRURAL e guia e vê que nada
   await page.locator("#p-1").selectOption({ label: "MILHO EM GRAOS (SC)" });
   await page.fill("#q-1", "1000");
   await page.fill("#v-1", "55,00");
+  // O ICMS do frete só é pedido quando o vendedor contrata o frete; frete por conta do comprador sai sem ele
+  await page.locator("#modalidade").selectOption("0");
+  await expect(page.locator("#frete-servico")).toBeVisible();
+  await page.locator("#modalidade").selectOption("1");
+  await expect(page.locator("#frete-servico")).toHaveCount(0);
+  await expect(page.getByText(/não sai nesta nota/)).toBeVisible();
   await page.getByRole("button", { name: "Conferir e emitir" }).click();
 
   const previa = page.getByRole("dialog");
@@ -146,6 +157,10 @@ test("equipe: com a emissão ligada confere ICMS, FUNRURAL e guia e vê que nada
   await expect(page.getByText("Sem resposta").first()).toBeVisible();
   const { data: notas } = await servico!.from("nfe_emissoes").select("situacao, chave, protocolo, valor_total, ambiente").eq("empresa_id", empresaId);
   expect(notas).toEqual([expect.objectContaining({ situacao: "falha", protocolo: null, valor_total: 55000, ambiente: "homologacao" })]);
+  const { data: dados } = await servico!.from("nfe_emissoes").select("dados").eq("empresa_id", empresaId).single();
+  const transporte = (dados!.dados as { transporte: { modalidade: number; icmsFrete: unknown } }).transporte;
+  expect(transporte.modalidade).toBe(1);
+  expect(transporte.icmsFrete ?? null).toBeNull();
   const { count } = await servico!.from("nfe_guias").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
   expect(count).toBe(0);
 });

@@ -134,6 +134,7 @@ export function EmitirNota({
   const [marca, setMarca] = React.useState(t0?.marca ?? "");
   const [volumes, setVolumes] = React.useState(t0?.volumes_quantidade ?? "");
   const [freteServico, setFreteServico] = React.useState(t0?.frete_servico ? mostrar(t0.frete_servico, 2) : "");
+  const [reterMesmoAssim, setReterMesmoAssim] = React.useState(Boolean(t0?.reter_icms_frete));
   const [valores, setValores] = React.useState({
     frete: inicial?.frete ? mostrar(inicial.frete, 2) : "",
     seguro: inicial?.seguro ? mostrar(inicial.seguro, 2) : "",
@@ -158,6 +159,10 @@ export function EmitirNota({
   const [repetida, setRepetida] = React.useState(false);
 
   const operacao = operacoes.find((o) => o.id === operacaoId);
+  // ICMS do frete retido: só quando o vendedor contrata o frete (CIF). Por conta do comprador
+  // ou de terceiros, só se quem emite marcar; transporte próprio ou sem frete, nunca.
+  const freteDeOutro = ["1", "2", "4"].includes(modalidade);
+  const reterFrete = Boolean(operacao?.freteIcmsRetido) && (modalidade === "0" || (freteDeOutro && reterMesmoAssim));
   const emitente = emitentes.find((e) => e.id === emitenteId);
   const destinatario = destinatarios.find((d) => d.id === destinatarioId);
   const somaProdutos = itens.reduce((s, i) => {
@@ -196,7 +201,7 @@ export function EmitirNota({
       return v && Number(v) > 0 ? v : "";
     };
     let fs = "";
-    if (operacao?.freteIcmsRetido) {
+    if (reterFrete) {
       const v = lerNumeroBR(freteServico, 2);
       if (!v || Number(v) <= 0) return "Informe o valor do frete contratado (para o ICMS do frete).";
       fs = v;
@@ -233,6 +238,7 @@ export function EmitirNota({
         especie: especie.trim(),
         marca: marca.trim(),
         frete_servico: fs,
+        reter_icms_frete: freteDeOutro && reterMesmoAssim,
       },
       pagamento: { forma, descricao: descricaoPag.trim(), a_prazo: aPrazo, parcelas: pars },
       referencias: refs,
@@ -449,7 +455,21 @@ export function EmitirNota({
             </Campo>
           </div>
         ) : null}
-        {operacao?.freteIcmsRetido ? (
+        {operacao?.freteIcmsRetido && freteDeOutro ? (
+          <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+            <p>
+              Frete {modalidade === "2" ? "por conta de terceiros" : "por conta do comprador"}: quem contrata o transporte é que responde pelo ICMS do frete, então ele{" "}
+              <strong>não sai nesta nota</strong>.
+            </p>
+            <label className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
+              <Checkbox checked={reterMesmoAssim} onChange={(e) => setReterMesmoAssim(e.target.checked)} className="mt-0.5" />
+              O vendedor vai recolher o ICMS deste frete mesmo assim (só quando a lei do estado mandar)
+            </label>
+          </div>
+        ) : operacao?.freteIcmsRetido && modalidade !== "0" ? (
+          <p className="text-sm text-muted-foreground">Sem frete contratado pelo vendedor: o ICMS do frete não sai nesta nota.</p>
+        ) : null}
+        {reterFrete ? (
           <Campo
             rotulo="Valor do frete contratado (R$)"
             htmlFor="frete-servico"

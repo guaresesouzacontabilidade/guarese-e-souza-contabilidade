@@ -336,6 +336,8 @@ const esquemaPedido = z.object({
     especie: z.string().max(60).optional(),
     marca: z.string().max(60).optional(),
     frete_servico: z.string().regex(/^\d+(\.\d{1,2})?$/).optional().or(z.literal("")),
+    /** Frete por conta do comprador ou de terceiros: o vendedor recolhe o ICMS do frete mesmo assim. */
+    reter_icms_frete: z.boolean().optional(),
   }),
   pagamento: z.object({
     forma: z.string().regex(/^\d{2}$/),

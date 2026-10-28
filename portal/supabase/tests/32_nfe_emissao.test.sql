@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(30);
+select plan(34);
 
 \ir 00_setup.sql.inc
 
@@ -105,6 +105,23 @@ select throws_like($$select public.nfe_emitir(current_setting('testes.empresa_a'
   'itens', jsonb_build_array(jsonb_build_object('produto_id', current_setting('testes.produto'), 'quantidade', '10', 'valor_unitario', '1')),
   'transporte', jsonb_build_object('modalidade', 0, 'frete_servico', '10')))$$, '%para outro estado, mas o cliente é de MT%',
   'operação para outro estado com cliente do mesmo estado é recusada');
+
+-- ICMS do frete retido só quando o vendedor contrata o frete (CIF)
+select set_config('testes.pedido_frete', jsonb_build_object(
+  'emitente_id', current_setting('testes.emitente'), 'operacao_id', current_setting('testes.operacao'), 'destinatario_id', current_setting('testes.cliente_go'),
+  'itens', jsonb_build_array(jsonb_build_object('produto_id', current_setting('testes.produto'), 'quantidade', '1000', 'valor_unitario', '1.15')))::text, true);
+select is(public.nfe_previa(current_setting('testes.empresa_a')::uuid, current_setting('testes.pedido_frete')::jsonb
+  || jsonb_build_object('transporte', jsonb_build_object('modalidade', 1))) #> '{transporte,icmsFrete}', 'null'::jsonb,
+  'frete por conta do comprador: a nota sai sem o ICMS do frete (e sem pedir o valor do frete)');
+select throws_like(format($$select public.nfe_previa(%L, %L)$$, current_setting('testes.empresa_a'), current_setting('testes.pedido_frete')::jsonb
+  || jsonb_build_object('transporte', jsonb_build_object('modalidade', 1, 'reter_icms_frete', true))), '%informe o valor do frete contratado%',
+  'comprador paga o frete, mas o vendedor recolhe mesmo assim: pede o valor do frete');
+select is(public.nfe_previa(current_setting('testes.empresa_a')::uuid, current_setting('testes.pedido_frete')::jsonb
+  || jsonb_build_object('transporte', jsonb_build_object('modalidade', 1, 'reter_icms_frete', true, 'frete_servico', '4500'))) #>> '{transporte,icmsFrete,valorServico}', '4500',
+  'com a marcação de quem emite, o ICMS do frete entra');
+select is(public.nfe_previa(current_setting('testes.empresa_a')::uuid, current_setting('testes.pedido_frete')::jsonb
+  || jsonb_build_object('transporte', jsonb_build_object('modalidade', 3, 'reter_icms_frete', true, 'frete_servico', '4500'))) #> '{transporte,icmsFrete}', 'null'::jsonb,
+  'transporte próprio do vendedor: não há frete contratado, sem ICMS do frete');
 select throws_like($$select public.nfe_cancelar(current_setting('testes.nota1')::uuid, 'Venda desfeita pelo cliente')$$, '%autorizada%',
   'só nota autorizada pode ser cancelada');
 select throws_like($$select public.nfe_carta_correcao(current_setting('testes.nota1')::uuid, 'Placa correta do veículo ABC1D23')$$, '%autorizada%',
