@@ -9,6 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { SeletorCompetencia } from "@/components/calculos/seletor-competencia";
 import { BotaoRelerEfd, FormCodigoAjuste, FormConfiguracaoEfd, FormGerarEfd } from "@/components/efd/gerador";
+import { FormDarIcms } from "@/components/dar-mt/gerar-dar";
+import { carregarDadosDar } from "@/lib/dar-mt/carregar";
+import { envPublico } from "@/lib/env";
 import { TIPOS_LANCAMENTO_ICMS } from "@/lib/calculos/icms";
 import { competenciaDosCalculos } from "@/lib/calculos/competencias";
 import { carregarEfd } from "@/lib/efd/carregar";
@@ -107,6 +110,10 @@ export default async function PaginaEfd({ params, searchParams }: PageProps<"/e/
   const resumo = previa.resumo;
   const regimeNormal = icms.resultado.modo === "normal";
   const notas = dados.notas;
+  // DAR do ICMS (SEFAZ-MT): robô do portal oficial
+  const darCarregado = dados.empresa.uf === "MT" && regimeNormal ? await carregarDadosDar(ctx.supabase, empresaId, comp) : null;
+  const dar = darCarregado && "dados" in darCarregado ? darCarregado.dados : null;
+  const fimDoMes = dar ? new Date(Date.UTC(Number(dar.hoje.slice(0, 4)), Number(dar.hoje.slice(5, 7)), 0)).toISOString().slice(0, 10) : "";
 
   return (
     <>
@@ -274,6 +281,79 @@ export default async function PaginaEfd({ params, searchParams }: PageProps<"/e/
                 )}
               </CardContent>
             </Card>
+
+            {dar ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">DAR do ICMS de {mes} (SEFAZ-MT)</CardTitle>
+                  <CardDescription>
+                    O robô preenche o DAR-1/AUT no site da SEFAZ-MT (receita 1112 — ICMS normal), com a multa e os juros de atraso, baixa o PDF oficial e publica na agenda
+                    de pagamentos da empresa. Gere depois de transmitir a EFD, com o mesmo valor do registro E116.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {dar.efd && Number(dar.efd.a_recolher ?? 0) !== Number(resumo.apuracao.a_recolher) ? (
+                    <Alerta tom="alerta">
+                      O último arquivo gerado ({formatarDataHora(dar.efd.created_at)}) tem {formatarMoeda(dar.efd.a_recolher ?? 0)} a recolher, mas a apuração de hoje dá{" "}
+                      {formatarMoeda(resumo.apuracao.a_recolher)}. O DAR deve ter o valor da EFD transmitida: se mudou algo, gere o arquivo de novo (retificadora) antes.
+                    </Alerta>
+                  ) : null}
+                  <FormDarIcms
+                    empresaId={empresaId}
+                    competencia={comp.slice(0, 7)}
+                    valor={formatarMoeda(dar.efd?.a_recolher ?? resumo.apuracao.a_recolher, { semSimbolo: true })}
+                    vencimento={dar.efd?.vencimento ?? vencimentoSugerido}
+                    pagamento={dar.ultimo_dia_util >= dar.hoje ? dar.ultimo_dia_util : dar.hoje}
+                    hoje={dar.hoje}
+                    fimDoMes={fimDoMes}
+                    disponivel={envPublico.ambiente() === "producao" && !dar.empresa.demonstracao}
+                    temVigente={dar.emissoes.some((e) => e.vencimento >= dar.hoje)}
+                  />
+                  {dar.emissoes.length ? (
+                    <Table>
+                      <THead>
+                        <Tr>
+                          <Th>DAR</Th>
+                          <Th className="text-right">Total</Th>
+                          <Th className="hidden sm:table-cell">Pagar até</Th>
+                          <Th />
+                        </Tr>
+                      </THead>
+                      <TBody>
+                        {dar.emissoes.map((e) => (
+                          <Tr key={e.id}>
+                            <Td>
+                              <span className="numero">nº {e.numero}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {formatarDataHora(e.created_at)}
+                                {e.gerado_por ? ` · ${e.gerado_por}` : ""}
+                              </span>
+                            </Td>
+                            <Td className="text-right numero">
+                              {formatarMoeda(e.total)}
+                              {Number(e.multa) + Number(e.juros) > 0 ? (
+                                <span className="block text-xs text-muted-foreground">com {formatarMoeda(Number(e.multa) + Number(e.juros))} de multa e juros</span>
+                              ) : null}
+                            </Td>
+                            <Td className="hidden sm:table-cell">
+                              {formatarData(e.vencimento)}
+                              {e.vencimento < dar.hoje ? <Badge variante="neutro" className="ml-1">vencido</Badge> : null}
+                            </Td>
+                            <Td className="text-right">
+                              {e.documento_id ? (
+                                <Link href={`${base}/documentos/${e.documento_id}`} className="text-sm font-medium text-primary hover:underline">
+                                  Abrir a guia
+                                </Link>
+                              ) : null}
+                            </Td>
+                          </Tr>
+                        ))}
+                      </TBody>
+                    </Table>
+                  ) : null}
+                </CardContent>
+              </Card>
+            ) : null}
           </div>
 
           <div className="space-y-5">

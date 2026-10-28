@@ -1120,6 +1120,43 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"dar_emissoes": {
+                  Row: {
+                    "competencia": string,"created_at": string,"dias_atraso": number,"documento_id": string | null,"efd_geracao_id": string | null,"empresa_id": string,"gerado_por": string | null,"id": string,"juros": number,"juros_percentual": number,"linha_digitavel": string | null,"meses_selic": (string)[],"multa": number,"multa_percentual": number,"numero": string,"origem": string,"principal": number,"receita": string,"total": number,"uf": string,"vencimento": string,"vencimento_imposto": string
+                  }
+                  Insert: {
+                    "competencia": string,"created_at"?: string,"dias_atraso"?: number,"documento_id"?: string | null,"efd_geracao_id"?: string | null,"empresa_id": string,"gerado_por"?: string | null,"id"?: string,"juros"?: number,"juros_percentual"?: number,"linha_digitavel"?: string | null,"meses_selic"?: (string)[],"multa"?: number,"multa_percentual"?: number,"numero": string,"origem": string,"principal": number,"receita": string,"total": number,"uf"?: string,"vencimento": string,"vencimento_imposto": string
+                  }
+                  Update: {
+                    "competencia"?: string,"created_at"?: string,"dias_atraso"?: number,"documento_id"?: string | null,"efd_geracao_id"?: string | null,"empresa_id"?: string,"gerado_por"?: string | null,"id"?: string,"juros"?: number,"juros_percentual"?: number,"linha_digitavel"?: string | null,"meses_selic"?: (string)[],"multa"?: number,"multa_percentual"?: number,"numero"?: string,"origem"?: string,"principal"?: number,"receita"?: string,"total"?: number,"uf"?: string,"vencimento"?: string,"vencimento_imposto"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dar_emissoes_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "dar_emissoes_efd_geracao_id_fkey"
+      columns: ["efd_geracao_id"]
+isOneToOne: false
+      referencedRelation: "efd_geracoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dar_emissoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dar_emissoes_gerado_por_fkey"
+      columns: ["gerado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"declaracoes_faturamento": {
                   Row: {
                     "assinada_em": string | null,"assinada_path": string | null,"assinada_por": string | null,"assinatura_digital": boolean | null,"cancelada_em": string | null,"cancelada_por": string | null,"cidade": string,"contador_crc": string,"contador_nome": string,"criado_em": string,"criado_por": string | null,"data_declaracao": string,"empresa_id": string,"finalidade": string | null,"id": string,"meses": NonNullable<Json>,"motivo_cancelamento": string | null,"observacao": string | null,"periodo_fim": string,"periodo_inicio": string,"representante_cargo": string | null,"representante_cpf": string | null,"representante_nome": string,"situacao": string,"total": number,"uf": string | null
@@ -4546,11 +4583,20 @@ isOneToOne: false
 "dados_apuracao_icms":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_versao_leitura"?: number }; Returns: Json
                            },
+"dados_dar_icms":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_vencimento"?: string }; Returns: Json
+                           },
 "dados_efd_icms_ipi":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
                            },
 "dados_previsao_impostos":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_meses"?: number }; Returns: Json
+                           },
+"dar_registrar_emissao":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"dar_vincular_documento":
+{ Args: { "p_documento_id": string,"p_id": string }; Returns: undefined
                            },
 "definir_inicio_notas":
 { Args: { "p_desde": string,"p_empresa_id": string }; Returns: Json

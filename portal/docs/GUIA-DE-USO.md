@@ -370,7 +370,7 @@ Rotina do mês:
 4. Se aparecer o aviso de **notas lidas antes da leitura completa**, clique em **Atualizar a leitura das notas** (o portal relê os XML guardados para trazer o frete de cada item e o crédito do Simples).
 5. Clique em **Conferir o mês**: os valores ficam guardados, o saldo credor passa para o mês seguinte e a **previsão de impostos do cliente** passa a mostrar essas guias. Para mudar depois, use **Reabrir** (com motivo; fica na auditoria).
 
-O vencimento mostrado é o dia 9 do mês seguinte (calendário fiscal da SEFAZ-TO) ou o prazo da obrigação ICMS em **Obrigações e prazos**, quando houver. O portal **não emite o DARE nem transmite a EFD**: emita as guias no portal da SEFAZ-TO. Por enquanto as regras de complementação e diferencial estão cadastradas só para o **Tocantins**; para empresa de outro estado, calcule à parte e lance como outra guia.
+O vencimento mostrado é o dia 9 do mês seguinte (calendário fiscal da SEFAZ-TO) ou o prazo da obrigação ICMS em **Obrigações e prazos**, quando houver. O portal **não transmite a EFD**. As guias do Tocantins (DARE) são emitidas no portal da SEFAZ-TO; para Mato Grosso, o DAR do ICMS normal sai pelo robô (veja "DAR do ICMS pelo robô"). Por enquanto as regras de complementação e diferencial estão cadastradas só para o **Tocantins**; para empresa de outro estado, calcule à parte e lance como outra guia.
 
 #### EFD ICMS/IPI (gerar o SPED Fiscal no portal)
 Em **Cálculos → EFD ICMS/IPI** (só a equipe vê), o portal monta o arquivo da EFD ICMS/IPI do mês com os XML guardados e a **Apuração do ICMS** — para empresas do Lucro Presumido ou Real contribuintes do ICMS (o Simples Nacional não entrega a EFD). O arquivo segue o Guia Prático da EFD ICMS/IPI 3.2.2 (leiaute 020, de 2026).
@@ -391,6 +391,19 @@ Rotina:
 4. No computador do escritório, importe no **PVA da EFD ICMS/IPI**, valide, assine com o certificado digital e transmita. Depois, envie o arquivo transmitido em Documentos (SPED Fiscal) para a **Conferência do SPED** comparar com os XML.
 
 O portal ainda **não gera**: ICMS-ST como substituto (E200), DIFAL das vendas a consumidor final de outro estado (E300), IPI (E500), inventário (Bloco H), Bloco K com estoque, CIAP (Bloco G), ajustes por documento (C197) e os registros 1400/1601 — quando a empresa tem essas operações, a tela avisa antes. O portal **não transmite** a EFD.
+
+#### DAR do ICMS pelo robô (Mato Grosso)
+Para empresas de **Mato Grosso** no regime normal, a página **Cálculos → EFD ICMS/IPI** tem o quadro **DAR do ICMS (SEFAZ-MT)**. O robô do portal preenche o DAR-1/AUT no site público da SEFAZ-MT (Pessoa Jurídica Inscrita, receita **1112 — ICMS normal**), baixa o **PDF oficial**, com o código de barras da SEFAZ, e publica a guia na **agenda de pagamentos** do cliente, com o "paguei".
+
+1. Transmita a EFD do mês primeiro. O valor sugerido é o do **último arquivo gerado** (registro E116) e o vencimento é o que foi informado na geração. Se a apuração mudou depois do arquivo, a tela avisa: gere de novo (retificadora) antes do DAR.
+2. Escolha **Pagar até**. A guia com multa e juros vale só até o fim do mês em que é gerada; o portal sugere o último dia útil.
+3. Clique em **Calcular multa e juros** e confira a prévia:
+   - **multa de mora**: 0,333% por dia de atraso, limitada a 20% (acima de 60 dias);
+   - **juros**: SELIC de cada mês entre o vencimento e o pagamento, mais 1% no mês do pagamento. Pago no próprio mês do vencimento, não há juros. A SELIC vem do Banco Central.
+   - Vencimento em fim de semana ou feriado passa para o dia útil seguinte. É a regra da SEFAZ-MT desde 03/2024: os juros e a multa incidem sobre o principal, sem correção à parte.
+4. Clique em **Gerar o DAR na SEFAZ-MT e publicar**. O robô só publica se o total registrado pela SEFAZ for igual ao calculado. Depois aparecem o número do DAR, a linha digitável (com o botão para copiar o código de barras) e o link da guia. O histórico do mês fica no quadro.
+
+Se o site da SEFAZ-MT estiver fora do ar, mudar ou pedir captcha, o robô para e avisa, e nada é publicado. Nesse caso, gere o DAR pelo site e anexe o PDF em Documentos (Guia de pagamento). Na demonstração, o robô não acessa a SEFAZ (os dados são fictícios); a prévia funciona.
 
 #### Comparativo de regimes (planejamento tributário)
 Em **Cálculos → Comparativo de regimes** (só a equipe vê), o portal mostra quanto a empresa teria pago no **Simples Nacional**, no **Lucro Presumido** e no **Lucro Real** nos 12 meses escolhidos, com os mesmos dados da previsão (notas, receita informada, colaboradores e pró-labore):
