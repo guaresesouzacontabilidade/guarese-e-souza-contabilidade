@@ -18,7 +18,7 @@
   const GROUPS = [
     { k: "comb", n: "Combustíveis", s: 1 },
     { k: "pista", n: "Lubrificantes e pista", s: 2 },
-    { k: "conv", n: "Conveniência", s: 3 },
+    { k: "conv", n: "Outros produtos", s: 3 },   // a conveniência não é do posto
   ];
   const PAYS = [
     { k: "pix", n: "PIX" },
@@ -37,7 +37,7 @@
   // com as posições numeradas como nas colunas (1 e 2, 3 e 4, 5 e 6).
   // Cada bomba tem dois lados (A e B) e cada lado atende um veículo por vez.
   // x e z são metros, usados pelo posto em 3D (z cresce na direção da rua; olhando da varanda, x positivo fica à esquerda).
-  // Combustíveis de cada bico e os tanques ainda são suposições, até a confirmação do posto.
+  // Combustíveis de cada bico e os tanques confirmados pelo posto.
   const LAYOUT = {
     bombas: [
       { n: 1, tipo: "diesel", x: 4.5, z: 6, pos: { A: 2, B: 1 }, lados: { A: [[3, "d10"], [4, "d10a"]], B: [[1, "d10"], [2, "d10a"]] } },
@@ -161,16 +161,15 @@
     const fuelMix = [["gc", 42], ["ga", 14], ["gp", 7], ["et", 15], ["d10", 16], ["d10a", 6]];
     const hourW = [1, .6, .5, .5, .7, 1.6, 4, 7.5, 8, 6.5, 5.5, 6, 7, 6.5, 5.5, 5.5, 6.5, 8.5, 9, 7, 4.5, 3.2, 2.2, 1.5];
     const hourMix = hourW.map((w, h) => [h, w]);
+    // Produtos da troca de óleo (a conveniência é de outro dono e não entra no Board)
     const shop = [
-      ["Água mineral 500 ml", 3.5, 18, "conv"], ["Refrigerante lata 350 ml", 6, 14, "conv"], ["Café expresso", 5.5, 16, "conv"],
-      ["Pão de queijo", 4.5, 13, "conv"], ["Salgado assado", 8.5, 9, "conv"], ["Energético 473 ml", 12.9, 7, "conv"],
-      ["Chocolate ao leite 90 g", 7.9, 6, "conv"], ["Gelo 5 kg", 13, 4, "conv"], ["Sorvete picolé", 7, 4, "conv"],
-      ["Óleo motor 5W30 1 L", 49.9, 2.2, "pista"], ["ARLA 32 balde 20 L", 89.9, 1.4, "pista"], ["Aditivo radiador 1 L", 29.9, 1, "pista"],
-      ["Palheta limpador", 39.9, .5, "pista"],
+      ["Óleo motor 5W30 1 L", 49.9, 3], ["Óleo motor 15W40 1 L", 42.9, 2.5], ["ARLA 32 balde 20 L", 89.9, 2],
+      ["Aditivo para combustível 200 ml", 24.9, 1.5], ["Aditivo radiador 1 L", 29.9, 1.2], ["Filtro de óleo", 34.9, 0.8],
+      ["Palheta limpador", 39.9, .6], ["Fluido de freio 500 ml", 27.9, .6],
     ];
     const shopMix = shop.map((p, i) => [i, p[2]]);
     const payFuel = [["pix", 34], ["deb", 22], ["cre", 26], ["din", 8], ["prazo", 10]];
-    const payShop = [["pix", 40], ["deb", 22], ["cre", 20], ["din", 18]];
+    const payShop = [["pix", 38], ["deb", 24], ["cre", 26], ["din", 12]];
     const end = dayStart(Date.now());
     const sales = [];
     let n = 0;
@@ -178,7 +177,7 @@
       const day = addDays(end, -d);
       const wd = new Date(day).getDay();
       const dayF = (wd === 0 ? .72 : wd === 6 ? .9 : wd === 5 ? 1.12 : 1) * (0.92 + rnd() * .16);
-      const nFuel = Math.round(230 * dayF), nShop = Math.round(160 * dayF);
+      const nFuel = Math.round(230 * dayF), nShop = Math.round(18 * dayF);
       for (let i = 0; i < nFuel + nShop; i++) {
         const isFuel = i < nFuel;
         const h = pick(hourMix);
@@ -191,10 +190,10 @@
           else q = rnd() < .35 ? Math.round(5 + rnd() * 9) * 10 / prices[f] : 12 + rnd() * 38;
           q = Math.round(q * 1000) / 1000;
           items.push({ p: FUEL[f].n, g: "comb", f, q, u: "L", v: r2(q * prices[f]) });
-          if (rnd() < .07) { const s = shop[pick(shopMix)]; items.push({ p: s[0], g: s[3], q: 1, u: "UN", v: s[1] }); }
+          if (rnd() < .04) { const s = shop[pick(shopMix)]; items.push({ p: s[0], g: "pista", q: 1, u: "UN", v: s[1] }); }
         } else {
           const k = 1 + (rnd() < .35 ? 1 : 0) + (rnd() < .1 ? 1 : 0);
-          for (let j = 0; j < k; j++) { const s = shop[pick(shopMix)]; const q = s[3] === "conv" && rnd() < .2 ? 2 : 1; items.push({ p: s[0], g: s[3], q, u: "UN", v: r2(s[1] * q) }); }
+          for (let j = 0; j < k; j++) { const s = shop[pick(shopMix)]; const q = /^Óleo/.test(s[0]) && rnd() < .5 ? 4 : 1; items.push({ p: s[0], g: "pista", q, u: "UN", v: r2(s[1] * q) }); }
         }
         const total = r2(items.reduce((a, x) => a + x.v, 0));
         sales.push({ k: "ex" + (n++), t, items, pays: { [pick(isFuel ? payFuel : payShop)]: total } });

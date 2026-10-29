@@ -20,14 +20,13 @@
 
   // ---------- Planta do posto (metros), tirada da foto ----------
   // x corre ao longo da rua da frente; z cresce na direção da rua.
-  // No fundo fica o prédio com a conveniência e a varanda de onde a foto foi tirada.
+  // No fundo fica o prédio com a varanda de onde a foto foi tirada (a conveniência é de outro dono e não aparece).
   // Olhando da varanda para a rua, x positivo fica à esquerda (onde estão o muro e a cabine).
   const BOMBA = Object.fromEntries(B.LAYOUT.bombas.map(b => [b.n, b]));
   const WALL_X = 8.2;                                  // muro do vizinho, à esquerda
   const LOT = { x0: -34.6, x1: WALL_X, z0: -15.6, z1: 22 };
   const CANOPY = { x0: -9, x1: WALL_X, z0: -15.6, z1: 10.5, h: 6 };
   const BUILDING = { x0: -12, x1: WALL_X, z0: -24, z1: -15.6, h1: 3.8, h2: 7.4 };
-  const STORE = { x0: -11, x1: 3, z0: -23.6, z1: -15.6 };
   const KIOSK = { x0: 6, x1: WALL_X, z0: -10, z1: -4.5, h: 2.8 };
   const PAD = { x0: -31.5, x1: -21, z0: -8.6, z1: 2 };
   const TANK_Y = -1.6, TANK_R = 0.78, TANK_L = 8.6;
@@ -44,7 +43,7 @@
     varanda: { label: "Da varanda", pos: [-1.85, 5.1, -15.1], target: [-1.0, 0.6, -2] },
     pista: { label: "Pista", pos: [11, 10, 22], target: [-1, 1, 0] },
     diesel: { label: "Diesel", pos: [15, 6.5, 17], target: [4.5, 1.5, 6] },
-    loja: { label: "Loja", pos: [-12, 4.4, -2], target: [-4, 1.6, -19] },
+    oleo: { label: "Troca de óleo", pos: [-1, 4.2, 5], target: [7, 1.2, -7] },
     tanques: { label: "Tanques", pos: [-14, 10, 12], target: [-26, -1, -3] },
   };
 
@@ -231,7 +230,7 @@
         <div class="w-panel-b" id="w-p-body"></div>
       </aside>
       <div class="w-hint w-glass" id="w-hint">
-        <p>Toque nas bombas, carros, tanques, loja, troca de óleo, ARLA e totem para ver o que está acontecendo.</p>
+        <p>Toque nas bombas, carros, tanques, troca de óleo, ARLA e totem para ver o que está acontecendo.</p>
         <button type="button" class="w-ibtn" id="w-hint-x" aria-label="Fechar dica">${ICON.x}</button>
       </div>
       <footer class="w-time w-glass">
@@ -295,11 +294,9 @@
     sim.live = false; planDay(days[j]); syncControls();
   }
 
-  // Lugares dentro da loja onde os clientes param
-  const STORE_SPOTS = [[1.5, -20.2], [-0.5, -17.6], [-2.5, -20.3], [-4.5, -17.6], [-6.5, -20.2], [1.8, -22.4], [-1.5, -22.5], [-4.8, -22.4], [-7.2, -17.4], [0, -18.8]];
-  const COUNTER = [-8.5, -18.6];
-  const STORE_DOOR = [-8.6, -15.3];
-  const STORE_OUT = [-8.6, -12.8];
+  // Onde os clientes da troca de óleo param, no balcão da cabine, e por onde chegam
+  const KIOSK_SPOTS = [[5.5, -6.1], [5.5, -5.2], [5.45, -7.0]];
+  const KIOSK_PATH = [5.5, -11.5];
 
   // Monta a agenda do dia: cada venda de combustível vira um veículo num lado de bomba.
   function planDay(day) {
@@ -319,8 +316,11 @@
       const fuelItems = s.items.filter(i => i.f);
       const emit = s.t - day;
       if (!fuelItems.length) {
-        const spot = STORE_SPOTS[hash(String(s.k)) % STORE_SPOTS.length];
-        sim.shop.push({ s, emit, appear: emit - 200 * SEC, counter: emit - 35 * SEC, gone: emit + 25 * SEC, spot, k: "c" + idx });
+        // Só quem compra na troca de óleo aparece (lubrificantes, ARLA, aditivos)
+        if (s.items.some(i => i.g === "pista")) {
+          const spot = KIOSK_SPOTS[hash(String(s.k)) % KIOSK_SPOTS.length];
+          sim.shop.push({ s, emit, appear: emit - 150 * SEC, gone: emit + 20 * SEC, spot, k: "c" + idx });
+        }
         return;
       }
       const main = fuelItems.reduce((a, i) => (i.q > a.q ? i : a));
@@ -466,7 +466,7 @@
       new T.PointLight("#fff7e8", 0, 20, 1.6), new T.PointLight("#ffe8c4", 0, 34, 1.6),
     ];
     nightLights[0].position.set(2, 5.4, 5); nightLights[1].position.set(-2, 5.4, -6);
-    nightLights[2].position.set(-4, 3.2, -19.6); nightLights[3].position.set(-24, 7, 6);
+    nightLights[2].position.set(6.5, 3.2, -7); nightLights[3].position.set(-24, 7, 6);
     nightLights.forEach(l => scene.add(l));
 
     // Materiais
@@ -718,7 +718,7 @@
       scene.add(box(1.2, 0.12, 1.2, mat.pole, WALL_X - 0.75, 0.06, -14.5));
     }
 
-    // ---------- Prédio do fundo: conveniência embaixo, varanda em cima ----------
+    // ---------- Prédio do fundo, com a varanda de onde a foto foi tirada ----------
     {
       const { x0, x1, z0, z1, h1, h2 } = BUILDING, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, w = x1 - x0, d = z1 - z0;
       const g = new T.Group();
@@ -726,20 +726,9 @@
       g.add(box(w, h1, 0.3, mat.wall, cx, h1 / 2, z0 + 0.15));
       g.add(box(0.3, h1, d, mat.wall, x0 + 0.15, h1 / 2, cz));
       g.add(box(0.3, h1, d, mat.wall, x1 - 0.15, h1 / 2, cz));
-      g.add(box(STORE.x0 - x0, h1, 0.3, mat.wall, (x0 + STORE.x0) / 2, h1 / 2, z1 - 0.15));       // parte fechada (escritório)
-      g.add(box(0.9, 2.1, 0.05, mat.dark, 5, 1.05, z1 + 0.01, false));
-      g.add(box(x1 - STORE.x1, h1, 0.3, mat.wall, (x1 + STORE.x1) / 2, h1 / 2, z1 - 0.15));
-      const sw = STORE.x1 - STORE.x0, scx = (STORE.x0 + STORE.x1) / 2;
-      const glass = plane(sw, 2.9, mat.glass, scx, 1.55, z1 - 0.1); glass.userData.shared = true; g.add(glass);
-      for (let i = 0; i <= 6; i++) g.add(box(0.1, 2.9, 0.12, mat.dark, STORE.x0 + i * sw / 6, 1.55, z1 - 0.1));
-      g.add(plane(sw, 0.7, new T.MeshLambertMaterial({ map: signTex("CONVENIÊNCIA", RED, "#ffffff", 1024, 96, 64) }), scx, 3.35, z1 + 0.02));
-      // dentro da loja
-      for (const zz of [-20.9, -19.4]) for (let i = 0; i < 3; i++) g.add(box(2.4, 1.5, 0.5, M(i % 2 ? "#e1d6c4" : "#d9c9b0"), 1 - i * 3, 0.75, zz));
-      g.add(box(9, 2.1, 0.7, new T.MeshLambertMaterial({ color: "#dfe9ee", emissive: "#9ccde0", emissiveIntensity: 0.35 }), -3, 1.05, z0 + 0.7));
-      g.add(box(1.2, 1.05, 3.4, M(RED), -9.8, 0.62, -19.4));
-      g.add(box(0.5, 0.35, 0.4, mat.dark, -9.8, 1.32, -19.0));
-      const ceiling = new T.Mesh(new T.PlaneGeometry(sw - 0.6, d - 0.8), mat.canopyLight); ceiling.userData.sharedRoof = true;
-      ceiling.rotation.x = Math.PI / 2; ceiling.position.set(scx, h1 - 0.12, cz); g.add(ceiling); roof(ceiling);
+      g.add(box(w, h1, 0.3, mat.wall, cx, h1 / 2, z1 - 0.15));                                      // fachada fechada
+      for (const dx of [5, -1.5]) g.add(box(0.9, 2.1, 0.05, mat.dark, dx, 1.05, z1 + 0.01, false));  // portas
+      for (const wx of [1.8, -4.5, -8]) g.add(box(1.6, 1.1, 0.05, M("#3d4a52"), wx, 1.7, z1 + 0.01, false)); // janelas
       // andar de cima, varanda com floreiras (é dali que a foto foi tirada)
       const upper = [
         box(w, 0.25, d, mat.roof, cx, h1 + 0.12, cz),
@@ -756,7 +745,6 @@
         const pot = box(1.2, 0.45, 0.5, M("#8a6a50"), px, h1 + 0.42, z1 + 1.05); g.add(pot); roof(pot);
         const bush = new T.Mesh(new T.IcosahedronGeometry(0.55, 0), mat.leaf2); bush.position.set(px, h1 + 0.95, z1 + 1.05); g.add(bush); roof(bush);
       }
-      pickable(g, "loja", 1);
       scene.add(g);
       // muro do fundo, ao lado do prédio, e muro do lado da área aberta
       scene.add(box(x0 - LOT.x0, 2.4, 0.3, mat.wall, (x0 + LOT.x0) / 2, 1.2, z1 - 0.15));
@@ -969,7 +957,6 @@
     for (const b of B.LAYOUT.bombas) addLabel("bomba", b.n, [b.x, 3.5, b.z + 0.6], `Bomba ${b.n}`);
     B.LAYOUT.tanques.forEach((tq, i) => addLabel("tanque", tq.n, [PAD.x1 + 0.4, 0.6, tankZ(i)], `T${tq.n}`, 30));
     const tanksLabel = addLabel("tanque", B.LAYOUT.tanques[0].n, [(PAD.x0 + PAD.x1) / 2, 1.2, PAD.z1 + 0.4], "Tanques", null, 30);
-    addLabel("loja", 1, [(STORE.x0 + STORE.x1) / 2, 3.9, STORE.z1 + 0.3], "Loja");
     addLabel("oleo", 1, [(KIOSK.x0 + KIOSK.x1) / 2, 3.4, (KIOSK.z0 + KIOSK.z1) / 2], "Troca de óleo");
     addLabel("totem", 1, [TOTEM.x, 8.6, TOTEM.z], "Totem");
     const v3 = new T.Vector3();
@@ -1136,7 +1123,7 @@
           d.hose = hoseBetween(noz, door); scene.add(d.hose);
         } else if (!fueling && d.hose) { scene.remove(d.hose); d.hose.geometry.dispose(); d.hose = null; }
       }
-      // Clientes da loja
+      // Clientes da troca de óleo: chegam pelo fundo, param no balcão e voltam
       const lerp2 = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
       for (const c of sim.shop) {
         if (t < c.appear || t >= c.gone) continue;
@@ -1144,12 +1131,11 @@
         let d = dyn.get(c.k);
         if (!d) d = addDyn(c.k, person(["#d03b3b", "#2a78d6", "#eda100", "#6250d6", "#f2f2f0", "#1baf7a", "#e87ba4"][hash(String(c.s.k)) % 7]), "cliente", c.k);
         let x, z;
-        if (t < c.appear + 15 * SEC) [x, z] = lerp2(STORE_DOOR, c.spot, (t - c.appear) / (15 * SEC));
-        else if (t < c.counter) [x, z] = c.spot;
-        else if (t < c.counter + 8 * SEC) [x, z] = lerp2(c.spot, COUNTER, (t - c.counter) / (8 * SEC));
-        else if (t < c.emit + 5 * SEC) [x, z] = COUNTER;
-        else { const u = clamp((t - c.emit - 5 * SEC) / (20 * SEC), 0, 1); [x, z] = u < 0.5 ? lerp2(COUNTER, STORE_DOOR, u * 2) : lerp2(STORE_DOOR, STORE_OUT, u * 2 - 1); }
-        d.obj.position.set(x, 0.2, z);
+        if (t < c.appear + 12 * SEC) [x, z] = lerp2(KIOSK_PATH, c.spot, (t - c.appear) / (12 * SEC));
+        else if (t < c.emit + 5 * SEC) [x, z] = c.spot;
+        else [x, z] = lerp2(c.spot, KIOSK_PATH, clamp((t - c.emit - 5 * SEC) / (15 * SEC), 0, 1));
+        d.obj.position.set(x, 0, z);
+        d.obj.rotation.y = t >= c.appear + 12 * SEC && t < c.emit + 5 * SEC ? Math.PI / 2 : (t < c.emit ? 0 : Math.PI);
       }
       // Caminhão da distribuidora
       for (const e of sim.deliveries) {
@@ -1225,9 +1211,9 @@
           const ts = tankState[L.id], tq = tanks[L.id].tq;
           if (!ts || ts.frac == null) L.set("off", `T${L.id} · ${SHORT[tq.f] || fuelName(tq.f)}`);
           else { const d = autonomy(tq.f, ts.level); L.set(d != null && d < 2 ? "bad" : d != null && d < 4 ? "busy" : "", `T${L.id} · ${B.pct.format(ts.frac)}`); }
-        } else if (L.type === "loja") {
+        } else if (L.type === "oleo") {
           const n = sim.shop.filter(c => t >= c.appear && t < c.gone).length;
-          L.set(n ? "busy" : "", n ? `Loja · ${n} cliente${n > 1 ? "s" : ""}` : "Loja");
+          L.set(n ? "busy" : "", n ? `Troca de óleo · ${n} cliente${n > 1 ? "s" : ""}` : "Troca de óleo");
         }
       }
       // Anel de seleção
@@ -1324,7 +1310,7 @@
       body += `<div class="w-sec"><h3>Hoje até agora</h3><div class="tbl-wrap"><table><thead><tr><th>Bico</th><th class="r">Abast.</th><th class="r">Litros</th><th class="r">Valor</th></tr></thead><tbody>${
         rows.map(r => `<tr><td><span class="fuel-name">${sw(r.f)}${r.n} · ${esc(fuelName(r.f))}</span></td><td class="r">${B.int.format(r.c)}</td><td class="r">${B.int.format(r.q)}</td><td class="r">${B.money(r.v)}</td></tr>`).join("")
       }</tbody></table></div>`;
-      body += `<p class="w-note">${real ? "Quando a nota não informa o bico, o Board escolhe um bico livre do mesmo combustível." : "Dados de exemplo."} Os combustíveis de cada bico são uma suposição até a confirmação do posto. Encerrantes e alarmes chegam com a ligação ao Meta Posto.</p></div>`;
+      body += `<p class="w-note">${real ? "Quando a nota não informa o bico, o Board escolhe um bico livre do mesmo combustível." : "Dados de exemplo."} Encerrantes e alarmes chegam com a ligação ao Meta Posto.</p></div>`;
     } else if (p.type === "veiculo") {
       const v = sim.visits.find(x => x.k === p.id);
       if (!v) { select(null); return; }
@@ -1352,27 +1338,12 @@
         body += `<div class="w-sec">${kv("Espaço livre", B.int.format(tq.cap - ts.level) + " L")}${days != null ? kv("Dura", `${B.dec1.format(days)} dias <span class="pill ${lvl}">${word}</span>`) : ""}</div>`;
       }
       body += `<div class="w-sec">${kv("Vendido hoje até agora", B.int.format(sold) + " L")}${ins.map(i => kv(`Entrada às ${hm(i.at)}`, B.int.format(i.q) + " L")).join("")}</div>`;
-      body += `<p class="w-note">Nível estimado: estoque digitado no Board, menos o que foi vendido e mais o que entrou pelas notas de compra. A posição e a capacidade dos tanques são suposições até a confirmação do posto.</p>`;
-    } else if (p.type === "loja") {
-      const list = done(t).filter(s => s.items.some(i => i.g === "conv"));
-      const items = list.flatMap(s => s.items.filter(i => i.g === "conv"));
-      const rev = items.reduce((a, i) => a + i.v, 0);
-      const inside = sim.shop.filter(c => t >= c.appear && t < c.gone).length;
-      eyebrow = "Conveniência"; title = "Loja"; sub = `${inside} cliente${inside === 1 ? "" : "s"} agora`;
-      body += `<div class="w-big">${B.money(rev)}<small>hoje até agora</small></div>`;
-      body += `<div class="w-sec">${kv("Vendas", B.int.format(list.length))}${kv("Ticket médio", list.length ? B.brl.format(rev / list.length) : "—")}</div>`;
-      const top = groupItems(items).slice(0, 5);
-      if (top.length) body += `<div class="w-sec"><h3>Mais vendidos hoje</h3>${itemList(top)}</div>`;
-      const last = list.slice(-5).reverse();
-      if (last.length) body += `<div class="w-sec"><h3>Últimas vendas</h3><ul class="w-list">${last.map(s => `<li><span>${hm(s.t - sim.day)}</span><span>${esc(s.items.filter(i => i.g === "conv").map(i => i.p).join(", "))}</span><span>${B.brl.format(s.items.filter(i => i.g === "conv").reduce((a, i) => a + i.v, 0))}</span></li>`).join("")}</ul></div>`;
-      const pays = {}; for (const s of list) for (const k in s.pays) pays[k] = (pays[k] || 0) + s.pays[k];
-      const tot = Object.values(pays).reduce((a, v) => a + v, 0);
-      if (tot) body += `<div class="w-sec"><h3>Formas de pagamento no caixa</h3>${B.PAYS.filter(x => pays[x.k]).map(x => kv(x.n, B.pct.format(pays[x.k] / tot))).join("")}</div>`;
+      body += `<p class="w-note">Nível estimado: estoque digitado no Board, menos o que foi vendido e mais o que entrou pelas notas de compra. A posição dos tanques no desenho é aproximada.</p>`;
     } else if (p.type === "cliente") {
       const c = sim.shop.find(x => x.k === p.id);
       if (!c) { select(null); return; }
-      eyebrow = "Cliente da loja"; title = B.brl.format(c.s.items.reduce((a, i) => a + i.v, 0));
-      sub = t < c.counter ? "Escolhendo" : t < c.emit + 5 * SEC ? "No caixa" : "Saindo";
+      eyebrow = "Cliente da troca de óleo"; title = B.brl.format(c.s.items.reduce((a, i) => a + i.v, 0));
+      sub = t < c.appear + 12 * SEC ? "Chegando" : t < c.emit + 5 * SEC ? "No balcão" : "Saindo";
       body += itemList(c.s.items.map(i => [i.p, i]));
       body += `<div class="w-sec">${kv("Pagamento", esc(payName(c.s)))}${kv("Nota emitida", hm(c.emit))}</div>`;
     } else if (p.type === "oleo") {
@@ -1424,7 +1395,7 @@
       if (!o) return;
       const c = new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3());
       const dir = world.camera.position.clone().sub(world.controls.target).normalize();
-      const dist = selected.type === "loja" || selected.type === "pista" ? 18 : 10;
+      const dist = selected.type === "pista" ? 18 : 10;
       world.flyTo([c.x + dir.x * dist, Math.max(3.5, c.y + dir.y * dist), c.z + dir.z * dist], [c.x, Math.max(0, c.y), c.z]);
     });
   }

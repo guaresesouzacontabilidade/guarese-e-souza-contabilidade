@@ -356,8 +356,8 @@ tr:last-child td { border-bottom: 0; }
     <section class="card c5" aria-labelledby="h-shop">
       <div class="card-h">
         <div>
-          <h2 id="h-shop">Mais vendidos da loja e pista</h2>
-          <p>Conveniência, lubrificantes e ARLA, por faturamento</p>
+          <h2 id="h-shop">Mais vendidos além do combustível</h2>
+          <p>Lubrificantes, ARLA, aditivos e outros produtos, por faturamento</p>
         </div>
       </div>
       <div class="hbars" id="shop"></div>
@@ -539,8 +539,10 @@ tr:last-child td { border-bottom: 0; }
   function renderDaily(b) {
     const rows = dailyRows(b);
     const leg = $("daily-legend"); leg.textContent = "";
-    for (const g of GROUPS) { const s = el("span"); const i = el("i"); i.style.background = `var(--s${g.s})`; s.append(i, g.n); leg.append(s); }
-    $("daily-note").textContent = period === "1" ? "Últimos 14 dias, com o dia escolhido em destaque" : (period !== "all" && rows.length > Number(period)) ? "Últimos 14 dias, com o período escolhido em destaque" : "Combustíveis, pista e loja somados em cada dia";
+    // Só os tipos de venda que aparecem nos dias mostrados
+    const groups = GROUPS.filter(g => rows.some(r => r[g.k] > 0));
+    for (const g of groups) { const s = el("span"); const i = el("i"); i.style.background = `var(--s${g.s})`; s.append(i, g.n); leg.append(s); }
+    $("daily-note").textContent = period === "1" ? "Últimos 14 dias, com o dia escolhido em destaque" : (period !== "all" && rows.length > Number(period)) ? "Últimos 14 dias, com o período escolhido em destaque" : "Combustíveis e produtos somados em cada dia";
 
     const box = $("daily-chart"); box.textContent = "";
     const W = Math.max(320, box.clientWidth || 700), H = W < 520 ? 220 : 260;
@@ -559,7 +561,7 @@ tr:last-child td { border-bottom: 0; }
     rows.forEach((r, i) => {
       const x = m.l + i * slot + (slot - bw) / 2;
       const g = svgEl("g", { opacity: r.inside ? 1 : .35 });
-      let acc = 0; const segs = GROUPS.filter(gr => r[gr.k] > 0);
+      let acc = 0; const segs = groups.filter(gr => r[gr.k] > 0);
       segs.forEach((gr, j) => {
         const y0 = y(acc), y1 = y(acc + r[gr.k]); acc += r[gr.k];
         const last = j === segs.length - 1;
@@ -574,7 +576,7 @@ tr:last-child td { border-bottom: 0; }
         }
       }
       const hit = svgEl("rect", { x: m.l + i * slot, y: m.t, width: slot, height: ph, fill: "transparent" });
-      const html = `<b>${esc(fmtWeekday(r.d))}</b>` + GROUPS.map(gr => `<div class="row"><span><i class="sw" style="background:var(--s${gr.s})"></i>${gr.n}</span><span>${brl.format(r[gr.k])}</span></div>`).join("") +
+      const html = `<b>${esc(fmtWeekday(r.d))}</b>` + groups.map(gr => `<div class="row"><span><i class="sw" style="background:var(--s${gr.s})"></i>${gr.n}</span><span>${brl.format(r[gr.k])}</span></div>`).join("") +
         `<div class="row tot"><span>Total</span><span>${brl.format(r.rev)}</span></div><div class="row"><span>Litros</span><span>${int.format(r.liters)} L</span></div>`;
       const on = e => { showTip(html, e); g.setAttribute("opacity", 1); };
       hit.addEventListener("pointermove", on); hit.addEventListener("pointerdown", on);
@@ -594,11 +596,11 @@ tr:last-child td { border-bottom: 0; }
 
     const tw = $("daily-table"); tw.textContent = "";
     const tbl = el("table");
-    tbl.innerHTML = `<thead><tr><th>Dia</th>${GROUPS.map(g => `<th class="r">${g.n}</th>`).join("")}<th class="r">Total</th><th class="r">Litros</th><th class="r">Vendas</th></tr></thead>`;
+    tbl.innerHTML = `<thead><tr><th>Dia</th>${groups.map(g => `<th class="r">${g.n}</th>`).join("")}<th class="r">Total</th><th class="r">Litros</th><th class="r">Vendas</th></tr></thead>`;
     const tb = el("tbody");
     for (const r of rows.filter(r => r.inside).reverse()) {
       const tr = el("tr");
-      tr.innerHTML = `<td>${esc(fmtWeekday(r.d))}</td>${GROUPS.map(g => `<td class="r">${brl.format(r[g.k])}</td>`).join("")}<td class="r"><b>${brl.format(r.rev)}</b></td><td class="r">${int.format(r.liters)}</td><td class="r">${int.format(r.n)}</td>`;
+      tr.innerHTML = `<td>${esc(fmtWeekday(r.d))}</td>${groups.map(g => `<td class="r">${brl.format(r[g.k])}</td>`).join("")}<td class="r"><b>${brl.format(r.rev)}</b></td><td class="r">${int.format(r.liters)}</td><td class="r">${int.format(r.n)}</td>`;
       tb.append(tr);
     }
     tbl.append(tb); tw.append(tbl);
@@ -636,7 +638,7 @@ tr:last-child td { border-bottom: 0; }
 
   function renderShop(cur) {
     const items = Object.entries(cur.shop).map(([name, s]) => ({ name, v: s.v, main: money(s.v), extra: `${int.format(s.q)} un.` })).sort((a, b) => b.v - a.v).slice(0, 8);
-    renderHbars("shop", items, "Nenhuma venda de loja ou pista no período.");
+    renderHbars("shop", items, "Nenhum produto vendido no período, além do combustível.");
   }
 
   function renderFuels(cur) {

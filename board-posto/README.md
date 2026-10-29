@@ -1,7 +1,8 @@
 # Board Posto Catarinense
 
 Painel do posto de combustível: preços do totem, faturamento, litros, ticket médio, margem por combustível,
-formas de pagamento, estoque dos tanques, movimento por hora e mais vendidos da loja e pista.
+formas de pagamento, estoque dos tanques, movimento por hora e mais vendidos além do combustível
+(lubrificantes, ARLA, aditivos). A conveniência é de outro dono e não entra no Board.
 
 > Esta pasta é independente do site da contabilidade e do Meu Dia: nada fora de `board-posto/` foi alterado.
 
@@ -23,10 +24,11 @@ O botão **Posto 3D** (ou o endereço com `#posto-3d`) abre o posto em 3D, com a
 
 - Cada venda de combustível vira um carro, picape ou caminhão que chega, abastece e sai no horário da nota.
   O mostrador da bomba corre os litros e o valor, e o frentista vai até o carro.
-- Clientes da loja aparecem dentro da conveniência; o caminhão-tanque aparece quando há nota de compra no dia.
+- Quem compra lubrificante, ARLA ou aditivo aparece no balcão da troca de óleo; o caminhão-tanque aparece quando há
+  nota de compra no dia.
 - Os tanques ficam visíveis sob um piso transparente, com o nível estimado (estoque digitado no Board,
   menos as vendas, mais as entregas).
-- Dá para tocar em bombas, carros, clientes, tanques, loja, troca de óleo, totem e coberturas para abrir os detalhes.
+- Dá para tocar em bombas, carros, clientes, tanques, troca de óleo, ARLA, totem e cobertura para abrir os detalhes.
 - **Ao vivo:** toca as vendas do último dia com dados no horário de agora. Também dá para pausar, acelerar
   (10×, 60×, 300×), arrastar a linha do tempo e trocar de dia. Céu e luzes seguem a hora do dia.
 
@@ -36,9 +38,10 @@ Sem bico na nota (o grupo `encerrante` da NFC-e traz `nBico`), o 3D escolhe um b
 apontando para a rua, com as posições numeradas como nas colunas (1-2, 3-4, 5-6), cobertura de forro claro com
 4 colunas, cabine de lubrificantes junto ao muro, ARLA ao lado da bomba 1, área aberta grande do outro lado e a rua
 na frente com faixa de pedestres. A vista **Da varanda** reproduz o ângulo da foto. Cores amarelo e vermelho, sem
-logotipos de marca. Ainda são suposições, em `LAYOUT` no `dados.js`: os combustíveis de cada bico (bomba 1 com
-diesel; bombas 2 e 3 com gasolina comum, aditivada, premium e etanol), os tanques (6, de 15 a 30 mil litros) e onde
-ficam a conveniência, os tanques e o totem.
+logotipos de marca. Em `LAYOUT` no `dados.js`: os combustíveis de cada bico (bomba 1 com
+diesel; bombas 2 e 3 com gasolina comum, aditivada, premium e etanol) e os tanques (6, de 15 a 30 mil litros)
+foram confirmados pelo posto, assim como a área dos tanques e o totem (a posição exata no desenho é aproximada).
+O prédio do fundo aparece sem loja.
 
 ## Ligação com o Meta Posto
 
