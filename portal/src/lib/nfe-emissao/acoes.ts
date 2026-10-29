@@ -131,10 +131,28 @@ export async function salvarProduto(empresaId: string, id: string | null, _anter
       valor_unitario: valor,
       origem: Number(texto(fd, "origem") || 0),
       ativo: !marcado(fd, "inativo"),
+      operacao_id: UUID.test(texto(fd, "operacao_id")) ? texto(fd, "operacao_id") : null,
     } as never,
   });
   if (error) return falha(mensagemErro(error));
   return sucesso("Produto salvo.");
+}
+
+/** Regra fiscal própria em vários produtos de uma vez (null = voltam a usar a operação da nota). */
+export async function definirOperacaoProdutos(empresaId: string, operacaoId: string | null, produtos: string[]): Promise<ResultadoAcao> {
+  const ctx = await contexto(empresaId, "nfe.configurar");
+  if (!ctx) return falha("Somente a equipe do escritório define as regras fiscais dos produtos.");
+  if (operacaoId !== null && !UUID.test(operacaoId)) return falha("Escolha a operação.");
+  const ids = [...new Set(produtos)].filter((id) => UUID.test(id));
+  if (!ids.length) return falha("Marque ao menos um produto.");
+  const { data, error } = await ctx.supabase.rpc("nfe_produtos_definir_operacao", {
+    p_empresa_id: empresaId,
+    p_operacao_id: operacaoId as never,
+    p_produtos: ids,
+  });
+  if (error) return falha(mensagemErro(error));
+  const n = Number(data ?? 0);
+  return sucesso(n === 0 ? "Os produtos já estavam com essa regra." : n === 1 ? "1 produto atualizado." : `${n} produtos atualizados.`);
 }
 
 const esquemaContribuicao = z.object({
@@ -354,7 +372,7 @@ export type PedidoNfe = z.input<typeof esquemaPedido>;
 
 export interface PreviaNfe {
   totais: ReturnType<typeof resumoTotais>;
-  itens: { descricao: string; quantidade: string; unidade: string; valor: string; cfop: string; icms: string; vICMS: string }[];
+  itens: { descricao: string; quantidade: string; unidade: string; valor: string; cfop: string; icms: string; vICMS: string; operacao: string | null }[];
   guias: { tipo: string; descricao: string; uf: string; valor: string }[];
   textos: string[];
   idDest: number;
@@ -381,6 +399,7 @@ export async function previaNota(empresaId: string, pedido: PedidoNfe): Promise<
         cfop: i.entrada.cfop,
         icms: `${i.entrada.origem}${i.icms.cst}${i.icms.pICMS != null ? ` ${fmt(i.icms.pICMS, 2).replace(".", ",")}%` : ""}`,
         vICMS: fmt(i.icms.vICMS, 2),
+        operacao: i.entrada.operacao ?? null,
       })),
       guias: n.guias.map((g) => ({ tipo: g.tipo, descricao: g.descricao, uf: g.uf, valor: fmt(g.valor, 2) })),
       textos: n.textosAutomaticos,

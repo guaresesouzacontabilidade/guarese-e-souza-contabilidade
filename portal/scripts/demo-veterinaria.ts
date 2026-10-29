@@ -145,6 +145,7 @@ export async function semearVeterinaria(
     const { count } = await admin.from("vet_tutores").select("id", { count: "exact", head: true }).eq("empresa_id", existente.id);
     if (count) {
       await semearEstoqueClinica(admin, conexao, opcoes.dominio, existente.id as string);
+      await semearNfeClinica(admin, existente.id as string);
       return false;
     }
   }
@@ -693,7 +694,74 @@ export async function semearVeterinaria(
     ok("logo: cadastro", await admin.from("empresas").update({ logo_path: caminho, logo_atualizado_em: new Date().toISOString() }).eq("id", empresaId));
   }
   await semearEstoqueClinica(admin, conexao, opcoes.dominio, empresaId);
+  await semearNfeClinica(admin, empresaId);
   return true;
+}
+
+/**
+ * NF-e do pet shop (DESLIGADA: a demonstração não tem certificado digital e
+ * nenhuma nota vai à SEFAZ). Venda no balcão com 5.102/CSOSN 102 e a ração com
+ * a regra fiscal própria de mercadoria com ST (5.405/CSOSN 500): na mesma nota,
+ * cada item sai com a sua regra. Só cria o que falta.
+ */
+async function semearNfeClinica(admin: SupabaseClient, empresaId: string) {
+  const { count } = await admin.from("nfe_config").select("empresa_id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  if (count) return;
+  ok("NF-e: configuração", await admin.from("nfe_config").insert({ empresa_id: empresaId, ativa: false, ambiente: "homologacao", crt: 1, presenca: 1, enviar_email_destinatario: false }));
+  const emitente = ok(
+    "NF-e: emitente",
+    await admin
+      .from("nfe_emitentes")
+      .insert({
+        empresa_id: empresaId,
+        nome: "Clínica Amigo Fiel (DEMO)",
+        inscricao_estadual: "290000000",
+        logradouro: "Avenida Fictícia dos Bichos",
+        numero: "300",
+        bairro: "Centro",
+        municipio_ibge: "1718204",
+        cep: "77500000",
+        serie: 1,
+      })
+      .select("id")
+      .single(),
+  ) as { id: string };
+  const operacoes = ok(
+    "NF-e: operações",
+    await admin
+      .from("nfe_operacoes")
+      .insert([
+        {
+          empresa_id: empresaId,
+          nome: "Venda no balcão - consumidor final (DEMO)",
+          natureza: "VENDA DE MERCADORIA",
+          destino: "interna",
+          consumidor_final: true,
+          cfop: "5102",
+          icms_cst: "102",
+          pis_cst: "49",
+          cofins_cst: "49",
+          informacoes: "Documento emitido por ME ou EPP optante pelo Simples Nacional. Operação de DEMONSTRAÇÃO, sem valor fiscal.",
+        },
+        {
+          empresa_id: empresaId,
+          nome: "Venda com ST - ração (DEMO)",
+          natureza: "VENDA DE MERCADORIA ADQUIRIDA COM ST",
+          destino: "interna",
+          consumidor_final: true,
+          cfop: "5405",
+          icms_cst: "500",
+          pis_cst: "49",
+          cofins_cst: "49",
+          informacoes: "ICMS retido anteriormente por substituição tributária.",
+        },
+      ])
+      .select("id, cfop"),
+  ) as { id: string; cfop: string }[];
+  const balcao = operacoes.find((o) => o.cfop === "5102")!.id;
+  const st = operacoes.find((o) => o.cfop === "5405")!.id;
+  ok("NF-e: ração com a regra própria (ST)", await admin.from("nfe_produtos").update({ operacao_id: st }).eq("empresa_id", empresaId).eq("ncm", "23091000"));
+  ok("NF-e na venda", await admin.from("gestao_config").update({ nfe_emitente_id: emitente.id, nfe_operacao_id: balcao }).eq("empresa_id", empresaId));
 }
 
 /**

@@ -595,7 +595,10 @@ export function EmitirNota({
                 <TBody>
                   {previa.itens.map((i, n) => (
                     <Tr key={n}>
-                      <Td>{i.descricao}</Td>
+                      <Td>
+                        {i.descricao}
+                        {i.operacao ? <span className="block text-xs text-muted-foreground">Regra própria do produto: {i.operacao}</span> : null}
+                      </Td>
                       <Td className="text-right numero">
                         {mostrar(i.quantidade)} {i.unidade}
                       </Td>

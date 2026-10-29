@@ -285,4 +285,63 @@ describe("XML da NF-e", () => {
     expect(devolucao.xml).toContain(`<NFref><refNFe>${produtor.chave}</refNFe></NFref>`);
     expect(validarXsd(devolucao.xml, "nfe_v4.00.xsd")).toBe("ok");
   });
+
+  it.skipIf(!temXmllint)("passa nos esquemas: nota mista do Simples (balcão 5.102/102 e ração com ST 5.405/500) e CST 60 no regime normal", () => {
+    const item = vendaMilho.itens[0];
+    const balcao = {
+      ...vendaMilho,
+      natureza: "VENDA DE MERCADORIA",
+      consumidorFinal: true,
+      presenca: 1 as const,
+      emitente: { ...vendaMilho.emitente, crt: 1 },
+      destinatario: {
+        tipo: "cpf" as const,
+        documento: "52998224725",
+        nome: "Tutor Fictício",
+        endereco: { logradouro: "Rua A", numero: "10", bairro: "Centro", codigoMunicipio: "5103403", municipio: "Cuiabá", uf: "MT" },
+        indicadorIe: 9 as const,
+      },
+      itens: [
+        { ...item, codigo: "1", descricao: "Shampoo neutro", ncm: "33051000", unidade: "UN", quantidade: "2", valorUnitario: "25", pesoKgUnidade: null, cfop: "5102", icms: { cst: "102" }, pis: { cst: "49" }, cofins: { cst: "49" }, ibscbs: null },
+        {
+          ...item,
+          codigo: "2",
+          descricao: "Ração cães adultos 15 kg",
+          ncm: "23091000",
+          cest: "2200100",
+          unidade: "UN",
+          quantidade: "1",
+          valorUnitario: "189.90",
+          pesoKgUnidade: "15",
+          cfop: "5405",
+          icms: { cst: "500" },
+          pis: { cst: "49" },
+          cofins: { cst: "49" },
+          ibscbs: null,
+          operacao: "Venda com ST",
+        },
+      ],
+      transporte: { modalidade: 9 as const },
+      pagamento: { forma: "17", aPrazo: false },
+      icmsPorOperacao: false,
+      contribuicoes: [],
+    } satisfies EntradaNfe;
+    const n = calcularNota(balcao);
+    expect(n.itens.map((i) => `${i.entrada.cfop}/${i.icms.cst}/${fmt(i.icms.vICMS, 2)}`)).toEqual(["5102/102/0.00", "5405/500/0.00"]);
+    const mista = nfeAssinada(balcao, chaves);
+    expect(mista.xml).toContain("<CFOP>5102</CFOP>");
+    expect(mista.xml).toContain("<CEST>2200100</CEST>");
+    expect(mista.xml).toContain("<CFOP>5405</CFOP>");
+    expect(mista.xml).toContain("<ICMSSN102><orig>0</orig><CSOSN>102</CSOSN></ICMSSN102>");
+    expect(mista.xml).toContain("<ICMSSN500><orig>0</orig><CSOSN>500</CSOSN></ICMSSN500>");
+    expect(mista.xml).not.toContain("Venda com ST");
+    expect(validarXsd(mista.xml, "nfe_v4.00.xsd")).toBe("ok");
+
+    const normal = nfeAssinada(
+      { ...vendaMilho, itens: [{ ...item, cfop: "6404", icms: { cst: "60" } }], icmsPorOperacao: false, contribuicoes: [] },
+      chaves,
+    );
+    expect(normal.xml).toContain("<ICMS60><orig>0</orig><CST>60</CST></ICMS60>");
+    expect(validarXsd(normal.xml, "nfe_v4.00.xsd")).toBe("ok");
+  });
 });

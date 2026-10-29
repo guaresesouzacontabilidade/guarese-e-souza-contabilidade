@@ -235,6 +235,38 @@ test("dona: nota de serviço a partir da conta (emissão desconectada até o esc
   await expect(page.getByText("Emissão desconectada")).toBeVisible();
 });
 
+test("escritório: ração com a regra fiscal própria (ST) e a regra em vários produtos de uma vez", async ({ page }) => {
+  const admin = clienteServico()!;
+  const { data: antipulgas } = await admin.from("nfe_produtos").select("id").eq("empresa_id", empresaId).ilike("descricao", "Antipulgas%").single();
+  await admin.from("nfe_produtos").update({ operacao_id: null }).eq("id", antipulgas!.id);
+  await entrar(page, `contador@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/notas-produto/configuracao`);
+  // A ração sai com 5.405/CSOSN 500 mesmo junto com outros produtos na nota
+  await expect(page.getByRole("row", { name: /Ração premium/ })).toContainText("Venda com ST - ração (DEMO)");
+  await expect(page.getByRole("row", { name: /Antipulgas/ })).toContainText("A da nota");
+  await expect(page.getByText(/CFOP 5405 — ICMS 500/)).toBeVisible();
+
+  const alvo = page.locator("#pr-alvo");
+  const valorSt = await alvo.locator("option", { hasText: "Venda com ST - ração (DEMO)" }).getAttribute("value");
+  await page.getByRole("checkbox", { name: /^Marcar Antipulgas/ }).check();
+  await alvo.selectOption(valorSt!);
+  await page.getByRole("button", { name: "Aplicar" }).click();
+  await expect(page.getByText("1 produto atualizado.")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("row", { name: /Antipulgas/ })).toContainText("Venda com ST - ração (DEMO)");
+
+  // Volta à operação da nota
+  await page.getByRole("checkbox", { name: /^Marcar Antipulgas/ }).check();
+  await alvo.selectOption("");
+  await page.getByRole("button", { name: "Aplicar" }).click();
+  await expect(page.getByRole("row", { name: /Antipulgas/ })).toContainText("A da nota", { timeout: 30_000 });
+  const { data: depois } = await admin.from("nfe_produtos").select("operacao_id").eq("id", antipulgas!.id).single();
+  expect(depois!.operacao_id).toBeNull();
+
+  // No cadastro do produto, a regra própria aparece escolhida
+  await page.getByRole("row", { name: /Ração premium/ }).getByRole("button", { name: "Editar" }).click();
+  await expect(page.getByRole("dialog").locator("#pr-operacao")).toHaveValue(valorSt!);
+});
+
 test("cliente de outra empresa não vê a clínica nem os documentos", async ({ page }) => {
   await entrar(page, `cliente@${DOMINIO}`);
   for (const rota of [`carteira/${pacienteId}`, `prontuario/${pacienteId}`]) {

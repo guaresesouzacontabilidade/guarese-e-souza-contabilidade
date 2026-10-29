@@ -3285,13 +3285,13 @@ isOneToOne: false
                   ]
                 },"nfe_produtos": {
                   Row: {
-                    "ativo": boolean,"cest": string | null,"codigo": string,"comprimento_m": number | null,"controla_estoque": boolean,"created_at": string,"custo_medio": number,"descricao": string,"empresa_id": string,"espessura_cm": number | null,"estoque_atual": number,"estoque_minimo": number | null,"grupo": string | null,"gtin": string | null,"id": string,"largura_cm": number | null,"ncm": string,"origem": number,"peso_kg": number | null,"preco_custo": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
+                    "ativo": boolean,"cest": string | null,"codigo": string,"comprimento_m": number | null,"controla_estoque": boolean,"created_at": string,"custo_medio": number,"descricao": string,"empresa_id": string,"espessura_cm": number | null,"estoque_atual": number,"estoque_minimo": number | null,"grupo": string | null,"gtin": string | null,"id": string,"largura_cm": number | null,"ncm": string,"operacao_id": string | null,"origem": number,"peso_kg": number | null,"preco_custo": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
                   }
                   Insert: {
-                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao": string,"empresa_id": string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm": string,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
+                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao": string,"empresa_id": string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm": string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
                   }
                   Update: {
-                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao"?: string,"empresa_id"?: string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm"?: string,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
+                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao"?: string,"empresa_id"?: string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm"?: string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
                   }
                   Relationships: [
                     {
@@ -3299,6 +3299,12 @@ isOneToOne: false
       columns: ["empresa_id"]
 isOneToOne: false
       referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_produtos_operacao_id_fkey"
+      columns: ["operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
       referencedColumns: ["id"]
     }
                   ]
@@ -5758,6 +5764,9 @@ isOneToOne: false
                            },
 "nfe_produto_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_produtos_definir_operacao":
+{ Args: { "p_empresa_id": string,"p_operacao_id": string,"p_produtos": (string)[] }; Returns: number
                            },
 "nfe_tentar_de_novo":
 { Args: { "p_id": string }; Returns: undefined

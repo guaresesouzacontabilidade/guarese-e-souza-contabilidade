@@ -115,6 +115,8 @@ export interface ItemEntrada {
   /** Excluir o ICMS da base do PIS e da COFINS */
   excluirIcmsPisCofins?: boolean;
   informacoes?: string | null;
+  /** Nome da regra fiscal própria do produto, quando não é a operação da nota (só para mostrar) */
+  operacao?: string | null;
 }
 
 export interface ContribuicaoEstadual {
@@ -359,6 +361,7 @@ export const CST_ICMS: Record<string, string> = {
   "41": "41 - Não tributada",
   "50": "50 - Suspensão",
   "51": "51 - Diferimento",
+  "60": "60 - ICMS cobrado anteriormente por substituição tributária",
   "90": "90 - Outras",
 };
 export const CSOSN: Record<string, string> = {
@@ -367,6 +370,7 @@ export const CSOSN: Record<string, string> = {
   "103": "103 - Isenção do ICMS no Simples para faixa de receita bruta",
   "300": "300 - Imune",
   "400": "400 - Não tributada pelo Simples",
+  "500": "500 - ICMS cobrado anteriormente por substituição tributária (ex.: ração, produto com ST)",
   "900": "900 - Outros",
 };
 

@@ -96,6 +96,8 @@ function icmsXml(i: ItemCalculado): string {
       const base = c.comBase ? `<modBC>3</modBC><vBC>${v2(c.vBC)}</vBC>${c.pRedBC ? `<pRedBC>${p2(c.pRedBC)}</pRedBC>` : ""}<pICMS>${p2(c.pICMS!)}</pICMS><vICMS>${v2(c.vICMS)}</vICMS>` : "";
       return `<ICMSSN900>${orig}<CSOSN>900</CSOSN>${base}</ICMSSN900>`;
     }
+    // ICMS já retido pelo fornecedor (substituído): sem destaque; o ICMS retido antes é opcional no leiaute
+    if (c.cst === "500") return `<ICMSSN500>${orig}<CSOSN>500</CSOSN></ICMSSN500>`;
     return `<ICMSSN102>${orig}<CSOSN>${c.cst}</CSOSN></ICMSSN102>`;
   }
   const cst = `<CST>${c.cst}</CST>`;
@@ -108,6 +110,8 @@ function icmsXml(i: ItemCalculado): string {
     case "41":
     case "50":
       return `<ICMS40>${orig}${cst}</ICMS40>`;
+    case "60":
+      return `<ICMS60>${orig}${cst}</ICMS60>`;
     case "51":
       return (
         `<ICMS51>${orig}${cst}<modBC>3</modBC>${c.pRedBC ? `<pRedBC>${p2(c.pRedBC)}</pRedBC>` : ""}` +

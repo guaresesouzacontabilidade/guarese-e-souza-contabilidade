@@ -20,6 +20,7 @@ import {
 import { mensagemErro } from "@/lib/acoes";
 import { formatarData } from "@/lib/formatos";
 import { SEM_PIS_COFINS, certificadoValido, cfopExportacao } from "@/lib/nfe-emissao/rotulos";
+import { CSOSN } from "@/lib/nfe-emissao/calculo";
 
 export const metadata: Metadata = { title: "Configurar emissão de NF-e" };
 
@@ -76,7 +77,7 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
   const operacoesSemPisCofins = pisCofins
     ? listaOperacoes.filter((o) => o.ativa && o.finalidade === 1 && !cfopExportacao(o.cfop) && (SEM_PIS_COFINS.includes(o.pis_cst) || SEM_PIS_COFINS.includes(o.cofins_cst)))
     : [];
-  const operacoesSemRegra = listaOperacoes.filter((o) => o.ativa && (simples ? !["101", "102", "103", "300", "400", "900"].includes(o.icms_cst) : ["101", "102", "103", "300", "400", "900"].includes(o.icms_cst) || (atual.crt === 3 && !o.ibscbs_cclass_trib)));
+  const operacoesSemRegra = listaOperacoes.filter((o) => o.ativa && (simples ? !(o.icms_cst in CSOSN) : o.icms_cst in CSOSN || (atual.crt === 3 && !o.ibscbs_cclass_trib)));
 
   return (
     <>
@@ -162,10 +163,10 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
           <Card>
             <CardHeader>
               <CardTitle>Produtos</CardTitle>
-              <CardDescription>O que a empresa vende, com NCM, unidade e peso.</CardDescription>
+              <CardDescription>O que a empresa vende, com NCM, unidade e peso. O produto com ST pode ter a própria regra fiscal.</CardDescription>
             </CardHeader>
             <CardContent>
-              <ProdutosNfe empresaId={empresaId} produtos={(produtos ?? []) as ProdutoNfe[]} />
+              <ProdutosNfe empresaId={empresaId} produtos={(produtos ?? []) as ProdutoNfe[]} operacoes={listaOperacoes} simples={simples} />
             </CardContent>
           </Card>
         </div>

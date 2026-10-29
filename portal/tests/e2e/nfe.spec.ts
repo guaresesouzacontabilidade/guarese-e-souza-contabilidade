@@ -83,8 +83,9 @@ test("equipe: emissão desligada sem certificado, produto pelo modelo e bloqueio
   await page.waitForURL(/\/notas-produto\/configuracao/);
   await expect(page.getByText("Sem certificado digital válido")).toBeVisible();
   await expect(page.getByText("Fazenda Boa Esperança (DEMO)")).toBeVisible();
-  await expect(page.getByText("Venda de milho para outro estado (DEMO)")).toBeVisible();
-  await expect(page.getByRole("cell", { name: /MILHO EM GRAOS/ })).toBeVisible();
+  // (o nome também aparece na escolha da regra fiscal própria dos produtos)
+  await expect(page.getByText("Venda de milho para outro estado (DEMO)", { exact: true })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /^MILHO EM GRAOS/ })).toBeVisible();
 
   // Produto novo a partir do modelo (NCM, unidade e peso preenchidos)
   await page.getByRole("button", { name: "Novo produto" }).click();

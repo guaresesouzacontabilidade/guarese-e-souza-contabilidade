@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Pencil, PlugZap, Plus, Trash2 } from "lucide-react";
+import { Pencil, PlugZap, Plus, Search, Trash2 } from "lucide-react";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { SeletorMunicipio } from "@/components/obrigacoes/seletor-municipio";
 import { listarMunicipios } from "@/lib/obrigacoes/acoes";
-import { salvarConfiguracao, salvarEmitente, salvarOperacao, salvarProduto, testarConexao } from "@/lib/nfe-emissao/acoes";
+import { definirOperacaoProdutos, salvarConfiguracao, salvarEmitente, salvarOperacao, salvarProduto, testarConexao } from "@/lib/nfe-emissao/acoes";
 import { CSOSN, CST_IBSCBS, CST_ICMS } from "@/lib/nfe-emissao/calculo";
 import {
   AMBIENTE_NFE,
@@ -71,6 +71,8 @@ export interface ProdutoNfe {
   valor_unitario: number | null;
   origem: number;
   ativo: boolean;
+  /** Regra fiscal própria (operação) do produto; vazio = a operação escolhida na nota */
+  operacao_id: string | null;
 }
 
 export interface ContribuicaoNfe {
@@ -417,7 +419,30 @@ const MODELOS_PRODUTO = [
   { rotulo: "Soja em grão (tonelada)", codigo: "SOJA-T", descricao: "SOJA EM GRAOS", ncm: "12019000", unidade: "TON", peso: "1000" },
 ];
 
-function FormProduto({ empresaId, produto, aoSalvar }: { empresaId: string; produto?: ProdutoNfe; aoSalvar: () => void }) {
+/** Operações que podem ser a regra própria de um produto: de venda (NF-e normal) e ligadas. */
+function operacoesDeVenda(operacoes: OperacaoNfe[]) {
+  return operacoes.filter((o) => o.ativa && o.finalidade === 1);
+}
+
+function rotuloOperacao(o: OperacaoNfe, simples: boolean) {
+  return `${o.nome} — CFOP ${o.cfop} — ${simples ? "CSOSN" : "CST"} ${o.icms_cst}`;
+}
+
+function FormProduto({
+  empresaId,
+  produto,
+  operacoes,
+  simples,
+  aoSalvar,
+}: {
+  empresaId: string;
+  produto?: ProdutoNfe;
+  operacoes: OperacaoNfe[];
+  simples: boolean;
+  aoSalvar: () => void;
+}) {
+  const opcoes = operacoesDeVenda(operacoes);
+  const atual = produto?.operacao_id ? operacoes.find((o) => o.id === produto.operacao_id) : undefined;
   const [v, setV] = React.useState({
     codigo: produto?.codigo ?? "",
     descricao: produto?.descricao ?? "",
@@ -489,6 +514,23 @@ function FormProduto({ empresaId, produto, aoSalvar }: { empresaId: string; prod
               <Campo rotulo="Código de barras (GTIN)" htmlFor="pr-gtin" ajuda="Deixe em branco se não tiver (sai SEM GTIN).">
                 <Input id="pr-gtin" name="gtin" inputMode="numeric" maxLength={14} defaultValue={produto?.gtin ?? ""} />
               </Campo>
+              <Campo
+                rotulo="Regra fiscal própria (opcional)"
+                htmlFor="pr-operacao"
+                erro={e.operacao_id}
+                className="sm:col-span-2"
+                ajuda="Para o produto que sai sempre com outra regra, mesmo junto com outros na mesma nota. Ex.: ração com ST (CFOP 5.405 e CSOSN 500). Vale na venda comum para o mesmo destino da operação da nota."
+              >
+                <Select id="pr-operacao" name="operacao_id" defaultValue={produto?.operacao_id ?? ""}>
+                  <option value="">A operação escolhida na nota</option>
+                  {atual && !opcoes.includes(atual) ? <option value={atual.id}>{rotuloOperacao(atual, simples)} (desligada ou não é de venda)</option> : null}
+                  {opcoes.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {rotuloOperacao(o, simples)}
+                    </option>
+                  ))}
+                </Select>
+              </Campo>
             </div>
             {produto ? (
               <label className="flex items-center gap-2 text-sm">
@@ -505,43 +547,120 @@ function FormProduto({ empresaId, produto, aoSalvar }: { empresaId: string; prod
   );
 }
 
-export function ProdutosNfe({ empresaId, produtos }: { empresaId: string; produtos: ProdutoNfe[] }) {
+export function ProdutosNfe({ empresaId, produtos, operacoes, simples }: { empresaId: string; produtos: ProdutoNfe[]; operacoes: OperacaoNfe[]; simples: boolean }) {
   const [editando, setEditando] = React.useState<ProdutoNfe | "novo" | null>(null);
+  const [busca, setBusca] = React.useState("");
+  const [marcados, setMarcados] = React.useState<Set<string>>(new Set());
+  const [alvo, setAlvo] = React.useState("");
+  const opcoes = operacoesDeVenda(operacoes);
+  const nomes = new Map(operacoes.map((o) => [o.id, o]));
+  const termo = busca.trim().toLowerCase();
+  const digitos = termo.replace(/\D/g, "");
+  const filtrados = termo
+    ? produtos.filter((p) => p.descricao.toLowerCase().includes(termo) || p.codigo.toLowerCase().includes(termo) || (digitos.length >= 2 && p.ncm.startsWith(digitos)))
+    : produtos;
+  const todosMarcados = filtrados.length > 0 && filtrados.every((p) => marcados.has(p.id));
+  const marcar = (id: string, sim: boolean) =>
+    setMarcados((m) => {
+      const n = new Set(m);
+      if (sim) n.add(id);
+      else n.delete(id);
+      return n;
+    });
+  const marcarFiltrados = (sim: boolean) =>
+    setMarcados((m) => {
+      const n = new Set(m);
+      for (const p of filtrados) {
+        if (sim) n.add(p.id);
+        else n.delete(p.id);
+      }
+      return n;
+    });
   return (
     <div className="space-y-3">
       {produtos.length ? (
-        <div className="overflow-x-auto">
-          <Table>
-            <THead>
-              <Tr>
-                <Th>Produto</Th>
-                <Th>NCM</Th>
-                <Th>Unidade</Th>
-                <Th className="text-right">Ações</Th>
-              </Tr>
-            </THead>
-            <TBody>
-              {produtos.map((p) => (
-                <Tr key={p.id}>
-                  <Td>
-                    <span className="font-medium">{p.descricao}</span> <span className="text-muted-foreground">({p.codigo})</span>{" "}
-                    {!p.ativo ? <Badge variante="neutro">Inativo</Badge> : null}
-                  </Td>
-                  <Td className="numero">{p.ncm.replace(/^(\d{4})(\d{2})(\d{2})$/, "$1.$2.$3")}</Td>
-                  <Td>
-                    {p.unidade}
-                    {p.peso_kg ? <span className="text-muted-foreground"> ({num(p.peso_kg)} kg)</span> : null}
-                  </Td>
-                  <Td className="text-right">
-                    <Button variante="fantasma" tamanho="sm" onClick={() => setEditando(p)}>
-                      <Pencil /> Editar
-                    </Button>
-                  </Td>
+        <>
+          {produtos.length > 8 ? (
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input aria-label="Buscar produto" placeholder="Buscar por nome, código ou começo do NCM (ex.: 2309)" className="pl-8" value={busca} onChange={(ev) => setBusca(ev.target.value)} />
+            </div>
+          ) : null}
+          {opcoes.length ? (
+            <div className="flex flex-wrap items-end gap-2 rounded-lg border border-border p-3">
+              <Campo rotulo={`Regra fiscal própria para os ${marcados.size} marcado(s)`} htmlFor="pr-alvo" className="min-w-0 flex-1">
+                <Select id="pr-alvo" value={alvo} onChange={(ev) => setAlvo(ev.target.value)}>
+                  <option value="">Tirar a regra própria (usar a operação da nota)</option>
+                  {opcoes.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {rotuloOperacao(o, simples)}
+                    </option>
+                  ))}
+                </Select>
+              </Campo>
+              <BotaoAcao
+                variante="contorno"
+                disabled={!marcados.size}
+                acao={() => definirOperacaoProdutos(empresaId, alvo || null, [...marcados])}
+                aoSucesso={() => setMarcados(new Set())}
+              >
+                Aplicar
+              </BotaoAcao>
+            </div>
+          ) : null}
+          <div className="overflow-x-auto">
+            <Table>
+              <THead>
+                <Tr>
+                  <Th className="w-8">
+                    <Checkbox aria-label="Marcar todos os produtos da lista" checked={todosMarcados} onChange={(ev) => marcarFiltrados(ev.target.checked)} />
+                  </Th>
+                  <Th>Produto</Th>
+                  <Th>NCM</Th>
+                  <Th>Unidade</Th>
+                  <Th>Regra fiscal</Th>
+                  <Th className="text-right">Ações</Th>
                 </Tr>
-              ))}
-            </TBody>
-          </Table>
-        </div>
+              </THead>
+              <TBody>
+                {filtrados.map((p) => {
+                  const op = p.operacao_id ? nomes.get(p.operacao_id) : undefined;
+                  return (
+                    <Tr key={p.id}>
+                      <Td>
+                        <Checkbox aria-label={`Marcar ${p.descricao}`} checked={marcados.has(p.id)} onChange={(ev) => marcar(p.id, ev.target.checked)} />
+                      </Td>
+                      <Td>
+                        <span className="font-medium">{p.descricao}</span> <span className="text-muted-foreground">({p.codigo})</span>{" "}
+                        {!p.ativo ? <Badge variante="neutro">Inativo</Badge> : null}
+                      </Td>
+                      <Td className="numero">{p.ncm.replace(/^(\d{4})(\d{2})(\d{2})$/, "$1.$2.$3")}</Td>
+                      <Td>
+                        {p.unidade}
+                        {p.peso_kg ? <span className="text-muted-foreground"> ({num(p.peso_kg)} kg)</span> : null}
+                      </Td>
+                      <Td>
+                        {op ? (
+                          <span title={rotuloOperacao(op, simples)}>
+                            <Badge variante={op.ativa && op.finalidade === 1 ? "info" : "alerta"}>Própria</Badge> {op.nome}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">A da nota</span>
+                        )}
+                      </Td>
+                      <Td className="text-right">
+                        <Button variante="fantasma" tamanho="sm" onClick={() => setEditando(p)}>
+                          <Pencil /> Editar
+                        </Button>
+                      </Td>
+                    </Tr>
+                  );
+                })}
+              </TBody>
+            </Table>
+          </div>
+          {termo && !filtrados.length ? <p className="text-sm text-muted-foreground">Nenhum produto encontrado.</p> : null}
+        </>
       ) : (
         <EstadoVazio titulo="Nenhum produto" descricao="Cadastre o que a empresa vende (ex.: milho em grão, com NCM e peso da saca)." />
       )}
@@ -550,7 +669,9 @@ export function ProdutosNfe({ empresaId, produtos }: { empresaId: string; produt
       </Button>
       <Dialog open={editando !== null} onOpenChange={(v) => !v && setEditando(null)}>
         <DialogContent largura="lg" titulo={editando === "novo" ? "Novo produto" : "Editar produto"}>
-          {editando !== null ? <FormProduto empresaId={empresaId} produto={editando === "novo" ? undefined : editando} aoSalvar={() => setEditando(null)} /> : null}
+          {editando !== null ? (
+            <FormProduto empresaId={empresaId} produto={editando === "novo" ? undefined : editando} operacoes={operacoes} simples={simples} aoSalvar={() => setEditando(null)} />
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>
@@ -583,6 +704,8 @@ interface ModeloOperacao {
   consumidor_final?: boolean;
   difal_metodo?: string;
   incide_funrural?: boolean;
+  /** Mercadoria com o ICMS já retido pelo fornecedor: CSOSN 500 no Simples, CST 60 no regime normal */
+  st?: boolean;
 }
 
 const MODELOS_OPERACAO: ModeloOperacao[] = [
@@ -598,6 +721,14 @@ const MODELOS_OPERACAO: ModeloOperacao[] = [
   },
   { rotulo: "Venda de mercadoria comprada para outro estado (6102)", nome: "Revenda - outro estado", natureza: "VENDA DE MERCADORIA ADQUIRIDA", destino: "interestadual", cfop: "6102" },
   { rotulo: "Venda de mercadoria comprada dentro do estado (5102)", nome: "Revenda - dentro do estado", natureza: "VENDA DE MERCADORIA ADQUIRIDA", destino: "interna", cfop: "5102" },
+  {
+    rotulo: "Venda de mercadoria com ICMS já retido (substituição tributária) dentro do estado (5405)",
+    nome: "Venda com ST - dentro do estado",
+    natureza: "VENDA DE MERCADORIA ADQUIRIDA COM ST",
+    destino: "interna",
+    cfop: "5405",
+    st: true,
+  },
   {
     rotulo: "Venda a consumidor (não contribuinte) de outro estado, com DIFAL (6108)",
     nome: "Venda a consumidor de outro estado",
@@ -716,7 +847,7 @@ function FormOperacao({
   // Operação nova no regime normal: a venda já vem com o PIS e a Cofins tributados (alíquota básica do regime)
   const padraoPis: Partial<OperacaoNfe> =
     !operacao && pisCofins ? { pis_cst: "01", cofins_cst: "01", pis_aliquota: pisCofins.pis, cofins_aliquota: pisCofins.cofins, excluir_icms_pis_cofins: true } : {};
-  const base = { ...padraoPis, ...operacao, ...(modelo ?? {}) } as Partial<OperacaoNfe>;
+  const base = { ...padraoPis, ...operacao, ...(modelo ?? {}), ...(modelo?.st ? { icms_cst: simples ? "500" : "60" } : {}) } as Partial<OperacaoNfe>;
   return (
     <div className="space-y-4">
       {!operacao ? (
@@ -828,7 +959,18 @@ function CamposOperacao({
             <fieldset className="space-y-4 rounded-lg border border-border p-3 sm:p-4">
               <legend className="px-1 text-sm font-medium">ICMS</legend>
               <div className="grid gap-4 sm:grid-cols-3 [&>*]:min-w-0">
-                <Campo rotulo={simples ? "CSOSN" : "CST"} htmlFor="op-cst" obrigatorio erro={e.icms_cst} className="sm:col-span-3">
+                <Campo
+                  rotulo={simples ? "CSOSN" : "CST"}
+                  htmlFor="op-cst"
+                  obrigatorio
+                  erro={e.icms_cst}
+                  className="sm:col-span-3"
+                  ajuda={
+                    cst === "500" || cst === "60"
+                      ? "Mercadoria que já veio com o ICMS retido pelo fornecedor: a nota sai sem ICMS destacado (CFOP 5.405). Para usar junto com outros produtos na mesma nota, escolha esta operação como regra própria dos produtos com ST (Produtos). Na venda para outra empresa que revende, a SEFAZ pode pedir o ICMS retido antes, que o portal ainda não preenche."
+                      : undefined
+                  }
+                >
                   <Select id="op-cst" name="icms_cst" value={cst} onChange={(ev) => setCst(ev.target.value)}>
                     <option value="">Escolha</option>
                     {Object.entries(csts).map(([c, r]) => (
