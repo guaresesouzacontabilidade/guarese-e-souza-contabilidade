@@ -120,6 +120,8 @@ describe.skipIf(!local)("auditor fiscal — análise de ponta a ponta (Supabase 
     expect(mono).toMatchObject({ tipo: "oportunidade", situacao: "novo", valor_base: 500 });
     expect(Number(mono.valor_estimado)).toBeGreaterThan(0);
     expect((mono.referencias as unknown[]).length).toBe(2);
+    // Grupos de itens gravados para o relatório de correções
+    expect((mono.criterios as unknown[]).length).toBe(2);
     expect(st).toMatchObject({ tipo: "oportunidade", valor_base: 360 });
     const { data: exec } = await admin.from("auditor_execucoes").select("situacao, notas_analisadas, achados_novos").eq("empresa_id", empresaId).order("criada_em", { ascending: false }).limit(1).single();
     expect(exec).toMatchObject({ situacao: "concluida" });

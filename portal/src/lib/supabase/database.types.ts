@@ -98,13 +98,13 @@ isOneToOne: false
                   ]
                 },"auditor_achados": {
                   Row: {
-                    "atualizado_em": string,"chave": string,"competencia": string,"confianca": string,"detectado_em": string,"empresa_id": string,"execucao_id": string | null,"fontes": NonNullable<Json>,"id": string,"memoria": NonNullable<Json>,"motivo": string | null,"publicado_em": string | null,"publicado_por": string | null,"referencias": NonNullable<Json>,"regra": string,"resumo": string,"revisado_em": string | null,"revisado_por": string | null,"situacao": string,"solicitacao_id": string | null,"texto_cliente": string | null,"tipo": string,"titulo": string,"valor_base": number | null,"valor_estimado": number | null,"valores_alterados_em": string | null
+                    "atualizado_em": string,"chave": string,"competencia": string,"confianca": string,"criterios": NonNullable<Json>,"detectado_em": string,"empresa_id": string,"execucao_id": string | null,"fontes": NonNullable<Json>,"id": string,"memoria": NonNullable<Json>,"motivo": string | null,"publicado_em": string | null,"publicado_por": string | null,"referencias": NonNullable<Json>,"regra": string,"resumo": string,"revisado_em": string | null,"revisado_por": string | null,"situacao": string,"solicitacao_id": string | null,"texto_cliente": string | null,"tipo": string,"titulo": string,"valor_base": number | null,"valor_estimado": number | null,"valores_alterados_em": string | null
                   }
                   Insert: {
-                    "atualizado_em"?: string,"chave": string,"competencia": string,"confianca": string,"detectado_em"?: string,"empresa_id": string,"execucao_id"?: string | null,"fontes"?: NonNullable<Json>,"id"?: string,"memoria"?: NonNullable<Json>,"motivo"?: string | null,"publicado_em"?: string | null,"publicado_por"?: string | null,"referencias"?: NonNullable<Json>,"regra": string,"resumo": string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"solicitacao_id"?: string | null,"texto_cliente"?: string | null,"tipo": string,"titulo": string,"valor_base"?: number | null,"valor_estimado"?: number | null,"valores_alterados_em"?: string | null
+                    "atualizado_em"?: string,"chave": string,"competencia": string,"confianca": string,"criterios"?: NonNullable<Json>,"detectado_em"?: string,"empresa_id": string,"execucao_id"?: string | null,"fontes"?: NonNullable<Json>,"id"?: string,"memoria"?: NonNullable<Json>,"motivo"?: string | null,"publicado_em"?: string | null,"publicado_por"?: string | null,"referencias"?: NonNullable<Json>,"regra": string,"resumo": string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"solicitacao_id"?: string | null,"texto_cliente"?: string | null,"tipo": string,"titulo": string,"valor_base"?: number | null,"valor_estimado"?: number | null,"valores_alterados_em"?: string | null
                   }
                   Update: {
-                    "atualizado_em"?: string,"chave"?: string,"competencia"?: string,"confianca"?: string,"detectado_em"?: string,"empresa_id"?: string,"execucao_id"?: string | null,"fontes"?: NonNullable<Json>,"id"?: string,"memoria"?: NonNullable<Json>,"motivo"?: string | null,"publicado_em"?: string | null,"publicado_por"?: string | null,"referencias"?: NonNullable<Json>,"regra"?: string,"resumo"?: string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"solicitacao_id"?: string | null,"texto_cliente"?: string | null,"tipo"?: string,"titulo"?: string,"valor_base"?: number | null,"valor_estimado"?: number | null,"valores_alterados_em"?: string | null
+                    "atualizado_em"?: string,"chave"?: string,"competencia"?: string,"confianca"?: string,"criterios"?: NonNullable<Json>,"detectado_em"?: string,"empresa_id"?: string,"execucao_id"?: string | null,"fontes"?: NonNullable<Json>,"id"?: string,"memoria"?: NonNullable<Json>,"motivo"?: string | null,"publicado_em"?: string | null,"publicado_por"?: string | null,"referencias"?: NonNullable<Json>,"regra"?: string,"resumo"?: string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"solicitacao_id"?: string | null,"texto_cliente"?: string | null,"tipo"?: string,"titulo"?: string,"valor_base"?: number | null,"valor_estimado"?: number | null,"valores_alterados_em"?: string | null
                   }
                   Relationships: [
                     {
@@ -4512,6 +4512,9 @@ isOneToOne: false
                            },
 "auditor_registrar_resultado":
 { Args: { "p_achados": Json,"p_execucao_id": string,"p_resumo": Json }; Returns: Json
+                           },
+"auditor_relatorio_itens":
+{ Args: { "p_empresa_id": string,"p_ids": (string)[] }; Returns: Json
                            },
 "auditor_revisar":
 { Args: { "p_acao": string,"p_id": string,"p_motivo"?: string,"p_texto_cliente"?: string }; Returns: undefined

@@ -161,6 +161,10 @@ describe("auditor fiscal — farmácia do Simples", () => {
     expect(a.referencias.map((r) => r.descricao)).toEqual(["DIPIRONA 500MG 10 COMP", "SHAMPOO 300ML"]);
     expect(a.referencias[0].motivo).toContain("comprado com CST 04");
     expect(a.fontes[0].titulo).toContain("art. 18, § 4º-A");
+    // Os grupos de itens do achado: o relatório de correções busca por eles todos os produtos e notas
+    expect(a.criterios.length).toBe(2);
+    expect(a.criterios.every((c) => c.competencia === "2026-09-01" && c.operacao === "saida")).toBe(true);
+    expect(a.criterios.map((c) => c.motivo).sort()).toEqual(a.referencias.map((r) => r.motivo).sort());
   });
 
   it("acha o ICMS-ST pago de novo no DAS só no produto vendido como tributado", () => {
@@ -168,6 +172,7 @@ describe("auditor fiscal — farmácia do Simples", () => {
     // Dipirona (comprada com ST, vendida com CSOSN 102): 360,00 × 6,728% × 33,50% = 8,11. O xampu saiu com CSOSN 500: fora.
     expect(a).toMatchObject({ valor_base: "360.00", valor_estimado: "8.11", confianca: "alta" });
     expect(a.resumo).toContain("CSOSN 102");
+    expect(a.criterios).toEqual([expect.objectContaining({ operacao: "saida", csosn: "102" })]);
     expect(a.referencias).toHaveLength(1);
   });
 

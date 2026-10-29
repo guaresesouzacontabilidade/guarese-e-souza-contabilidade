@@ -3,6 +3,7 @@
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { processarFilaDepois } from "@/lib/jobs/disparo";
+import { competenciaAtual } from "@/lib/competencia";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ACOES = ["confirmar", "descartar", "publicar", "retirar", "resolver", "reabrir"] as const;
@@ -65,4 +66,41 @@ export async function pedirAjudaAchado(empresaId: string, achadoId: string): Pro
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["enviar_envio"], limite: 10 });
   return sucesso("Pedido enviado ao escritório. Acompanhe em Solicitações.", { solicitacao: data });
+}
+
+/**
+ * Publica à empresa o relatório de correções (PDF e planilha) dos achados
+ * escolhidos: os arquivos entram em Documentos (Relatórios) e o cliente é avisado.
+ */
+export async function publicarRelatorioCorrecoes(empresaId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+  const ctx = await obterContextoEmpresa(empresaId);
+  if (!ctx.pode("auditor.gerenciar") || !ctx.pode("documentos.publicar")) return falha("Seu acesso não permite publicar relatórios para o cliente.");
+  const ids = [...new Set(fd.getAll("achado").map(String).filter((x) => UUID.test(x)))];
+  if (!ids.length) return falha("Escolha pelo menos um achado para o relatório.");
+  if (ids.length > 200) return falha("Escolha no máximo 200 achados.");
+  const recado = String(fd.get("recado") ?? "").trim().slice(0, 2000) || null;
+  const { data: empresa } = await ctx.supabase.from("empresas").select("razao_social, nome_fantasia, logo_path").eq("id", empresaId).single();
+  if (!empresa) return falha("Empresa não encontrada.");
+  const { gerarRelatorioCorrecoes, TITULO_RELATORIO_CORRECOES } = await import("./relatorio");
+  const { publicarArquivoDoEscritorio } = await import("@/lib/documentos/publicar-servidor");
+  const competencia = competenciaAtual();
+  try {
+    for (const formato of ["xlsx", "pdf"] as const) {
+      const r = await gerarRelatorioCorrecoes(ctx.supabase, { id: empresaId, ...empresa }, ids, recado, formato);
+      const pub = await publicarArquivoDoEscritorio(ctx.supabase, empresaId, {
+        categoria: "esc_relatorio",
+        competencia,
+        nome: r.nome,
+        mime: r.tipo,
+        bytes: r.arquivo,
+        titulo: `${TITULO_RELATORIO_CORRECOES}${formato === "xlsx" ? " — planilha de produtos" : ""} — ${r.dados.periodo}`,
+      });
+      if ("erro" in pub) return falha(pub.erro);
+    }
+  } catch (e) {
+    return falha(e instanceof Error && e.message.startsWith("Nenhum achado") ? e.message : "Não foi possível gerar o relatório. Tente novamente.");
+  }
+  processarFilaDepois({ tipos: ["processar_documento", "enviar_envio"] });
+  return sucesso("Relatório publicado: o PDF e a planilha estão em Documentos da empresa (Relatórios) e o cliente foi avisado.");
 }

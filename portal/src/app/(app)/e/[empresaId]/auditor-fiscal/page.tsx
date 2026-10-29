@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AcoesAchado, BotaoAnalisar, BotaoPedirAjuda } from "@/components/auditor-fiscal/auditor-fiscal";
 import { AtualizarEnquanto } from "@/components/ui/atualizar-enquanto";
+import { RelatorioCorrecoes } from "@/components/auditor-fiscal/relatorio-correcoes";
 import {
   CONFIANCA,
   FILTROS_SITUACAO,
@@ -71,7 +72,7 @@ async function VisaoEquipe({ empresaId, base, sp, ctx }: { empresaId: string; ba
 
   const [{ data: achados }, { data: todos }, { data: execucoes }, { data: empresa }, { data: parametros }] = await Promise.all([
     consulta,
-    ctx.supabase.from("auditor_achados").select("tipo, situacao, valor_estimado").eq("empresa_id", empresaId),
+    ctx.supabase.from("auditor_achados").select("id, regra, titulo, competencia, tipo, situacao, valor_estimado").eq("empresa_id", empresaId).order("competencia", { ascending: false }),
     ctx.supabase
       .from("auditor_execucoes")
       .select("id, situacao, origem, criada_em, concluida_em, notas_analisadas, itens_analisados, notas_relidas, achados_novos, erro, periodo_inicio, periodo_fim")
@@ -129,6 +130,10 @@ async function VisaoEquipe({ empresaId, base, sp, ctx }: { empresaId: string; ba
           , o auditor presume o Anexo I (comércio) e marca os valores como &ldquo;confiança média&rdquo;.
         </Alerta>
       ) : null}
+
+      <div className="mb-4">
+        <RelatorioCorrecoes empresaId={empresaId} achados={ativos.slice(0, 200)} podePublicar={ctx.pode("documentos.publicar")} />
+      </div>
 
       <Card className="mb-4">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6 text-sm">

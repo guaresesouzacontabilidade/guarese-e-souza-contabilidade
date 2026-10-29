@@ -98,6 +98,26 @@ export interface Referencia extends ExemploItem {
   motivo: string;
 }
 
+/**
+ * Grupo de itens que levou ao achado (mesmos códigos fiscais do agrupamento):
+ * o relatório de correções busca por ele todos os produtos e notas do achado.
+ */
+export interface CriterioItens {
+  competencia: string;
+  operacao: "entrada" | "saida";
+  modelo: string;
+  cfop: string | null;
+  ncm: string | null;
+  gtin: string | null;
+  cest: string | null;
+  ex: string | null;
+  csosn: string | null;
+  cst_icms: string | null;
+  cst_pis: string | null;
+  cst_cofins: string | null;
+  motivo: string;
+}
+
 export interface AchadoCalculado {
   regra: string;
   chave: string;
@@ -110,6 +130,8 @@ export interface AchadoCalculado {
   valor_estimado: string | null;
   memoria: { rotulo: string; valor: string }[];
   referencias: Referencia[];
+  /** Grupos de itens do achado (vazio quando o achado não depende de produtos, como o IBS/CBS). */
+  criterios: CriterioItens[];
   fontes: Fonte[];
 }
 
@@ -146,6 +168,24 @@ function referencias(grupos: { g: GrupoItens; motivo: string }[], limite = 15): 
     .flatMap(({ g, motivo }) => (g.exemplos ?? []).map((e) => ({ ...e, motivo })))
     .sort((a, b) => num(b.valor).comparedTo(num(a.valor)))
     .slice(0, limite);
+}
+
+function criterios(grupos: { g: GrupoItens; motivo: string }[], limite = 300): CriterioItens[] {
+  return grupos.slice(0, limite).map(({ g, motivo }) => ({
+    competencia: g.competencia,
+    operacao: g.operacao,
+    modelo: g.modelo,
+    cfop: g.cfop,
+    ncm: g.ncm,
+    gtin: g.gtin,
+    cest: g.cest,
+    ex: g.ex,
+    csosn: g.csosn,
+    cst_icms: g.cst_icms,
+    cst_pis: g.cst_pis,
+    cst_cofins: g.cst_cofins,
+    motivo,
+  }));
 }
 
 function fontesUnicas(lista: (Fonte | null | undefined)[]): Fonte[] {
@@ -422,6 +462,7 @@ function monofasicoSimples(
         { rotulo: "Prazo para pedir a restituição", valor: formatarData(prazo) },
       ],
       referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: x.classe!.motivo }))),
+      criterios: criterios(marcadas.map((x) => ({ g: x.g, motivo: x.classe!.motivo }))),
       fontes: fontesUnicas([FONTES.segregacao, ...marcadas.map((x) => x.classe!.fonte), FONTES.restituicao]),
     },
   ];
@@ -483,6 +524,7 @@ function stSimples(
         { rotulo: "Prazo para pedir a restituição", valor: formatarData(prazo) },
       ],
       referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: x.st!.motivo }))),
+      criterios: criterios(marcadas.map((x) => ({ g: x.g, motivo: x.st!.motivo }))),
       fontes: fontesUnicas([FONTES.segregacao, FONTES.st, FONTES.restituicao]),
     },
   ];
@@ -533,6 +575,7 @@ function monofasicoRegimeNormal(c: string, regime: string, vendas: GrupoItens[],
         { rotulo: "Prazo para pedir a restituição", valor: formatarData(prazo) },
       ],
       referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: x.classe!.motivo }))),
+      criterios: criterios(marcadas.map((x) => ({ g: x.g, motivo: x.classe!.motivo }))),
       fontes: fontesUnicas([...marcadas.map((x) => x.classe!.fonte), FONTES.restituicao]),
     },
   ];
@@ -570,6 +613,7 @@ function icmsStRegimeNormal(c: string, vendas: GrupoItens[], ev: Evidencias, e: 
         { rotulo: "ICMS próprio destacado nessas vendas", valor: moeda(valor) },
       ],
       referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: x.st!.motivo }))),
+      criterios: criterios(marcadas.map((x) => ({ g: x.g, motivo: x.st!.motivo }))),
       fontes: fontesUnicas([FONTES.st, FONTES.restituicao]),
     },
   ];
@@ -607,6 +651,7 @@ function vendaStSemCompraSt(c: string, vendas: GrupoItens[], ev: Evidencias, e: 
         { rotulo: "NCMs envolvidos", valor: ncms.join(", ") },
       ],
       referencias: referencias(marcadas.map((g) => ({ g, motivo: `vendido como ST; compras do NCM ${fmtNcm(g.ncm)} sem ST` }))),
+      criterios: criterios(marcadas.map((g) => ({ g, motivo: `vendido como ST; compras do NCM ${fmtNcm(g.ncm)} sem ST` }))),
       fontes: [FONTES.st],
     },
   ];
@@ -665,6 +710,7 @@ function stRetidaForaDaSt(c: string, grupos: GrupoItens[], e: EntradaAuditoria):
         { rotulo: "Prazo para pedir a restituição", valor: formatarData(prazo) },
       ],
       referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: motivoExclusao(x.g, x.exc) }))),
+      criterios: criterios(marcadas.map((x) => ({ g: x.g, motivo: motivoExclusao(x.g, x.exc) }))),
       fontes: fontesUnicas([...d.fontes, FONTES.restituicao]),
     },
   ];
@@ -721,6 +767,7 @@ function vendaStForaDaSt(c: string, regime: string | null, vendas: GrupoItens[],
           : []),
       ],
       referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: `vendido como ST; comprado sem ST de indústria do ${x.exc.uf} (${motivoExclusao(x.g, x.exc)})` }))),
+      criterios: criterios(marcadas.map((x) => ({ g: x.g, motivo: `vendido como ST; comprado sem ST de indústria do ${x.exc.uf} (${motivoExclusao(x.g, x.exc)})` }))),
       fontes: fontesUnicas([...d.fontes, simplesNacional ? FONTES.segregacao : null]),
     },
   ];
@@ -772,6 +819,7 @@ function estoqueSaidaSt(e: EntradaAuditoria): AchadoCalculado[] {
         { rotulo: "Fora da ST", valor: d.desde },
       ],
       referencias: referencias(marcadas.map((x) => ({ g: x.g, motivo: motivoExclusao(x.g, x.exc) }))),
+      criterios: criterios(marcadas.map((x) => ({ g: x.g, motivo: motivoExclusao(x.g, x.exc) }))),
       fontes: fontesUnicas(d.fontes),
     });
   }
@@ -814,6 +862,7 @@ function ibsCbsAusente(
         { rotulo: "Obrigatório desde", valor: formatarData(inicioObrigacao) },
       ],
       referencias: referencias(sem.map((g) => ({ g, motivo: "nota sem o grupo IBSCBS" }))),
+      criterios: [],
       fontes: [FONTES.ibsCbs, FONTES.notaTecnica],
     },
   ];
@@ -851,6 +900,7 @@ function ibsCbsAliquota(c: string, vendas: GrupoItens[]): AchadoCalculado[] {
         { rotulo: "Alíquotas de teste de 2026", valor: "CBS 0,9% · IBS estadual 0,1% · IBS municipal 0%" },
       ],
       referencias: referencias(marcadas.map((g) => ({ g, motivo: `CBS ${g.p_cbs ?? "—"}%, IBS UF ${g.p_ibs_uf ?? "—"}%` }))),
+      criterios: [],
       fontes: [FONTES.ibsCbs, FONTES.notaTecnica],
     },
   ];
@@ -882,6 +932,7 @@ function ncmInvalido(c: string, vendas: GrupoItens[]): AchadoCalculado[] {
         { rotulo: "Valor desses itens", valor: moeda(valor) },
       ],
       referencias: referencias(marcadas.map((g) => ({ g, motivo: `NCM informado: ${g.ncm ?? "nenhum"}` }))),
+      criterios: criterios(marcadas.map((g) => ({ g, motivo: `NCM informado: ${g.ncm ?? "nenhum"}` }))),
       fontes: [],
     },
   ];

@@ -218,6 +218,7 @@ function issRetidoNoDas(c: string, saidas: NotaServico[], s: MesSimplesServicos 
         { rotulo: "Prazo para pedir a restituição", valor: formatarData(prazo) },
       ],
       referencias: referencias(marcadas.map((n) => ({ n, valor: num(n.valor), motivo: `ISS retido${num(t(n).iss).gt(0) ? ` de ${moeda(num(t(n).iss))}` : ""}` }))),
+      criterios: [],
       fontes: [FONTES_SERVICOS.issRetidoSimples, FONTES_SERVICOS.segregacaoIss, FONTES_SERVICOS.anexosServicos, FONTES_SERVICOS.restituicao],
     },
   ];
@@ -269,6 +270,7 @@ function aliquotaIssRetido(c: string, saidas: NotaServico[], sAnterior: MesSimpl
         { rotulo: "Prazo para pedir a restituição", valor: formatarData(prazo) },
       ],
       referencias: referencias(acima),
+      criterios: [],
       fontes: [FONTES_SERVICOS.aliquotaRetencao, FONTES_SERVICOS.anexosServicos, FONTES_SERVICOS.restituicao],
     });
   }
@@ -295,6 +297,7 @@ function aliquotaIssRetido(c: string, saidas: NotaServico[], sAnterior: MesSimpl
         { rotulo: "ISS que falta pagar (base × diferença de alíquota)", valor: moeda(total) },
       ],
       referencias: referencias(abaixo),
+      criterios: [],
       fontes: [FONTES_SERVICOS.aliquotaRetencao, FONTES_SERVICOS.anexosServicos],
     });
   }
@@ -339,6 +342,7 @@ function federaisRetidosSimples(c: string, saidas: NotaServico[], regime: string
           motivo: [r.irrf.gt(0) ? `IR ${moeda(r.irrf)}` : null, r.csrf.gt(0) ? `PIS/Cofins/CSLL ${moeda(r.csrf)}` : null].filter(Boolean).join("; "),
         })),
       ),
+      criterios: [],
       fontes: [FONTES_SERVICOS.irrfSimples, FONTES_SERVICOS.csrfSimples, FONTES_SERVICOS.restituicao],
     },
   ];
@@ -380,6 +384,7 @@ function inssRetidoSimples(c: string, saidas: NotaServico[], s: MesSimplesServic
         { rotulo: "Prazo para pedir a restituição", valor: formatarData(prazo) },
       ],
       referencias: referencias(marcadas.map((n) => ({ n, valor: num(t(n).ret_cp), motivo: `INSS retido de ${moeda(num(t(n).ret_cp))}` }))),
+      criterios: [],
       fontes: [FONTES_SERVICOS.inssSimples, FONTES_SERVICOS.restituicao],
     },
   ];
@@ -425,6 +430,7 @@ function regimeDivergente(c: string, saidas: NotaServico[], regime: string | nul
       referencias: referencias(
         marcadas.map((n) => ({ n, valor: num(n.valor), motivo: t(n).op_simp_nac === "1" ? "emitida como não optante" : "emitida como optante do Simples" })),
       ),
+      criterios: [],
       fontes: [FONTES_SERVICOS.leiauteNfse],
     },
   ];

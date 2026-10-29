@@ -57,7 +57,7 @@ export function novaPasta() {
   return wb;
 }
 
-function cabecalho(ws: ExcelJS.Worksheet, info: InfoPlanilha, colunas: string[], larguras: number[]) {
+export function cabecalhoPlanilha(ws: ExcelJS.Worksheet, info: InfoPlanilha, colunas: string[], larguras: number[]) {
   ws.addRow([]);
   logosNoTopo(ws, info, colunas.length);
   ws.addRow([info.titulo]).font = { bold: true, size: 14, color: { argb: MARROM } };
@@ -80,7 +80,7 @@ const num = (v: string | number | null | undefined) => dec(v ?? 0).toNumber();
 export function planilhaDre(wb: ExcelJS.Workbook, info: InfoPlanilha, dre: ResultadoDre) {
   const ws = wb.addWorksheet("Resultado (DRE)");
   const varios = dre.meses.length > 1;
-  cabecalho(ws, info, ["Descrição", ...(varios ? dre.meses.map(rotuloMesCurto) : []), "Total", "% da receita"], [52, ...(varios ? dre.meses.map(() => 15) : []), 16, 12]);
+  cabecalhoPlanilha(ws, info, ["Descrição", ...(varios ? dre.meses.map(rotuloMesCurto) : []), "Total", "% da receita"], [52, ...(varios ? dre.meses.map(() => 15) : []), 16, 12]);
   for (const l of dre.linhas) {
     const r = ws.addRow([
       `${l.nivel === 1 ? "    " : ""}${l.rotulo}`,
@@ -100,7 +100,7 @@ export function planilhaDre(wb: ExcelJS.Workbook, info: InfoPlanilha, dre: Resul
 
 export function planilhaFluxo(wb: ExcelJS.Workbook, info: InfoPlanilha, fluxo: ResultadoFluxo) {
   const ws = wb.addWorksheet("Fluxo de caixa");
-  cabecalho(ws, info, ["Movimento", ...fluxo.meses.map((m) => rotuloMesCurto(m.mes))], [46, ...fluxo.meses.map(() => 15)]);
+  cabecalhoPlanilha(ws, info, ["Movimento", ...fluxo.meses.map((m) => rotuloMesCurto(m.mes))], [46, ...fluxo.meses.map(() => 15)]);
   const linha = (rotulo: string, valores: (string | number)[], negrito = false) => {
     const r = ws.addRow([rotulo, ...valores.map(num)]);
     r.eachCell((c, i) => i > 1 && (c.numFmt = MOEDA));
@@ -117,7 +117,7 @@ export function planilhaFluxo(wb: ExcelJS.Workbook, info: InfoPlanilha, fluxo: R
   linha("Saldo no fim", fluxo.meses.map((m) => m.saldoFinal), true);
 
   const cat = wb.addWorksheet("Fluxo por categoria");
-  cabecalho(cat, info, ["Categoria", "Grupo", "Entradas", "Saídas"], [40, 34, 16, 16]);
+  cabecalhoPlanilha(cat, info, ["Categoria", "Grupo", "Entradas", "Saídas"], [40, 34, 16, 16]);
   for (const c of fluxo.porCategoria) {
     const r = cat.addRow([c.categoria, GRUPOS_FLUXO[c.grupo] ?? c.grupo, num(c.entradas), num(c.saidas)]);
     r.getCell(3).numFmt = MOEDA;
@@ -134,7 +134,7 @@ export function planilhaProjecao(
   linhas: { data: string; vencido: boolean; descricao: string; contraparte: string | null; entrada: number | string; saida: number | string }[],
 ) {
   const ws = wb.addWorksheet("Previsão de caixa");
-  cabecalho(ws, info, ["Data", "Descrição", "Cliente/Fornecedor", "A receber", "A pagar", "Situação"], [14, 44, 30, 15, 15, 12]);
+  cabecalhoPlanilha(ws, info, ["Data", "Descrição", "Cliente/Fornecedor", "A receber", "A pagar", "Situação"], [14, 44, 30, 15, 15, 12]);
   let saldo = dec(saldoHoje);
   for (const l of [...linhas].sort((a, b) => a.data.localeCompare(b.data))) {
     saldo = saldo.plus(dec(l.entrada)).minus(dec(l.saida));
@@ -155,7 +155,7 @@ export function planilhaProjecao(
 
 export function planilhaIndicadores(wb: ExcelJS.Workbook, info: InfoPlanilha, indicadores: Indicador[], resumo: string[]) {
   const ws = wb.addWorksheet("Indicadores");
-  cabecalho(ws, info, ["Indicador", "Valor", "Situação", "O que significa"], [32, 22, 12, 90]);
+  cabecalhoPlanilha(ws, info, ["Indicador", "Valor", "Situação", "O que significa"], [32, 22, 12, 90]);
   const rot = { bom: "Saudável", atencao: "Atenção", critico: "Crítico", sem_dados: "Sem dados" } as const;
   for (const i of indicadores) {
     const r = ws.addRow([i.titulo, i.valor, rot[i.status], `${i.explicacao}${i.detalhe ? ` (${i.detalhe})` : ""}`]);
