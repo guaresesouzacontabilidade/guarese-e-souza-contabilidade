@@ -1,4 +1,4 @@
-/** Modelo de e-mail com a identidade do escritório (HTML com estilos inline). */
+/** Modelo de e-mail com a identidade do escritório (ou a do cliente que envia; HTML com estilos inline). */
 
 function esc(t: string) {
   return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -9,9 +9,15 @@ export interface DadosModeloEmail {
   paragrafos: string[];
   botao?: { texto: string; url: string };
   aviso?: string;
+  /**
+   * E-mail que um cliente do escritório manda aos clientes dele (ex.: lembrete
+   * da clínica ao tutor): cabeçalho e rodapé com o nome e os contatos dele, sem
+   * a marca do escritório.
+   */
+  remetente?: { nome: string; contatos: string[] };
 }
 
-export function modeloEmail({ titulo, paragrafos, botao, aviso }: DadosModeloEmail) {
+export function modeloEmail({ titulo, paragrafos, botao, aviso, remetente }: DadosModeloEmail) {
   const corpo = paragrafos
     .map((p) => `<p style="margin:0 0 12px;line-height:1.6;white-space:pre-line;">${esc(p)}</p>`)
     .join("");
@@ -24,15 +30,31 @@ export function modeloEmail({ titulo, paragrafos, botao, aviso }: DadosModeloEma
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f3f0;padding:24px 12px;"><tr><td align="center">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e7e2dc;border-radius:12px;">
 <tr><td style="padding:22px 28px;border-bottom:1px solid #efe6da;">
-<div style="font-size:19px;font-weight:bold;color:#4a2c1d;">Portal Guarese&rsquo;s ON</div>
-<div style="font-size:12px;color:#6b625b;">Documentos, contabilidade e gestão financeira em um só lugar.</div></td></tr>
+${
+  remetente
+    ? `<div style="font-size:19px;font-weight:bold;color:#4a2c1d;">${esc(remetente.nome)}</div>`
+    : `<div style="font-size:19px;font-weight:bold;color:#4a2c1d;">Portal Guarese&rsquo;s ON</div>
+<div style="font-size:12px;color:#6b625b;">Documentos, contabilidade e gestão financeira em um só lugar.</div>`
+}</td></tr>
 <tr><td style="padding:26px 28px;"><h1 style="margin:0 0 14px;font-size:18px;color:#4a2c1d;">${esc(titulo)}</h1>${corpo}${btn}
 ${aviso ? `<p style="font-size:12px;color:#6b625b;line-height:1.5;">${esc(aviso)}</p>` : ""}</td></tr>
 <tr><td style="padding:14px 28px;border-top:1px solid #efe6da;font-size:11px;color:#8a8079;line-height:1.5;">
-GUARESE&rsquo;S ON CONTABILIDADE — GUARESE&rsquo;S ON SOLUCOES EMPRESARIAIS LTDA — CNPJ 62.935.399/0001-50<br>
+${
+  remetente
+    ? `${esc(remetente.nome)}${remetente.contatos.length ? ` — ${esc(remetente.contatos.join(" · "))}` : ""}<br>
+Mensagem automática. Não responda a este e-mail; fale com ${esc(remetente.nome)} pelos contatos acima.`
+    : `GUARESE&rsquo;S ON CONTABILIDADE — GUARESE&rsquo;S ON SOLUCOES EMPRESARIAIS LTDA — CNPJ 62.935.399/0001-50<br>
 Praça do Centenário, nº 713, Centro, Porto Nacional – TO — CEP 77.500-000<br>
-Esta é uma mensagem automática do portal. Não responda a este e-mail; use a central de mensagens.</td></tr>
+Esta é uma mensagem automática do portal. Não responda a este e-mail; use a central de mensagens.`
+}</td></tr>
 </table></td></tr></table></body></html>`;
-  const texto = [titulo, "", ...paragrafos, botao ? `\n${botao.texto}: ${botao.url}` : "", aviso ? `\n${aviso}` : ""].join("\n");
+  const texto = [
+    titulo,
+    "",
+    ...paragrafos,
+    botao ? `\n${botao.texto}: ${botao.url}` : "",
+    aviso ? `\n${aviso}` : "",
+    remetente ? `\n${[remetente.nome, ...remetente.contatos].join(" · ")}` : "",
+  ].join("\n");
   return { html, texto };
 }

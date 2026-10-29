@@ -25,6 +25,10 @@ export interface ResumoCaixa {
   /** Recebimentos do hotel neste caixa (quando a empresa usa a gestão do hotel) */
   hotel_total?: number;
   hotel_por_forma?: Record<string, { valor: number; quantidade: number }>;
+  /** Recebimentos da clínica veterinária neste caixa (contas da clínica pagas com o caixa aberto) */
+  clinica_quantidade?: number;
+  clinica_total?: number;
+  clinica_por_forma?: Record<string, { valor: number; quantidade: number }>;
 }
 
 /** Recebimento do hotel feito com este caixa aberto, com os comprovantes anexados. */

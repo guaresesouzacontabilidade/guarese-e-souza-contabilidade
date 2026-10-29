@@ -4397,6 +4397,642 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"vet_adendos": {
+                  Row: {
+                    "atendimento_id": string,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"texto": string,"veterinario_id": string
+                  }
+                  Insert: {
+                    "atendimento_id": string,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"texto": string,"veterinario_id": string
+                  }
+                  Update: {
+                    "atendimento_id"?: string,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"texto"?: string,"veterinario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_adendos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_adendos_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_adendos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_adendos_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_agenda": {
+                  Row: {
+                    "atendimento_id": string | null,"created_at": string,"criado_por": string | null,"duracao_min": number,"empresa_id": string,"id": string,"inicio": string,"nome_avulso": string | null,"observacoes": string | null,"paciente_id": string | null,"status": string,"telefone_avulso": string | null,"tipo": string,"tutor_id": string | null,"updated_at": string,"veterinario_id": string | null
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id": string,"id"?: string,"inicio": string,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"tutor_id"?: string | null,"updated_at"?: string,"veterinario_id"?: string | null
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id"?: string,"id"?: string,"inicio"?: string,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"tutor_id"?: string | null,"updated_at"?: string,"veterinario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_agenda_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_anexos": {
+                  Row: {
+                    "atendimento_id": string,"caminho": string,"confirmado_em": string | null,"created_at": string,"descricao": string | null,"empresa_id": string,"enviado_por": string | null,"id": string,"mime": string,"nome": string,"tamanho": number
+                  }
+                  Insert: {
+                    "atendimento_id": string,"caminho": string,"confirmado_em"?: string | null,"created_at"?: string,"descricao"?: string | null,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"mime": string,"nome": string,"tamanho": number
+                  }
+                  Update: {
+                    "atendimento_id"?: string,"caminho"?: string,"confirmado_em"?: string | null,"created_at"?: string,"descricao"?: string | null,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"mime"?: string,"nome"?: string,"tamanho"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_anexos_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_anexos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_atendimentos": {
+                  Row: {
+                    "agendamento_id": string | null,"anamnese": string | null,"cancelado_motivo": string | null,"created_at": string,"criado_por": string | null,"data_hora": string,"diagnostico_conclusivo": string | null,"diagnostico_presuntivo": string | null,"empresa_id": string,"estado_geral": string | null,"exame_fisico": string | null,"finalizado_em": string | null,"finalizado_por": string | null,"frequencia_cardiaca": number | null,"frequencia_respiratoria": number | null,"hidratacao": string | null,"id": string,"local": string | null,"mucosas": string | null,"numero": number,"orientacoes": string | null,"paciente_id": string,"peso_kg": number | null,"procedimentos": string | null,"relato": string | null,"retorno_em": string | null,"retorno_motivo": string | null,"status": string,"temperatura": number | null,"tipo": string,"tpc": number | null,"tratamento": string | null,"tutor_id": string,"updated_at": string,"veterinario_id": string
+                  }
+                  Insert: {
+                    "agendamento_id"?: string | null,"anamnese"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"diagnostico_conclusivo"?: string | null,"diagnostico_presuntivo"?: string | null,"empresa_id": string,"estado_geral"?: string | null,"exame_fisico"?: string | null,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"frequencia_cardiaca"?: number | null,"frequencia_respiratoria"?: number | null,"hidratacao"?: string | null,"id"?: string,"local"?: string | null,"mucosas"?: string | null,"numero": number,"orientacoes"?: string | null,"paciente_id": string,"peso_kg"?: number | null,"procedimentos"?: string | null,"relato"?: string | null,"retorno_em"?: string | null,"retorno_motivo"?: string | null,"status"?: string,"temperatura"?: number | null,"tipo"?: string,"tpc"?: number | null,"tratamento"?: string | null,"tutor_id": string,"updated_at"?: string,"veterinario_id": string
+                  }
+                  Update: {
+                    "agendamento_id"?: string | null,"anamnese"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"diagnostico_conclusivo"?: string | null,"diagnostico_presuntivo"?: string | null,"empresa_id"?: string,"estado_geral"?: string | null,"exame_fisico"?: string | null,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"frequencia_cardiaca"?: number | null,"frequencia_respiratoria"?: number | null,"hidratacao"?: string | null,"id"?: string,"local"?: string | null,"mucosas"?: string | null,"numero"?: number,"orientacoes"?: string | null,"paciente_id"?: string,"peso_kg"?: number | null,"procedimentos"?: string | null,"relato"?: string | null,"retorno_em"?: string | null,"retorno_motivo"?: string | null,"status"?: string,"temperatura"?: number | null,"tipo"?: string,"tpc"?: number | null,"tratamento"?: string | null,"tutor_id"?: string,"updated_at"?: string,"veterinario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_atendimentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_agendamento_id_fkey"
+      columns: ["empresa_id","agendamento_id"]
+isOneToOne: false
+      referencedRelation: "vet_agenda"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_atendimentos_finalizado_por_fkey"
+      columns: ["finalizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_avisos": {
+                  Row: {
+                    "canal": string,"created_at": string,"criado_por": string | null,"data_alvo": string,"empresa_id": string,"envio_id": string | null,"id": string,"paciente_id": string,"referencia_id": string,"tipo": string,"tutor_id": string
+                  }
+                  Insert: {
+                    "canal": string,"created_at"?: string,"criado_por"?: string | null,"data_alvo": string,"empresa_id": string,"envio_id"?: string | null,"id"?: string,"paciente_id": string,"referencia_id": string,"tipo": string,"tutor_id": string
+                  }
+                  Update: {
+                    "canal"?: string,"created_at"?: string,"criado_por"?: string | null,"data_alvo"?: string,"empresa_id"?: string,"envio_id"?: string | null,"id"?: string,"paciente_id"?: string,"referencia_id"?: string,"tipo"?: string,"tutor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_avisos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_avisos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_avisos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_avisos_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_avisos_envio_id_fkey"
+      columns: ["envio_id"]
+isOneToOne: false
+      referencedRelation: "envios"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_config": {
+                  Row: {
+                    "atualizado_por": string | null,"cidade_documentos": string | null,"created_at": string,"duracao_padrao_min": number,"email": string | null,"empresa_id": string,"endereco": string | null,"horario_fim": string,"horario_inicio": string,"lembrete_dias_antes": number,"lembrete_email": boolean,"mensagem_retorno": string | null,"mensagem_vacina": string | null,"nome_clinica": string | null,"proximo_numero_atendimento": number,"proximo_numero_conta": number,"proximo_numero_documento": number,"proximo_numero_receita": number,"registro_crmv": string | null,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"horario_fim"?: string,"horario_inicio"?: string,"lembrete_dias_antes"?: number,"lembrete_email"?: boolean,"mensagem_retorno"?: string | null,"mensagem_vacina"?: string | null,"nome_clinica"?: string | null,"proximo_numero_atendimento"?: number,"proximo_numero_conta"?: number,"proximo_numero_documento"?: number,"proximo_numero_receita"?: number,"registro_crmv"?: string | null,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"horario_fim"?: string,"horario_inicio"?: string,"lembrete_dias_antes"?: number,"lembrete_email"?: boolean,"mensagem_retorno"?: string | null,"mensagem_vacina"?: string | null,"nome_clinica"?: string | null,"proximo_numero_atendimento"?: number,"proximo_numero_conta"?: number,"proximo_numero_documento"?: number,"proximo_numero_receita"?: number,"registro_crmv"?: string | null,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_conta_itens": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"conta_id": string,"created_at": string,"descricao": string,"empresa_id": string,"id": string,"lancado_por": string | null,"quantidade": number,"servico_id": string | null,"total": number,"valor_unitario": number
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_id": string,"created_at"?: string,"descricao": string,"empresa_id": string,"id"?: string,"lancado_por"?: string | null,"quantidade": number,"servico_id"?: string | null,"total": number,"valor_unitario": number
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_id"?: string,"created_at"?: string,"descricao"?: string,"empresa_id"?: string,"id"?: string,"lancado_por"?: string | null,"quantidade"?: number,"servico_id"?: string | null,"total"?: number,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_conta_itens_empresa_id_conta_id_fkey"
+      columns: ["empresa_id","conta_id"]
+isOneToOne: false
+      referencedRelation: "vet_contas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_conta_itens_empresa_id_servico_id_fkey"
+      columns: ["empresa_id","servico_id"]
+isOneToOne: false
+      referencedRelation: "vet_servicos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_conta_itens_lancado_por_fkey"
+      columns: ["lancado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_contas": {
+                  Row: {
+                    "atendimento_id": string | null,"cancelada_motivo": string | null,"created_at": string,"criado_por": string | null,"desconto": number,"empresa_id": string,"fechada_em": string | null,"fechada_por": string | null,"id": string,"numero": number,"observacao": string | null,"paciente_id": string | null,"status": string,"tutor_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"empresa_id": string,"fechada_em"?: string | null,"fechada_por"?: string | null,"id"?: string,"numero": number,"observacao"?: string | null,"paciente_id"?: string | null,"status"?: string,"tutor_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"empresa_id"?: string,"fechada_em"?: string | null,"fechada_por"?: string | null,"id"?: string,"numero"?: number,"observacao"?: string | null,"paciente_id"?: string | null,"status"?: string,"tutor_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_contas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_contas_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_contas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_contas_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_contas_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_contas_fechada_por_fkey"
+      columns: ["fechada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_documentos": {
+                  Row: {
+                    "atendimento_id": string | null,"cancelado_em": string | null,"cancelado_motivo": string | null,"created_at": string,"criado_por": string | null,"dados": NonNullable<Json>,"emitido_em": string,"empresa_id": string,"id": string,"numero": number,"paciente_id": string,"tipo": string,"tutor_id": string,"veterinario_id": string
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dados"?: NonNullable<Json>,"emitido_em"?: string,"empresa_id": string,"id"?: string,"numero": number,"paciente_id": string,"tipo": string,"tutor_id": string,"veterinario_id": string
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dados"?: NonNullable<Json>,"emitido_em"?: string,"empresa_id"?: string,"id"?: string,"numero"?: number,"paciente_id"?: string,"tipo"?: string,"tutor_id"?: string,"veterinario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_documentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_pacientes": {
+                  Row: {
+                    "alergias": string | null,"ativo": boolean,"castrado": boolean,"created_at": string,"criado_por": string | null,"empresa_id": string,"especie": string,"especie_outra": string | null,"id": string,"microchip": string | null,"nascimento": string | null,"nascimento_estimado": boolean,"nome": string,"obito_causa": string | null,"obito_em": string | null,"observacoes": string | null,"pelagem": string | null,"peso_kg": number | null,"porte": string | null,"raca": string | null,"sexo": string,"sinais_particulares": string | null,"tutor_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "alergias"?: string | null,"ativo"?: boolean,"castrado"?: boolean,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"especie": string,"especie_outra"?: string | null,"id"?: string,"microchip"?: string | null,"nascimento"?: string | null,"nascimento_estimado"?: boolean,"nome": string,"obito_causa"?: string | null,"obito_em"?: string | null,"observacoes"?: string | null,"pelagem"?: string | null,"peso_kg"?: number | null,"porte"?: string | null,"raca"?: string | null,"sexo"?: string,"sinais_particulares"?: string | null,"tutor_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "alergias"?: string | null,"ativo"?: boolean,"castrado"?: boolean,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"especie"?: string,"especie_outra"?: string | null,"id"?: string,"microchip"?: string | null,"nascimento"?: string | null,"nascimento_estimado"?: boolean,"nome"?: string,"obito_causa"?: string | null,"obito_em"?: string | null,"observacoes"?: string | null,"pelagem"?: string | null,"peso_kg"?: number | null,"porte"?: string | null,"raca"?: string | null,"sexo"?: string,"sinais_particulares"?: string | null,"tutor_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_pacientes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_pacientes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_pacientes_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_pagamentos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"conta_id": string,"created_at": string,"data": string,"empresa_id": string,"forma": string,"id": string,"lancamento_id": string | null,"observacao": string | null,"registrado_por": string | null,"sessao_id": string | null,"valor": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_id": string,"created_at"?: string,"data": string,"empresa_id": string,"forma": string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"registrado_por"?: string | null,"sessao_id"?: string | null,"valor": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_id"?: string,"created_at"?: string,"data"?: string,"empresa_id"?: string,"forma"?: string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"registrado_por"?: string | null,"sessao_id"?: string | null,"valor"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_pagamentos_empresa_id_conta_id_fkey"
+      columns: ["empresa_id","conta_id"]
+isOneToOne: false
+      referencedRelation: "vet_contas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_pagamentos_lancamento_id_fkey"
+      columns: ["lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_pagamentos_registrado_por_fkey"
+      columns: ["registrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_pagamentos_sessao_id_fkey"
+      columns: ["sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_receita_itens": {
+                  Row: {
+                    "concentracao": string | null,"duracao": string | null,"empresa_id": string,"forma_farmaceutica": string | null,"id": string,"medicamento": string,"ordem": number,"posologia": string,"quantidade": string,"receita_id": string,"uso": string,"via": string
+                  }
+                  Insert: {
+                    "concentracao"?: string | null,"duracao"?: string | null,"empresa_id": string,"forma_farmaceutica"?: string | null,"id"?: string,"medicamento": string,"ordem": number,"posologia": string,"quantidade": string,"receita_id": string,"uso"?: string,"via"?: string
+                  }
+                  Update: {
+                    "concentracao"?: string | null,"duracao"?: string | null,"empresa_id"?: string,"forma_farmaceutica"?: string | null,"id"?: string,"medicamento"?: string,"ordem"?: number,"posologia"?: string,"quantidade"?: string,"receita_id"?: string,"uso"?: string,"via"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_receita_itens_empresa_id_receita_id_fkey"
+      columns: ["empresa_id","receita_id"]
+isOneToOne: false
+      referencedRelation: "vet_receitas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_receitas": {
+                  Row: {
+                    "atendimento_id": string | null,"cancelada_em": string | null,"cancelada_motivo": string | null,"created_at": string,"criado_por": string | null,"emitida_em": string,"empresa_id": string,"id": string,"numero": number,"numero_controle": string | null,"observacoes": string | null,"paciente_id": string,"tipo": string,"tutor_id": string,"uso_continuo": boolean,"validade": string | null,"veterinario_id": string
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"emitida_em"?: string,"empresa_id": string,"id"?: string,"numero": number,"numero_controle"?: string | null,"observacoes"?: string | null,"paciente_id": string,"tipo"?: string,"tutor_id": string,"uso_continuo"?: boolean,"validade"?: string | null,"veterinario_id": string
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"emitida_em"?: string,"empresa_id"?: string,"id"?: string,"numero"?: number,"numero_controle"?: string | null,"observacoes"?: string | null,"paciente_id"?: string,"tipo"?: string,"tutor_id"?: string,"uso_continuo"?: boolean,"validade"?: string | null,"veterinario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_receitas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_servicos": {
+                  Row: {
+                    "ativo": boolean,"categoria": string,"created_at": string,"empresa_id": string,"id": string,"nome": string,"ordem": number,"preco": number,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"categoria"?: string,"created_at"?: string,"empresa_id": string,"id"?: string,"nome": string,"ordem"?: number,"preco": number,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"categoria"?: string,"created_at"?: string,"empresa_id"?: string,"id"?: string,"nome"?: string,"ordem"?: number,"preco"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_servicos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_tutores": {
+                  Row: {
+                    "aceita_email": boolean,"aceita_whatsapp": boolean,"autorizados": string | null,"bairro": string | null,"cep": string | null,"cidade": string | null,"complemento": string | null,"cpf": string | null,"created_at": string,"criado_por": string | null,"email": string | null,"empresa_id": string,"id": string,"logradouro": string | null,"nome": string,"numero": string | null,"observacoes": string | null,"telefone": string | null,"telefone2": string | null,"uf": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "aceita_email"?: boolean,"aceita_whatsapp"?: boolean,"autorizados"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"complemento"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"email"?: string | null,"empresa_id": string,"id"?: string,"logradouro"?: string | null,"nome": string,"numero"?: string | null,"observacoes"?: string | null,"telefone"?: string | null,"telefone2"?: string | null,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "aceita_email"?: boolean,"aceita_whatsapp"?: boolean,"autorizados"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"complemento"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"email"?: string | null,"empresa_id"?: string,"id"?: string,"logradouro"?: string | null,"nome"?: string,"numero"?: string | null,"observacoes"?: string | null,"telefone"?: string | null,"telefone2"?: string | null,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_tutores_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_tutores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_vacinacoes": {
+                  Row: {
+                    "aplicada_em": string,"atendimento_id": string | null,"cancelada_em": string | null,"cancelada_motivo": string | null,"created_at": string,"criado_por": string | null,"dose": string,"empresa_id": string,"fabricacao": string | null,"fabricante": string | null,"id": string,"observacao": string | null,"origem": string,"paciente_id": string,"partida": string | null,"proxima_dose_em": string | null,"vacina_id": string | null,"vacina_nome": string,"validade": string | null,"veterinario_externo": string | null,"veterinario_id": string | null
+                  }
+                  Insert: {
+                    "aplicada_em": string,"atendimento_id"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dose": string,"empresa_id": string,"fabricacao"?: string | null,"fabricante"?: string | null,"id"?: string,"observacao"?: string | null,"origem"?: string,"paciente_id": string,"partida"?: string | null,"proxima_dose_em"?: string | null,"vacina_id"?: string | null,"vacina_nome": string,"validade"?: string | null,"veterinario_externo"?: string | null,"veterinario_id"?: string | null
+                  }
+                  Update: {
+                    "aplicada_em"?: string,"atendimento_id"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dose"?: string,"empresa_id"?: string,"fabricacao"?: string | null,"fabricante"?: string | null,"id"?: string,"observacao"?: string | null,"origem"?: string,"paciente_id"?: string,"partida"?: string | null,"proxima_dose_em"?: string | null,"vacina_id"?: string | null,"vacina_nome"?: string,"validade"?: string | null,"veterinario_externo"?: string | null,"veterinario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_vacinacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_vacina_id_fkey"
+      columns: ["empresa_id","vacina_id"]
+isOneToOne: false
+      referencedRelation: "vet_vacinas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_vacinas": {
+                  Row: {
+                    "ativa": boolean,"created_at": string,"doses_iniciais": number,"empresa_id": string,"especie": string,"fabricante": string | null,"id": string,"intervalo_doses_dias": number,"nome": string,"observacao": string | null,"ordem": number,"reforco_dias": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"created_at"?: string,"doses_iniciais"?: number,"empresa_id": string,"especie"?: string,"fabricante"?: string | null,"id"?: string,"intervalo_doses_dias"?: number,"nome": string,"observacao"?: string | null,"ordem"?: number,"reforco_dias"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"created_at"?: string,"doses_iniciais"?: number,"empresa_id"?: string,"especie"?: string,"fabricante"?: string | null,"id"?: string,"intervalo_doses_dias"?: number,"nome"?: string,"observacao"?: string | null,"ordem"?: number,"reforco_dias"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_vacinas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_veterinarios": {
+                  Row: {
+                    "ativo": boolean,"cadastro_mapa": string | null,"created_at": string,"crmv": string,"crmv_uf": string,"email": string | null,"empresa_id": string,"especialidade": string | null,"id": string,"nome": string,"perfil_id": string | null,"proximo_numero_magistral": number,"responsavel_tecnico": boolean,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cadastro_mapa"?: string | null,"created_at"?: string,"crmv": string,"crmv_uf": string,"email"?: string | null,"empresa_id": string,"especialidade"?: string | null,"id"?: string,"nome": string,"perfil_id"?: string | null,"proximo_numero_magistral"?: number,"responsavel_tecnico"?: boolean,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cadastro_mapa"?: string | null,"created_at"?: string,"crmv"?: string,"crmv_uf"?: string,"email"?: string | null,"empresa_id"?: string,"especialidade"?: string | null,"id"?: string,"nome"?: string,"perfil_id"?: string | null,"proximo_numero_magistral"?: number,"responsavel_tecnico"?: boolean,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_veterinarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_veterinarios_perfil_id_fkey"
+      columns: ["perfil_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"xml_lote_itens": {
                   Row: {
                     "arquivo": string,"caminho": string | null,"dados": NonNullable<Json>,"documento_id": string | null,"lote_id": string,"ordem": number,"parte": number | null
@@ -5346,6 +5982,108 @@ isOneToOne: false
                            },
 "validar_atualizacao_normativa":
 { Args: { "p_id": string,"p_observacao"?: string }; Returns: undefined
+                           },
+"vet_adendo_registrar":
+{ Args: { "p_atendimento_id": string,"p_texto": string }; Returns: string
+                           },
+"vet_agenda_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_agenda_status":
+{ Args: { "p_agenda_id": string,"p_status": string }; Returns: undefined
+                           },
+"vet_anexo_confirmar":
+{ Args: { "p_anexo_id": string }; Returns: undefined
+                           },
+"vet_anexo_iniciar":
+{ Args: { "p_atendimento_id": string,"p_dados": Json }; Returns: Json
+                           },
+"vet_atendimento_abrir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_atendimento_cancelar":
+{ Args: { "p_atendimento_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"vet_atendimento_finalizar":
+{ Args: { "p_atendimento_id": string }; Returns: undefined
+                           },
+"vet_atendimento_salvar":
+{ Args: { "p_atendimento_id": string,"p_dados": Json }; Returns: undefined
+                           },
+"vet_aviso_registrar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"vet_conta_abrir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_conta_cancelar":
+{ Args: { "p_conta_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"vet_conta_desconto":
+{ Args: { "p_conta_id": string,"p_desconto": number }; Returns: undefined
+                           },
+"vet_conta_fechar":
+{ Args: { "p_conta_id": string }; Returns: undefined
+                           },
+"vet_conta_item_cancelar":
+{ Args: { "p_item_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"vet_conta_item_lancar":
+{ Args: { "p_conta_id": string,"p_dados": Json }; Returns: string
+                           },
+"vet_conta_resumo":
+{ Args: { "p_conta_id": string }; Returns: Json
+                           },
+"vet_documento_cancelar":
+{ Args: { "p_documento_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"vet_documento_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_lembretes_pendentes":
+{ Args: { "p_ate": string,"p_empresa_id": string }; Returns: Json
+                           },
+"vet_paciente_excluir":
+{ Args: { "p_paciente_id": string }; Returns: undefined
+                           },
+"vet_paciente_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_pagamento_estornar":
+{ Args: { "p_motivo": string,"p_pagamento_id": string }; Returns: undefined
+                           },
+"vet_pagamento_registrar":
+{ Args: { "p_conta_id": string,"p_dados": Json }; Returns: string
+                           },
+"vet_receita_cancelar":
+{ Args: { "p_motivo": string,"p_receita_id": string }; Returns: undefined
+                           },
+"vet_receita_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_servico_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_tutor_excluir":
+{ Args: { "p_tutor_id": string }; Returns: undefined
+                           },
+"vet_tutor_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_vacina_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_vacinacao_cancelar":
+{ Args: { "p_motivo": string,"p_vacinacao_id": string }; Returns: undefined
+                           },
+"vet_vacinacao_registrar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_veterinario_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
                            },
 "vincular_membro":
 { Args: { "p_empresa_id": string,"p_papel": string,"p_permissoes"?: (string)[],"p_user_id": string }; Returns: string

@@ -40,6 +40,9 @@ import {
   UtensilsCrossed,
   ConciergeBell,
   Soup,
+  PawPrint,
+  Stethoscope,
+  Syringe,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -61,8 +64,8 @@ export interface EmpresaMenu {
   demonstracao: boolean;
   /** Gestão da loja ligada para a empresa. */
   loja: boolean;
-  /** Modalidade da gestão: loja completa, só notas e transporte ou hotel. */
-  modalidade: "loja" | "notas" | "hotel" | null;
+  /** Modalidade da gestão: loja completa, só notas e transporte, hotel ou clínica veterinária. */
+  modalidade: "loja" | "notas" | "hotel" | "veterinaria" | null;
   /** CT-e configurado pelo escritório (ligado ou em conferência). */
   cte?: boolean;
   /** Tem caminhões cadastrados (rentabilidade da frota). */
@@ -162,7 +165,9 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
   const base = `/e/${empresa.id}`;
   const transporte = empresa.loja && empresa.modalidade === "notas";
   const hotel = empresa.loja && empresa.modalidade === "hotel";
+  const clinica = empresa.loja && empresa.modalidade === "veterinaria";
   const hospedagem: ItemMenu[] = [];
+  const veterinaria: ItemMenu[] = [];
   const loja: ItemMenu[] = [];
   const notas: ItemMenu[] = [];
   const documentos: ItemMenu[] = [];
@@ -190,6 +195,19 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     loja.push({ rotulo: "Produtos e estoque", href: `${base}/loja/produtos`, icone: Boxes });
     loja.push({ rotulo: "Vendas", href: `${base}/loja/vendas`, icone: ReceiptText });
     if (p.has("gestao.gerenciar")) configuracoes.push({ rotulo: "Configurações do hotel", href: `${base}/hotel/configuracoes`, icone: BedDouble });
+  } else if (clinica && p.has("gestao.vender")) {
+    // Clínica veterinária: agenda, prontuário, vacinas e contas; a loja vira o pet shop e farmácia
+    veterinaria.push({ rotulo: "Painel da clínica", href: `${base}/veterinaria`, icone: PawPrint, exato: true });
+    veterinaria.push({ rotulo: "Agenda", href: `${base}/veterinaria/agenda`, icone: CalendarRange });
+    veterinaria.push({ rotulo: "Tutores e animais", href: `${base}/veterinaria/pacientes`, icone: Stethoscope });
+    veterinaria.push({ rotulo: "Vacinas e retornos", href: `${base}/veterinaria/lembretes`, icone: Syringe });
+    veterinaria.push({ rotulo: "Contas da clínica", href: `${base}/veterinaria/contas`, icone: ReceiptText });
+    loja.push({ rotulo: "Painel do pet shop", href: `${base}/loja`, icone: Store, exato: true });
+    loja.push({ rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart });
+    loja.push({ rotulo: "Caixa do dia", href: `${base}/loja/caixa`, icone: Banknote });
+    loja.push({ rotulo: "Produtos e estoque", href: `${base}/loja/produtos`, icone: Boxes });
+    loja.push({ rotulo: "Vendas", href: `${base}/loja/vendas`, icone: ReceiptText });
+    if (p.has("gestao.gerenciar")) configuracoes.push({ rotulo: "Configurações da clínica", href: `${base}/veterinaria/configuracoes`, icone: PawPrint });
   } else if (empresa.loja && p.has("gestao.vender")) {
     loja.push({ rotulo: "Loja", href: `${base}/loja`, icone: Store, exato: true });
     loja.push({ rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart });
@@ -237,7 +255,8 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
   const grupos: GrupoMenu[] = [
     { id: "inicio", rotulo: "Início", icone: Home, itens: [{ rotulo: "Início", href: base, icone: Home, exato: true }] },
     { id: "hotel", rotulo: "Hotel", icone: BedDouble, itens: hospedagem },
-    { id: "loja", rotulo: hotel ? "Restaurante e bar" : "Loja", icone: hotel ? UtensilsCrossed : Store, itens: loja },
+    { id: "veterinaria", rotulo: "Clínica", icone: PawPrint, itens: veterinaria },
+    { id: "loja", rotulo: hotel ? "Restaurante e bar" : clinica ? "Pet shop e farmácia" : "Loja", icone: hotel ? UtensilsCrossed : Store, itens: loja },
     { id: "notas", rotulo: transporte ? "Notas e transporte" : "Notas", icone: transporte ? Truck : ReceiptText, itens: notas },
     { id: "documentos", rotulo: "Documentos", icone: FolderOpen, itens: documentos },
     { id: "pagamentos", rotulo: "Pagamentos e prazos", icone: CalendarDays, itens: pagamentos },

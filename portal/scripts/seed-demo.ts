@@ -32,6 +32,7 @@ import { semearLoja } from "./demo-loja";
 import { semearFrota } from "./demo-frota";
 import { semearTransportadoraCompleta } from "./demo-transportadora";
 import { semearHotel } from "./demo-hotel";
+import { semearVeterinaria } from "./demo-veterinaria";
 import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
@@ -309,6 +310,17 @@ async function main() {
   ) {
     console.log("  Hotel fictício: quartos, reservas, hóspedes na casa, consumo, caixa da recepção e dois meses de histórico");
   }
+  if (
+    await semearVeterinaria(admin, comoAdmin, { url, publica }, {
+      dominio: DOMINIO,
+      contadorId: idEquipe,
+      inicioAtendimento: competencia(-12),
+      garantirUsuario: (email, nome) => garantirUsuario(admin, email, nome, "cliente", senha),
+      permissoesTitular: titular,
+    })
+  ) {
+    console.log("  Clínica veterinária fictícia: tutores, animais, prontuário, vacinas, receitas, atestados, agenda do dia, contas e lembretes");
+  }
   if (await semearCteGraos(admin)) {
     console.log("  CT-e da comercial de grãos: configuração e operações do frete (emissão desligada; formulário em modo de conferência)");
   }
@@ -342,6 +354,7 @@ async function main() {
   console.log(`  Madeireira:     madeireira@${DOMINIO} (dono) e balcao@${DOMINIO} (só vende no caixa)`);
   console.log(`  Grãos:          graos@${DOMINIO} (dono) e balanca@${DOMINIO} (ordens de carregamento e pesagem)`);
   console.log(`  Hotel:          hotel@${DOMINIO} (dono) e recepcao@${DOMINIO} (recepção)`);
+  console.log(`  Clínica vet.:   veterinaria@${DOMINIO} (dona e veterinária) e atendimento@${DOMINIO} (recepção da clínica)`);
   console.log(`  Transportadora: transportadora@${DOMINIO} (dono; frota, ordens de carregamento, CT-e em conferência, financeiro e documentos)`);
   console.log(MANTER_SENHAS ? "  Senhas: mantidas (não foram alteradas)" : `  Senha de todos: ${senha}`);
   console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}, Fazenda Exemplo (DEMO) — só a equipe, Madeireira Reflorestar (DEMO), Grãos Cerrado (DEMO)\n`);

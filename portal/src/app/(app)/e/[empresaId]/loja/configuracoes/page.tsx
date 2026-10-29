@@ -51,7 +51,7 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
                 cfg
                   ? {
                       ativa: cfg.ativa,
-                      modalidade: cfg.modalidade === "notas" || cfg.modalidade === "hotel" ? cfg.modalidade : "loja",
+                      modalidade: cfg.modalidade === "notas" || cfg.modalidade === "hotel" || cfg.modalidade === "veterinaria" ? cfg.modalidade : "loja",
                       perfil_fiscal: cfg.perfil_fiscal,
                       permitir_estoque_negativo: cfg.permitir_estoque_negativo,
                       permitir_venda_prazo: cfg.permitir_venda_prazo,
@@ -93,6 +93,15 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
                     Configurações do hotel
                   </Link>
                   . Aqui ficam as contas do Financeiro e as preferências do restaurante e bar.
+                </Alerta>
+              ) : null}
+              {ctx.veterinaria ? (
+                <Alerta tom="info" titulo="Clínica veterinária">
+                  Os veterinários (CRMV), as vacinas, os serviços com os preços e os lembretes ficam em{" "}
+                  <Link href={`/e/${empresaId}/veterinaria/configuracoes`} className="underline">
+                    Configurações da clínica
+                  </Link>
+                  . Aqui ficam as contas do Financeiro e as preferências do pet shop.
                 </Alerta>
               ) : null}
               <Alerta tom="info" titulo="Quem pode usar">

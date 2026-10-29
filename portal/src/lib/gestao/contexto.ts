@@ -13,6 +13,8 @@ export async function obterContextoLoja(empresaId: string) {
     notas,
     /** Modalidade "hotel": a loja vira o restaurante e bar do hotel (mesmo caixa, produtos e estoque). */
     hotel: ctx.acesso.gestao_modalidade === "hotel",
+    /** Modalidade "veterinaria": a loja vira o pet shop e farmácia da clínica (mesmo caixa, produtos e estoque). */
+    veterinaria: ctx.acesso.gestao_modalidade === "veterinaria",
     vende: ativa && !notas && ctx.pode("gestao.vender"),
     gerente: ativa && ctx.pode("gestao.gerenciar"),
     /** Faz ordens de carregamento (modalidade notas, com a permissão de emitir NF-e). */

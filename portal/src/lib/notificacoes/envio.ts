@@ -4,7 +4,7 @@ import type { Job } from "@/lib/jobs/executor";
 import { enviarEmail } from "@/lib/email/enviar";
 import { enviarModeloWhatsapp } from "@/lib/whatsapp/cloud-api";
 import { envPublico } from "@/lib/env";
-import { formatarCompetencia } from "@/lib/formatos";
+import { formatarCompetencia, formatarTelefone } from "@/lib/formatos";
 
 /** Avisos do escritório ao cliente que também podem ir por WhatsApp (iguais aos do banco). */
 const TIPOS_AVISO_WHATSAPP = [
@@ -79,6 +79,20 @@ async function prepararAvisoWhatsapp(admin: ClienteAdmin, envio: Envio, site: st
   };
 }
 
+/** Nome e contatos da clínica (configuração da clínica, com o cadastro da empresa como reserva). */
+async function remetenteClinica(admin: ClienteAdmin, empresaId: string | null) {
+  if (!empresaId) return { nome: "Clínica veterinária", contatos: [] };
+  const [{ data: e }, { data: cfg }] = await Promise.all([
+    admin.from("empresas").select("razao_social, nome_fantasia, telefone, email").eq("id", empresaId).maybeSingle(),
+    admin.from("vet_config").select("nome_clinica, telefone, email").eq("empresa_id", empresaId).maybeSingle(),
+  ]);
+  const telefone = cfg?.telefone ?? e?.telefone ?? null;
+  return {
+    nome: cfg?.nome_clinica ?? e?.nome_fantasia ?? e?.razao_social ?? "Clínica veterinária",
+    contatos: [telefone ? `Tel. ${formatarTelefone(telefone)}` : null, cfg?.email ?? e?.email ?? null].filter((c): c is string => Boolean(c)),
+  };
+}
+
 async function dispensar(admin: ClienteAdmin, envioId: string, motivo: string) {
   await admin.from("envios").update({ status: "desativado", erro: motivo }).eq("id", envioId);
   return { status: "desativado", motivo };
@@ -102,10 +116,14 @@ export async function executarEnvio(admin: ClienteAdmin, job: Job) {
       if (n?.tipo === "mensagem" && n.lida_em) return dispensar(admin, envio.id, "Mensagem já lida no portal; e-mail dispensado.");
       link = n?.link ?? null;
     }
+    // Lembrete de vacina ou retorno ao tutor da clínica: sai com o nome e os contatos da clínica, sem botão do portal
+    const remetente = envio.tipo === "lembrete_veterinario" ? await remetenteClinica(admin, envio.empresa_id) : undefined;
     resultado = await enviarEmail(envio.destinatario, envio.assunto ?? "Portal Guarese's ON", {
       titulo: envio.assunto ?? "Portal Guarese's ON",
       paragrafos: [envio.conteudo ?? ""],
-      botao: link ? { texto: "Abrir no portal", url: `${site}${link}` } : { texto: "Acessar o portal", url: `${site}/painel` },
+      botao: remetente ? undefined : link ? { texto: "Abrir no portal", url: `${site}${link}` } : { texto: "Acessar o portal", url: `${site}/painel` },
+      aviso: remetente ? "Você recebe este lembrete porque autorizou a clínica a avisar por e-mail. Para não receber mais, fale com a clínica." : undefined,
+      remetente,
     });
   } else if (envio.tipo === "aviso") {
     const aviso = await prepararAvisoWhatsapp(admin, envio, site);

@@ -60,7 +60,7 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
     dados.ativa = fd.get("ativa") === "on";
     const perfil = texto(fd, "perfil_fiscal");
     if (perfil) dados.perfil_fiscal = perfil;
-    // Qualquer modalidade da lista (loja, notas e transporte, hotel)
+    // Qualquer modalidade da lista (loja, notas e transporte, hotel, clínica veterinária)
     const modalidade = texto(fd, "modalidade");
     if (Object.hasOwn(MODALIDADES_GESTAO, modalidade)) dados.modalidade = modalidade;
   }
@@ -69,7 +69,13 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
   revalidarLoja(empresaId);
   revalidatePath(`/e/${empresaId}`, "layout");
   if (!(ctx.equipe && dados.ativa)) return sucesso("Configurações salvas.");
-  return sucesso(dados.modalidade === "hotel" ? "Gestão do hotel ligada e configurada." : "Gestão da loja ligada e configurada.");
+  return sucesso(
+    dados.modalidade === "hotel"
+      ? "Gestão do hotel ligada e configurada."
+      : dados.modalidade === "veterinaria"
+        ? "Gestão da clínica veterinária ligada e configurada."
+        : "Gestão da loja ligada e configurada.",
+  );
 }
 
 // -----------------------------------------------------------------------------
