@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CabecalhoPagina } from "@/components/ui/pagina";
+import { ReceiptText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alerta } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
@@ -78,15 +80,24 @@ export default async function PaginaConta({ params }: PageProps<"/e/[empresaId]/
         }
         voltar={{ href: `${base}/contas`, rotulo: "Contas da clínica" }}
         acoes={
-          aberta ? (
-            <>
-              <DialogoPagamento empresaId={empresaId} contaId={c.id} saldo={Number(r.saldo)} hoje={hojeClinica()} caixaAberto={Boolean(caixa)} />
-              <BotaoFecharConta empresaId={empresaId} contaId={c.id} desabilitado={Number(r.saldo) !== 0} />
-              {!temPagamento ? (
-                <DialogoMotivo acao={cancelarConta.bind(null, empresaId, c.id)} titulo="Cancelar a conta?" rotuloBotao="Cancelar conta" variante="fantasma" tamanho="md" />
-              ) : null}
-            </>
-          ) : null
+          <>
+            {aberta ? (
+              <>
+                <DialogoPagamento empresaId={empresaId} contaId={c.id} saldo={Number(r.saldo)} hoje={hojeClinica()} caixaAberto={Boolean(caixa)} />
+                <BotaoFecharConta empresaId={empresaId} contaId={c.id} desabilitado={Number(r.saldo) !== 0} />
+                {!temPagamento ? (
+                  <DialogoMotivo acao={cancelarConta.bind(null, empresaId, c.id)} titulo="Cancelar a conta?" rotuloBotao="Cancelar conta" variante="fantasma" tamanho="md" />
+                ) : null}
+              </>
+            ) : null}
+            {c.status !== "cancelada" && Number(r.total) > 0 && ctx.pode("nfse.emitir") ? (
+              <Button asChild variante="contorno">
+                <Link href={`/e/${empresaId}/notas-servico/nova?conta=${c.id}`}>
+                  <ReceiptText /> Emitir nota de serviço
+                </Link>
+              </Button>
+            ) : null}
+          </>
         }
       />
       {c.status === "cancelada" ? (

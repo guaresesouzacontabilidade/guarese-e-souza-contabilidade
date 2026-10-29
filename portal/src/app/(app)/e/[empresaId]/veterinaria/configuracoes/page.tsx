@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,12 @@ export default async function PaginaConfiguracoesClinica({ params }: PageProps<"
     ctx.supabase.from("empresa_membros").select("user_id, perfil:perfis!empresa_membros_user_id_fkey(nome)").eq("empresa_id", empresaId).eq("ativo", true).neq("papel", "equipe"),
     ctx.supabase.from("nfe_produtos").select("id, descricao").eq("empresa_id", empresaId).eq("ativo", true).order("descricao").limit(500),
   ]);
+  const [{ data: nfeCfg }, { data: nfseCfg }] = await Promise.all([
+    ctx.supabase.from("nfe_config").select("ativa").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("nfse_emissao_config").select("ativa").eq("empresa_id", empresaId).maybeSingle(),
+  ]);
+  const nfeAtiva = Boolean(nfeCfg?.ativa);
+  const nfseAtiva = Boolean(nfseCfg?.ativa);
   const produtoNome = new Map((produtos ?? []).map((x) => [x.id, x.descricao]));
   const usuarios = (membros ?? []).map((m) => ({ id: m.user_id, nome: (m.perfil as unknown as { nome: string } | null)?.nome ?? "Usuário" }));
   const c = cfg ?? {
@@ -52,11 +59,36 @@ export default async function PaginaConfiguracoesClinica({ params }: PageProps<"
         voltar={{ href: `/e/${empresaId}/veterinaria`, rotulo: "Painel da clínica" }}
       />
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardContent className="pt-6">
-            <FormularioConfigClinica empresaId={empresaId} c={c} emailConfigurado={emailConfigurado()} />
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <FormularioConfigClinica empresaId={empresaId} c={c} emailConfigurado={emailConfigurado()} />
+            </CardContent>
+          </Card>
+          <Alerta tom={nfeAtiva && nfseAtiva ? "sucesso" : "info"} titulo="Notas fiscais da clínica">
+            <span className="block">
+              <strong>Produtos do pet shop e farmácia (NF-e):</strong> na tela{" "}
+              <Link href={`/e/${empresaId}/loja/vender`} className="underline">
+                Vender
+              </Link>
+              , a caixinha “Emitir NF-e” manda a nota na hora em que a venda é concluída. A operação, quem emite e se a caixinha já vem marcada ficam em{" "}
+              <Link href={`/e/${empresaId}/loja/configuracoes`} className="underline">
+                Pet shop e farmácia → Configurações
+              </Link>
+              . {nfeAtiva ? "Emissão ligada." : "Emissão ainda desligada."}
+            </span>
+            <span className="mt-1 block">
+              <strong>Consultas e procedimentos (NFS-e):</strong> na conta da clínica, o botão “Emitir nota de serviço” já preenche o tutor, o valor e os serviços.{" "}
+              {nfseAtiva ? "Emissão ligada." : "Emissão ainda desligada."}
+            </span>
+            {!nfeAtiva || !nfseAtiva ? (
+              <span className="mt-1 block">
+                Quem liga é o escritório, com o certificado digital A1 da clínica (Notas → Emitir nota de produto / de serviço → Configurações). A recepção precisa das
+                permissões “Emitir nota de produto” e “Emitir notas” para usar.
+              </span>
+            ) : null}
+          </Alerta>
+        </div>
         <div className="space-y-4">
           <Card>
             <CardHeader className="flex-row items-center justify-between gap-2">

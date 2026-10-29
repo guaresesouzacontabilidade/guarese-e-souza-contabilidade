@@ -59,6 +59,36 @@ export default async function NovaNota({ params, searchParams }: PageProps<"/e/[
     }
   }
 
+  // Conta da clínica veterinária: tutor como tomador, valor da conta e os serviços na descrição
+  const conta = parametro(sp, "conta");
+  if (!iniciais && conta && UUID.test(conta)) {
+    const [{ data: c }, { data: itens }] = await Promise.all([
+      ctx.supabase
+        .from("vet_contas")
+        .select("numero, desconto, status, tutor:vet_tutores(nome, cpf, email, telefone), paciente:vet_pacientes(nome)")
+        .eq("id", conta)
+        .eq("empresa_id", empresaId)
+        .maybeSingle(),
+      ctx.supabase.from("vet_conta_itens").select("descricao, total").eq("conta_id", conta).is("cancelado_em", null).order("created_at"),
+    ]);
+    if (c && c.status !== "cancelada") {
+      const t = c.tutor as unknown as { nome: string; cpf: string | null; email: string | null; telefone: string | null };
+      const animal = (c.paciente as unknown as { nome: string } | null)?.nome;
+      const total = Math.max(0, (itens ?? []).reduce((s, i) => s + Number(i.total), 0) - Number(c.desconto));
+      iniciais = {
+        servico_id: servicos?.length === 1 ? servicos[0].id : undefined,
+        tomador_tipo: t.cpf ? "cpf" : "nao_identificado",
+        tomador_documento: t.cpf,
+        tomador_nome: t.nome,
+        tomador_email: t.email,
+        tomador_telefone: t.telefone,
+        valor: total.toFixed(2),
+        descricao: `Serviços veterinários${animal ? ` — ${animal}` : ""}: ${(itens ?? []).map((i) => i.descricao).join("; ")}`.slice(0, 1000),
+        informacoes_complementares: `Conta nº ${c.numero} da clínica.`,
+      };
+    }
+  }
+
   return (
     <>
       <CabecalhoPagina

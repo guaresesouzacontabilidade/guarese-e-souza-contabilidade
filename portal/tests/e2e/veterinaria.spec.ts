@@ -76,6 +76,7 @@ const animal = `Mimi ${sufixo}`;
 let empresaId = "";
 let pacienteId = "";
 let atendimentoId = "";
+let contaId = "";
 
 test.beforeAll(async () => {
   const admin = clienteServico();
@@ -204,7 +205,7 @@ test("recepção: vê o retorno nos lembretes, cobra e recebe (vai para o Financ
   await page.goto(`/e/${empresaId}/veterinaria/atendimentos/${atendimentoId}`);
   await page.getByRole("button", { name: /Cobrar/ }).click();
   await page.waitForURL(/\/veterinaria\/contas\/[0-9a-f-]{36}$/, { timeout: 60_000 });
-  const contaId = page.url().split("/").pop()!;
+  contaId = page.url().split("/").pop()!;
   const consulta = await page.locator("#ci-servico option", { hasText: /^Consulta —/ }).getAttribute("value");
   await page.selectOption("#ci-servico", consulta!);
   await page.getByRole("button", { name: /Lançar/ }).click();
@@ -223,6 +224,15 @@ test("recepção: vê o retorno nos lembretes, cobra e recebe (vai para o Financ
   const { data: lanc } = await admin.from("lancamentos").select("origem, situacao, valor_previsto, valor_baixado").eq("id", pagamentos![0].lancamento_id!).single();
   expect(lanc?.origem).toBe("veterinaria");
   expect(Number(lanc?.valor_baixado)).toBe(Number(pagamentos![0].valor));
+});
+
+test("dona: nota de serviço a partir da conta (emissão desconectada até o escritório ligar)", async ({ page }) => {
+  await entrar(page, `veterinaria@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/veterinaria/contas/${contaId}`);
+  await page.getByRole("link", { name: /Emitir nota de serviço/ }).click();
+  await page.waitForURL(new RegExp(`/notas-servico/nova\\?conta=${contaId}`));
+  // Sem certificado e sem a configuração do escritório, nada é enviado
+  await expect(page.getByText("Emissão desconectada")).toBeVisible();
 });
 
 test("cliente de outra empresa não vê a clínica nem os documentos", async ({ page }) => {
