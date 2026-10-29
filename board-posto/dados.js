@@ -1,0 +1,382 @@
+/* Board Posto Catarinense — dados compartilhados entre o painel e o posto em 3D. */
+(() => {
+  "use strict";
+
+  // ---------- Cadastros fixos ----------
+  // A cor segue o combustível (nunca a posição no ranking).
+  const FUELS = [
+    { k: "gc", n: "Gasolina comum", s: 1 },
+    { k: "ga", n: "Gasolina aditivada", s: 2 },
+    { k: "et", n: "Etanol", s: 3 },
+    { k: "d10", n: "Diesel S10", s: 4 },
+    { k: "gp", n: "Gasolina premium", s: 5 },
+    { k: "d10a", n: "Diesel S10 aditivado", s: 6 },
+    { k: "d500", n: "Diesel S500", s: 7 },
+    { k: "gnv", n: "GNV", s: 8, m3: true },
+  ];
+  const FUEL = Object.fromEntries(FUELS.map(f => [f.k, f]));
+  const GROUPS = [
+    { k: "comb", n: "Combustíveis", s: 1 },
+    { k: "pista", n: "Lubrificantes e pista", s: 2 },
+    { k: "conv", n: "Outros produtos", s: 3 },   // a conveniência não é do posto
+  ];
+  const PAYS = [
+    { k: "pix", n: "PIX" },
+    { k: "deb", n: "Cartão de débito" },
+    { k: "cre", n: "Cartão de crédito" },
+    { k: "din", n: "Dinheiro" },
+    { k: "prazo", n: "A prazo e frotas" },
+    { k: "out", n: "Outros" },
+  ];
+  // Códigos tPag da NFC-e
+  const TPAG = { "01": "din", "02": "out", "03": "cre", "04": "deb", "05": "prazo", "10": "out", "11": "out", "12": "out", "13": "prazo", "15": "prazo", "16": "pix", "17": "pix", "18": "pix", "19": "out", "90": "out", "99": "out" };
+  const DAY = 86400000;
+  const STORE_KEY = "board-posto-catarinense:v1";
+
+  // Planta do posto montada a partir da foto: duas fileiras de ilhas apontando para a rua,
+  // com as posições numeradas como nas colunas (1 e 2, 3 e 4, 5 e 6).
+  // Cada bomba tem dois lados (A e B) e cada lado atende um veículo por vez.
+  // x e z são metros, usados pelo posto em 3D (z cresce na direção da rua; olhando da varanda, x positivo fica à esquerda).
+  // Combustíveis de cada bico e os tanques confirmados pelo posto.
+  const LAYOUT = {
+    bombas: [
+      { n: 1, tipo: "diesel", x: 4.5, z: 6, pos: { A: 2, B: 1 }, lados: { A: [[3, "d10"], [4, "d10a"]], B: [[1, "d10"], [2, "d10a"]] } },
+      { n: 2, tipo: "carro", x: -4.5, z: 6, pos: { A: 4, B: 3 }, lados: { A: [[9, "gc"], [10, "ga"], [11, "gp"], [12, "et"]], B: [[5, "gc"], [6, "ga"], [7, "gp"], [8, "et"]] } },
+      { n: 3, tipo: "carro", x: -4.5, z: -4, pos: { A: 6, B: 5 }, lados: { A: [[17, "gc"], [18, "ga"], [19, "gp"], [20, "et"]], B: [[13, "gc"], [14, "ga"], [15, "gp"], [16, "et"]] } },
+    ],
+    tanques: [
+      { n: 1, f: "gc", cap: 30000 },
+      { n: 2, f: "ga", cap: 15000 },
+      { n: 3, f: "gp", cap: 15000 },
+      { n: 4, f: "et", cap: 15000 },
+      { n: 5, f: "d10", cap: 15000 },
+      { n: 6, f: "d10a", cap: 15000 },
+    ],
+  };
+  const SIDES = [];
+  const BICOS = {};
+  for (const b of LAYOUT.bombas) {
+    for (const lado of ["A", "B"]) {
+      const side = { id: b.n + lado, bomba: b.n, lado, pos: b.pos[lado], x: b.x, z: b.z, tipo: b.tipo, bicos: b.lados[lado].map(([n, f]) => ({ n, f })) };
+      SIDES.push(side);
+      for (const bi of side.bicos) BICOS[bi.n] = { n: bi.n, f: bi.f, side };
+    }
+  }
+
+  // ---------- Formatação ----------
+  const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  const brl0 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  const int = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+  const dec1 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const dec2 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const dec3 = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  const pct = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 0 });
+  const pct1 = new Intl.NumberFormat("pt-BR", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const money = v => (Math.abs(v) >= 10000 ? brl0 : brl).format(v);
+  const compactBRL = v => {
+    const a = Math.abs(v);
+    if (a >= 1e6) return "R$ " + dec2.format(v / 1e6).replace(/,00$/, "") + " mi";
+    if (a >= 1e3) return "R$ " + int.format(v / 1e3) + " mil";
+    return "R$ " + int.format(v);
+  };
+  const dayStart = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  const addDays = (t, n) => { const d = new Date(t); d.setDate(d.getDate() + n); return d.getTime(); };
+  const fmtDay = t => new Date(t).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  const fmtDate = t => new Date(t).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const fmtWeekday = t => new Date(t).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+  const fmtTime = t => new Date(t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const isoDay = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const isoTime = iso => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d).getTime(); };
+  const fmtIso = iso => iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "";
+  const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
+  const r2 = v => Math.round(v * 100) / 100;
+
+  // ---------- Leitura de números e datas ----------
+  function parseNum(s) {
+    if (s == null) return null;
+    let t = String(s).trim().replace(/[R$\s]/g, "");
+    if (!t) return null;
+    const neg = /^\(.*\)$/.test(t) || t.startsWith("-");
+    t = t.replace(/[()\-]/g, "");
+    if (t.includes(",") && t.includes(".")) t = t.lastIndexOf(",") > t.lastIndexOf(".") ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, "");
+    else if (t.includes(",")) t = t.replace(",", ".");
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
+    const v = Number(t);
+    return isFinite(v) ? (neg ? -v : v) : null;
+  }
+  function parseDate(s, hourStr) {
+    if (!s) return null;
+    const t = String(s).trim();
+    let m;
+    if ((m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/))) {
+      const y = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+      let hh = m[4], mi = m[5], ss = m[6];
+      if (!hh && hourStr) { const h = String(hourStr).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/); if (h) { hh = h[1]; mi = h[2]; ss = h[3]; } }
+      return new Date(y, Number(m[2]) - 1, Number(m[1]), Number(hh || 12), Number(mi || 0), Number(ss || 0)).getTime();
+    }
+    if ((m = t.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/))) {
+      let hh = m[4], mi = m[5], ss = m[6];
+      if (!hh && hourStr) { const h = String(hourStr).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/); if (h) { hh = h[1]; mi = h[2]; ss = h[3]; } }
+      // Horário local da nota (ignora o fuso: o posto e quem olha estão no mesmo lugar)
+      return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(hh || 12), Number(mi || 0), Number(ss || 0)).getTime();
+    }
+    return null;
+  }
+
+  // ---------- Classificação de produtos ----------
+  function fuelOf(name, anp) {
+    const t = norm(name);
+    if (/\bOLEO\b(?!.*DIESEL)|LUBRIF|ARLA|^ADITIVO|ADITIVO\s+(P\/|PARA|RADIADOR|ARREF)|FLUIDO|GLP|COZINHA|BOTIJ|\bP-?13\b|\b\d{1,2}W-?\d{2}\b|\b\d+\s?ML\b/.test(t)) return null;
+    if (/\bGNV\b|GAS NATURAL/.test(t)) return "gnv";
+    if (/DIESEL|\bS-?10\b|\bS-?500\b/.test(t)) return /S-?500/.test(t) ? "d500" : /ADIT|V-?POWER|EVOLUX|PREMIUM|PODIUM|\bADT\b/.test(t) ? "d10a" : "d10";
+    if (/ETANOL|ALCOOL|\bETH\b/.test(t)) return "et";
+    if (/V-?POWER|PODIUM|OCTAPRO/.test(t)) return "gp";
+    if (/GASOLINA|\bGAS\b|\bGC\b|\bGA\b/.test(t)) {
+      if (/PREMIUM|PODIUM|V-?POWER|GRID|OCTAPRO|SUPRA/.test(t)) return "gp";
+      if (/ADIT|DT CLEAN|\bADT\b/.test(t)) return "ga";
+      return "gc";
+    }
+    const a = String(anp || "");
+    if (a === "320102002") return "ga";
+    if (a === "320102003") return "gp";
+    if (a.startsWith("3201")) return "gc";
+    if (a.startsWith("8101")) return "et";
+    if (a.startsWith("8201")) return "d10";
+    if (a.startsWith("2201")) return "gnv";
+    return null;
+  }
+  function groupOf(name, ncm) {
+    const t = norm(name), n = String(ncm || "");
+    if (/^(2710|3403|3811|3819|3820|31021010)/.test(n)) return "pista";
+    if (/\bOLEO\b|LUBRIF|ARLA|ADITIVO|FLUIDO|ARREFEC|PALHETA|FILTRO|LAMPADA|\b\d{1,2}W-?\d{2}\b/.test(t)) return "pista";
+    return "conv";
+  }
+  const isM3 = u => /M3|M³/.test(norm(u));
+
+  // ---------- Dados de exemplo ----------
+  // Gerados com semente fixa: os mesmos números a cada abertura.
+  function makeSample() {
+    let seed = 20261029;
+    const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const pick = arr => { let r = rnd() * arr.reduce((a, x) => a + x[1], 0); for (const x of arr) { if ((r -= x[1]) <= 0) return x[0]; } return arr[0][0]; };
+    const prices = { gc: 6.399, ga: 6.599, gp: 6.999, et: 4.899, d10: 6.199, d10a: 6.399 };
+    const costs = { gc: 5.89, ga: 6.04, gp: 6.36, et: 4.41, d10: 5.71, d10a: 5.86 };
+    const fuelMix = [["gc", 42], ["ga", 14], ["gp", 7], ["et", 15], ["d10", 16], ["d10a", 6]];
+    const hourW = [1, .6, .5, .5, .7, 1.6, 4, 7.5, 8, 6.5, 5.5, 6, 7, 6.5, 5.5, 5.5, 6.5, 8.5, 9, 7, 4.5, 3.2, 2.2, 1.5];
+    const hourMix = hourW.map((w, h) => [h, w]);
+    // Produtos da troca de óleo (a conveniência é de outro dono e não entra no Board)
+    const shop = [
+      ["Óleo motor 5W30 1 L", 49.9, 3], ["Óleo motor 15W40 1 L", 42.9, 2.5], ["ARLA 32 balde 20 L", 89.9, 2],
+      ["Aditivo para combustível 200 ml", 24.9, 1.5], ["Aditivo radiador 1 L", 29.9, 1.2], ["Filtro de óleo", 34.9, 0.8],
+      ["Palheta limpador", 39.9, .6], ["Fluido de freio 500 ml", 27.9, .6],
+    ];
+    const shopMix = shop.map((p, i) => [i, p[2]]);
+    const payFuel = [["pix", 34], ["deb", 22], ["cre", 26], ["din", 8], ["prazo", 10]];
+    const payShop = [["pix", 38], ["deb", 24], ["cre", 26], ["din", 12]];
+    const end = dayStart(Date.now());
+    const sales = [];
+    let n = 0;
+    for (let d = 60; d >= 1; d--) {
+      const day = addDays(end, -d);
+      const wd = new Date(day).getDay();
+      const dayF = (wd === 0 ? .72 : wd === 6 ? .9 : wd === 5 ? 1.12 : 1) * (0.92 + rnd() * .16);
+      const nFuel = Math.round(230 * dayF), nShop = Math.round(18 * dayF);
+      for (let i = 0; i < nFuel + nShop; i++) {
+        const isFuel = i < nFuel;
+        const h = pick(hourMix);
+        const t = day + h * 3600000 + Math.floor(rnd() * 3600000);
+        const items = [];
+        if (isFuel) {
+          const f = pick(fuelMix);
+          let q;
+          if (f === "d10" || f === "d10a") q = rnd() < .3 ? 80 + rnd() * 200 : 25 + rnd() * 50;
+          else q = rnd() < .35 ? Math.round(5 + rnd() * 9) * 10 / prices[f] : 12 + rnd() * 38;
+          q = Math.round(q * 1000) / 1000;
+          items.push({ p: FUEL[f].n, g: "comb", f, q, u: "L", v: r2(q * prices[f]) });
+          if (rnd() < .04) { const s = shop[pick(shopMix)]; items.push({ p: s[0], g: "pista", q: 1, u: "UN", v: s[1] }); }
+        } else {
+          const k = 1 + (rnd() < .35 ? 1 : 0) + (rnd() < .1 ? 1 : 0);
+          for (let j = 0; j < k; j++) { const s = shop[pick(shopMix)]; const q = /^Óleo/.test(s[0]) && rnd() < .5 ? 4 : 1; items.push({ p: s[0], g: "pista", q, u: "UN", v: r2(s[1] * q) }); }
+        }
+        const total = r2(items.reduce((a, x) => a + x.v, 0));
+        sales.push({ k: "ex" + (n++), t, items, pays: { [pick(isFuel ? payFuel : payShop)]: total } });
+      }
+    }
+    sales.sort((a, b) => a.t - b.t);
+
+    // Estoque dia a dia: entregas a cada 2 dias (gasolinas e etanol num dia, diesel no outro) completando o
+    // tanque até 85%, e o LMC de exemplo (abertura, entradas, vendas, medição, perdas e sobras) que sai daí.
+    const fuelKeys = Object.keys(prices);
+    const capOf = f => LAYOUT.tanques.filter(x => x.f === f).reduce((a, x) => a + x.cap, 0);
+    const vol = {}, rev = {};
+    for (const s of sales) {
+      const d = isoDay(s.t), r = rev[d] || (rev[d] = { v: 0, n: 0 });
+      r.n++;
+      for (const it of s.items) { r.v += it.v; if (it.f) vol[it.f + d] = (vol[it.f + d] || 0) + it.q; }
+    }
+    const level = Object.fromEntries(fuelKeys.map(f => [f, Math.round(capOf(f) * (0.5 + rnd() * 0.25))]));
+    const purchases = [], sped = {};
+    const enc = Object.fromEntries(Object.values(BICOS).map(b => [b.n, 400000 + b.n * 23711.5]));
+    for (let d = 60; d >= 1; d--) {
+      const day = addDays(end, -d), iso = isoDay(day), mk = iso.slice(0, 7);
+      const M = sped[mk] || (sped[mk] = { nome: "POSTO CATARINENSE (EXEMPLO)", cnpj: "", ini: iso, fin: iso, rev: {}, lmc: {}, tanks: {}, bicos: {}, sample: true });
+      M.fin = iso;
+      if (rev[iso]) M.rev[iso] = { v: r2(rev[iso].v), n: rev[iso].n };
+      const group = d % 2 === 0 ? ["gc", "ga", "gp", "et"] : ["d10", "d10a"];
+      const items = [];
+      for (const f of fuelKeys) {
+        const abert = r2(level[f]);
+        // o último diesel S10 não vem, para o exemplo mostrar um tanque baixo
+        let e = group.includes(f) && !(f === "d10" && d === 1) ? Math.round((capOf(f) * 0.85 - abert) / 500) * 500 : 0;
+        if (e < 1000) e = 0;
+        if (e) items.push({ f, q: e, v: r2(e * costs[f] * (0.99 + rnd() * .02)) });
+        const saidas = r2(vol[f + iso] || 0), disp = r2(abert + e), escr = r2(disp - saidas);
+        // perdas e sobras pequenas; de vez em quando uma perda acima de 0,6%
+        let dev = rnd() < 0.04 ? -0.0085 * disp : (rnd() - 0.55) * 0.004 * disp;
+        dev = r2(dev);
+        const fisico = r2(escr + dev);
+        const rec = { abert, entr: e, disp, saidas, escr, perda: dev < 0 ? -dev : 0, ganho: dev > 0 ? dev : 0, fisico };
+        (M.lmc[f] = M.lmc[f] || {})[iso] = rec;
+        const tq = LAYOUT.tanques.find(x => x.f === f);
+        if (tq) (M.tanks[tq.n] = M.tanks[tq.n] || { f, days: {} }).days[iso] = { ...rec };
+        // as vendas do dia se dividem entre os bicos do combustível; aferição de 20 L no dia 5
+        const bicos = Object.values(BICOS).filter(b => b.f === f);
+        const w = bicos.map(() => 0.6 + rnd()), ws = w.reduce((a, x) => a + x, 0) || 1;
+        bicos.forEach((b, j) => {
+          const vendas = r2(saidas * w[j] / ws), aferi = iso.endsWith("-05") ? 20 : 0;
+          const ab = enc[b.n], fecha = r2(ab + vendas + aferi);
+          enc[b.n] = fecha;
+          (M.bicos[b.n] = M.bicos[b.n] || { f, tank: tq ? String(tq.n) : "", days: {} }).days[iso] = { interv: "", mot: "", abert: r2(ab), fecha, aferi, vendas };
+        });
+        level[f] = fisico;
+      }
+      if (items.length) purchases.push({ k: "exc" + d, t: day + (d % 2 === 0 ? 9.5 : 10.25) * 3600000, items });
+    }
+
+    return {
+      mode: "sample", sales, purchases, cancelled: [], seen: [], cnpj: null,
+      costs: { ...costs },
+      stock: Object.fromEntries(fuelKeys.map(f => [f, Math.round(level[f])])),
+      sped,
+    };
+  }
+
+  // ---------- Estado ----------
+  const state = { db: null, saveFailed: false };
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) { const v = JSON.parse(raw); if (v && v.mode === "real" && Array.isArray(v.sales)) state.db = v; }
+  } catch (e) {}
+  if (!state.db) state.db = makeSample();
+  function save() {
+    if (state.db.mode !== "real") return;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state.db)); state.saveFailed = false; }
+    catch (e) { state.saveFailed = true; }
+  }
+  // Avisa o painel e o posto 3D que os dados mudaram.
+  const changed = () => window.dispatchEvent(new Event("bpc:change"));
+
+  // ---------- Cálculos ----------
+  function salesIn(a, b) {
+    // As vendas estão em ordem de horário: busca binária pelos limites.
+    const s = state.db.sales;
+    const lo = x => { let l = 0, h = s.length; while (l < h) { const m = (l + h) >> 1; if (s[m].t < x) l = m + 1; else h = m; } return l; };
+    return s.slice(lo(a), lo(b));
+  }
+  function salesDays() {
+    const out = [];
+    let last = null;
+    for (const s of state.db.sales) { const d = dayStart(s.t); if (d !== last) { out.push(d); last = d; } }
+    return out;
+  }
+  function purchaseCost() {
+    // Custo médio por litro nas notas de compra dos últimos 60 dias de dados.
+    const db = state.db, out = {};
+    if (!db.purchases.length) return out;
+    const maxT = Math.max(...db.purchases.map(p => p.t));
+    const acc = {};
+    for (const p of db.purchases) {
+      if (p.t < maxT - 60 * DAY) continue;
+      for (const it of p.items) { const a = acc[it.f] || (acc[it.f] = { q: 0, v: 0 }); a.q += it.q; a.v += it.v; }
+    }
+    for (const f in acc) if (acc[f].q > 0) out[f] = acc[f].v / acc[f].q;
+    return out;
+  }
+  function costFor(f, pc) {
+    const db = state.db;
+    if (db.costs && db.costs[f] != null) return { v: db.costs[f], src: db.mode === "sample" ? "exemplo" : "digitado" };
+    if (pc[f] != null) return { v: pc[f], src: "notas de compra" };
+    return null;
+  }
+  function summarize(list) {
+    const m = { rev: 0, n: list.length, fuelSales: 0, liters: 0, groups: { comb: 0, pista: 0, conv: 0 }, fuels: {}, pays: {}, shop: {} };
+    for (const s of list) {
+      let hasFuel = false;
+      for (const it of s.items) {
+        m.rev += it.v;
+        m.groups[it.g] += it.v;
+        if (it.f) {
+          hasFuel = true;
+          const f = m.fuels[it.f] || (m.fuels[it.f] = { q: 0, v: 0 });
+          f.q += it.q; f.v += it.v;
+          if (!FUEL[it.f].m3) m.liters += it.q;
+        } else {
+          const p = m.shop[it.p] || (m.shop[it.p] = { q: 0, v: 0, g: it.g });
+          p.q += it.q; p.v += it.v;
+        }
+      }
+      if (hasFuel) m.fuelSales++;
+      for (const k in s.pays) m.pays[k] = (m.pays[k] || 0) + s.pays[k];
+    }
+    const pc = purchaseCost();
+    m.margin = 0; m.marginLiters = 0; m.fuelsWithCost = 0;
+    for (const f in m.fuels) {
+      const c = costFor(f, pc);
+      if (c && m.fuels[f].q > 0) { m.margin += m.fuels[f].v - c.v * m.fuels[f].q; if (!FUEL[f].m3) m.marginLiters += m.fuels[f].q; m.fuelsWithCost++; }
+    }
+    return m;
+  }
+  // LMC do SPED: os dias de um combustível em ordem, juntando os meses importados.
+  function lmcDays(f) {
+    const out = [];
+    for (const m of Object.values(state.db.sped || {})) { const byDay = m.lmc && m.lmc[f]; if (byDay) for (const d in byDay) out.push([d, byDay[d]]); }
+    return out.sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  }
+  // Último estoque medido no LMC (fechamento físico) e o dia da medição.
+  function lmcStock(f) {
+    const d = lmcDays(f);
+    return d.length ? { v: d[d.length - 1][1].fisico, day: d[d.length - 1][0] } : null;
+  }
+  // Venda média por dia nos últimos dias do LMC
+  function lmcAvg(f, n = 7) {
+    const d = lmcDays(f).slice(-n);
+    return d.length ? d.reduce((a, [, r]) => a + r.saidas, 0) / d.length : null;
+  }
+  // Estoque estimado de um combustível num instante: o estoque digitado vale para o fim dos dados;
+  // voltando no tempo, soma o que foi vendido depois e tira o que chegou depois.
+  // Sem estoque digitado, usa o LMC do SPED: no dia, vai da abertura até a medição do fim do dia.
+  function stockAt(f, t) {
+    const db = state.db;
+    if (db.stock && db.stock[f] != null) {
+      let v = db.stock[f];
+      for (const s of db.sales) if (s.t > t) for (const it of s.items) if (it.f === f) v += it.q;
+      for (const p of db.purchases) if (p.t > t) for (const it of p.items) if (it.f === f) v -= it.q;
+      return v;
+    }
+    const days = lmcDays(f);
+    if (!days.length) return null;
+    const iso = isoDay(t), hit = days.find(([d]) => d === iso);
+    if (hit) return hit[1].abert + (hit[1].fisico - hit[1].abert) * ((t - dayStart(t)) / DAY);
+    if (iso > days[days.length - 1][0]) return days[days.length - 1][1].fisico;
+    if (iso < days[0][0]) return days[0][1].abert;
+    return null;
+  }
+
+  window.BPC = {
+    FUELS, FUEL, GROUPS, PAYS, TPAG, DAY, STORE_KEY, LAYOUT, SIDES, BICOS,
+    brl, brl0, int, dec1, dec2, dec3, pct, pct1, money, compactBRL,
+    dayStart, addDays, fmtDay, fmtDate, fmtWeekday, fmtTime, isoDay, isoTime, fmtIso, norm, r2, parseNum, parseDate,
+    fuelOf, groupOf, isM3, makeSample, state, save, changed,
+    salesIn, salesDays, purchaseCost, costFor, summarize, stockAt, lmcDays, lmcStock, lmcAvg,
+  };
+})();
