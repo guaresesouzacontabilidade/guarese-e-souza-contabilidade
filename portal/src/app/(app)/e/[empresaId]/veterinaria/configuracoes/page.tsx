@@ -17,13 +17,15 @@ export default async function PaginaConfiguracoesClinica({ params }: PageProps<"
   const { empresaId } = await params;
   const ctx = await obterContextoClinica(empresaId);
   if (!ctx.gerente) return <ClinicaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.clinicaAtiva} />;
-  const [{ data: cfg }, { data: vets }, { data: vacinas }, { data: servicos }, { data: membros }] = await Promise.all([
+  const [{ data: cfg }, { data: vets }, { data: vacinas }, { data: servicos }, { data: membros }, { data: produtos }] = await Promise.all([
     ctx.supabase.from("vet_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("vet_veterinarios").select("*, perfil:perfis(nome)").eq("empresa_id", empresaId).order("nome"),
     ctx.supabase.from("vet_vacinas").select("*").eq("empresa_id", empresaId).order("ordem"),
     ctx.supabase.from("vet_servicos").select("*").eq("empresa_id", empresaId).order("ordem"),
     ctx.supabase.from("empresa_membros").select("user_id, perfil:perfis!empresa_membros_user_id_fkey(nome)").eq("empresa_id", empresaId).eq("ativo", true).neq("papel", "equipe"),
+    ctx.supabase.from("nfe_produtos").select("id, descricao").eq("empresa_id", empresaId).eq("ativo", true).order("descricao").limit(500),
   ]);
+  const produtoNome = new Map((produtos ?? []).map((x) => [x.id, x.descricao]));
   const usuarios = (membros ?? []).map((m) => ({ id: m.user_id, nome: (m.perfil as unknown as { nome: string } | null)?.nome ?? "Usuário" }));
   const c = cfg ?? {
     nome_clinica: null,
@@ -102,7 +104,7 @@ export default async function PaginaConfiguracoesClinica({ params }: PageProps<"
           <Card>
             <CardHeader className="flex-row items-center justify-between gap-2">
               <CardTitle>Vacinas</CardTitle>
-              <DialogoVacinaCatalogo empresaId={empresaId} />
+              <DialogoVacinaCatalogo empresaId={empresaId} produtos={produtos ?? []} />
             </CardHeader>
             <CardContent className="p-0">
               <Table>
@@ -121,6 +123,7 @@ export default async function PaginaConfiguracoesClinica({ params }: PageProps<"
                         <span className="block text-xs text-muted-foreground">
                           {ESPECIES_VACINA[v.especie] ?? v.especie}
                           {v.fabricante ? ` · ${v.fabricante}` : ""}
+                          {v.produto_id && produtoNome.has(v.produto_id) ? ` · baixa: ${produtoNome.get(v.produto_id)}` : ""}
                         </span>
                       </Td>
                       <Td className="text-xs">
@@ -128,7 +131,7 @@ export default async function PaginaConfiguracoesClinica({ params }: PageProps<"
                         {v.reforco_dias ? ` · reforço em ${v.reforco_dias} dias` : " · sem reforço"}
                       </Td>
                       <Td className="text-right">
-                        <DialogoVacinaCatalogo empresaId={empresaId} v={v} />
+                        <DialogoVacinaCatalogo empresaId={empresaId} v={v} produtos={produtos ?? []} />
                       </Td>
                     </Tr>
                   ))}

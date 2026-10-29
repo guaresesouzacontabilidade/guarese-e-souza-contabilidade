@@ -6,7 +6,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * Clínica veterinária (clínica fictícia da demonstração):
  *  - a recepção cadastra tutor e animal, mas não abre atendimento;
  *  - a veterinária atende, aplica vacina (com fabricante, partida, fabricação e
- *    validade), emite a receita e finaliza; a receita sai em 2 vias e a
+ *    validade; a dose sai do estoque), dá baixa de 0,5 mL de um medicamento
+ *    cobrando na conta, emite a receita e finaliza; a receita sai em 2 vias e a
  *    carteira de vacinação em PDF, com a identidade da clínica e sem a marca
  *    do escritório;
  *  - a recepção vê o retorno nos lembretes, cobra e recebe (o pagamento vai
@@ -129,6 +130,15 @@ test("veterinária: atende, aplica a vacina, emite a receita e finaliza; PDFs da
   await page.getByRole("button", { name: /Salvar prontuário/ }).click();
   await expect(page.getByText("Prontuário salvo.")).toBeVisible();
 
+  // Estoque antes: vacina felina por dose (ligada ao catálogo) e o medicamento em mL
+  const admin = clienteServico()!;
+  const estoque = async (descricao: string) => {
+    const { data } = await admin.from("nfe_produtos").select("id, estoque_atual").eq("empresa_id", empresaId).ilike("descricao", `${descricao}%`).single();
+    return { id: data!.id as string, saldo: Number(data!.estoque_atual) };
+  };
+  const v4Antes = await estoque("Vacina polivalente felina");
+  const dipironaAntes = await estoque("Dipirona");
+
   // Vacina da clínica: sem os dados do frasco não registra
   await page.getByRole("button", { name: /Aplicar vacina/ }).click();
   await page.selectOption("#va-vacina", { label: "Polivalente felina (V3/V4/V5)" });
@@ -139,6 +149,17 @@ test("veterinária: atende, aplica a vacina, emite a receita e finaliza; PDFs da
   await expect(page.locator("#va-proxima")).toHaveValue(somarDias(hojeLocal(), 21));
   await page.getByRole("button", { name: "Registrar aplicação" }).click();
   await expect(page.getByText(`T${sufixo}`).first()).toBeVisible();
+  // A vacina aplicada tira 1 dose do estoque
+  expect((await estoque("Vacina polivalente felina")).saldo).toBe(v4Antes.saldo - 1);
+
+  // Medicamento usado no atendimento: 0,5 mL sai do estoque e vai para a conta do tutor
+  await page.selectOption("#us-produto", dipironaAntes.id);
+  await page.fill("#us-qtd", "0,5");
+  await page.getByLabel("Cobrar na conta do tutor").check();
+  await page.getByRole("button", { name: /Dar baixa/ }).click();
+  await expect(page.getByText("Baixa no estoque e cobrança na conta registradas.")).toBeVisible();
+  await expect(page.getByText(/cobrado R\$\s?0,60/)).toBeVisible();
+  expect((await estoque("Dipirona")).saldo).toBeCloseTo(dipironaAntes.saldo - 0.5, 4);
 
   // Receita comum a partir do atendimento
   await page.getByRole("link", { name: /Nova receita/ }).click();

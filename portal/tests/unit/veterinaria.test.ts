@@ -3,6 +3,7 @@ import { gruposEmpresa, type EmpresaMenu } from "@/components/layout/navegacao";
 import type { Permissao } from "@/lib/permissoes";
 import { idadeAnimal, linkWhatsapp, mensagemLembrete, pendenciasTutor, proximaDose } from "@/lib/veterinaria/rotulos";
 import { VIAS_RECEITA, dataPorExtenso } from "@/lib/veterinaria/pdf";
+import { TIPOS_MOVIMENTO, UNIDADES_LOJA, formatarQuantidade, un } from "@/lib/gestao/rotulos";
 
 const ID = "11111111-1111-4111-8111-111111111111";
 
@@ -68,6 +69,20 @@ describe("clínica veterinária: documentos", () => {
     expect(dataPorExtenso("2026-10-09")).toBe("9 de outubro de 2026");
     // 01:30 UTC do dia 1º ainda é dia 31 em Porto Nacional (UTC-3)
     expect(dataPorExtenso("2026-11-01T01:30:00Z")).toBe("31 de outubro de 2026");
+  });
+});
+
+describe("clínica veterinária: estoque", () => {
+  it("remédio fracionado em mililitro (sem confundir com o metro linear da madeireira)", () => {
+    expect(UNIDADES_LOJA.map((u) => u.valor)).toEqual(expect.arrayContaining(["MLT", "DOSE", "FR", "AMP", "CP", "G"]));
+    expect(un("MLT")).toBe("mL");
+    expect(un("ML")).toBe("m");
+    expect(`${formatarQuantidade("97.5000")} ${un("MLT")}`).toBe("97,5 mL");
+  });
+
+  it("o histórico do produto mostra o uso no atendimento e o estorno", () => {
+    expect(TIPOS_MOVIMENTO.uso_clinica).toBe("Uso no atendimento (clínica)");
+    expect(TIPOS_MOVIMENTO.estorno_uso_clinica).toMatch(/volta ao estoque/);
   });
 });
 

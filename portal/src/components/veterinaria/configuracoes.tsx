@@ -209,9 +209,10 @@ export interface VacinaForm {
   reforco_dias: number | null;
   observacao: string | null;
   ativa: boolean;
+  produto_id?: string | null;
 }
 
-export function DialogoVacinaCatalogo({ empresaId, v }: { empresaId: string; v?: VacinaForm }) {
+export function DialogoVacinaCatalogo({ empresaId, v, produtos = [] }: { empresaId: string; v?: VacinaForm; produtos?: { id: string; descricao: string }[] }) {
   const [aberto, setAberto] = React.useState(false);
   return (
     <Dialog open={aberto} onOpenChange={setAberto}>
@@ -258,6 +259,20 @@ export function DialogoVacinaCatalogo({ empresaId, v }: { empresaId: string; v?:
               </div>
               <Campo rotulo="Observação" htmlFor="vc-obs">
                 <Input id="vc-obs" name="observacao" maxLength={300} defaultValue={v?.observacao ?? ""} />
+              </Campo>
+              <Campo
+                rotulo="Produto do estoque"
+                htmlFor="vc-produto"
+                ajuda="Cada aplicação na clínica tira 1 unidade deste produto (cadastre a vacina por dose) e cancelar a vacina devolve. Vazio = sem baixa."
+              >
+                <Select id="vc-produto" name="produto_id" defaultValue={v?.produto_id ?? ""}>
+                  <option value="">Sem baixa no estoque</option>
+                  {produtos.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.descricao}
+                    </option>
+                  ))}
+                </Select>
               </Campo>
               {v ? (
                 <label className="flex items-center gap-2 text-sm">

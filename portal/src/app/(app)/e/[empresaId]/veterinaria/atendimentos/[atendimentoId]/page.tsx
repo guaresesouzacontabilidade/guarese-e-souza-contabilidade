@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FilePlus2, FileText, Paperclip, Syringe } from "lucide-react";
+import { FilePlus2, FileText, PackageMinus, Paperclip, Syringe } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,11 @@ import { Alerta } from "@/components/ui/feedback";
 import { BotaoFinalizarAtendimento, DialogoAdendo, EnvioAnexo, FormularioProntuario } from "@/components/veterinaria/atendimento";
 import { ClinicaIndisponivel, DialogoMotivo } from "@/components/veterinaria/comuns";
 import { BotaoAbrirConta } from "@/components/veterinaria/conta";
+import { FormularioUso } from "@/components/veterinaria/usos";
 import { DialogoVacina } from "@/components/veterinaria/vacina";
-import { cancelarAtendimento } from "@/lib/veterinaria/acoes";
+import { cancelarAtendimento, cancelarUso } from "@/lib/veterinaria/acoes";
+import { formatarMoeda } from "@/lib/dinheiro";
+import { formatarQuantidade, un } from "@/lib/gestao/rotulos";
 import { formatarData, formatarDataHora } from "@/lib/formatos";
 import { hojeClinica, obterContextoClinica } from "@/lib/veterinaria/contexto";
 import { DOSES, ESPECIES, STATUS_ATENDIMENTO, TIPOS_ATENDIMENTO, TIPOS_DOCUMENTO, TIPOS_RECEITA, idadeAnimal } from "@/lib/veterinaria/rotulos";
@@ -41,13 +44,25 @@ export default async function PaginaAtendimento({ params }: PageProps<"/e/[empre
     .eq("empresa_id", empresaId)
     .maybeSingle();
   if (!a) notFound();
-  const [{ data: adendos }, { data: anexos }, { data: vacinas }, { data: receitas }, { data: documentos }, { data: catalogo }] = await Promise.all([
+  const [{ data: adendos }, { data: anexos }, { data: vacinas }, { data: receitas }, { data: documentos }, { data: catalogo }, { data: usos }, { data: produtos }] = await Promise.all([
     ctx.supabase.from("vet_adendos").select("id, texto, created_at, veterinario:vet_veterinarios(nome, crmv, crmv_uf)").eq("atendimento_id", atendimentoId).order("created_at"),
     ctx.supabase.from("vet_anexos").select("id, nome, descricao, mime, created_at, confirmado_em").eq("atendimento_id", atendimentoId).not("confirmado_em", "is", null).order("created_at"),
     ctx.supabase.from("vet_vacinacoes").select("id, vacina_nome, dose, partida, fabricante, proxima_dose_em, cancelada_em").eq("atendimento_id", atendimentoId).order("created_at"),
     ctx.supabase.from("vet_receitas").select("id, numero, tipo, cancelada_em").eq("atendimento_id", atendimentoId).order("numero"),
     ctx.supabase.from("vet_documentos").select("id, numero, tipo, cancelado_em").eq("atendimento_id", atendimentoId).order("numero"),
     ctx.supabase.from("vet_vacinas").select("id, nome, fabricante, doses_iniciais, intervalo_doses_dias, reforco_dias").eq("empresa_id", empresaId).eq("ativa", true).order("ordem"),
+    ctx.supabase
+      .from("vet_usos")
+      .select("id, descricao, quantidade, unidade, vacinacao_id, cancelado_em, cancelado_motivo, created_at, conta_item:vet_conta_itens(total, cancelado_em)")
+      .eq("atendimento_id", atendimentoId)
+      .order("created_at"),
+    ctx.supabase
+      .from("nfe_produtos")
+      .select("id, descricao, unidade, valor_unitario, estoque_atual, controla_estoque")
+      .eq("empresa_id", empresaId)
+      .eq("ativo", true)
+      .order("descricao")
+      .limit(500),
   ]);
   const p = a.paciente as unknown as { id: string; nome: string; especie: string; raca: string | null; sexo: string; nascimento: string | null; alergias: string | null };
   const t = a.tutor as unknown as { id: string; nome: string };
@@ -181,6 +196,47 @@ export default async function PaginaAtendimento({ params }: PageProps<"/e/[empre
               ) : (
                 <p className="text-muted-foreground">Nenhuma vacina neste atendimento.</p>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PackageMinus className="size-5" /> Medicamentos e materiais usados
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {usos?.length ? (
+                <ul className="space-y-2">
+                  {usos.map((u) => {
+                    const item = u.conta_item as unknown as { total: number | string; cancelado_em: string | null } | null;
+                    return (
+                      <li key={u.id} className={`flex items-start justify-between gap-2 ${u.cancelado_em ? "opacity-50" : ""}`}>
+                        <span>
+                          <strong>{u.descricao}</strong> · {formatarQuantidade(u.quantidade)} {un(u.unidade)}
+                          <span className="block text-xs text-muted-foreground">
+                            {formatarDataHora(u.created_at)}
+                            {u.vacinacao_id ? " · dose da vacina aplicada" : ""}
+                            {item && !item.cancelado_em ? ` · cobrado ${formatarMoeda(item.total)}` : item ? " · cobrança cancelada" : " · sem cobrança"}
+                            {u.cancelado_em ? ` · cancelado: ${u.cancelado_motivo}` : ""}
+                          </span>
+                        </span>
+                        {!u.cancelado_em && !u.vacinacao_id ? (
+                          <DialogoMotivo
+                            acao={cancelarUso.bind(null, empresaId, u.id)}
+                            titulo="Cancelar este lançamento?"
+                            descricao="O produto volta ao estoque e, se foi cobrado, sai da conta do tutor (com a conta ainda aberta)."
+                            rotuloBotao="Cancelar"
+                          />
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground">Nada lançado. O que for usado aqui sai do estoque do pet shop e farmácia.</p>
+              )}
+              {a.status !== "cancelado" ? <FormularioUso empresaId={empresaId} atendimentoId={a.id} produtos={produtos ?? []} /> : null}
             </CardContent>
           </Card>
 

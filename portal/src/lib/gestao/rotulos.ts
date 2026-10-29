@@ -32,6 +32,13 @@ export const UNIDADES_LOJA = [
   { valor: "CX", rotulo: "Caixa (CX)" },
   { valor: "PCT", rotulo: "Pacote (PCT)" },
   { valor: "L", rotulo: "Litro (L)" },
+  // Clínica e farmácia: remédio fracionado e vacinas
+  { valor: "MLT", rotulo: "Mililitro (mL)" },
+  { valor: "G", rotulo: "Grama (G)" },
+  { valor: "FR", rotulo: "Frasco (FR)" },
+  { valor: "AMP", rotulo: "Ampola (AMP)" },
+  { valor: "CP", rotulo: "Comprimido (CP)" },
+  { valor: "DOSE", rotulo: "Dose (DOSE)" },
 ] as const;
 
 export const TIPOS_MOVIMENTO: Record<string, string> = {
@@ -41,6 +48,10 @@ export const TIPOS_MOVIMENTO: Record<string, string> = {
   inventario: "Ajuste de inventário",
   venda: "Venda",
   cancelamento_venda: "Venda cancelada (devolução ao estoque)",
+  consumo_hotel: "Consumo no quarto (hotel)",
+  estorno_consumo_hotel: "Consumo cancelado (volta ao estoque)",
+  uso_clinica: "Uso no atendimento (clínica)",
+  estorno_uso_clinica: "Uso cancelado (volta ao estoque)",
 };
 
 export interface MedidasProduto {
@@ -112,7 +123,7 @@ export function parcelasDoPrazo(valor: Decimal.Value, parcelas: number, primeiro
 
 /** Unidade como se escreve: M3 → m³, M2 → m², M → m. */
 export function un(u: string | null | undefined) {
-  return u === "M3" ? "m³" : u === "M2" ? "m²" : u === "M" || u === "ML" ? "m" : (u ?? "");
+  return u === "M3" ? "m³" : u === "M2" ? "m²" : u === "M" || u === "ML" ? "m" : u === "MLT" ? "mL" : (u ?? "");
 }
 
 /** Situação da NF-e na hora da venda, para o caixa. */

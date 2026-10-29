@@ -794,7 +794,7 @@ export async function pdfProntuario(supabase: Supa, empresaId: string, pacienteI
     carregarIdentidadeClinica(supabase, empresaId),
   ]);
   if (!p) return null;
-  const [{ data: atendimentos }, { data: adendos }, { data: vacinas }, { data: receitas }, { data: itens }, { data: documentos }, { data: anexos }] = await Promise.all([
+  const [{ data: atendimentos }, { data: adendos }, { data: vacinas }, { data: receitas }, { data: itens }, { data: documentos }, { data: anexos }, { data: usos }] = await Promise.all([
     supabase.from("vet_atendimentos").select("*, veterinario:vet_veterinarios(nome, crmv, crmv_uf)").eq("empresa_id", empresaId).eq("paciente_id", pacienteId).order("data_hora"),
     supabase
       .from("vet_adendos")
@@ -828,6 +828,14 @@ export async function pdfProntuario(supabase: Supa, empresaId: string, pacienteI
       .eq("atendimento.paciente_id", pacienteId)
       .not("confirmado_em", "is", null)
       .order("created_at"),
+    supabase
+      .from("vet_usos")
+      .select("atendimento_id, descricao, quantidade, unidade")
+      .eq("empresa_id", empresaId)
+      .eq("paciente_id", pacienteId)
+      .is("cancelado_em", null)
+      .not("atendimento_id", "is", null)
+      .order("created_at"),
   ]);
   const paciente = p as unknown as Paciente;
   const t = (p as unknown as { tutor: Tutor }).tutor;
@@ -852,6 +860,13 @@ export async function pdfProntuario(supabase: Supa, empresaId: string, pacienteI
         rotuloValor("Parâmetros", parametros(a as unknown as Linha) || null),
         rotuloValor("Estado geral", a.estado_geral),
         ...CAMPOS_PRONTUARIO.map(([campo, rotulo]) => rotuloValor(rotulo, (a as unknown as Record<string, string | null>)[campo])),
+        rotuloValor(
+          "Medicamentos e materiais usados",
+          (usos ?? [])
+            .filter((u) => u.atendimento_id === a.id)
+            .map((u) => `${u.descricao} (${numeroBr(u.quantidade)} ${u.unidade === "MLT" ? "mL" : u.unidade.toLowerCase()})`)
+            .join("; ") || null,
+        ),
         rotuloValor("Retorno", a.retorno_em ? `${formatarData(a.retorno_em)}${a.retorno_motivo ? ` — ${a.retorno_motivo}` : ""}` : null),
         a.finalizado_em ? { text: `Finalizado em ${formatarDataHora(a.finalizado_em)}.`, fontSize: 7.5, color: COR.cinza } : null,
         ...meus.map((x) => {

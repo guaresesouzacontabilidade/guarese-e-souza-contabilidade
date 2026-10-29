@@ -6,6 +6,8 @@
  *    segundo veterinário só na agenda; a recepção agenda, cadastra e cobra;
  *  - tutores e animais (cães, gatos e um coelho), vacinas de carteira
  *    anterior e serviços com preço;
+ *  - pet shop e farmácia: medicamento fracionado em mL (com a conversão do
+ *    frasco do fornecedor), vacinas por dose ligadas ao catálogo e ração;
  *  - prontuário de cerca de dois meses (atendimentos finalizados, adendo,
  *    vacinas aplicadas, receita comum, de antimicrobiano e de manipulado
  *    controlado, atestados), gravado direto (as funções só registram com a
@@ -98,6 +100,21 @@ function animais(h: string): Animal[] {
   ];
 }
 
+/**
+ * Pet shop e farmácia: medicamento fracionado em mL (o frasco de 50 mL entra
+ * como 50 mL), vacinas por dose (ligadas ao catálogo: cada aplicação tira 1
+ * dose) e produtos de balcão.
+ */
+const PRODUTOS: { chave: string; descricao: string; ncm: string; unidade: string; preco: number; custo: number; estoque: number; grupo: string }[] = [
+  { chave: "dipirona", descricao: "Dipirona sódica 500 mg/mL injetável (frasco 50 mL)", ncm: "30049099", unidade: "MLT", preco: 1.2, custo: 0.36, estoque: 500, grupo: "Farmácia (uso na clínica)" },
+  { chave: "soro", descricao: "Soro fisiológico 0,9% (bolsa 500 mL)", ncm: "30049099", unidade: "MLT", preco: 0.06, custo: 0.018, estoque: 5000, grupo: "Farmácia (uso na clínica)" },
+  { chave: "v10", descricao: "Vacina polivalente canina V10 (dose)", ncm: "30024290", unidade: "DOSE", preco: 95, custo: 38, estoque: 30, grupo: "Vacinas" },
+  { chave: "raiva", descricao: "Vacina antirrábica (dose)", ncm: "30024290", unidade: "DOSE", preco: 60, custo: 14, estoque: 20, grupo: "Vacinas" },
+  { chave: "v4", descricao: "Vacina polivalente felina V4 (dose)", ncm: "30024290", unidade: "DOSE", preco: 110, custo: 45, estoque: 15, grupo: "Vacinas" },
+  { chave: "racao", descricao: "Ração premium cães adultos 15 kg", ncm: "23091000", unidade: "UN", preco: 289, custo: 198, estoque: 12, grupo: "Pet shop" },
+  { chave: "antipulgas", descricao: "Antipulgas e carrapatos cães 10 a 20 kg (comprimido)", ncm: "30049099", unidade: "CP", preco: 89, custo: 52, estoque: 24, grupo: "Pet shop" },
+];
+
 const SERVICOS: [string, string, number][] = [
   ["Vacina polivalente canina (V10)", "vacina", 95],
   ["Vacina antirrábica", "vacina", 60],
@@ -126,7 +143,10 @@ export async function semearVeterinaria(
   const { data: existente } = await admin.from("empresas").select("id").eq("documento", documento).maybeSingle();
   if (existente) {
     const { count } = await admin.from("vet_tutores").select("id", { count: "exact", head: true }).eq("empresa_id", existente.id);
-    if (count) return false;
+    if (count) {
+      await semearEstoqueClinica(admin, conexao, opcoes.dominio, existente.id as string);
+      return false;
+    }
   }
   const empresaId =
     (existente?.id as string | undefined) ??
@@ -672,5 +692,66 @@ export async function semearVeterinaria(
     ok("logo: envio", await admin.storage.from("empresas-logos").upload(caminho, readFileSync(join(__dirname, "arquivos-demo", "logo-clinica.png")), { contentType: "image/png", upsert: false }));
     ok("logo: cadastro", await admin.from("empresas").update({ logo_path: caminho, logo_atualizado_em: new Date().toISOString() }).eq("id", empresaId));
   }
+  await semearEstoqueClinica(admin, conexao, opcoes.dominio, empresaId);
   return true;
+}
+
+/**
+ * Pet shop e farmácia da clínica fictícia: produtos com estoque, a conversão
+ * do frasco do fornecedor (1 FR = 50 mL), as vacinas do catálogo ligadas aos
+ * produtos e o medicamento usado no atendimento em andamento (cobrado na
+ * conta). Só na primeira vez (a clínica pode mudar tudo depois).
+ */
+export async function semearEstoqueClinica(admin: SupabaseClient, conexao: { url: string; publica: string }, dominio: string, empresaId: string) {
+  const { count } = await admin.from("nfe_produtos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  if (count) return;
+  const dona = await sessao(admin, conexao.url, conexao.publica, `veterinaria@${dominio}`);
+  try {
+    const produto = new Map<string, string>();
+    for (const [i, x] of PRODUTOS.entries()) {
+      const id = ok(
+        `produto ${x.descricao}`,
+        await dona.rpc("gestao_produto_salvar", {
+          p_empresa_id: empresaId,
+          p_id: null,
+          p_dados: { codigo: String(101 + i), descricao: x.descricao, ncm: x.ncm, unidade: x.unidade, valor_unitario: x.preco, preco_custo: x.custo, grupo: x.grupo, controla_estoque: true },
+        }),
+      ) as string;
+      ok(
+        `estoque ${x.descricao}`,
+        await dona.rpc("gestao_estoque_lancar", {
+          p_empresa_id: empresaId,
+          p_dados: { tipo: "entrada_manual", produto_id: id, quantidade: x.estoque, custo_unitario: x.custo, observacao: "Estoque inicial (DEMONSTRAÇÃO)" },
+        }),
+      );
+      produto.set(x.chave, id);
+    }
+    // Compra do fornecedor: 1 frasco (FR) da nota = 50 mL no estoque
+    ok(
+      "conversão do fornecedor",
+      await admin.from("estoque_vinculos").insert({
+        empresa_id: empresaId,
+        fornecedor_documento: cnpjValido("990011000001"),
+        codigo_fornecedor: "DIP50",
+        produto_id: produto.get("dipirona"),
+        fator: 50,
+        descricao_fornecedor: "DIPIRONA SODICA 500MG/ML INJ FR 50ML (FICTICIO)",
+        unidade_fornecedor: "FR",
+      }),
+    );
+    // Vacinas do catálogo ligadas aos produtos (de agora em diante, cada aplicação tira 1 dose)
+    const { data: catalogo } = await admin.from("vet_vacinas").select("id, nome").eq("empresa_id", empresaId);
+    for (const [prefixo, chave] of [["Polivalente canina", "v10"], ["Antirrábica", "raiva"], ["Polivalente felina", "v4"]] as [string, string][]) {
+      const v = (catalogo ?? []).find((x) => (x.nome as string).startsWith(prefixo));
+      if (v) ok(`baixa da vacina ${prefixo}`, await dona.rpc("vet_vacina_produto_definir", { p_vacina_id: v.id, p_produto_id: produto.get(chave) }));
+    }
+    // Medicamento e soro usados no atendimento em andamento (o da dipirona é cobrado na conta)
+    const { data: aberto } = await admin.from("vet_atendimentos").select("id").eq("empresa_id", empresaId).eq("status", "aberto").order("data_hora", { ascending: false }).limit(1).maybeSingle();
+    if (aberto) {
+      ok("uso no atendimento", await dona.rpc("vet_uso_registrar", { p_atendimento_id: aberto.id, p_dados: { produto_id: produto.get("dipirona"), quantidade: "1,5", cobrar: true } }));
+      ok("soro no atendimento", await dona.rpc("vet_uso_registrar", { p_atendimento_id: aberto.id, p_dados: { produto_id: produto.get("soro"), quantidade: "100" } }));
+    }
+  } finally {
+    await dona.auth.signOut({ scope: "local" });
+  }
 }

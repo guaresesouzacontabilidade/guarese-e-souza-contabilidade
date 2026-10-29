@@ -135,7 +135,7 @@ export async function salvarVacinaCatalogo(empresaId: string, vacinaId: string |
     if (vacinaId && !idValido(vacinaId)) return falha("Vacina inválida.");
     const ctx = await contexto(empresaId, true);
     if (texto(fd, "nome").length < 2) return falha("Revise os campos destacados.", { nome: ["Informe o nome da vacina."] });
-    const { error } = await ctx.supabase.rpc("vet_vacina_salvar", {
+    const { data, error } = await ctx.supabase.rpc("vet_vacina_salvar", {
       p_empresa_id: empresaId,
       p_id: vacinaId as string,
       p_dados: {
@@ -150,6 +150,15 @@ export async function salvarVacinaCatalogo(empresaId: string, vacinaId: string |
       },
     });
     if (error) return falha(mensagemErro(error));
+    // Produto do estoque (1 dose sai a cada aplicação na clínica); vazio desliga
+    const produto = texto(fd, "produto_id");
+    if (fd.has("produto_id") && (!produto || UUID.test(produto))) {
+      const id = vacinaId ?? (data as string | null);
+      if (id) {
+        const r = await ctx.supabase.rpc("vet_vacina_produto_definir", { p_vacina_id: id, p_produto_id: (produto || null) as string });
+        if (r.error) return falha(mensagemErro(r.error));
+      }
+    }
     revalidar(empresaId);
     return sucesso("Vacina salva no catálogo.");
   });
@@ -637,6 +646,47 @@ export async function abrirConta(empresaId: string, dados: { tutor_id?: string; 
     if (error) return falha(mensagemErro(error));
     revalidar(empresaId);
     return sucesso(undefined, { id: data as string });
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Medicamentos e materiais usados no atendimento (baixa no estoque)
+// -----------------------------------------------------------------------------
+export async function registrarUso(empresaId: string, atendimentoId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  return executar(async () => {
+    if (!idValido(atendimentoId)) return falha("Atendimento inválido.");
+    const ctx = await contexto(empresaId);
+    const produto = texto(fd, "produto_id");
+    // "2,5" ou "2.5"; com vírgula, o ponto é separador de milhar ("1.000,5")
+    const bruto = texto(fd, "quantidade", 14);
+    const qtd = bruto.includes(",") ? bruto.replace(/\./g, "").replace(",", ".") : bruto;
+    const cobrar = fd.getAll("cobrar").includes("on");
+    const valor = dinheiro(fd, "valor");
+    const erros: Record<string, string[]> = {};
+    if (!UUID.test(produto)) erros.produto_id = ["Escolha o produto."];
+    if (!/^\d{1,6}(\.\d{1,4})?$/.test(qtd) || Number(qtd) <= 0) erros.quantidade = ["Informe a quantidade usada (ex.: 2,5)."];
+    if (valor === null) erros.valor = ["Valor inválido."];
+    if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
+    const { error } = await ctx.supabase.rpc("vet_uso_registrar", {
+      p_atendimento_id: atendimentoId,
+      p_dados: { produto_id: produto, quantidade: qtd, cobrar, valor: cobrar ? (valor ?? "") : "", observacao: texto(fd, "observacao", 300) },
+    });
+    if (error) return falha(mensagemErro(error));
+    revalidar(empresaId);
+    revalidatePath(`/e/${empresaId}/loja`, "layout");
+    return sucesso(cobrar ? "Baixa no estoque e cobrança na conta registradas." : "Baixa no estoque registrada.");
+  });
+}
+
+export async function cancelarUso(empresaId: string, usoId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  return executar(async () => {
+    if (!idValido(usoId)) return falha("Lançamento inválido.");
+    const ctx = await contexto(empresaId);
+    const { error } = await ctx.supabase.rpc("vet_uso_cancelar", { p_uso_id: usoId, p_motivo: texto(fd, "motivo", 300) });
+    if (error) return falha(mensagemErro(error));
+    revalidar(empresaId);
+    revalidatePath(`/e/${empresaId}/loja`, "layout");
+    return sucesso("Cancelado: o produto voltou ao estoque.");
   });
 }
 

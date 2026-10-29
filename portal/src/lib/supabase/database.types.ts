@@ -4940,6 +4940,61 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"vet_usos": {
+                  Row: {
+                    "atendimento_id": string | null,"cancelado_em": string | null,"cancelado_motivo": string | null,"conta_item_id": string | null,"created_at": string,"custo_unitario": number | null,"descricao": string,"empresa_id": string,"id": string,"lancado_por": string | null,"observacao": string | null,"paciente_id": string,"produto_id": string,"quantidade": number,"unidade": string,"vacinacao_id": string | null
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_item_id"?: string | null,"created_at"?: string,"custo_unitario"?: number | null,"descricao": string,"empresa_id": string,"id"?: string,"lancado_por"?: string | null,"observacao"?: string | null,"paciente_id": string,"produto_id": string,"quantidade": number,"unidade": string,"vacinacao_id"?: string | null
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_item_id"?: string | null,"created_at"?: string,"custo_unitario"?: number | null,"descricao"?: string,"empresa_id"?: string,"id"?: string,"lancado_por"?: string | null,"observacao"?: string | null,"paciente_id"?: string,"produto_id"?: string,"quantidade"?: number,"unidade"?: string,"vacinacao_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_usos_conta_item_id_fkey"
+      columns: ["conta_item_id"]
+isOneToOne: false
+      referencedRelation: "vet_conta_itens"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_usos_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_usos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_usos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_usos_empresa_id_vacinacao_id_fkey"
+      columns: ["empresa_id","vacinacao_id"]
+isOneToOne: false
+      referencedRelation: "vet_vacinacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_usos_lancado_por_fkey"
+      columns: ["lancado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_usos_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"vet_vacinacoes": {
                   Row: {
                     "aplicada_em": string,"atendimento_id": string | null,"cancelada_em": string | null,"cancelada_motivo": string | null,"created_at": string,"criado_por": string | null,"dose": string,"empresa_id": string,"fabricacao": string | null,"fabricante": string | null,"id": string,"observacao": string | null,"origem": string,"paciente_id": string,"partida": string | null,"proxima_dose_em": string | null,"vacina_id": string | null,"vacina_nome": string,"validade": string | null,"veterinario_externo": string | null,"veterinario_id": string | null
@@ -4991,13 +5046,13 @@ isOneToOne: false
                   ]
                 },"vet_vacinas": {
                   Row: {
-                    "ativa": boolean,"created_at": string,"doses_iniciais": number,"empresa_id": string,"especie": string,"fabricante": string | null,"id": string,"intervalo_doses_dias": number,"nome": string,"observacao": string | null,"ordem": number,"reforco_dias": number | null,"updated_at": string
+                    "ativa": boolean,"created_at": string,"doses_iniciais": number,"empresa_id": string,"especie": string,"fabricante": string | null,"id": string,"intervalo_doses_dias": number,"nome": string,"observacao": string | null,"ordem": number,"produto_id": string | null,"reforco_dias": number | null,"updated_at": string
                   }
                   Insert: {
-                    "ativa"?: boolean,"created_at"?: string,"doses_iniciais"?: number,"empresa_id": string,"especie"?: string,"fabricante"?: string | null,"id"?: string,"intervalo_doses_dias"?: number,"nome": string,"observacao"?: string | null,"ordem"?: number,"reforco_dias"?: number | null,"updated_at"?: string
+                    "ativa"?: boolean,"created_at"?: string,"doses_iniciais"?: number,"empresa_id": string,"especie"?: string,"fabricante"?: string | null,"id"?: string,"intervalo_doses_dias"?: number,"nome": string,"observacao"?: string | null,"ordem"?: number,"produto_id"?: string | null,"reforco_dias"?: number | null,"updated_at"?: string
                   }
                   Update: {
-                    "ativa"?: boolean,"created_at"?: string,"doses_iniciais"?: number,"empresa_id"?: string,"especie"?: string,"fabricante"?: string | null,"id"?: string,"intervalo_doses_dias"?: number,"nome"?: string,"observacao"?: string | null,"ordem"?: number,"reforco_dias"?: number | null,"updated_at"?: string
+                    "ativa"?: boolean,"created_at"?: string,"doses_iniciais"?: number,"empresa_id"?: string,"especie"?: string,"fabricante"?: string | null,"id"?: string,"intervalo_doses_dias"?: number,"nome"?: string,"observacao"?: string | null,"ordem"?: number,"produto_id"?: string | null,"reforco_dias"?: number | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -5005,6 +5060,12 @@ isOneToOne: false
       columns: ["empresa_id"]
 isOneToOne: false
       referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_vacinas_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
       referencedColumns: ["id"]
     }
                   ]
@@ -6072,6 +6133,15 @@ isOneToOne: false
                            },
 "vet_tutor_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_uso_cancelar":
+{ Args: { "p_motivo": string,"p_uso_id": string }; Returns: undefined
+                           },
+"vet_uso_registrar":
+{ Args: { "p_atendimento_id": string,"p_dados": Json }; Returns: string
+                           },
+"vet_vacina_produto_definir":
+{ Args: { "p_produto_id": string,"p_vacina_id": string }; Returns: undefined
                            },
 "vet_vacina_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string

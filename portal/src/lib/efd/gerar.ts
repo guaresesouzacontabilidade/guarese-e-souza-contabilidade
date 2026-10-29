@@ -418,6 +418,7 @@ const UNIDADES: Record<string, string> = {
   UN: "Unidade", UND: "Unidade", UNID: "Unidade", PC: "Peca", PCT: "Pacote", CX: "Caixa", KG: "Quilograma", G: "Grama", T: "Tonelada",
   TON: "Tonelada", TN: "Tonelada", SC: "Saca", SC60: "Saca de 60 kg", L: "Litro", LT: "Litro", ML: "Mililitro", M: "Metro", M2: "Metro quadrado",
   M3: "Metro cubico", MT: "Metro", DZ: "Duzia", FD: "Fardo", GL: "Galao", PAR: "Par", RL: "Rolo", SV: "Servico", KIT: "Kit", BD: "Balde", SAC: "Saco",
+  MLT: "Mililitro", FR: "Frasco", AMP: "Ampola", CP: "Comprimido", DOSE: "Dose",
 };
 
 function unidadeCampo(u: string | null | undefined): string {
