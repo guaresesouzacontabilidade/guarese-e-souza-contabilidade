@@ -9,9 +9,10 @@
     { k: "ga", n: "Gasolina aditivada", s: 2 },
     { k: "et", n: "Etanol", s: 3 },
     { k: "d10", n: "Diesel S10", s: 4 },
-    { k: "d500", n: "Diesel S500", s: 5 },
-    { k: "gp", n: "Gasolina premium", s: 6 },
-    { k: "gnv", n: "GNV", s: 7, m3: true },
+    { k: "gp", n: "Gasolina premium", s: 5 },
+    { k: "d10a", n: "Diesel S10 aditivado", s: 6 },
+    { k: "d500", n: "Diesel S500", s: 7 },
+    { k: "gnv", n: "GNV", s: 8, m3: true },
   ];
   const FUEL = Object.fromEntries(FUELS.map(f => [f.k, f]));
   const GROUPS = [
@@ -32,28 +33,31 @@
   const DAY = 86400000;
   const STORE_KEY = "board-posto-catarinense:v1";
 
-  // Layout padrão do posto, até a pessoa informar o real.
+  // Planta do posto montada a partir da foto: duas fileiras de ilhas apontando para a rua,
+  // com as posições numeradas como nas colunas (1 e 2, 3 e 4, 5 e 6).
   // Cada bomba tem dois lados (A e B) e cada lado atende um veículo por vez.
+  // x e z são metros, usados pelo posto em 3D (z cresce na direção da rua; olhando da varanda, x positivo fica à esquerda).
+  // Combustíveis de cada bico e os tanques ainda são suposições, até a confirmação do posto.
   const LAYOUT = {
     bombas: [
-      { n: 1, tipo: "carro", lados: { A: [[1, "gc"], [2, "et"]], B: [[3, "ga"], [4, "gc"]] } },
-      { n: 2, tipo: "carro", lados: { A: [[5, "gc"], [6, "et"]], B: [[7, "ga"], [8, "gc"]] } },
-      { n: 3, tipo: "carro", lados: { A: [[9, "gc"], [10, "et"]], B: [[11, "gc"], [12, "d10"]] } },
-      { n: 4, tipo: "diesel", lados: { A: [[13, "d10"], [14, "d500"]], B: [[15, "d10"], [16, "d500"]] } },
+      { n: 1, tipo: "diesel", x: 4.5, z: 6, pos: { A: 2, B: 1 }, lados: { A: [[3, "d10"], [4, "d10a"]], B: [[1, "d10"], [2, "d10a"]] } },
+      { n: 2, tipo: "carro", x: -4.5, z: 6, pos: { A: 4, B: 3 }, lados: { A: [[9, "gc"], [10, "ga"], [11, "gp"], [12, "et"]], B: [[5, "gc"], [6, "ga"], [7, "gp"], [8, "et"]] } },
+      { n: 3, tipo: "carro", x: -4.5, z: -4, pos: { A: 6, B: 5 }, lados: { A: [[17, "gc"], [18, "ga"], [19, "gp"], [20, "et"]], B: [[13, "gc"], [14, "ga"], [15, "gp"], [16, "et"]] } },
     ],
     tanques: [
       { n: 1, f: "gc", cap: 30000 },
       { n: 2, f: "ga", cap: 15000 },
-      { n: 3, f: "et", cap: 15000 },
-      { n: 4, f: "d10", cap: 30000 },
-      { n: 5, f: "d500", cap: 15000 },
+      { n: 3, f: "gp", cap: 15000 },
+      { n: 4, f: "et", cap: 15000 },
+      { n: 5, f: "d10", cap: 15000 },
+      { n: 6, f: "d10a", cap: 15000 },
     ],
   };
   const SIDES = [];
   const BICOS = {};
   for (const b of LAYOUT.bombas) {
     for (const lado of ["A", "B"]) {
-      const side = { id: b.n + lado, bomba: b.n, lado, tipo: b.tipo, bicos: b.lados[lado].map(([n, f]) => ({ n, f })) };
+      const side = { id: b.n + lado, bomba: b.n, lado, pos: b.pos[lado], x: b.x, z: b.z, tipo: b.tipo, bicos: b.lados[lado].map(([n, f]) => ({ n, f })) };
       SIDES.push(side);
       for (const bi of side.bicos) BICOS[bi.n] = { n: bi.n, f: bi.f, side };
     }
@@ -121,8 +125,9 @@
     const t = norm(name);
     if (/\bOLEO\b(?!.*DIESEL)|LUBRIF|ARLA|^ADITIVO|ADITIVO\s+(P\/|PARA|RADIADOR|ARREF)|FLUIDO|GLP|COZINHA|BOTIJ|\bP-?13\b|\b\d{1,2}W-?\d{2}\b|\b\d+\s?ML\b/.test(t)) return null;
     if (/\bGNV\b|GAS NATURAL/.test(t)) return "gnv";
-    if (/DIESEL|\bS-?10\b|\bS-?500\b/.test(t)) return /S-?500/.test(t) ? "d500" : "d10";
+    if (/DIESEL|\bS-?10\b|\bS-?500\b/.test(t)) return /S-?500/.test(t) ? "d500" : /ADIT|V-?POWER|EVOLUX|PREMIUM|PODIUM|\bADT\b/.test(t) ? "d10a" : "d10";
     if (/ETANOL|ALCOOL|\bETH\b/.test(t)) return "et";
+    if (/V-?POWER|PODIUM|OCTAPRO/.test(t)) return "gp";
     if (/GASOLINA|\bGAS\b|\bGC\b|\bGA\b/.test(t)) {
       if (/PREMIUM|PODIUM|V-?POWER|GRID|OCTAPRO|SUPRA/.test(t)) return "gp";
       if (/ADIT|DT CLEAN|\bADT\b/.test(t)) return "ga";
@@ -151,9 +156,9 @@
     let seed = 20261029;
     const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
     const pick = arr => { let r = rnd() * arr.reduce((a, x) => a + x[1], 0); for (const x of arr) { if ((r -= x[1]) <= 0) return x[0]; } return arr[0][0]; };
-    const prices = { gc: 6.399, ga: 6.599, et: 4.899, d10: 6.199, d500: 6.099 };
-    const costs = { gc: 5.89, ga: 6.04, et: 4.41, d10: 5.71, d500: 5.63 };
-    const fuelMix = [["gc", 48], ["ga", 13], ["et", 15], ["d10", 20], ["d500", 4]];
+    const prices = { gc: 6.399, ga: 6.599, gp: 6.999, et: 4.899, d10: 6.199, d10a: 6.399 };
+    const costs = { gc: 5.89, ga: 6.04, gp: 6.36, et: 4.41, d10: 5.71, d10a: 5.86 };
+    const fuelMix = [["gc", 42], ["ga", 14], ["gp", 7], ["et", 15], ["d10", 16], ["d10a", 6]];
     const hourW = [1, .6, .5, .5, .7, 1.6, 4, 7.5, 8, 6.5, 5.5, 6, 7, 6.5, 5.5, 5.5, 6.5, 8.5, 9, 7, 4.5, 3.2, 2.2, 1.5];
     const hourMix = hourW.map((w, h) => [h, w]);
     const shop = [
@@ -182,7 +187,7 @@
         if (isFuel) {
           const f = pick(fuelMix);
           let q;
-          if (f === "d10" || f === "d500") q = rnd() < .3 ? 80 + rnd() * 200 : 25 + rnd() * 50;
+          if (f === "d10" || f === "d10a") q = rnd() < .3 ? 80 + rnd() * 200 : 25 + rnd() * 50;
           else q = rnd() < .35 ? Math.round(5 + rnd() * 9) * 10 / prices[f] : 12 + rnd() * 38;
           q = Math.round(q * 1000) / 1000;
           items.push({ p: FUEL[f].n, g: "comb", f, q, u: "L", v: r2(q * prices[f]) });
@@ -203,7 +208,7 @@
     const purchases = [];
     for (let d = 60; d >= 1; d--) {
       const day = addDays(end, -d);
-      const fuels = d % 2 === 0 ? ["gc", "ga", "et"] : ["d10", "d500"];
+      const fuels = d % 2 === 0 ? ["gc", "ga", "gp", "et"] : ["d10", "d10a"];
       const items = fuels.map(f => {
         const q = Math.max(1000, Math.round(litersByFuel[f] / 60 * 2 / 500) * 500);
         return { f, q, v: r2(q * costs[f] * (0.99 + rnd() * .02)) };
@@ -214,7 +219,7 @@
     return {
       mode: "sample", sales, purchases, cancelled: [], seen: [], cnpj: null,
       costs: { ...costs },
-      stock: { gc: 14000, ga: 2900, et: 5200, d10: 6800, d500: 4500 },
+      stock: { gc: 14000, ga: 2900, gp: 5200, et: 5600, d10: 3600, d10a: 5400 },
     };
   }
 

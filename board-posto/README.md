@@ -31,8 +31,14 @@ O botão **Posto 3D** (ou o endereço com `#posto-3d`) abre o posto em 3D, com a
   (10×, 60×, 300×), arrastar a linha do tempo e trocar de dia. Céu e luzes seguem a hora do dia.
 
 Sem bico na nota (o grupo `encerrante` da NFC-e traz `nBico`), o 3D escolhe um bico livre do mesmo combustível.
-O layout das bombas, bicos e tanques é um padrão (4 bombas, 16 bicos, 5 tanques) em `LAYOUT`, no `dados.js`,
-até ser trocado pelo layout real do posto.
+
+**Planta montada a partir de uma foto do posto** (tirada da varanda do prédio do fundo): 3 bombas em duas fileiras
+apontando para a rua, com as posições numeradas como nas colunas (1-2, 3-4, 5-6), cobertura de forro claro com
+4 colunas, cabine de lubrificantes junto ao muro, ARLA ao lado da bomba 1, área aberta grande do outro lado e a rua
+na frente com faixa de pedestres. A vista **Da varanda** reproduz o ângulo da foto. Cores amarelo e vermelho, sem
+logotipos de marca. Ainda são suposições, em `LAYOUT` no `dados.js`: os combustíveis de cada bico (bomba 1 com
+diesel; bombas 2 e 3 com gasolina comum, aditivada, premium e etanol), os tanques (6, de 15 a 30 mil litros) e onde
+ficam a conveniência, os tanques e o totem.
 
 ## Ligação com o Meta Posto
 
