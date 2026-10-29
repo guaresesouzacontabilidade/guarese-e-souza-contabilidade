@@ -85,6 +85,9 @@
   const fmtDate = t => new Date(t).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
   const fmtWeekday = t => new Date(t).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
   const fmtTime = t => new Date(t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const isoDay = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const isoTime = iso => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d).getTime(); };
+  const fmtIso = iso => iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "";
   const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
   const r2 = v => Math.round(v * 100) / 100;
 
@@ -201,24 +204,60 @@
     }
     sales.sort((a, b) => a.t - b.t);
 
-    // Entregas da distribuidora a cada 2 dias: gasolinas e etanol num dia, diesel no outro.
-    const litersByFuel = {};
-    for (const s of sales) for (const it of s.items) if (it.f) litersByFuel[it.f] = (litersByFuel[it.f] || 0) + it.q;
-    const purchases = [];
+    // Estoque dia a dia: entregas a cada 2 dias (gasolinas e etanol num dia, diesel no outro) completando o
+    // tanque até 85%, e o LMC de exemplo (abertura, entradas, vendas, medição, perdas e sobras) que sai daí.
+    const fuelKeys = Object.keys(prices);
+    const capOf = f => LAYOUT.tanques.filter(x => x.f === f).reduce((a, x) => a + x.cap, 0);
+    const vol = {}, rev = {};
+    for (const s of sales) {
+      const d = isoDay(s.t), r = rev[d] || (rev[d] = { v: 0, n: 0 });
+      r.n++;
+      for (const it of s.items) { r.v += it.v; if (it.f) vol[it.f + d] = (vol[it.f + d] || 0) + it.q; }
+    }
+    const level = Object.fromEntries(fuelKeys.map(f => [f, Math.round(capOf(f) * (0.5 + rnd() * 0.25))]));
+    const purchases = [], sped = {};
+    const enc = Object.fromEntries(Object.values(BICOS).map(b => [b.n, 400000 + b.n * 23711.5]));
     for (let d = 60; d >= 1; d--) {
-      const day = addDays(end, -d);
-      const fuels = d % 2 === 0 ? ["gc", "ga", "gp", "et"] : ["d10", "d10a"];
-      const items = fuels.map(f => {
-        const q = Math.max(1000, Math.round(litersByFuel[f] / 60 * 2 / 500) * 500);
-        return { f, q, v: r2(q * costs[f] * (0.99 + rnd() * .02)) };
-      });
-      purchases.push({ k: "exc" + d, t: day + (d % 2 === 0 ? 9.5 : 10.25) * 3600000, items });
+      const day = addDays(end, -d), iso = isoDay(day), mk = iso.slice(0, 7);
+      const M = sped[mk] || (sped[mk] = { nome: "POSTO CATARINENSE (EXEMPLO)", cnpj: "", ini: iso, fin: iso, rev: {}, lmc: {}, tanks: {}, bicos: {}, sample: true });
+      M.fin = iso;
+      if (rev[iso]) M.rev[iso] = { v: r2(rev[iso].v), n: rev[iso].n };
+      const group = d % 2 === 0 ? ["gc", "ga", "gp", "et"] : ["d10", "d10a"];
+      const items = [];
+      for (const f of fuelKeys) {
+        const abert = r2(level[f]);
+        // o último diesel S10 não vem, para o exemplo mostrar um tanque baixo
+        let e = group.includes(f) && !(f === "d10" && d === 1) ? Math.round((capOf(f) * 0.85 - abert) / 500) * 500 : 0;
+        if (e < 1000) e = 0;
+        if (e) items.push({ f, q: e, v: r2(e * costs[f] * (0.99 + rnd() * .02)) });
+        const saidas = r2(vol[f + iso] || 0), disp = r2(abert + e), escr = r2(disp - saidas);
+        // perdas e sobras pequenas; de vez em quando uma perda acima de 0,6%
+        let dev = rnd() < 0.04 ? -0.0085 * disp : (rnd() - 0.55) * 0.004 * disp;
+        dev = r2(dev);
+        const fisico = r2(escr + dev);
+        const rec = { abert, entr: e, disp, saidas, escr, perda: dev < 0 ? -dev : 0, ganho: dev > 0 ? dev : 0, fisico };
+        (M.lmc[f] = M.lmc[f] || {})[iso] = rec;
+        const tq = LAYOUT.tanques.find(x => x.f === f);
+        if (tq) (M.tanks[tq.n] = M.tanks[tq.n] || { f, days: {} }).days[iso] = { ...rec };
+        // as vendas do dia se dividem entre os bicos do combustível; aferição de 20 L no dia 5
+        const bicos = Object.values(BICOS).filter(b => b.f === f);
+        const w = bicos.map(() => 0.6 + rnd()), ws = w.reduce((a, x) => a + x, 0) || 1;
+        bicos.forEach((b, j) => {
+          const vendas = r2(saidas * w[j] / ws), aferi = iso.endsWith("-05") ? 20 : 0;
+          const ab = enc[b.n], fecha = r2(ab + vendas + aferi);
+          enc[b.n] = fecha;
+          (M.bicos[b.n] = M.bicos[b.n] || { f, tank: tq ? String(tq.n) : "", days: {} }).days[iso] = { interv: "", mot: "", abert: r2(ab), fecha, aferi, vendas };
+        });
+        level[f] = fisico;
+      }
+      if (items.length) purchases.push({ k: "exc" + d, t: day + (d % 2 === 0 ? 9.5 : 10.25) * 3600000, items });
     }
 
     return {
       mode: "sample", sales, purchases, cancelled: [], seen: [], cnpj: null,
       costs: { ...costs },
-      stock: { gc: 14000, ga: 2900, gp: 5200, et: 5600, d10: 3600, d10a: 5400 },
+      stock: Object.fromEntries(fuelKeys.map(f => [f, Math.round(level[f])])),
+      sped,
     };
   }
 
@@ -226,7 +265,7 @@
   const state = { db: null, saveFailed: false };
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) { const v = JSON.parse(raw); if (v && Array.isArray(v.sales) && v.sales.length) state.db = v; }
+    if (raw) { const v = JSON.parse(raw); if (v && v.mode === "real" && Array.isArray(v.sales)) state.db = v; }
   } catch (e) {}
   if (!state.db) state.db = makeSample();
   function save() {
@@ -297,22 +336,47 @@
     }
     return m;
   }
+  // LMC do SPED: os dias de um combustível em ordem, juntando os meses importados.
+  function lmcDays(f) {
+    const out = [];
+    for (const m of Object.values(state.db.sped || {})) { const byDay = m.lmc && m.lmc[f]; if (byDay) for (const d in byDay) out.push([d, byDay[d]]); }
+    return out.sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  }
+  // Último estoque medido no LMC (fechamento físico) e o dia da medição.
+  function lmcStock(f) {
+    const d = lmcDays(f);
+    return d.length ? { v: d[d.length - 1][1].fisico, day: d[d.length - 1][0] } : null;
+  }
+  // Venda média por dia nos últimos dias do LMC
+  function lmcAvg(f, n = 7) {
+    const d = lmcDays(f).slice(-n);
+    return d.length ? d.reduce((a, [, r]) => a + r.saidas, 0) / d.length : null;
+  }
   // Estoque estimado de um combustível num instante: o estoque digitado vale para o fim dos dados;
   // voltando no tempo, soma o que foi vendido depois e tira o que chegou depois.
+  // Sem estoque digitado, usa o LMC do SPED: no dia, vai da abertura até a medição do fim do dia.
   function stockAt(f, t) {
     const db = state.db;
-    if (!db.stock || db.stock[f] == null) return null;
-    let v = db.stock[f];
-    for (const s of db.sales) if (s.t > t) for (const it of s.items) if (it.f === f) v += it.q;
-    for (const p of db.purchases) if (p.t > t) for (const it of p.items) if (it.f === f) v -= it.q;
-    return v;
+    if (db.stock && db.stock[f] != null) {
+      let v = db.stock[f];
+      for (const s of db.sales) if (s.t > t) for (const it of s.items) if (it.f === f) v += it.q;
+      for (const p of db.purchases) if (p.t > t) for (const it of p.items) if (it.f === f) v -= it.q;
+      return v;
+    }
+    const days = lmcDays(f);
+    if (!days.length) return null;
+    const iso = isoDay(t), hit = days.find(([d]) => d === iso);
+    if (hit) return hit[1].abert + (hit[1].fisico - hit[1].abert) * ((t - dayStart(t)) / DAY);
+    if (iso > days[days.length - 1][0]) return days[days.length - 1][1].fisico;
+    if (iso < days[0][0]) return days[0][1].abert;
+    return null;
   }
 
   window.BPC = {
     FUELS, FUEL, GROUPS, PAYS, TPAG, DAY, STORE_KEY, LAYOUT, SIDES, BICOS,
     brl, brl0, int, dec1, dec2, dec3, pct, pct1, money, compactBRL,
-    dayStart, addDays, fmtDay, fmtDate, fmtWeekday, fmtTime, norm, r2, parseNum, parseDate,
+    dayStart, addDays, fmtDay, fmtDate, fmtWeekday, fmtTime, isoDay, isoTime, fmtIso, norm, r2, parseNum, parseDate,
     fuelOf, groupOf, isM3, makeSample, state, save, changed,
-    salesIn, salesDays, purchaseCost, costFor, summarize, stockAt,
+    salesIn, salesDays, purchaseCost, costFor, summarize, stockAt, lmcDays, lmcStock, lmcAvg,
   };
 })();

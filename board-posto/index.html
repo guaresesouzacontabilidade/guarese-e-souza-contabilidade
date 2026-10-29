@@ -82,6 +82,7 @@ button { cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 8px 14px; font-weight: 600; display: inline-flex; gap: 8px; align-items: center; font-size: 14px; }
 .btn:hover { border-color: var(--axis); }
+a.btn { color: var(--ink); text-decoration: none; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn.danger { color: var(--bad-ink); }
@@ -174,6 +175,20 @@ tr:last-child td { border-bottom: 0; }
 .days .track { flex: 1; height: 6px; background: var(--grid); border-radius: 3px; position: relative; }
 .days .fill { height: 100%; border-radius: 3px; }
 
+/* SPED Fiscal */
+.sped-area { display: flex; flex-direction: column; gap: 12px; }
+.sped-h { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; justify-content: space-between; padding-top: 8px; }
+.sped-h h2 { font-size: 26px; }
+.sped-h p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.sped-month { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.sped-month select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.sped-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.sped-stats > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sped-stats span { color: var(--ink-2); font-size: 13px; }
+.sped-stats b { font-family: var(--f-display); font-size: 26px; font-weight: 600; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sped-stats small { color: var(--muted); font-size: 12px; }
+.sped-note { margin: 0; color: var(--muted); font-size: 12px; }
+
 /* Etapas Meta Posto */
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .steps li { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
@@ -199,7 +214,7 @@ tr:last-child td { border-bottom: 0; }
 .drop.over { border-color: var(--accent); background: var(--accent-soft); }
 .drop strong { font-size: 16px; }
 .drop span { color: var(--muted); font-size: 13px; }
-.kinds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .kinds div { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
 .kinds b { display: block; font-family: var(--f-display); font-size: 16px; font-weight: 600; }
 .kinds span { color: var(--ink-2); }
@@ -215,6 +230,7 @@ tr:last-child td { border-bottom: 0; }
 @media (max-width: 980px) {
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .c8, .c4, .c7, .c5, .c6 { grid-column: span 12; }
+  .sped-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .steps { grid-template-columns: 1fr; }
 }
 @media (max-width: 520px) {
@@ -246,7 +262,7 @@ tr:last-child td { border-bottom: 0; }
       </div>
     </div>
     <div class="controls">
-      <div class="seg" role="group" aria-label="Período">
+      <div class="seg" role="group" aria-label="Período" id="period-seg">
         <button type="button" data-period="1" aria-pressed="false">Dia</button>
         <button type="button" data-period="7" aria-pressed="false">7 dias</button>
         <button type="button" data-period="30" aria-pressed="true">30 dias</button>
@@ -268,6 +284,12 @@ tr:last-child td { border-bottom: 0; }
     <button type="button" class="btn" data-open-import>Importar agora</button>
   </div>
 
+  <div class="notice" id="no-sales" hidden>
+    <p>Ainda não há vendas importadas. Os XML das notas (NFC-e) trazem horário, preço e forma de pagamento de cada venda.</p>
+    <button type="button" class="btn" data-open-import>Importar XML</button>
+  </div>
+
+  <div id="sales-area" style="display: contents">
   <section class="totem" aria-label="Preço médio por litro">
     <div class="totem-cards" id="totem"></div>
     <p class="totem-note" id="totem-note"></p>
@@ -362,7 +384,53 @@ tr:last-child td { border-bottom: 0; }
       </div>
       <div class="hbars" id="shop"></div>
     </section>
+  </div>
+  </div>
 
+  <section class="sped-area" id="sped-area" aria-labelledby="h-sped" hidden>
+    <div class="sped-h">
+      <div>
+        <h2 id="h-sped">SPED Fiscal</h2>
+        <p id="sped-sub"></p>
+      </div>
+      <label class="sped-month" for="sped-month">Mês <select id="sped-month"></select></label>
+    </div>
+    <div class="grid">
+      <section class="card c12" aria-label="Resumo do mês no SPED">
+        <div class="sped-stats" id="sped-stats"></div>
+      </section>
+      <section class="card c12" aria-labelledby="h-lmc">
+        <div class="card-h">
+          <div>
+            <h2 id="h-lmc">Perdas e sobras (LMC)</h2>
+            <p>Por combustível, no mês. Perda acima de 0,6% do volume do dia precisa de justificativa (Portaria DNC 26/1992). Em SC, diferença sem justificativa conta como saída sem nota.</p>
+          </div>
+        </div>
+        <div class="tbl-wrap" id="lmc-table"></div>
+      </section>
+      <section class="card c12" aria-labelledby="h-lmc-chart">
+        <div class="card-h">
+          <div>
+            <h2 id="h-lmc-chart">Estoque medido no fim do dia</h2>
+            <p>Medição física de cada combustível, registrada no LMC</p>
+          </div>
+        </div>
+        <div class="legend" id="lmc-legend"></div>
+        <div class="chart" id="lmc-chart"></div>
+      </section>
+      <section class="card c12" aria-labelledby="h-bicos">
+        <div class="card-h">
+          <div>
+            <h2 id="h-bicos">Bicos e encerrantes</h2>
+            <p>Encerrante do primeiro e do último dia do mês, litros vendidos e aferições de cada bico</p>
+          </div>
+        </div>
+        <div class="tbl-wrap" id="bicos-table"></div>
+      </section>
+    </div>
+  </section>
+
+  <div class="grid">
     <section class="card c12" aria-labelledby="h-meta">
       <div class="card-h">
         <div>
@@ -374,7 +442,7 @@ tr:last-child td { border-bottom: 0; }
         <li>
           <span class="n">Etapa 1 · disponível</span>
           <h3>Importar notas e planilhas</h3>
-          <p>XML das NFC-e e NF-e (soltos ou em .zip) ou planilha CSV exportada do Meta Posto.</p>
+          <p>XML das NFC-e e NF-e (soltos ou em .zip), SPED Fiscal com o LMC, ou planilha CSV exportada do Meta Posto.</p>
         </li>
         <li>
           <span class="n">Etapa 2 · aguardando</span>
@@ -407,11 +475,12 @@ tr:last-child td { border-bottom: 0; }
     </div>
     <div class="kinds">
       <div><b>XML das notas</b><span>NFC-e de venda e NF-e de compra da distribuidora. Soltos ou num .zip.</span></div>
+      <div><b>SPED Fiscal</b><span>Arquivo .txt do mês. Traz o LMC: estoque, perdas, sobras e encerrantes.</span></div>
       <div><b>Planilha do Meta Posto</b><span>Relatório de vendas em CSV. Você escolhe qual coluna é qual.</span></div>
     </div>
     <label class="drop" id="drop" for="file-in">
       <strong>Arraste os arquivos aqui ou toque para escolher</strong>
-      <span>.xml, .zip ou .csv</span>
+      <span>.xml, .zip, .txt (SPED) ou .csv</span>
       <input type="file" id="file-in" multiple accept=".xml,.zip,.csv,.txt,text/xml,application/xml,text/csv,application/zip" hidden>
     </label>
     <div id="import-result" hidden></div>
@@ -432,8 +501,8 @@ tr:last-child td { border-bottom: 0; }
   const {
     FUELS, FUEL, GROUPS, PAYS, TPAG, DAY, STORE_KEY,
     brl, int, dec2, dec3, pct, pct1, money, compactBRL,
-    dayStart, addDays, fmtDay, fmtDate, fmtWeekday, norm, r2, parseNum, parseDate,
-    fuelOf, groupOf, isM3, makeSample, save, changed, salesIn, purchaseCost, costFor, summarize,
+    dayStart, addDays, fmtDay, fmtDate, fmtWeekday, isoTime, fmtIso, norm, r2, parseNum, parseDate,
+    fuelOf, groupOf, isM3, makeSample, save, changed, salesIn, purchaseCost, costFor, summarize, lmcStock, lmcAvg,
   } = BPC;
   const S = BPC.state;
   const $ = id => document.getElementById(id);
@@ -694,15 +763,20 @@ tr:last-child td { border-bottom: 0; }
     const list = FUELS.filter(f => m.fuels[f.k]);
     if (!list.length) { box.append(el("p", "empty", "Sem vendas de combustível nos últimos 7 dias.")); return; }
     for (const f of list) {
-      const avg = m.fuels[f.k].q / days, unit = f.m3 ? "m³" : "L";
-      const st = S.db.stock && S.db.stock[f.k];
+      let avg = m.fuels[f.k].q / days;
+      const unit = f.m3 ? "m³" : "L";
+      const typed = S.db.stock && S.db.stock[f.k];
+      const lmc = typed == null ? lmcStock(f.k) : null;   // sem estoque digitado, vale a medição do LMC
+      const st = typed != null ? typed : lmc ? lmc.v : null;
+      if (lmc) { const a = lmcAvg(f.k); if (a) avg = a; }
       const row = el("div", "tank");
       const left = el("div");
       const name = el("div", "fuel-name"); const sw = el("i", "sw"); sw.style.background = `var(--s${f.s})`; name.append(sw, f.n);
       left.append(name, el("div", "meta", `Vende ${int.format(avg)} ${unit} por dia`));
+      if (lmc) left.append(el("div", "meta", `Medido no SPED em ${fmtIso(lmc.day)}: ${int.format(lmc.v)} ${unit}`));
       const lab = el("label"); lab.htmlFor = "stock-" + f.k; lab.append(`Estoque (${unit})`);
       const inp = el("input"); inp.id = "stock-" + f.k; inp.inputMode = "numeric"; inp.placeholder = "Digite";
-      if (st != null) inp.value = int.format(st);
+      if (typed != null) inp.value = int.format(typed);
       inp.addEventListener("change", () => {
         const v = parseNum(inp.value); S.db.stock = S.db.stock || {};
         if (inp.value.trim() === "" || v == null) delete S.db.stock[f.k]; else S.db.stock[f.k] = v;
@@ -720,7 +794,7 @@ tr:last-child td { border-bottom: 0; }
         const pill = el("span", "pill " + lvl); pill.innerHTML = icon[lvl]; pill.append(`${d < 1 ? "menos de 1 dia" : "dura " + dec2.format(d).replace(/,\d+$/, "") + (Math.floor(d) === 1 ? " dia" : " dias")} · ${word}`);
         line.append(tr, pill);
       } else {
-        line.append(el("span", "meta", "Digite o estoque para ver quantos dias dura."));
+        line.append(el("span", "meta", "Digite o estoque ou importe o SPED para ver quantos dias dura."));
       }
       row.append(line);
       box.append(row);
@@ -766,12 +840,160 @@ tr:last-child td { border-bottom: 0; }
     box.append(svg);
   }
 
+  // ---------- SPED Fiscal ----------
+  let spedMonth = null;
+  const monthName = key => { const [y, m] = key.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" }); };
+  const fmtCnpj = c => /^\d{14}$/.test(c || "") ? c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5") : (c || "");
+  const signedL = v => (v > 0.5 ? "+" : "") + int.format(v) + " L";
+  function renderSped() {
+    const sped = S.db.sped || {};
+    const months = Object.keys(sped).sort();
+    $("sped-area").hidden = !months.length;
+    if (!months.length) return;
+    if (!spedMonth || !sped[spedMonth]) spedMonth = months[months.length - 1];
+    const sel = $("sped-month"); sel.textContent = "";
+    for (const m of months) sel.append(new Option(monthName(m), m));
+    sel.value = spedMonth;
+    const M = sped[spedMonth];
+    $("sped-sub").textContent = [M.nome || "Empresa", M.cnpj ? "CNPJ " + fmtCnpj(M.cnpj) : "", `${fmtIso(M.ini)} a ${fmtIso(M.fin)}`].filter(Boolean).join(" · ") + (M.sample ? " · exemplo montado com as vendas de exemplo" : "");
+
+    // Totais por combustível no mês
+    const fuels = FUELS.filter(f => M.lmc && M.lmc[f.k]);
+    const agg = {};
+    for (const f of fuels) {
+      const days = Object.keys(M.lmc[f.k]).sort();
+      const a = agg[f.k] = { saidas: 0, entr: 0, perda: 0, ganho: 0, over: 0, last: null, lastDay: null, days: days.length };
+      for (const d of days) {
+        const r = M.lmc[f.k][d];
+        a.saidas += r.saidas; a.entr += r.entr; a.perda += r.perda; a.ganho += r.ganho;
+        if (r.disp > 0 && Math.abs(r.ganho - r.perda) > 0.006 * r.disp) a.over++;
+        a.last = r.fisico; a.lastDay = d;
+      }
+    }
+    const liters = fuels.filter(f => !f.m3).reduce((x, f) => x + agg[f.k].saidas, 0);
+    const result = fuels.filter(f => !f.m3).reduce((x, f) => x + agg[f.k].ganho - agg[f.k].perda, 0);
+    const stockEnd = fuels.filter(f => !f.m3).reduce((x, f) => x + (agg[f.k].last || 0), 0);
+    const nDays = Math.max(1, ...fuels.map(f => agg[f.k].days));
+    const revs = Object.values(M.rev || {}), rev = revs.reduce((x, r) => x + r.v, 0), notas = revs.reduce((x, r) => x + r.n, 0);
+    const t0 = isoTime(M.ini), t1 = addDays(isoTime(M.fin), 1);
+    let buyQ = 0, buyV = 0;
+    for (const p of S.db.purchases) if (p.t >= t0 && p.t < t1) for (const it of p.items) if (!FUEL[it.f].m3) { buyQ += it.q; buyV += it.v; }
+    const lastDay = fuels.length ? fuels.map(f => agg[f.k].lastDay).sort().pop() : null;
+    const stats = [
+      ["Faturamento das notas de saída", revs.length ? money(rev) : "—", revs.length ? `${int.format(notas)} notas` : "Sem notas de saída no arquivo"],
+      ["Litros vendidos (LMC)", fuels.length ? int.format(liters) + " L" : "—", fuels.length ? `${int.format(liters / nDays)} L por dia` : "Sem LMC no arquivo"],
+      ["Compras de combustível", buyQ ? int.format(buyQ) + " L" : "—", buyQ ? `${money(buyV)} · ${brl.format(buyV / buyQ)} por litro` : "Sem notas de compra no mês"],
+      ["Sobras e perdas", fuels.length ? signedL(result) : "—", fuels.length && liters ? `${pct1.format(result / liters)} do vendido` : ""],
+      ["Estoque medido no último dia", fuels.length ? int.format(stockEnd) + " L" : "—", lastDay ? `em ${fmtIso(lastDay)}` : ""],
+    ];
+    const box = $("sped-stats"); box.textContent = "";
+    for (const [l, v, sub] of stats) { const d = el("div"); d.append(el("span", null, l), el("b", null, v), el("small", null, sub)); box.append(d); }
+    if (result < -0.5) box.children[3].querySelector("b").classList.add("neg");
+
+    // Perdas e sobras por combustível
+    const lt = $("lmc-table"); lt.textContent = "";
+    if (!fuels.length) lt.append(el("p", "empty", "Esse SPED não tem o LMC (registros 1300). Confira se o bloco 1 está sendo gerado completo."));
+    else {
+      const tbl = el("table");
+      tbl.innerHTML = `<thead><tr><th>Combustível</th><th class="r">Vendido</th><th class="r">Entradas</th><th class="r">Perdas</th><th class="r">Sobras</th><th class="r">Resultado</th><th class="r">Estoque final</th><th>Dias acima de 0,6%</th></tr></thead>`;
+      const tb = el("tbody");
+      for (const f of fuels) {
+        const a = agg[f.k], res = a.ganho - a.perda, unit = f.m3 ? "m³" : "L";
+        const tr = el("tr");
+        tr.innerHTML = `<td><span class="fuel-name"><i class="sw" style="background:var(--s${f.s})"></i>${esc(f.n)}</span></td>
+          <td class="r">${int.format(a.saidas)} ${unit}</td><td class="r">${int.format(a.entr)} ${unit}</td>
+          <td class="r">${int.format(a.perda)} ${unit}</td><td class="r">${int.format(a.ganho)} ${unit}</td>
+          <td class="r ${res < -0.5 ? "neg" : ""}">${signedL(res).replace(" L", " " + unit)}${a.saidas ? ` <small>(${pct1.format(res / a.saidas)})</small>` : ""}</td>
+          <td class="r">${a.last != null ? int.format(a.last) + " " + unit : "—"}</td><td></td>`;
+        const pill = el("span", "pill " + (a.over ? "warn" : "ok"));
+        pill.innerHTML = icon[a.over ? "warn" : "ok"]; pill.append(a.over ? `${a.over} ${a.over === 1 ? "dia" : "dias"}` : "Nenhum");
+        tr.lastElementChild.append(pill);
+        tb.append(tr);
+      }
+      tbl.append(tb); lt.append(tbl);
+    }
+    renderLmcChart(M, fuels);
+
+    // Bicos e encerrantes
+    const bt = $("bicos-table"); bt.textContent = "";
+    const bicos = Object.entries(M.bicos || {}).filter(([, b]) => Object.keys(b.days || {}).length).sort((x, y) => Number(x[0]) - Number(y[0]) || (x[0] < y[0] ? -1 : 1));
+    if (!bicos.length) bt.append(el("p", "empty", "Esse SPED não tem os encerrantes por bico (registro 1320)."));
+    else {
+      const tbl = el("table");
+      tbl.innerHTML = `<thead><tr><th>Bico</th><th>Combustível</th><th class="r">Tanque</th><th class="r">Encerrante inicial</th><th class="r">Encerrante final</th><th class="r">Vendido</th><th class="r">Aferição</th><th class="r">Intervenções</th></tr></thead>`;
+      const tb = el("tbody");
+      for (const [n, b] of bicos) {
+        const days = Object.keys(b.days).sort(), first = b.days[days[0]], last = b.days[days[days.length - 1]];
+        let vendas = 0, aferi = 0, interv = 0;
+        for (const d of days) { vendas += b.days[d].vendas; aferi += b.days[d].aferi; interv += b.days[d].intervs || (b.days[d].interv ? 1 : 0); }
+        const f = FUEL[b.f];
+        const tr = el("tr");
+        tr.innerHTML = `<td>${esc(n)}</td><td>${f ? `<span class="fuel-name"><i class="sw" style="background:var(--s${f.s})"></i>${esc(f.n)}</span>` : "—"}</td>
+          <td class="r">${esc(b.tank || "—")}</td><td class="r">${dec3.format(first.abert)}</td><td class="r">${dec3.format(last.fecha)}</td>
+          <td class="r">${int.format(vendas)} L</td><td class="r">${aferi ? int.format(aferi) + " L" : "—"}</td><td class="r">${interv || "—"}</td>`;
+        tb.append(tr);
+      }
+      tbl.append(tb); bt.append(tbl);
+    }
+  }
+  function renderLmcChart(M, fuels) {
+    const box = $("lmc-chart"), leg = $("lmc-legend"); box.textContent = ""; leg.textContent = "";
+    const list = fuels.filter(f => !f.m3);
+    if (!list.length) return;
+    for (const f of list) { const sp = el("span"); const i = el("i"); i.style.background = `var(--s${f.s})`; sp.append(i, f.n); leg.append(sp); }
+    const days = [...new Set(list.flatMap(f => Object.keys(M.lmc[f.k])))].sort();
+    const W = Math.max(320, box.clientWidth || 900), H = W < 520 ? 220 : 260;
+    const m = { l: 52, r: 12, t: 12, b: 26 };
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const max = Math.max(1, ...list.flatMap(f => Object.values(M.lmc[f.k]).map(r => r.fisico)));
+    const step = niceStep(max / 4), top = Math.ceil(max / step) * step;
+    const x = i => m.l + (days.length > 1 ? i / (days.length - 1) * pw : pw / 2);
+    const y = v => m.t + ph - Math.max(0, v) / top * ph;
+    const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Estoque medido no fim de cada dia, por combustível" });
+    for (let v = 0; v <= top + 1e-6; v += step) {
+      svg.append(svgEl("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? css("--axis") : css("--grid"), "stroke-width": 1 }));
+      const t = svgEl("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }); t.textContent = v >= 1000 ? int.format(v / 1000) + " mil" : int.format(v); svg.append(t);
+    }
+    const every = Math.max(1, Math.ceil(days.length / Math.max(2, Math.floor(pw / 52))));
+    days.forEach((d, i) => { if (i % every === 0 || i === days.length - 1) { const t = svgEl("text", { x: x(i), y: H - 8, "text-anchor": "middle" }); t.textContent = d.slice(8, 10) + "/" + d.slice(5, 7); svg.append(t); } });
+    for (const f of list) {
+      const pts = days.map((d, i) => M.lmc[f.k][d] ? [x(i), y(M.lmc[f.k][d].fisico)] : null).filter(Boolean);
+      if (!pts.length) continue;
+      svg.append(svgEl("polyline", { points: pts.map(p => p.join(",")).join(" "), fill: "none", stroke: css(`--s${f.s}`), "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+      const lp = pts[pts.length - 1];
+      svg.append(svgEl("circle", { cx: lp[0], cy: lp[1], r: 4, fill: css(`--s${f.s}`), stroke: css("--panel"), "stroke-width": 2 }));
+    }
+    const guide = svgEl("line", { y1: m.t, y2: m.t + ph, stroke: css("--axis"), "stroke-width": 1, visibility: "hidden" });
+    svg.append(guide);
+    const slot = days.length > 1 ? pw / (days.length - 1) : pw;
+    days.forEach((d, i) => {
+      const hit = svgEl("rect", { x: x(i) - slot / 2, y: m.t, width: slot, height: ph, fill: "transparent" });
+      const html = `<b>${esc(fmtIso(d))}</b>` + list.filter(f => M.lmc[f.k][d]).map(f => {
+        const r = M.lmc[f.k][d], res = r.ganho - r.perda;
+        return `<div class="row"><span><i class="sw" style="background:var(--s${f.s})"></i>${esc(f.n)}</span><span>${int.format(r.fisico)} L${Math.abs(res) >= 1 ? ` (${res > 0 ? "+" : ""}${int.format(res)})` : ""}</span></div>`;
+      }).join("");
+      const on = e => { guide.setAttribute("x1", x(i)); guide.setAttribute("x2", x(i)); guide.setAttribute("visibility", "visible"); showTip(html, e); };
+      hit.addEventListener("pointermove", on); hit.addEventListener("pointerdown", on);
+      hit.addEventListener("pointerleave", () => { guide.setAttribute("visibility", "hidden"); hideTip(); });
+      svg.append(hit);
+    });
+    box.append(svg);
+  }
+
   function render() {
     const b = bounds();
     document.querySelectorAll("[data-period]").forEach(btn => btn.setAttribute("aria-pressed", String(btn.dataset.period === period)));
     $("sample-notice").hidden = S.db.mode !== "sample";
     $("clear-data").hidden = S.db.mode !== "real";
-    if (!b) return;
+    renderSped();
+    $("sales-area").hidden = !b;
+    $("period-seg").hidden = !b;
+    $("no-sales").hidden = !!b;
+    if (!b) {
+      const months = Object.keys(S.db.sped || {}).sort();
+      $("range-text").textContent = months.length ? `SPED de ${monthName(months[months.length - 1])}` : "Sem dados importados";
+      return;
+    }
     const cur = summarize(salesIn(b.start, b.end));
     const prev = b.prevStart != null && b.prevStart >= dayStart(b.minT) ? summarize(salesIn(b.prevStart, b.prevEnd)) : null;
     const lastIncluded = addDays(b.end, -1);
@@ -786,6 +1008,103 @@ tr:last-child td { border-bottom: 0; }
     renderTanks(b);
     renderHours(cur, b);
     renderShop(cur);
+  }
+
+  // ---------- SPED Fiscal (EFD ICMS/IPI) ----------
+  // Registros lidos: 0000 (empresa e período), 0200/0206 (produtos e código ANP), C100/C170/C190 (notas),
+  // 1300/1310/1320 (LMC: movimento diário por combustível, tanque e bico) e 1370 (bicos e tanques).
+  const SPED_OK = new Set(["00", "01", "06", "07", "08"]);   // situações de documento válidas
+  const CFOP_DEV = /^[56](201|202|208|209|210|410|411|412|413|503|553|555|556|660|661|662)$/;   // devoluções
+  const isSped = text => /^\uFEFF?\s*\|0000\|/.test(text);
+  function parseSped(text) {
+    const n = v => parseNum(v) || 0;
+    const day = v => /^\d{8}$/.test(v || "") ? `${v.slice(4)}-${v.slice(2, 4)}-${v.slice(0, 2)}` : null;
+    const lmcRec = (f, i) => ({ abert: n(f[i]), entr: n(f[i + 1]), disp: n(f[i + 2]), saidas: n(f[i + 3]), escr: n(f[i + 4]), perda: n(f[i + 5]), ganho: n(f[i + 6]), fisico: n(f[i + 7]) });
+    const out = { nome: "", cnpj: "", ini: null, fin: null, rev: {}, purchases: [], lmc: {}, tanks: {}, bicos: {}, notas: 0 };
+    const prods = {};
+    const fuelOfProd = cod => { const p = prods[cod]; return p ? fuelOf(p.desc, p.anp) : null; };
+    let prod = null, doc = null, lmc = null, tank = null;
+    const closeDoc = () => {
+      const d = doc; doc = null;
+      if (!d || !SPED_OK.has(d.sit) || !d.day) return;
+      if (d.oper === "1" && d.emit === "0") {
+        // Faturamento: valor das operações de venda da nota (sem devoluções)
+        const v = d.c190.length ? d.c190.filter(c => /^[56]/.test(c.cfop) && !CFOP_DEV.test(c.cfop)).reduce((a, c) => a + c.v, 0) : d.vl;
+        if (v <= 0) return;
+        const r = out.rev[d.day] || (out.rev[d.day] = { v: 0, n: 0 });
+        r.v = r2(r.v + v); r.n++; out.notas++;
+      } else if (d.oper === "0") {
+        const items = [];
+        for (const it of d.items) {
+          const f = fuelOfProd(it.cod);
+          if (!f || it.q <= 0) continue;
+          items.push({ f, q: isM3(it.unid) && !FUEL[f].m3 ? it.q * 1000 : it.q, v: r2(it.v) });
+        }
+        if (items.length) out.purchases.push({ k: d.chave || `sped:${d.num}:${d.day}`, t: isoTime(d.dayIn || d.day) + 10 * 3600000, items });
+      }
+    };
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.replace(/^\uFEFF/, "").trim();
+      if (line[0] !== "|") continue;
+      const f = line.split("|"), reg = f[1];
+      switch (reg) {
+        case "0000": out.ini = day(f[4]); out.fin = day(f[5]); out.nome = (f[6] || "").trim(); out.cnpj = (f[7] || "").trim(); break;
+        case "0200": prod = prods[f[2]] = { desc: f[3] || "", anp: "" }; break;
+        case "0206": if (prod) prod.anp = f[2] || ""; break;
+        case "C100": closeDoc(); doc = { oper: f[2], emit: f[3], sit: f[6], num: f[8], chave: f[9], day: day(f[10]), dayIn: day(f[11]), vl: n(f[12]), items: [], c190: [] }; break;
+        case "C170": if (doc) doc.items.push({ cod: f[3], q: n(f[5]), unid: f[6] || "", v: n(f[7]) - n(f[8]) }); break;
+        case "C190": if (doc) doc.c190.push({ cfop: f[3] || "", v: n(f[5]) }); break;
+        case "1300": {
+          closeDoc();
+          const fk = fuelOfProd(f[2]), d = day(f[3]);
+          lmc = fk && d ? { f: fk, day: d } : null; tank = null;
+          if (lmc) {
+            const byDay = out.lmc[fk] || (out.lmc[fk] = {}), rec = lmcRec(f, 4);
+            if (byDay[d]) for (const k in rec) byDay[d][k] += rec[k]; else byDay[d] = rec;   // dois produtos do mesmo combustível
+          }
+          break;
+        }
+        case "1310": if (lmc) { tank = (f[2] || "").trim(); const t = out.tanks[tank] || (out.tanks[tank] = { f: lmc.f, days: {} }); t.days[lmc.day] = lmcRec(f, 3); } break;
+        case "1320": if (lmc) {
+          const b = out.bicos[(f[2] || "").trim()] || (out.bicos[(f[2] || "").trim()] = { f: lmc.f, tank, days: {} });
+          b.f = lmc.f; if (tank) b.tank = tank;
+          // Mais de um registro no dia (intervenção ou encerrante que virou): soma os volumes,
+          // fica o primeiro encerrante de abertura e o último de fechamento.
+          const rec = { interv: (f[3] || "").trim(), mot: (f[4] || "").trim(), fecha: n(f[8]), abert: n(f[9]), aferi: n(f[10]), vendas: n(f[11]) };
+          rec.intervs = rec.interv ? 1 : 0;
+          const cur = b.days[lmc.day];
+          if (!cur) b.days[lmc.day] = rec;
+          else { cur.fecha = rec.fecha; cur.aferi += rec.aferi; cur.vendas += rec.vendas; cur.intervs += rec.intervs; if (rec.interv) cur.interv = rec.interv; }
+        } break;
+        case "1370": { const k = (f[2] || "").trim(), b = out.bicos[k] || (out.bicos[k] = { days: {} }); const fk = fuelOfProd(f[3]); if (fk) b.f = fk; if (f[4]) b.tank = f[4].trim(); break; }
+        default: if (reg && reg[0] !== "C") closeDoc();
+      }
+    }
+    closeDoc();
+    return out;
+  }
+  function importSped(files) {
+    const lines = [];
+    for (const file of files) {
+      let p = null;
+      try { p = parseSped(file.text); } catch (e) {}
+      if (!p || !p.ini) { lines.push(`“${file.name}” não parece um SPED Fiscal.`); continue; }
+      ensureReal();
+      const key = p.ini.slice(0, 7);
+      S.db.sped = S.db.sped || {};
+      const had = !!S.db.sped[key];
+      S.db.sped[key] = { nome: p.nome, cnpj: p.cnpj, ini: p.ini, fin: p.fin, rev: p.rev, lmc: p.lmc, tanks: p.tanks, bicos: p.bicos };
+      const seen = new Set(S.db.purchases.map(x => x.k)); let added = 0;
+      for (const x of p.purchases) if (!seen.has(x.k)) { S.db.purchases.push(x); seen.add(x.k); added++; }
+      const nFuels = Object.keys(p.lmc).length, nDays = new Set(Object.values(p.lmc).flatMap(o => Object.keys(o))).size;
+      lines.push(`SPED de ${monthName(key)}${had ? " (no lugar do que já estava)" : ""}: ${nDays} dia(s) de LMC de ${nFuels} combustível(is), ${Object.keys(p.bicos).length} bico(s), ${int.format(p.notas)} nota(s) de saída e ${added} nota(s) de compra de combustível.`);
+      if (!nFuels) lines.push("Esse SPED não tem o LMC (registros 1300). Confira se o bloco 1 está sendo gerado completo.");
+      if (S.db.cnpj && p.cnpj && S.db.cnpj !== p.cnpj) lines.push(`Atenção: o CNPJ do SPED (${fmtCnpj(p.cnpj)}) é diferente do CNPJ das notas importadas.`);
+      spedMonth = key;
+    }
+    save();
+    if (S.saveFailed) lines.push("Os dados são muitos para guardar neste navegador. Eles ficam aqui até fechar a página.");
+    return lines;
   }
 
   // ---------- XML de NF-e / NFC-e ----------
@@ -994,11 +1313,13 @@ tr:last-child td { border-bottom: 0; }
       } catch (e) { unknown++; }
     }
     const lines = [];
+    const speds = csvs.filter(c => isSped(c.text));
+    if (speds.length) { lines.push(...importSped(speds)); csvs.splice(0, csvs.length, ...csvs.filter(c => !isSped(c.text))); }
     if (xmls.length) lines.push(...importXmls(xmls));
     if (zipFail) lines.push("Não deu para abrir o .zip agora. Descompacte e mande os XML soltos.");
-    if (unknown) lines.push(`${unknown} arquivo(s) não reconhecido(s). Use .xml, .zip ou .csv.`);
+    if (unknown) lines.push(`${unknown} arquivo(s) não reconhecido(s). Use .xml, .zip, .txt (SPED) ou .csv.`);
     if (csvs.length) { showCsvMap(csvs[0]); if (csvs.length > 1) lines.push("Mande uma planilha por vez. Abri a primeira."); }
-    if (lines.length) showResult(lines, !xmls.length && !csvs.length);
+    if (lines.length) showResult(lines, !xmls.length && !csvs.length && !speds.length);
     else resBox.hidden = true;
     changed();
   }
@@ -1128,6 +1449,7 @@ tr:last-child td { border-bottom: 0; }
     render();
   }));
   $("daily-toggle").addEventListener("click", () => { showDailyTable = !showDailyTable; render(); });
+  $("sped-month").addEventListener("change", e => { spedMonth = e.target.value; render(); });
   let rz = null, lastW = window.innerWidth;
   window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; lastW = window.innerWidth; clearTimeout(rz); rz = setTimeout(render, 150); });
   const mq = window.matchMedia("(prefers-color-scheme: dark)");

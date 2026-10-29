@@ -18,6 +18,24 @@ Em **Importar dados** dá para mandar:
 
 Os dados importados, os custos e os estoques digitados ficam só no navegador (localStorage).
 
+## SPED Fiscal
+
+Em **Importar dados** também entra o arquivo do SPED Fiscal (EFD ICMS/IPI, o `.txt` do mês, solto ou num `.zip`).
+O Board reconhece o arquivo pelo registro `|0000|` na primeira linha e lê:
+
+| Registro | O que vira no Board |
+| --- | --- |
+| `0000` | Empresa, CNPJ e mês |
+| `0200` e `0206` | Produtos e código ANP, para saber qual combustível é cada produto |
+| `C100`, `C170` e `C190` | Faturamento por dia das notas de saída (sem devoluções e canceladas) e notas de compra de combustível, que dão o custo por litro |
+| `1300` e `1310` | LMC por combustível e por tanque: abertura, entradas, vendas, estoque escritural, perdas, sobras e medição |
+| `1320` e `1370` | Encerrantes, vendas, aferições e intervenções de cada bico, e o tanque de cada bico |
+
+Aparece uma seção **SPED Fiscal** com o resumo do mês, as perdas e sobras por combustível (com os dias em que a
+diferença passou de 0,6% do volume disponível), o estoque medido no fim de cada dia e a tabela de bicos e
+encerrantes. Sem estoque digitado, o cartão de estoque e os tanques do 3D usam a medição do LMC. O SPED não traz
+horário, preço nem forma de pagamento de cada venda: isso continua vindo dos XML.
+
 ## Posto 3D
 
 O botão **Posto 3D** (ou o endereço com `#posto-3d`) abre o posto em 3D, com as mesmas vendas do Board:

@@ -1329,7 +1329,7 @@
       eyebrow = `Tanque ${tq.n}`; title = fuelName(tq.f); sub = `Capacidade de ${B.int.format(tq.cap)} litros`;
       const sold = sim.visits.filter(v => v.f === tq.f && v.fuelEnd <= t).reduce((a, v) => a + v.q, 0);
       const ins = sim.deliveries.flatMap(e => e.p.items.filter(i => i.f === tq.f).map(i => ({ ...i, at: e.p.t - sim.day }))).filter(i => i.at <= t);
-      if (!ts || ts.level == null) body += `<p>Digite o estoque atual no Board, no cartão <b>Estoque dos tanques</b>, para ver o nível deste tanque.</p>`;
+      if (!ts || ts.level == null) body += `<p>Digite o estoque atual no Board, no cartão <b>Estoque dos tanques</b>, ou importe o SPED Fiscal com o LMC para ver o nível deste tanque.</p>`;
       else {
         const days = autonomy(tq.f, ts.level);
         const lvl = days == null ? "ok" : days < 2 ? "bad" : days < 4 ? "warn" : "ok";
@@ -1338,7 +1338,7 @@
         body += `<div class="w-sec">${kv("Espaço livre", B.int.format(tq.cap - ts.level) + " L")}${days != null ? kv("Dura", `${B.dec1.format(days)} dias <span class="pill ${lvl}">${word}</span>`) : ""}</div>`;
       }
       body += `<div class="w-sec">${kv("Vendido hoje até agora", B.int.format(sold) + " L")}${ins.map(i => kv(`Entrada às ${hm(i.at)}`, B.int.format(i.q) + " L")).join("")}</div>`;
-      body += `<p class="w-note">Nível estimado: estoque digitado no Board, menos o que foi vendido e mais o que entrou pelas notas de compra. A posição dos tanques no desenho é aproximada.</p>`;
+      body += `<p class="w-note">Nível estimado: estoque digitado no Board (ou a medição do LMC do SPED), menos o que foi vendido e mais o que entrou pelas notas de compra. A posição dos tanques no desenho é aproximada.</p>`;
     } else if (p.type === "cliente") {
       const c = sim.shop.find(x => x.k === p.id);
       if (!c) { select(null); return; }
