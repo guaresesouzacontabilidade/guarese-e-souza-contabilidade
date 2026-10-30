@@ -6113,6 +6113,9 @@ isOneToOne: false
 "vet_documento_emitir":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
                            },
+"vet_importar_tutores":
+{ Args: { "p_empresa_id": string,"p_tutores": Json }; Returns: Json
+                           },
 "vet_lembretes_pendentes":
 { Args: { "p_ate": string,"p_empresa_id": string }; Returns: Json
                            },

@@ -66,38 +66,51 @@ export function normalizarTitulo(t: string) {
 
 /** Linhas da planilha (a primeira aba com dados do Excel, ou o CSV). */
 export async function lerPlanilhaProdutos(bytes: Uint8Array, nome: string): Promise<Celula[][]> {
+  const abas = await lerAbasPlanilha(bytes, nome);
+  return (abas.find((a) => a.linhas.length > 0) ?? abas[0])?.linhas ?? [];
+}
+
+/** Todas as abas do Excel (só as que têm dados) ou o CSV como uma aba só. Até 20.000 linhas por aba. */
+export async function lerAbasPlanilha(bytes: Uint8Array, nome: string): Promise<{ nome: string; linhas: Celula[][] }[]> {
   const ext = nome.toLowerCase().split(".").pop();
   if (ext === "xls") throw new Error("O formato .xls (Excel 97-2003) não é aceito. Abra o arquivo e salve como .xlsx ou .csv.");
   if (ext === "xlsx") {
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer);
-    const ws = wb.worksheets.find((w) => w.actualRowCount > 0) ?? wb.worksheets[0];
-    if (!ws) return [];
-    const linhas: Celula[][] = [];
-    ws.eachRow({ includeEmpty: true }, (row, n) => {
-      const valores: Celula[] = [];
-      for (let c = 1; c <= row.cellCount; c++) {
-        const v = row.getCell(c).value as unknown;
-        if (v === null || v === undefined) valores.push(null);
-        else if (typeof v === "number") valores.push(v);
-        else if (v instanceof Date) valores.push(v.toISOString().slice(0, 10));
-        else if (typeof v === "object" && "result" in (v as object)) {
-          const r = (v as { result: unknown }).result;
-          valores.push(typeof r === "number" ? r : r == null ? null : String(r));
-        } else if (typeof v === "object" && "richText" in (v as object)) valores.push((v as { richText: { text: string }[] }).richText.map((r) => r.text).join(""));
-        else if (typeof v === "object" && "text" in (v as object)) valores.push(String((v as { text: unknown }).text ?? ""));
-        else valores.push(String(v));
-      }
-      linhas[n - 1] = valores;
-    });
-    return Array.from(linhas, (l) => l ?? []).slice(0, 20000);
+    const abas = wb.worksheets.filter((w) => w.actualRowCount > 0).map((ws) => ({ nome: ws.name, linhas: linhasDaAba(ws) }));
+    return abas.length ? abas : wb.worksheets.slice(0, 1).map((ws) => ({ nome: ws.name, linhas: [] }));
   }
   const texto = new TextDecoder(ehUtf8(bytes) ? "utf-8" : "windows-1252").decode(bytes);
   const primeira = texto.split(/\r?\n/, 1)[0] ?? "";
   const delimitador = primeira.includes(";") ? ";" : primeira.includes("\t") ? "\t" : ",";
   const r = Papa.parse<string[]>(texto, { skipEmptyLines: false, delimiter: delimitador });
-  return (r.data as string[][]).map((l) => l.map((c) => (String(c ?? "").trim() === "" ? null : String(c).trim()))).slice(0, 20000);
+  const linhas = (r.data as string[][]).map((l) => l.map((c) => (String(c ?? "").trim() === "" ? null : String(c).trim()))).slice(0, 20000);
+  return [{ nome: nome.replace(/\.[^.]+$/, ""), linhas }];
+}
+
+type AbaExcel = import("exceljs").Worksheet;
+
+function linhasDaAba(ws: AbaExcel): Celula[][] {
+  const linhas: Celula[][] = [];
+  ws.eachRow({ includeEmpty: true }, (row, n) => {
+    if (n > 20000) return;
+    const valores: Celula[] = [];
+    for (let c = 1; c <= row.cellCount; c++) {
+      const v = row.getCell(c).value as unknown;
+      if (v === null || v === undefined) valores.push(null);
+      else if (typeof v === "number") valores.push(v);
+      else if (v instanceof Date) valores.push(v.toISOString().slice(0, 10));
+      else if (typeof v === "object" && "result" in (v as object)) {
+        const r = (v as { result: unknown }).result;
+        valores.push(typeof r === "number" ? r : r instanceof Date ? r.toISOString().slice(0, 10) : r == null ? null : String(r));
+      } else if (typeof v === "object" && "richText" in (v as object)) valores.push((v as { richText: { text: string }[] }).richText.map((r) => r.text).join(""));
+      else if (typeof v === "object" && "text" in (v as object)) valores.push(String((v as { text: unknown }).text ?? ""));
+      else valores.push(String(v));
+    }
+    linhas[n - 1] = valores;
+  });
+  return Array.from(linhas, (l) => l ?? []);
 }
 
 function ehUtf8(bytes: Uint8Array) {

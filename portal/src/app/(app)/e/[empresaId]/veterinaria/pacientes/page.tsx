@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PawPrint, Search } from "lucide-react";
+import { FileSpreadsheet, PawPrint, Search } from "lucide-react";
 import { CabecalhoPagina, Paginacao } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,7 +58,18 @@ export default async function PaginaPacientes({ params, searchParams }: PageProp
         titulo="Tutores e animais"
         descricao="Cadastro dos responsáveis e dos animais. Abra o animal para ver o prontuário, as vacinas, as receitas e os documentos."
         voltar={{ href: base, rotulo: "Painel da clínica" }}
-        acoes={<DialogoTutor empresaId={empresaId} abrirAoCriar />}
+        acoes={
+          <div className="flex flex-wrap gap-2">
+            {ctx.gerente ? (
+              <Button asChild variante="contorno">
+                <Link href={`${base}/importar`}>
+                  <FileSpreadsheet /> Importar planilha
+                </Link>
+              </Button>
+            ) : null}
+            <DialogoTutor empresaId={empresaId} abrirAoCriar />
+          </div>
+        }
       />
       <form className="mb-4 flex gap-2" action={`${base}/pacientes`}>
         <div className="relative flex-1">
@@ -115,7 +126,15 @@ export default async function PaginaPacientes({ params, searchParams }: PageProp
           </CardContent>
         </Card>
       ) : (
-        <EstadoVazio icone={PawPrint} titulo={busca ? "Ninguém encontrado" : "Nenhum tutor cadastrado"} descricao="Cadastre o tutor e, na ficha dele, os animais." />
+        <EstadoVazio
+          icone={PawPrint}
+          titulo={busca ? "Ninguém encontrado" : "Nenhum tutor cadastrado"}
+          descricao={
+            busca || !ctx.gerente
+              ? "Cadastre o tutor e, na ficha dele, os animais."
+              : "Cadastre o tutor e, na ficha dele, os animais. Vindo de outro sistema? Use Importar planilha para trazer todos de uma vez."
+          }
+        />
       )}
       <Paginacao
         pagina={pagina}

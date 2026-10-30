@@ -267,6 +267,67 @@ test("escritório: ração com a regra fiscal própria (ST) e a regra em vários
   await expect(page.getByRole("dialog").locator("#pr-operacao")).toHaveValue(valorSt!);
 });
 
+test("dona: importa tutores e animais de uma planilha do sistema antigo, sem duplicar ao importar de novo", async ({ page }) => {
+  const n = Date.now().toString().slice(-6);
+  const admin = clienteServico()!;
+  const csv = [
+    "Cliente;CPF;Celular;Animal;Espécie;Sexo;Nascimento",
+    `TUTORA IMPORTADA ${n};;(63) 99${n.slice(0, 3)}-${n.slice(3)}0;Paçoca ${n};Cão;Fêmea;10/02/2022`,
+    `TUTORA IMPORTADA ${n};;(63) 99${n.slice(0, 3)}-${n.slice(3)}0;Biscoito ${n};Gato;M;`,
+    `;;;Sem espécie ${n};;;`,
+  ].join("\n");
+  const arquivo = { name: "clientes-sistema-antigo.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") };
+  try {
+    await entrar(page, `veterinaria@${DOMINIO}`);
+    await page.goto(`/e/${empresaId}/veterinaria/pacientes`);
+    await page.getByRole("link", { name: /Importar planilha/ }).click();
+    await page.waitForURL(/\/veterinaria\/importar/);
+    const modelo = await page.request.get(`/api/veterinaria/${empresaId}/modelo-importacao`);
+    expect(modelo.status()).toBe(200);
+    expect(modelo.headers()["content-type"]).toContain("spreadsheetml");
+
+    await page.locator("#imp-arquivo").setInputFiles(arquivo);
+    await page.getByRole("button", { name: "Conferir a planilha" }).click();
+    await expect(page.getByText("3 linha(s), tutores e animais")).toBeVisible({ timeout: 30_000 });
+    // O animal sem espécie fica de fora até escolher a espécie padrão
+    await expect(page.getByRole("button", { name: "Importar 1 tutor(es) novo(s) e 2 animal(is)" })).toBeVisible();
+    await page.locator("#imp-especie").selectOption("canina");
+    await expect(page.getByText(`Tutora Importada ${n}`)).toBeVisible();
+    await page.getByRole("button", { name: "Importar 1 tutor(es) novo(s) e 3 animal(is)" }).click();
+    await expect(page.getByText("1 tutor(es) novo(s) e 3 animal(is) novo(s) cadastrados.")).toBeVisible({ timeout: 30_000 });
+
+    const { data: tutor } = await admin.from("vet_tutores").select("id, nome, telefone").eq("empresa_id", empresaId).eq("nome", `Tutora Importada ${n}`).single();
+    expect(tutor!.telefone).toBe(`6399${n}0`);
+    const { data: animais } = await admin.from("vet_pacientes").select("nome, especie, sexo, nascimento").eq("tutor_id", tutor!.id).order("nome");
+    expect(animais!.map((a) => `${a.nome}|${a.especie}|${a.sexo}|${a.nascimento ?? ""}`)).toEqual([
+      `Biscoito ${n}|felina|macho|`,
+      `Paçoca ${n}|canina|femea|2022-02-10`,
+      `Sem espécie ${n}|canina|indefinido|`,
+    ]);
+
+    // A mesma planilha de novo: nada novo
+    await page.getByRole("button", { name: "Conferir a planilha" }).click();
+    await expect(page.getByText("Nada novo para importar")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Já cadastrado").first()).toBeVisible();
+  } finally {
+    const { data: criados } = await admin.from("vet_tutores").select("id").eq("empresa_id", empresaId).like("nome", `%${n}%`);
+    const ids = (criados ?? []).map((t) => t.id);
+    if (ids.length) {
+      await admin.from("vet_pacientes").delete().in("tutor_id", ids);
+      await admin.from("vet_tutores").delete().in("id", ids);
+    }
+  }
+});
+
+test("recepção não importa a planilha de tutores", async ({ page }) => {
+  await entrar(page, `atendimento@${DOMINIO}`);
+  expect((await page.request.get(`/api/veterinaria/${empresaId}/modelo-importacao`)).status()).toBe(403);
+  await page.goto(`/e/${empresaId}/veterinaria/pacientes`);
+  await expect(page.getByRole("link", { name: /Importar planilha/ })).toHaveCount(0);
+  await page.goto(`/e/${empresaId}/veterinaria/importar`);
+  await expect(page.getByText("Só o responsável pela clínica importa tutores e animais.")).toBeVisible();
+});
+
 test("cliente de outra empresa não vê a clínica nem os documentos", async ({ page }) => {
   await entrar(page, `cliente@${DOMINIO}`);
   for (const rota of [`carteira/${pacienteId}`, `prontuario/${pacienteId}`]) {
