@@ -5489,6 +5489,9 @@ isOneToOne: false
 "gestao_orcamento_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: Json
                            },
+"gestao_produto_excluir":
+{ Args: { "p_empresa_id": string,"p_produto_id": string }; Returns: string
+                           },
 "gestao_produto_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
                            },

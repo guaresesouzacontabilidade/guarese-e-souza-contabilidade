@@ -95,7 +95,7 @@ async function criarNota(numero: string, itens: { codigo: string; descricao: str
 }
 
 async function produto(filtro: { id?: string; codigo?: string; descricao?: string }) {
-  let q = servico!.from("nfe_produtos").select("id, estoque_atual, preco_custo, valor_unitario, unidade").eq("empresa_id", empresaId);
+  let q = servico!.from("nfe_produtos").select("id, estoque_atual, preco_custo, valor_unitario, unidade, ativo").eq("empresa_id", empresaId);
   if (filtro.id) q = q.eq("id", filtro.id);
   if (filtro.codigo) q = q.eq("codigo", filtro.codigo);
   if (filtro.descricao) q = q.eq("descricao", filtro.descricao);
@@ -154,6 +154,31 @@ test("planilha: modelo, prévia com erro, importação e atualização do mesmo 
   await expect(page.getByText(/0 produto\(s\) novo\(s\), 1 atualizado\(s\)/)).toBeVisible({ timeout: 30_000 });
   const atualizado = await produto({ codigo });
   expect([Number(atualizado!.estoque_atual), Number(atualizado!.valor_unitario), Number(atualizado!.preco_custo)]).toEqual([25, 13.9, 8]);
+
+  // Excluir: produto só com o estoque da planilha (sem venda nem nota) é apagado
+  await page.goto(`/e/${empresaId}/loja/produtos/${atualizado!.id}`);
+  await page.getByRole("button", { name: "Excluir", exact: true }).click();
+  await page.getByRole("button", { name: "Excluir produto" }).click();
+  await expect(page.getByText("Produto excluído.")).toBeVisible({ timeout: 30_000 });
+  await page.waitForURL((u) => u.pathname.endsWith("/loja/produtos"));
+  expect(await produto({ codigo })).toBeNull();
+});
+
+test("excluir produto com compra por nota no histórico só desativa (e o histórico fica)", async ({ page }) => {
+  test.setTimeout(120_000);
+  try {
+    await entrar(page, `madeireira@${DOMINIO}`);
+    await page.goto(`/e/${empresaId}/loja/produtos/${pregoId}`);
+    await page.getByRole("button", { name: "Excluir", exact: true }).click();
+    await page.getByRole("button", { name: "Excluir produto" }).click();
+    await expect(page.getByText(/foi desativado/)).toBeVisible({ timeout: 30_000 });
+    const prego = await produto({ id: pregoId });
+    expect(prego!.ativo).toBe(false);
+    const { count } = await servico!.from("estoque_movimentos").select("id", { count: "exact", head: true }).eq("produto_id", pregoId);
+    expect(count).toBeGreaterThan(0);
+  } finally {
+    await servico!.from("nfe_produtos").update({ ativo: true }).eq("id", pregoId);
+  }
 });
 
 test("nota de compra: fator da caixa, produto criado do item e entrada automática da próxima nota", async ({ page }) => {

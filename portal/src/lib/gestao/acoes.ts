@@ -81,6 +81,26 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
 // -----------------------------------------------------------------------------
 // Produtos e estoque
 // -----------------------------------------------------------------------------
+/**
+ * Exclui o produto: sem histórico (nunca vendido, comprado por nota ou usado em
+ * nota, hotel, clínica ou carregamento), ele é apagado; com histórico, é
+ * desativado e as vendas e notas antigas continuam guardadas.
+ */
+export async function excluirProdutoLoja(empresaId: string, produtoId: string): Promise<ResultadoAcao<{ resultado: "excluido" | "desativado" }>> {
+  if (!UUID.test(empresaId) || !UUID.test(produtoId)) return falha("Registro inválido.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const { data, error } = await ctx.supabase.rpc("gestao_produto_excluir", { p_empresa_id: empresaId, p_produto_id: produtoId });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  const resultado = data === "excluido" ? "excluido" : "desativado";
+  return sucesso(
+    resultado === "excluido"
+      ? "Produto excluído."
+      : "O produto já tem vendas, notas ou compras no histórico, então foi desativado: saiu das listas, do caixa e das notas (fica em Inativos).",
+    { resultado },
+  );
+}
+
 export async function salvarProdutoLoja(empresaId: string, produtoId: string | null, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao<{ id: string }>> {
   if (!UUID.test(empresaId) || (produtoId && !UUID.test(produtoId))) return falha("Registro inválido.");
   const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");

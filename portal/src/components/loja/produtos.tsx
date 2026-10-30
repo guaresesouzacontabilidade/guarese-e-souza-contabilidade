@@ -3,8 +3,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowDownUp, ClipboardCheck, PackagePlus, Pencil } from "lucide-react";
-import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
+import { ArrowDownUp, ClipboardCheck, PackagePlus, Pencil, Trash2 } from "lucide-react";
+import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CampoValor } from "@/components/ui/campo-valor";
@@ -13,7 +13,7 @@ import { Campo, Checkbox, Input, Select } from "@/components/ui/form";
 import { Alerta } from "@/components/ui/feedback";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
-import { lancarEstoque, registrarInventario, salvarProdutoLoja, darEntradaNota } from "@/lib/gestao/acoes";
+import { excluirProdutoLoja, lancarEstoque, registrarInventario, salvarProdutoLoja, darEntradaNota } from "@/lib/gestao/acoes";
 import { UNIDADES_LOJA, formatarQuantidade, modoMedida, quantidadePorPecas, un } from "@/lib/gestao/rotulos";
 
 export interface ProdutoLoja {
@@ -173,6 +173,27 @@ export function DialogoProduto({ empresaId, produto, grupos }: { empresaId: stri
         <FormProduto empresaId={empresaId} produto={produto} grupos={grupos} aoSalvar={() => setAberto(false)} />
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Excluir o produto (com histórico, o banco só desativa) e voltar para a lista. */
+export function ExcluirProduto({ empresaId, produto }: { empresaId: string; produto: Pick<ProdutoLoja, "id" | "descricao"> }) {
+  const router = useRouter();
+  return (
+    <BotaoAcao
+      variante="contorno"
+      acao={() => excluirProdutoLoja(empresaId, produto.id)}
+      aoSucesso={() => router.push(`/e/${empresaId}/loja/produtos`)}
+      confirmar={{
+        titulo: `Excluir "${produto.descricao}"?`,
+        descricao:
+          "Se o produto nunca foi vendido, comprado por nota nem saiu em nota fiscal, ele é apagado, junto com o estoque lançado à mão ou pela planilha. Se já tem esse histórico, ele é desativado: sai das listas, do caixa e das notas, e as vendas e notas antigas continuam guardadas (dá para reativar em Inativos).",
+        textoConfirmar: "Excluir produto",
+        perigo: true,
+      }}
+    >
+      <Trash2 /> Excluir
+    </BotaoAcao>
   );
 }
 

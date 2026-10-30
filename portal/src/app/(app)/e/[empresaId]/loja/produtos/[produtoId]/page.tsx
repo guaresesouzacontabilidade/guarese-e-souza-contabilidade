@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
-import { DialogoProduto, LancarEstoque } from "@/components/loja/produtos";
+import { DialogoProduto, ExcluirProduto, LancarEstoque } from "@/components/loja/produtos";
 import { diasAtras, obterContextoLoja } from "@/lib/gestao/contexto";
 import { carregarProdutosLoja, estoqueBaixo } from "@/lib/gestao/dados";
 import { TIPOS_MOVIMENTO, formatarQuantidade, secaoPeca, un } from "@/lib/gestao/rotulos";
@@ -58,6 +58,7 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
             <>
               <LancarEstoque empresaId={empresaId} produtos={[p]} produtoId={p.id} />
               <DialogoProduto empresaId={empresaId} produto={p} grupos={grupos} />
+              <ExcluirProduto empresaId={empresaId} produto={p} />
             </>
           ) : null
         }
