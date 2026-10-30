@@ -155,6 +155,18 @@ test("planilha: modelo, prévia com erro, importação e atualização do mesmo 
   const atualizado = await produto({ codigo });
   expect([Number(atualizado!.estoque_atual), Number(atualizado!.valor_unitario), Number(atualizado!.preco_custo)]).toEqual([25, 13.9, 8]);
 
+  // Corrigir o estoque à mão: digita a quantidade certa e o portal lança a diferença
+  await page.goto(`/e/${empresaId}/loja/produtos/${atualizado!.id}`);
+  await page.getByRole("button", { name: "Ajustar estoque" }).click();
+  const ajuste = page.getByRole("dialog");
+  await ajuste.locator("#qtd-mov").fill("20");
+  await expect(ajuste.getByText("Vai lançar uma saída de 5 UN")).toBeVisible();
+  await ajuste.getByRole("button", { name: "Corrigir estoque" }).click();
+  await expect(page.getByText("Estoque corrigido.")).toBeVisible({ timeout: 30_000 });
+  expect(Number((await produto({ codigo }))!.estoque_atual)).toBe(20);
+  const { data: correcao } = await servico!.from("estoque_movimentos").select("tipo, quantidade, observacao").eq("produto_id", atualizado!.id).order("created_at", { ascending: false }).limit(1).single();
+  expect([correcao!.tipo, Number(correcao!.quantidade), correcao!.observacao]).toEqual(["inventario", -5, "Correção manual do estoque"]);
+
   // Excluir: produto só com o estoque da planilha (sem venda nem nota) é apagado
   await page.goto(`/e/${empresaId}/loja/produtos/${atualizado!.id}`);
   await page.getByRole("button", { name: "Excluir", exact: true }).click();

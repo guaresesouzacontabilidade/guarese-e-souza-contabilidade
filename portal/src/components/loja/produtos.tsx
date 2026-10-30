@@ -200,7 +200,8 @@ export function ExcluirProduto({ empresaId, produto }: { empresaId: string; prod
 /** Entrada ou saída manual do estoque (com a conta da cubagem pelas peças). */
 export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: string; produtos: ProdutoLoja[]; produtoId?: string }) {
   const [aberto, setAberto] = React.useState(false);
-  const [tipo, setTipo] = React.useState("entrada_manual");
+  // Na página do produto, o mais comum é corrigir o saldo; na lista, lançar uma entrada
+  const [tipo, setTipo] = React.useState(produtoId ? "corrigir" : "entrada_manual");
   const [pid, setPid] = React.useState(produtoId ?? "");
   const [pecas, setPecas] = React.useState("");
   const [comp, setComp] = React.useState("");
@@ -208,21 +209,28 @@ export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: s
   const produto = produtos.find((p) => p.id === pid);
   const modo = produto ? modoMedida(produto) : "direto";
   const calculada = produto && modo !== "direto" && pecas ? quantidadePorPecas(produto, lerValorBR(pecas) ?? 0, comp ? (lerValorBR(comp)?.toString() ?? null) : null) : null;
+  const certa = tipo === "corrigir" && qtd.trim() ? lerValorBR(qtd) : null;
+  const diferenca = produto && certa ? certa.minus(produto.estoque_atual) : null;
 
   return (
     <Dialog open={aberto} onOpenChange={setAberto}>
       <DialogTrigger asChild>
         <Button variante="contorno">
-          <ArrowDownUp /> Entrada ou saída
+          <ArrowDownUp /> Ajustar estoque
         </Button>
       </DialogTrigger>
-      <DialogContent titulo="Entrada ou saída de estoque" descricao="Para compras com nota, use “Entrada de mercadorias”: importe o XML ou o PDF e o custo vem certinho da nota." largura="lg">
+      <DialogContent
+        titulo="Ajustar o estoque"
+        descricao="Corrija o saldo para a quantidade certa ou lance uma entrada ou saída. Para compras com nota, use “Entrada de mercadorias”: o custo vem certinho da nota."
+        largura="lg"
+      >
         <FormularioAcao acao={lancarEstoque.bind(null, empresaId)} aoSucesso={() => setAberto(false)} className="space-y-4">
           {({ estado, pendente }) => (
             <>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Campo rotulo="Tipo" htmlFor="tipo-mov">
                   <Select id="tipo-mov" name="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+                    <option value="corrigir">Corrigir para a quantidade certa (contei e está diferente)</option>
                     <option value="entrada_manual">Entrada (produção, compra sem nota, devolução)</option>
                     <option value="saida_manual">Saída (perda, quebra, uso próprio)</option>
                   </Select>
@@ -260,7 +268,13 @@ export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: s
                 </div>
               ) : null}
               <div className="grid gap-4 sm:grid-cols-2">
-                <Campo rotulo={`Quantidade${produto ? ` (${un(produto.unidade)})` : ""}`} htmlFor="qtd-mov" obrigatorio erro={estado.erros?.quantidade}>
+                <Campo
+                  rotulo={`${tipo === "corrigir" ? "Quantidade certa agora" : "Quantidade"}${produto ? ` (${un(produto.unidade)})` : ""}`}
+                  htmlFor="qtd-mov"
+                  obrigatorio
+                  erro={estado.erros?.quantidade}
+                  ajuda={tipo === "corrigir" && produto ? `O sistema mostra ${formatarQuantidade(produto.estoque_atual)} ${un(produto.unidade)}. O portal lança a diferença.` : undefined}
+                >
                   <Input id="qtd-mov" name="quantidade" value={qtd} onChange={(e) => setQtd(e.target.value)} inputMode="decimal" />
                 </Campo>
                 {tipo === "entrada_manual" ? (
@@ -269,11 +283,18 @@ export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: s
                   </Campo>
                 ) : null}
               </div>
+              {produto && diferenca ? (
+                <p className="text-sm text-muted-foreground">
+                  {diferenca.isZero()
+                    ? "O estoque já está com essa quantidade."
+                    : `Vai lançar uma ${diferenca.isPositive() ? "entrada" : "saída"} de ${formatarQuantidade(diferenca.abs())} ${un(produto.unidade)} (fica no histórico do produto).`}
+                </p>
+              ) : null}
               <Campo rotulo="Observação" htmlFor="obs-mov">
-                <Input id="obs-mov" name="observacao" maxLength={300} />
+                <Input id="obs-mov" name="observacao" maxLength={300} placeholder={tipo === "corrigir" ? "Ex.: contagem da prateleira" : undefined} />
               </Campo>
               <div className="flex justify-end">
-                <BotaoEnviar pendente={pendente}>Registrar</BotaoEnviar>
+                <BotaoEnviar pendente={pendente}>{tipo === "corrigir" ? "Corrigir estoque" : "Registrar"}</BotaoEnviar>
               </div>
             </>
           )}

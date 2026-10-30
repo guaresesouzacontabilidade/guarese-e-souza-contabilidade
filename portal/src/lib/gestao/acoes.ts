@@ -151,6 +151,17 @@ export async function lancarEstoque(empresaId: string, _a: ResultadoAcao, fd: Fo
   const tipo = texto(fd, "tipo");
   const quantidade = numero(texto(fd, "quantidade"));
   if (!quantidade) return falha("Informe a quantidade.", { quantidade: ["Informe a quantidade."] });
+  // Correção: digita a quantidade certa e o banco lança a diferença (como no inventário)
+  if (tipo === "corrigir") {
+    const { data, error } = await ctx.supabase.rpc("gestao_inventario", {
+      p_empresa_id: empresaId,
+      p_itens: [{ produto_id: produtoId, contado: quantidade }],
+      p_observacao: (texto(fd, "observacao") || "Correção manual do estoque").slice(0, 300),
+    });
+    if (error) return falha(mensagemErro(error));
+    revalidarLoja(empresaId);
+    return sucesso(Number(data ?? 0) ? "Estoque corrigido." : "O estoque já estava com essa quantidade.");
+  }
   const { error } = await ctx.supabase.rpc("gestao_estoque_lancar", {
     p_empresa_id: empresaId,
     p_dados: { tipo, produto_id: produtoId, quantidade, custo_unitario: numero(texto(fd, "custo_unitario")), observacao: texto(fd, "observacao") },
