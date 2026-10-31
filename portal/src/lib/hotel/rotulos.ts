@@ -102,6 +102,17 @@ export const UNIDADES_EXTRA: Record<UnidadeExtra, { um: string; varios: string }
   hora: { um: "hora", varios: "horas" },
 };
 
+/**
+ * Sugestões para o primeiro cadastro (o preço o gerente informa). Fica aqui, e
+ * não no componente de cliente, porque a página (servidor) percorre a lista.
+ */
+export const SUGESTOES_EXTRA: { nome: string; natureza: NaturezaExtra; unidade: UnidadeExtra }[] = [
+  { nome: "Marmita", natureza: "alimentacao", unidade: "marmita" },
+  { nome: "Refeição", natureza: "alimentacao", unidade: "refeicao" },
+  { nome: "Lavanderia (por peça)", natureza: "lavanderia", unidade: "peca" },
+  { nome: "Aluguel de carro", natureza: "locacao", unidade: "dia" },
+];
+
 /** "3 dias", "1 marmita", "2,5 kg". */
 export function quantidadeExtra(qtd: number, unidade: string) {
   const u = UNIDADES_EXTRA[unidade as UnidadeExtra];

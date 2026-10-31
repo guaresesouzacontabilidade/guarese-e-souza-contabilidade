@@ -11,6 +11,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  *    uma observação sobre o hóspede no check-out;
  *  - a ficha do hóspede sai em PDF com a identidade do hotel; a recepção não vê os relatórios;
  *  - o dono cadastra serviço extra e escolhe o modelo e a cor dos documentos;
+ *  - sem serviço extra em uso, o dono vê as sugestões para o primeiro cadastro;
  *  - cliente de outra empresa não vê o hotel.
  */
 const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
@@ -288,6 +289,27 @@ test("dono: cadastra um serviço extra e escolhe o modelo e a cor dos documentos
   // A demonstração volta como estava
   await servico!.from("hotel_config").update(antes!).eq("empresa_id", empresaId);
   await servico!.from("hotel_extras").delete().eq("empresa_id", empresaId).like("nome", "Transfer teste %");
+});
+
+test("dono: hotel sem serviço extra em uso vê as sugestões (a página abre)", async ({ page }) => {
+  test.setTimeout(120_000);
+  const { data: emUso } = await servico!.from("hotel_extras").select("id").eq("empresa_id", empresaId).eq("ativo", true);
+  const ids = (emUso ?? []).map((e) => e.id);
+  await servico!.from("hotel_extras").update({ ativo: false }).in("id", ids);
+  try {
+    await entrar(page, `hotel@${DOMINIO}`);
+    await page.goto(`/e/${empresaId}/hotel/extras`);
+    await expect(page.getByText(/Cadastre os serviços que o hotel cobra à parte/)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Não foi possível carregar esta página")).toHaveCount(0);
+    await page.getByRole("button", { name: "Lavanderia (por peça)", exact: true }).click();
+    const dialogo = page.getByRole("dialog");
+    await expect(dialogo.locator("#ex-nome")).toHaveValue("Lavanderia (por peça)");
+    await expect(dialogo.locator("#ex-natureza")).toHaveValue("lavanderia");
+    await expect(dialogo.locator("#ex-unidade")).toHaveValue("peca");
+  } finally {
+    // A demonstração volta como estava
+    await servico!.from("hotel_extras").update({ ativo: true }).in("id", ids);
+  }
 });
 
 test("dono: cadastra vários quartos de uma vez (faixa, pulando um número)", async ({ page }) => {

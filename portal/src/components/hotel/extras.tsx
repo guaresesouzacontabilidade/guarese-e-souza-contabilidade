@@ -25,14 +25,6 @@ export interface ExtraForm {
 
 export const ICONES_EXTRA: Record<NaturezaExtra, typeof Soup> = { alimentacao: Soup, lavanderia: Shirt, locacao: Car, outro: ConciergeBell };
 
-/** Sugestões para o primeiro cadastro (o preço o gerente informa). */
-export const SUGESTOES_EXTRA: { nome: string; natureza: NaturezaExtra; unidade: UnidadeExtra }[] = [
-  { nome: "Marmita", natureza: "alimentacao", unidade: "marmita" },
-  { nome: "Refeição", natureza: "alimentacao", unidade: "refeicao" },
-  { nome: "Lavanderia (por peça)", natureza: "lavanderia", unidade: "peca" },
-  { nome: "Aluguel de carro", natureza: "locacao", unidade: "dia" },
-];
-
 /** Cadastro (gerente) de um serviço extra com preço fixo. */
 export function DialogoExtra({
   empresaId,
