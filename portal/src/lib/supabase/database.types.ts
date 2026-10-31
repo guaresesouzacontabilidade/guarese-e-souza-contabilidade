@@ -2102,13 +2102,13 @@ isOneToOne: false
                   ]
                 },"hotel_config": {
                   Row: {
-                    "atualizado_por": string | null,"cafe_incluso": boolean,"created_at": string,"doc_cadastur": string | null,"doc_cor": string | null,"doc_email": string | null,"doc_endereco": string | null,"doc_modelo": string,"doc_nome": string | null,"doc_site": string | null,"doc_telefone": string | null,"doc_whatsapp": string | null,"empresa_id": string,"hora_checkin": string,"hora_checkout": string,"politica": string | null,"proximo_numero_reserva": number,"taxa_servico": number | null,"updated_at": string
+                    "atualizado_por": string | null,"cafe_incluso": boolean,"created_at": string,"doc_cadastur": string | null,"doc_cor": string | null,"doc_email": string | null,"doc_endereco": string | null,"doc_modelo": string,"doc_nome": string | null,"doc_site": string | null,"doc_telefone": string | null,"doc_whatsapp": string | null,"empresa_id": string,"hora_checkin": string,"hora_checkout": string,"politica": string | null,"proximo_numero_recibo_extra": number,"proximo_numero_reserva": number,"taxa_servico": number | null,"updated_at": string
                   }
                   Insert: {
-                    "atualizado_por"?: string | null,"cafe_incluso"?: boolean,"created_at"?: string,"doc_cadastur"?: string | null,"doc_cor"?: string | null,"doc_email"?: string | null,"doc_endereco"?: string | null,"doc_modelo"?: string,"doc_nome"?: string | null,"doc_site"?: string | null,"doc_telefone"?: string | null,"doc_whatsapp"?: string | null,"empresa_id": string,"hora_checkin"?: string,"hora_checkout"?: string,"politica"?: string | null,"proximo_numero_reserva"?: number,"taxa_servico"?: number | null,"updated_at"?: string
+                    "atualizado_por"?: string | null,"cafe_incluso"?: boolean,"created_at"?: string,"doc_cadastur"?: string | null,"doc_cor"?: string | null,"doc_email"?: string | null,"doc_endereco"?: string | null,"doc_modelo"?: string,"doc_nome"?: string | null,"doc_site"?: string | null,"doc_telefone"?: string | null,"doc_whatsapp"?: string | null,"empresa_id": string,"hora_checkin"?: string,"hora_checkout"?: string,"politica"?: string | null,"proximo_numero_recibo_extra"?: number,"proximo_numero_reserva"?: number,"taxa_servico"?: number | null,"updated_at"?: string
                   }
                   Update: {
-                    "atualizado_por"?: string | null,"cafe_incluso"?: boolean,"created_at"?: string,"doc_cadastur"?: string | null,"doc_cor"?: string | null,"doc_email"?: string | null,"doc_endereco"?: string | null,"doc_modelo"?: string,"doc_nome"?: string | null,"doc_site"?: string | null,"doc_telefone"?: string | null,"doc_whatsapp"?: string | null,"empresa_id"?: string,"hora_checkin"?: string,"hora_checkout"?: string,"politica"?: string | null,"proximo_numero_reserva"?: number,"taxa_servico"?: number | null,"updated_at"?: string
+                    "atualizado_por"?: string | null,"cafe_incluso"?: boolean,"created_at"?: string,"doc_cadastur"?: string | null,"doc_cor"?: string | null,"doc_email"?: string | null,"doc_endereco"?: string | null,"doc_modelo"?: string,"doc_nome"?: string | null,"doc_site"?: string | null,"doc_telefone"?: string | null,"doc_whatsapp"?: string | null,"empresa_id"?: string,"hora_checkin"?: string,"hora_checkout"?: string,"politica"?: string | null,"proximo_numero_recibo_extra"?: number,"proximo_numero_reserva"?: number,"taxa_servico"?: number | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -2190,6 +2190,80 @@ isOneToOne: false
       columns: ["empresa_id"]
 isOneToOne: false
       referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_extras_recibo_itens": {
+                  Row: {
+                    "descricao": string,"empresa_id": string,"extra_id": string | null,"id": string,"natureza": string,"quantidade": number,"recibo_id": string,"total": number,"unidade": string,"valor_unitario": number
+                  }
+                  Insert: {
+                    "descricao": string,"empresa_id": string,"extra_id"?: string | null,"id"?: string,"natureza": string,"quantidade": number,"recibo_id": string,"total": number,"unidade": string,"valor_unitario": number
+                  }
+                  Update: {
+                    "descricao"?: string,"empresa_id"?: string,"extra_id"?: string | null,"id"?: string,"natureza"?: string,"quantidade"?: number,"recibo_id"?: string,"total"?: number,"unidade"?: string,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_extras_recibo_itens_empresa_id_recibo_id_fkey"
+      columns: ["empresa_id","recibo_id"]
+isOneToOne: false
+      referencedRelation: "hotel_extras_recibos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_extras_recibo_itens_extra_id_fkey"
+      columns: ["extra_id"]
+isOneToOne: false
+      referencedRelation: "hotel_extras"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_extras_recibos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_por": string | null,"contraparte_id": string,"created_at": string,"data": string,"empresa_id": string,"forma": string | null,"id": string,"lancado_por": string | null,"lancamento_id": string | null,"motivo_cancelamento": string | null,"numero": number,"observacao": string | null,"pagamento": string,"sessao_id": string | null,"solicitante": string | null,"total": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_por"?: string | null,"contraparte_id": string,"created_at"?: string,"data"?: string,"empresa_id": string,"forma"?: string | null,"id"?: string,"lancado_por"?: string | null,"lancamento_id"?: string | null,"motivo_cancelamento"?: string | null,"numero": number,"observacao"?: string | null,"pagamento": string,"sessao_id"?: string | null,"solicitante"?: string | null,"total": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_por"?: string | null,"contraparte_id"?: string,"created_at"?: string,"data"?: string,"empresa_id"?: string,"forma"?: string | null,"id"?: string,"lancado_por"?: string | null,"lancamento_id"?: string | null,"motivo_cancelamento"?: string | null,"numero"?: number,"observacao"?: string | null,"pagamento"?: string,"sessao_id"?: string | null,"solicitante"?: string | null,"total"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_extras_recibos_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_empresa_id_contraparte_id_fkey"
+      columns: ["empresa_id","contraparte_id"]
+isOneToOne: false
+      referencedRelation: "contrapartes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_lancado_por_fkey"
+      columns: ["lancado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
       referencedColumns: ["id"]
     }
                   ]
@@ -5596,6 +5670,15 @@ isOneToOne: false
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
                            },"hotel_trocar_quarto":
 { Args: { "p_motivo": string,"p_quarto_id": string,"p_reserva_id": string }; Returns: undefined
+                           },
+"hotel_extras_recibo_cancelar":
+{ Args: { "p_motivo": string,"p_recibo_id": string }; Returns: undefined
+                           },
+"hotel_extras_recibo_lancar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"hotel_extras_recibos_listar":
+{ Args: { "p_ate": string,"p_de": string,"p_empresa_id": string }; Returns: Json
                            },
 "icms_carteira":
 { Args: { "p_competencia": string }; Returns: Json

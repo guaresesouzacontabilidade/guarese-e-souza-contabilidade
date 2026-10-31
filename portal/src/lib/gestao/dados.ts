@@ -43,6 +43,8 @@ export interface RecebimentoHotelCaixa {
   reserva_numero: number | null;
   quarto: string | null;
   hospede: string | null;
+  /** Recibo de serviços extras pago na hora por uma empresa (sem reserva; o nome da empresa vem em `hospede`). */
+  recibo_numero: number | null;
   comprovantes: { id: string; nome: string; mime: string }[];
 }
 
@@ -124,7 +126,7 @@ export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string
     .maybeSingle();
   if (!s) return null;
 
-  const [resumoAoVivo, vendasR, movR, hotelR] = await Promise.all([
+  const [resumoAoVivo, vendasR, movR, hotelR, recibosR] = await Promise.all([
     s.status === "aberto" ? supabase.rpc("gestao_caixa_resumo", { p_sessao_id: sessaoId }) : Promise.resolve({ data: s.resumo }),
     supabase
       .from("vendas")
@@ -145,6 +147,12 @@ export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string
       .select(
         "id, created_at, forma, valor, adiantamento, cancelado_em, reserva:hotel_reservas!hotel_pagamentos_empresa_id_reserva_id_fkey(id, numero, quarto:hotel_quartos!hotel_reservas_empresa_id_quarto_id_fkey(numero), hospede:hotel_hospedes!hotel_reservas_empresa_id_hospede_id_fkey(nome)), anexos:hotel_pagamento_anexos!hotel_pagamento_anexos_empresa_id_pagamento_id_fkey(id, nome, mime, confirmado_em, created_at)",
       )
+      .eq("sessao_id", sessaoId)
+      .order("created_at"),
+    // Hotel: serviços extras pagos na hora por empresas (recibo) neste caixa
+    supabase
+      .from("hotel_extras_recibos")
+      .select("id, created_at, numero, forma, total, cancelado_em, empresa:contrapartes!hotel_extras_recibos_empresa_id_contraparte_id_fkey(nome)")
       .eq("sessao_id", sessaoId)
       .order("created_at"),
   ]);
@@ -211,7 +219,8 @@ export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string
     quem: nome(m.autor),
   }));
 
-  const hotel: RecebimentoHotelCaixa[] = (hotelR.data ?? []).map((p) => ({
+  const hotel: RecebimentoHotelCaixa[] = [
+    ...(hotelR.data ?? []).map((p) => ({
     id: p.id,
     hora: p.created_at,
     forma: p.forma,
@@ -222,11 +231,27 @@ export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string
     reserva_numero: p.reserva?.numero ?? null,
     quarto: p.reserva?.quarto?.numero ?? null,
     hospede: p.reserva?.hospede?.nome ?? null,
+    recibo_numero: null,
     comprovantes: (p.anexos ?? [])
       .filter((a) => a.confirmado_em)
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
       .map((a) => ({ id: a.id, nome: a.nome, mime: a.mime })),
-  }));
+    })),
+    ...(recibosR.data ?? []).map((r) => ({
+      id: r.id,
+      hora: r.created_at,
+      forma: r.forma ?? "outro",
+      valor: String(r.total),
+      sinal: false,
+      estornado: Boolean(r.cancelado_em),
+      reserva_id: null,
+      reserva_numero: null,
+      quarto: null,
+      hospede: nome(r.empresa),
+      recibo_numero: Number(r.numero),
+      comprovantes: [],
+    })),
+  ].sort((a, b) => a.hora.localeCompare(b.hora));
 
   const resumo = (resumoAoVivo.data ?? {}) as unknown as ResumoCaixa;
   return {

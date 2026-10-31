@@ -31,7 +31,7 @@ export function PainelCaixa({
   const hotelDinheiro = Number(r.hotel_por_forma?.dinheiro?.valor ?? 0);
   const clinicaDinheiro = Number(r.clinica_por_forma?.dinheiro?.valor ?? 0);
   const hotelValidos = hotel.filter((h) => !h.estornado);
-  const semComprovante = hotelValidos.filter((h) => FORMAS_COM_COMPROVANTE.has(h.forma) && !h.comprovantes.length).length;
+  const semComprovante = hotelValidos.filter((h) => !h.recibo_numero && FORMAS_COM_COMPROVANTE.has(h.forma) && !h.comprovantes.length).length;
   const aberto = s.status === "aberto";
   const pdf = `/api/loja/caixa/${s.id}/relatorio`;
   const diferenca = s.diferenca != null ? dec(s.diferenca) : null;
@@ -157,7 +157,7 @@ export function PainelCaixa({
                     {semComprovante === 1 ? "1 recebimento em PIX, cartão ou transferência está" : `${semComprovante} recebimentos em PIX, cartão ou transferência estão`} sem
                     comprovante. Anexe pelo clipe na conta do hóspede antes de fechar o caixa.
                   </p>
-                ) : hotelValidos.some((h) => FORMAS_COM_COMPROVANTE.has(h.forma)) ? (
+                ) : hotelValidos.some((h) => !h.recibo_numero && FORMAS_COM_COMPROVANTE.has(h.forma)) ? (
                   <p className="mb-3 text-sm text-sucesso">Todos os recebimentos em PIX, cartão ou transferência têm comprovante.</p>
                 ) : null}
                 <Table>
@@ -175,7 +175,11 @@ export function PainelCaixa({
                         <Td className="hidden align-top text-muted-foreground numero sm:table-cell">{hora(h.hora)}</Td>
                         <Td className="align-top">
                           <span className="block text-xs text-muted-foreground sm:hidden">{hora(h.hora)}</span>
-                          {h.reserva_id ? (
+                          {h.recibo_numero ? (
+                            <Link href={`/e/${empresaId}/hotel/extras`} className="font-medium hover:underline">
+                              Recibo nº {h.recibo_numero} · serviços extras
+                            </Link>
+                          ) : h.reserva_id ? (
                             <Link href={`/e/${empresaId}/hotel/reservas/${h.reserva_id}`} className="font-medium hover:underline">
                               Nº {h.reserva_numero}
                               {h.quarto ? ` · quarto ${h.quarto}` : ""}
@@ -194,7 +198,7 @@ export function PainelCaixa({
                             </Badge>
                           ) : h.comprovantes.length ? (
                             <ComprovantesDoPagamento empresaId={empresaId} comprovantes={h.comprovantes.map((c) => ({ ...c, podeExcluir: false }))} />
-                          ) : FORMAS_COM_COMPROVANTE.has(h.forma) ? (
+                          ) : !h.recibo_numero && FORMAS_COM_COMPROVANTE.has(h.forma) ? (
                             <span className="mt-1 block">
                               <Badge variante="alerta">Sem comprovante</Badge>
                             </span>
@@ -236,7 +240,7 @@ export function PainelCaixa({
               <dl className="space-y-1.5 text-sm">
                 <Linha rotulo="Troco inicial" valor={formatarMoeda(r.abertura)} />
                 <Linha rotulo="+ Vendas em dinheiro" valor={formatarMoeda(valorDaForma(r, "dinheiro"))} />
-                {hotelDinheiro ? <Linha rotulo="+ Hospedagens em dinheiro" valor={formatarMoeda(hotelDinheiro)} /> : null}
+                {hotelDinheiro ? <Linha rotulo="+ Hotel em dinheiro" valor={formatarMoeda(hotelDinheiro)} /> : null}
                 {clinicaDinheiro ? <Linha rotulo="+ Clínica em dinheiro" valor={formatarMoeda(clinicaDinheiro)} /> : null}
                 <Linha rotulo={`+ Suprimentos (${r.qtd_suprimentos})`} valor={formatarMoeda(r.suprimentos)} />
                 <Linha rotulo={`− Sangrias (${r.qtd_sangrias})`} valor={formatarMoeda(r.sangrias)} />

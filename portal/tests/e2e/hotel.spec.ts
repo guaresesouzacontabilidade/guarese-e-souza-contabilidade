@@ -12,6 +12,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  *  - a ficha do hóspede sai em PDF com a identidade do hotel; a recepção não vê os relatórios;
  *  - o dono cadastra serviço extra e escolhe o modelo e a cor dos documentos;
  *  - sem serviço extra em uso, o dono vê as sugestões para o primeiro cadastro;
+ *  - a recepção lança serviços extras para uma empresa (pago na hora e a
+ *    prazo), cada um com recibo em PDF, e só o dono cancela o recibo;
  *  - cliente de outra empresa não vê o hotel.
  */
 const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
@@ -289,6 +291,90 @@ test("dono: cadastra um serviço extra e escolhe o modelo e a cor dos documentos
   // A demonstração volta como estava
   await servico!.from("hotel_config").update(antes!).eq("empresa_id", empresaId);
   await servico!.from("hotel_extras").delete().eq("empresa_id", empresaId).like("nome", "Transfer teste %");
+});
+
+test("recepção: lança serviços extras para uma empresa, com recibo; o dono cancela", async ({ page }) => {
+  test.setTimeout(180_000);
+  const CNPJ = "11222333000181";
+  const nomeEmpresa = "EMPRESA TESTE AUTOMÁTICO LTDA";
+  await entrar(page, `recepcao@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/hotel/extras`);
+  await page.getByRole("radio", { name: "Empresa" }).click();
+
+  // Cadastro rápido da empresa (sem a consulta à Receita, que depende de rede)
+  await page.getByRole("button", { name: "Cadastrar empresa" }).click();
+  const dialogo = page.getByRole("dialog");
+  await dialogo.locator("#emp-doc").fill("11.222.333/0001-81");
+  await dialogo.locator("#emp-nome").fill(nomeEmpresa);
+  await dialogo.getByRole("button", { name: "Salvar empresa" }).click();
+  await expect(page.getByText("Empresa cadastrada.")).toBeVisible({ timeout: 30_000 });
+  const { data: contra } = await servico!.from("contrapartes").select("id").eq("empresa_id", empresaId).eq("documento", CNPJ).single();
+  await expect(page.locator("#ex-empresa")).toHaveValue(contra!.id);
+
+  // 1. Três marmitas pagas na hora no PIX
+  await page.getByRole("button", { name: "Mais Marmita", exact: true }).click();
+  await page.getByRole("button", { name: "Mais Marmita", exact: true }).click();
+  await page.getByRole("button", { name: "Mais Marmita", exact: true }).click();
+  await page.locator("#ex-solicitante").fill("Encarregado Teste");
+  await page.locator("#ex-forma").selectOption("pix");
+  await page.getByRole("button", { name: "Lançar e gerar recibo" }).click();
+  await expect(page.getByText(/^Recibo nº \d+ gerado$/).first()).toBeVisible({ timeout: 30_000 });
+  const { data: rec1 } = await servico!
+    .from("hotel_extras_recibos")
+    .select("id, numero, total, pagamento, forma, solicitante, lancamento:lancamentos!hotel_extras_recibos_empresa_id_lancamento_id_fkey(situacao)")
+    .eq("contraparte_id", contra!.id)
+    .order("numero", { ascending: false })
+    .limit(1)
+    .single();
+  expect({ total: rec1!.total, pagamento: rec1!.pagamento, forma: rec1!.forma, solicitante: rec1!.solicitante }).toEqual({
+    total: 66,
+    pagamento: "na_hora",
+    forma: "pix",
+    solicitante: "Encarregado Teste",
+  });
+  expect((rec1!.lancamento as unknown as { situacao: string }).situacao).toBe("quitado");
+
+  // O recibo sai em PDF com a identidade do hotel
+  const href = await page.getByRole("link", { name: "Abrir o recibo (PDF)" }).getAttribute("href");
+  expect(href).toBe(`/api/hotel/${empresaId}/recibos/${rec1!.id}`);
+  const pdf = await page.request.get(href!);
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toContain("application/pdf");
+  expect((await pdf.body()).toString("latin1")).toContain("(Hotel Rio Tocantins \\(DEMO\\))");
+
+  // 2. Lavanderia a prazo (conta a receber da empresa)
+  await page.locator("#ex-empresa").selectOption(contra!.id);
+  await page.getByRole("button", { name: "Mais Lavanderia (por peça)", exact: true }).click();
+  await page.getByRole("radio", { name: "Vai pagar depois (a prazo)" }).check();
+  await expect(page.locator("#ex-vencimento")).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
+  await page.getByRole("button", { name: "Lançar e gerar recibo" }).click();
+  await expect(page.getByText(`Recibo nº ${Number(rec1!.numero) + 1} gerado`).first()).toBeVisible({ timeout: 30_000 });
+  const { data: rec2 } = await servico!
+    .from("hotel_extras_recibos")
+    .select("id, numero, pagamento, vencimento, lancamento_id")
+    .eq("contraparte_id", contra!.id)
+    .eq("numero", Number(rec1!.numero) + 1)
+    .single();
+  expect(rec2!.pagamento).toBe("a_prazo");
+  expect(rec2!.vencimento).not.toBeNull();
+
+  // Na lista do mês: a recepção vê os dois, sem o botão de cancelar
+  const linha2 = page.getByRole("row", { name: new RegExp(`Nº ${rec2!.numero}\\b`) });
+  await expect(linha2).toContainText(nomeEmpresa);
+  await expect(linha2).toContainText("A receber");
+  await expect(page.getByRole("button", { name: `Cancelar o recibo nº ${rec2!.numero}` })).toHaveCount(0);
+
+  // 3. O dono cancela o recibo a prazo: o Financeiro é cancelado junto
+  await page.context().clearCookies();
+  await entrar(page, `hotel@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/hotel/extras`);
+  await page.getByRole("button", { name: `Cancelar o recibo nº ${rec2!.numero}` }).click();
+  await page.getByRole("dialog").locator(`#cr-${rec2!.id}`).fill("Lançado para a empresa errada (teste)");
+  await page.getByRole("dialog").getByRole("button", { name: "Cancelar recibo" }).click();
+  await expect(page.getByText("Recibo cancelado (o lançamento do Financeiro foi cancelado junto).")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("row", { name: new RegExp(`Nº ${rec2!.numero}\\b`) })).toContainText("Cancelado");
+  const { data: lanc } = await servico!.from("lancamentos").select("situacao").eq("id", rec2!.lancamento_id!).single();
+  expect(lanc!.situacao).toBe("cancelado");
 });
 
 test("dono: hotel sem serviço extra em uso vê as sugestões (a página abre)", async ({ page }) => {

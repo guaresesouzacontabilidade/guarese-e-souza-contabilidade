@@ -112,7 +112,7 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
   const gaveta: TableCell[][] = [
     ["Troco inicial (abertura)", { text: R$(r.abertura), alignment: "right" }],
     ["+ Vendas em dinheiro (já descontado o troco)", { text: R$(valorDaForma(r, "dinheiro")), alignment: "right" }],
-    ...(hotelDinheiro ? [["+ Hospedagens em dinheiro", { text: R$(hotelDinheiro), alignment: "right" }] as TableCell[]] : []),
+    ...(hotelDinheiro ? [["+ Hotel em dinheiro", { text: R$(hotelDinheiro), alignment: "right" }] as TableCell[]] : []),
     ...(clinicaDinheiro ? [["+ Clínica em dinheiro (contas pagas neste caixa)", { text: R$(clinicaDinheiro), alignment: "right" }] as TableCell[]] : []),
     [`+ Suprimentos (${r.qtd_suprimentos})`, { text: R$(r.suprimentos), alignment: "right" }],
     [`− Sangrias (${r.qtd_sangrias})`, { text: R$(r.sangrias), alignment: "right" }],
@@ -239,12 +239,14 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
                     ? { text: "Estornado", color: COR.vermelho, bold: true }
                     : h.comprovantes.length
                       ? { text: h.comprovantes.length > 1 ? `Sim (${h.comprovantes.length})` : "Sim", color: COR.verde }
-                      : FORMAS_COM_COMPROVANTE.has(h.forma)
-                        ? { text: "Sem comprovante", color: COR.amarelo, bold: true }
+                      : h.recibo_numero
+                        ? { text: "Recibo", color: COR.cinza }
+                        : FORMAS_COM_COMPROVANTE.has(h.forma)
+                          ? { text: "Sem comprovante", color: COR.amarelo, bold: true }
                         : { text: "—", color: COR.cinza };
                   return [
                     { text: hora(h.hora), color: cor },
-                    { text: `Nº ${h.reserva_numero ?? "—"}${h.quarto ? ` · qto ${h.quarto}` : ""}`, color: cor },
+                    { text: h.recibo_numero ? `Recibo nº ${h.recibo_numero}` : `Nº ${h.reserva_numero ?? "—"}${h.quarto ? ` · qto ${h.quarto}` : ""}`, color: cor },
                     { text: h.hospede ?? "", color: cor },
                     { text: `${FORMAS_PAGAMENTO_HOTEL[h.forma as FormaPagamentoHotel] ?? h.forma}${h.sinal ? " (sinal)" : ""}`, color: cor },
                     comprovante,

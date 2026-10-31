@@ -105,6 +105,52 @@ export async function carregarExtras(supabase: Supa, empresaId: string, apenasAt
   return (data ?? []).map((e) => ({ id: e.id, nome: e.nome, natureza: e.natureza as NaturezaExtra, unidade: e.unidade as UnidadeExtra, preco: Number(e.preco), ativo: e.ativo }));
 }
 
+/** Empresas (clientes do Financeiro, com CNPJ ou CPF) para os serviços extras lançados sem hóspede. */
+export async function empresasClientesHotel(supabase: Supa, empresaId: string) {
+  const { data } = await supabase
+    .from("contrapartes")
+    .select("id, nome, documento")
+    .eq("empresa_id", empresaId)
+    .eq("ativo", true)
+    .contains("papeis", ["cliente"])
+    .order("nome")
+    .limit(1000);
+  return data ?? [];
+}
+
+export type SituacaoRecibo = "pago" | "parcial" | "a_receber" | "vencido" | "cancelado";
+
+export interface ReciboExtra {
+  id: string;
+  numero: number;
+  data: string;
+  total: number;
+  pagamento: "na_hora" | "a_prazo";
+  forma: string | null;
+  vencimento: string | null;
+  solicitante: string | null;
+  observacao: string | null;
+  cancelado_em: string | null;
+  motivo_cancelamento: string | null;
+  empresa: string;
+  documento: string | null;
+  lancado_por: string | null;
+  situacao: SituacaoRecibo;
+  pago_em: string | null;
+  itens: { descricao: string; unidade: string; quantidade: number; valor_unitario: number; total: number }[];
+}
+
+/** Recibos de serviços extras para empresas no período, com a situação do Financeiro. */
+export async function listarRecibosExtras(supabase: Supa, empresaId: string, de: string, ate: string): Promise<ReciboExtra[]> {
+  const { data, error } = await supabase.rpc("hotel_extras_recibos_listar", { p_empresa_id: empresaId, p_de: de, p_ate: ate });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as ReciboExtra[]).map((r) => ({
+    ...r,
+    total: Number(r.total),
+    itens: (r.itens ?? []).map((i) => ({ ...i, quantidade: Number(i.quantidade), valor_unitario: Number(i.valor_unitario), total: Number(i.total) })),
+  }));
+}
+
 export async function carregarCategorias(supabase: Supa, empresaId: string): Promise<CategoriaHotel[]> {
   const { data } = await supabase
     .from("hotel_categorias")

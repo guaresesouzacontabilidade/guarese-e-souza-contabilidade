@@ -173,6 +173,7 @@ export async function semearHotel(
     if (count) {
       await anexarComprovanteDemo(admin, existente.id);
       await semearExtrasDemo(admin, conexao, opcoes.dominio, existente.id);
+      await semearRecibosEmpresasDemo(admin, conexao, opcoes.dominio, existente.id);
       return false;
     }
   }
@@ -640,6 +641,7 @@ export async function semearHotel(
 
   await anexarComprovanteDemo(admin, empresaId);
   await semearExtrasDemo(admin, conexao, opcoes.dominio, empresaId);
+  await semearRecibosEmpresasDemo(admin, conexao, opcoes.dominio, empresaId);
 
   // Logo fictícia
   const { data: e } = await admin.from("empresas").select("logo_path").eq("id", empresaId).single();
@@ -747,6 +749,55 @@ export async function semearExtrasDemo(admin: SupabaseClient, conexao: { url: st
     }
   } finally {
     await dono.auth.signOut({ scope: "local" });
+    await recepcao.auth.signOut({ scope: "local" });
+  }
+}
+
+/**
+ * Serviços extras lançados para empresas (sem hóspede), com recibo: marmitas
+ * para a obra da construtora fictícia, pagas na hora, e lavanderia da equipe
+ * da agropecuária fictícia, a prazo. Só na primeira vez.
+ */
+export async function semearRecibosEmpresasDemo(admin: SupabaseClient, conexao: { url: string; publica: string }, dominio: string, empresaId: string) {
+  const { count } = await admin.from("hotel_extras_recibos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  if (count) return;
+  const [{ data: extras }, { data: empresas }] = await Promise.all([
+    admin.from("hotel_extras").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true),
+    admin.from("contrapartes").select("id, nome").eq("empresa_id", empresaId).contains("papeis", ["cliente"]).ilike("nome", "%(FICTÍCIA)%"),
+  ]);
+  const extra = (trecho: string) => extras?.find((e) => e.nome.toLowerCase().includes(trecho))?.id;
+  const empresa = (trecho: string) => empresas?.find((e) => e.nome.includes(trecho))?.id;
+  if (!extra("marmita") || !extra("lavanderia") || !empresa("CONSTRUTORA") || !empresa("AGROPECUÁRIA")) return;
+  const recepcao = await sessao(admin, conexao.url, conexao.publica, `recepcao@${dominio}`);
+  try {
+    const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Araguaina" }).format(new Date());
+    ok(
+      "recibo da construtora",
+      await recepcao.rpc("hotel_extras_recibo_lancar", {
+        p_empresa_id: empresaId,
+        p_dados: {
+          contraparte_id: empresa("CONSTRUTORA"),
+          solicitante: "Mestre de obras João (DEMONSTRAÇÃO)",
+          pagamento: "na_hora",
+          forma: "pix",
+          itens: [{ extra_id: extra("marmita"), quantidade: "18" }],
+        },
+      }),
+    );
+    ok(
+      "recibo da agropecuária",
+      await recepcao.rpc("hotel_extras_recibo_lancar", {
+        p_empresa_id: empresaId,
+        p_dados: {
+          contraparte_id: empresa("AGROPECUÁRIA"),
+          solicitante: "Equipe de campo (DEMONSTRAÇÃO)",
+          pagamento: "a_prazo",
+          vencimento: somarDias(hoje, 15),
+          itens: [{ extra_id: extra("lavanderia"), quantidade: "24" }],
+        },
+      }),
+    );
+  } finally {
     await recepcao.auth.signOut({ scope: "local" });
   }
 }

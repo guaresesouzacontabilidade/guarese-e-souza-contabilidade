@@ -2,8 +2,9 @@ import "server-only";
 import type { Content, TableCell } from "pdfmake/interfaces";
 import { COR } from "@/lib/relatorios/pdf";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCep, formatarCpf, formatarData, formatarDataHora, formatarTelefone, nomeMes } from "@/lib/formatos";
-import type { ReservaCompleta } from "./dados";
+import { formatarCep, formatarCpf, formatarData, formatarDataHora, formatarDocumento, formatarTelefone, nomeMes } from "@/lib/formatos";
+import { valorPorExtenso } from "@/lib/declaracoes/extenso";
+import type { ReciboExtra, ReservaCompleta } from "./dados";
 import type { RelatorioHotel } from "./relatorio";
 import {
   FORMAS_PAGAMENTO_HOTEL,
@@ -17,6 +18,7 @@ import {
   TIPOS_ITEM,
   diaMes,
   noites,
+  quantidadeExtra,
   type FormaPagamentoHotel,
   type StatusReserva,
 } from "./rotulos";
@@ -241,6 +243,66 @@ export function blocosConta(
       margin: [0, 6, 0, 0],
     },
   );
+  return blocos;
+}
+
+/** Recibo de serviços extras lançados para uma empresa (pago na hora ou a prazo). */
+export function blocosReciboExtra(r: ReciboExtra, hotel: string, tons: TonsTabela = TONS_PADRAO): Content[] {
+  const cancelado = r.situacao === "cancelado";
+  const pago = r.situacao === "pago";
+  const empresa = `${r.empresa}${r.documento ? ` — ${r.documento.length === 14 ? "CNPJ" : "CPF"} ${formatarDocumento(r.documento)}` : ""}`;
+  const formaPaga = r.forma ? (FORMAS_PAGAMENTO_HOTEL[r.forma as FormaPagamentoHotel] ?? r.forma) : null;
+  const pagamento =
+    r.pagamento === "na_hora"
+      ? `Pago na hora — ${formaPaga}`
+      : `A prazo — vencimento ${r.vencimento ? formatarData(r.vencimento) : ""}${
+          pago ? ` (pago${r.pago_em ? ` em ${formatarData(r.pago_em)}` : ""})` : r.situacao === "vencido" ? " (vencido)" : r.situacao === "parcial" ? " (pago em parte)" : " (a receber)"
+        }`;
+  const blocos: Content[] = [];
+  if (cancelado) {
+    blocos.push({
+      text: [{ text: "RECIBO CANCELADO", bold: true }, r.motivo_cancelamento ? `  —  ${r.motivo_cancelamento}` : ""],
+      color: tons.alerta,
+      fontSize: 11,
+      margin: [0, 0, 0, 8],
+    });
+  }
+  blocos.push(
+    campos(
+      [
+        ["Empresa", empresa],
+        ["Pedido por", r.solicitante ?? undefined],
+        ["Data do serviço", formatarData(r.data)],
+        ["Pagamento", pagamento],
+        ["Lançado por", r.lancado_por ?? undefined],
+      ],
+      tons,
+    ),
+  );
+  const linhas: TableCell[][] = r.itens.map((i) => [i.descricao, quantidadeExtra(i.quantidade, i.unidade), moeda(i.valor_unitario), moeda(i.total)]);
+  linhas.push([{ text: "Total", bold: true }, "", "", { text: moeda(r.total), bold: true, alignment: "right" }]);
+  blocos.push({ text: "Serviços", style: "secao" }, tabela(["Serviço", "Quantidade", "Preço unit.", "Valor"], linhas, ["*", 90, 70, 70], [2, 3], tons));
+  if (!cancelado) {
+    const declaracao = pago
+      ? `Recebemos de ${r.empresa} a importância de ${moeda(r.total)} (${valorPorExtenso(r.total)}), referente aos serviços acima.`
+      : `Serviços prestados a ${r.empresa} no valor de ${moeda(r.total)} (${valorPorExtenso(r.total)}), a pagar até ${r.vencimento ? formatarData(r.vencimento) : ""}.`;
+    blocos.push(
+      { text: declaracao, fontSize: 10, margin: [0, 8, 0, 36] },
+      {
+        columns: [
+          { width: "*", text: "" },
+          {
+            width: 240,
+            stack: [
+              { canvas: [{ type: "line", x1: 0, y1: 0, x2: 240, y2: 0, lineWidth: 0.6, lineColor: tons.cinza }] },
+              { text: hotel, alignment: "center", fontSize: 9, margin: [0, 4, 0, 0] },
+            ],
+          },
+          { width: "*", text: "" },
+        ],
+      },
+    );
+  }
   return blocos;
 }
 

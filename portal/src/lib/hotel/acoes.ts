@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { lerValorBR } from "@/lib/dinheiro";
-import { validarCpf } from "@/lib/formatos";
+import { ErroConsultaCnpj, consultarCnpjReceita } from "@/lib/empresas/receita";
+import { somenteDigitos, validarCnpj, validarCpf } from "@/lib/formatos";
 import type { Json } from "@/lib/supabase/database.types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -498,6 +499,118 @@ export async function lancarExtras(
     if (error) return falha(mensagemErro(error));
     revalidarHotel(empresaId);
     return sucesso(`${n} serviço(s) lançado(s) na conta do quarto.`, { itens: Number(n) });
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Serviços extras para empresas (sem hóspede): cada lançamento vira um recibo
+// -----------------------------------------------------------------------------
+
+export interface EmpresaClienteHotel {
+  id: string;
+  nome: string;
+  documento: string | null;
+}
+
+/** Nome, telefone e e-mail de um CNPJ nos dados abertos da Receita (o servidor envia só o número). */
+export async function buscarEmpresaHotel(empresaId: string, cnpj: string): Promise<ResultadoAcao<{ nome: string; telefone: string | null; email: string | null }>> {
+  return executar(async () => {
+    await contexto(empresaId);
+    try {
+      const r = await consultarCnpjReceita(cnpj);
+      return sucesso("Dados preenchidos pela Receita. Confira antes de salvar.", {
+        nome: r.razaoSocial.slice(0, 120),
+        telefone: r.telefones[0] ?? null,
+        email: r.email,
+      });
+    } catch (e) {
+      return falha(e instanceof ErroConsultaCnpj ? e.message : "Não foi possível consultar a Receita agora. Preencha o nome à mão.");
+    }
+  });
+}
+
+/** Cadastra (ou reaproveita, pelo CNPJ/CPF) a empresa nos clientes do Financeiro. */
+export async function cadastrarEmpresaHotel(
+  empresaId: string,
+  dados: { nome: string; documento: string; telefone?: string; email?: string },
+): Promise<ResultadoAcao<EmpresaClienteHotel>> {
+  return executar(async () => {
+    const nome = dados.nome.trim();
+    const doc = somenteDigitos(dados.documento);
+    if (nome.length < 2 || nome.length > 120) return falha("Informe o nome da empresa.", { nome: ["De 2 a 120 letras."] });
+    if (!(doc.length === 14 ? validarCnpj(doc) : doc.length === 11 ? validarCpf(doc) : false)) {
+      return falha("CNPJ (ou CPF) inválido.", { documento: ["Confira os números."] });
+    }
+    const email = (dados.email ?? "").trim();
+    if (email && (email.length > 200 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))) return falha("E-mail inválido.", { email: ["Confira o e-mail."] });
+    const ctx = await contexto(empresaId);
+    const { data, error } = await ctx.supabase.rpc("gestao_cliente_salvar", {
+      p_empresa_id: empresaId,
+      p_dados: { nome, documento: doc, telefone: dados.telefone ?? "", email },
+    });
+    if (error) return falha(mensagemErro(error));
+    const { data: c } = await ctx.supabase.from("contrapartes").select("id, nome, documento").eq("id", data as string).single();
+    revalidarHotel(empresaId);
+    return sucesso("Empresa cadastrada.", c ?? { id: data as string, nome, documento: doc });
+  });
+}
+
+export interface LancamentoEmpresa {
+  contraparte_id: string;
+  solicitante?: string;
+  observacao?: string;
+  data?: string | null;
+  pagamento: "na_hora" | "a_prazo";
+  forma?: string | null;
+  vencimento?: string | null;
+  itens: { extra_id: string; quantidade: string; valor_unitario?: string | null }[];
+}
+
+/** Lança os serviços para a empresa e gera o recibo numerado (pago na hora ou a prazo). */
+export async function lancarExtrasEmpresa(empresaId: string, l: LancamentoEmpresa): Promise<ResultadoAcao<{ id: string; numero: number }>> {
+  return executar(async () => {
+    if (!UUID.test(l.contraparte_id)) return falha("Escolha a empresa que pediu os serviços.");
+    if (!l.itens.length) return falha("Escolha pelo menos um serviço.");
+    if (l.itens.some((i) => !UUID.test(i.extra_id) || !lerValorBR(i.quantidade)?.gt(0))) return falha("Confira as quantidades.");
+    if (l.itens.some((i) => i.valor_unitario != null && i.valor_unitario !== "" && !valor(i.valor_unitario))) return falha("Confira os preços.");
+    if (l.data && !DATA.test(l.data)) return falha("Data inválida.");
+    if (l.pagamento !== "na_hora" && l.pagamento !== "a_prazo") return falha("Escolha se a empresa pagou na hora ou vai pagar depois.");
+    if (l.pagamento === "na_hora" && !l.forma) return falha("Escolha como a empresa pagou.");
+    if (l.pagamento === "a_prazo" && !DATA.test(l.vencimento ?? "")) return falha("Informe o vencimento.");
+    const ctx = await contexto(empresaId);
+    const { data, error } = await ctx.supabase.rpc("hotel_extras_recibo_lancar", {
+      p_empresa_id: empresaId,
+      p_dados: {
+        contraparte_id: l.contraparte_id,
+        solicitante: (l.solicitante ?? "").trim().slice(0, 120),
+        observacao: (l.observacao ?? "").trim().slice(0, 300),
+        data: l.data || null,
+        pagamento: l.pagamento,
+        forma: l.pagamento === "na_hora" ? l.forma : null,
+        vencimento: l.pagamento === "a_prazo" ? l.vencimento : null,
+        itens: l.itens.map((i) => ({ extra_id: i.extra_id, quantidade: lerValorBR(i.quantidade)!.toString(), valor_unitario: i.valor_unitario ? valor(i.valor_unitario) : null })),
+      },
+    });
+    if (error) return falha(mensagemErro(error));
+    const r = data as { id: string; numero: number };
+    revalidarHotel(empresaId);
+    revalidatePath(`/e/${empresaId}/loja/caixa`);
+    return sucesso(`Recibo nº ${r.numero} gerado.`, { id: r.id, numero: Number(r.numero) });
+  });
+}
+
+/** Cancela o recibo (gerente): o lançamento do Financeiro é cancelado junto. */
+export async function cancelarReciboExtra(empresaId: string, reciboId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  return executar(async () => {
+    if (!UUID.test(reciboId)) return falha("Recibo inválido.");
+    const ctx = await contexto(empresaId, true);
+    const motivo = texto(fd, "motivo");
+    if (motivo.length < 3) return falha("Explique o motivo.", { motivo: ["Ex.: lançado em dobro, a empresa devolveu as marmitas."] });
+    const { error } = await ctx.supabase.rpc("hotel_extras_recibo_cancelar", { p_recibo_id: reciboId, p_motivo: motivo.slice(0, 300) });
+    if (error) return falha(mensagemErro(error));
+    revalidarHotel(empresaId);
+    revalidatePath(`/e/${empresaId}/loja/caixa`);
+    return sucesso("Recibo cancelado (o lançamento do Financeiro foi cancelado junto).");
   });
 }
 
