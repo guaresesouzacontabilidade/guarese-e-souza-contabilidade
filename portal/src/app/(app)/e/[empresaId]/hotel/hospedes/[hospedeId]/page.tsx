@@ -12,7 +12,7 @@ import { BotaoExcluirHospede, DialogoHospede, DialogoObservacoesHospede } from "
 import { obterContextoHotel } from "@/lib/hotel/contexto";
 import { GENEROS, STATUS_RESERVA, TIPOS_DOCUMENTO, VARIANTE_STATUS, diaMes, noites, type StatusReserva } from "@/lib/hotel/rotulos";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCep, formatarCpf, formatarData, formatarTelefone } from "@/lib/formatos";
+import { formatarCep, formatarCpf, formatarData, formatarDocumento, formatarTelefone } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Hóspede" };
@@ -29,13 +29,20 @@ export default async function PaginaHospede({ params }: PageProps<"/e/[empresaId
     ctx.supabase
       .from("hotel_reservas")
       .select("id, numero, status, entrada, saida, valor_previsto, quarto:hotel_quartos!hotel_reservas_empresa_id_quarto_id_fkey(numero)")
-      .eq("hospede_id", hospedeId)
+      .or(`hospede_id.eq.${hospedeId},ocupante_id.eq.${hospedeId}`)
       .order("entrada", { ascending: false }),
     ctx.supabase.from("hotel_reserva_hospedes").select("reserva_id").eq("hospede_id", hospedeId),
   ]);
   if (!h) notFound();
   const base = `/e/${empresaId}/hotel`;
-  const linhas: [string, string | null][] = [
+  const linhas: [string, string | null][] = h.tipo_pessoa === "PJ" ? [
+    ["CNPJ", h.cnpj ? formatarDocumento(h.cnpj) : null],
+    ["Telefone", h.telefone ? formatarTelefone(h.telefone) : null],
+    ["E-mail", h.email],
+    ["Endereço", h.endereco],
+    ["Cidade", h.cidade ? `${h.cidade}${h.uf ? `/${h.uf}` : ""}` : null],
+    ["CEP", h.cep ? formatarCep(h.cep) : null],
+  ] : [
     ["CPF", h.cpf ? formatarCpf(h.cpf) : null],
     [h.documento_tipo ? TIPOS_DOCUMENTO[h.documento_tipo] : "Outro documento", h.documento],
     ["Nascimento", h.nascimento ? formatarData(h.nascimento) : null],

@@ -10,7 +10,7 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
 import { DialogoHospede } from "@/components/hotel/hospede";
 import { obterContextoHotel } from "@/lib/hotel/contexto";
-import { formatarCpf, formatarTelefone } from "@/lib/formatos";
+import { formatarCpf, formatarDocumento, formatarTelefone } from "@/lib/formatos";
 
 export const metadata: Metadata = { title: "Hóspedes" };
 
@@ -23,11 +23,11 @@ export default async function PaginaHospedes({ params, searchParams }: PageProps
   if (!ctx.recepcao) return <HotelIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativo={ctx.hotelAtivo} />;
   const busca = typeof sp.busca === "string" ? sp.busca.slice(0, 60).trim() : "";
   const pagina = Math.max(1, Number(sp.pagina) || 1);
-  let q = ctx.supabase.from("hotel_hospedes").select("id, nome, cpf, documento, telefone, cidade, uf, email", { count: "exact" }).eq("empresa_id", empresaId);
+  let q = ctx.supabase.from("hotel_hospedes").select("id, nome, tipo_pessoa, cnpj, cpf, documento, telefone, cidade, uf, email", { count: "exact" }).eq("empresa_id", empresaId);
   if (busca) {
     const digitos = busca.replace(/\D/g, "");
     const termo = busca.replace(/[%,()]/g, " ");
-    q = digitos.length >= 3 ? q.or(`cpf.like.%${digitos}%,telefone.like.%${digitos}%`) : q.ilike("nome", `%${termo}%`);
+    q = digitos.length >= 3 ? q.or(`cpf.like.%${digitos}%,cnpj.like.%${digitos}%,telefone.like.%${digitos}%`) : q.ilike("nome", `%${termo}%`);
   }
   const inicio = (pagina - 1) * POR_PAGINA;
   const { data: hospedes, count } = await q.order("nome").range(inicio, inicio + POR_PAGINA - 1);
@@ -76,7 +76,7 @@ export default async function PaginaHospedes({ params, searchParams }: PageProps
                         {h.nome}
                       </Link>
                     </Td>
-                    <Td>{h.cpf ? formatarCpf(h.cpf) : h.documento ?? <span className="text-alerta">sem documento</span>}</Td>
+                    <Td>{h.tipo_pessoa === "PJ" ? `Empresa · ${formatarDocumento(h.cnpj)}` : h.cpf ? formatarCpf(h.cpf) : h.documento ?? <span className="text-alerta">sem documento</span>}</Td>
                     <Td className="hidden sm:table-cell">{h.telefone ? formatarTelefone(h.telefone) : "—"}</Td>
                     <Td className="hidden md:table-cell">{h.cidade ? `${h.cidade}${h.uf ? `/${h.uf}` : ""}` : "—"}</Td>
                     <Td className="text-right">{resumo.get(h.id)?.n ?? 0}</Td>

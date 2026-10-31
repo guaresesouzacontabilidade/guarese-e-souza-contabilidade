@@ -2269,13 +2269,13 @@ isOneToOne: false
                   ]
                 },"hotel_hospedes": {
                   Row: {
-                    "cep": string | null,"cidade": string | null,"cpf": string | null,"created_at": string,"criado_por": string | null,"documento": string | null,"documento_tipo": string | null,"email": string | null,"empresa_id": string,"endereco": string | null,"genero": string | null,"id": string,"nacionalidade": string | null,"nascimento": string | null,"nome": string,"observacoes": string | null,"pais": string | null,"profissao": string | null,"telefone": string | null,"uf": string | null,"updated_at": string
+                    "cep": string | null,"cidade": string | null,"cnpj": string | null,"cpf": string | null,"created_at": string,"criado_por": string | null,"documento": string | null,"documento_tipo": string | null,"email": string | null,"empresa_id": string,"endereco": string | null,"genero": string | null,"id": string,"nacionalidade": string | null,"nascimento": string | null,"nome": string,"observacoes": string | null,"pais": string | null,"profissao": string | null,"telefone": string | null,"tipo_pessoa": string,"uf": string | null,"updated_at": string
                   }
                   Insert: {
-                    "cep"?: string | null,"cidade"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento"?: string | null,"documento_tipo"?: string | null,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"genero"?: string | null,"id"?: string,"nacionalidade"?: string | null,"nascimento"?: string | null,"nome": string,"observacoes"?: string | null,"pais"?: string | null,"profissao"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string
+                    "cep"?: string | null,"cidade"?: string | null,"cnpj"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento"?: string | null,"documento_tipo"?: string | null,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"genero"?: string | null,"id"?: string,"nacionalidade"?: string | null,"nascimento"?: string | null,"nome": string,"observacoes"?: string | null,"pais"?: string | null,"profissao"?: string | null,"telefone"?: string | null,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "cep"?: string | null,"cidade"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento"?: string | null,"documento_tipo"?: string | null,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"genero"?: string | null,"id"?: string,"nacionalidade"?: string | null,"nascimento"?: string | null,"nome"?: string,"observacoes"?: string | null,"pais"?: string | null,"profissao"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string
+                    "cep"?: string | null,"cidade"?: string | null,"cnpj"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento"?: string | null,"documento_tipo"?: string | null,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"genero"?: string | null,"id"?: string,"nacionalidade"?: string | null,"nascimento"?: string | null,"nome"?: string,"observacoes"?: string | null,"pais"?: string | null,"profissao"?: string | null,"telefone"?: string | null,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -2424,13 +2424,13 @@ isOneToOne: false
                   ]
                 },"hotel_reservas": {
                   Row: {
-                    "adultos": number,"cancelada_em": string | null,"cancelada_por": string | null,"categoria_id": string,"checkin_em": string | null,"checkin_por": string | null,"checkout_em": string | null,"checkout_por": string | null,"created_at": string,"criado_por": string | null,"criancas": number,"destino": string | null,"diaria_acordada": number | null,"empresa_faturar_id": string | null,"empresa_id": string,"entrada": string,"hospede_id": string,"id": string,"meio_transporte": string | null,"motivo_cancelamento": string | null,"motivo_viagem": string | null,"numero": number,"observacoes": string | null,"origem": string,"placa_veiculo": string | null,"procedencia": string | null,"quarto_id": string,"saida": string,"saida_prevista": string | null,"status": string,"updated_at": string,"valor_previsto": number
+                    "adultos": number,"cancelada_em": string | null,"cancelada_por": string | null,"categoria_id": string,"checkin_em": string | null,"checkin_por": string | null,"checkout_em": string | null,"checkout_por": string | null,"created_at": string,"criado_por": string | null,"criancas": number,"destino": string | null,"diaria_acordada": number | null,"empresa_faturar_id": string | null,"empresa_id": string,"entrada": string,"hospede_id": string,"id": string,"meio_transporte": string | null,"motivo_cancelamento": string | null,"motivo_viagem": string | null,"numero": number,"observacoes": string | null,"ocupante_id": string | null,"origem": string,"placa_veiculo": string | null,"procedencia": string | null,"quarto_id": string,"saida": string,"saida_prevista": string | null,"status": string,"updated_at": string,"valor_previsto": number
                   }
                   Insert: {
-                    "adultos"?: number,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"categoria_id": string,"checkin_em"?: string | null,"checkin_por"?: string | null,"checkout_em"?: string | null,"checkout_por"?: string | null,"created_at"?: string,"criado_por"?: string | null,"criancas"?: number,"destino"?: string | null,"diaria_acordada"?: number | null,"empresa_faturar_id"?: string | null,"empresa_id": string,"entrada": string,"hospede_id": string,"id"?: string,"meio_transporte"?: string | null,"motivo_cancelamento"?: string | null,"motivo_viagem"?: string | null,"numero": number,"observacoes"?: string | null,"origem"?: string,"placa_veiculo"?: string | null,"procedencia"?: string | null,"quarto_id": string,"saida": string,"saida_prevista"?: string | null,"status"?: string,"updated_at"?: string,"valor_previsto"?: number
+                    "adultos"?: number,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"categoria_id": string,"checkin_em"?: string | null,"checkin_por"?: string | null,"checkout_em"?: string | null,"checkout_por"?: string | null,"created_at"?: string,"criado_por"?: string | null,"criancas"?: number,"destino"?: string | null,"diaria_acordada"?: number | null,"empresa_faturar_id"?: string | null,"empresa_id": string,"entrada": string,"hospede_id": string,"id"?: string,"meio_transporte"?: string | null,"motivo_cancelamento"?: string | null,"motivo_viagem"?: string | null,"numero": number,"observacoes"?: string | null,"ocupante_id"?: string | null,"origem"?: string,"placa_veiculo"?: string | null,"procedencia"?: string | null,"quarto_id": string,"saida": string,"saida_prevista"?: string | null,"status"?: string,"updated_at"?: string,"valor_previsto"?: number
                   }
                   Update: {
-                    "adultos"?: number,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"categoria_id"?: string,"checkin_em"?: string | null,"checkin_por"?: string | null,"checkout_em"?: string | null,"checkout_por"?: string | null,"created_at"?: string,"criado_por"?: string | null,"criancas"?: number,"destino"?: string | null,"diaria_acordada"?: number | null,"empresa_faturar_id"?: string | null,"empresa_id"?: string,"entrada"?: string,"hospede_id"?: string,"id"?: string,"meio_transporte"?: string | null,"motivo_cancelamento"?: string | null,"motivo_viagem"?: string | null,"numero"?: number,"observacoes"?: string | null,"origem"?: string,"placa_veiculo"?: string | null,"procedencia"?: string | null,"quarto_id"?: string,"saida"?: string,"saida_prevista"?: string | null,"status"?: string,"updated_at"?: string,"valor_previsto"?: number
+                    "adultos"?: number,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"categoria_id"?: string,"checkin_em"?: string | null,"checkin_por"?: string | null,"checkout_em"?: string | null,"checkout_por"?: string | null,"created_at"?: string,"criado_por"?: string | null,"criancas"?: number,"destino"?: string | null,"diaria_acordada"?: number | null,"empresa_faturar_id"?: string | null,"empresa_id"?: string,"entrada"?: string,"hospede_id"?: string,"id"?: string,"meio_transporte"?: string | null,"motivo_cancelamento"?: string | null,"motivo_viagem"?: string | null,"numero"?: number,"observacoes"?: string | null,"ocupante_id"?: string | null,"origem"?: string,"placa_veiculo"?: string | null,"procedencia"?: string | null,"quarto_id"?: string,"saida"?: string,"saida_prevista"?: string | null,"status"?: string,"updated_at"?: string,"valor_previsto"?: number
                   }
                   Relationships: [
                     {
@@ -2486,6 +2486,12 @@ isOneToOne: false
       columns: ["empresa_id","quarto_id"]
 isOneToOne: false
       referencedRelation: "hotel_quartos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_reservas_ocupante_fk"
+      columns: ["empresa_id","ocupante_id"]
+isOneToOne: false
+      referencedRelation: "hotel_hospedes"
       referencedColumns: ["empresa_id","id"]
     }
                   ]
@@ -5685,6 +5691,9 @@ isOneToOne: false
                            },
 "hotel_movimento":
 { Args: { "p_ate": string,"p_de": string,"p_empresa_id": string }; Returns: Json
+                           },
+"hotel_reserva_ocupante":
+{ Args: { "p_hospede_id": string,"p_reserva_id": string }; Returns: undefined
                            },
 "icms_carteira":
 { Args: { "p_competencia": string }; Returns: Json

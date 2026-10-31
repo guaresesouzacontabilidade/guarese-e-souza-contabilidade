@@ -495,3 +495,79 @@ test("caixa do turno: abre com o nome do turno, mostra o movimento, gera os rela
   // O turno fechado aparece nos turnos de hoje (o nome pode ser de uma execução interrompida antes)
   await expect(page.getByRole("cell", { name: sessao!.caixa_nome })).toBeVisible();
 });
+
+test("recepção: reserva no nome da empresa, quem se hospedou e check-out faturado para ela", async ({ page }) => {
+  test.setTimeout(240_000);
+  const hoje = hojeLocal();
+  const [{ data: quartos }, { data: ativas }] = await Promise.all([
+    servico!.from("hotel_quartos").select("id, numero").eq("empresa_id", empresaId).eq("ativo", true).eq("limpeza", "limpo").order("numero"),
+    servico!.from("hotel_reservas").select("quarto_id").eq("empresa_id", empresaId).in("status", ["pre_reserva", "confirmada", "hospedado"]).lt("entrada", amanha()).gt("saida", hoje),
+  ]);
+  const { data: ocupados } = await servico!.from("hotel_reservas").select("quarto_id").eq("empresa_id", empresaId).eq("status", "hospedado");
+  const livre = (quartos ?? []).find((q) => ![...(ativas ?? []), ...(ocupados ?? [])].some((a) => a.quarto_id === q.id));
+  expect(livre, "precisa de um quarto livre e limpo hoje").toBeTruthy();
+
+  await entrar(page, `recepcao@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/hotel/reservas/nova`);
+  // A empresa vira o hóspede da reserva (cadastro pelo CNPJ, sem a consulta à Receita)
+  await page.getByRole("button", { name: "Cadastrar empresa" }).click();
+  const dialogo = page.getByRole("dialog");
+  await dialogo.locator("#emp-doc").fill("11.444.777/0001-61");
+  await dialogo.locator("#emp-nome").fill("EMPRESA HÓSPEDE TESTE LTDA");
+  await dialogo.getByRole("button", { name: "Salvar empresa" }).click();
+  await expect(page.getByText("Empresa · CNPJ 11.444.777/0001-61")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/Conta faturada para a própria empresa/)).toBeVisible();
+  await page.locator("#r-adultos").fill("1");
+  await page.locator("#r-quarto").selectOption({ value: livre!.id });
+  await page.getByText(/Diárias previstas: R\$/).waitFor();
+  await page.locator('input[name="checkin_agora"]').check();
+  await page.getByRole("button", { name: "Criar reserva" }).click();
+  await page.waitForURL(/\/hotel\/reservas\/[0-9a-f-]{36}$/, { timeout: 60_000 });
+  const id = page.url().split("/").pop()!;
+  try {
+    await expect(page.getByText(/Reserva no nome da EMPRESA HÓSPEDE TESTE LTDA/)).toBeVisible();
+    const { data: r } = await servico!
+      .from("hotel_reservas")
+      .select("status, faturar:contrapartes!hotel_reservas_empresa_id_empresa_faturar_id_fkey(documento)")
+      .eq("id", id)
+      .single();
+    expect(r!.status).toBe("hospedado");
+    expect((r!.faturar as unknown as { documento: string }).documento).toBe("11444777000161");
+
+    // Quem se hospedou pela empresa (cadastrado na hora)
+    const funcionario = `Funcionário Teste ${Date.now() % 100000}`;
+    await page.getByRole("button", { name: "Informar quem se hospedou" }).first().click();
+    const oc = page.getByRole("dialog");
+    await oc.getByRole("button", { name: "Cadastrar pessoa" }).click();
+    await oc.locator("#oc-nome").fill(funcionario);
+    await oc.locator("#oc-cpf").fill(cpfAleatorio());
+    await oc.getByRole("button", { name: "Salvar" }).click();
+    await expect(page.getByText("Quem se hospedou pela empresa ficou registrado na reserva.")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("link", { name: funcionario })).toBeVisible();
+
+    // Conta faturada para a empresa e check-out
+    await page.getByRole("button", { name: "Receber pagamento" }).click();
+    const pg = page.getByRole("dialog");
+    await pg.locator("#pg-forma").selectOption("faturado");
+    await expect(pg.locator("#pg-empresa")).not.toHaveValue("");
+    await pg.locator("#pg-venc").fill(amanha());
+    await pg.getByRole("button", { name: "Registrar" }).click();
+    await expect(pg).toBeHidden({ timeout: 60_000 });
+    await page.getByRole("button", { name: "Check-out" }).click();
+    await page.getByRole("button", { name: "Fazer check-out" }).click();
+    await expect(page.getByText("Encerrada", { exact: true }).first()).toBeVisible({ timeout: 30_000 });
+    const { data: fim } = await servico!
+      .from("hotel_reservas")
+      .select("status, ocupante:hotel_hospedes!hotel_reservas_ocupante_fk(nome)")
+      .eq("id", id)
+      .single();
+    expect(fim!.status).toBe("encerrada");
+    expect((fim!.ocupante as unknown as { nome: string }).nome).toBe(funcionario);
+
+    // A ficha de registro sai com a pessoa e a empresa
+    const ficha = await page.request.get(`/api/hotel/${empresaId}/reservas/${id}?doc=ficha`);
+    expect(ficha.status()).toBe(200);
+  } finally {
+    await servico!.from("hotel_quartos").update({ limpeza: "limpo" }).eq("id", livre!.id);
+  }
+});

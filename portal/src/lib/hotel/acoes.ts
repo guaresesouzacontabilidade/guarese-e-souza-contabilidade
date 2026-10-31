@@ -219,6 +219,8 @@ export async function colocarEmManutencao(empresaId: string, quartoId: string, _
 function dadosHospede(fd: FormData, prefixo = "") {
   const t = (n: string) => texto(fd, `${prefixo}${n}`);
   return {
+    tipo_pessoa: t("tipo_pessoa") === "PJ" ? "PJ" : "PF",
+    cnpj: t("cnpj"),
     nome: t("nome"),
     cpf: t("cpf"),
     documento_tipo: t("documento_tipo"),
@@ -241,7 +243,9 @@ function dadosHospede(fd: FormData, prefixo = "") {
 function conferirHospede(d: ReturnType<typeof dadosHospede>, prefixo = "") {
   const erros: Record<string, string[]> = {};
   if (d.nome.length < 2 || d.nome.length > 120) erros[`${prefixo}nome`] = ["Informe o nome completo."];
-  if (d.cpf && !validarCpf(d.cpf)) erros[`${prefixo}cpf`] = ["CPF inválido. Confira os números."];
+  if (d.tipo_pessoa === "PJ") {
+    if (!validarCnpj(somenteDigitos(d.cnpj))) erros[`${prefixo}cnpj`] = ["CNPJ inválido. Confira os números."];
+  } else if (d.cpf && !validarCpf(d.cpf)) erros[`${prefixo}cpf`] = ["CPF inválido. Confira os números."];
   if (d.nascimento && !DATA.test(d.nascimento)) erros[`${prefixo}nascimento`] = ["Data inválida."];
   const tel = d.telefone.replace(/\D/g, "");
   if (tel && (tel.length < 10 || tel.length > 13)) erros[`${prefixo}telefone`] = ["Telefone com DDD."];
@@ -263,6 +267,56 @@ export async function salvarHospede(empresaId: string, hospedeId: string | null,
     if (error) return falha(mensagemErro(error));
     revalidarHotel(empresaId);
     return sucesso(hospedeId ? "Cadastro do hóspede atualizado." : "Hóspede cadastrado.", { id: data as string });
+  });
+}
+
+/** Empresa como hóspede (reserva no nome dela): cadastro pelo CNPJ; ela entra também nos clientes do Financeiro. */
+export async function cadastrarEmpresaHospede(
+  empresaId: string,
+  dados: { nome: string; documento: string; telefone?: string; email?: string },
+): Promise<ResultadoAcao<EmpresaClienteHotel>> {
+  return executar(async () => {
+    const nome = dados.nome.trim();
+    const cnpj = somenteDigitos(dados.documento);
+    if (nome.length < 2 || nome.length > 120) return falha("Informe o nome da empresa.", { nome: ["De 2 a 120 letras."] });
+    if (!validarCnpj(cnpj)) return falha("CNPJ inválido.", { documento: ["Confira os números."] });
+    const email = (dados.email ?? "").trim();
+    if (email && (email.length > 200 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))) return falha("E-mail inválido.", { email: ["Confira o e-mail."] });
+    const tel = somenteDigitos(dados.telefone ?? "");
+    const ctx = await contexto(empresaId);
+    const { data, error } = await ctx.supabase.rpc("hotel_hospede_salvar", {
+      p_empresa_id: empresaId,
+      p_id: null as unknown as string,
+      p_dados: { tipo_pessoa: "PJ", nome, cnpj, telefone: tel.length >= 10 && tel.length <= 13 ? tel : "", email },
+    });
+    if (error) return falha(mensagemErro(error));
+    revalidarHotel(empresaId);
+    return sucesso("Empresa cadastrada como hóspede.", { id: data as string, nome, documento: cnpj });
+  });
+}
+
+/**
+ * Quem se hospedou pela empresa: escolhe uma pessoa já cadastrada ou cadastra
+ * na hora (nome e CPF ou documento, para a ficha de registro).
+ */
+export async function informarOcupante(empresaId: string, reservaId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  return executar(async () => {
+    if (!UUID.test(reservaId)) return falha("Reserva inválida.");
+    const ctx = await contexto(empresaId);
+    let hospedeId = texto(fd, "hospede_id");
+    if (texto(fd, "modo") === "novo") {
+      const dados = { ...dadosHospede(fd, "oc_"), tipo_pessoa: "PF" };
+      const erros = conferirHospede(dados, "oc_");
+      if (!dados.cpf && !dados.documento) erros.oc_cpf = ["Informe o CPF ou outro documento (ficha de registro)."];
+      if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
+      const { data, error } = await ctx.supabase.rpc("hotel_hospede_salvar", { p_empresa_id: empresaId, p_id: null as unknown as string, p_dados: dados });
+      if (error) return falha(mensagemErro(error));
+      hospedeId = data as string;
+    } else if (!UUID.test(hospedeId)) return falha("Escolha quem se hospedou.", { hospede_id: ["Escolha a pessoa ou cadastre uma nova."] });
+    const { error } = await ctx.supabase.rpc("hotel_reserva_ocupante", { p_reserva_id: reservaId, p_hospede_id: hospedeId });
+    if (error) return falha(mensagemErro(error));
+    revalidarHotel(empresaId);
+    return sucesso("Quem se hospedou pela empresa ficou registrado na reserva.");
   });
 }
 

@@ -13,6 +13,7 @@ import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import {
   buscarEmpresaHotel,
+  cadastrarEmpresaHospede,
   cadastrarEmpresaHotel,
   cancelarReciboExtra,
   lancarExtras,
@@ -461,8 +462,23 @@ export function LancarExtras({
   );
 }
 
-/** Cadastro rápido da empresa que pede serviços extras (CNPJ com os dados da Receita). */
-export function DialogoEmpresaHotel({ empresaId, aoCadastrar }: { empresaId: string; aoCadastrar: (c: EmpresaClienteHotel) => void }) {
+/**
+ * Cadastro rápido de empresa pelo CNPJ (dados da Receita): a que pede serviços
+ * extras (cliente do Financeiro) ou, com `comoHospede`, a que faz a reserva no
+ * nome dela (hóspede pessoa jurídica, que também vira cliente do Financeiro).
+ */
+export function DialogoEmpresaHotel({
+  empresaId,
+  aoCadastrar,
+  comoHospede = false,
+  rotuloBotao,
+}: {
+  empresaId: string;
+  aoCadastrar: (c: EmpresaClienteHotel) => void;
+  comoHospede?: boolean;
+  /** Botão com texto (sem ele, só o ícone "+"). */
+  rotuloBotao?: string;
+}) {
   const [aberto, setAberto] = React.useState(false);
   const [doc, setDoc] = React.useState("");
   const [nome, setNome] = React.useState("");
@@ -486,7 +502,7 @@ export function DialogoEmpresaHotel({ empresaId, aoCadastrar }: { empresaId: str
 
   function salvar() {
     iniciar(async () => {
-      const r = await cadastrarEmpresaHotel(empresaId, { nome, documento: doc, telefone, email });
+      const r = await (comoHospede ? cadastrarEmpresaHospede : cadastrarEmpresaHotel)(empresaId, { nome, documento: doc, telefone, email });
       if (r.ok && r.dados) {
         toast.success(r.mensagem ?? "Empresa cadastrada.");
         aoCadastrar(r.dados);
@@ -506,13 +522,26 @@ export function DialogoEmpresaHotel({ empresaId, aoCadastrar }: { empresaId: str
   return (
     <Dialog open={aberto} onOpenChange={setAberto}>
       <DialogTrigger asChild>
-        <Button type="button" variante="contorno" tamanho="icone" aria-label="Cadastrar empresa">
-          <Plus />
-        </Button>
+        {rotuloBotao ? (
+          <Button type="button" variante="contorno" tamanho="sm">
+            <Building2 /> {rotuloBotao}
+          </Button>
+        ) : (
+          <Button type="button" variante="contorno" tamanho="icone" aria-label="Cadastrar empresa">
+            <Plus />
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent titulo="Cadastrar empresa" descricao="Digite o CNPJ e busque os dados na Receita. A empresa entra nos clientes do Financeiro.">
+      <DialogContent
+        titulo="Cadastrar empresa"
+        descricao={
+          comoHospede
+            ? "A reserva fica no nome da empresa e é faturada para ela. Quem se hospedou pela empresa é informado na reserva, até o check-out."
+            : "Digite o CNPJ e busque os dados na Receita. A empresa entra nos clientes do Financeiro."
+        }
+      >
         <div className="space-y-4">
-          <Campo rotulo="CNPJ (ou CPF)" htmlFor="emp-doc" obrigatorio erro={erros.documento}>
+          <Campo rotulo={comoHospede ? "CNPJ" : "CNPJ (ou CPF)"} htmlFor="emp-doc" obrigatorio erro={erros.documento}>
             <div className="flex gap-2">
               <Input id="emp-doc" value={doc} onChange={(e) => setDoc(e.target.value)} inputMode="numeric" maxLength={18} placeholder="00.000.000/0000-00" className="min-w-0 flex-1" />
               <Button type="button" variante="contorno" onClick={buscar} disabled={buscando || doc.replace(/\D/g, "").length !== 14}>

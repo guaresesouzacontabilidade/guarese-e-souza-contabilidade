@@ -76,9 +76,21 @@ function documentoDe(h: Pick<Hospede, "cpf" | "documento" | "documento_tipo">) {
 /** Ficha de registro do hóspede (dados da FNRH), para conferência e assinatura. */
 export function blocosFicha(c: ReservaCompleta, tons: TonsTabela = TONS_PADRAO): Content[] {
   const r = c.reserva;
-  const h = r.hospede;
-  if (!h) return [];
-  const blocos: Content[] = [
+  // Reserva no nome de uma empresa: a ficha é de quem se hospedou por ela
+  const empresa = r.hospede?.tipo_pessoa === "PJ" ? r.hospede : null;
+  const h = empresa ? r.ocupante : r.hospede;
+  const blocos: Content[] = [];
+  if (empresa) {
+    blocos.push(
+      { text: "Empresa (reserva no nome dela)", style: "secao" },
+      campos([["Empresa", empresa.nome], ["CNPJ", empresa.cnpj ? formatarDocumento(empresa.cnpj) : null]], tons),
+    );
+  }
+  if (!h) {
+    blocos.push({ text: "Quem se hospedou pela empresa ainda não foi informado na reserva.", color: tons.alerta, margin: [0, 0, 0, 8] });
+    return blocos;
+  }
+  blocos.push(
     { text: "Hóspede", style: "secao" },
     campos(
       [
@@ -112,7 +124,7 @@ export function blocosFicha(c: ReservaCompleta, tons: TonsTabela = TONS_PADRAO):
       ],
       tons,
     ),
-  ];
+  );
   if (c.acompanhantes.length) {
     blocos.push(
       { text: "Acompanhantes", style: "secao" },
@@ -158,7 +170,12 @@ export function blocosConta(
   const blocos: Content[] = [
     campos(
       [
-        ["Hóspede", r.hospede?.nome],
+        ...((r.hospede?.tipo_pessoa === "PJ"
+          ? [
+              ["Empresa", r.hospede.nome],
+              ["Hóspede", r.ocupante?.nome ?? "a informar"],
+            ]
+          : [["Hóspede", r.hospede?.nome]]) as [string, string | null | undefined][]),
         ["Quarto", `${r.quarto?.numero ?? ""} — ${r.categoria?.nome ?? ""}`],
         ["Estadia", `${formatarData(r.entrada)} a ${formatarData(r.saida)} (${noites(r.entrada, r.saida)} noite${noites(r.entrada, r.saida) > 1 ? "s" : ""})`],
         ["Pessoas", `${r.adultos} adulto(s)${r.criancas ? ` e ${r.criancas} criança(s)` : ""}`],

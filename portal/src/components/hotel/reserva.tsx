@@ -2,18 +2,19 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { BedDouble, CalendarDays, UserPlus, Users } from "lucide-react";
+import { BedDouble, Building2, CalendarDays, UserPlus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { CampoValor } from "@/components/ui/campo-valor";
 import { Alerta } from "@/components/ui/feedback";
 import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { formatarMoeda, lerValorBR } from "@/lib/dinheiro";
-import { formatarCpf, formatarTelefone } from "@/lib/formatos";
+import { formatarCnpj, formatarCpf, formatarTelefone } from "@/lib/formatos";
 import { salvarReserva } from "@/lib/hotel/acoes";
 import { diariasDaEstadia, type CategoriaPreco, type TarifaPeriodo } from "@/lib/hotel/calculo";
 import { LIMPEZA, MEIOS_TRANSPORTE, MOTIVOS_VIAGEM, ORIGENS, diaMes, noites as contarNoites, somarDias, type Limpeza } from "@/lib/hotel/rotulos";
 import { CamposHospede } from "./hospede";
+import { DialogoEmpresaHotel } from "./extras";
 
 export interface QuartoOpcao {
   id: string;
@@ -36,6 +37,9 @@ export interface Ocupacao {
 export interface HospedeOpcaoForm {
   id: string;
   nome: string;
+  /** "PJ": empresa que faz a reserva no nome dela (quem se hospeda é informado depois). */
+  tipo_pessoa?: string;
+  cnpj?: string | null;
   cpf: string | null;
   documento: string | null;
   telefone: string | null;
@@ -97,6 +101,7 @@ export function FormReserva({
   const [acordada, setAcordada] = React.useState(reserva?.diaria_acordada ? formatarMoeda(reserva.diaria_acordada, { semSimbolo: true }) : "");
   const [modoHospede, setModoHospede] = React.useState<"lista" | "novo">(reserva || padrao?.hospede_id || hospedes.length ? "lista" : "novo");
   const [hospede, setHospede] = React.useState(reserva?.hospede_id ?? padrao?.hospede_id ?? "");
+  const [lista, setLista] = React.useState(hospedes);
   const [busca, setBusca] = React.useState("");
   const [acomp, setAcomp] = React.useState<string[]>(reserva?.acompanhantes ?? []);
   const [buscaAcomp, setBuscaAcomp] = React.useState("");
@@ -113,12 +118,15 @@ export function FormReserva({
 
   const termo = busca.trim().toLowerCase();
   const digitos = termo.replace(/\D/g, "");
-  const filtrados = hospedes
+  const filtrados = lista
     .filter((h) => !termo || h.nome.toLowerCase().includes(termo) || (digitos.length >= 3 && ((h.cpf ?? "").includes(digitos) || (h.telefone ?? "").includes(digitos))))
     .slice(0, 50);
-  const hSel = hospedes.find((h) => h.id === hospede);
+  const hSel = lista.find((h) => h.id === hospede);
+  const reservaDeEmpresa = hSel?.tipo_pessoa === "PJ";
   const termoAcomp = buscaAcomp.trim().toLowerCase();
-  const sugestoesAcomp = termoAcomp ? hospedes.filter((h) => h.id !== hospede && !acomp.includes(h.id) && h.nome.toLowerCase().includes(termoAcomp)).slice(0, 6) : [];
+  const sugestoesAcomp = termoAcomp
+    ? lista.filter((h) => h.tipo_pessoa !== "PJ" && h.id !== hospede && !acomp.includes(h.id) && h.nome.toLowerCase().includes(termoAcomp)).slice(0, 6)
+    : [];
 
   return (
     <FormularioAcao
@@ -140,6 +148,20 @@ export function FormReserva({
                 <Users className="size-4" /> Hóspede responsável
               </h2>
               {!reserva ? (
+                <div className="flex flex-wrap items-center gap-2">
+                <DialogoEmpresaHotel
+                  empresaId={empresaId}
+                  comoHospede
+                  rotuloBotao="Cadastrar empresa"
+                  aoCadastrar={(c) => {
+                    setLista((l) => [
+                      ...l.filter((x) => x.id !== c.id),
+                      { id: c.id, nome: c.nome, tipo_pessoa: "PJ", cnpj: c.documento, cpf: null, documento: null, telefone: null, cidade: null, uf: null },
+                    ]);
+                    setHospede(c.id);
+                    setModoHospede("lista");
+                  }}
+                />
                 <div className="flex gap-1 rounded-lg bg-muted p-1 text-sm">
                   <button type="button" className={`rounded-md px-3 py-1 ${modoHospede === "lista" ? "bg-card shadow" : ""}`} onClick={() => setModoHospede("lista")}>
                     Já cadastrado
@@ -147,6 +169,7 @@ export function FormReserva({
                   <button type="button" className={`rounded-md px-3 py-1 ${modoHospede === "novo" ? "bg-card shadow" : ""}`} onClick={() => setModoHospede("novo")}>
                     <UserPlus className="mr-1 inline size-3.5" /> Novo hóspede
                   </button>
+                </div>
                 </div>
               ) : null}
             </div>
@@ -156,12 +179,24 @@ export function FormReserva({
                 {hSel ? (
                   <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/50 p-3 text-sm">
                     <div>
-                      <p className="font-medium">{hSel.nome}</p>
+                      <p className="flex items-center gap-1.5 font-medium">
+                        {reservaDeEmpresa ? <Building2 className="size-4" /> : null} {hSel.nome}
+                      </p>
                       <p className="text-muted-foreground">
-                        {[hSel.cpf ? `CPF ${formatarCpf(hSel.cpf)}` : hSel.documento ? `Doc. ${hSel.documento}` : "sem documento", hSel.telefone ? formatarTelefone(hSel.telefone) : null, hSel.cidade ? `${hSel.cidade}${hSel.uf ? `/${hSel.uf}` : ""}` : null]
+                        {[
+                          reservaDeEmpresa ? `Empresa · CNPJ ${formatarCnpj(hSel.cnpj ?? "")}` : hSel.cpf ? `CPF ${formatarCpf(hSel.cpf)}` : hSel.documento ? `Doc. ${hSel.documento}` : "sem documento",
+                          hSel.telefone ? formatarTelefone(hSel.telefone) : null,
+                          hSel.cidade ? `${hSel.cidade}${hSel.uf ? `/${hSel.uf}` : ""}` : null,
+                        ]
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
+                      {reservaDeEmpresa ? (
+                        <p className="mt-1 text-xs">
+                          Reserva no nome da empresa: a conta é faturada para ela. Quem se hospedou pela empresa é informado na reserva (de preferência no check-in,
+                          obrigatório para o check-out).
+                        </p>
+                      ) : null}
                     </div>
                     {!reserva ? (
                       <Button type="button" variante="fantasma" tamanho="sm" onClick={() => setHospede("")}>
@@ -176,8 +211,13 @@ export function FormReserva({
                       {filtrados.length ? (
                         filtrados.map((h) => (
                           <button key={h.id} type="button" onClick={() => setHospede(h.id)} className="flex w-full items-center justify-between gap-2 border-b border-border px-3 py-2 text-left text-sm last:border-0 hover:bg-muted">
-                            <span className="font-medium">{h.nome}</span>
-                            <span className="text-xs text-muted-foreground">{h.cpf ? formatarCpf(h.cpf) : h.telefone ? formatarTelefone(h.telefone) : ""}</span>
+                            <span className="font-medium">
+                              {h.nome}
+                              {h.tipo_pessoa === "PJ" ? <span className="ml-1.5 rounded bg-info-bg px-1.5 py-0.5 text-xs text-info-fg">empresa</span> : null}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {h.tipo_pessoa === "PJ" ? formatarCnpj(h.cnpj ?? "") : h.cpf ? formatarCpf(h.cpf) : h.telefone ? formatarTelefone(h.telefone) : ""}
+                            </span>
                           </button>
                         ))
                       ) : (
@@ -273,7 +313,12 @@ export function FormReserva({
                 <strong>Diárias previstas: {formatarMoeda(totalPrevia)}</strong>
               </div>
             ) : null}
-            {empresasFaturar.length ? (
+            {reservaDeEmpresa ? (
+              <p className="rounded-xl bg-info-bg/60 p-3 text-sm text-info-fg">
+                <input type="hidden" name="empresa_faturar_id" value="" />
+                Conta faturada para a própria empresa ({hSel?.nome}).
+              </p>
+            ) : empresasFaturar.length ? (
               <Campo rotulo="Empresa que paga (faturado)" htmlFor="r-faturar" ajuda="Do cadastro de clientes do Financeiro. A conta pode ser faturada para ela no check-out.">
                 <Select id="r-faturar" name="empresa_faturar_id" defaultValue={reserva?.empresa_faturar_id ?? ""}>
                   <option value="">O próprio hóspede paga</option>
@@ -291,12 +336,12 @@ export function FormReserva({
           </section>
 
           {/* Acompanhantes */}
-          {modoHospede === "lista" && hospedes.length ? (
+          {modoHospede === "lista" && lista.length ? (
             <section className="space-y-3 rounded-2xl border border-border p-4">
               <h2 className="font-semibold">Acompanhantes (opcional)</h2>
               <input type="hidden" name="acompanhantes_presente" value="1" />
               {acomp.map((id) => {
-                const h = hospedes.find((x) => x.id === id);
+                const h = lista.find((x) => x.id === id);
                 return (
                   <div key={id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
                     <input type="hidden" name="acompanhantes" value={id} />

@@ -12,6 +12,9 @@ import { GENEROS, TIPOS_DOCUMENTO } from "@/lib/hotel/rotulos";
 
 export interface HospedeForm {
   id?: string;
+  /** "PJ": empresa que faz reservas no nome dela. */
+  tipo_pessoa?: string | null;
+  cnpj?: string | null;
   nome?: string;
   cpf?: string | null;
   documento_tipo?: string | null;
@@ -38,6 +41,45 @@ export function CamposHospede({ prefixo = "", h, erros, completo = true }: { pre
   const n = (c: string) => `${prefixo}${c}`;
   const id = (c: string) => `hs-${prefixo}${c}`;
   const e = (c: string) => erros?.[n(c)];
+  if (h?.tipo_pessoa === "PJ") {
+    // Empresa hóspede: quem se hospeda por ela é informado em cada reserva
+    return (
+      <div className="space-y-4">
+        <input type="hidden" name={n("tipo_pessoa")} value="PJ" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Campo rotulo="Nome da empresa" htmlFor={id("nome")} obrigatorio erro={e("nome")} className="sm:col-span-2">
+            <Input id={id("nome")} name={n("nome")} maxLength={120} defaultValue={h?.nome ?? ""} autoComplete="off" />
+          </Campo>
+          <Campo rotulo="CNPJ" htmlFor={id("cnpj")} obrigatorio erro={e("cnpj")}>
+            <Input id={id("cnpj")} name={n("cnpj")} inputMode="numeric" maxLength={18} defaultValue={h?.cnpj ?? ""} />
+          </Campo>
+          <Campo rotulo="Telefone" htmlFor={id("telefone")} erro={e("telefone")}>
+            <Input id={id("telefone")} name={n("telefone")} inputMode="tel" maxLength={16} defaultValue={h?.telefone ?? ""} />
+          </Campo>
+          <Campo rotulo="E-mail" htmlFor={id("email")} erro={e("email")}>
+            <Input id={id("email")} name={n("email")} type="email" maxLength={200} defaultValue={h?.email ?? ""} />
+          </Campo>
+          <Campo rotulo="Cidade" htmlFor={id("cidade")}>
+            <Input id={id("cidade")} name={n("cidade")} maxLength={80} defaultValue={h?.cidade ?? ""} />
+          </Campo>
+          <Campo rotulo="UF" htmlFor={id("uf")} erro={e("uf")}>
+            <Input id={id("uf")} name={n("uf")} maxLength={2} defaultValue={h?.uf ?? ""} className="uppercase" />
+          </Campo>
+          <Campo rotulo="Endereço" htmlFor={id("endereco")} className="sm:col-span-2">
+            <Input id={id("endereco")} name={n("endereco")} maxLength={200} defaultValue={h?.endereco ?? ""} />
+          </Campo>
+          <Campo rotulo="CEP" htmlFor={id("cep")} erro={e("cep")}>
+            <Input id={id("cep")} name={n("cep")} inputMode="numeric" maxLength={9} defaultValue={h?.cep ?? ""} />
+          </Campo>
+        </div>
+        {completo ? (
+          <Campo rotulo="Observações sobre a empresa" htmlFor={id("observacoes")} erro={e("observacoes")} ajuda="Contato para reservas, como fatura, avisos para a equipe. Só o hotel vê.">
+            <Textarea id={id("observacoes")} name={n("observacoes")} rows={3} maxLength={1000} defaultValue={h?.observacoes ?? ""} />
+          </Campo>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">

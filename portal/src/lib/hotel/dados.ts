@@ -346,7 +346,7 @@ export async function carregarReserva(supabase: Supa, empresaId: string, reserva
   const { data: r } = await supabase
     .from("hotel_reservas")
     .select(
-      "*, quarto:hotel_quartos!hotel_reservas_empresa_id_quarto_id_fkey(id, numero, andar, limpeza, camas), categoria:hotel_categorias!hotel_reservas_empresa_id_categoria_id_fkey(id, nome, diaria, capacidade, pessoas_incluidas, adicional_pessoa), hospede:hotel_hospedes!hotel_reservas_empresa_id_hospede_id_fkey(*), faturar:contrapartes!hotel_reservas_empresa_id_empresa_faturar_id_fkey(id, nome, documento)",
+      "*, quarto:hotel_quartos!hotel_reservas_empresa_id_quarto_id_fkey(id, numero, andar, limpeza, camas), categoria:hotel_categorias!hotel_reservas_empresa_id_categoria_id_fkey(id, nome, diaria, capacidade, pessoas_incluidas, adicional_pessoa), hospede:hotel_hospedes!hotel_reservas_empresa_id_hospede_id_fkey(*), ocupante:hotel_hospedes!hotel_reservas_ocupante_fk(*), faturar:contrapartes!hotel_reservas_empresa_id_empresa_faturar_id_fkey(id, nome, documento)",
     )
     .eq("empresa_id", empresaId)
     .eq("id", reservaId)
@@ -378,6 +378,8 @@ export type ReservaCompleta = NonNullable<Awaited<ReturnType<typeof carregarRese
 export interface HospedeOpcao {
   id: string;
   nome: string;
+  tipo_pessoa: string;
+  cnpj: string | null;
   cpf: string | null;
   documento: string | null;
   telefone: string | null;
@@ -388,7 +390,7 @@ export interface HospedeOpcao {
 export async function opcoesHospedes(supabase: Supa, empresaId: string): Promise<HospedeOpcao[]> {
   const { data } = await supabase
     .from("hotel_hospedes")
-    .select("id, nome, cpf, documento, telefone, cidade, uf")
+    .select("id, nome, tipo_pessoa, cnpj, cpf, documento, telefone, cidade, uf")
     .eq("empresa_id", empresaId)
     .order("nome")
     .limit(2000);

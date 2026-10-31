@@ -174,6 +174,7 @@ export async function semearHotel(
       await anexarComprovanteDemo(admin, existente.id);
       await semearExtrasDemo(admin, conexao, opcoes.dominio, existente.id);
       await semearRecibosEmpresasDemo(admin, conexao, opcoes.dominio, existente.id);
+      await semearReservaEmpresaDemo(admin, conexao, opcoes.dominio, existente.id);
       return false;
     }
   }
@@ -642,6 +643,7 @@ export async function semearHotel(
   await anexarComprovanteDemo(admin, empresaId);
   await semearExtrasDemo(admin, conexao, opcoes.dominio, empresaId);
   await semearRecibosEmpresasDemo(admin, conexao, opcoes.dominio, empresaId);
+  await semearReservaEmpresaDemo(admin, conexao, opcoes.dominio, empresaId);
 
   // Logo fictícia
   const { data: e } = await admin.from("empresas").select("logo_path").eq("id", empresaId).single();
@@ -797,6 +799,57 @@ export async function semearRecibosEmpresasDemo(admin: SupabaseClient, conexao: 
         },
       }),
     );
+  } finally {
+    await recepcao.auth.signOut({ scope: "local" });
+  }
+}
+
+/**
+ * Reserva no nome de uma empresa (fictícia): a construtora é o hóspede, a conta
+ * fica faturada para ela e falta informar quem se hospedou (o aviso aparece na
+ * reserva). Pelas funções do portal, como a recepção.
+ */
+export async function semearReservaEmpresaDemo(admin: SupabaseClient, conexao: { url: string; publica: string }, dominio: string, empresaId: string) {
+  const { count } = await admin.from("hotel_hospedes").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("cnpj", cnpjValido("556677001001"));
+  if (count) return;
+  const { data: quartos } = await admin.from("hotel_quartos").select("id, numero").eq("empresa_id", empresaId).eq("ativo", true).order("numero");
+  if (!quartos?.length) return;
+  const recepcao = await sessao(admin, conexao.url, conexao.publica, `recepcao@${dominio}`);
+  try {
+    const construtora = ok(
+      "empresa hóspede",
+      await recepcao.rpc("hotel_hospede_salvar", {
+        p_empresa_id: empresaId,
+        p_id: null,
+        p_dados: {
+          tipo_pessoa: "PJ",
+          nome: "CONSTRUTORA PONTE NOVA EXEMPLO LTDA (FICTÍCIA)",
+          cnpj: cnpjValido("556677001001"),
+          telefone: "63999887766",
+          email: "obras@construtora-ficticia.exemplo.test",
+          cidade: "Palmas",
+          uf: "TO",
+        },
+      }),
+    ) as string;
+    const entrada = somarDias(hoje(), 3);
+    // O primeiro quarto livre nessas noites
+    for (const q of quartos) {
+      const r = await recepcao.rpc("hotel_reserva_salvar", {
+        p_empresa_id: empresaId,
+        p_id: null,
+        p_dados: {
+          hospede_id: construtora,
+          quarto_id: q.id,
+          entrada,
+          saida: somarDias(entrada, 4),
+          adultos: 1,
+          origem: "empresa",
+          observacoes: "Funcionário da obra. A empresa avisa o nome na chegada. (DEMONSTRAÇÃO)",
+        },
+      });
+      if (!r.error) break;
+    }
   } finally {
     await recepcao.auth.signOut({ scope: "local" });
   }

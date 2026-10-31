@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, FileText, NotebookPen, Pencil, Printer, Soup, UserRound, UtensilsCrossed } from "lucide-react";
+import { Building2, CalendarDays, FileText, NotebookPen, Pencil, Printer, Soup, UserRound, UtensilsCrossed } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Table, TBody, TFoot, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
 import { AnexarComprovante, ComprovantesDoPagamento } from "@/components/hotel/comprovantes";
 import { DialogoObservacoesHospede } from "@/components/hotel/hospede";
+import { DialogoOcupante } from "@/components/hotel/ocupante";
 import {
   BotaoCheckout,
   CancelarItem,
@@ -23,7 +24,7 @@ import {
   EstornarPagamento,
 } from "@/components/hotel/conta";
 import { obterContextoHotel } from "@/lib/hotel/contexto";
-import { carregarQuartos, carregarReserva, empresasParaFaturar } from "@/lib/hotel/dados";
+import { carregarQuartos, carregarReserva, empresasParaFaturar, opcoesHospedes } from "@/lib/hotel/dados";
 import {
   FORMAS_PAGAMENTO_HOTEL,
   LIMPEZA,
@@ -42,7 +43,7 @@ import {
 } from "@/lib/hotel/rotulos";
 import { hojeLocal } from "@/lib/gestao/contexto";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCpf, formatarData, formatarDataHora, formatarTelefone } from "@/lib/formatos";
+import { formatarCnpj, formatarCpf, formatarData, formatarDataHora, formatarTelefone } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Reserva" };
@@ -74,8 +75,15 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
   const { reserva: r, itens, pagamentos, acompanhantes, resumo } = completa;
   const status = r.status as StatusReserva;
   const h = r.hospede;
+  // Reserva no nome de uma empresa: quem se hospedou por ela é informado na reserva
+  const deEmpresa = h?.tipo_pessoa === "PJ";
+  const o = r.ocupante;
   const base = `/e/${empresaId}/hotel`;
   const aberta = ["pre_reserva", "confirmada", "hospedado"].includes(status);
+  const pessoas =
+    deEmpresa && aberta
+      ? (await opcoesHospedes(ctx.supabase, empresaId)).filter((p) => p.tipo_pessoa !== "PJ").map((p) => ({ id: p.id, nome: p.nome, cpf: p.cpf, documento: p.documento }))
+      : [];
   const hospedado = status === "hospedado";
   const aguardando = status === "pre_reserva" || status === "confirmada";
   const limpeza = (r.quarto?.limpeza ?? "limpo") as Limpeza;
@@ -84,7 +92,7 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
       ? `A entrada desta reserva é ${formatarData(r.entrada)}. Para fazer o check-in hoje, altere a data de entrada.`
       : limpeza !== "limpo"
         ? `O quarto ${r.quarto?.numero} está ${LIMPEZA[limpeza].toLowerCase()}. Libere-o na governança ou troque o quarto antes do check-in.`
-        : !h?.cpf && !h?.documento
+        : !deEmpresa && !h?.cpf && !h?.documento
           ? `Complete o cadastro de ${h?.nome} com o CPF ou outro documento antes do check-in.`
           : null
     : null;
@@ -113,7 +121,7 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
             Reserva nº {r.numero} <Badge variante={VARIANTE_STATUS[status]}>{STATUS_RESERVA[status]}</Badge>
           </span>
         }
-        descricao={`${h?.nome ?? ""} · quarto ${r.quarto?.numero ?? ""} (${r.categoria?.nome ?? ""}) · ${diaMes(r.entrada)} a ${diaMes(r.saida)}`}
+        descricao={`${h?.nome ?? ""}${deEmpresa ? (o ? ` (hóspede: ${o.nome})` : " (empresa)") : ""} · quarto ${r.quarto?.numero ?? ""} (${r.categoria?.nome ?? ""}) · ${diaMes(r.entrada)} a ${diaMes(r.saida)}`}
         voltar={{ href: `${base}/reservas`, rotulo: "Reservas" }}
         acoes={
           <>
@@ -175,6 +183,17 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
           {ctx.gerente ? <DialogoServico empresaId={empresaId} reservaId={r.id} desconto /> : null}
           <DialogoTrocarQuarto empresaId={empresaId} reservaId={r.id} quartos={opcoesTroca} />
         </div>
+      ) : null}
+      {deEmpresa && !o && aberta ? (
+        <Alerta tom={hospedado ? "alerta" : "info"} className="mb-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              <strong>Reserva no nome da {h?.nome}.</strong> Informe quem se hospedou pela empresa
+              {hospedado ? " — sem isso o check-out não fecha." : " (de preferência no check-in; obrigatório para o check-out)."}
+            </span>
+            <DialogoOcupante empresaId={empresaId} reservaId={r.id} empresa={h?.nome ?? "empresa"} pessoas={pessoas} />
+          </div>
+        </Alerta>
       ) : null}
       {status === "cancelada" || status === "no_show" ? (
         <Alerta tom="perigo" className="mb-5">
@@ -353,25 +372,57 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <UserRound className="size-4" /> Hóspede
+                {deEmpresa ? <Building2 className="size-4" /> : <UserRound className="size-4" />} {deEmpresa ? "Empresa (reserva no nome dela)" : "Hóspede"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <dl>
                 <Linha
-                  rotulo="Nome"
+                  rotulo={deEmpresa ? "Empresa" : "Nome"}
                   valor={
                     <Link href={`${base}/hospedes/${r.hospede_id}`} className="text-primary hover:underline">
                       {h?.nome}
                     </Link>
                   }
                 />
-                <Linha rotulo="CPF" valor={h?.cpf ? formatarCpf(h.cpf) : null} />
-                {h?.documento ? <Linha rotulo={TIPOS_DOCUMENTO[h.documento_tipo ?? "outro"] ?? "Documento"} valor={h.documento} /> : null}
+                {deEmpresa ? (
+                  <Linha rotulo="CNPJ" valor={h?.cnpj ? formatarCnpj(h.cnpj) : null} />
+                ) : (
+                  <>
+                    <Linha rotulo="CPF" valor={h?.cpf ? formatarCpf(h.cpf) : null} />
+                    {h?.documento ? <Linha rotulo={TIPOS_DOCUMENTO[h.documento_tipo ?? "outro"] ?? "Documento"} valor={h.documento} /> : null}
+                  </>
+                )}
                 <Linha rotulo="Telefone" valor={h?.telefone ? formatarTelefone(h.telefone) : null} />
                 <Linha rotulo="Cidade" valor={h?.cidade ? `${h.cidade}${h.uf ? `/${h.uf}` : ""}` : null} />
                 {acompanhantes.length ? <Linha rotulo="Acompanhantes" valor={acompanhantes.map((a) => a.nome).join(", ")} /> : null}
               </dl>
+              {deEmpresa ? (
+                <div className="mt-3 rounded-lg border border-border p-3 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <UserRound className="size-4 shrink-0" /> Quem se hospedou pela empresa
+                    </span>
+                    {aberta && o ? <DialogoOcupante empresaId={empresaId} reservaId={r.id} empresa={h?.nome ?? "empresa"} pessoas={pessoas} trocar /> : null}
+                  </div>
+                  {o ? (
+                    <dl className="mt-1">
+                      <Linha
+                        rotulo="Nome"
+                        valor={
+                          <Link href={`${base}/hospedes/${o.id}`} className="text-primary hover:underline">
+                            {o.nome}
+                          </Link>
+                        }
+                      />
+                      <Linha rotulo={o.cpf ? "CPF" : TIPOS_DOCUMENTO[o.documento_tipo ?? "outro"] ?? "Documento"} valor={o.cpf ? formatarCpf(o.cpf) : o.documento} />
+                      {o.telefone ? <Linha rotulo="Telefone" valor={formatarTelefone(o.telefone)} /> : null}
+                    </dl>
+                  ) : (
+                    <p className="mt-1 text-xs text-muted-foreground">Ainda não informado. É obrigatório para fazer o check-out.</p>
+                  )}
+                </div>
+              ) : null}
               <div className={cn("mt-3 rounded-lg p-3 text-sm", h?.observacoes ? "border border-alerta/40 bg-alerta-bg/40" : "bg-muted/40")}>
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 font-medium">
@@ -385,7 +436,7 @@ export default async function PaginaReserva({ params }: PageProps<"/e/[empresaId
                   <p className="mt-1 text-xs text-muted-foreground">Nada anotado. Anote preferências, alergias ou avisos para a equipe (só o hotel vê).</p>
                 )}
               </div>
-              {!h?.cpf && !h?.documento ? (
+              {!deEmpresa && !h?.cpf && !h?.documento ? (
                 <Alerta tom="alerta" className="mt-3">
                   Falta o documento para a ficha de registro.{" "}
                   <Link href={`${base}/hospedes/${r.hospede_id}`} className="underline">
