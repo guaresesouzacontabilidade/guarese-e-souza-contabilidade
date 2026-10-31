@@ -415,3 +415,83 @@ test("dono: cadastra vários quartos de uma vez (faixa, pulando um número)", as
   const { data } = await servico!.from("hotel_quartos").select("numero, andar, limpeza").eq("empresa_id", empresaId).like("numero", "9__").order("numero");
   expect(data).toEqual(["901", "902", "904", "905"].map((numero) => ({ numero, andar: "9º andar", limpeza: "limpo" })));
 });
+
+test("planilhas dos serviços extras do dia e do mês (conta do quarto e empresas)", async ({ page }) => {
+  test.setTimeout(120_000);
+  const ExcelJS = (await import("exceljs")).default;
+  await entrar(page, `recepcao@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/hotel/extras`);
+  await expect(page.getByRole("button", { name: "Planilha do dia" })).toBeVisible();
+  const ler = async (url: string) => {
+    const r = await page.request.get(url);
+    expect(r.status()).toBe(200);
+    expect(r.headers()["content-type"]).toContain("spreadsheetml");
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(Buffer.from(await r.body()) as unknown as ArrayBuffer);
+    const ws = wb.getWorksheet("Serviços extras")!;
+    const origens = new Set<string>();
+    ws.eachRow((row, n) => {
+      if (n > 6) origens.add(String(row.getCell(3).value ?? ""));
+    });
+    return { origens, resumo: wb.getWorksheet("Resumo") };
+  };
+  const mes = hojeLocal().slice(0, 7);
+  const doMes = await ler(`/api/hotel/${empresaId}/extras/planilha?mes=${mes}`);
+  expect(doMes.origens.has("Empresa")).toBe(true);
+  expect(doMes.origens.has("Conta do quarto")).toBe(true);
+  expect(doMes.resumo).toBeTruthy();
+  const doDia = await ler(`/api/hotel/${empresaId}/extras/planilha?dia=${hojeLocal()}`);
+  expect(doDia.origens.size).toBeGreaterThan(0);
+  expect((await page.request.get(`/api/hotel/${empresaId}/extras/planilha`)).status()).toBe(400);
+});
+
+test("caixa do turno: abre com o nome do turno, mostra o movimento, gera os relatórios e fecha", async ({ page }) => {
+  test.setTimeout(180_000);
+  const turno = `Turno teste ${Date.now() % 100000}`;
+  await entrar(page, `hotel@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/hotel/caixa`);
+  if (await page.getByRole("heading", { name: "Abrir o turno" }).isVisible()) {
+    await page.locator("#caixa_nome").fill(turno);
+    await page.locator("#valor_abertura").fill("100");
+    await page.getByRole("button", { name: "Abrir o turno" }).click();
+  }
+  await expect(page.getByText("O que aconteceu no hotel durante o turno")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Dinheiro na gaveta (esperado)")).toBeVisible();
+
+  // Um serviço extra para empresa, pago em dinheiro, entra no movimento e na gaveta do turno
+  await page.goto(`/e/${empresaId}/hotel/extras`);
+  await page.getByRole("radio", { name: "Empresa" }).click();
+  const { data: empresa } = await servico!.from("contrapartes").select("id").eq("empresa_id", empresaId).ilike("nome", "CONSTRUTORA%").limit(1).single();
+  await page.locator("#ex-empresa").selectOption(empresa!.id);
+  await page.getByRole("button", { name: "Mais Marmita", exact: true }).click();
+  await page.locator("#ex-forma").selectOption("dinheiro");
+  await page.getByRole("button", { name: "Lançar e gerar recibo" }).click();
+  await expect(page.getByText(/^Recibo nº \d+ gerado$/).first()).toBeVisible({ timeout: 30_000 });
+
+  await page.goto(`/e/${empresaId}/hotel/caixa`);
+  await expect(page.getByRole("cell", { name: /Recibo de empresa/ }).first()).toBeVisible();
+  const { data: sessao } = await servico!
+    .from("caixa_sessoes")
+    .select("id, caixa_nome")
+    .eq("empresa_id", empresaId)
+    .eq("status", "aberto")
+    .order("aberto_em", { ascending: false })
+    .limit(1)
+    .single();
+  const pdf = await page.request.get(`/api/hotel/${empresaId}/turnos/${sessao!.id}`);
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toContain("application/pdf");
+  const dia = await page.request.get(`/api/hotel/${empresaId}/relatorio-dia?data=${hojeLocal()}`);
+  expect(dia.status()).toBe(200);
+  expect(dia.headers()["content-type"]).toContain("application/pdf");
+
+  // Fecha o turno contando o dinheiro esperado (o que a tela mostra)
+  const texto = await page.getByText("Dinheiro na gaveta (esperado)").locator("../..").innerText();
+  const esperado = /R\$\s*([\d.]+,\d{2})/.exec(texto)![1].replace(/\./g, "");
+  await page.getByRole("button", { name: "Fechar o caixa" }).click();
+  await page.getByLabel("Dinheiro contado").fill(esperado);
+  await page.getByRole("dialog").getByRole("button", { name: "Fechar o caixa" }).click();
+  await expect(page.getByRole("heading", { name: "Abrir o turno" })).toBeVisible({ timeout: 30_000 });
+  // O turno fechado aparece nos turnos de hoje (o nome pode ser de uma execução interrompida antes)
+  await expect(page.getByRole("cell", { name: sessao!.caixa_nome })).toBeVisible();
+});

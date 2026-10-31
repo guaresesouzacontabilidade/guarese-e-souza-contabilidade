@@ -151,6 +151,83 @@ export async function listarRecibosExtras(supabase: Supa, empresaId: string, de:
   }));
 }
 
+/** Uma linha de serviço extra do período: na conta do quarto (hóspede) ou no recibo de uma empresa. */
+export interface ExtraDoPeriodo {
+  data: string;
+  hora: string;
+  origem: "hospede" | "empresa";
+  reserva_numero: number | null;
+  quarto: string | null;
+  cliente: string;
+  documento: string | null;
+  solicitante: string | null;
+  recibo_numero: number | null;
+  servico: string;
+  natureza: string | null;
+  unidade: string | null;
+  quantidade: number;
+  valor_unitario: number;
+  total: number;
+  pagamento: string;
+  forma?: string | null;
+  situacao: string;
+  lancado_por: string | null;
+  cancelado: boolean;
+  motivo_cancelamento: string | null;
+}
+
+/** Todos os serviços extras do período (dia ou mês), base das planilhas. */
+export async function extrasDoPeriodo(supabase: Supa, empresaId: string, de: string, ate: string): Promise<ExtraDoPeriodo[]> {
+  const { data, error } = await supabase.rpc("hotel_extras_periodo", { p_empresa_id: empresaId, p_de: de, p_ate: ate });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as ExtraDoPeriodo[]).map((x) => ({
+    ...x,
+    quantidade: Number(x.quantidade),
+    valor_unitario: Number(x.valor_unitario),
+    total: Number(x.total),
+  }));
+}
+
+export type TipoMovimento =
+  | "reserva"
+  | "checkin"
+  | "checkout"
+  | "cancelamento"
+  | "no_show"
+  | "pagamento"
+  | "estorno"
+  | "consumo"
+  | "servico"
+  | "desconto"
+  | "item_cancelado"
+  | "recibo"
+  | "recibo_cancelado";
+
+/** O que aconteceu no hotel: uma linha por acontecimento, com quem fez. */
+export interface MovimentoHotel {
+  quando: string;
+  tipo: TipoMovimento;
+  reserva_id?: string;
+  reserva_numero?: number;
+  quarto?: string;
+  hospede?: string;
+  recibo_id?: string;
+  recibo_numero?: number;
+  empresa?: string;
+  detalhe: string | null;
+  forma?: string | null;
+  valor?: number | null;
+  sessao_id?: string | null;
+  quem: string | null;
+}
+
+/** Movimento do hotel num intervalo de horário (o turno da recepção ou o dia). */
+export async function movimentoHotel(supabase: Supa, empresaId: string, de: string, ate: string): Promise<MovimentoHotel[]> {
+  const { data, error } = await supabase.rpc("hotel_movimento", { p_empresa_id: empresaId, p_de: de, p_ate: ate });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as MovimentoHotel[]).map((m) => ({ ...m, valor: m.valor == null ? null : Number(m.valor) }));
+}
+
 export async function carregarCategorias(supabase: Supa, empresaId: string): Promise<CategoriaHotel[]> {
   const { data } = await supabase
     .from("hotel_categorias")

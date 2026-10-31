@@ -5671,6 +5671,9 @@ isOneToOne: false
                            },"hotel_trocar_quarto":
 { Args: { "p_motivo": string,"p_quarto_id": string,"p_reserva_id": string }; Returns: undefined
                            },
+"hotel_extras_periodo":
+{ Args: { "p_ate": string,"p_de": string,"p_empresa_id": string }; Returns: Json
+                           },
 "hotel_extras_recibo_cancelar":
 { Args: { "p_motivo": string,"p_recibo_id": string }; Returns: undefined
                            },
@@ -5678,6 +5681,9 @@ isOneToOne: false
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
                            },
 "hotel_extras_recibos_listar":
+{ Args: { "p_ate": string,"p_de": string,"p_empresa_id": string }; Returns: Json
+                           },
+"hotel_movimento":
 { Args: { "p_ate": string,"p_de": string,"p_empresa_id": string }; Returns: Json
                            },
 "icms_carteira":

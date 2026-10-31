@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Building2, FileText } from "lucide-react";
+import { Building2, FileSpreadsheet, FileText } from "lucide-react";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +100,33 @@ export default async function PaginaExtras({ params, searchParams }: PageProps<"
           />
         </div>
       )}
+
+      {!deUmaReserva ? (
+        <Card className="mb-5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileSpreadsheet className="size-5" /> Planilhas dos serviços extras
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-end gap-3">
+            <form action={`/api/hotel/${empresaId}/extras/planilha`} method="get" className="flex flex-wrap items-end gap-2">
+              <label className="text-sm">
+                <span className="mb-1 block font-medium">Dia</span>
+                <Input name="dia" type="date" defaultValue={hoje} max={hoje} required className="h-9 w-44" aria-label="Dia da planilha" />
+              </label>
+              <Button type="submit" variante="contorno" tamanho="sm" className="h-9">
+                <FileSpreadsheet /> Planilha do dia
+              </Button>
+            </form>
+            <Button asChild variante="contorno" tamanho="sm" className="h-9">
+              <a href={`/api/hotel/${empresaId}/extras/planilha?mes=${mes}`}>
+                <FileSpreadsheet /> Planilha de {nomeMes(mesNum)}
+              </a>
+            </Button>
+            <p className="w-full text-xs text-muted-foreground">Excel com tudo o que foi lançado: na conta dos quartos e para as empresas, com o resumo por serviço e por tipo.</p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {!deUmaReserva ? (
         <Card className="mb-5">

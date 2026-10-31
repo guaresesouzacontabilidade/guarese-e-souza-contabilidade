@@ -10,7 +10,7 @@ import type { Indicador } from "./indicadores";
 import { rotuloMesCurto } from "./periodo";
 
 /** Planilhas dos relatórios (valores como números, formato de moeda brasileiro). */
-const MOEDA = '"R$" #,##0.00;[Red]-"R$" #,##0.00;"—"';
+export const MOEDA = '"R$" #,##0.00;[Red]-"R$" #,##0.00;"—"';
 const MARROM = "FF4A2C1D";
 const BEGE = "FFF1E8DC";
 

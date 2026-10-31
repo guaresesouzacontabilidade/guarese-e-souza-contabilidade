@@ -58,9 +58,9 @@ select is(public.registrar_xml_fiscal(current_setting('testes.xml2')::uuid, pg_t
           'duplicado', 'mesma chave de acesso detectada como duplicada');
 select is((select count(*)::int from public.documentos_fiscais where chave_acesso = '29260911444777000161550010000001231000001230'), 1,
           'nota duplicada não é registrada duas vezes');
-select is((select status_revisao from public.lancamentos where documento_fiscal_id is not null and numero_documento = '123'), 'sugerido',
+select is((select status_revisao from public.lancamentos where empresa_id = current_setting('testes.empresa_a')::uuid and documento_fiscal_id is not null and numero_documento = '123'), 'sugerido',
           'XML gera apenas lançamento SUGERIDO (não definitivo)');
-select is((select count(*)::int from public.lancamentos where numero_documento = '123'), 1, 'XML duplicado não duplica a sugestão');
+select is((select count(*)::int from public.lancamentos where empresa_id = current_setting('testes.empresa_a')::uuid and numero_documento = '123'), 1, 'XML duplicado não duplica a sugestão');
 select is(pg_temp.dre('receita_operacional'), 0::numeric, 'sugestão não entra no resultado');
 
 -- Evento de cancelamento de outra nota
@@ -70,8 +70,8 @@ select is(public.registrar_xml_fiscal(current_setting('testes.xml_evt')::uuid, j
   'descricao_evento', 'Cancelamento', 'sequencia', 1, 'data_evento', '2026-09-16T09:00:00-03:00', 'cstat', '135',
   'identificador', 'ID1101112926091144477700016155001000000124100000124001', 'justificativa', 'Erro de digitação')) ->> 'situacao',
   'evento_registrado', 'evento de cancelamento registrado');
-select ok((select cancelada_evento from public.documentos_fiscais where numero = '124'), 'nota marcada como cancelada pelo evento do arquivo');
-select is((select situacao from public.lancamentos where numero_documento = '124'), 'cancelado', 'sugestão da nota cancelada é cancelada');
+select ok((select cancelada_evento from public.documentos_fiscais where empresa_id = current_setting('testes.empresa_a')::uuid and numero = '124'), 'nota marcada como cancelada pelo evento do arquivo');
+select is((select situacao from public.lancamentos where empresa_id = current_setting('testes.empresa_a')::uuid and numero_documento = '124'), 'cancelado', 'sugestão da nota cancelada é cancelada');
 select is(public.registrar_xml_fiscal(current_setting('testes.xml_evt')::uuid, jsonb_build_object(
   'tipo', 'evento', 'chave_acesso', '29260911444777000161550010000001241000001240', 'tipo_evento', '110111', 'cstat', '135',
   'identificador', 'ID1101112926091144477700016155001000000124100000124001')) ->> 'situacao',
@@ -80,9 +80,9 @@ select is(public.registrar_xml_fiscal(current_setting('testes.xml_evt')::uuid, j
 -- Cliente confirma a sugestão da NF 123
 select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
 set local role authenticated;
-update public.lancamentos set status_revisao = 'confirmado' where numero_documento = '123';
+update public.lancamentos set status_revisao = 'confirmado' where empresa_id = current_setting('testes.empresa_a')::uuid and numero_documento = '123';
 select is(pg_temp.dre('receita_operacional'), 1500.00::numeric, 'receita da nota confirmada: R$ 1.500,00');
-select set_config('testes.lanc_nf', (select id::text from public.lancamentos where numero_documento = '123'), true);
+select set_config('testes.lanc_nf', (select id::text from public.lancamentos where empresa_id = current_setting('testes.empresa_a')::uuid and numero_documento = '123'), true);
 reset role;
 
 -- -------------------------------------------------------------- extrato

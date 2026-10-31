@@ -11,14 +11,19 @@ import { Alerta } from "@/components/ui/feedback";
 import { formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import { abrirCaixa, fecharCaixa, movimentarCaixa } from "@/lib/gestao/acoes";
 
-/** Abertura do caixa com o troco inicial da gaveta. */
-export function AbrirCaixa({ empresaId, sugestaoNome }: { empresaId: string; sugestaoNome: string }) {
+/** Abertura do caixa com o troco inicial da gaveta (no hotel, o caixa do turno, com o nome do turno). */
+export function AbrirCaixa({ empresaId, sugestaoNome, turno = false }: { empresaId: string; sugestaoNome: string; turno?: boolean }) {
   return (
     <FormularioAcao acao={abrirCaixa.bind(null, empresaId)} className="space-y-4">
       {({ estado, pendente }) => (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Campo rotulo="Nome do caixa" htmlFor="caixa_nome" ajuda="Ex.: Caixa 1, Balcão, Pátio." erro={estado.erros?.caixa_nome}>
+            <Campo
+              rotulo={turno ? "Nome do turno" : "Nome do caixa"}
+              htmlFor="caixa_nome"
+              ajuda={turno ? "Ex.: Manhã — Ana, Noite, Plantão. Sai no relatório do turno." : "Ex.: Caixa 1, Balcão, Pátio."}
+              erro={estado.erros?.caixa_nome}
+            >
               <Input id="caixa_nome" name="caixa_nome" defaultValue={sugestaoNome} maxLength={40} />
             </Campo>
             <Campo rotulo="Troco inicial na gaveta" htmlFor="valor_abertura" ajuda="Quanto dinheiro já tem na gaveta agora." erro={estado.erros?.valor_abertura}>
@@ -26,7 +31,7 @@ export function AbrirCaixa({ empresaId, sugestaoNome }: { empresaId: string; sug
             </Campo>
           </div>
           <BotaoEnviar pendente={pendente} textoPendente="Abrindo..." tamanho="lg">
-            <LockOpen /> Abrir o caixa
+            <LockOpen /> {turno ? "Abrir o turno" : "Abrir o caixa"}
           </BotaoEnviar>
         </>
       )}

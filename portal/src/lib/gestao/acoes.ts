@@ -25,6 +25,8 @@ function numero(v: string): string | null {
 
 function revalidarLoja(empresaId: string) {
   revalidatePath(`/e/${empresaId}/loja`, "layout");
+  // O caixa é o mesmo do turno da recepção do hotel
+  revalidatePath(`/e/${empresaId}/hotel`, "layout");
 }
 
 // -----------------------------------------------------------------------------

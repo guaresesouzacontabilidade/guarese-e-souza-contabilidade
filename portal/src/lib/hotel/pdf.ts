@@ -4,12 +4,15 @@ import { COR } from "@/lib/relatorios/pdf";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarCep, formatarCpf, formatarData, formatarDataHora, formatarDocumento, formatarTelefone, nomeMes } from "@/lib/formatos";
 import { valorPorExtenso } from "@/lib/declaracoes/extenso";
-import type { ReciboExtra, ReservaCompleta } from "./dados";
+import type { MovimentoHotel, ReciboExtra, ReservaCompleta } from "./dados";
+import type { RelatorioCaixa, ResumoCaixa } from "@/lib/gestao/dados";
+import { FORMAS_PAGAMENTO, hora, type FormaPagamento } from "@/lib/gestao/rotulos";
 import type { RelatorioHotel } from "./relatorio";
 import {
   FORMAS_PAGAMENTO_HOTEL,
   GENEROS,
   MEIOS_TRANSPORTE,
+  MOVIMENTOS_HOTEL,
   MOTIVOS_VIAGEM,
   ORIGENS,
   SETORES,
@@ -303,6 +306,145 @@ export function blocosReciboExtra(r: ReciboExtra, hotel: string, tons: TonsTabel
       },
     );
   }
+  return blocos;
+}
+
+/** Turno (caixa) do dia, para o relatório do dia. */
+export interface TurnoDoDia {
+  caixa_nome: string;
+  operador: string | null;
+  aberto_em: string;
+  fechado_em: string | null;
+  resumo: ResumoCaixa;
+  valor_contado: string | null;
+  diferenca: string | null;
+}
+
+/** Contagem do movimento: o que aconteceu nas reservas e quanto foi recebido. */
+function resumoMovimento(movimentos: MovimentoHotel[], tons: TonsTabela): Content {
+  const n = (t: string) => movimentos.filter((m) => m.tipo === t).length;
+  const soma = (tipos: string[]) => movimentos.filter((m) => tipos.includes(m.tipo)).reduce((s, m) => s + Number(m.valor ?? 0), 0);
+  const recibosNaHora = movimentos.filter((m) => m.tipo === "recibo" && m.forma);
+  return campos(
+    [
+      ["Reservas feitas", String(n("reserva"))],
+      ["Check-ins / check-outs", `${n("checkin")} / ${n("checkout")}`],
+      ["Cancelamentos / não compareceram", `${n("cancelamento")} / ${n("no_show")}`],
+      ["Pagamentos recebidos", `${n("pagamento")} — ${moeda(soma(["pagamento"]))}`],
+      ["Estornos", n("estorno") ? `${n("estorno")} — ${moeda(soma(["estorno"]))}` : "nenhum"],
+      ["Consumo e serviços nas contas", moeda(soma(["consumo", "servico"]) + soma(["desconto"]))],
+      ["Recibos de empresas", n("recibo") ? `${n("recibo")} — ${moeda(soma(["recibo"]))} (${recibosNaHora.length} pago(s) na hora)` : "nenhum"],
+    ],
+    tons,
+  );
+}
+
+/** Tabela do movimento: hora, o que foi, reserva ou empresa, detalhe, valor e quem fez. */
+function tabelaMovimento(movimentos: MovimentoHotel[], tons: TonsTabela, comData = false): Content {
+  if (!movimentos.length) return { text: "Nada aconteceu nas reservas neste horário.", color: tons.cinza, margin: [0, 0, 0, 8] };
+  const formaDe = (f: string | null | undefined) => (f ? (FORMAS_PAGAMENTO_HOTEL[f as FormaPagamentoHotel] ?? f) : "");
+  return tabela(
+    ["Hora", "O que", "Reserva / empresa", "Detalhe", "Valor", "Quem"],
+    movimentos.map((m) => {
+      const quem = m.reserva_numero
+        ? `Nº ${m.reserva_numero} · qto ${m.quarto ?? ""}\n${m.hospede ?? ""}`
+        : m.recibo_numero
+          ? `Recibo nº ${m.recibo_numero}\n${m.empresa ?? ""}`
+          : "";
+      const detalhe = [m.detalhe, ["pagamento", "estorno", "recibo"].includes(m.tipo) ? formaDe(m.forma) : ""].filter(Boolean).join(" · ");
+      const negativo = ["estorno", "item_cancelado", "recibo_cancelado", "desconto"].includes(m.tipo);
+      return [
+        comData ? `${diaMes(m.quando.slice(0, 10))} ${hora(m.quando)}` : hora(m.quando),
+        MOVIMENTOS_HOTEL[m.tipo] ?? m.tipo,
+        quem,
+        detalhe,
+        m.valor != null && m.tipo !== "checkin" ? { text: `${negativo && m.tipo !== "desconto" ? "−" : ""}${moeda(Math.abs(m.valor))}`, color: negativo ? tons.alerta : undefined } : "",
+        m.quem ?? "",
+      ];
+    }),
+    [comData ? 52 : 30, 74, 92, "*", 58, 70],
+    [4],
+    tons,
+  );
+}
+
+/** Linhas do caixa: troco, recebido por forma (hotel e restaurante), sangrias e a gaveta. */
+function linhasCaixa(r: ResumoCaixa): [string, string][] {
+  const linhas: [string, string][] = [["Troco inicial", moeda(r.abertura)]];
+  for (const [f, v] of Object.entries(r.hotel_por_forma ?? {})) linhas.push([`Hotel — ${FORMAS_PAGAMENTO_HOTEL[f as FormaPagamentoHotel] ?? f} (${v.quantidade})`, moeda(v.valor)]);
+  for (const [f, v] of Object.entries(r.por_forma ?? {})) linhas.push([`Restaurante e bar — ${FORMAS_PAGAMENTO[f as FormaPagamento] ?? f} (${v?.vendas ?? 0})`, moeda(v?.valor)]);
+  if (Number(r.sangrias)) linhas.push([`Sangrias (${r.qtd_sangrias})`, `− ${moeda(r.sangrias)}`]);
+  if (Number(r.suprimentos)) linhas.push([`Suprimentos (${r.qtd_suprimentos})`, moeda(r.suprimentos)]);
+  linhas.push(["Total recebido no turno", moeda(Number(r.hotel_total ?? 0) + Number(r.vendas_total ?? 0))]);
+  linhas.push(["Dinheiro esperado na gaveta", moeda(r.dinheiro_esperado)]);
+  return linhas;
+}
+
+/** Relatório do turno da recepção: o caixa do turno e o que aconteceu no hotel no horário dele. */
+export function blocosTurno(rel: RelatorioCaixa, movimentos: MovimentoHotel[], tons: TonsTabela = TONS_PADRAO): Content[] {
+  const s = rel.sessao;
+  const r = rel.resumo;
+  const fechado = s.status === "fechado";
+  const caixa = linhasCaixa(r);
+  if (fechado) {
+    caixa.push(["Dinheiro contado no fechamento", moeda(s.valor_contado)]);
+    const dif = Number(s.diferenca ?? 0);
+    caixa.push(["Diferença", dif === 0 ? "conferiu" : `${dif > 0 ? "sobra de " : "falta de "}${moeda(Math.abs(dif))}`]);
+  }
+  return [
+    campos(
+      [
+        ["Turno", s.caixa_nome],
+        ["Quem abriu", s.operador],
+        ["Abertura", formatarDataHora(s.aberto_em)],
+        ["Fechamento", fechado ? `${formatarDataHora(s.fechado_em)}${s.fechado_por && s.fechado_por !== s.operador ? ` por ${s.fechado_por}` : ""}` : "turno em andamento"],
+      ],
+      tons,
+    ),
+    { text: "Caixa do turno", style: "secao" },
+    campos(caixa, tons),
+    { text: "Reservas no turno", style: "secao" },
+    resumoMovimento(movimentos, tons),
+    { text: "O que aconteceu no hotel durante o turno", style: "secao" },
+    tabelaMovimento(movimentos, tons),
+    {
+      margin: [0, 36, 0, 0],
+      columns: [
+        { stack: [{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 200, y2: 0, lineWidth: 0.6, lineColor: tons.cinza }] }, { text: `Entregue por ${s.operador ?? ""}`, fontSize: 8.5, margin: [0, 4, 0, 0] }] },
+        { stack: [{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 200, y2: 0, lineWidth: 0.6, lineColor: tons.cinza }] }, { text: "Recebido por (próximo turno)", fontSize: 8.5, margin: [0, 4, 0, 0] }] },
+      ],
+    },
+  ];
+}
+
+/** Relatório do dia: os turnos (caixas) do dia e tudo o que aconteceu no hotel. */
+export function blocosDiaHotel(turnos: TurnoDoDia[], movimentos: MovimentoHotel[], tons: TonsTabela = TONS_PADRAO): Content[] {
+  const blocos: Content[] = [{ text: "Turnos do dia", style: "secao" }];
+  blocos.push(
+    turnos.length
+      ? tabela(
+          ["Turno", "Quem", "Horário", "Recebido", "Gaveta", "Diferença"],
+          turnos.map((t) => {
+            const dif = t.diferenca == null ? null : Number(t.diferenca);
+            return [
+              t.caixa_nome,
+              t.operador ?? "",
+              `${hora(t.aberto_em)} – ${t.fechado_em ? hora(t.fechado_em) : "aberto"}`,
+              moeda(Number(t.resumo.hotel_total ?? 0) + Number(t.resumo.vendas_total ?? 0)),
+              moeda(t.fechado_em ? t.valor_contado : t.resumo.dinheiro_esperado),
+              dif == null ? "—" : dif === 0 ? "conferiu" : { text: `${dif > 0 ? "+" : "−"}${moeda(Math.abs(dif))}`, color: tons.alerta },
+            ];
+          }),
+          ["*", 90, 70, 66, 66, 60],
+          [3, 4, 5],
+          tons,
+        )
+      : { text: "Nenhum turno (caixa) aberto neste dia.", color: tons.cinza, margin: [0, 0, 0, 8] },
+    { text: "Reservas no dia", style: "secao" },
+    resumoMovimento(movimentos, tons),
+    { text: "O que aconteceu no hotel no dia", style: "secao" },
+    tabelaMovimento(movimentos, tons),
+  );
   return blocos;
 }
 

@@ -113,6 +113,23 @@ export const SUGESTOES_EXTRA: { nome: string; natureza: NaturezaExtra; unidade: 
   { nome: "Aluguel de carro", natureza: "locacao", unidade: "dia" },
 ];
 
+/** O que aconteceu no hotel (relatório do turno e do dia). */
+export const MOVIMENTOS_HOTEL: Record<string, string> = {
+  reserva: "Reserva feita",
+  checkin: "Check-in",
+  checkout: "Check-out",
+  cancelamento: "Reserva cancelada",
+  no_show: "Não compareceu",
+  pagamento: "Pagamento recebido",
+  estorno: "Pagamento estornado",
+  consumo: "Consumo na conta",
+  servico: "Serviço na conta",
+  desconto: "Desconto",
+  item_cancelado: "Lançamento cancelado",
+  recibo: "Recibo de empresa",
+  recibo_cancelado: "Recibo cancelado",
+};
+
 /** "3 dias", "1 marmita", "2,5 kg". */
 export function quantidadeExtra(qtd: number, unidade: string) {
   const u = UNIDADES_EXTRA[unidade as UnidadeExtra];
