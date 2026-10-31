@@ -140,7 +140,8 @@ test("dono: venda a prazo exige cliente e gera uma conta a receber por parcela",
   await entrar(page, `madeireira@${DOMINIO}`);
   await caixaAberto(page, "Caixa 1");
   // 4 vigas 6 × 12 de 4 m = 0,1152 m³ × R$ 2.300 = R$ 264,96
-  await adicionar(page, "viga", /Viga de eucalipto/);
+  // Palavras em qualquer ordem
+  await adicionar(page, "eucalipto viga", /Viga de eucalipto/);
   await page.locator('input[id^="p-"]').first().fill("4");
   await expect(page.getByText("0,1152 m³")).toBeVisible();
   await page.getByRole("group", { name: "Formas de pagamento" }).getByRole("button", { name: /A prazo/ }).click();
@@ -180,7 +181,8 @@ test("balconista: abre o próprio caixa, vende no PIX, faz sangria e fecha; não
   await expect(page.getByText("Você não tem acesso à loja")).toBeVisible();
 
   await caixaAberto(page, "Caixa E2E");
-  await adicionar(page, "mourão", /Mourão de eucalipto/);
+  // Sem acento também acha
+  await adicionar(page, "mourao", /Mourão de eucalipto/);
   await page.locator('input[id^="q-"]').first().fill("3");
   await page.getByRole("group", { name: "Formas de pagamento" }).getByRole("button", { name: /PIX/ }).click();
   await page.getByRole("button", { name: "Concluir venda" }).click();

@@ -16,6 +16,7 @@ import { formatarDocumento } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 import { finalizarVenda, salvarClienteLoja, salvarOrcamento, situacaoNfeDaVenda, type ResultadoNfeVenda, type VendaEntrada } from "@/lib/gestao/acoes";
 import { FORMAS_PAGAMENTO, formatarQuantidade, modoMedida, quantidadePorPecas, secaoPeca, un, type FormaPagamento, type NfeNaVenda } from "@/lib/gestao/rotulos";
+import { buscarProdutos } from "@/lib/gestao/busca-produtos";
 import { EM_ANDAMENTO, SITUACAO_NFE, type SituacaoNfe } from "@/lib/nfe-emissao/rotulos";
 import { FormDestinatario, type Destinatario } from "@/components/nfe/cadastros";
 
@@ -159,11 +160,7 @@ export function PontoDeVenda({
     .reduce((s, p) => s.plus(Decimal.max(ler(p.recebido).minus(ler(p.valor)), 0)), new Decimal(0));
 
   const termo = busca.trim().toLowerCase();
-  const encontrados = termo
-    ? produtos
-        .filter((p) => p.descricao.toLowerCase().includes(termo) || p.codigo.toLowerCase() === termo || p.gtin === termo || (p.grupo ?? "").toLowerCase().includes(termo))
-        .slice(0, 8)
-    : [];
+  const { itens: encontrados, total: totalEncontrados } = React.useMemo(() => buscarProdutos(produtos, busca, 30), [produtos, busca]);
 
   function adicionar(p: ProdutoPdv) {
     const modo = modoMedida(p);
@@ -315,12 +312,12 @@ export function PontoDeVenda({
               />
             </div>
             {encontrados.length ? (
-              <ul className="divide-y divide-border rounded-xl border border-border" aria-label="Produtos encontrados">
+              <ul className="max-h-[26rem] divide-y divide-border overflow-y-auto rounded-xl border border-border" aria-label="Produtos encontrados">
                 {encontrados.map((p) => (
                   <li key={p.id}>
                     <button type="button" onClick={() => adicionar(p)} className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-accent">
                       <span className="min-w-0">
-                        <span className="block truncate font-medium">{p.descricao}</span>
+                        <span className="block break-words font-medium">{p.descricao}</span>
                         <span className="text-xs text-muted-foreground">
                           Cód. {p.codigo}
                           {secaoPeca(p) ? ` · ${secaoPeca(p)}` : ""}
@@ -336,7 +333,12 @@ export function PontoDeVenda({
                 ))}
               </ul>
             ) : busca.trim() ? (
-              <p className="text-sm text-muted-foreground">Nenhum produto encontrado.</p>
+              <p className="text-sm text-muted-foreground">Nenhum produto encontrado. Tente outra palavra do nome ou o código.</p>
+            ) : null}
+            {totalEncontrados > encontrados.length ? (
+              <p className="text-xs text-muted-foreground">
+                Mostrando {encontrados.length} de {totalEncontrados} produtos. Digite mais uma palavra (modelo, cor, tamanho) para achar mais rápido.
+              </p>
             ) : null}
           </CardContent>
         </Card>
