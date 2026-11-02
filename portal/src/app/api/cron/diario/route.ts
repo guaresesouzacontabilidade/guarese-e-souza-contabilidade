@@ -32,6 +32,8 @@ async function executar(req: Request) {
   const notas = await admin.rpc("rotina_notas_automaticas");
   const auditor = await admin.rpc("rotina_auditor_fiscal");
   const lotes = await admin.rpc("rotina_lotes_xml");
+  // Robô de planejamento tributário: um estudo por empresa ativa (pela fila)
+  const estudos = await admin.rpc("rotina_estudos");
   const resultado = {
     ...(data as Record<string, unknown>),
     obrigacoes: operacional.data,
@@ -39,6 +41,7 @@ async function executar(req: Request) {
     notas_automaticas: notas.error ? { erro: notas.error.message } : notas.data,
     auditor_fiscal: auditor.error ? { erro: auditor.error.message } : auditor.data,
     lotes_xml: lotes.error ? { erro: lotes.error.message } : lotes.data,
+    estudos_tributarios: estudos.error ? { erro: estudos.error.message } : estudos.data,
   };
   await registrarRotina(admin, "diaria", { ok: true, resultado });
   const fila = await processarFila({ limite: 50, tempoMaximoMs: 30_000 });

@@ -68,13 +68,13 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
     opcoes.push({ valor: c.slice(0, 7), rotulo: `${formatarCompetencia(somarMeses(c, -11))} a ${formatarCompetencia(c)} (12 meses)` });
   }
   const ate = competenciaDosCalculos(parametro(sp, "ate"));
-  const margem = lerNumero(parametro(sp, "margem"), -100, 100);
-  const aliquotaIcms = lerNumero(parametro(sp, "icms"), 0, 40);
+  const margemUrl = lerNumero(parametro(sp, "margem"), -100, 100);
+  const icmsUrl = lerNumero(parametro(sp, "icms"), 0, 40);
   const aliquotaIss = lerNumero(parametro(sp, "iss"), 0, 5);
   const creditos = parametro(sp, "creditos", ["sim", "nao"]) !== "nao";
   const invalidos = [
-    parametro(sp, "margem") && !margem ? "margem de lucro (entre −100 e 100)" : null,
-    parametro(sp, "icms") && !aliquotaIcms ? "ICMS (entre 0 e 40)" : null,
+    parametro(sp, "margem") && !margemUrl ? "margem de lucro (entre −100 e 100)" : null,
+    parametro(sp, "icms") && !icmsUrl ? "ICMS (entre 0 e 40)" : null,
     parametro(sp, "iss") && !aliquotaIss ? "ISS (entre 0 e 5)" : null,
   ].filter(Boolean);
 
@@ -122,6 +122,13 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
     );
   }
 
+  // Sem valor na tela, usa as premissas guardadas para o robô tributário
+  const salva = (v: unknown) => (v === null || v === undefined || v === "" ? null : new Decimal(String(v)));
+  const margemSalva = salva(dados.parametros.margem_lucro);
+  const icmsSalvo = salva(dados.parametros.aliquota_icms_media);
+  const margem = parametro(sp, "margem") ? margemUrl : margemSalva;
+  const aliquotaIcms = parametro(sp, "icms") ? icmsUrl : icmsSalvo;
+  const usandoSalvas = (!parametro(sp, "margem") && !!margemSalva) || (!parametro(sp, "icms") && !!icmsSalvo);
   const c = compararRegimes(dados, ate, { margemLucro: margem, aliquotaIcms, aliquotaIss, creditosPisCofins: creditos });
   const fim = c.meses[c.meses.length - 1];
 
@@ -221,6 +228,14 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
               <Button type="submit">Recalcular</Button>
             </div>
           </form>
+          {usandoSalvas ? (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Usando as premissas guardadas para o robô tributário.{" "}
+              <Link href={`/escritorio/oportunidades/${empresaId}`} className="font-medium text-primary hover:underline">
+                Ver ou mudar no estudo tributário
+              </Link>
+            </p>
+          ) : null}
           {margemFinanceiro && !margem ? (
             <p className="mt-3 text-sm text-muted-foreground">
               No Financeiro, o resultado antes do IRPJ e da CSLL no período foi de {textoPercentual(margemFinanceiro, 1)} da receita (com os tributos do regime atual).{" "}

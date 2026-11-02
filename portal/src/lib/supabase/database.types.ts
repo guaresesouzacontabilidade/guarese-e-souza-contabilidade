@@ -366,13 +366,13 @@ isOneToOne: false
                   ]
                 },"calculo_parametros": {
                   Row: {
-                    "acrescimo_lc224": boolean,"aliquota_iss": number | null,"anexo_mercadorias": string,"anexo_servicos": string,"atualizado_por": string | null,"calcular_icms": boolean,"calcular_ipi": boolean,"created_at": string,"creditos_pis_cofins": boolean,"empresa_id": string,"fap": number,"fator_r": boolean,"icms_destinacao_padrao": string,"inicio_atividade": string | null,"mei_atividade": string | null,"presuncao_csll_mercadorias": number,"presuncao_csll_servicos": number,"presuncao_irpj_mercadorias": number,"presuncao_irpj_servicos": number,"pro_labore": number,"rat": number,"socios_pro_labore": number,"terceiros": number,"updated_at": string
+                    "acrescimo_lc224": boolean,"aliquota_icms_media": number | null,"aliquota_iss": number | null,"anexo_mercadorias": string,"anexo_servicos": string,"atualizado_por": string | null,"calcular_icms": boolean,"calcular_ipi": boolean,"created_at": string,"creditos_pis_cofins": boolean,"empresa_id": string,"fap": number,"fator_r": boolean,"icms_destinacao_padrao": string,"inicio_atividade": string | null,"margem_lucro": number | null,"mei_atividade": string | null,"presuncao_csll_mercadorias": number,"presuncao_csll_servicos": number,"presuncao_irpj_mercadorias": number,"presuncao_irpj_servicos": number,"pro_labore": number,"rat": number,"socios_pro_labore": number,"terceiros": number,"updated_at": string
                   }
                   Insert: {
-                    "acrescimo_lc224"?: boolean,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id": string,"fap"?: number,"fator_r"?: boolean,"icms_destinacao_padrao"?: string,"inicio_atividade"?: string | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
+                    "acrescimo_lc224"?: boolean,"aliquota_icms_media"?: number | null,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id": string,"fap"?: number,"fator_r"?: boolean,"icms_destinacao_padrao"?: string,"inicio_atividade"?: string | null,"margem_lucro"?: number | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
                   }
                   Update: {
-                    "acrescimo_lc224"?: boolean,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id"?: string,"fap"?: number,"fator_r"?: boolean,"icms_destinacao_padrao"?: string,"inicio_atividade"?: string | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
+                    "acrescimo_lc224"?: boolean,"aliquota_icms_media"?: number | null,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id"?: string,"fap"?: number,"fator_r"?: boolean,"icms_destinacao_padrao"?: string,"inicio_atividade"?: string | null,"margem_lucro"?: number | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1810,6 +1810,56 @@ isOneToOne: false
     },{
       foreignKeyName: "estoques_informado_por_fkey"
       columns: ["informado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"estudo_execucoes": {
+                  Row: {
+                    "concluido_em": string | null,"empresa_id": string,"erro": string | null,"id": number,"iniciado_em": string,"origem": string,"pedido_por": string | null,"resumo": Json | null,"situacao": string
+                  }
+                  Insert: {
+                    "concluido_em"?: string | null,"empresa_id": string,"erro"?: string | null,"id"?: never,"iniciado_em"?: string,"origem": string,"pedido_por"?: string | null,"resumo"?: Json | null,"situacao"?: string
+                  }
+                  Update: {
+                    "concluido_em"?: string | null,"empresa_id"?: string,"erro"?: string | null,"id"?: never,"iniciado_em"?: string,"origem"?: string,"pedido_por"?: string | null,"resumo"?: Json | null,"situacao"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estudo_execucoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estudo_execucoes_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"estudo_oportunidades": {
+                  Row: {
+                    "apresentado_em": string | null,"atualizado_em": string,"detalhes": NonNullable<Json>,"detectado_em": string,"economia_anual": number | null,"empresa_id": string,"estado": string,"faltando": (string)[],"id": string,"motivo": string | null,"resumo": string,"revisado_em": string | null,"revisado_por": string | null,"situacao": string,"tipo": string,"titulo": string,"valor_na_revisao": number | null,"valor_unico": number | null
+                  }
+                  Insert: {
+                    "apresentado_em"?: string | null,"atualizado_em"?: string,"detalhes"?: NonNullable<Json>,"detectado_em"?: string,"economia_anual"?: number | null,"empresa_id": string,"estado": string,"faltando"?: (string)[],"id"?: string,"motivo"?: string | null,"resumo": string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"tipo": string,"titulo": string,"valor_na_revisao"?: number | null,"valor_unico"?: number | null
+                  }
+                  Update: {
+                    "apresentado_em"?: string | null,"atualizado_em"?: string,"detalhes"?: NonNullable<Json>,"detectado_em"?: string,"economia_anual"?: number | null,"empresa_id"?: string,"estado"?: string,"faltando"?: (string)[],"id"?: string,"motivo"?: string | null,"resumo"?: string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"tipo"?: string,"titulo"?: string,"valor_na_revisao"?: number | null,"valor_unico"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estudo_oportunidades_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estudo_oportunidades_revisado_por_fkey"
+      columns: ["revisado_por"]
 isOneToOne: false
       referencedRelation: "perfis"
       referencedColumns: ["id"]
@@ -5550,6 +5600,24 @@ isOneToOne: false
 "estado_acesso":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"estudo_dados":
+{ Args: { "p_ate": string,"p_empresa_id": string }; Returns: Json
+                           },
+"estudo_falhou":
+{ Args: { "p_empresa_id": string,"p_erro": string,"p_execucao_id": number,"p_origem": string }; Returns: undefined
+                           },
+"estudo_premissas_salvar":
+{ Args: { "p_aliquota_icms": number,"p_empresa_id": string,"p_margem_lucro": number }; Returns: undefined
+                           },
+"estudo_registrar":
+{ Args: { "p_empresa_id": string,"p_estudos": Json,"p_execucao_id": number,"p_origem": string,"p_pedir_auditor"?: boolean }; Returns: Json
+                           },
+"estudo_revisar":
+{ Args: { "p_acao": string,"p_id": string,"p_motivo"?: string }; Returns: undefined
+                           },
+"estudo_rodar":
+{ Args: { "p_empresa_id"?: string }; Returns: number
+                           },
 "excluir_documento":
 { Args: { "p_documento_id": string,"p_motivo": string }; Returns: undefined
                            },
@@ -6128,6 +6196,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_diaria":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_estudos":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_lotes_xml":

@@ -292,7 +292,7 @@ Converse com o escritório por assunto, com anexos. Com a conversa aberta, as re
 
 ## 3. Para a equipe do escritório
 
-O menu **Escritório** mostra a carteira inteira, em grupos: **Visão geral** (a visão geral e o **Mapa da carteira**), **Empresas**, **Atendimento** (documentos recebidos, pendências, solicitações e mensagens), **Prazos** (obrigações, vencimentos e fechamentos), **Notas fiscais** (automáticas, de serviço, de produto e CT-e), **Fiscal** (apuração do ICMS, auditor fiscal e maquininhas), **Financeiro** (financeiro da carteira, conciliação e relatórios) e **Escritório** (equipe, configurações e auditoria). Ao escolher uma empresa no seletor, aparece a área daquela empresa (com os mesmos grupos do cliente e as ferramentas da equipe, como o cadastro em **Configurações**).
+O menu **Escritório** mostra a carteira inteira, em grupos: **Visão geral** (a visão geral e o **Mapa da carteira**), **Empresas**, **Atendimento** (documentos recebidos, pendências, solicitações e mensagens), **Prazos** (obrigações, vencimentos e fechamentos), **Notas fiscais** (automáticas, de serviço, de produto e CT-e), **Fiscal** (apuração do ICMS, auditor fiscal, planejamento tributário e maquininhas), **Financeiro** (financeiro da carteira, conciliação e relatórios) e **Escritório** (equipe, configurações e auditoria). Ao escolher uma empresa no seletor, aparece a área daquela empresa (com os mesmos grupos do cliente e as ferramentas da equipe, como o cadastro em **Configurações**).
 
 A **Visão geral da carteira** resume tudo em blocos: o medidor das **obrigações do mês** (atrasadas, da semana, esperando o cliente e concluídas), **Atenção hoje** (o que está atrasado, certificados vencendo e documentos recebidos após o fechamento), a **caixa de entrada**, a **entrega de documentos** da competência de trabalho (com as empresas mais atrasadas), o **fechamento do mês**, a **economia encontrada** pelo auditor fiscal (valor estimado), os **prazos da semana** por dia, as **tarefas da equipe** e os **clientes por cidade**. Cada bloco tem a seta que abre a tela completa.
 
@@ -504,6 +504,25 @@ O menu **Auditor fiscal** do escritório mostra, para a carteira toda, a **poss�
    - A lista completa de produtos vem da análise feita a partir desta versão. Achado mais antigo sai só com as notas de exemplo: clique em **Analisar agora** uma vez para refazer a análise com todos os produtos (a revisão feita é mantida).
 
 Para a conta do Simples ficar exata, preencha em **Cálculos → Configuração** o anexo das vendas e o dos serviços (com o Fator R, se for o caso) e, em **Receita e folha mês a mês**, a receita e a folha dos meses anteriores ao portal (sem isso o achado aparece com confiança média). O auditor não vê o PGDAS-D: ele mostra quanto foi cobrado a mais caso a separação não tenha sido feita — confira a apuração antes de publicar. A lista de produtos monofásicos usada (com a lei de cada linha) fica no fim da página do auditor da carteira.
+
+### Planejamento tributário (robô de oportunidades)
+O menu **Fiscal → Planejamento tributário** mostra as **Oportunidades da carteira**: um robô estuda cada empresa ativa **toda noite**, com os dados que o portal já tem (notas, receita e folha informadas, configuração dos cálculos e achados do auditor). Tudo é calculado no próprio portal; nenhum dado sai para serviço externo. São 4 estudos por empresa:
+
+- **Regime mais barato**: compara Simples Nacional, Lucro Presumido e Lucro Real nos últimos 12 meses (a mesma conta do **Comparativo de regimes**). Vira oportunidade quando outro regime sai pelo menos R$ 1.200 por ano mais barato. Lembre: o regime só muda em janeiro.
+- **Fator R**: para serviços do Anexo V com Fator R, calcula quanto de pró-labore a mais leva a folha a 28% da receita (Anexo III), quanto o DAS cairia e quanto custaria o INSS de 11% do sócio sobre o pró-labore a mais. Só vira oportunidade se a economia **líquida** passar de R$ 1.200 por ano. Entre 28% e 30% avisa que está perto do limite.
+- **Imposto pago a mais**: soma os achados do **Auditor fiscal** ainda válidos (valor a recuperar e quanto disso é dos últimos 12 meses). Se o auditor nunca rodou ou rodou há mais de 35 dias, o robô pede a análise sozinho.
+- **Limite do Simples**: projeta a receita do ano (o que já foi faturado + a média dos meses) e avisa antes do **sublimite** (R$ 3,6 milhões: ICMS e ISS saem do DAS) e do **limite** (R$ 4,8 milhões: sai do Simples), dizendo o mês em que deve passar.
+
+Cada estudo fica como **Oportunidade**, **Alerta**, **Nada a fazer** ou **Faltam dados** — neste caso, diz exatamente o que falta (por exemplo, a configuração dos cálculos, a folha do Fator R ou a margem de lucro). Na lista:
+
+1. Os números do topo somam a **economia estimada por ano**, o **valor a recuperar**, o que está **para revisar** e os **alertas**. As abas separam **Em aberto**, **Aprovadas e apresentadas**, **Descartadas**, **Faltam dados** e **Todos os estudos**; o filtro **Estudo** mostra um tipo só. A lista vem em ordem de economia.
+2. **Rodar agora em toda a carteira** estuda na hora todas as empresas que você atende (pela fila; os resultados aparecem conforme ficam prontos).
+3. Clique na empresa para abrir o **Estudo tributário** dela: cada estudo traz o resumo, os valores, **Como chegamos nesse resultado** (a conta passo a passo), as premissas e cuidados, o que falta e links para o comparativo, a configuração e o auditor. **Rodar agora** refaz o estudo desta empresa.
+4. Revise: **Aprovar** (com uma observação opcional) ou **Descartar** (o motivo é obrigatório). Fica registrado quem revisou, quando e o valor da época. O estudo descartado não volta como novo enquanto a oportunidade continuar; se ela sumir e aparecer de novo, volta para revisão.
+5. Depois de aprovado, **PDF para o cliente** gera o estudo com a logo do escritório e a da empresa, a conta explicada e os próximos passos em linguagem simples (só sai depois da aprovação). Quando apresentar, use **Marcar como apresentado**. **Reabrir** volta o estudo para revisão.
+6. Em **Premissas do comparativo de regimes**, guarde a **margem de lucro** e o **ICMS médio** da empresa (o que as notas não informam). O robô estuda a empresa de novo na hora, e o **Comparativo de regimes** passa a usar esses valores quando os campos ficam em branco.
+
+O sino da equipe avisa só quando aparece **oportunidade ou alerta novo** numa empresa, ou quando o valor de uma oportunidade muda bastante (20% ou mais, e pelo menos R$ 500). Os estudos são estimativas com os dados do portal: confira com o cliente antes de recomendar qualquer mudança. Ficam para uma próxima etapa: retenções, ISS e incentivos de ICMS do Tocantins e de Mato Grosso, a Reforma Tributária de 2027 no Simples e o acompanhamento das mudanças na legislação.
 
 ### SPED Fiscal × XML (antes de transmitir a EFD)
 Em cada empresa → **Auditor fiscal → SPED Fiscal × XML** (e no quadro do auditor da carteira):

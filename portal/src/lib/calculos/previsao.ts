@@ -76,6 +76,9 @@ export interface ParametrosCalculo {
   terceiros: Num;
   pro_labore: Num;
   socios_pro_labore: number;
+  /** Premissas guardadas do comparativo: margem de lucro (%) e ICMS médio fora do Simples (%). */
+  margem_lucro?: Num;
+  aliquota_icms_media?: Num;
   updated_at?: string;
 }
 
@@ -490,6 +493,30 @@ export function receitaBruta12Meses(dados: DadosPrevisao, competencia: string) {
   };
   const r = receita12Meses(ctx);
   return { rbt12: centavos(r.rbt12), mesesSemDados: r.semDados, observacao: r.observacao };
+}
+
+/**
+ * Receita e folha dos 12 meses anteriores (Fator R) pelo mesmo critério da
+ * previsão: folha informada no mês, ou a dos colaboradores (com encargos) mais
+ * o pró-labore. Usada pelo robô de planejamento tributário.
+ */
+export function fatorR12Meses(dados: DadosPrevisao, competencia: string) {
+  const comp = `${competencia.slice(0, 7)}-01`;
+  const porMes = new Map(dados.meses.map((m) => [`${String(m.competencia).slice(0, 7)}-01`, m]));
+  const p = (dados.parametros ?? { inicio_atividade: null, pro_labore: null }) as ParametrosCalculo;
+  const ctx: Ctx = {
+    dados,
+    p,
+    comp,
+    mes: (c) => porMes.get(c),
+    receita: receitaDoMes(porMes.get(comp)),
+    linhas: [],
+    avisos: [],
+    memoria: [],
+    fontes: [],
+  };
+  const r = receita12Meses(ctx);
+  return { rbt12: centavos(r.rbt12), folha12: centavos(r.folha12), folhaEstimada: r.folhaEstimada, mesesSemDados: r.semDados };
 }
 
 /**

@@ -33,6 +33,7 @@ import { semearFrota } from "./demo-frota";
 import { semearTransportadoraCompleta } from "./demo-transportadora";
 import { semearHotel } from "./demo-hotel";
 import { semearVeterinaria } from "./demo-veterinaria";
+import { semearEstudos } from "./demo-estudos";
 import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
@@ -320,6 +321,9 @@ async function main() {
     })
   ) {
     console.log("  Clínica veterinária fictícia: tutores, animais, prontuário, vacinas, receitas, atestados, agenda do dia, contas e lembretes");
+  }
+  if (await semearEstudos(admin)) {
+    console.log("  Robô tributário: configuração e receita fictícias da clínica (o robô encontra a oportunidade do Fator R ao rodar)");
   }
   if (await semearCteGraos(admin)) {
     console.log("  CT-e da comercial de grãos: configuração e operações do frete (emissão desligada; formulário em modo de conferência)");

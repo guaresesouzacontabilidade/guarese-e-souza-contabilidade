@@ -44,6 +44,7 @@ import {
   PawPrint,
   Stethoscope,
   Syringe,
+  Lightbulb,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -137,6 +138,7 @@ export function gruposEscritorio(admin: boolean): GrupoMenu[] {
       itens: [
         { rotulo: "Apuração do ICMS", href: "/escritorio/icms", icone: Landmark },
         { rotulo: "Auditor fiscal", href: "/escritorio/auditor-fiscal", icone: ScanSearch },
+        { rotulo: "Planejamento tributário", href: "/escritorio/oportunidades", icone: Lightbulb },
         { rotulo: "Maquininhas", href: "/escritorio/maquininhas", icone: CreditCard },
       ],
     },
