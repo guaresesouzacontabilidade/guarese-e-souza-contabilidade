@@ -45,6 +45,10 @@ describe("mapa da carteira: situação de cada etapa", () => {
     expect(status(dados({ notas: { docs: 5, sem_xml: 3, auto: "ativa", erro: null } }))[1]).toBe("andamento:3 sem XML");
     expect(status(dados({ notas: { docs: 5, sem_xml: 0, auto: "certificado_vencido", erro: null } }))[1]).toBe("atraso:Certificado vencido");
     expect(status(dados({ notas: { docs: 0, sem_xml: 0, auto: "sem", erro: null } }))[1]).toBe("afazer:Sem notas");
+    const nfse = calcularEtapas(dados({ notas: { docs: 3, sem_xml: 0, auto: "erro", erro: "Ambiente Nacional da NFS-e recusou a consulta (HTTP 400)." } }), ctx)[1];
+    expect(`${nfse.status}:${nfse.texto}`).toBe("atraso:NFS-e com erro");
+    expect(nfse.detalhe).toContain("nada se perde");
+    expect(status(dados({ notas: { docs: 3, sem_xml: 0, auto: "erro", erro: "A SEFAZ respondeu sem o retorno esperado (HTTP 503)." } }))[1]).toBe("atraso:Busca com erro");
     const atual = calcularEtapas(dados(), { ...ctx, competencia: "2026-11-01" });
     expect(atual[1].status).toBe("andamento");
   });

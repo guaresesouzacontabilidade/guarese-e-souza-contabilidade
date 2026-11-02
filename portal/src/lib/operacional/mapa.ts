@@ -192,6 +192,15 @@ function notas(n: DadosMapa["notas"], ctx: ContextoMapa): Parcial {
     return { status: "atraso", texto: "Certificado vencido", detalhe: "O certificado digital venceu e a busca automática de notas parou. Cadastre o certificado novo.", acao: abrir };
   }
   if (n.auto === "erro") {
+    // A busca tem duas partes: NF-e (SEFAZ) e NFS-e (Ambiente Nacional). Diz qual está falhando.
+    if (n.erro && /NFS-e/i.test(n.erro)) {
+      return {
+        status: "atraso",
+        texto: "NFS-e com erro",
+        detalhe: `A busca automática das notas de serviço (NFS-e Nacional) está falhando: ${n.erro} As notas de produto (NF-e) da SEFAZ são buscadas à parte. Quando a busca voltar, ela continua de onde parou (nada se perde).`,
+        acao: abrir,
+      };
+    }
     return { status: "atraso", texto: "Busca com erro", detalhe: `A busca automática de notas está falhando${n.erro ? `: ${n.erro}` : "."}`, acao: abrir };
   }
   if (n.sem_xml > 0) {

@@ -306,6 +306,32 @@ describe("NFS-e — Ambiente de Dados Nacional", () => {
     expect(lerRetornoNfse("", 204).situacao).toBe("nenhum");
     expect(lerRetornoNfse("", 403)).toMatchObject({ situacao: "erro", mensagem: expect.stringContaining("certificado da empresa não foi aceito") });
   });
+
+  it("\"nenhum documento\" com HTTP 400 (resposta do ADN desde 31/10/2026) não é falha", () => {
+    expect(lerRetornoNfse(JSON.stringify({ StatusProcessamento: "NENHUM_DOCUMENTO_LOCALIZADO", LoteDFe: null }), 400)).toEqual({
+      situacao: "nenhum",
+      documentos: [],
+      mensagem: null,
+    });
+    expect(lerRetornoNfse(JSON.stringify({ statusProcessamento: "NENHUM_DOCUMENTO_LOCALIZADO", erros: null }), 400).situacao).toBe("nenhum");
+    expect(lerRetornoNfse(JSON.stringify({ Erros: { Codigo: "E2220", Descricao: "Nenhum documento" } }), 400).situacao).toBe("nenhum");
+  });
+
+  it("recusa em outro formato: guarda o motivo lido ou um trecho da resposta (sem CPF/CNPJ)", () => {
+    const validacao = lerRetornoNfse(
+      JSON.stringify({ title: "One or more validation errors occurred.", status: 400, errors: { lote: ["O valor não é válido."] } }),
+      400,
+    );
+    expect(validacao).toMatchObject({ situacao: "erro", mensagem: "lote: O valor não é válido." });
+    expect(lerRetornoNfse(JSON.stringify({ title: "Bad Request", detail: "NSU inválido" }), 400).mensagem).toBe(
+      "Ambiente Nacional da NFS-e recusou a consulta (HTTP 400): Bad Request — NSU inválido",
+    );
+    const desconhecido = lerRetornoNfse(JSON.stringify({ codigoRetorno: 99, contribuinte: "11222333000181" }), 400);
+    expect(desconhecido.situacao).toBe("erro");
+    expect(desconhecido.mensagem).toContain("Resposta:");
+    expect(desconhecido.mensagem).toContain("[documento]");
+    expect(desconhecido.mensagem).not.toContain("11222333000181");
+  });
 });
 
 // -----------------------------------------------------------------------------
