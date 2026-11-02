@@ -3714,6 +3714,56 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"operacional_anotacoes": {
+                  Row: {
+                    "autor_id": string | null,"criada_em": string,"empresa_id": string,"id": string,"texto": string
+                  }
+                  Insert: {
+                    "autor_id"?: string | null,"criada_em"?: string,"empresa_id": string,"id"?: string,"texto": string
+                  }
+                  Update: {
+                    "autor_id"?: string | null,"criada_em"?: string,"empresa_id"?: string,"id"?: string,"texto"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "operacional_anotacoes_autor_id_fkey"
+      columns: ["autor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "operacional_anotacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"operacional_marcacoes": {
+                  Row: {
+                    "competencia": string | null,"empresa_id": string,"etapa": string,"id": string,"marcada_em": string,"marcada_por": string | null,"observacao": string | null,"situacao": string
+                  }
+                  Insert: {
+                    "competencia"?: string | null,"empresa_id": string,"etapa": string,"id"?: string,"marcada_em"?: string,"marcada_por"?: string | null,"observacao"?: string | null,"situacao": string
+                  }
+                  Update: {
+                    "competencia"?: string | null,"empresa_id"?: string,"etapa"?: string,"id"?: string,"marcada_em"?: string,"marcada_por"?: string | null,"observacao"?: string | null,"situacao"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "operacional_marcacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "operacional_marcacoes_marcada_por_fkey"
+      columns: ["marcada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"ordens_carregamento": {
                   Row: {
                     "carregado_em": string | null,"cancelada_em": string | null,"cancelada_por": string | null,"contrato": string | null,"created_at": string,"criado_por": string | null,"data_emissao": string,"destinatario_documento": string | null,"destinatario_id": string | null,"destinatario_nome": string,"emitente_id": string | null,"empresa_id": string,"frete_por_conta": number,"id": string,"impureza": number | null,"local_carregamento": string | null,"local_descarga": string | null,"motivo_cancelamento": string | null,"motorista_cpf": string | null,"motorista_nome": string | null,"nfe_emissao_id": string | null,"numero": number,"observacoes": string | null,"operacao_id": string | null,"peso_bruto_kg": number | null,"peso_liquido_kg": number | null,"peso_previsto_kg": number | null,"placa": string | null,"placa_uf": string | null,"placas_reboque": (string)[],"preco_unitario": number | null,"produto_descricao": string,"produto_id": string,"quantidade": number,"rntrc": string | null,"status": string,"tara_kg": number | null,"ticket_balanca": string | null,"transportador_documento": string | null,"transportador_id": string | null,"transportador_nome": string | null,"umidade": number | null,"unidade": string,"updated_at": string,"validade": string | null
@@ -5907,9 +5957,36 @@ isOneToOne: false
 "notas_reservar":
 { Args: { "p_empresa_id": string,"p_segundos"?: number }; Returns: boolean
                            },
+"operacional_anotacao_excluir":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"operacional_anotar":
+{ Args: { "p_empresa_id": string,"p_texto": string }; Returns: string
+                           },
+"operacional_desmarcar":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_etapa": string,"p_todas"?: boolean }; Returns: undefined
+                           },
 "operacional_empresas":
 { Args: Record<PropertyKey, never>; Returns: {
               "abertas": number,"aguardando_cliente": number,"atrasadas": number,"documento": string,"em_revisao": number,"empresa_id": string,"municipio": string,"nome_fantasia": string,"proximo_prazo": string,"razao_social": string,"regime": string,"responsavel": string,"uf": string,"vencendo_7d": number
+            }[]
+                           },
+"operacional_historico":
+{ Args: { "p_ate": string,"p_empresa_id": string,"p_meses"?: number }; Returns: {
+              "competencia": string,"dados": Json
+            }[]
+                           },
+"operacional_mapa":
+{ Args: { "p_competencia": string,"p_empresa_id"?: string }; Returns: {
+              "cidade": string,"dados": Json,"documento": string,"empresa_id": string,"nome_fantasia": string,"razao_social": string,"regime": string,"responsavel": string,"responsavel_id": string,"uf": string
+            }[]
+                           },
+"operacional_marcar":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_etapa": string,"p_observacao"?: string,"p_situacao": string,"p_todas"?: boolean }; Returns: string
+                           },
+"operacional_ultimas_acoes":
+{ Args: { "p_empresa_id": string,"p_limite"?: number }; Returns: {
+              "quando": string,"quem": string,"texto": string
             }[]
                            },
 "preparar_lote_xml":

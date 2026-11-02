@@ -292,9 +292,29 @@ Converse com o escritório por assunto, com anexos. Com a conversa aberta, as re
 
 ## 3. Para a equipe do escritório
 
-O menu **Escritório** mostra a carteira inteira, em grupos: **Visão geral**, **Empresas**, **Atendimento** (documentos recebidos, pendências, solicitações e mensagens), **Prazos** (obrigações, vencimentos e fechamentos), **Notas fiscais** (automáticas, de serviço, de produto e CT-e), **Fiscal** (apuração do ICMS, auditor fiscal e maquininhas), **Financeiro** (financeiro da carteira, conciliação e relatórios) e **Escritório** (equipe, configurações e auditoria). Ao escolher uma empresa no seletor, aparece a área daquela empresa (com os mesmos grupos do cliente e as ferramentas da equipe, como o cadastro em **Configurações**).
+O menu **Escritório** mostra a carteira inteira, em grupos: **Visão geral** (a visão geral e o **Mapa da carteira**), **Empresas**, **Atendimento** (documentos recebidos, pendências, solicitações e mensagens), **Prazos** (obrigações, vencimentos e fechamentos), **Notas fiscais** (automáticas, de serviço, de produto e CT-e), **Fiscal** (apuração do ICMS, auditor fiscal e maquininhas), **Financeiro** (financeiro da carteira, conciliação e relatórios) e **Escritório** (equipe, configurações e auditoria). Ao escolher uma empresa no seletor, aparece a área daquela empresa (com os mesmos grupos do cliente e as ferramentas da equipe, como o cadastro em **Configurações**).
 
 A **Visão geral da carteira** resume tudo em blocos: o medidor das **obrigações do mês** (atrasadas, da semana, esperando o cliente e concluídas), **Atenção hoje** (o que está atrasado, certificados vencendo e documentos recebidos após o fechamento), a **caixa de entrada**, a **entrega de documentos** da competência de trabalho (com as empresas mais atrasadas), o **fechamento do mês**, a **economia encontrada** pelo auditor fiscal (valor estimado), os **prazos da semana** por dia, as **tarefas da equipe** e os **clientes por cidade**. Cada bloco tem a seta que abre a tela completa.
+
+### Mapa da carteira (empresa por empresa)
+
+Em **Visão geral → Mapa da carteira**, cada empresa que você atende é uma linha e as **6 etapas do mês** são colunas: **Documentos do cliente**, **Notas da SEFAZ**, **Extrato e conciliação**, **Impostos e guias**, **Obrigações entregues** e **Fechamento**. O mês mostrado é o de trabalho (em novembro, outubro); as setas trocam o mês. Cada quadradinho tem cor, símbolo e uma palavra curta, calculados sozinhos com o que o portal já tem:
+- **Documentos**: o checklist do mês (atrasado, faltando com o cliente, para conferir ou recebido).
+- **Notas**: os XML do mês no portal, as notas que chegaram só como resumo da SEFAZ (sem XML) e a situação da busca automática (certificado vencido, busca com erro).
+- **Extrato**: os lançamentos do extrato do mês ainda sem conciliar e as contas sem extrato.
+- **Impostos** e **Obrigações**: as tarefas do módulo **Obrigações e prazos** (para o escritório, o pagamento conta como feito quando a guia foi enviada).
+- **Fechamento**: o fechamento do mês (a fazer, em andamento ou fechado).
+
+Cores: verde = concluído; azul = em andamento; cinza = a fazer; amarelo = perto do prazo (até 3 dias); vermelho = atrasado ou com erro; roxo = esperando o cliente; tracejado = não se aplica.
+- **Atenção agora** (no topo): as 4 etapas mais urgentes da carteira, com o botão **Resolver**.
+- Os **cartões** (todas, mês fechado, em dia, perto do prazo, com atraso, esperando o cliente) também filtram a lista. **Toda a carteira / Minhas empresas** mostra só as empresas em que você é o responsável; há busca, responsável, regime e ordem (mais urgentes primeiro, nome ou responsável).
+- Cada coluna mostra quantas empresas já terminaram a etapa; a mais atrasada ganha o aviso **Gargalo do mês**.
+- **Clicar num quadradinho** abre o painel do lado com o que falta, em uma frase, e o botão do que fazer agora (ex.: **Cobrar o cliente agora** — manda o lembrete das pendências no portal e pelos canais ligados —, **Abrir a conciliação**, **Abrir as tarefas de impostos**, **Abrir o fechamento**). Quando a etapa foi resolvida fora do portal, use **Marcar como concluída** (com observação); quando não vale para a empresa (ex.: sem conta bancária), use **Não se aplica**, neste mês ou em todos os meses. **Desfazer a marcação** volta ao que os dados mostram.
+- **Andamento por pessoa**: as etapas concluídas no mês por responsável.
+- **Baixar planilha**: o mapa do mês em Excel, com as cores e a explicação de cada etapa.
+- No celular, cada empresa vira um cartão com as 6 etapas.
+
+O nome da empresa abre a **ficha operacional**: o **próximo passo** em destaque, as 6 etapas com os botões, **Como foi nos últimos meses** (6 meses: no prazo, feito com atraso, atrasado, ainda não; quando uma etapa atrasa em 2 meses ou mais, aparece um aviso), os **prazos deste mês**, o que está **esperando o cliente** (com **Cobrar o cliente agora**), as **anotações da equipe** (recados internos; o cliente não vê; só quem escreveu ou o administrador apaga) e as **últimas ações** na empresa. O mapa e a ficha são só da equipe: o cliente não vê.
 
 ### Rotina do mês, passo a passo
 

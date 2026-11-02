@@ -79,6 +79,7 @@ test("cliente de uma empresa não acessa dados de outra", async ({ browser }) =>
     "/escritorio/obrigacoes/empresas",
     "/escritorio/obrigacoes/catalogo",
     "/escritorio/obrigacoes/normas",
+    "/escritorio/mapa",
   ]) {
     await p2.goto(rota);
     expect(new URL(p2.url()).pathname, `cliente não deve permanecer em ${rota}`).not.toBe(rota);
@@ -95,7 +96,7 @@ test("cliente de uma empresa não acessa dados de outra", async ({ browser }) =>
 });
 
 test("visitante sem login não acessa áreas internas nem exportações", async ({ request }) => {
-  for (const rota of ["/api/auditoria/exportar", "/api/conta/meus-dados", "/api/financeiro/exportar?formato=csv"]) {
+  for (const rota of ["/api/auditoria/exportar", "/api/conta/meus-dados", "/api/financeiro/exportar?formato=csv", "/api/escritorio/mapa/planilha?competencia=2026-10"]) {
     const r = await request.get(rota, { maxRedirects: 0 });
     expect([302, 303, 307, 401, 403], `rota ${rota}`).toContain(r.status());
   }

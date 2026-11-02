@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  LayoutGrid,
   PackageCheck,
   Building2,
   FileInput,
@@ -87,7 +88,15 @@ export interface GrupoMenu {
 /** Grupos do escritório: as ferramentas que andam juntas ficam no mesmo grupo. */
 export function gruposEscritorio(admin: boolean): GrupoMenu[] {
   const grupos: GrupoMenu[] = [
-    { id: "visao", rotulo: "Visão geral", icone: LayoutDashboard, itens: [{ rotulo: "Visão geral", href: "/escritorio", icone: LayoutDashboard, exato: true }] },
+    {
+      id: "visao",
+      rotulo: "Visão geral",
+      icone: LayoutDashboard,
+      itens: [
+        { rotulo: "Visão geral", href: "/escritorio", icone: LayoutDashboard, exato: true },
+        { rotulo: "Mapa da carteira", href: "/escritorio/mapa", icone: LayoutGrid },
+      ],
+    },
     { id: "empresas", rotulo: "Empresas", icone: Building2, itens: [{ rotulo: "Empresas", href: "/escritorio/empresas", icone: Building2 }] },
     {
       id: "atendimento",
