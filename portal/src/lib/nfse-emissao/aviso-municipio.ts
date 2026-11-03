@@ -4,7 +4,7 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { envServidor } from "@/lib/env-servidor";
 import { ErroConexao } from "@/lib/notas-automaticas/transporte";
 import { credencialDaEmpresa } from "./emitir";
-import { URLS_SEFIN, consultarConvenio } from "./sefin";
+import { URLS_CONVENIO, consultarConvenio } from "./sefin";
 import { avaliarEmissorNacional, type AvisoMunicipio, type ConsultaConvenio } from "./municipio";
 
 type ClienteSessao = Awaited<ReturnType<typeof criarClienteServidor>>;
@@ -63,7 +63,7 @@ async function consultar(empresaId: string, codigoMunicipio: string, ambiente: "
   try {
     const cred = await credencialDaEmpresa(criarClienteAdmin(), empresaId);
     if ("erro" in cred) return { tipo: "sem_certificado" };
-    const r = await consultarConvenio({ base: URLS_SEFIN[ambiente], credencial: cred.credencial }, codigoMunicipio);
+    const r = await consultarConvenio({ credencial: cred.credencial }, URLS_CONVENIO[ambiente], codigoMunicipio);
     return r === "nao_encontrado" ? { tipo: "nao_encontrado" } : { tipo: "ok", convenio: r };
   } catch (e) {
     const motivo = e instanceof ErroConexao ? e.message : "falha inesperada na consulta.";

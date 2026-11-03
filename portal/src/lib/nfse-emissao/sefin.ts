@@ -186,22 +186,58 @@ export function lerConvenio(json: unknown): ConvenioMunicipio {
   };
 }
 
-/** Convênio da cidade no Emissor Nacional; "nao_encontrado" quando o governo não conhece a cidade (HTTP 404). */
-export async function consultarConvenio(c: ConexaoSefin, codigoMunicipio: string): Promise<ConvenioMunicipio | "nao_encontrado"> {
+/**
+ * Onde perguntar o convênio: a "API de Parâmetros Municipais do ADN" (Perguntas e Respostas v1.1,
+ * assunto 19.6), em /parametrizacao/{IBGE}/convenio; o endereço do manual da Sefin
+ * (/parametros_municipais/{IBGE}/convenio) fica como segunda tentativa. Em 03/11/2026 a Sefin de
+ * produção respondeu HTTP 404 para Porto Nacional, cidade que emite pelo nacional.
+ */
+export const URLS_CONVENIO: Record<AmbienteNfse, string[]> = {
+  producao: ["https://adn.nfse.gov.br/parametrizacao", `${URLS_SEFIN.producao}/parametros_municipais`],
+  homologacao: ["https://adn.producaorestrita.nfse.gov.br/parametrizacao", `${URLS_SEFIN.homologacao}/parametros_municipais`],
+};
+
+/** Resposta que diz com todas as letras que a cidade não está no Sistema Nacional (e não só "endereço inexistente"). */
+function cidadeNaoEncontrada(corpo: string): boolean {
+  return /E0037|E0016|E0038/.test(corpo) || (/munic[ií]pio/i.test(corpo) && /(n[ãa]o\s+(encontrad|localizad|conveniad|cadastrad|existe)|inexistente)/i.test(corpo));
+}
+
+/**
+ * Convênio da cidade, tentando os endereços na ordem. "nao_encontrado" só quando o governo diz que
+ * a cidade não está no Sistema Nacional; um 404 sem esse texto (endereço inexistente) passa para o
+ * próximo endereço e, se nenhum responder, vira falha da consulta (o aviso não afirma nada).
+ */
+export async function consultarConvenio(
+  c: { credencial: Credencial; ca?: string[] },
+  bases: string[],
+  codigoMunicipio: string,
+): Promise<ConvenioMunicipio | "nao_encontrado"> {
   if (!/^[0-9]{7}$/.test(codigoMunicipio)) throw new ErroConexao("Código do município inválido.", "municipio");
-  const resp = await requisitar(`${c.base}/parametros_municipais/${codigoMunicipio}/convenio`, {
-    metodo: "GET",
-    credencial: c.credencial,
-    cabecalhos,
-    tempoLimiteMs: 10_000,
-    ca: c.ca,
-  });
-  if (resp.status === 404) return "nao_encontrado";
-  if (resp.status === 401 || resp.status === 403) {
-    throw new ErroConexao(`O Emissor Nacional recusou o certificado da empresa (HTTP ${resp.status}).`, "certificado");
+  let semDados: ConvenioMunicipio | null = null;
+  let naoEncontrado = false;
+  let falha: ErroConexao | null = null;
+  for (const base of bases) {
+    try {
+      const resp = await requisitar(`${base}/${codigoMunicipio}/convenio`, { metodo: "GET", credencial: c.credencial, cabecalhos, tempoLimiteMs: 10_000, ca: c.ca });
+      if (resp.status >= 200 && resp.status < 300) {
+        const lido = lerConvenio(json(resp.corpo));
+        if (lido.emissorNacional !== null || lido.todasHabilitadas !== null) return lido;
+        semDados ??= lido;
+      } else if (resp.status === 404) {
+        if (cidadeNaoEncontrada(resp.corpo)) naoEncontrado = true;
+        else falha ??= new ErroConexao("O Emissor Nacional não reconheceu o endereço da consulta (HTTP 404).", "servico");
+      } else if (resp.status === 401 || resp.status === 403) {
+        falha = new ErroConexao(`O Emissor Nacional recusou o certificado da empresa (HTTP ${resp.status}).`, "certificado");
+      } else {
+        falha ??= new ErroConexao(`O Emissor Nacional não respondeu à consulta (HTTP ${resp.status}).`, "servico");
+      }
+    } catch (e) {
+      falha ??= e instanceof ErroConexao ? e : new ErroConexao("Falha de conexão.", "rede");
+    }
   }
-  if (resp.status < 200 || resp.status >= 300) throw new ErroConexao(`O Emissor Nacional não respondeu à consulta (HTTP ${resp.status}).`, "servico");
-  return lerConvenio(json(resp.corpo));
+  if (naoEncontrado) return "nao_encontrado";
+  if (semDados) return semDados;
+  throw falha ?? new ErroConexao("Nenhum endereço de consulta configurado.", "url");
 }
 
 /** Registra o pedido de evento (cancelamento). */

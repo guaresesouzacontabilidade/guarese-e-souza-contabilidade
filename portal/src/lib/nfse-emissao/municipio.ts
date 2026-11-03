@@ -113,7 +113,8 @@ export function avaliarEmissorNacional(e: EntradaAvisoMunicipio): AvisoMunicipio
     );
   }
 
-  if (e.consulta.tipo === "nao_encontrado") {
+  // Com outra empresa da mesma cidade emitindo pelo portal, a cidade está no Sistema Nacional: a resposta não vale
+  if (e.consulta.tipo === "nao_encontrado" && e.outrasEmpresasEmitindo === 0) {
     return aviso(
       recusa ? "perigo" : "alerta",
       `${e.municipio ?? "A cidade"} não aparece no Emissor Nacional`,
@@ -129,7 +130,9 @@ export function avaliarEmissorNacional(e: EntradaAvisoMunicipio): AvisoMunicipio
       ? `Não foi possível consultar a prefeitura agora: ${e.consulta.motivo.charAt(0).toLowerCase()}${e.consulta.motivo.slice(1)}`
       : e.consulta.tipo === "ok"
         ? "A resposta da prefeitura veio sem os dados esperados."
-        : null;
+        : e.consulta.tipo === "nao_encontrado"
+          ? "A consulta ao governo não trouxe a configuração da cidade."
+          : null;
   if (recusa) {
     return aviso(
       "perigo",

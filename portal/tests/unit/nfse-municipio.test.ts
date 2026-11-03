@@ -108,6 +108,13 @@ describe("avaliarEmissorNacional", () => {
     expect(a.texto[0]).toMatch(/Confira se o município emissor está certo/);
   });
 
+  it("\"cidade não encontrada\" com outra empresa da cidade emitindo pelo portal não vale (o caso do hotel em 03/11)", () => {
+    const a = avaliarEmissorNacional({ ...base, consulta: { tipo: "nao_encontrado" }, recusaE0039: "2026-11-03T13:20:00Z", outrasEmpresasEmitindo: 1 })!;
+    expect(a.titulo).toBe("A prefeitura não liberou esta empresa no Emissor Nacional");
+    expect(a.texto.join(" ")).not.toMatch(/não aparece/);
+    expect(a.texto.join(" ")).toMatch(/autorize empresa por empresa/);
+  });
+
   it("no ambiente de teste, avisa que a produção pode ser diferente", () => {
     const a = avaliarEmissorNacional({ ...base, ambiente: "homologacao", consulta: ok({ emissorNacional: true, todasHabilitadas: true }) })!;
     expect(a.texto.join(" ")).toMatch(/ambiente de teste do governo/);
@@ -148,7 +155,7 @@ describe("consultarConvenio", () => {
   const credencial = { chave: pCli.pem, certificados: [cCli.pem] };
   const pedidos: string[] = [];
   let servidor: https.Server;
-  let base = "";
+  let bases: string[] = [];
 
   beforeAll(async () => {
     servidor = https.createServer({ key: pSrv.pem, cert: cSrv.pem, ca: [ac.pem], requestCert: true, rejectUnauthorized: true }, (req, res) => {
@@ -159,35 +166,52 @@ describe("consultarConvenio", () => {
         res.end(JSON.stringify(corpo));
       };
       if (cn !== TITULAR) return responder(403, { mensagem: "certificado" });
-      if (req.url === "/SefinNacional/parametros_municipais/1718204/convenio") {
+      const url = req.url ?? "";
+      // ADN: só conhece Porto Nacional; outras cidades caem no "endereço inexistente" (404 sem texto)
+      if (url === "/parametrizacao/1718204/convenio") {
         return responder(200, { parametrosConvenio: { tipoConvenio: 1, aderenteEmissorNacional: 1, situacaoEmissaoPadraoContribuintesRFB: 0 } });
       }
-      if (req.url === "/SefinNacional/parametros_municipais/3550308/convenio") {
+      if (url.startsWith("/parametrizacao/")) {
+        res.writeHead(404);
+        return res.end();
+      }
+      if (url === "/SefinNacional/parametros_municipais/3550308/convenio") {
         return responder(200, { parametrosConvenio: { aderenteEmissorNacional: 0, situacaoEmissaoPadraoContribuintesRFB: 1 } });
       }
-      if (req.url === "/SefinNacional/parametros_municipais/9999999/convenio") return responder(500, { mensagem: "instabilidade" });
-      return responder(404, { erros: [{ Codigo: "E404", Descricao: "Município não encontrado" }] });
+      if (url === "/SefinNacional/parametros_municipais/1234567/convenio") {
+        return responder(404, { erros: [{ Codigo: "E0037", Descricao: "Município emissor inexistente no cadastro de convênio." }] });
+      }
+      if (url === "/SefinNacional/parametros_municipais/9999999/convenio") return responder(500, { mensagem: "instabilidade" });
+      res.writeHead(404);
+      return res.end();
     });
     await new Promise<void>((r) => servidor.listen(0, "127.0.0.1", r));
-    base = `https://localhost:${(servidor.address() as AddressInfo).port}/SefinNacional`;
+    const raiz = `https://localhost:${(servidor.address() as AddressInfo).port}`;
+    bases = [`${raiz}/parametrizacao`, `${raiz}/SefinNacional/parametros_municipais`];
   });
   afterAll(() => new Promise<void>((r) => servidor.close(() => r())));
 
-  it("pergunta o convênio com o certificado da empresa e lê a resposta", async () => {
-    expect(await consultarConvenio({ base, credencial, ca: [ac.pem] }, "1718204")).toEqual({ emissorNacional: true, todasHabilitadas: false });
-    expect(pedidos).toContain("GET /SefinNacional/parametros_municipais/1718204/convenio");
-    expect(await consultarConvenio({ base, credencial, ca: [ac.pem] }, "3550308")).toEqual({ emissorNacional: false, todasHabilitadas: true });
+  it("pergunta o convênio no ADN com o certificado da empresa e lê a resposta", async () => {
+    expect(await consultarConvenio({ credencial, ca: [ac.pem] }, bases, "1718204")).toEqual({ emissorNacional: true, todasHabilitadas: false });
+    expect(pedidos).toContain("GET /parametrizacao/1718204/convenio");
+    expect(pedidos).not.toContain("GET /SefinNacional/parametros_municipais/1718204/convenio");
   });
 
-  it("cidade desconhecida (HTTP 404) e falhas do serviço", async () => {
-    expect(await consultarConvenio({ base, credencial, ca: [ac.pem] }, "1234567")).toBe("nao_encontrado");
-    await expect(consultarConvenio({ base, credencial, ca: [ac.pem] }, "9999999")).rejects.toThrow(/HTTP 500/);
-    await expect(consultarConvenio({ base, credencial, ca: [ac.pem] }, "17182")).rejects.toThrow(/inválido/);
+  it("endereço inexistente no primeiro serviço (404 sem texto): tenta o segundo", async () => {
+    expect(await consultarConvenio({ credencial, ca: [ac.pem] }, bases, "3550308")).toEqual({ emissorNacional: false, todasHabilitadas: true });
+    expect(pedidos).toContain("GET /parametrizacao/3550308/convenio");
+  });
+
+  it("\"cidade não encontrada\" só quando o governo diz isso; 404 sem texto em todos vira falha da consulta", async () => {
+    expect(await consultarConvenio({ credencial, ca: [ac.pem] }, bases, "1234567")).toBe("nao_encontrado");
+    await expect(consultarConvenio({ credencial, ca: [ac.pem] }, bases, "5208707")).rejects.toThrow(/não reconheceu o endereço da consulta/);
+    await expect(consultarConvenio({ credencial, ca: [ac.pem] }, bases, "9999999")).rejects.toThrow(/HTTP 404|HTTP 500/);
+    await expect(consultarConvenio({ credencial, ca: [ac.pem] }, bases, "17182")).rejects.toThrow(/inválido/);
   });
 
   it("certificado de outra empresa recusado (HTTP 403)", async () => {
     const pOutro = par();
     const outro = { chave: pOutro.pem, certificados: [cert(pOutro, "OUTRA:99888777000166", { p: pAc, c: ac.c }).pem] };
-    await expect(consultarConvenio({ base, credencial: outro, ca: [ac.pem] }, "1718204")).rejects.toThrow(/recusou o certificado/);
+    await expect(consultarConvenio({ credencial: outro, ca: [ac.pem] }, bases, "1718204")).rejects.toThrow(/recusou o certificado/);
   });
 });
