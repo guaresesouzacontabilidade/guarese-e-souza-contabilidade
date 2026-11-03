@@ -141,6 +141,69 @@ export async function nfsePorChave(c: ConexaoSefin, chave: string): Promise<stri
   return descompactar(xmlB64);
 }
 
+/**
+ * Convênio do município no Sistema Nacional NFS-e (GET /parametros_municipais/{código IBGE}/convenio),
+ * conforme o "Perguntas e Respostas NFS-e" v1.1 (set/2026), assunto 19.6:
+ *  - aderenteEmissorNacional: 1 = a prefeitura usa os Emissores Públicos Nacionais (API, web e app);
+ *    0 = as notas saem pelo sistema próprio da prefeitura (só MEI e o item 99 emitem pelo nacional);
+ *  - situacaoEmissaoPadraoContribuintesRFB: 1 = toda empresa com endereço na cidade (base da Receita)
+ *    já pode emitir; 0 = a prefeitura autoriza empresa por empresa no Cadastro Nacional (CNC).
+ * Cada campo vem null quando a resposta não o traz (formato inesperado).
+ */
+export interface ConvenioMunicipio {
+  emissorNacional: boolean | null;
+  todasHabilitadas: boolean | null;
+}
+
+/** Valor 0/1 (número, texto ou verdadeiro/falso) como sim/não; null quando não dá para entender. */
+function simNao(v: unknown): boolean | null {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v === 1 ? true : v === 0 ? false : null;
+  if (typeof v === "string") {
+    const t = v.trim().toLowerCase();
+    if (["1", "true", "s", "sim"].includes(t)) return true;
+    if (["0", "false", "n", "nao", "não"].includes(t)) return false;
+  }
+  return null;
+}
+
+/** Procura o campo em qualquer nível da resposta (o convênio pode vir dentro de um grupo, ex.: "parametrosConvenio"). */
+function campoProfundo(o: unknown, nome: string, nivel = 0): unknown {
+  if (!o || typeof o !== "object" || nivel > 4) return undefined;
+  const direto = campo(o, nome);
+  if (direto !== undefined) return direto;
+  for (const v of Object.values(o as Obj)) {
+    const achado = campoProfundo(v, nome, nivel + 1);
+    if (achado !== undefined) return achado;
+  }
+  return undefined;
+}
+
+export function lerConvenio(json: unknown): ConvenioMunicipio {
+  return {
+    emissorNacional: simNao(campoProfundo(json, "aderenteEmissorNacional")),
+    todasHabilitadas: simNao(campoProfundo(json, "situacaoEmissaoPadraoContribuintesRFB")),
+  };
+}
+
+/** Convênio da cidade no Emissor Nacional; "nao_encontrado" quando o governo não conhece a cidade (HTTP 404). */
+export async function consultarConvenio(c: ConexaoSefin, codigoMunicipio: string): Promise<ConvenioMunicipio | "nao_encontrado"> {
+  if (!/^[0-9]{7}$/.test(codigoMunicipio)) throw new ErroConexao("Código do município inválido.", "municipio");
+  const resp = await requisitar(`${c.base}/parametros_municipais/${codigoMunicipio}/convenio`, {
+    metodo: "GET",
+    credencial: c.credencial,
+    cabecalhos,
+    tempoLimiteMs: 10_000,
+    ca: c.ca,
+  });
+  if (resp.status === 404) return "nao_encontrado";
+  if (resp.status === 401 || resp.status === 403) {
+    throw new ErroConexao(`O Emissor Nacional recusou o certificado da empresa (HTTP ${resp.status}).`, "certificado");
+  }
+  if (resp.status < 200 || resp.status >= 300) throw new ErroConexao(`O Emissor Nacional não respondeu à consulta (HTTP ${resp.status}).`, "servico");
+  return lerConvenio(json(resp.corpo));
+}
+
 /** Registra o pedido de evento (cancelamento). */
 export async function registrarEvento(c: ConexaoSefin, chave: string, pedidoAssinado: string): Promise<ResultadoEvento> {
   const resp = await requisitar(`${c.base}/nfse/${chave}/eventos`, {

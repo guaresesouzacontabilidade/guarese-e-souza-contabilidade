@@ -54,6 +54,7 @@ export const EXPLICACAO_ERRO: Record<string, string> = {
   E0008: "A data e a hora da emissão estão adiantadas em relação ao relógio do Emissor Nacional. Tente de novo em alguns minutos.",
   E0014: "Este número de nota já foi usado. O escritório precisa ajustar a numeração.",
   E0015: "A data da prestação não pode ser depois da emissão.",
+  E0039: "A prefeitura ainda não liberou esta empresa para emitir pelo Emissor Nacional (a cidade usa o sistema próprio ou autoriza empresa por empresa). Fale com o escritório.",
   E0714: "A assinatura digital não foi aceita. Fale com o escritório (certificado digital).",
   E0718: "O certificado digital não é desta empresa. Fale com o escritório.",
   E1200: "O certificado digital não foi aceito na conexão. Fale com o escritório.",
