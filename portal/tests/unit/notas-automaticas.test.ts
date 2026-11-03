@@ -317,6 +317,26 @@ describe("NFS-e — Ambiente de Dados Nacional", () => {
     expect(lerRetornoNfse(JSON.stringify({ Erros: { Codigo: "E2220", Descricao: "Nenhum documento" } }), 400).situacao).toBe("nenhum");
   });
 
+  it("\"REJEICAO\" sem motivo (resposta do ADN desde 31/10/2026) é marcada para conferência", () => {
+    const corpo = JSON.stringify({
+      TipoConsulta: "InscricaoCertificado",
+      StatusProcessamento: "REJEICAO",
+      LoteDFe: [],
+      Alertas: [],
+      Erros: [],
+      TipoAmbiente: "PRODUCAO",
+      VersaoAplicativo: "1.0.0.0",
+      DataHoraProcessamento: "2026-11-02T19:20:02.4135315-03:00",
+    });
+    expect(lerRetornoNfse(corpo, 400)).toMatchObject({ situacao: "erro", semMotivo: true, mensagem: expect.stringContaining("sem informar o motivo") });
+    // Com código de erro, continua sendo recusa com motivo (sem conferência)
+    const comMotivo = lerRetornoNfse(JSON.stringify({ StatusProcessamento: "REJEICAO", Erros: [{ Codigo: "E2245", Descricao: "Não há procuração" }] }), 400);
+    expect(comMotivo.semMotivo).toBeUndefined();
+    expect(comMotivo.mensagem).toBe("E2245: Não há procuração");
+    // CNPJ informado na consulta, só com letras e números
+    expect(urlDistribuicaoNfse(7, "producao", undefined, "11.222.333/0001-81")).toBe("https://adn.nfse.gov.br/contribuintes/DFe/7?lote=true&cnpjConsulta=11222333000181");
+  });
+
   it("recusa em outro formato: guarda o motivo lido ou um trecho da resposta (sem CPF/CNPJ)", () => {
     const validacao = lerRetornoNfse(
       JSON.stringify({ title: "One or more validation errors occurred.", status: 400, errors: { lote: ["O valor não é válido."] } }),

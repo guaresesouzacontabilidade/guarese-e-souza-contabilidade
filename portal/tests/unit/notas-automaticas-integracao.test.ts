@@ -63,6 +63,9 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
   let ac: ReturnType<typeof cert>;
   const eventosRecebidos: string[] = [];
   let consultasDist = 0;
+  /** Como o Ambiente Nacional responde: antigo (404 sem nota nova) ou "REJEICAO" sem motivo (desde 31/10/2026). */
+  let modoAdn: "antigo" | "rejeicao_sem_nota_nova" | "rejeicao_sem_cnpj" | "rejeicao_sempre" = "antigo";
+  const consultasNfse: string[] = [];
   const criados: string[] = [];
   let chaveAnterior: string | undefined;
 
@@ -142,6 +145,15 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
         }
         if (req.url?.startsWith("/nfse/DFe/")) {
           const nsu = Number(/DFe\/(\d+)/.exec(req.url)?.[1]);
+          consultasNfse.push(req.url.replace("/nfse", ""));
+          const comCnpj = req.url.includes(`cnpjConsulta=${CNPJ}`);
+          const rejeita =
+            modoAdn === "rejeicao_sempre" || (modoAdn === "rejeicao_sem_cnpj" && !comCnpj) || (modoAdn === "rejeicao_sem_nota_nova" && nsu > 1);
+          if (rejeita) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ TipoConsulta: "InscricaoCertificado", StatusProcessamento: "REJEICAO", LoteDFe: [], Alertas: [], Erros: [], TipoAmbiente: "PRODUCAO" }));
+            return;
+          }
           res.writeHead(nsu <= 1 ? 200 : 404, { "Content-Type": "application/json" });
           res.end(
             JSON.stringify(
@@ -398,6 +410,48 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
     expect(nota?.ciencia_em).toBeNull();
     const { data: execucoes } = await admin.from("notas_automaticas_execucoes").select("servico, resultado, resumos").eq("empresa_id", empresaId);
     expect(execucoes?.map((e) => `${e.servico}:${e.resultado}:${e.resumos}`)).toEqual(["confirmacao:novos:1"]);
+  }, 120_000);
+  it("ADN com \"REJEICAO\" sem motivo: confere com a última nota e com o CNPJ antes de dar erro, sem perder nota", async () => {
+    const { executarNotasAutomaticas } = await import("@/lib/notas-automaticas/sincronizar");
+    const urls = { distribuicao: `${base}/dist`, evento: `${base}/evento`, nfse: `${base}/nfse` };
+    const depois = new Date(Date.now() + 3 * 3_600_000).toISOString();
+    const rodar = async (modo: typeof modoAdn, id: number) => {
+      modoAdn = modo;
+      consultasNfse.length = 0;
+      await admin.from("notas_automaticas_execucoes").delete().eq("empresa_id", empresaId);
+      await admin
+        .from("notas_automaticas")
+        .update({ nfse_ativa: true, pausada: false, nfse_ult_nsu: 1, nfse_proxima: new Date().toISOString(), nfe_proxima: depois, executando_ate: null, erros_seguidos: 0, ultimo_erro: null })
+        .eq("empresa_id", empresaId);
+      const job = { id, tipo: "notas_automaticas", payload: { empresa_id: empresaId } } as never;
+      const r = (await executarNotasAutomaticas(admin as never, job, { urls, ca: [ac.pem] })) as { erros: string[] };
+      const { data: exec } = await admin.from("notas_automaticas_execucoes").select("resultado, codigo, mensagem").eq("empresa_id", empresaId).eq("servico", "nfse").single();
+      const { data: cfg } = await admin.from("notas_automaticas").select("nfse_ult_nsu, erros_seguidos").eq("empresa_id", empresaId).single();
+      return { r, exec, cfg, consultas: [...consultasNfse] };
+    };
+    try {
+      // Sem nota nova: o ADN recusa o NSU seguinte, mas devolve a última nota já recebida → nada novo, sem erro
+      const a = await rodar("rejeicao_sem_nota_nova", 6);
+      expect(a.r.erros).toEqual([]);
+      expect(a.exec).toMatchObject({ resultado: "sem_novidades", codigo: "HTTP 200 (última nota)", mensagem: null });
+      expect(a.consultas).toEqual(["/DFe/2?lote=true", "/DFe/1?lote=true"]);
+      expect(a.cfg).toMatchObject({ nfse_ult_nsu: 1, erros_seguidos: 0 });
+
+      // O ADN só aceita com o CNPJ informado: a terceira consulta resolve
+      const b = await rodar("rejeicao_sem_cnpj", 7);
+      expect(b.r.erros).toEqual([]);
+      expect(b.exec).toMatchObject({ resultado: "sem_novidades", codigo: "HTTP 200 (com CNPJ)" });
+      expect(b.consultas).toEqual(["/DFe/2?lote=true", "/DFe/1?lote=true", `/DFe/1?lote=true&cnpjConsulta=${CNPJ}`]);
+
+      // Recusa de verdade: registra o erro com explicação e o NSU não anda
+      const c = await rodar("rejeicao_sempre", 8);
+      expect(c.r.erros.length).toBe(1);
+      expect(c.exec?.resultado).toBe("erro");
+      expect(c.exec?.mensagem).toContain("mesmo pedindo uma nota já recebida e informando o CNPJ");
+      expect(c.cfg).toMatchObject({ nfse_ult_nsu: 1, erros_seguidos: 1 });
+    } finally {
+      modoAdn = "antigo";
+    }
   }, 120_000);
 });
 

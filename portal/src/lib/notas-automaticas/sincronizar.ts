@@ -440,17 +440,50 @@ async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoSer
   let resultado: "novos" | "sem_novidades" | "limite" | "erro" = "sem_novidades";
   let mensagem: string | null = null;
   let erro: string | null = null;
+  // Depois que a consulta com o CNPJ informado funcionar, as próximas desta busca também o informam
+  let comCnpj = false;
+  const consultar = async (nsu: number, cnpj: boolean) => {
+    const resp = await requisitar(urlDistribuicaoNfse(nsu, AMBIENTE, c.urls.nfse, cnpj ? c.cnpj : undefined), {
+      metodo: "GET",
+      credencial: c.credencial,
+      ca: c.ca,
+      tempoLimiteMs: 20_000,
+      cabecalhos: { Accept: "application/json" },
+    });
+    return { status: resp.status, r: lerRetornoNfse(resp.corpo, resp.status) };
+  };
   try {
     for (let consultas = 0; consultas < MAX_CONSULTAS && Date.now() < c.prazo; consultas++) {
-      const resp = await requisitar(urlDistribuicaoNfse(ult + 1, AMBIENTE, c.urls.nfse), {
-        metodo: "GET",
-        credencial: c.credencial,
-        ca: c.ca,
-        tempoLimiteMs: 20_000,
-        cabecalhos: { Accept: "application/json" },
-      });
-      codigo = `HTTP ${resp.status}`;
-      const r = lerRetornoNfse(resp.corpo, resp.status);
+      let { status, r } = await consultar(ult + 1, comCnpj);
+      let via = "";
+      if (r.situacao === "erro" && r.semMotivo) {
+        // Desde 31/10/2026 o ADN responde "REJEICAO" sem motivo, inclusive (ao que parece) quando
+        // não há nota nova. Para separar "nada novo" de recusa de verdade, pede de novo a última nota
+        // já recebida (que existe) e, se ainda recusar, repete informando o CNPJ da empresa.
+        // Nada se perde: o NSU só avança com nota recebida.
+        const tentativas: { nsu: number; cnpj: boolean; rotulo: string }[] = [];
+        if (ult > 0) tentativas.push({ nsu: ult, cnpj: comCnpj, rotulo: "última nota" });
+        if (!comCnpj) tentativas.push({ nsu: Math.max(ult, 1), cnpj: true, rotulo: "com CNPJ" });
+        for (const t of tentativas) {
+          const conferida = await consultar(t.nsu, t.cnpj);
+          if (conferida.r.situacao === "erro" && conferida.r.semMotivo) continue;
+          ({ status, r } = conferida);
+          via = ` (${t.rotulo})`;
+          if (t.cnpj) comCnpj = true;
+          break;
+        }
+        if (r.situacao === "erro" && r.semMotivo) {
+          const conferencias = tentativas.map((t) => (t.cnpj && t.rotulo === "com CNPJ" ? "informando o CNPJ da empresa" : "pedindo uma nota já recebida"));
+          r = {
+            ...r,
+            mensagem:
+              "Ambiente Nacional da NFS-e recusou a consulta sem informar o motivo (REJEICAO sem código)" +
+              (conferencias.length ? `, mesmo ${conferencias.join(" e ")}` : "") +
+              ". Nada se perde: a busca continua do mesmo ponto quando o serviço aceitar.",
+          };
+        }
+      }
+      codigo = `HTTP ${status}${via}`;
       if (r.situacao === "erro") {
         resultado = "erro";
         erro = r.mensagem;
@@ -458,7 +491,10 @@ async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoSer
         break;
       }
       if (r.situacao === "nenhum") break;
-      for (const d of r.documentos) {
+      const novosNoLote = r.documentos.filter((d) => d.nsu > ult);
+      // Só voltou a nota já recebida (consulta de conferência): nada novo
+      if (!novosNoLote.length) break;
+      for (const d of novosNoLote) {
         if (d.nsu <= ult) continue;
         const x = await processarDocumentoNfse(c, d);
         documentos += x.novos;
