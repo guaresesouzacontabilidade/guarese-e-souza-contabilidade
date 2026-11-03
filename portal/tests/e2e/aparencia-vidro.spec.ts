@@ -1,10 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 
 /**
- * Aparência "Vidro líquido": escolhida no menu de aparência, vale para o
- * portal inteiro (fica guardada no aparelho), põe a paisagem no fundo e deixa
- * os painéis translúcidos; a paisagem abre sem login (usada também na tela de
- * entrada).
+ * Aparência "Vidro líquido": é a padrão (quem nunca escolheu entra nela, já
+ * na tela de entrada), vale para o portal inteiro, põe a paisagem no fundo e
+ * deixa os painéis translúcidos; outra aparência escolhida no menu fica
+ * guardada no aparelho; a paisagem abre sem login.
  */
 const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
 const DOMINIO = "demo.guareses.test";
@@ -24,15 +24,23 @@ async function entrar(page: Page, email: string) {
   }
 }
 
-test("vidro líquido: escolher no menu, fundo de paisagem, painéis translúcidos e escolha guardada", async ({ page, request }) => {
+test("vidro líquido: padrão, fundo de paisagem, painéis translúcidos e escolha guardada", async ({ page, request }) => {
   test.setTimeout(120_000);
   // A paisagem é um arquivo público (também aparece antes do login)
   const fundo = await request.get("/marca/fundo-vidro.svg");
   expect(fundo.status()).toBe(200);
   expect(fundo.headers()["content-type"]).toContain("image/svg+xml");
 
+  // Padrão: quem nunca escolheu uma aparência já entra no vidro líquido (inclusive na tela de entrada)
+  await page.goto("/login");
+  await expect(page.locator("html")).toHaveClass(/\bvidro\b/);
   await entrar(page, `contador@${DOMINIO}`);
   await page.goto("/escritorio");
+  await expect(page.locator("html")).toHaveClass(/\bvidro\b/);
+  // Escolher outra e voltar pelo menu
+  await page.getByRole("button", { name: /Aparência do portal/ }).click();
+  await page.getByRole("menuitem", { name: "Bronze" }).click();
+  await expect(page.locator("html")).toHaveClass(/\bbronze\b/);
   await page.getByRole("button", { name: /Aparência do portal/ }).click();
   await page.getByRole("menuitem", { name: "Vidro líquido" }).click();
   await expect(page.locator("html")).toHaveClass(/\bvidro\b/);
@@ -56,9 +64,11 @@ test("vidro líquido: escolher no menu, fundo de paisagem, painéis translúcido
   await page.goto("/escritorio/mapa");
   await expect(page.locator("html")).toHaveClass(/\bvidro\b/);
 
-  // Volta para a aparência clara
+  // Quem escolhe a aparência clara fica com ela, sem a paisagem
   await page.getByRole("button", { name: /Aparência do portal/ }).click();
   await page.getByRole("menuitem", { name: "Clara (Luz)" }).click();
   await expect(page.locator("html")).not.toHaveClass(/\bvidro\b/);
   expect(await page.evaluate(() => getComputedStyle(document.body, "::before").backgroundImage)).toBe("none");
+  await page.reload();
+  await expect(page.locator("html")).toHaveClass(/\blight\b/);
 });
