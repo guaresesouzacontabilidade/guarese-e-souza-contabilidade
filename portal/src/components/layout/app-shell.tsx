@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronsUpDown,
   Gem,
+  GlassWater,
   LogOut,
   Menu as IconeMenu,
   Moon,
@@ -104,7 +105,7 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
   return (
     <div className="min-h-dvh lg:pl-72">
       {/* Menu lateral fixo (computador) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-sidebar-borda bg-sidebar text-sidebar-foreground lg:flex nao-imprimir">
+      <aside className="casca-menu fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-sidebar-borda bg-sidebar text-sidebar-foreground lg:flex nao-imprimir">
         {conteudoMenu}
       </aside>
       {/* Menu em gaveta (tablet e celular) */}
@@ -112,7 +113,7 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
         <div className="flex h-full flex-col">{conteudoMenu}</div>
       </Gaveta>
 
-      <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-border bg-background/70 px-3 backdrop-blur-xl sm:px-5 nao-imprimir">
+      <header className="casca-topo sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-border bg-background/70 px-3 backdrop-blur-xl sm:px-5 nao-imprimir">
         <Button variante="fantasma" tamanho="icone" className="lg:hidden" aria-label="Abrir menu" onClick={() => setMenuAberto(true)}>
           <IconeMenu className="size-5" />
         </Button>
@@ -556,13 +557,15 @@ function AlternarTema() {
   return (
     <Menu>
       <MenuGatilho asChild>
-        <Button variante="fantasma" tamanho="icone" aria-label="Aparência do portal (clara, escura ou bronze)">
+        <Button variante="fantasma" tamanho="icone" aria-label="Aparência do portal (clara, escura, bronze ou vidro líquido)">
           {montado && theme === "dark" ? (
             <Moon className="size-5" />
           ) : montado && theme === "light" ? (
             <Sun className="size-5" />
           ) : montado && theme === "bronze" ? (
             <Gem className="size-5" />
+          ) : montado && theme === "vidro" ? (
+            <GlassWater className="size-5" />
           ) : (
             <Monitor className="size-5" />
           )}
@@ -578,6 +581,9 @@ function AlternarTema() {
         </MenuItem>
         <MenuItem onSelect={() => setTheme("bronze")}>
           <Gem /> Bronze
+        </MenuItem>
+        <MenuItem onSelect={() => setTheme("vidro")}>
+          <GlassWater /> Vidro líquido
         </MenuItem>
         <MenuItem onSelect={() => setTheme("system")}>
           <Monitor /> Igual ao sistema
@@ -653,7 +659,7 @@ function NavegacaoInferior({ empresa, caminho, abrirMenu }: { empresa: EmpresaMe
   if (abas.length < 2) return null;
   const ativo = grupoAtivo(caminho, grupos);
   return (
-    <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/80 backdrop-blur-xl lg:hidden nao-imprimir">
+    <nav aria-label="Atalhos" className="casca-rodape fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/80 backdrop-blur-xl lg:hidden nao-imprimir">
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {abas.map((g) => {
           const atual = ativo?.id === g.id;

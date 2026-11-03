@@ -2,17 +2,18 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/space-grotesk";
 
-/* Temas escuros controlados pela classe .dark ou .bronze (next-themes) */
-@custom-variant dark (&:where(.dark, .dark *, .bronze, .bronze *));
+/* Temas escuros controlados pela classe .dark, .bronze ou .vidro (next-themes) */
+@custom-variant dark (&:where(.dark, .dark *, .bronze, .bronze *, .vidro, .vidro *));
 
 /* =============================================================================
    Identidade visual — Portal Guarese's ON
    Três temas: "Luz" (claro) e "Aurora" (escuro), com violeta e ciano como
    cores de destaque, e "Bronze" (escuro), com as cores da marca modernizadas
-   (dourado e cobre, com verde-água). Degradê nos botões principais, no menu
+   (dourado e cobre, com verde-água), e "Vidro líquido" (escuro), com painéis
+   translúcidos sobre uma paisagem ao entardecer. Degradê nos botões principais, no menu
    ativo e nos gráficos, fundo com brilhos suaves, títulos em Space Grotesk e
    verde/âmbar/vermelho para indicadores. Contraste de texto de pelo menos
-   4,5:1 nos três temas.
+   4,5:1 nos quatro temas.
    ============================================================================= */
 :root {
   --background: #f5f7ff;
@@ -211,6 +212,83 @@
   color-scheme: dark;
 }
 
+/* -----------------------------------------------------------------------------
+   Vidro líquido: painéis translúcidos que desfocam a paisagem do fundo
+   (public/marca/fundo-vidro.svg), com borda de luz no alto, cantos mais
+   redondos, menu lateral flutuante e topo em cápsula. O vidro é escuro o
+   bastante para o texto manter contraste de 4,5:1 sobre qualquer parte do
+   fundo. Quem pede menos transparência no aparelho vê painéis sólidos.
+   ----------------------------------------------------------------------------- */
+.vidro {
+  --background: #0b0d18;
+  --fundo-app: #0b0d18;
+  --fundo-heroi:
+    radial-gradient(640px 420px at 25% 35%, rgba(124, 92, 255, 0.3), transparent 65%),
+    radial-gradient(560px 360px at 90% 90%, rgba(242, 178, 122, 0.22), transparent 60%), #0e0f1f;
+  --foreground: #f3f5fb;
+  --card: rgba(20, 21, 36, 0.6);
+  --card-foreground: #f3f5fb;
+  --muted: rgba(255, 255, 255, 0.07);
+  --muted-foreground: #dde1ee;
+  --bege: rgba(255, 255, 255, 0.08);
+  --bege-forte: rgba(255, 255, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.13);
+  --input: rgba(255, 255, 255, 0.24);
+  --primary: #c4b5fd;
+  --primary-hover: #ddd6fe;
+  --primary-foreground: #0b0820;
+  --secondary: rgba(255, 255, 255, 0.1);
+  --secondary-hover: rgba(255, 255, 255, 0.16);
+  --secondary-foreground: #eee9ff;
+  --ring: #c9bcff;
+  --titulo: #ffffff;
+
+  --gradiente: linear-gradient(135deg, #9b7bff 0%, #38d6f0 100%);
+  --gradiente-texto: #070a12;
+  --gradiente-marca: linear-gradient(135deg, #9b7bff 0%, #38d6f0 100%);
+  --gradiente-selo: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+  --brilho: 0 10px 30px -10px rgba(139, 92, 246, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  --sombra-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 24px 48px -26px rgba(0, 0, 0, 0.6);
+
+  --sidebar: rgba(16, 17, 30, 0.55);
+  --sidebar-foreground: #e9ecf7;
+  --sidebar-muted: #b9bfd4;
+  --sidebar-ativo: rgba(255, 255, 255, 0.1);
+  --sidebar-ativo-fundo: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.1));
+  --sidebar-ativo-borda: rgba(255, 255, 255, 0.34);
+  --sidebar-ativo-texto: #ffffff;
+  --sidebar-borda: rgba(255, 255, 255, 0.12);
+
+  --sucesso: #5ee39a;
+  --sucesso-bg: rgba(34, 197, 94, 0.18);
+  --sucesso-fg: #c8f9da;
+  --alerta: #fcc54b;
+  --alerta-bg: rgba(245, 158, 11, 0.2);
+  --alerta-fg: #fde9b0;
+  --perigo: #ffa0ae;
+  --perigo-bg: rgba(244, 63, 94, 0.2);
+  --perigo-fg: #ffd3da;
+  --info: #7deaf9;
+  --info-bg: rgba(34, 211, 238, 0.16);
+  --info-fg: #c3f6fd;
+
+  --grafico-1: #c4b5fd;
+  --grafico-2: #38d6f0;
+  --grafico-3: #5ee39a;
+  --grafico-4: #ffa0ae;
+  --grafico-5: #fcc54b;
+  --grafico-6: #b9bfd4;
+
+  /* Quanto o vidro desfoca o que está atrás (menos no celular, para ficar leve) */
+  --vidro-desfoque: 22px;
+  /* Reflexo de luz no alto de cada painel */
+  --vidro-reflexo: linear-gradient(160deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.025) 34%, rgba(255, 255, 255, 0) 60%);
+  --vidro-flutuante: rgba(22, 23, 40, 0.82);
+  --radius: 1rem;
+  color-scheme: dark;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -396,6 +474,98 @@
   }
 }
 
+/* -----------------------------------------------------------------------------
+   Vidro líquido: superfícies
+   ----------------------------------------------------------------------------- */
+/* A paisagem fica parada atrás de tudo (sem "background-attachment: fixed", que falha no iPhone) */
+.vidro body {
+  background: var(--background);
+}
+.vidro body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Véu escuro por cima da paisagem: texto solto (fora dos painéis) continua legível no pôr do sol */
+  background:
+    linear-gradient(180deg, rgba(8, 9, 20, 0.36) 0%, rgba(8, 9, 20, 0.46) 40%, rgba(8, 9, 20, 0.56) 52%, rgba(8, 9, 20, 0.6) 60%, rgba(8, 9, 20, 0.6) 85%, rgba(8, 9, 20, 0.62) 100%),
+    url("/marca/fundo-vidro.svg") center / cover no-repeat,
+    #0b0d18;
+}
+/* Painéis, cartões, menus e diálogos viram vidro: desfocam o fundo e ganham o reflexo no alto */
+.vidro :is(.bg-card, .bg-sidebar, .vidro-painel) {
+  -webkit-backdrop-filter: blur(var(--vidro-desfoque)) saturate(170%);
+  backdrop-filter: blur(var(--vidro-desfoque)) saturate(170%);
+  background-image: var(--vidro-reflexo);
+}
+/* Dentro de um painel de vidro não precisa desfocar de novo (fica mais leve) */
+.vidro :is(.bg-card, .bg-sidebar, .vidro-painel) .bg-card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background-image: none;
+}
+/* Janelas por cima da tela (menus, diálogos, avisos): vidro mais encorpado, para ler sem esforço */
+.vidro :is([role="menu"], [role="dialog"], [role="alertdialog"], [role="listbox"]) {
+  background-color: var(--vidro-flutuante);
+}
+.vidro option {
+  background-color: #161827;
+  color: #f3f5fb;
+}
+/* Menu lateral flutuante e topo em cápsula */
+@media (min-width: 1024px) {
+  .vidro .casca-menu {
+    top: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    width: calc(18rem - 1.5rem);
+    overflow: hidden;
+    border: 1px solid var(--sidebar-borda);
+    border-radius: 1.75rem;
+    box-shadow: var(--sombra-card);
+  }
+}
+.vidro .casca-topo {
+  top: 0.75rem;
+  margin: 0.75rem 0.75rem 0;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background-color: var(--card);
+  background-image: var(--vidro-reflexo);
+  box-shadow: var(--sombra-card);
+  -webkit-backdrop-filter: blur(var(--vidro-desfoque)) saturate(170%);
+  backdrop-filter: blur(var(--vidro-desfoque)) saturate(170%);
+}
+.vidro .casca-rodape {
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background-color: var(--vidro-flutuante);
+  box-shadow: var(--sombra-card);
+}
+@media (max-width: 640px) {
+  .vidro {
+    --vidro-desfoque: 14px;
+  }
+}
+/* Menos transparência pedida no aparelho: painéis sólidos, sem desfoque */
+@media (prefers-reduced-transparency: reduce) {
+  .vidro {
+    --card: #171a2b;
+    --sidebar: #131524;
+    --vidro-flutuante: #171a2b;
+    --muted: #20243a;
+    --secondary: #20243a;
+  }
+  .vidro :is(.bg-card, .bg-sidebar, .vidro-painel, .casca-topo) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -416,5 +586,8 @@
   }
   body {
     background: #ffffff;
+  }
+  .vidro body::before {
+    display: none;
   }
 }

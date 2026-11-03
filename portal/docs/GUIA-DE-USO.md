@@ -26,6 +26,12 @@ No canto superior direito (iniciais do nome) → **Minha conta**:
 - **Dispositivos conectados**: onde a conta está aberta; dá para encerrar um aparelho ou todos os outros.
 - **Privacidade e seus dados (LGPD)**: baixar uma cópia dos seus dados e fazer pedidos ao escritório (correção, exclusão etc.).
 
+### Aparência do portal
+
+No topo, ao lado do sino, o botão de **Aparência** troca as cores do portal (a escolha fica guardada no aparelho): **Clara (Luz)**, **Escura (Aurora)**, **Bronze**, **Vidro líquido** ou **Igual ao sistema** (segue o modo claro/escuro do computador ou celular).
+
+No **Vidro líquido**, os painéis ficam translúcidos sobre uma paisagem ao entardecer, com o menu lateral flutuando e o topo em cápsula. Os textos foram conferidos para continuarem fáceis de ler em qualquer parte do fundo. Se o aparelho estiver configurado para **reduzir a transparência** (acessibilidade), os painéis aparecem sólidos. Na impressão, o fundo não sai.
+
 ---
 
 ## 2. Para os clientes
