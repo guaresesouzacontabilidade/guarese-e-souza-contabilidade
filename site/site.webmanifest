@@ -1,0 +1,12 @@
+{
+  "name": "ON Guarese's Contabilidade",
+  "short_name": "ON Guarese's",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#0b0d18",
+  "theme_color": "#0b0d18",
+  "icons": [
+    { "src": "/img/icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/img/icone-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

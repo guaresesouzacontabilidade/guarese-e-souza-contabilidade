@@ -37,7 +37,13 @@ export interface AnexoEmail {
   tipo: string;
 }
 
-export async function enviarEmail(para: string, assunto: string, conteudo: DadosModeloEmail, anexos: AnexoEmail[] = []): Promise<ResultadoEnvio> {
+export async function enviarEmail(
+  para: string,
+  assunto: string,
+  conteudo: DadosModeloEmail,
+  anexos: AnexoEmail[] = [],
+  opcoes: { responderPara?: string } = {},
+): Promise<ResultadoEnvio> {
   const t = obterTransporte();
   if (!t) return { enviado: false, motivo: "nao_configurado" };
   const { html, texto } = modeloEmail(conteudo);
@@ -46,6 +52,7 @@ export async function enviarEmail(para: string, assunto: string, conteudo: Dados
       from: t.remetente,
       to: para,
       subject: assunto,
+      replyTo: opcoes.responderPara,
       html,
       text: texto,
       attachments: anexos.map((a) => ({ filename: a.nome, content: a.conteudo, contentType: a.tipo })),
