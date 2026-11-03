@@ -227,3 +227,42 @@ export const CBS_IBS_2026: Fonte = {
   titulo: "CBS e IBS em 2026 (ano de teste) — Lei Complementar nº 214/2025",
   url: "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm",
 };
+
+// -----------------------------------------------------------------------------
+// Reforma tributária em 2027 (comparativo de regimes com as regras de 2027)
+// -----------------------------------------------------------------------------
+/**
+ * Parte do PIS e da Cofins na alíquota efetiva do DAS, em %, por anexo e faixa
+ * (soma das colunas Cofins e PIS da partilha dos Anexos I a V da LC 123/2006,
+ * redação da LC 155/2016). A partir de 2027 essa parte passa a ser da CBS e do
+ * IBS dentro do DAS; quem opta pelo IBS/CBS por fora deixa de pagá-la no DAS.
+ */
+export const PIS_COFINS_NO_DAS: Record<Anexo, string[]> = {
+  I: ["15.50", "15.50", "15.50", "15.50", "15.50", "34.40"],
+  II: ["14.00", "14.00", "14.00", "14.00", "14.00", "25.50"],
+  III: ["15.60", "17.10", "16.60", "16.60", "15.60", "19.50"],
+  IV: ["21.50", "25.00", "24.00", "23.00", "22.00", "25.00"],
+  V: ["17.15", "17.15", "18.15", "19.15", "17.15", "20.00"],
+};
+
+export const IBS_CBS_2027 = {
+  /** Alíquota de referência da CBS calculada pelo TCU em 28/10/2026 (11,3468%, arredondada); o Senado fixa por resolução até dezembro de 2026. */
+  cbsReferencia: "11.3",
+  /** Em 2027 e 2028 a CBS é a referência menos 0,1 ponto (LC 214/2025, art. 347). */
+  reducaoTransicao: "0.1",
+  /** IBS em 2027 e 2028: 0,05% estadual e 0,05% municipal (ADCT, art. 127; LC 214/2025, art. 344). */
+  ibsUf: "0.05",
+  ibsMun: "0.05",
+  fonteCbs: {
+    titulo: "CBS de 2027: alíquota de referência de 11,3% calculada pelo TCU em 28/10/2026; o Senado fixa a alíquota por resolução até dezembro de 2026",
+    url: "https://www12.senado.leg.br/noticias/materias/2026/10/28/reforma-tributaria-tcu-calcula-aliquota-da-cbs-em-11-3-para-2027",
+  } as Fonte,
+  fonteTransicao: {
+    titulo: "LC nº 214/2025, arts. 344 e 347, e ADCT, art. 127: em 2027 e 2028, CBS pela referência menos 0,1 ponto e IBS de 0,1%; PIS e Cofins extintos e IPI zerado (exceto Zona Franca de Manaus)",
+    url: "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm",
+  } as Fonte,
+  fonteSimples: {
+    titulo: "Simples Nacional: opção pelo IBS e pela CBS no regime regular (LC 214/2025, art. 41, § 3º; Resolução CGSN nº 186/2026) — setembro de 2026 para o 1º semestre de 2027 e março de 2027 para o 2º",
+    url: "https://www8.receita.fazenda.gov.br/simplesnacional/noticias/NoticiaCompleta.aspx?id=c739e03c-8482-473f-8e82-f38ec3b13637",
+  } as Fonte,
+};

@@ -177,3 +177,65 @@ describe("comparativo de regimes", () => {
     expect(v(c, "lucro_presumido", "patronal")).toBe("20544.00");
   });
 });
+
+describe("comparativo de regimes — regras de 2027 (reforma tributária)", () => {
+  it("serviços no Simples: o DAS fica igual; com o IBS/CBS por fora, sai a parte do PIS/Cofins e entram a CBS e o IBS", () => {
+    const d = dados("simples_nacional", meses(0, 20000));
+    const em2026 = compararRegimes(d, ATE, premissas({ aliquotaIss: new Decimal(2) }));
+    const c = compararRegimes(d, ATE, premissas({ aliquotaIss: new Decimal(2), regras: "2027" }));
+    expect(c.regras).toBe("2027");
+    expect(c.aliquotaCbs?.toString()).toBe("11.2");
+    expect(c.regimes.map((r) => r.regime)).toEqual(["simples_nacional", "simples_hibrido", "lucro_presumido", "lucro_real"]);
+    expect(regime(c, "simples_hibrido").rotulo).toBe("Simples com IBS/CBS por fora");
+    // No DAS: mesmo total de 2026 (Anexo III, 2ª faixa: 7,3% sobre R$ 20 mil = R$ 1.460 por mês)
+    expect(v(c, "simples_nacional", "das")).toBe(v(em2026, "simples_nacional", "das"));
+    expect(v(c, "simples_nacional", "das")).toBe("17520.00");
+    expect(regime(c, "simples_nacional").tributos.cbs.situacao).toBe("no_das");
+    expect(regime(c, "simples_nacional").tributos.pis.situacao).toBe("nao_se_aplica");
+    // Por fora: o DAS perde 17,10% da alíquota efetiva (PIS + Cofins da 2ª faixa) = R$ 249,66 por mês
+    expect(v(c, "simples_hibrido", "das")).toBe("14524.08");
+    // CBS de 11,2% sobre a receita sem o ISS do DAS (32% da alíquota efetiva): 19.532,80 × 11,2% por mês, sem compras
+    expect(v(c, "simples_hibrido", "cbs")).toBe("26252.08");
+    expect(v(c, "simples_hibrido", "ibs")).toBe("234.39");
+    // Prestador de serviços sem compras: pagar por fora sai bem mais caro
+    expect(c.melhor).toBe("simples_nacional");
+    // Presumido: CBS no lugar do PIS/Cofins, sobre a receita sem o ISS (19.600 × 11,2% por mês); IRPJ e CSLL iguais aos de 2026
+    expect(v(c, "lucro_presumido", "cbs")).toBe("26342.40");
+    expect(v(c, "lucro_presumido", "ibs")).toBe("235.20");
+    expect(regime(c, "lucro_presumido").tributos.pis.situacao).toBe("nao_se_aplica");
+    expect(v(c, "lucro_presumido", "irpj")).toBe(v(em2026, "lucro_presumido", "irpj"));
+    expect(c.avisos.some((a) => /Senado ainda fixa a alíquota/.test(a))).toBe(true);
+    expect(c.fontes.some((f) => /TCU/.test(f.titulo))).toBe(true);
+    // 2026 continua como antes: três regimes, PIS e Cofins
+    expect(em2026.regras).toBe("2026");
+    expect(em2026.regimes.map((r) => r.regime)).toEqual(["simples_nacional", "lucro_presumido", "lucro_real"]);
+    expect(regime(em2026, "lucro_presumido").tributos.cbs.situacao).toBe("nao_se_aplica");
+  });
+
+  it("alíquota da CBS informada e redução de 30% da atividade (profissão regulamentada)", () => {
+    const d = dados("lucro_presumido", meses(0, 20000));
+    const outra = compararRegimes(d, ATE, premissas({ aliquotaIss: new Decimal(2), regras: "2027", aliquotaCbs: new Decimal(10) }));
+    expect(v(outra, "lucro_presumido", "cbs")).toBe("23520.00");
+    expect(outra.avisos.some((a) => /CBS de 10% informada/.test(a))).toBe(true);
+    const reduzida = compararRegimes(d, ATE, premissas({ aliquotaIss: new Decimal(2), regras: "2027", reducaoIbsCbs: new Decimal(30) }));
+    // 19.600 × 11,2% × 70% por mês
+    expect(v(reduzida, "lucro_presumido", "cbs")).toBe("18439.68");
+    expect(regime(reduzida, "lucro_presumido").tributos.cbs.detalhe).toMatch(/redução de 30% da atividade/);
+  });
+
+  it("comércio no Presumido: créditos de CBS sobre as compras, base sem o ICMS e IPI zerado", () => {
+    const lista = meses(50000, 0, { compras: 30000, icms_compras: 5400 });
+    const d = dados("lucro_presumido", lista, { calcular_ipi: true }, { contribuinte_icms: true });
+    const c = compararRegimes(d, ATE, premissas({ aliquotaIcms: new Decimal(18), regras: "2027" }));
+    // (50.000 − 9.000 de ICMS) × 11,2% − (30.000 − 5.400) × 11,2% = 1.836,80 por mês
+    expect(v(c, "lucro_presumido", "cbs")).toBe("22041.60");
+    expect(v(c, "lucro_real", "cbs")).toBe("22041.60");
+    // Sem créditos
+    const semCreditos = compararRegimes(d, ATE, premissas({ aliquotaIcms: new Decimal(18), regras: "2027", creditosPisCofins: false }));
+    expect(v(semCreditos, "lucro_presumido", "cbs")).toBe("55104.00");
+    // IPI zerado a partir de 2027
+    expect(regime(c, "lucro_presumido").tributos.ipi.situacao).toBe("calculado");
+    expect(v(c, "lucro_presumido", "ipi")).toBe("0.00");
+    expect(regime(c, "lucro_presumido").tributos.ipi.detalhe).toMatch(/Zona Franca de Manaus/);
+  });
+});

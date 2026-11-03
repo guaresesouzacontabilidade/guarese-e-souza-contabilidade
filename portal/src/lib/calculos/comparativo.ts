@@ -4,7 +4,7 @@ import { somarMeses } from "@/lib/competencia";
 import { formatarCompetencia } from "@/lib/formatos";
 import { REGIMES } from "@/lib/rotulos";
 import { baseCreditoPisCofins, basesPresuncao, dasSimples, folhaDoMes, irpjSobre, proLabores, receitaDoMes, type DadosPrevisao, type ParametrosCalculo, type ReceitaMes } from "./previsao";
-import { CBS_IBS_2026, FOLHA, FONTE_SIMPLES, IRPJ_CSLL, LC224, PIS_COFINS, SIMPLES, type Fonte } from "./tabelas";
+import { CBS_IBS_2026, FOLHA, FONTE_SIMPLES, IBS_CBS_2027, IRPJ_CSLL, LC224, PIS_COFINS, PIS_COFINS_NO_DAS, SIMPLES, type Fonte } from "./tabelas";
 
 /**
  * Comparativo de regimes (planejamento tributário): quanto a empresa teria
@@ -12,15 +12,27 @@ import { CBS_IBS_2026, FOLHA, FONTE_SIMPLES, IRPJ_CSLL, LC224, PIS_COFINS, SIMPL
  * previsão (notas enviadas, receita informada, colaboradores e pró-labore).
  * O que os dados não dizem (margem de lucro, ICMS fora do Simples, ISS) vem
  * das premissas informadas pela equipe; sem elas o regime fica incompleto.
+ *
+ * Com `regras: "2027"`, os mesmos 12 meses são calculados com as regras da
+ * reforma tributária em 2027: CBS (referência menos 0,1 ponto) e IBS de 0,1%
+ * no lugar do PIS e da Cofins, com créditos sobre as compras, IPI zerado e,
+ * no Simples, a escolha entre manter a CBS e o IBS no DAS (mesmo total) ou
+ * pagá-los por fora (DAS sem a parte do PIS/Cofins + CBS e IBS com créditos).
  */
 
 export const REGIMES_COMPARADOS = ["simples_nacional", "lucro_presumido", "lucro_real"] as const;
 export type RegimeComparado = (typeof REGIMES_COMPARADOS)[number];
+/** Nas regras de 2027, o Simples também aparece com o IBS e a CBS por fora do DAS. */
+export type RegimeResultado = RegimeComparado | "simples_hibrido";
+export const ROTULO_SIMPLES_HIBRIDO = "Simples com IBS/CBS por fora";
+export type RegrasComparativo = "2026" | "2027";
 
 export const TRIBUTOS_COMPARADOS = [
   { chave: "das", rotulo: "DAS (Simples Nacional)" },
   { chave: "pis", rotulo: "PIS" },
   { chave: "cofins", rotulo: "Cofins" },
+  { chave: "cbs", rotulo: "CBS" },
+  { chave: "ibs", rotulo: "IBS" },
   { chave: "irpj", rotulo: "IRPJ" },
   { chave: "csll", rotulo: "CSLL" },
   { chave: "icms", rotulo: "ICMS" },
@@ -41,7 +53,7 @@ export interface TributoComparado {
 }
 
 export interface ResultadoRegime {
-  regime: RegimeComparado;
+  regime: RegimeResultado;
   rotulo: string;
   tributos: Record<ChaveTributo, TributoComparado>;
   total: Decimal;
@@ -63,18 +75,27 @@ export interface PremissasComparativo {
   aliquotaIcms: Decimal | null;
   /** Alíquota do ISS do município, em %. Sem ela, usa a da configuração. */
   aliquotaIss: Decimal | null;
-  /** Créditos de PIS/Cofins sobre as compras das notas de entrada (Lucro Real). */
+  /** Créditos de PIS/Cofins sobre as compras das notas de entrada (Lucro Real); nas regras de 2027, créditos de CBS e IBS (fora do DAS). */
   creditosPisCofins: boolean;
+  /** Regras usadas: as de 2026 (padrão) ou as da reforma tributária em 2027. */
+  regras?: RegrasComparativo;
+  /** 2027: alíquota da CBS, em %. Sem ela, a referência calculada pelo TCU menos 0,1 ponto. */
+  aliquotaCbs?: Decimal | null;
+  /** 2027: redução da alíquota da CBS e do IBS da atividade, em % (0, 30, 60 ou 100). */
+  reducaoIbsCbs?: Decimal | null;
 }
 
 export interface Comparativo {
+  regras: RegrasComparativo;
+  /** 2027: alíquota da CBS usada, em % (null nas regras de 2026). */
+  aliquotaCbs: Decimal | null;
   meses: string[];
   regimeAtual: string | null;
   regimeAtualRotulo: string;
   receita: { mercadorias: Decimal; servicos: Decimal; total: Decimal; porMes: Decimal[]; mesesSemDados: string[] };
   regimes: ResultadoRegime[];
   /** Regime completo e permitido de menor total. */
-  melhor: RegimeComparado | null;
+  melhor: RegimeResultado | null;
   /** Quanto o melhor regime custaria a menos que o atual no período. */
   economia: Decimal | null;
   /** Alíquota média do ICMS destacado nas notas de venda (quando há). */
@@ -206,8 +227,38 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
   // PIS/Cofins: o ICMS destacado nas vendas fica fora da base (STF, Tema 69)
   const basePisCofins = total.map((t, i) => Decimal.max(0, t.minus(icmsDebito[i])));
 
+  // Créditos sobre as compras das notas de entrada (PIS/Cofins no Lucro Real; CBS e IBS nas regras de 2027)
+  const creditoBase = meses.map((c) => {
+    const m = porMes.get(c);
+    return premissas.creditosPisCofins && m ? baseCreditoPisCofins(m) : ZERO;
+  });
+
+  // Regras de 2027 (reforma tributária): CBS e IBS no regime regular, com créditos; base sem o ICMS e o ISS (LC 214/2025, art. 12, § 2º)
+  const r2027 = premissas.regras === "2027";
+  const aliqCbs = premissas.aliquotaCbs ?? dec(IBS_CBS_2027.cbsReferencia).minus(IBS_CBS_2027.reducaoTransicao);
+  const aliqIbs = dec(IBS_CBS_2027.ibsUf).plus(IBS_CBS_2027.ibsMun);
+  const reducao = Decimal.min(CEM, Decimal.max(0, premissas.reducaoIbsCbs ?? ZERO));
+  const fatorReducao = new Decimal(1).minus(reducao.div(CEM));
+  const ibsCbsRegular = (bases: Decimal[]) => ({
+    cbs: comSaldoCredor(
+      bases.map((b) => b.times(aliqCbs).times(fatorReducao).div(CEM)),
+      creditoBase.map((b) => b.times(aliqCbs).div(CEM)),
+    ),
+    ibs: comSaldoCredor(
+      bases.map((b) => b.times(aliqIbs).times(fatorReducao).div(CEM)),
+      creditoBase.map((b) => b.times(aliqIbs).div(CEM)),
+    ),
+  });
+  const textoReducao = reducao.gt(0) ? `, com redução de ${textoPercentual(reducao)} da atividade` : "";
+  const textoCreditos2027 = premissas.creditosPisCofins ? `menos os créditos sobre ${moeda(soma(creditoBase))} de compras` : "sem créditos";
+  const textoIbs = `${textoPercentual(aliqIbs)} (0,05% estadual e 0,05% municipal)${textoReducao}, ${textoCreditos2027}`;
+  // IPI zerado a partir de 2027 (exceto produtos com industrialização incentivada na Zona Franca de Manaus)
+  const ipi2027: TributoComparado = p.calcular_ipi
+    ? tributo("calculado", ZERO, "Zerado a partir de 2027 (exceto produtos com industrialização incentivada na Zona Franca de Manaus)")
+    : tributo("nao_se_aplica");
+
   const montar = (
-    regime: RegimeComparado,
+    regime: RegimeResultado,
     t: Partial<Record<ChaveTributo, TributoComparado>>,
     mensais: Decimal[][],
     impedimento: string | null = null,
@@ -223,7 +274,7 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
     if (!diferenca.isZero()) porMesRegime[porMesRegime.length - 1] = porMesRegime[porMesRegime.length - 1].plus(diferenca);
     return {
       regime,
-      rotulo: REGIMES[regime],
+      rotulo: regime === "simples_hibrido" ? ROTULO_SIMPLES_HIBRIDO : REGIMES[regime],
       tributos,
       total: centavos(totalRegime),
       porMes: porMesRegime,
@@ -245,26 +296,56 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
   const anexoIv = p.anexo_servicos === "IV" && servTotal.gt(0);
   const patronalIv = anexoIv ? patronal("simples_iv") : meses.map(() => ZERO);
   const maiorRbt12 = Decimal.max(receitaTotal, ...simplesMes.map((s) => s.rbt12));
+  const impedimentoSimples = maiorRbt12.gt(SIMPLES.limite) ? `Receita acima do limite do Simples Nacional (${moeda(dec(SIMPLES.limite))} em 12 meses).` : null;
+  const comunsSimples = {
+    irpj: tributo("no_das"),
+    csll: tributo("no_das"),
+    icms: temIcms ? tributo("no_das") : tributo("nao_se_aplica"),
+    iss: servTotal.gt(0) ? tributo("no_das") : tributo("nao_se_aplica"),
+    ipi: p.anexo_mercadorias === "II" && mercTotal.gt(0) ? tributo("no_das") : tributo("nao_se_aplica"),
+    patronal: anexoIv
+      ? tributo("calculado", soma(patronalIv), "Anexo IV: a contribuição patronal é paga fora do DAS")
+      : temFolha
+        ? tributo("no_das")
+        : tributo("nao_se_aplica"),
+  };
   const simples = montar(
     "simples_nacional",
-    {
-      das: tributo("calculado", soma(das), "Inclui IRPJ, CSLL, PIS, Cofins, CPP, ICMS e ISS (e IPI na indústria)"),
-      pis: tributo("no_das"),
-      cofins: tributo("no_das"),
-      irpj: tributo("no_das"),
-      csll: tributo("no_das"),
-      icms: temIcms ? tributo("no_das") : tributo("nao_se_aplica"),
-      iss: servTotal.gt(0) ? tributo("no_das") : tributo("nao_se_aplica"),
-      ipi: p.anexo_mercadorias === "II" && mercTotal.gt(0) ? tributo("no_das") : tributo("nao_se_aplica"),
-      patronal: anexoIv
-        ? tributo("calculado", soma(patronalIv), "Anexo IV: a contribuição patronal é paga fora do DAS")
-        : temFolha
-          ? tributo("no_das")
-          : tributo("nao_se_aplica"),
-    },
+    r2027
+      ? {
+          das: tributo("calculado", soma(das), "Mesmo total de 2026: a CBS e o IBS ocupam no DAS a parte que era do PIS e da Cofins"),
+          cbs: tributo("no_das"),
+          ibs: tributo("no_das"),
+          ...comunsSimples,
+        }
+      : {
+          das: tributo("calculado", soma(das), "Inclui IRPJ, CSLL, PIS, Cofins, CPP, ICMS e ISS (e IPI na indústria)"),
+          pis: tributo("no_das"),
+          cofins: tributo("no_das"),
+          ...comunsSimples,
+        },
     [das, patronalIv],
-    maiorRbt12.gt(SIMPLES.limite) ? `Receita acima do limite do Simples Nacional (${moeda(dec(SIMPLES.limite))} em 12 meses).` : null,
+    impedimentoSimples,
   );
+  // 2027, IBS e CBS por fora do DAS: o DAS perde a parte do PIS/Cofins dos anexos e a empresa apura a CBS e o IBS com créditos
+  let hibrido: ResultadoRegime | null = null;
+  if (r2027) {
+    const parteIbsCbsDas = simplesMes.map((s) => soma(s.partes.map((pt) => pt.receita.times(pt.efetiva).times(dec(PIS_COFINS_NO_DAS[pt.anexo][pt.faixa - 1])).div(CEM))));
+    const dasHibrido = das.map((d, i) => Decimal.max(0, d.minus(parteIbsCbsDas[i])));
+    const baseHibrido = total.map((t, i) => Decimal.max(0, t.minus(soma(simplesMes[i].partes.map((pt) => pt.receita.times(pt.efetiva).times(pt.parcelaIcmsIss))))));
+    const h = ibsCbsRegular(baseHibrido);
+    hibrido = montar(
+      "simples_hibrido",
+      {
+        das: tributo("calculado", soma(dasHibrido), `DAS sem a parte da CBS e do IBS (a que era do PIS e da Cofins): ${moeda(soma(parteIbsCbsDas))} a menos`),
+        cbs: tributo("calculado", soma(h.cbs), `${textoPercentual(aliqCbs)} sobre ${moeda(soma(baseHibrido))} (receita sem o ICMS e o ISS do DAS)${textoReducao}, ${textoCreditos2027}`),
+        ibs: tributo("calculado", soma(h.ibs), textoIbs),
+        ...comunsSimples,
+      },
+      [dasHibrido, h.cbs, h.ibs, patronalIv],
+      impedimentoSimples,
+    );
+  }
   if (!simples.impedimento && maiorRbt12.gt(SIMPLES.sublimite)) {
     avisos.push(
       `A receita passou do sublimite de ${moeda(dec(SIMPLES.sublimite))}: no Simples, o ICMS e o ISS passam a ser pagos fora do DAS, o que não está neste comparativo.`,
@@ -284,7 +365,7 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
   // ---------------------------------------------------------------------------
   // Lucro Presumido
   // ---------------------------------------------------------------------------
-  addFonte(PIS_COFINS.fonteCumulativo);
+  if (!r2027) addFonte(PIS_COFINS.fonteCumulativo);
   addFonte(IRPJ_CSLL.fonte);
   const pisCum = basePisCofins.map((b) => b.times(PIS_COFINS.cumulativo.pis).div(CEM));
   const cofinsCum = basePisCofins.map((b) => b.times(PIS_COFINS.cumulativo.cofins).div(CEM));
@@ -321,26 +402,35 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
   if (lc224) addFonte(LC224.fonte);
   const patronalGeral = patronal("geral");
   const comuns = { icms, iss, ipi, patronal: temFolha ? tributo("calculado", soma(patronalGeral), "CPP 20%, RAT/FAP e terceiros") : tributo("nao_se_aplica") };
-  const presumido = montar(
-    "lucro_presumido",
-    {
-      pis: tributo("calculado", soma(pisCum), `${textoPercentual(PIS_COFINS.cumulativo.pis)} (cumulativo)`),
-      cofins: tributo("calculado", soma(cofinsCum), `${textoPercentual(PIS_COFINS.cumulativo.cofins)} (cumulativo)`),
-      irpj: tributo("calculado", soma(irpjPres), "Por trimestre, sobre a base presumida, com adicional de 10%"),
-      csll: tributo("calculado", soma(csllPres), "Por trimestre, sobre a base presumida"),
-      ...comuns,
-    },
-    [pisCum, cofinsCum, irpjPres, csllPres, icmsMes, issMes, ipiMes, patronalGeral],
-  );
+  // 2027: CBS e IBS no lugar do PIS e da Cofins (iguais no Presumido e no Real: os dois ficam no regime regular, com créditos)
+  const baseRegular = total.map((t, i) => Decimal.max(0, t.minus(icmsDebito[i]).minus(issMes[i])));
+  const regular = ibsCbsRegular(baseRegular);
+  const regular2027 = {
+    cbs: tributo("calculado", soma(regular.cbs), `${textoPercentual(aliqCbs)} sobre ${moeda(soma(baseRegular))} (receita sem ICMS e ISS)${textoReducao}, ${textoCreditos2027}`),
+    ibs: tributo("calculado", soma(regular.ibs), textoIbs),
+    ...comuns,
+    ipi: ipi2027,
+  };
+  const irpjPresumido = tributo("calculado", soma(irpjPres), "Por trimestre, sobre a base presumida, com adicional de 10%");
+  const csllPresumido = tributo("calculado", soma(csllPres), "Por trimestre, sobre a base presumida");
+  const presumido = r2027
+    ? montar("lucro_presumido", { ...regular2027, irpj: irpjPresumido, csll: csllPresumido }, [regular.cbs, regular.ibs, irpjPres, csllPres, icmsMes, issMes, patronalGeral])
+    : montar(
+        "lucro_presumido",
+        {
+          pis: tributo("calculado", soma(pisCum), `${textoPercentual(PIS_COFINS.cumulativo.pis)} (cumulativo)`),
+          cofins: tributo("calculado", soma(cofinsCum), `${textoPercentual(PIS_COFINS.cumulativo.cofins)} (cumulativo)`),
+          irpj: irpjPresumido,
+          csll: csllPresumido,
+          ...comuns,
+        },
+        [pisCum, cofinsCum, irpjPres, csllPres, icmsMes, issMes, ipiMes, patronalGeral],
+      );
 
   // ---------------------------------------------------------------------------
   // Lucro Real (anual, sobre o lucro estimado pela margem)
   // ---------------------------------------------------------------------------
-  addFonte(PIS_COFINS.fonteNaoCumulativo);
-  const creditoBase = meses.map((c) => {
-    const m = porMes.get(c);
-    return premissas.creditosPisCofins && m ? baseCreditoPisCofins(m) : ZERO;
-  });
+  if (!r2027) addFonte(PIS_COFINS.fonteNaoCumulativo);
   const pisNc = comSaldoCredor(
     basePisCofins.map((b) => b.times(PIS_COFINS.naoCumulativo.pis).div(CEM)),
     creditoBase.map((b) => b.times(PIS_COFINS.naoCumulativo.pis).div(CEM)),
@@ -362,19 +452,23 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
   const textoCreditos = premissas.creditosPisCofins ? `com créditos sobre ${moeda(soma(creditoBase))} de compras` : "sem créditos";
   const textoLucro = (aliquota: string) =>
     lucro && lucro.gt(0) ? `${aliquota} sobre o lucro de ${moeda(lucro)}` : "Sem lucro no período: não há imposto sobre o lucro";
-  const real = montar(
-    "lucro_real",
-    {
-      pis: tributo("calculado", soma(pisNc), `${textoPercentual(PIS_COFINS.naoCumulativo.pis)} (não cumulativo), ${textoCreditos}`),
-      cofins: tributo("calculado", soma(cofinsNc), `${textoPercentual(PIS_COFINS.naoCumulativo.cofins)} (não cumulativo), ${textoCreditos}`),
-      irpj: lucro ? tributo("calculado", soma(irpjReal), textoLucro("15% e adicional de 10%")) : tributo("falta", ZERO, "a margem de lucro"),
-      csll: lucro ? tributo("calculado", soma(csllReal), textoLucro("9%")) : tributo("falta", ZERO, "a margem de lucro"),
-      ...comuns,
-    },
-    [pisNc, cofinsNc, irpjReal, csllReal, icmsMes, issMes, ipiMes, patronalGeral],
-  );
+  const irpjLucroReal = lucro ? tributo("calculado", soma(irpjReal), textoLucro("15% e adicional de 10%")) : tributo("falta", ZERO, "a margem de lucro");
+  const csllLucroReal = lucro ? tributo("calculado", soma(csllReal), textoLucro("9%")) : tributo("falta", ZERO, "a margem de lucro");
+  const real = r2027
+    ? montar("lucro_real", { ...regular2027, irpj: irpjLucroReal, csll: csllLucroReal }, [regular.cbs, regular.ibs, irpjReal, csllReal, icmsMes, issMes, patronalGeral])
+    : montar(
+        "lucro_real",
+        {
+          pis: tributo("calculado", soma(pisNc), `${textoPercentual(PIS_COFINS.naoCumulativo.pis)} (não cumulativo), ${textoCreditos}`),
+          cofins: tributo("calculado", soma(cofinsNc), `${textoPercentual(PIS_COFINS.naoCumulativo.cofins)} (não cumulativo), ${textoCreditos}`),
+          irpj: irpjLucroReal,
+          csll: csllLucroReal,
+          ...comuns,
+        },
+        [pisNc, cofinsNc, irpjReal, csllReal, icmsMes, issMes, ipiMes, patronalGeral],
+      );
 
-  const regimes = [simples, presumido, real];
+  const regimes = hibrido ? [simples, hibrido, presumido, real] : [simples, presumido, real];
   const elegiveis = regimes.filter((r) => !r.impedimento && r.faltando.length === 0);
   const melhor = receitaTotal.gt(0) && elegiveis.length ? elegiveis.reduce((a, b) => (b.total.lt(a.total) ? b : a)).regime : null;
   // O que falta só aumenta o total: se a parte calculada já passa do melhor, o regime não tem como sair mais barato
@@ -420,12 +514,22 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
       `da CSLL de ${textoPercentual(dec(p.presuncao_csll_mercadorias))} e ${textoPercentual(dec(p.presuncao_csll_servicos))}` +
       (lc224 ? "; acréscimo da LC 224/2025 aplicado" : p.acrescimo_lc224 ? "" : "; acréscimo da LC 224/2025 desmarcado na configuração"),
   });
+  const creditosLucroReal = r2027 ? `CBS e IBS ${textoCreditos2027.replace(/^menos os /, "com ")}` : `PIS/Cofins ${textoCreditos}`;
   memoria.push({
     rotulo: "Lucro Real",
     valor: lucro
-      ? `margem de ${textoPercentual(margem!)} da receita (lucro de ${moeda(lucro)} antes do IRPJ e da CSLL); PIS/Cofins ${textoCreditos}`
-      : `falta a margem de lucro; PIS/Cofins ${textoCreditos}`,
+      ? `margem de ${textoPercentual(margem!)} da receita (lucro de ${moeda(lucro)} antes do IRPJ e da CSLL); ${creditosLucroReal}`
+      : `falta a margem de lucro; ${creditosLucroReal}`,
   });
+  if (r2027) {
+    memoria.unshift({
+      rotulo: "Regras de 2027 (reforma tributária)",
+      valor:
+        `CBS de ${textoPercentual(aliqCbs)}${premissas.aliquotaCbs ? " (informada)" : ` (referência de ${textoPercentual(dec(IBS_CBS_2027.cbsReferencia))} calculada pelo TCU, menos 0,1 ponto)`} ` +
+        `e IBS de ${textoPercentual(aliqIbs)} sobre a receita sem ICMS e ISS${textoReducao}; créditos ${premissas.creditosPisCofins ? "das compras das notas de entrada que hoje dão crédito de PIS/Cofins" : "não considerados"}; ` +
+        "PIS e Cofins extintos e IPI zerado; IRPJ, CSLL, ICMS, ISS e encargos da folha como em 2026",
+    });
+  }
   if (temIcms) {
     memoria.push({
       rotulo: "ICMS fora do Simples",
@@ -461,15 +565,43 @@ export function compararRegimes(dados: DadosPrevisao, ate: string, premissas: Pr
   if (dados.empresa.tem_pro_labore && proLaboreMensal.isZero()) {
     avisos.push("A empresa tem pró-labore, mas o valor não foi informado em Cálculos → Configuração.");
   }
+  avisos.push("FGTS e os descontos dos empregados e sócios (INSS e IRRF) são iguais em todos os regimes e não entram no comparativo.");
+  if (r2027) {
+    avisos.unshift(
+      "Regras de 2027 aplicadas aos mesmos 12 meses: mostra quanto a empresa pagaria se as regras de 2027 já valessem, com a mesma receita, as mesmas compras e a mesma folha.",
+    );
+    avisos.push(
+      premissas.aliquotaCbs
+        ? `CBS de ${textoPercentual(aliqCbs)} informada nas premissas.`
+        : `CBS de ${textoPercentual(aliqCbs)}: referência de ${textoPercentual(dec(IBS_CBS_2027.cbsReferencia))} calculada pelo TCU em 28/10/2026, menos 0,1 ponto (2027 e 2028). O Senado ainda fixa a alíquota por resolução até dezembro de 2026; se mudar, informe a nova nas premissas.`,
+      "Simples no DAS: o total de 2027 é o mesmo de 2026, porque a CBS e o IBS ocupam a parte que era do PIS e da Cofins. Com o IBS e a CBS por fora, o DAS perde essa parte e a empresa apura a CBS e o IBS com créditos; em troca, quem compra dela passa a ter crédito integral — vantagem para quem vende a outras empresas, que não aparece neste custo.",
+      "Opção do Simples pelo IBS e pela CBS por fora: a de setembro de 2026 vale para o 1º semestre de 2027 (pode ser cancelada até 30/11/2026); a próxima janela é março de 2027, para o 2º semestre.",
+      "Créditos de CBS e IBS: só os das compras das notas de entrada que hoje dão crédito de PIS/Cofins, à alíquota cheia. Não entram energia, aluguel e serviços tomados sem nota no portal, nem o crédito menor das compras de fornecedores do Simples.",
+      "No Lucro Real, o IRPJ e a CSLL usam a mesma margem de 2026: a troca do PIS e da Cofins pela CBS pode mudar o lucro.",
+      "Não entram: Imposto Seletivo (cigarros, bebidas, veículos e outros), ICMS-ST e DIFAL, combustíveis e outros regimes específicos, isenções, retenções, incentivos fiscais, nem adições, exclusões e prejuízos do Lucro Real.",
+    );
+  } else {
+    avisos.push(
+      "Não entram: ICMS-ST e DIFAL, produtos monofásicos, isenções, retenções, incentivos fiscais, créditos de PIS/Cofins sobre energia, aluguéis e depreciação, nem adições, exclusões e prejuízos do Lucro Real.",
+    );
+  }
   avisos.push(
-    "FGTS e os descontos dos empregados e sócios (INSS e IRRF) são iguais em todos os regimes e não entram no comparativo.",
-    "Não entram: ICMS-ST e DIFAL, produtos monofásicos, isenções, retenções, incentivos fiscais, créditos de PIS/Cofins sobre energia, aluguéis e depreciação, nem adições, exclusões e prejuízos do Lucro Real.",
     "O regime vale para o ano todo e só muda no começo do ano: a opção pelo Simples Nacional é feita em janeiro; a saída do Simples comunicada em janeiro vale para o mesmo ano (depois, só para o ano seguinte); o Lucro Presumido e o Real são definidos pelo primeiro pagamento do ano. Algumas atividades e situações impedem o Simples; o escritório confere antes.",
-    "Reforma tributária: a partir de 2027 o PIS e a Cofins dão lugar à CBS e o IPI é zerado para a maioria dos produtos. Este comparativo usa as regras de 2026; para o regime de 2027, considere também a opção de pagar a CBS e o IBS fora do DAS.",
   );
-  addFonte(CBS_IBS_2026);
+  if (r2027) {
+    addFonte(IBS_CBS_2027.fonteCbs);
+    addFonte(IBS_CBS_2027.fonteTransicao);
+    addFonte(IBS_CBS_2027.fonteSimples);
+  } else {
+    avisos.push(
+      "Reforma tributária: a partir de 2027 o PIS e a Cofins dão lugar à CBS e o IPI é zerado para a maioria dos produtos. Este cálculo usa as regras de 2026; o comparativo de regimes também calcula com as regras de 2027 (escolha nas premissas).",
+    );
+    addFonte(CBS_IBS_2026);
+  }
 
   return {
+    regras: r2027 ? "2027" : "2026",
+    aliquotaCbs: r2027 ? aliqCbs : null,
     meses,
     regimeAtual,
     regimeAtualRotulo: regimeAtual ? (REGIMES[regimeAtual] ?? regimeAtual) : "não informado",
