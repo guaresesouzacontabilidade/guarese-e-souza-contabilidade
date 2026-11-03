@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Alerta } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormConfiguracao, ServicosNfse, type AtividadeEmpresa, type ConfigNfse, type ServicoNfse } from "@/components/nfse/configuracao";
+import { AvisoMunicipioCarregando, AvisoMunicipioNfse } from "@/components/nfse/aviso-municipio";
 import { formatarData } from "@/lib/formatos";
 import { certificadoValido } from "@/lib/nfse-emissao/rotulos";
 import { atividadeDeComercio, cnaesDaEmpresa, indexarServicos, sugerirServicos, type ServicoNacional } from "@/lib/nfse-emissao/lista-servicos";
@@ -50,6 +52,7 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
     autorizacao_texto: cfg?.autorizacao_texto ?? null,
   };
   const certificadoOk = certificadoValido(cert?.valido_ate);
+  const nomeMunicipio = municipio ? `${municipio.nome} / ${municipio.uf}` : null;
 
   const faltamReforma = (servicos ?? []).filter((s) => s.ativo && !(s.codigo_nbs && s.cind_op && s.cclass_trib));
 
@@ -84,6 +87,19 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
           </>
         )}
       </Alerta>
+      {emp?.tipo_pessoa === "PJ" && codigo ? (
+        // A consulta ao governo vem depois, sem segurar a tela
+        <Suspense fallback={<AvisoMunicipioCarregando municipio={nomeMunicipio} />}>
+          <AvisoMunicipioNfse
+            supabase={ctx.supabase}
+            empresaId={empresaId}
+            codigoMunicipio={codigo}
+            municipio={nomeMunicipio}
+            ambiente={atual.ambiente}
+            regime={emp?.regime_tributario ?? ""}
+          />
+        </Suspense>
+      ) : null}
       {faltamReforma.length ? (
         <Alerta tom="alerta" className="mb-4" titulo="Serviços sem os dados da reforma tributária">
           O leiaute novo da nota (NT 009), que o ambiente de teste do governo já usa, exige o código NBS e a classificação do IBS/CBS em cada serviço. Edite:{" "}
@@ -97,7 +113,7 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
             <CardDescription>Comece no ambiente de teste e passe para produção depois de conferir uma nota.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FormConfiguracao empresaId={empresaId} cfg={atual} regime={emp?.regime_tributario ?? ""} municipioNome={municipio ? `${municipio.nome} / ${municipio.uf}` : null} />
+            <FormConfiguracao empresaId={empresaId} cfg={atual} regime={emp?.regime_tributario ?? ""} municipioNome={nomeMunicipio} />
           </CardContent>
         </Card>
         <Card>

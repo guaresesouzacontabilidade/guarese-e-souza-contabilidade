@@ -257,6 +257,16 @@ function compDe(data: string | null | undefined): string | null {
 // -----------------------------------------------------------------------------
 // Contexto do cálculo
 // -----------------------------------------------------------------------------
+/** Parte do DAS de um mês (vendas ou serviços): anexo, faixa e alíquota efetiva (para o comparativo de 2027). */
+export interface ParteSimples {
+  anexo: Anexo;
+  faixa: number;
+  receita: Decimal;
+  efetiva: Decimal;
+  /** Parcela do ICMS (vendas) ou do ISS (serviços) na alíquota efetiva, em fração (0,335 = 33,5%). */
+  parcelaIcmsIss: Decimal;
+}
+
 interface Ctx {
   dados: DadosPrevisao;
   p: ParametrosCalculo;
@@ -267,6 +277,8 @@ interface Ctx {
   avisos: string[];
   memoria: { rotulo: string; valor: string }[];
   fontes: Fonte[];
+  /** Preenchido só quando pedido (dasSimples): as partes do DAS do mês. */
+  partesSimples?: ParteSimples[];
 }
 
 function addFonte(ctx: Ctx, f: Fonte) {
@@ -427,6 +439,7 @@ function calcularSimples(ctx: Ctx) {
     const st = Decimal.min(receita.vendasSt, merc);
     const normal = merc.minus(st);
     ctx.memoria.push({ rotulo: `Alíquota efetiva — Anexo ${anexo} (${a.faixa}ª faixa)`, valor: pct(a.efetiva) });
+    ctx.partesSimples?.push({ anexo, faixa: a.faixa, receita: merc, efetiva: a.efetiva, parcelaIcmsIss: dec(a.dados.icms ?? 0).div(CEM) });
     if (normal.gt(0)) {
       const v = normal.times(a.efetiva);
       das = das.plus(v);
@@ -446,6 +459,7 @@ function calcularSimples(ctx: Ctx) {
     const ret = Decimal.min(receita.servicosRetido, serv);
     const normal = serv.minus(ret);
     ctx.memoria.push({ rotulo: `Alíquota efetiva — Anexo ${anexoServ} (${a.faixa}ª faixa)`, valor: pct(a.efetiva) });
+    ctx.partesSimples?.push({ anexo: anexoServ, faixa: a.faixa, receita: serv, efetiva: a.efetiva, parcelaIcmsIss: dec(a.dados.iss ?? 0).div(CEM) });
     if (normal.gt(0)) {
       const v = normal.times(a.efetiva);
       das = das.plus(v);
@@ -536,11 +550,13 @@ export function dasSimples(dados: DadosPrevisao, competencia: string) {
     avisos: [],
     memoria: [],
     fontes: [],
+    partesSimples: [],
   };
   const r12 = receita12Meses(ctx);
   const anexoServicos = calcularSimples(ctx);
   return {
     valor: ctx.linhas.find((l) => l.chave === "das")?.valor ?? new Decimal(0),
+    partes: ctx.partesSimples ?? [],
     anexoServicos,
     rbt12: centavos(r12.rbt12),
     mesesSemDados: r12.semDados,

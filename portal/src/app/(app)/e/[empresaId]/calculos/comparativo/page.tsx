@@ -13,7 +13,7 @@ import { Table, TBody, TFoot, THead, Td, Th, Tr } from "@/components/ui/table";
 import { compararRegimes, textoPercentual, TRIBUTOS_COMPARADOS, type ResultadoRegime, type TributoComparado } from "@/lib/calculos/comparativo";
 import type { DadosPrevisao } from "@/lib/calculos/previsao";
 import { competenciaDosCalculos } from "@/lib/calculos/competencias";
-import { PRIMEIRA_COMPETENCIA } from "@/lib/calculos/tabelas";
+import { IBS_CBS_2027, PRIMEIRA_COMPETENCIA } from "@/lib/calculos/tabelas";
 import { carregarDre } from "@/lib/relatorios/dados";
 import { competenciaAtual, somarMeses, ultimoDiaDoMes } from "@/lib/competencia";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
@@ -72,10 +72,17 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
   const icmsUrl = lerNumero(parametro(sp, "icms"), 0, 40);
   const aliquotaIss = lerNumero(parametro(sp, "iss"), 0, 5);
   const creditos = parametro(sp, "creditos", ["sim", "nao"]) !== "nao";
+  // Regras da reforma tributária em 2027
+  const regras = parametro(sp, "regras", ["2026", "2027"]) === "2027" ? "2027" : "2026";
+  const cbsUrl = lerNumero(parametro(sp, "cbs"), 0, 30);
+  const reducaoTexto = parametro(sp, "reducao", ["0", "30", "60", "100"]) || "0";
+  const reducao = new Decimal(reducaoTexto);
+  const cbsPadrao = new Decimal(IBS_CBS_2027.cbsReferencia).minus(IBS_CBS_2027.reducaoTransicao);
   const invalidos = [
     parametro(sp, "margem") && !margemUrl ? "margem de lucro (entre −100 e 100)" : null,
     parametro(sp, "icms") && !icmsUrl ? "ICMS (entre 0 e 40)" : null,
     parametro(sp, "iss") && !aliquotaIss ? "ISS (entre 0 e 5)" : null,
+    parametro(sp, "cbs") && !cbsUrl ? "CBS (entre 0 e 30)" : null,
   ].filter(Boolean);
 
   const cabecalho = (
@@ -129,7 +136,15 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
   const margem = parametro(sp, "margem") ? margemUrl : margemSalva;
   const aliquotaIcms = parametro(sp, "icms") ? icmsUrl : icmsSalvo;
   const usandoSalvas = (!parametro(sp, "margem") && !!margemSalva) || (!parametro(sp, "icms") && !!icmsSalvo);
-  const c = compararRegimes(dados, ate, { margemLucro: margem, aliquotaIcms, aliquotaIss, creditosPisCofins: creditos });
+  const c = compararRegimes(dados, ate, {
+    margemLucro: margem,
+    aliquotaIcms,
+    aliquotaIss,
+    creditosPisCofins: creditos,
+    regras,
+    aliquotaCbs: regras === "2027" ? cbsUrl : null,
+    reducaoIbsCbs: regras === "2027" ? reducao : null,
+  });
   const fim = c.meses[c.meses.length - 1];
 
   // Referência: alíquota interna geral do estado da empresa (Obrigações > ICMS por estado)
@@ -179,6 +194,16 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
         </CardHeader>
         <CardContent>
           <form method="get" className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
+            <Campo
+              rotulo="Regras"
+              htmlFor="cmp-regras"
+              ajuda="2027: reforma tributária (CBS e IBS no lugar do PIS e da Cofins, IPI zerado e o Simples com o IBS e a CBS por fora), com os mesmos 12 meses de dados."
+            >
+              <Select id="cmp-regras" name="regras" defaultValue={regras}>
+                <option value="2026">2026 (atuais)</option>
+                <option value="2027">2027 (reforma tributária)</option>
+              </Select>
+            </Campo>
             <Campo rotulo="Período" htmlFor="cmp-ate">
               <Select id="cmp-ate" name="ate" defaultValue={ate.slice(0, 7)}>
                 {opcoes.map((o) => (
@@ -218,7 +243,30 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
                 />
               </Campo>
             ) : null}
-            <Campo rotulo="Créditos de PIS/Cofins no Lucro Real" htmlFor="cmp-creditos" ajuda="Sobre as compras das notas de entrada.">
+            {regras === "2027" ? (
+              <>
+                <Campo
+                  rotulo="CBS em 2027 (%)"
+                  htmlFor="cmp-cbs"
+                  ajuda={`Em branco: ${textoPercentual(cbsPadrao)} (referência de ${textoPercentual(new Decimal(IBS_CBS_2027.cbsReferencia))} calculada pelo TCU em 28/10/2026, menos 0,1 ponto em 2027 e 2028). O Senado fixa a alíquota até dezembro de 2026.`}
+                >
+                  <Input id="cmp-cbs" name="cbs" inputMode="decimal" defaultValue={textoNumero(cbsUrl)} placeholder={textoNumero(cbsPadrao)} />
+                </Campo>
+                <Campo rotulo="Redução da CBS e do IBS na atividade" htmlFor="cmp-reducao" ajuda="Vale para toda a receita. Confira a classificação do IBS/CBS dos serviços e produtos da empresa.">
+                  <Select id="cmp-reducao" name="reducao" defaultValue={reducaoTexto}>
+                    <option value="0">Nenhuma (alíquota cheia)</option>
+                    <option value="30">30% (profissões regulamentadas, como contabilidade, advocacia e engenharia)</option>
+                    <option value="60">60% (saúde, educação e outros da lista da LC 214/2025)</option>
+                    <option value="100">100% (alíquota zero)</option>
+                  </Select>
+                </Campo>
+              </>
+            ) : null}
+            <Campo
+              rotulo={regras === "2027" ? "Créditos de CBS e IBS (fora do DAS)" : "Créditos de PIS/Cofins no Lucro Real"}
+              htmlFor="cmp-creditos"
+              ajuda={regras === "2027" ? "Sobre as compras das notas de entrada; valem no Presumido, no Real e no Simples com IBS/CBS por fora." : "Sobre as compras das notas de entrada."}
+            >
               <Select id="cmp-creditos" name="creditos" defaultValue={creditos ? "sim" : "nao"}>
                 <option value="sim">Sim, sobre as compras</option>
                 <option value="nao">Não considerar</option>
@@ -265,6 +313,13 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
         />
       ) : (
         <>
+          {c.regras === "2027" ? (
+            <Alerta tom="info" className="mb-4" titulo="Regras de 2027 (reforma tributária)">
+              Os mesmos 12 meses calculados como se as regras de 2027 já valessem: CBS de {textoPercentual(c.aliquotaCbs ?? cbsPadrao)} e IBS de 0,1% no lugar do PIS e da
+              Cofins, com créditos sobre as compras, e IPI zerado. No Simples, a empresa escolhe manter a CBS e o IBS no DAS ou pagá-los por fora (a próxima janela é março de
+              2027, para o 2º semestre). {cbsUrl ? "" : "A alíquota da CBS ainda pode mudar até a resolução do Senado (dezembro de 2026)."}
+            </Alerta>
+          ) : null}
           {melhor && c.economia && c.economia.gt(0) && atual ? (
             <Alerta tom="sucesso" className="mb-4" titulo={`${melhor.rotulo}: economia estimada de ${formatarMoeda(c.economia)} em 12 meses`}>
               Em relação ao regime atual ({atual.rotulo}), cerca de {formatarMoeda(c.economia.div(12).toDecimalPlaces(2))} por mês. Antes de mudar, confira as premissas e
@@ -300,7 +355,7 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
             </Alerta>
           ) : null}
 
-          <div className="mb-4 grid gap-3 md:grid-cols-3 [&>*]:min-w-0">
+          <div className={`mb-4 grid gap-3 [&>*]:min-w-0 ${c.regimes.length > 3 ? "sm:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
             {c.regimes.map((r) => (
               <Card key={r.regime} className={destaque(r)}>
                 <CardHeader className="pb-2">
@@ -389,7 +444,7 @@ export default async function ComparativoRegimes({ params, searchParams }: PageP
               </Table>
               <details className="mt-3 px-4 sm:px-6">
                 <summary className="cursor-pointer text-sm font-medium text-primary">Como cada valor foi calculado</summary>
-                <div className="mt-2 grid gap-3 md:grid-cols-3">
+                <div className={`mt-2 grid gap-3 ${c.regimes.length > 3 ? "sm:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
                   {c.regimes.map((r) => (
                     <div key={r.regime}>
                       <p className="text-sm font-medium">{r.rotulo}</p>
