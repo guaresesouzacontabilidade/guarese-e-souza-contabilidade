@@ -12,6 +12,12 @@ Posicionamento (do site antigo do escritório): médicos e clínicas, produtores
 rurais e empresas em geral. Publicado na Vercel, que roda `npm ci` e
 `npm run build` e publica a pasta `dist` (configurado no `vercel.json`).
 
+Endereço: **https://onguaresescontabilidade.com.br** (o `www` redireciona para
+ele). O domínio está no Registro.br, com duas entradas na zona DNS: tipo A
+(nome em branco) `76.76.21.21` e CNAME `www` → `cname.vercel-dns.com`. As
+entradas de e-mail do Google (MX e TXT) e a do portal (`portal`, CNAME para a
+Vercel) ficam como estão. O certificado (https) é renovado pela Vercel.
+
 ## Pastas
 
 | Pasta ou arquivo | O que tem |
