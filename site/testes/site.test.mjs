@@ -68,7 +68,8 @@ test("página inicial: seções do briefing, SEO, segurança e nada inventado à
   assert.equal(await pagina.title(), "ON Guarese's Contabilidade | Contabilidade em Porto Nacional (TO)");
   assert.ok(await pagina.locator('meta[property="og:image"]').getAttribute("content"));
   // Primeira tela: o que, para quem e o próximo passo
-  assert.match(await pagina.locator("h1").textContent(), /Contabilidade para médicos, produtores rurais e empresas de Porto Nacional/);
+  assert.equal(await pagina.locator("h1").textContent(), "Cuidamos de tudo da sua empresa.");
+  assert.match(await pagina.locator(".heroi-sub").textContent(), /empresas, médicos e produtores rurais/);
   assert.ok(await pagina.locator('.heroi a[href="#contato"]', { hasText: "Pedir uma proposta" }).isVisible());
   for (const id of ["inicio", "para-quem", "servicos", "portal", "quem-somos", "como-funciona", "duvidas", "contato"]) {
     assert.ok(await pagina.locator(`#${id}`).isVisible(), `seção ${id} visível`);

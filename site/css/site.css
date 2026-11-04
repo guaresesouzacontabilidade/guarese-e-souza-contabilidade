@@ -412,8 +412,9 @@ html.escuro .icone-lua {
   background: var(--marca);
 }
 .heroi h1 {
-  font-size: clamp(2.15rem, 4.4vw, 3.5rem);
-  max-width: 19ch;
+  font-size: clamp(2.5rem, 5.4vw, 4.4rem);
+  max-width: 14ch;
+  line-height: 1.05;
   margin-bottom: var(--e3);
 }
 .heroi-sub {
@@ -1187,7 +1188,7 @@ html.escuro .campo select option {
     background-position: center, 40% 70%, center;
   }
   .heroi h1 {
-    font-size: clamp(1.9rem, 8.2vw, 2.4rem);
+    font-size: clamp(2.3rem, 11vw, 3rem);
   }
   .heroi-botoes .botao {
     width: 100%;
