@@ -604,15 +604,63 @@ html.escuro .icone-lua {
   padding-bottom: 2.25rem;
 }
 .notebook-tela {
+  position: relative;
   padding: 2.2% 2.2% 2.6%;
   border-radius: 12px 12px 4px 4px;
   background: #211d1a;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
-.notebook-tela img {
+.notebook-tela img,
+.notebook-tela video {
+  display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
   border-radius: 4px;
+  background: #f6f5f3;
+}
+/* Botão de pausar/tocar a demonstração, no canto esquerdo da tela do notebook (o celular cobre o direito) */
+.video-controle {
+  position: absolute;
+  left: 4.4%;
+  bottom: 6.5%;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(30, 26, 23, 0.74);
+  color: #ffffff;
+  cursor: pointer;
+  opacity: 0.82;
+  transition: opacity 0.2s ease;
+}
+.video-controle:hover,
+.video-controle:focus-visible {
+  opacity: 1;
+}
+.video-controle svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.icone-pausar {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+.icone-tocar {
+  display: none;
+  fill: currentColor;
+}
+.video-controle.pausado .icone-pausar {
+  display: none;
+}
+.video-controle.pausado .icone-tocar {
+  display: block;
 }
 .notebook-base {
   height: 0.8rem;
@@ -1240,6 +1288,16 @@ html.escuro .campo select option {
   .celular {
     width: 30%;
     right: 0;
+  }
+  .video-controle {
+    left: 3.6%;
+    bottom: 5.5%;
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+  .video-controle svg {
+    width: 0.85rem;
+    height: 0.85rem;
   }
   .etapas {
     grid-template-columns: minmax(0, 1fr);

@@ -191,7 +191,15 @@
         <figure class="portal-visual" data-revelar>
           <div class="notebook">
             <div class="notebook-tela">
-              <img src="/img/portal-computador.webp" width="1440" height="900" loading="lazy" decoding="async" alt="Tela inicial do portal no computador: documentos do mês, próximo pagamento, conversas com o escritório e faturamento.">
+              <!-- Vídeo de demonstração (portal da demonstração, dados fictícios). Só baixa e toca quando aparece na tela (js/site.js). -->
+              <video class="portal-video" id="portal-video" width="1280" height="800" muted loop playsinline preload="none" poster="/img/portal-computador.webp" aria-label="Demonstração do portal: tela inicial, envio de documentos, meus documentos, agenda de pagamentos, saúde financeira e mensagens com o escritório.">
+                <source src="/video/portal-demonstracao.webm" type="video/webm">
+                <source src="/video/portal-demonstracao.mp4" type="video/mp4">
+              </video>
+              <button class="video-controle pausado" id="video-controle" type="button" aria-label="Tocar a demonstração do portal" hidden>
+                <svg class="icone-pausar" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg>
+                <svg class="icone-tocar" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+              </button>
             </div>
             <div class="notebook-base"></div>
           </div>

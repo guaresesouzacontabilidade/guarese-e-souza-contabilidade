@@ -37,7 +37,7 @@ test("build do Vite: CSS e JS versionados, arquivos fixos no lugar e o script do
     assert.ok(csp.includes(`'${hash}'`), `${pagina}: hash do script do tema na CSP`);
   }
   assert.match(fs.readFileSync(path.join(RAIZ, "index.html"), "utf8"), /<script type="module" crossorigin src="\/assets\/[^"]+\.js"><\/script>/);
-  for (const fixo of ["img/logo-horizontal.svg", "img/fundo-grafite.svg", "img/fundo-grafite-ceu.svg", "img/favicon.svg", "img/compartilhar.jpg", "fontes/inter.woff2", "site.webmanifest", "robots.txt", "sitemap.xml"]) {
+  for (const fixo of ["img/logo-horizontal.svg", "img/fundo-grafite.svg", "img/fundo-grafite-ceu.svg", "img/favicon.svg", "img/compartilhar.jpg", "video/portal-demonstracao.mp4", "video/portal-demonstracao.webm", "fontes/inter.woff2", "site.webmanifest", "robots.txt", "sitemap.xml"]) {
     assert.ok(fs.existsSync(path.join(RAIZ, fixo)), `${fixo} no build`);
   }
   assert.equal(cfg.framework, "vite");
@@ -134,6 +134,40 @@ test("topo: as serras ondulam; com pouco movimento no aparelho, a paisagem fica 
   assert.equal(await parado.pagina.evaluate(() => document.querySelector(".heroi").classList.contains("ondas-ativas")), false);
   assert.match(await parado.pagina.evaluate(() => getComputedStyle(document.querySelector(".heroi")).backgroundImage), /fundo-grafite\.svg/);
   assert.equal(await parado.pagina.evaluate(() => getComputedStyle(document.getElementById("heroi-ondas")).opacity), "0");
+  assert.deepEqual(parado.erros, []);
+  await parado.ctx.close();
+});
+
+test("portal: o vídeo de demonstração só toca na tela, pausa pelo botão e respeita pouco movimento", async () => {
+  const { ctx, pagina, erros } = await abrir();
+  await pagina.goto(base + "/", { waitUntil: "networkidle" });
+  const video = pagina.locator("#portal-video");
+  // Antes de aparecer na tela, nada é baixado
+  assert.equal(await video.evaluate((v) => v.networkState === v.NETWORK_EMPTY || v.readyState === 0), true);
+  await video.scrollIntoViewIfNeeded();
+  await pagina.waitForFunction(() => { const v = document.getElementById("portal-video"); return !v.paused && v.currentTime > 0.3; }, null, { timeout: 15000 });
+  const botao = pagina.locator("#video-controle");
+  assert.equal(await botao.getAttribute("aria-label"), "Pausar a demonstração do portal");
+  await botao.click();
+  assert.equal(await video.evaluate((v) => v.paused), true);
+  assert.equal(await botao.getAttribute("aria-label"), "Tocar a demonstração do portal");
+  // Pausado pela pessoa: continua parado ao sair e voltar à tela
+  await pagina.evaluate(() => window.scrollTo(0, 0));
+  await pagina.waitForTimeout(300);
+  await video.scrollIntoViewIfNeeded();
+  await pagina.waitForTimeout(500);
+  assert.equal(await video.evaluate((v) => v.paused), true);
+  assert.deepEqual(erros, []);
+  await ctx.close();
+
+  const parado = await abrir({ reducedMotion: "reduce" });
+  await parado.pagina.goto(base + "/", { waitUntil: "networkidle" });
+  await parado.pagina.locator("#portal-video").scrollIntoViewIfNeeded();
+  await parado.pagina.waitForTimeout(800);
+  assert.equal(await parado.pagina.locator("#portal-video").evaluate((v) => v.paused), true);
+  assert.equal(await parado.pagina.locator("#video-controle").isVisible(), true);
+  await parado.pagina.locator("#video-controle").click();
+  await parado.pagina.waitForFunction(() => !document.getElementById("portal-video").paused, null, { timeout: 15000 });
   assert.deepEqual(parado.erros, []);
   await parado.ctx.close();
 });

@@ -228,6 +228,52 @@
     }
   }
 
+  /* Portal: vídeo de demonstração no notebook. Só baixa e toca quando aparece na tela e
+     pausa quando sai; com pouco movimento ou economia de dados no aparelho fica a imagem
+     parada, e o botão deixa tocar. */
+  var video = document.getElementById("portal-video");
+  var controle = document.getElementById("video-controle");
+  if (video && controle && typeof video.play === "function") {
+    var economia = !!(navigator.connection && navigator.connection.saveData);
+    var pausadoPelaPessoa = poucoMovimento || economia;
+    var atualizarControle = function () {
+      var parado = video.paused;
+      controle.classList.toggle("pausado", parado);
+      controle.setAttribute("aria-label", parado ? "Tocar a demonstração do portal" : "Pausar a demonstração do portal");
+    };
+    var tocar = function () {
+      var p = video.play();
+      if (p && p.catch) p.catch(atualizarControle);
+    };
+    controle.hidden = false;
+    video.addEventListener("play", atualizarControle);
+    video.addEventListener("pause", atualizarControle);
+    controle.addEventListener("click", function () {
+      if (video.paused) {
+        pausadoPelaPessoa = false;
+        tocar();
+      } else {
+        pausadoPelaPessoa = true;
+        video.pause();
+      }
+    });
+    atualizarControle();
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(
+        function (entradas) {
+          if (entradas[0].isIntersecting) {
+            if (!pausadoPelaPessoa) tocar();
+          } else if (!video.paused) {
+            video.pause();
+          }
+        },
+        { threshold: 0.35 },
+      ).observe(video);
+    } else if (!pausadoPelaPessoa) {
+      tocar();
+    }
+  }
+
   /* Blocos aparecem ao rolar (em cascata dentro de cada grupo) */
   var revelar = Array.prototype.slice.call(document.querySelectorAll("[data-revelar]"));
   revelar.forEach(function (el) {

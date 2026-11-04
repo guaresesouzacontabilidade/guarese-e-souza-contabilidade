@@ -37,7 +37,7 @@ Vercel) ficam como estão. O certificado (https) é renovado pela Vercel.
 | Números (clientes, anos, empresas abertas) | `index.html`, bloco `id="numeros"` (na seção Quem somos): preencha `data-alvo` com os valores **reais**. Sem os três valores, a faixa fica escondida. |
 | Depoimentos | `index.html`, seção `id="depoimentos"`: copie o modelo comentado. Só depoimentos reais e autorizados por escrito. Sem nenhum, a seção fica escondida. |
 | Fotos e mini-bios da equipe | seção `id="quem-somos"` (hoje com as iniciais) |
-| Telas do portal | `public/img/portal-computador.webp` e `public/img/portal-celular.webp` (sempre da demonstração, com dados fictícios) |
+| Telas do portal | Vídeo no notebook: `public/video/portal-demonstracao.webm` e `.mp4` (gravados no portal da demonstração, aparência Grafite, com dados fictícios; a resposta digitada nas Mensagens não é enviada). A imagem `public/img/portal-computador.webp` é o primeiro quadro do vídeo e aparece antes de ele tocar, sem JavaScript ou com pouco movimento no aparelho. No celular do desenho fica `public/img/portal-celular.webp`. O vídeo só baixa quando a seção aparece na tela e tem botão de pausar. |
 
 ## Formulário de contato
 
