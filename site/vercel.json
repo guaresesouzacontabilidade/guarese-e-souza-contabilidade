@@ -7,7 +7,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-FNtTjtMt8yMUUYOEd7notdwJfnxuK+1dnl68gkkIb/c='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://portal.onguaresescontabilidade.com.br; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'sha256-E57E7kSu7aF0u68HuGfgpPiWaTX6QS3BCIsCBJvghGU='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://portal.onguaresescontabilidade.com.br; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
         },
         {
           "key": "X-Content-Type-Options",

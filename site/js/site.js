@@ -79,21 +79,21 @@
     });
   }
 
-  /* Tema: vidro (padrão) ou claro, guardado no aparelho */
+  /* Tema: claro (padrão, como a logo) ou escuro, guardado no aparelho */
   var botaoTema = document.getElementById("alternar-tema");
   function rotuloTema() {
     if (!botaoTema) return;
-    var claro = raiz.classList.contains("claro");
-    botaoTema.setAttribute("aria-label", claro ? "Trocar para o modo escuro (vidro)" : "Trocar para o modo claro");
+    var escuro = raiz.classList.contains("escuro");
+    botaoTema.setAttribute("aria-label", escuro ? "Trocar para o modo claro" : "Trocar para o modo escuro");
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", claro ? "#f8f3ec" : "#100c09");
+    if (meta) meta.setAttribute("content", escuro ? "#171412" : "#ffffff");
   }
   if (botaoTema) {
     rotuloTema();
     botaoTema.addEventListener("click", function () {
-      var claro = raiz.classList.toggle("claro");
+      var escuro = raiz.classList.toggle("escuro");
       try {
-        localStorage.setItem("tema", claro ? "claro" : "vidro");
+        localStorage.setItem("tema", escuro ? "escuro" : "claro");
       } catch (e) {
         /* sem armazenamento: vale só nesta visita */
       }

@@ -63,7 +63,7 @@ test("página inicial: seções do briefing, SEO, segurança e nada inventado à
   await ctx.close();
 });
 
-test("celular: menu abre e fecha; tema claro fica guardado", async () => {
+test("celular: menu abre e fecha; tema escuro fica guardado", async () => {
   const { ctx, pagina, erros } = await abrir({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await pagina.goto(base + "/", { waitUntil: "networkidle" });
   // Sem rolagem horizontal no celular
@@ -74,13 +74,15 @@ test("celular: menu abre e fecha; tema claro fica guardado", async () => {
   // O botão do portal no menu tem texto legível (cor do botão, não a dos links)
   const cores = await pagina.locator("#menu .menu-portal").evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]);
   assert.notEqual(cores[0], cores[1]);
-  assert.equal(cores[0], "rgb(26, 17, 11)"); // --botao-texto (marrom escuro) sobre o dourado
+  assert.equal(cores[0], "rgb(57, 49, 43)"); // --botao-texto (grafite da logo) sobre o botão branco
   await pagina.locator("#menu a", { hasText: "Serviços" }).click();
   assert.equal(await botao.getAttribute("aria-expanded"), "false");
+  // Padrão: versão clara (como a logo); o botão troca para a escura e a escolha fica guardada
+  assert.doesNotMatch((await pagina.locator("html").getAttribute("class")) || "", /escuro/);
   await pagina.locator("#alternar-tema").click();
-  assert.match(await pagina.locator("html").getAttribute("class"), /claro/);
+  assert.match(await pagina.locator("html").getAttribute("class"), /escuro/);
   await pagina.reload({ waitUntil: "networkidle" });
-  assert.match(await pagina.locator("html").getAttribute("class"), /claro/);
+  assert.match(await pagina.locator("html").getAttribute("class"), /escuro/);
   assert.deepEqual(erros, []);
   await ctx.close();
 });

@@ -36,31 +36,34 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Direção: editorial e sóbria, nas cores da marca (marrom, dourado e cobre; bege
-   na versão clara). A paisagem ao entardecer, em dourado, fica só no topo; o
-   resto é fundo liso, linhas finas e seções numeradas. O vidro aparece em poucos
-   lugares: o topo ao rolar, a ficha do escritório e o formulário. O degradê
-   dourado e cobre é só da logo; a seta que sobe na logo é a seta dos botões.
+   Direção: editorial e sóbria, nas cores da logo oficial: grafite (#39312b) e
+   branco. A versão clara é a padrão (como a logo, grafite sobre branco); a
+   versão escura é opcional. A paisagem em tons de grafite fica só no topo, com
+   a logo em branco; o resto é fundo liso, linhas finas e seções numeradas. O
+   vidro aparece em poucos lugares: o topo ao rolar, a ficha do escritório e o
+   formulário. A seta que sobe na logo é a seta dos botões.
    ----------------------------------------------------------------------------- */
 :root {
-  /* Cores */
-  /* Cores da marca: marrom, dourado e cobre (com bege na versão clara) */
-  --fundo: #100c09;
-  --fundo-alt: #19130e;
-  --vidro: rgba(26, 19, 14, 0.66);
-  --linha: rgba(245, 225, 200, 0.11);
-  --linha-forte: rgba(245, 225, 200, 0.24);
-  --texto: #f5ede4;
-  --texto-2: #cdbcaa;
-  --titulo: #fff6ec;
-  --destaque: #f0b979;
-  --destaque-forte: #f7cf9c;
-  --botao-fundo: #f0b979;
-  --botao-texto: #1a110b;
-  --botao-hover: #f7cf9c;
-  --erro: #ff9b8f;
-  --sucesso: #86efac;
-  --marca: linear-gradient(90deg, #f5c994 0%, #c97a3d 100%);
+  /* Cores da logo oficial: grafite #39312b sobre branco (versão padrão) */
+  --grafite: #39312b;
+  --fundo: #ffffff;
+  --fundo-alt: #f5f3f1;
+  --vidro: rgba(255, 255, 255, 0.86);
+  --linha: rgba(57, 49, 43, 0.13);
+  --linha-forte: rgba(57, 49, 43, 0.3);
+  --texto: #39312b;
+  --texto-2: #655c55;
+  --titulo: #29231f;
+  --destaque: #39312b;
+  --destaque-forte: #1e1a17;
+  --botao-fundo: #39312b;
+  --botao-texto: #ffffff;
+  --botao-hover: #29231f;
+  --erro: #b42318;
+  --sucesso: #15803d;
+  --sombra: 0 24px 48px -30px rgba(57, 49, 43, 0.32);
+  /* A logo é pintada com esta cor (sólida, como a original) */
+  --marca: linear-gradient(#39312b, #39312b);
   /* Forma e espaço */
   --raio: 14px;
   --raio-p: 10px;
@@ -75,26 +78,27 @@
   --texto-max: 62ch;
   --fonte: "Inter", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
   --fonte-titulo: "Space Grotesk", "Inter", "Segoe UI", system-ui, sans-serif;
-  color-scheme: dark;
-}
-html.claro {
-  --fundo: #f8f3ec;
-  --fundo-alt: #efe5d7;
-  --vidro: rgba(255, 252, 247, 0.84);
-  --linha: rgba(74, 44, 29, 0.14);
-  --linha-forte: rgba(74, 44, 29, 0.3);
-  --texto: #2b1d14;
-  --texto-2: #65513f;
-  --titulo: #22150c;
-  --destaque: #9a5524;
-  --destaque-forte: #7d4218;
-  --botao-fundo: #4a2c1d;
-  --botao-texto: #fbf4ea;
-  --botao-hover: #5f3a26;
-  --marca: linear-gradient(90deg, #b87333 0%, #5a3420 100%);
-  --erro: #be123c;
-  --sucesso: #15803d;
   color-scheme: light;
+}
+html.escuro {
+  --fundo: #171412;
+  --fundo-alt: #1f1b18;
+  --vidro: rgba(31, 27, 24, 0.74);
+  --linha: rgba(255, 255, 255, 0.1);
+  --linha-forte: rgba(255, 255, 255, 0.24);
+  --texto: #ece7e2;
+  --texto-2: #b8afa7;
+  --titulo: #ffffff;
+  --destaque: #ffffff;
+  --destaque-forte: #e9e4de;
+  --botao-fundo: #f2eee9;
+  --botao-texto: #39312b;
+  --botao-hover: #ffffff;
+  --erro: #ff9b8f;
+  --sucesso: #86efac;
+  --sombra: 0 24px 48px -32px rgba(0, 0, 0, 0.6);
+  --marca: linear-gradient(#f2eee9, #f2eee9);
+  color-scheme: dark;
 }
 
 *,
@@ -178,12 +182,12 @@ p {
   background-color: var(--vidro);
   border: 1px solid var(--linha);
   border-radius: var(--raio);
-  box-shadow: 0 24px 48px -32px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--sombra);
   -webkit-backdrop-filter: blur(18px) saturate(150%);
   backdrop-filter: blur(18px) saturate(150%);
 }
 
-/* Logo oficial (vetor) pintada com o degradê da marca */
+/* Logo oficial (vetor) numa cor só: grafite no fundo claro, branca no escuro */
 .logo {
   display: inline-block;
   height: 2.25rem;
@@ -274,14 +278,14 @@ p {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.icone-lua {
+.icone-sol {
   display: none;
 }
-html.claro .icone-sol {
-  display: none;
-}
-html.claro .icone-lua {
+html.escuro .icone-sol {
   display: block;
+}
+html.escuro .icone-lua {
+  display: none;
 }
 
 /* Topo: transparente sobre a paisagem; vidro ao rolar */
@@ -293,17 +297,18 @@ html.claro .icone-lua {
   border-bottom: 1px solid transparent;
 }
 .topo:not(.rolado) {
-  --texto: #f5ede4;
-  --texto-2: #dccbb8;
-  --titulo: #fff6ec;
-  --linha: rgba(245, 225, 200, 0.18);
-  --linha-forte: rgba(245, 225, 200, 0.32);
-  --vidro: rgba(26, 19, 14, 0.92);
-  --destaque: #f0b979;
-  --botao-fundo: #f0b979;
-  --botao-texto: #1a110b;
-  --botao-hover: #f7cf9c;
-  --marca: linear-gradient(90deg, #f5c994 0%, #c97a3d 100%);
+  --texto: #f1ece7;
+  --texto-2: #ddd6cf;
+  --titulo: #ffffff;
+  --destaque: #ffffff;
+  --destaque-forte: #ffffff;
+  --linha: rgba(255, 255, 255, 0.16);
+  --linha-forte: rgba(255, 255, 255, 0.36);
+  --botao-fundo: #ffffff;
+  --botao-texto: #39312b;
+  --botao-hover: #ebe6e1;
+  --marca: linear-gradient(#ffffff, #ffffff);
+  --vidro: rgba(23, 20, 17, 0.95);
 }
 .topo.rolado {
   background-color: var(--vidro);
@@ -360,19 +365,21 @@ html.claro .icone-lua {
   display: none;
 }
 
-/* Topo da página: a paisagem, com o texto e a ficha do escritório */
+/* Topo da página: a paisagem em grafite (nos dois modos), com o texto e a ficha */
 .heroi {
-  --texto: #f5ede4;
-  --texto-2: #e0d0bd;
-  --titulo: #fff6ec;
-  --destaque: #f0b979;
-  --linha: rgba(245, 225, 200, 0.16);
-  --vidro: rgba(22, 15, 10, 0.62);
-  --botao-fundo: #f0b979;
-  --botao-texto: #1a110b;
-  --botao-hover: #f7cf9c;
-  --linha-forte: rgba(245, 225, 200, 0.36);
-  --marca: linear-gradient(90deg, #f5c994 0%, #c97a3d 100%);
+  --texto: #f1ece7;
+  --texto-2: #ddd6cf;
+  --titulo: #ffffff;
+  --destaque: #ffffff;
+  --destaque-forte: #ffffff;
+  --linha: rgba(255, 255, 255, 0.16);
+  --linha-forte: rgba(255, 255, 255, 0.36);
+  --botao-fundo: #ffffff;
+  --botao-texto: #39312b;
+  --botao-hover: #ebe6e1;
+  --marca: linear-gradient(#ffffff, #ffffff);
+  --vidro: rgba(23, 20, 17, 0.62);
+  --sombra: 0 24px 48px -32px rgba(0, 0, 0, 0.6);
   position: relative;
   color: var(--texto);
   min-height: min(100svh, 860px);
@@ -380,9 +387,9 @@ html.claro .icone-lua {
   align-items: center;
   padding: 7.5rem 0 4.5rem;
   background:
-    linear-gradient(180deg, rgba(14, 9, 6, 0.5) 0%, rgba(14, 9, 6, 0.26) 38%, rgba(14, 9, 6, 0.58) 74%, #100c09 100%),
-    url("/img/fundo-dourado.svg") center 62% / cover no-repeat,
-    #100c09;
+    linear-gradient(180deg, rgba(15, 13, 11, 0.5) 0%, rgba(15, 13, 11, 0.26) 38%, rgba(15, 13, 11, 0.58) 74%, #141210 100%),
+    url("/img/fundo-grafite.svg") center 62% / cover no-repeat,
+    #141210;
 }
 .heroi-grade {
   display: grid;
@@ -571,8 +578,8 @@ html.claro .icone-lua {
 .notebook-tela {
   padding: 2.2% 2.2% 2.6%;
   border-radius: 12px 12px 4px 4px;
-  background: #1f1712;
-  border: 1px solid rgba(245, 225, 200, 0.14);
+  background: #211d1a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 .notebook-tela img {
   width: 100%;
@@ -583,7 +590,7 @@ html.claro .icone-lua {
   height: 0.8rem;
   margin: 0 -5%;
   border-radius: 0 0 12px 12px;
-  background: #33261c;
+  background: #3a3430;
 }
 .celular {
   position: absolute;
@@ -592,8 +599,8 @@ html.claro .icone-lua {
   width: 25%;
   padding: 2%;
   border-radius: 22px;
-  background: #15100c;
-  border: 1px solid rgba(245, 225, 200, 0.18);
+  background: #141210;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 24px 40px -24px rgba(0, 0, 0, 0.7);
 }
 .celular img {
@@ -875,25 +882,25 @@ html.claro .icone-lua {
   padding: 0.65rem 0.85rem;
   border-radius: var(--raio-p);
   border: 1px solid var(--linha-forte);
-  background: rgba(245, 225, 200, 0.05);
+  background: #ffffff;
   color: var(--texto);
   font: 400 1rem/1.4 var(--fonte);
 }
-html.claro .campo input,
-html.claro .campo select,
-html.claro .campo textarea {
-  background: #ffffff;
+html.escuro .campo input,
+html.escuro .campo select,
+html.escuro .campo textarea {
+  background: rgba(255, 255, 255, 0.05);
 }
 .campo textarea {
   resize: vertical;
 }
 .campo select option {
-  background: #1f1712;
-  color: #f5ede4;
-}
-html.claro .campo select option {
   background: #ffffff;
-  color: #2b1d14;
+  color: #39312b;
+}
+html.escuro .campo select option {
+  background: #1f1b18;
+  color: #ece7e2;
 }
 .campo input:focus,
 .campo select:focus,
@@ -924,7 +931,7 @@ html.claro .campo select option {
   width: 1.1rem;
   height: 1.1rem;
   flex-shrink: 0;
-  accent-color: #c97a3d;
+  accent-color: var(--destaque);
 }
 .formulario-status {
   margin: 0;
@@ -1009,7 +1016,7 @@ html.claro .campo select option {
   height: 3.4rem;
   border-radius: 50%;
   background: #1fa855;
-  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.45);
   transition: transform 0.2s ease;
 }
 .whats-flutuante:hover {
@@ -1077,7 +1084,8 @@ html.claro .campo select option {
     align-items: stretch;
     gap: 0;
     padding: 0.5rem 1.25rem 1.25rem;
-    background-color: var(--vidro);
+    /* Fundo liso: dentro do topo com vidro, o desfoque do menu não funciona e o texto da página apareceria */
+    background-color: var(--fundo);
     border-bottom: 1px solid var(--linha);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
     backdrop-filter: blur(18px) saturate(150%);
@@ -1087,7 +1095,7 @@ html.claro .campo select option {
     transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
   }
   .topo:not(.rolado) .menu {
-    background-color: rgba(14, 16, 30, 0.96);
+    background-color: var(--vidro);
   }
   .menu.aberto {
     opacity: 1;
@@ -1258,10 +1266,10 @@ html.claro .campo select option {
 }
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --vidro: #1f1712;
+    --vidro: #ffffff;
   }
-  html.claro {
-    --vidro: #fffaf3;
+  html.escuro {
+    --vidro: #1f1b18;
   }
   .vidro,
   .topo.rolado,
