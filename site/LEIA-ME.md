@@ -33,6 +33,7 @@ Vercel) ficam como estão. O certificado (https) é renovado pela Vercel.
 | --- | --- |
 | Textos e seções | `index.html` (cada seção tem um comentário com o nome) |
 | Cores e fontes | começo de `css/site.css`: `:root` (versão clara, padrão) e `html.escuro` (versão escura). Principais: `--fundo`, `--texto`, `--botao-fundo`, `--marca` (cor da logo). Paisagem do topo: `public/img/fundo-grafite.svg`. |
+| Ondas do topo (serras em movimento) | `js/site.js`, bloco "Topo: as serras do fundo ondulam": em cada camada, `base` e `amp` são a altura e o tamanho das ondas, e o 4º número de cada onda é a velocidade (0 para parar). O céu fica em `public/img/fundo-grafite-ceu.svg`; com pouco movimento no aparelho (ou sem JavaScript) aparece a paisagem parada `public/img/fundo-grafite.svg`. |
 | Números (clientes, anos, empresas abertas) | `index.html`, bloco `id="numeros"` (na seção Quem somos): preencha `data-alvo` com os valores **reais**. Sem os três valores, a faixa fica escondida. |
 | Depoimentos | `index.html`, seção `id="depoimentos"`: copie o modelo comentado. Só depoimentos reais e autorizados por escrito. Sem nenhum, a seção fica escondida. |
 | Fotos e mini-bios da equipe | seção `id="quem-somos"` (hoje com as iniciais) |

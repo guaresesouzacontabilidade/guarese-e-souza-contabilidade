@@ -37,7 +37,7 @@ test("build do Vite: CSS e JS versionados, arquivos fixos no lugar e o script do
     assert.ok(csp.includes(`'${hash}'`), `${pagina}: hash do script do tema na CSP`);
   }
   assert.match(fs.readFileSync(path.join(RAIZ, "index.html"), "utf8"), /<script type="module" crossorigin src="\/assets\/[^"]+\.js"><\/script>/);
-  for (const fixo of ["img/logo-horizontal.svg", "img/fundo-grafite.svg", "img/favicon.svg", "img/compartilhar.jpg", "fontes/inter.woff2", "site.webmanifest", "robots.txt", "sitemap.xml"]) {
+  for (const fixo of ["img/logo-horizontal.svg", "img/fundo-grafite.svg", "img/fundo-grafite-ceu.svg", "img/favicon.svg", "img/compartilhar.jpg", "fontes/inter.woff2", "site.webmanifest", "robots.txt", "sitemap.xml"]) {
     assert.ok(fs.existsSync(path.join(RAIZ, fixo)), `${fixo} no build`);
   }
   assert.equal(cfg.framework, "vite");
@@ -113,6 +113,29 @@ test("celular: menu abre e fecha; tema escuro fica guardado", async () => {
   assert.match(await pagina.locator("html").getAttribute("class"), /escuro/);
   assert.deepEqual(erros, []);
   await ctx.close();
+});
+
+test("topo: as serras ondulam; com pouco movimento no aparelho, a paisagem fica parada", async () => {
+  const { ctx, pagina, erros } = await abrir();
+  await pagina.goto(base + "/", { waitUntil: "networkidle" });
+  await pagina.waitForFunction(() => document.querySelector(".heroi").classList.contains("ondas-ativas"));
+  const quadro = () => pagina.evaluate(() => document.getElementById("heroi-ondas").toDataURL());
+  const antes = await quadro();
+  await pagina.waitForTimeout(800);
+  assert.notEqual(await quadro(), antes, "as ondas mudam com o tempo");
+  assert.match(await pagina.evaluate(() => getComputedStyle(document.querySelector(".heroi")).backgroundImage), /fundo-grafite-ceu\.svg/);
+  assert.equal(await pagina.evaluate(() => getComputedStyle(document.getElementById("heroi-ondas")).opacity), "1");
+  assert.deepEqual(erros, []);
+  await ctx.close();
+
+  const parado = await abrir({ reducedMotion: "reduce" });
+  await parado.pagina.goto(base + "/", { waitUntil: "networkidle" });
+  await parado.pagina.waitForTimeout(600);
+  assert.equal(await parado.pagina.evaluate(() => document.querySelector(".heroi").classList.contains("ondas-ativas")), false);
+  assert.match(await parado.pagina.evaluate(() => getComputedStyle(document.querySelector(".heroi")).backgroundImage), /fundo-grafite\.svg/);
+  assert.equal(await parado.pagina.evaluate(() => getComputedStyle(document.getElementById("heroi-ondas")).opacity), "0");
+  assert.deepEqual(parado.erros, []);
+  await parado.ctx.close();
 });
 
 async function preencher(pagina) {

@@ -381,15 +381,42 @@ html.escuro .icone-lua {
   --vidro: rgba(23, 20, 17, 0.62);
   --sombra: 0 24px 48px -32px rgba(0, 0, 0, 0.6);
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
   color: var(--texto);
   min-height: min(100svh, 860px);
   display: flex;
   align-items: center;
   padding: 7.5rem 0 4.5rem;
-  background:
-    linear-gradient(180deg, rgba(15, 13, 11, 0.5) 0%, rgba(15, 13, 11, 0.26) 38%, rgba(15, 13, 11, 0.58) 74%, #141210 100%),
-    url("/img/fundo-grafite.svg") center 62% / cover no-repeat,
-    #141210;
+  /* Paisagem parada (sem JavaScript ou com pouco movimento); com as ondas ativas fica só o céu */
+  background: url("/img/fundo-grafite.svg") center 62% / cover no-repeat, #141210;
+}
+.heroi.ondas-ativas {
+  background-image: url("/img/fundo-grafite-ceu.svg");
+}
+/* Serras em movimento: canvas no pé do topo, que aparece aos poucos */
+.heroi-ondas {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: -2;
+  width: 100%;
+  height: 420px;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+.heroi-ondas.visivel {
+  opacity: 1;
+}
+/* Véu escuro por cima da paisagem e das ondas: garante a leitura do texto */
+.heroi::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(15, 13, 11, 0.5) 0%, rgba(15, 13, 11, 0.26) 38%, rgba(15, 13, 11, 0.58) 74%, #141210 100%);
+  pointer-events: none;
 }
 .heroi-grade {
   display: grid;
@@ -1185,7 +1212,7 @@ html.escuro .campo select option {
   .heroi {
     min-height: 0;
     padding: 6.25rem 0 var(--e5);
-    background-position: center, 40% 70%, center;
+    background-position: 40% 70%;
   }
   .heroi h1 {
     font-size: clamp(2.1rem, 9.6vw, 2.6rem);
