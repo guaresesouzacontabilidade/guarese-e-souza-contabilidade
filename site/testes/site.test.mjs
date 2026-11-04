@@ -1,20 +1,47 @@
-// Testes do site: páginas, segurança, menu, tema e formulário.
-// Uso: node --test site/testes/site.test.mjs   (precisa do Playwright instalado no ambiente)
+// Testes do site: build do Vite, páginas, segurança, menu, tema e formulário.
+// Uso (na pasta site): npm install && npm test   (precisa do Playwright instalado no ambiente)
+// Os testes compilam o site com o Vite e testam o resultado (dist), como ele vai para a Vercel.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { iniciarServidor } from "./servidor.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
-const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const PROJETO = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const RAIZ = path.join(PROJETO, "dist");
 const API = "https://portal.onguaresescontabilidade.com.br/api/site/contato";
 let srv, base, navegador;
 
 before(async () => {
-  ({ servidor: srv, base } = await iniciarServidor(RAIZ));
+  execFileSync(process.execPath, [path.join(PROJETO, "node_modules", "vite", "bin", "vite.js"), "build", "--logLevel", "warn"], { cwd: PROJETO, stdio: "inherit" });
+  ({ servidor: srv, base } = await iniciarServidor(RAIZ, 0, PROJETO));
   navegador = await chromium.launch();
+});
+
+test("build do Vite: CSS e JS versionados, arquivos fixos no lugar e o script do tema liberado pela CSP", () => {
+  const cfg = JSON.parse(fs.readFileSync(path.join(PROJETO, "vercel.json"), "utf8"));
+  const csp = cfg.headers.find((h) => h.source === "/(.*)").headers.find((h) => h.key === "Content-Security-Policy").value;
+  for (const pagina of ["index.html", "privacidade.html", "404.html"]) {
+    const html = fs.readFileSync(path.join(RAIZ, pagina), "utf8");
+    assert.match(html, /<link rel="stylesheet" crossorigin href="\/assets\/[^"]+\.css">/, `${pagina}: CSS empacotado`);
+    assert.doesNotMatch(html, /href="\/css\/|src="\/js\//, `${pagina}: sem caminhos do código-fonte`);
+    // O Vite não mexe no script do tema: o hash dele precisa continuar igual ao da CSP
+    const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+    assert.equal(inline.length, 1, `${pagina}: um script do tema`);
+    const hash = "sha256-" + crypto.createHash("sha256").update(inline[0]).digest("base64");
+    assert.ok(csp.includes(`'${hash}'`), `${pagina}: hash do script do tema na CSP`);
+  }
+  assert.match(fs.readFileSync(path.join(RAIZ, "index.html"), "utf8"), /<script type="module" crossorigin src="\/assets\/[^"]+\.js"><\/script>/);
+  for (const fixo of ["img/logo-horizontal.svg", "img/fundo-grafite.svg", "img/favicon.svg", "img/compartilhar.jpg", "fontes/inter.woff2", "site.webmanifest", "robots.txt", "sitemap.xml"]) {
+    assert.ok(fs.existsSync(path.join(RAIZ, fixo)), `${fixo} no build`);
+  }
+  assert.equal(cfg.framework, "vite");
+  assert.equal(cfg.outputDirectory, "dist");
 });
 after(async () => {
   await navegador?.close();

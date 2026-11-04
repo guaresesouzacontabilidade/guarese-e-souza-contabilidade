@@ -1,25 +1,36 @@
 # Site institucional — ON Guarese's Contabilidade
 
-Site estático (HTML, CSS e JavaScript, sem etapa de compilação), com versão
-clara. Direção visual editorial: a paisagem só no topo, fundo liso, linhas
-finas e seções numeradas; o vidro do portal aparece só no topo ao rolar, na
-ficha do escritório e no formulário; o degradê da marca fica só na logo.
+Site estático feito com **Vite** (HTML, CSS e JavaScript, sem bibliotecas):
+o Vite junta e minifica o CSS e o JavaScript, com o nome versionado, e gera a
+pasta `dist`, que é o que vai para o ar. Direção visual editorial: a paisagem
+só no topo, fundo liso, linhas finas e seções numeradas; o vidro aparece só
+no topo ao rolar, na ficha do escritório e no formulário.
 Cores da logo oficial: grafite (#39312b) e branco. A versão clara é a padrão
 (grafite sobre branco, como a logo); a escura é opcional pelo botão do topo.
 No topo da página a paisagem é em tons de grafite e a logo aparece em branco.
 Posicionamento (do site antigo do escritório): médicos e clínicas, produtores
-rurais e empresas em geral. Publicado na Vercel.
+rurais e empresas em geral. Publicado na Vercel, que roda `npm ci` e
+`npm run build` e publica a pasta `dist` (configurado no `vercel.json`).
+
+## Pastas
+
+| Pasta ou arquivo | O que tem |
+| --- | --- |
+| `index.html`, `privacidade.html`, `404.html` | as três páginas (entradas do Vite, ver `vite.config.js`) |
+| `css/site.css`, `js/site.js` | estilos e comportamento; o Vite empacota em `/assets` |
+| `public/` | arquivos que mantêm o endereço: `img/`, `fontes/`, manifesto, `robots.txt`, `sitemap.xml` |
+| `testes/` | testes automáticos e o servidor local que imita a Vercel |
 
 ## Onde mudar cada coisa
 
 | O quê | Onde |
 | --- | --- |
 | Textos e seções | `index.html` (cada seção tem um comentário com o nome) |
-| Cores e fontes | começo de `css/site.css`: `:root` (versão clara, padrão) e `html.escuro` (versão escura). Principais: `--fundo`, `--texto`, `--botao-fundo`, `--marca` (cor da logo). Paisagem do topo: `img/fundo-grafite.svg`. |
+| Cores e fontes | começo de `css/site.css`: `:root` (versão clara, padrão) e `html.escuro` (versão escura). Principais: `--fundo`, `--texto`, `--botao-fundo`, `--marca` (cor da logo). Paisagem do topo: `public/img/fundo-grafite.svg`. |
 | Números (clientes, anos, empresas abertas) | `index.html`, bloco `id="numeros"` (na seção Quem somos): preencha `data-alvo` com os valores **reais**. Sem os três valores, a faixa fica escondida. |
 | Depoimentos | `index.html`, seção `id="depoimentos"`: copie o modelo comentado. Só depoimentos reais e autorizados por escrito. Sem nenhum, a seção fica escondida. |
 | Fotos e mini-bios da equipe | seção `id="quem-somos"` (hoje com as iniciais) |
-| Telas do portal | `img/portal-computador.webp` e `img/portal-celular.webp` (sempre da demonstração, com dados fictícios) |
+| Telas do portal | `public/img/portal-computador.webp` e `public/img/portal-celular.webp` (sempre da demonstração, com dados fictícios) |
 
 ## Formulário de contato
 
@@ -33,12 +44,17 @@ envios por endereço e só as origens do site são aceitas.
 ## Segurança
 
 `vercel.json` define a política de conteúdo (CSP). O pequeno script no
-`<head>` (tema claro/escuro) é liberado pelo seu hash: se mudar esse script,
-recalcule o hash `sha256` e atualize o `vercel.json` (os testes avisam).
+`<head>` (tema claro/escuro) é liberado pelo seu hash; o Vite não altera esse
+script. Se mudar o script, recalcule o hash `sha256` e atualize o
+`vercel.json` (os testes avisam).
 
 ## Testar
 
+Na pasta `site`:
+
 ```
-node --test site/testes/site.test.mjs     # páginas, menu, tema e formulário
-node site/testes/servidor.mjs 4000         # abre o site em http://localhost:4000
+npm install                    # uma vez
+npm run dev                    # site com recarga automática, para editar
+npm test                       # compila com o Vite e testa o build: páginas, menu, tema, formulário e CSP
+npm run build && node testes/servidor.mjs 4000   # o build como na Vercel (com a CSP), em http://localhost:4000
 ```
