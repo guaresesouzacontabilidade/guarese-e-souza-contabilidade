@@ -1,7 +1,11 @@
 # Site institucional — ON Guarese's Contabilidade
 
-Site estático (HTML, CSS e JavaScript, sem etapa de compilação), no mesmo
-visual "Vidro líquido" do portal, com versão clara. Publicado na Vercel.
+Site estático (HTML, CSS e JavaScript, sem etapa de compilação), com versão
+clara. Direção visual editorial: a paisagem só no topo, fundo liso, linhas
+finas e seções numeradas; o vidro do portal aparece só no topo ao rolar, na
+ficha do escritório e no formulário; o degradê da marca fica só na logo.
+Posicionamento (do site antigo do escritório): médicos e clínicas, produtores
+rurais e empresas em geral. Publicado na Vercel.
 
 ## Onde mudar cada coisa
 
@@ -9,7 +13,7 @@ visual "Vidro líquido" do portal, com versão clara. Publicado na Vercel.
 | --- | --- |
 | Textos e seções | `index.html` (cada seção tem um comentário com o nome) |
 | Cores e fontes | começo de `css/site.css` (variáveis `--degrade`, `--destaque`, ...) |
-| Números (clientes, anos, empresas abertas) | `index.html`, bloco `id="numeros"`: preencha `data-alvo` com os valores **reais**. Sem os três valores, a faixa fica escondida. |
+| Números (clientes, anos, empresas abertas) | `index.html`, bloco `id="numeros"` (na seção Quem somos): preencha `data-alvo` com os valores **reais**. Sem os três valores, a faixa fica escondida. |
 | Depoimentos | `index.html`, seção `id="depoimentos"`: copie o modelo comentado. Só depoimentos reais e autorizados por escrito. Sem nenhum, a seção fica escondida. |
 | Fotos e mini-bios da equipe | seção `id="quem-somos"` (hoje com as iniciais) |
 | Telas do portal | `img/portal-computador.webp` e `img/portal-celular.webp` (sempre da demonstração, com dados fictícios) |

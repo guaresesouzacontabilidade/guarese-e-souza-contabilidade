@@ -1,5 +1,5 @@
-/* Site ON Guarese's Contabilidade: menu, tema, animações ao rolar, números,
-   linha do tempo, depoimentos e formulário de contato. Sem bibliotecas. */
+/* Site ON Guarese's Contabilidade: menu, tema, entrada dos blocos ao rolar,
+   números, depoimentos e formulário de contato. Sem bibliotecas. */
 (function () {
   "use strict";
   var raiz = document.documentElement;
@@ -10,24 +10,12 @@
   var ano = document.getElementById("ano");
   if (ano) ano.textContent = String(new Date().getFullYear());
 
-  /* Topo: fica em vidro e mais compacto ao rolar */
+  /* Topo: vira vidro ao rolar */
   var topo = document.getElementById("topo");
-  var cena = document.querySelector(".cena");
-  var linha = document.getElementById("linha-tempo");
   var agendado = false;
   function aoRolar() {
     agendado = false;
-    var y = window.scrollY || 0;
-    if (topo) topo.classList.toggle("rolado", y > 24);
-    // Paisagem com um leve efeito de profundidade
-    if (cena && !poucoMovimento) cena.style.transform = "translate3d(0," + (-y * 0.03).toFixed(1) + "px,0)";
-    // Linha do tempo se preenche conforme a seção passa pela tela
-    if (linha) {
-      var r = linha.getBoundingClientRect();
-      var alto = window.innerHeight || 1;
-      var p = (alto * 0.75 - r.top) / (r.height || 1);
-      linha.style.setProperty("--progresso", String(Math.max(0, Math.min(1, p))));
-    }
+    if (topo) topo.classList.toggle("rolado", (window.scrollY || 0) > 24);
   }
   window.addEventListener(
     "scroll",
@@ -98,7 +86,7 @@
     var claro = raiz.classList.contains("claro");
     botaoTema.setAttribute("aria-label", claro ? "Trocar para o modo escuro (vidro)" : "Trocar para o modo claro");
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", claro ? "#f5f7ff" : "#0b0d18");
+    if (meta) meta.setAttribute("content", claro ? "#f7f7fb" : "#0b0d17");
   }
   if (botaoTema) {
     rotuloTema();
@@ -142,15 +130,6 @@
       el.classList.add("visivel");
     });
   }
-
-  /* Luz que acompanha o mouse nos cartões de serviço */
-  Array.prototype.forEach.call(document.querySelectorAll("[data-luz]"), function (c) {
-    c.addEventListener("pointermove", function (e) {
-      var r = c.getBoundingClientRect();
-      c.style.setProperty("--mx", e.clientX - r.left + "px");
-      c.style.setProperty("--my", e.clientY - r.top + "px");
-    });
-  });
 
   /* Números: a faixa só aparece com todos os valores preenchidos (reais) */
   var numeros = document.getElementById("numeros");

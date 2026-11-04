@@ -40,15 +40,19 @@ test("página inicial: seções do briefing, SEO, segurança e nada inventado à
   assert.match(csp, /connect-src 'self' https:\/\/portal\.onguaresescontabilidade\.com\.br/);
   assert.equal(await pagina.title(), "ON Guarese's Contabilidade | Contabilidade em Porto Nacional (TO)");
   assert.ok(await pagina.locator('meta[property="og:image"]').getAttribute("content"));
-  for (const id of ["inicio", "quem-somos", "servicos", "portal", "diferenciais", "como-funciona", "duvidas", "contato"]) {
+  // Primeira tela: o que, para quem e o próximo passo
+  assert.match(await pagina.locator("h1").textContent(), /Contabilidade para médicos, produtores rurais e empresas de Porto Nacional/);
+  assert.ok(await pagina.locator('.heroi a[href="#contato"]', { hasText: "Pedir uma proposta" }).isVisible());
+  for (const id of ["inicio", "para-quem", "servicos", "portal", "quem-somos", "como-funciona", "duvidas", "contato"]) {
     assert.ok(await pagina.locator(`#${id}`).isVisible(), `seção ${id} visível`);
   }
   // Sem números e depoimentos reais, essas partes ficam escondidas
   assert.equal(await pagina.locator("#numeros").isVisible(), false);
   assert.equal(await pagina.locator("#depoimentos").isVisible(), false);
   assert.equal(await pagina.locator("#formulario-alternativa").isVisible(), false);
-  assert.equal(await pagina.locator(".servico").count(), 6);
-  assert.equal(await pagina.locator(".acordeao details").count(), 6);
+  assert.equal(await pagina.locator(".servico").count(), 5);
+  assert.equal(await pagina.locator(".publico").count(), 3);
+  assert.equal(await pagina.locator(".acordeao details").count(), 7);
   // Portal e WhatsApp
   assert.equal(await pagina.locator('a[href="https://portal.onguaresescontabilidade.com.br"]').first().getAttribute("href"), "https://portal.onguaresescontabilidade.com.br");
   assert.match(await pagina.locator(".whats-flutuante").getAttribute("href"), /^https:\/\/wa\.me\/5563992969763/);
@@ -62,9 +66,15 @@ test("página inicial: seções do briefing, SEO, segurança e nada inventado à
 test("celular: menu abre e fecha; tema claro fica guardado", async () => {
   const { ctx, pagina, erros } = await abrir({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await pagina.goto(base + "/", { waitUntil: "networkidle" });
+  // Sem rolagem horizontal no celular
+  assert.equal(await pagina.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), 0);
   const botao = pagina.locator("#abrir-menu");
   await botao.click();
   assert.equal(await botao.getAttribute("aria-expanded"), "true");
+  // O botão do portal no menu tem texto legível (cor do botão, não a dos links)
+  const cores = await pagina.locator("#menu .menu-portal").evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]);
+  assert.notEqual(cores[0], cores[1]);
+  assert.equal(cores[0], "rgb(17, 20, 39)");
   await pagina.locator("#menu a", { hasText: "Serviços" }).click();
   assert.equal(await botao.getAttribute("aria-expanded"), "false");
   await pagina.locator("#alternar-tema").click();
