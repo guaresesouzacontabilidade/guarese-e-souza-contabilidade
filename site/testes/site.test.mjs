@@ -74,7 +74,7 @@ test("celular: menu abre e fecha; tema claro fica guardado", async () => {
   // O botão do portal no menu tem texto legível (cor do botão, não a dos links)
   const cores = await pagina.locator("#menu .menu-portal").evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]);
   assert.notEqual(cores[0], cores[1]);
-  assert.equal(cores[0], "rgb(17, 20, 39)");
+  assert.equal(cores[0], "rgb(26, 17, 11)"); // --botao-texto (marrom escuro) sobre o dourado
   await pagina.locator("#menu a", { hasText: "Serviços" }).click();
   assert.equal(await botao.getAttribute("aria-expanded"), "false");
   await pagina.locator("#alternar-tema").click();

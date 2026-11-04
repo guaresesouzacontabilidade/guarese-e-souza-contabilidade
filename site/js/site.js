@@ -86,7 +86,7 @@
     var claro = raiz.classList.contains("claro");
     botaoTema.setAttribute("aria-label", claro ? "Trocar para o modo escuro (vidro)" : "Trocar para o modo claro");
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", claro ? "#f7f7fb" : "#0b0d17");
+    if (meta) meta.setAttribute("content", claro ? "#f8f3ec" : "#100c09");
   }
   if (botaoTema) {
     rotuloTema();

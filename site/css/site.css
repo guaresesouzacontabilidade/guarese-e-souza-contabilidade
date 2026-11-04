@@ -36,30 +36,31 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Direção: editorial e sóbria. A paisagem do Tocantins ao entardecer fica só no
-   topo; o resto é fundo liso, linhas finas e seções numeradas. O vidro (marca
-   do portal) aparece em poucos lugares: o topo ao rolar, a ficha do escritório
-   e o formulário. O degradê violeta e ciano é só da logo; a seta que sobe na
-   logo é a seta dos botões e links.
+   Direção: editorial e sóbria, nas cores da marca (marrom, dourado e cobre; bege
+   na versão clara). A paisagem ao entardecer, em dourado, fica só no topo; o
+   resto é fundo liso, linhas finas e seções numeradas. O vidro aparece em poucos
+   lugares: o topo ao rolar, a ficha do escritório e o formulário. O degradê
+   dourado e cobre é só da logo; a seta que sobe na logo é a seta dos botões.
    ----------------------------------------------------------------------------- */
 :root {
   /* Cores */
-  --fundo: #0b0d17;
-  --fundo-alt: #10132a;
-  --vidro: rgba(16, 18, 32, 0.62);
-  --linha: rgba(255, 255, 255, 0.1);
-  --linha-forte: rgba(255, 255, 255, 0.22);
-  --texto: #eef0f7;
-  --texto-2: #b9bfd2;
-  --titulo: #ffffff;
-  --destaque: #b9a8ff;
-  --destaque-forte: #d6ccff;
-  --botao-fundo: #f1eeff;
-  --botao-texto: #111427;
-  --botao-hover: #ffffff;
-  --erro: #ffa0ae;
-  --sucesso: #5ee39a;
-  --marca: linear-gradient(90deg, #9b7bff 0%, #38d6f0 100%);
+  /* Cores da marca: marrom, dourado e cobre (com bege na versão clara) */
+  --fundo: #100c09;
+  --fundo-alt: #19130e;
+  --vidro: rgba(26, 19, 14, 0.66);
+  --linha: rgba(245, 225, 200, 0.11);
+  --linha-forte: rgba(245, 225, 200, 0.24);
+  --texto: #f5ede4;
+  --texto-2: #cdbcaa;
+  --titulo: #fff6ec;
+  --destaque: #f0b979;
+  --destaque-forte: #f7cf9c;
+  --botao-fundo: #f0b979;
+  --botao-texto: #1a110b;
+  --botao-hover: #f7cf9c;
+  --erro: #ff9b8f;
+  --sucesso: #86efac;
+  --marca: linear-gradient(90deg, #f5c994 0%, #c97a3d 100%);
   /* Forma e espaço */
   --raio: 14px;
   --raio-p: 10px;
@@ -77,19 +78,20 @@
   color-scheme: dark;
 }
 html.claro {
-  --fundo: #f7f7fb;
-  --fundo-alt: #eceef6;
-  --vidro: rgba(255, 255, 255, 0.82);
-  --linha: rgba(20, 30, 70, 0.12);
-  --linha-forte: rgba(20, 30, 70, 0.26);
-  --texto: #1b2034;
-  --texto-2: #4a5068;
-  --titulo: #0d1022;
-  --destaque: #5133e8;
-  --destaque-forte: #3f22cf;
-  --botao-fundo: #141833;
-  --botao-texto: #ffffff;
-  --botao-hover: #262d5a;
+  --fundo: #f8f3ec;
+  --fundo-alt: #efe5d7;
+  --vidro: rgba(255, 252, 247, 0.84);
+  --linha: rgba(74, 44, 29, 0.14);
+  --linha-forte: rgba(74, 44, 29, 0.3);
+  --texto: #2b1d14;
+  --texto-2: #65513f;
+  --titulo: #22150c;
+  --destaque: #9a5524;
+  --destaque-forte: #7d4218;
+  --botao-fundo: #4a2c1d;
+  --botao-texto: #fbf4ea;
+  --botao-hover: #5f3a26;
+  --marca: linear-gradient(90deg, #b87333 0%, #5a3420 100%);
   --erro: #be123c;
   --sucesso: #15803d;
   color-scheme: light;
@@ -291,15 +293,17 @@ html.claro .icone-lua {
   border-bottom: 1px solid transparent;
 }
 .topo:not(.rolado) {
-  --texto: #eef0f7;
-  --texto-2: #c9cfe0;
-  --titulo: #ffffff;
-  --linha: rgba(255, 255, 255, 0.16);
-  --linha-forte: rgba(255, 255, 255, 0.3);
-  --vidro: rgba(16, 18, 32, 0.9);
-  --botao-fundo: #f1eeff;
-  --botao-texto: #111427;
-  --botao-hover: #ffffff;
+  --texto: #f5ede4;
+  --texto-2: #dccbb8;
+  --titulo: #fff6ec;
+  --linha: rgba(245, 225, 200, 0.18);
+  --linha-forte: rgba(245, 225, 200, 0.32);
+  --vidro: rgba(26, 19, 14, 0.92);
+  --destaque: #f0b979;
+  --botao-fundo: #f0b979;
+  --botao-texto: #1a110b;
+  --botao-hover: #f7cf9c;
+  --marca: linear-gradient(90deg, #f5c994 0%, #c97a3d 100%);
 }
 .topo.rolado {
   background-color: var(--vidro);
@@ -358,16 +362,17 @@ html.claro .icone-lua {
 
 /* Topo da página: a paisagem, com o texto e a ficha do escritório */
 .heroi {
-  --texto: #eef0f7;
-  --texto-2: #ccd2e3;
-  --titulo: #ffffff;
-  --destaque: #c9bcff;
-  --linha: rgba(255, 255, 255, 0.14);
-  --vidro: rgba(14, 16, 30, 0.6);
-  --botao-fundo: #f1eeff;
-  --botao-texto: #111427;
-  --botao-hover: #ffffff;
-  --linha-forte: rgba(255, 255, 255, 0.34);
+  --texto: #f5ede4;
+  --texto-2: #e0d0bd;
+  --titulo: #fff6ec;
+  --destaque: #f0b979;
+  --linha: rgba(245, 225, 200, 0.16);
+  --vidro: rgba(22, 15, 10, 0.62);
+  --botao-fundo: #f0b979;
+  --botao-texto: #1a110b;
+  --botao-hover: #f7cf9c;
+  --linha-forte: rgba(245, 225, 200, 0.36);
+  --marca: linear-gradient(90deg, #f5c994 0%, #c97a3d 100%);
   position: relative;
   color: var(--texto);
   min-height: min(100svh, 860px);
@@ -375,9 +380,9 @@ html.claro .icone-lua {
   align-items: center;
   padding: 7.5rem 0 4.5rem;
   background:
-    linear-gradient(180deg, rgba(8, 9, 20, 0.5) 0%, rgba(8, 9, 20, 0.38) 35%, rgba(8, 9, 20, 0.62) 72%, #0b0d17 100%),
-    url("/img/fundo-vidro.svg") center 62% / cover no-repeat,
-    #0b0d17;
+    linear-gradient(180deg, rgba(14, 9, 6, 0.5) 0%, rgba(14, 9, 6, 0.26) 38%, rgba(14, 9, 6, 0.58) 74%, #100c09 100%),
+    url("/img/fundo-dourado.svg") center 62% / cover no-repeat,
+    #100c09;
 }
 .heroi-grade {
   display: grid;
@@ -566,8 +571,8 @@ html.claro .icone-lua {
 .notebook-tela {
   padding: 2.2% 2.2% 2.6%;
   border-radius: 12px 12px 4px 4px;
-  background: #1b1d29;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #1f1712;
+  border: 1px solid rgba(245, 225, 200, 0.14);
 }
 .notebook-tela img {
   width: 100%;
@@ -578,7 +583,7 @@ html.claro .icone-lua {
   height: 0.8rem;
   margin: 0 -5%;
   border-radius: 0 0 12px 12px;
-  background: #2a2d3d;
+  background: #33261c;
 }
 .celular {
   position: absolute;
@@ -587,8 +592,8 @@ html.claro .icone-lua {
   width: 25%;
   padding: 2%;
   border-radius: 22px;
-  background: #11121a;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #15100c;
+  border: 1px solid rgba(245, 225, 200, 0.18);
   box-shadow: 0 24px 40px -24px rgba(0, 0, 0, 0.7);
 }
 .celular img {
@@ -870,7 +875,7 @@ html.claro .icone-lua {
   padding: 0.65rem 0.85rem;
   border-radius: var(--raio-p);
   border: 1px solid var(--linha-forte);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(245, 225, 200, 0.05);
   color: var(--texto);
   font: 400 1rem/1.4 var(--fonte);
 }
@@ -883,12 +888,12 @@ html.claro .campo textarea {
   resize: vertical;
 }
 .campo select option {
-  background: #161827;
-  color: #f3f5fb;
+  background: #1f1712;
+  color: #f5ede4;
 }
 html.claro .campo select option {
   background: #ffffff;
-  color: #1b2034;
+  color: #2b1d14;
 }
 .campo input:focus,
 .campo select:focus,
@@ -919,7 +924,7 @@ html.claro .campo select option {
   width: 1.1rem;
   height: 1.1rem;
   flex-shrink: 0;
-  accent-color: #8b6dff;
+  accent-color: #c97a3d;
 }
 .formulario-status {
   margin: 0;
@@ -1253,10 +1258,10 @@ html.claro .campo select option {
 }
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --vidro: #161827;
+    --vidro: #1f1712;
   }
   html.claro {
-    --vidro: #ffffff;
+    --vidro: #fffaf3;
   }
   .vidro,
   .topo.rolado,
