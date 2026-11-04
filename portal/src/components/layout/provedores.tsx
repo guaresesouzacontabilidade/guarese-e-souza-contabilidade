@@ -6,7 +6,7 @@ import { PresencaPortal } from "./presenca";
 
 export function Provedores({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
-    <ThemeProvider attribute="class" themes={["light", "dark", "bronze", "vidro"]} defaultTheme="vidro" enableSystem disableTransitionOnChange nonce={nonce}>
+    <ThemeProvider attribute="class" themes={["light", "dark", "bronze", "grafite", "vidro"]} defaultTheme="vidro" enableSystem disableTransitionOnChange nonce={nonce}>
       {children}
       <PresencaPortal />
       <Toaster

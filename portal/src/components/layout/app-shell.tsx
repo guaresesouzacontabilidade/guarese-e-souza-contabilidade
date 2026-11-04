@@ -17,6 +17,7 @@ import {
   Menu as IconeMenu,
   Moon,
   MoreHorizontal,
+  Pencil,
   Search,
   Sun,
   UserCircle,
@@ -557,13 +558,15 @@ function AlternarTema() {
   return (
     <Menu>
       <MenuGatilho asChild>
-        <Button variante="fantasma" tamanho="icone" aria-label="Aparência do portal (clara, escura, bronze ou vidro líquido)">
+        <Button variante="fantasma" tamanho="icone" aria-label="Aparência do portal (clara, escura, bronze, grafite ou vidro líquido)">
           {montado && theme === "dark" ? (
             <Moon className="size-5" />
           ) : montado && theme === "light" ? (
             <Sun className="size-5" />
           ) : montado && theme === "bronze" ? (
             <Gem className="size-5" />
+          ) : montado && theme === "grafite" ? (
+            <Pencil className="size-5" />
           ) : montado && theme === "vidro" ? (
             <GlassWater className="size-5" />
           ) : (
@@ -581,6 +584,9 @@ function AlternarTema() {
         </MenuItem>
         <MenuItem onSelect={() => setTheme("bronze")}>
           <Gem /> Bronze
+        </MenuItem>
+        <MenuItem onSelect={() => setTheme("grafite")}>
+          <Pencil /> Grafite (cores da logo)
         </MenuItem>
         <MenuItem onSelect={() => setTheme("vidro")}>
           <GlassWater /> Vidro líquido

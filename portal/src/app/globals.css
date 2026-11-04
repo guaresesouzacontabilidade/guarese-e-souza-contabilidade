@@ -7,13 +7,13 @@
 
 /* =============================================================================
    Identidade visual — Portal Guarese's ON
-   Três temas: "Luz" (claro) e "Aurora" (escuro), com violeta e ciano como
-   cores de destaque, e "Bronze" (escuro), com as cores da marca modernizadas
-   (dourado e cobre, com verde-água), e "Vidro líquido" (escuro), com painéis
-   translúcidos sobre uma paisagem ao entardecer. Degradê nos botões principais, no menu
-   ativo e nos gráficos, fundo com brilhos suaves, títulos em Space Grotesk e
-   verde/âmbar/vermelho para indicadores. Contraste de texto de pelo menos
-   4,5:1 nos quatro temas.
+   Cinco temas: "Luz" (claro) e "Aurora" (escuro), com violeta e ciano como
+   cores de destaque; "Bronze" (escuro), com dourado e cobre; "Grafite"
+   (claro), nas cores da logo oficial (grafite #39312b sobre branco); e
+   "Vidro líquido" (escuro, o padrão), com painéis translúcidos sobre uma
+   paisagem ao entardecer. Degradê nos botões principais, no menu ativo e nos
+   gráficos, títulos em Space Grotesk e verde/âmbar/vermelho para
+   indicadores. Contraste de texto de pelo menos 4,5:1 em todos os temas.
    ============================================================================= */
 :root {
   --background: #f5f7ff;
@@ -210,6 +210,71 @@
   --grafico-5: #fbbf24;
   --grafico-6: #a8988a;
   color-scheme: dark;
+}
+
+/* Grafite: as cores da logo oficial (grafite #39312b sobre branco), tema claro */
+.grafite {
+  --background: #f6f5f3;
+  --fundo-app:
+    radial-gradient(1100px 520px at 100% -10%, rgba(57, 49, 43, 0.07), transparent 60%),
+    radial-gradient(900px 480px at 0% -5%, rgba(57, 49, 43, 0.04), transparent 55%), #f6f5f3;
+  --fundo-heroi:
+    radial-gradient(640px 420px at 25% 35%, rgba(57, 49, 43, 0.12), transparent 65%),
+    radial-gradient(560px 360px at 90% 90%, rgba(57, 49, 43, 0.08), transparent 60%), #efedea;
+  --foreground: #2b2520;
+  --card: #ffffff;
+  --card-foreground: #2b2520;
+  --muted: #f1efec;
+  --muted-foreground: #625952;
+  --bege: #f1eeea;
+  --bege-forte: #e7e3de;
+  --border: #e6e2dd;
+  --input: #d3cdc6;
+  --primary: #39312b;
+  --primary-hover: #29231f;
+  --primary-foreground: #ffffff;
+  --secondary: #efebe7;
+  --secondary-hover: #e5e0da;
+  --secondary-foreground: #39312b;
+  --ring: #39312b;
+  --titulo: #1e1a17;
+
+  --gradiente: linear-gradient(135deg, #4a413a 0%, #29231f 100%);
+  --gradiente-texto: #ffffff;
+  --gradiente-marca: linear-gradient(135deg, #39312b 0%, #39312b 100%);
+  --gradiente-selo: linear-gradient(135deg, #4a413a 0%, #29231f 100%);
+  --brilho: 0 10px 24px -12px rgba(57, 49, 43, 0.45);
+  --sombra-card: 0 1px 2px rgba(57, 49, 43, 0.05), 0 12px 32px -20px rgba(57, 49, 43, 0.24);
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #39312b;
+  --sidebar-muted: #675e57;
+  --sidebar-ativo: #efebe7;
+  --sidebar-ativo-fundo: linear-gradient(90deg, rgba(57, 49, 43, 0.11), rgba(57, 49, 43, 0.04));
+  --sidebar-ativo-borda: rgba(57, 49, 43, 0.3);
+  --sidebar-ativo-texto: #1e1a17;
+  --sidebar-borda: #e6e2dd;
+
+  --sucesso: #136c35;
+  --sucesso-bg: #e7f5ec;
+  --sucesso-fg: #14532d;
+  --alerta: #9c4507;
+  --alerta-bg: #fdf2dd;
+  --alerta-fg: #78350f;
+  --perigo: #be123c;
+  --perigo-bg: #fbe9ed;
+  --perigo-fg: #881337;
+  --info: #0b6a83;
+  --info-bg: #e3f3f6;
+  --info-fg: #164e63;
+
+  --grafico-1: #39312b;
+  --grafico-2: #9a8f86;
+  --grafico-3: #16a34a;
+  --grafico-4: #e11d48;
+  --grafico-5: #d97706;
+  --grafico-6: #c4bcb4;
+  color-scheme: light;
 }
 
 /* -----------------------------------------------------------------------------

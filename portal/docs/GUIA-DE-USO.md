@@ -28,7 +28,7 @@ No canto superior direito (iniciais do nome) → **Minha conta**:
 
 ### Aparência do portal
 
-No topo, ao lado do sino, o botão de **Aparência** troca as cores do portal (a escolha fica guardada no aparelho): **Clara (Luz)**, **Escura (Aurora)**, **Bronze**, **Vidro líquido** (a aparência padrão) ou **Igual ao sistema** (segue o modo claro/escuro do computador ou celular). Quem já tinha escolhido outra aparência continua com a sua.
+No topo, ao lado do sino, o botão de **Aparência** troca as cores do portal (a escolha fica guardada no aparelho): **Clara (Luz)**, **Escura (Aurora)**, **Bronze**, **Grafite (cores da logo)** (clara, grafite sobre branco, como a logo oficial), **Vidro líquido** (a aparência padrão) ou **Igual ao sistema** (segue o modo claro/escuro do computador ou celular). Quem já tinha escolhido outra aparência continua com a sua.
 
 No **Vidro líquido**, os painéis ficam translúcidos sobre uma paisagem ao entardecer, com o menu lateral flutuando e o topo em cápsula. Os textos foram conferidos para continuarem fáceis de ler em qualquer parte do fundo. Se o aparelho estiver configurado para **reduzir a transparência** (acessibilidade), os painéis aparecem sólidos. Na impressão, o fundo não sai.
 
