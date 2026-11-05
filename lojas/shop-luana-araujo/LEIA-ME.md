@@ -18,7 +18,11 @@ venda (baixa o estoque, entra no Financeiro e pode sair a NF-e).
   visitas, o portal recebe no máximo uma consulta por minuto por página. Uma
   mudança de preço ou estoque no portal aparece no site em até 1 minuto.
 - Fotos: o portal guarda cada foto em dois tamanhos prontos (WebP, 600 e
-  1200 px). O site só escolhe o tamanho, sem serviço pago de otimização de imagens.
+  1200 px). O site só escolhe o tamanho, sem serviço pago de otimização de imagens,
+  e entrega as fotos pelo próprio endereço (`/fotos/...`): a Vercel busca cada uma
+  no portal uma vez e guarda por um ano (o nome da foto nunca muda). Assim o
+  armazenamento do portal quase não reenvia fotos, e o link compartilhado no
+  WhatsApp mostra a imagem pelo domínio da loja.
 
 ## Páginas
 
@@ -55,7 +59,7 @@ como pede o Decreto 7.962/2013 para lojas virtuais.
 | `LOJA_SLUG` | o "endereço curto" da loja no portal (ex.: `shop-luana-araujo`) |
 | `PORTAL_CHAVE` | a chave gerada em Portal → Configurar o site (aparece uma vez só) |
 | `NEXT_PUBLIC_SITE_URL` | `https://shopluanaaraujo.com.br` |
-| `FOTOS_URL` | o mesmo `NEXT_PUBLIC_SUPABASE_URL` do portal (libera as fotos na política de segurança) |
+| `FOTOS_URL` | o mesmo `NEXT_PUBLIC_SUPABASE_URL` do portal (de onde o site busca as fotos para entregar em `/fotos`) |
 
 O portal mostra as três primeiras já prontas para copiar quando a chave é
 gerada. Gerar uma chave nova desliga a anterior na hora: troque a variável na

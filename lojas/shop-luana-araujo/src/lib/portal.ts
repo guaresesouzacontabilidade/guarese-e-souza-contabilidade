@@ -35,6 +35,14 @@ async function demo(): Promise<Demo> {
   return JSON.parse(await readFile(process.env.VITRINE_DEMO as string, "utf8")) as Demo;
 }
 
+/** Endereço das fotos no armazenamento do portal → mesmo caminho em /fotos do próprio site. */
+function pelasFotosDoSite<T extends { fotos?: string[] }>(item: T): T {
+  const origem = process.env.FOTOS_URL?.replace(/\/$/, "");
+  if (!origem || !item.fotos) return item;
+  const prefixo = `${origem}/storage/v1/object/public/loja-site/`;
+  return { ...item, fotos: item.fotos.map((f) => (f.startsWith(prefixo) ? `/fotos/${f.slice(prefixo.length)}` : f)) };
+}
+
 async function pedirAoPortal<T>(caminho: string, init?: RequestInit & { next?: { revalidate?: number; tags?: string[] } }): Promise<T | null> {
   const { url, slug, chave } = config();
   const r = await fetch(`${url}/api/vitrine/${encodeURIComponent(slug)}${caminho}`, {
@@ -54,14 +62,15 @@ export async function obterVitrine(): Promise<Vitrine> {
   }
   const v = await pedirAoPortal<Vitrine>("", { next: { revalidate: REVALIDAR_SEGUNDOS, tags: ["vitrine"] } });
   if (!v) throw new Error("Loja não encontrada no portal: confira LOJA_SLUG e PORTAL_CHAVE.");
-  return v;
+  return { ...v, produtos: (v.produtos ?? []).map(pelasFotosDoSite) };
 }
 
 /** Produto com descrição, todas as fotos e as variações. */
 export async function obterProduto(id: string): Promise<ProdutoDetalhe | null> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
   if (emDemonstracao()) return (await demo()).detalhes[id] ?? null;
-  return pedirAoPortal<ProdutoDetalhe>(`/produtos/${id}`, { next: { revalidate: REVALIDAR_SEGUNDOS, tags: ["vitrine", `produto:${id}`] } });
+  const p = await pedirAoPortal<ProdutoDetalhe>(`/produtos/${id}`, { next: { revalidate: REVALIDAR_SEGUNDOS, tags: ["vitrine", `produto:${id}`] } });
+  return p ? pelasFotosDoSite(p) : null;
 }
 
 export type RespostaPedido = { ok: true; pedido: PedidoRegistrado } | { ok: false; mensagem: string; precosMudaram?: boolean };

@@ -51,7 +51,7 @@ export default async function PaginaProduto({ params }: PageProps<"/p/[id]/[[...
     "@type": "Product",
     name: p.nome,
     sku: p.codigo,
-    image: p.fotos.map((f) => `${f}-g.webp`),
+    image: p.fotos.map((f) => `${f.startsWith("/") ? site : ""}${f}-g.webp`),
     description: resumoTexto(p.descricao, 500),
     offers: {
       "@type": "Offer",
