@@ -60,3 +60,29 @@ test("fechar o portal pede login de novo; recarregar e outras abas não desconec
   await expect(nova).toHaveURL(/\/login/);
   await ctx.close();
 });
+
+test("abrir um arquivo do portal na mesma aba (como o PDF de uma nota) e voltar não desconecta", async ({ browser }) => {
+  test.setTimeout(180_000);
+  const ctx = await browser.newContext({ baseURL: BASE, locale: "pt-BR" });
+  const aba = await ctx.newPage();
+  await entrar(aba, `contador@${DOMINIO}`);
+  await aba.goto("/escritorio/empresas");
+  await expect(aba.getByRole("heading", { name: "Empresas" })).toBeVisible({ timeout: 90_000 });
+
+  // Link para um arquivo do portal aberto nesta mesma aba; a pessoa fica um tempo nele e volta
+  await aba.evaluate(() => {
+    const a = document.createElement("a");
+    a.href = "/api/saude";
+    a.id = "link-arquivo";
+    a.textContent = "arquivo do portal";
+    a.style.cssText = "position:fixed;left:20px;bottom:20px;z-index:99999;background:#fff;padding:8px";
+    document.body.appendChild(a);
+  });
+  await aba.click("#link-arquivo");
+  await aba.waitForURL(/\/api\/saude/);
+  await esperar(8_000);
+  await aba.goBack();
+  await expect(aba).toHaveURL(/\/escritorio\/empresas/, { timeout: 60_000 });
+  await expect(aba.getByRole("heading", { name: "Empresas" })).toBeVisible({ timeout: 90_000 });
+  await ctx.close();
+});

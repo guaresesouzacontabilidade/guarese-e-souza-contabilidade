@@ -1,19 +1,20 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Search, Send } from "lucide-react";
+import { Loader2, Search, Send, Users } from "lucide-react";
 import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Alerta } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
 import { CampoValor } from "@/components/ui/campo-valor";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
-import { buscarTomador, pedirNota, type TomadorReceita } from "@/lib/nfse-emissao/acoes";
+import { buscarTomador, pedirNota, type TomadorReceita, type TomadorSalvo } from "@/lib/nfse-emissao/acoes";
 import { TOMADOR_TIPO } from "@/lib/nfse-emissao/rotulos";
 import type { ResultadoAcao } from "@/lib/acoes";
 import { formatarMoeda, lerValorBR } from "@/lib/dinheiro";
-import { formatarDocumento, somenteDigitos } from "@/lib/formatos";
+import { formatarDocumento, formatarTelefone, somenteDigitos } from "@/lib/formatos";
 
 export interface ServicoOpcao {
   id: string;
@@ -47,6 +48,7 @@ export function PedirNota({
   retencaoPermitida,
   ambiente,
   iniciais,
+  tomadoresSalvos = [],
 }: {
   empresaId: string;
   servicos: ServicoOpcao[];
@@ -54,6 +56,7 @@ export function PedirNota({
   retencaoPermitida: boolean;
   ambiente: "homologacao" | "producao";
   iniciais?: DadosIniciais;
+  tomadoresSalvos?: TomadorSalvo[];
 }) {
   const router = useRouter();
   const formId = "form-pedir-nota";
@@ -63,7 +66,12 @@ export function PedirNota({
   const [documento, setDocumento] = React.useState(iniciais?.tomador_documento ? formatarDocumento(iniciais.tomador_documento) : "");
   const [nome, setNome] = React.useState(iniciais?.tomador_nome ?? "");
   const [email, setEmail] = React.useState(iniciais?.tomador_email ?? "");
+  const [telefone, setTelefone] = React.useState(iniciais?.tomador_telefone ?? "");
   const [endereco, setEndereco] = React.useState<TomadorReceita["endereco"] | null>(iniciais?.endereco ?? null);
+  // Muda quando o endereço vem de fora (Receita ou tomador salvo): recria os campos com os valores novos
+  const [versaoEndereco, setVersaoEndereco] = React.useState(0);
+  const [salvoEscolhido, setSalvoEscolhido] = React.useState("");
+  const [salvarTomador, setSalvarTomador] = React.useState(true);
   const [valor, setValor] = React.useState(iniciais?.valor ? String(iniciais.valor) : "");
   const [local, setLocal] = React.useState("empresa");
   const [buscando, setBuscando] = React.useState(false);
@@ -88,8 +96,28 @@ export function PedirNota({
       setNome(r.dados.nome);
       if (r.dados.email && !email) setEmail(r.dados.email);
       setEndereco(r.dados.endereco);
+      setVersaoEndereco((v) => v + 1);
       setAviso({ tom: "sucesso", texto: r.mensagem ?? "Dados preenchidos." });
     } else setAviso({ tom: "perigo", texto: r.mensagem ?? "Não foi possível consultar o CNPJ." });
+  }
+
+  // Tomador salvo com o mesmo CPF/CNPJ digitado (para o texto da opção de salvar)
+  const docDigitado = somenteDigitos(documento);
+  const jaSalvo = tipo !== "nao_identificado" && docDigitado.length >= 11 && tomadoresSalvos.some((t) => t.documento === docDigitado);
+
+  function escolherSalvo(id: string) {
+    setSalvoEscolhido(id);
+    const t = tomadoresSalvos.find((x) => x.id === id);
+    if (!t) return;
+    setTipo(t.tipo);
+    setDocumento(formatarDocumento(t.documento));
+    setNome(t.nome);
+    setEmail(t.email ?? "");
+    setTelefone(t.telefone ? formatarTelefone(t.telefone) : "");
+    setEndereco(t.tipo === "cnpj" ? t.endereco : null);
+    setVersaoEndereco((v) => v + 1);
+    if (local === "tomador") setLocal("empresa");
+    setAviso({ tom: "sucesso", texto: `Dados de ${t.nome} preenchidos. Confira antes de emitir.` });
   }
 
   const faltando = (): string | null => {
@@ -145,6 +173,25 @@ export function PedirNota({
 
             <fieldset className="space-y-3 rounded-lg border border-border p-3 sm:p-4">
               <legend className="px-1 text-sm font-medium">Para quem é a nota (tomador)</legend>
+              {tomadoresSalvos.length ? (
+                <Campo rotulo="Tomador salvo" htmlFor="tomador_salvo" ajuda="Escolha um tomador já cadastrado para preencher os dados, ou digite um novo abaixo.">
+                  <div className="flex flex-wrap gap-2">
+                    <Select id="tomador_salvo" value={salvoEscolhido} onChange={(e) => escolherSalvo(e.target.value)} className="min-w-0 flex-1">
+                      <option value="">Escolher um tomador salvo...</option>
+                      {tomadoresSalvos.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.nome} — {formatarDocumento(t.documento)}
+                        </option>
+                      ))}
+                    </Select>
+                    <Button asChild variante="contorno">
+                      <Link href={`/e/${empresaId}/notas-servico/tomadores`}>
+                        <Users /> Tomadores salvos
+                      </Link>
+                    </Button>
+                  </div>
+                </Campo>
+              ) : null}
               <div className="flex flex-wrap gap-x-5 gap-y-2" role="radiogroup" aria-label="Tipo de tomador">
                 {(Object.keys(TOMADOR_TIPO) as (keyof typeof TOMADOR_TIPO)[]).map((t) => (
                   <label key={t} className="flex items-center gap-2 text-sm">
@@ -155,6 +202,7 @@ export function PedirNota({
                       checked={tipo === t}
                       onChange={() => {
                         setTipo(t);
+                        setSalvoEscolhido("");
                         setAviso(null);
                         if (t !== "cnpj") setEndereco(null);
                         if (local === "tomador") setLocal("empresa");
@@ -177,6 +225,7 @@ export function PedirNota({
                         value={documento}
                         onChange={(e) => {
                           setDocumento(e.target.value);
+                          setSalvoEscolhido("");
                           if (tipo === "cnpj") setEndereco(null);
                         }}
                         placeholder={tipo === "cnpj" ? "00.000.000/0000-00" : "000.000.000-00"}
@@ -199,7 +248,7 @@ export function PedirNota({
               {aviso ? <Alerta tom={aviso.tom}>{aviso.texto}</Alerta> : null}
 
               {tipo === "cnpj" && endereco ? (
-                <div className="grid gap-3 sm:grid-cols-6">
+                <div key={versaoEndereco} className="grid gap-3 sm:grid-cols-6">
                   <Campo rotulo="Endereço" htmlFor="end_logradouro" className="sm:col-span-3" erro={erros.end_logradouro}>
                     <Input id="end_logradouro" name="end_logradouro" defaultValue={endereco.logradouro ?? ""} maxLength={255} />
                   </Campo>
@@ -230,9 +279,23 @@ export function PedirNota({
                     <Input id="tomador_email" name="tomador_email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={80} />
                   </Campo>
                   <Campo rotulo="Telefone do tomador" htmlFor="tomador_telefone" ajuda="Opcional.">
-                    <Input id="tomador_telefone" name="tomador_telefone" inputMode="tel" defaultValue={iniciais?.tomador_telefone ?? ""} />
+                    <Input id="tomador_telefone" name="tomador_telefone" inputMode="tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
                   </Campo>
                 </div>
+              ) : null}
+
+              {tipo !== "nao_identificado" ? (
+                <label className="flex items-start gap-2 text-sm">
+                  <Checkbox name="salvar_tomador" checked={salvarTomador} onChange={(e) => setSalvarTomador(e.target.checked)} className="mt-0.5" />
+                  <span>
+                    {jaSalvo ? "Atualizar os dados salvos deste tomador" : "Salvar este tomador para as próximas notas"}
+                    <span className="block text-xs text-muted-foreground">
+                      {jaSalvo
+                        ? "O tomador já está salvo: guardamos os dados como estão nesta nota."
+                        : "Na próxima nota, é só escolher o tomador na lista, sem digitar tudo de novo."}
+                    </span>
+                  </span>
+                </label>
               ) : null}
             </fieldset>
 

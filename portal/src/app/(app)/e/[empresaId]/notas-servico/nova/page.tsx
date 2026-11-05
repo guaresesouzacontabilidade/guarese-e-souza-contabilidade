@@ -6,7 +6,7 @@ import { Alerta } from "@/components/ui/feedback";
 import { Card, CardContent } from "@/components/ui/card";
 import { PedirNota, type DadosIniciais } from "@/components/nfse/pedir-nota";
 import { parametro } from "@/lib/busca";
-import type { TomadorReceita } from "@/lib/nfse-emissao/acoes";
+import type { TomadorReceita, TomadorSalvo } from "@/lib/nfse-emissao/acoes";
 
 export const metadata: Metadata = { title: "Emitir nota de serviço" };
 
@@ -19,10 +19,18 @@ export default async function NovaNota({ params, searchParams }: PageProps<"/e/[
   const base = `/e/${empresaId}/notas-servico`;
   if (!ctx.pode("nfse.emitir")) return <Alerta tom="alerta">Seu acesso não inclui a emissão de notas desta empresa.</Alerta>;
 
-  const [{ data: cfg }, { data: servicos }, { data: emp }] = await Promise.all([
+  const [{ data: cfg }, { data: servicos }, { data: emp }, { data: salvos }] = await Promise.all([
     ctx.supabase.from("nfse_emissao_config").select("ativa, ambiente, codigo_municipio, iss_retencao_permitida").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("nfse_servicos").select("id, nome, codigo_tributacao_nacional, descricao_padrao").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     ctx.supabase.from("empresas").select("regime_tributario").eq("id", empresaId).maybeSingle(),
+    // Tomadores salvos: os usados mais recentemente primeiro
+    ctx.supabase
+      .from("nfse_tomadores")
+      .select("id, tipo, documento, nome, email, telefone, endereco")
+      .eq("empresa_id", empresaId)
+      .order("ultimo_uso_em", { ascending: false, nullsFirst: false })
+      .order("nome")
+      .limit(2000),
   ]);
   if (!cfg?.ativa) {
     return (
@@ -108,6 +116,7 @@ export default async function NovaNota({ params, searchParams }: PageProps<"/e/[
               retencaoPermitida={cfg.iss_retencao_permitida && emp?.regime_tributario !== "mei"}
               ambiente={cfg.ambiente as "homologacao" | "producao"}
               iniciais={iniciais}
+              tomadoresSalvos={(salvos ?? []) as TomadorSalvo[]}
             />
           </CardContent>
         </Card>

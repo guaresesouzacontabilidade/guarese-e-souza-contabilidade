@@ -3620,6 +3620,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"nfse_tomadores": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"documento": string,"email": string | null,"empresa_id": string,"endereco": Json | null,"id": string,"nome": string,"telefone": string | null,"tipo": string,"ultimo_uso_em": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"documento": string,"email"?: string | null,"empresa_id": string,"endereco"?: Json | null,"id"?: string,"nome": string,"telefone"?: string | null,"tipo": string,"ultimo_uso_em"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"documento"?: string,"email"?: string | null,"empresa_id"?: string,"endereco"?: Json | null,"id"?: string,"nome"?: string,"telefone"?: string | null,"tipo"?: string,"ultimo_uso_em"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfse_tomadores_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_tomadores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notas_automaticas": {
                   Row: {
                     "atualizado_por": string | null,"buscar_desde": string | null,"certificado_valido_ate": string | null,"ciencia_automatica": boolean,"empresa_id": string,"erros_seguidos": number,"executando_ate": string | null,"nfe_ativa": boolean,"nfe_max_nsu": string | null,"nfe_proxima": string | null,"nfe_ult_nsu": string,"nfse_ativa": boolean,"nfse_proxima": string | null,"nfse_ult_nsu": number,"pausada": boolean,"ultima_execucao": string | null,"ultimo_erro": string | null,"ultimo_sucesso": string | null,"updated_at": string
@@ -6013,6 +6038,12 @@ isOneToOne: false
                            },
 "nfse_tentar_de_novo":
 { Args: { "p_id": string }; Returns: undefined
+                           },
+"nfse_tomador_excluir":
+{ Args: { "p_empresa_id": string,"p_id": string }; Returns: undefined
+                           },
+"nfse_tomador_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
                            },
 "notas_agendar":
 { Args: { "p_empresa_id": string,"p_quando": string }; Returns: undefined

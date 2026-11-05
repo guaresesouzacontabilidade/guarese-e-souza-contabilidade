@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileText, PlugZap, Plus, Settings2 } from "lucide-react";
+import { FileText, PlugZap, Plus, Settings2, Users } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
@@ -63,6 +63,13 @@ export default async function NotasServico({ params, searchParams }: PageProps<"
               <Button asChild variante="contorno">
                 <Link href={`${base}/configuracao`}>
                   <Settings2 /> Configurar emissão
+                </Link>
+              </Button>
+            ) : null}
+            {ctx.pode("nfse.emitir") ? (
+              <Button asChild variante="contorno">
+                <Link href={`${base}/tomadores`}>
+                  <Users /> Tomadores salvos
                 </Link>
               </Button>
             ) : null}

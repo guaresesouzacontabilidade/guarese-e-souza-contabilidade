@@ -53,7 +53,7 @@ export default async function DetalheNota({ params }: PageProps<"/e/[empresaId]/
             {temXml ? (
               <>
                 <Button asChild>
-                  <a href={`/api/nfse/${empresaId}/${n.id}?formato=pdf`}>
+                  <a href={`/api/nfse/${empresaId}/${n.id}?formato=pdf`} target="_blank" rel="noopener noreferrer">
                     <Download /> PDF (DANFSe)
                   </a>
                 </Button>

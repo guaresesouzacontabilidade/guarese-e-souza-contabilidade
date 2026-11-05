@@ -51,6 +51,7 @@ let empresaId = "";
 async function limpar() {
   if (!empresaId) return;
   await servico!.from("nfse_emissoes").delete().eq("empresa_id", empresaId);
+  await servico!.from("nfse_tomadores").delete().eq("empresa_id", empresaId);
   await servico!.from("nfse_servicos").delete().eq("empresa_id", empresaId).like("nome", "%(E2E)%");
   await servico!.from("nfse_emissao_config").update({ ativa: false }).eq("empresa_id", empresaId);
   await servico!.from("certificados_digitais").delete().eq("empresa_id", empresaId).eq("titular", "CERTIFICADO FICTICIO (E2E)");
@@ -147,6 +148,60 @@ test("empresário: emissão desconectada sem configurar; com a emissão ligada p
   await expect(page.getByText("Sem resposta").first()).toBeVisible();
   const { data: notas } = await servico!.from("nfse_emissoes").select("situacao, chave_acesso, valor").eq("empresa_id", empresaId);
   expect(notas).toEqual([expect.objectContaining({ situacao: "falha", chave_acesso: null, valor: 350 })]);
+
+  // "Salvar este tomador" vem marcado: o CPF ficou salvo e aparece na próxima nota
+  const { data: salvos } = await servico!.from("nfse_tomadores").select("documento, nome, ultimo_uso_em").eq("empresa_id", empresaId);
+  expect(salvos).toEqual([expect.objectContaining({ documento: "52998224725", nome: "Fulano de Tal (fictício)" })]);
+  expect(salvos![0].ultimo_uso_em).toBeTruthy();
+  await page.goto(`/e/${empresaId}/notas-servico/nova`);
+  await page.selectOption("#tomador_salvo", { label: "Fulano de Tal (fictício) — 529.982.247-25" });
+  await expect(page.locator("#tomador_documento")).toHaveValue("529.982.247-25");
+  await expect(page.locator("#tomador_nome")).toHaveValue("Fulano de Tal (fictício)");
+  await expect(page.getByText("Atualizar os dados salvos deste tomador")).toBeVisible();
+});
+
+test("tomadores salvos: cadastrar, editar e excluir um CPF", async ({ page }) => {
+  test.setTimeout(180_000);
+  // Começa sem tomadores (o teste anterior salva um ao emitir)
+  await servico!.from("nfse_tomadores").delete().eq("empresa_id", empresaId);
+  await entrar(page, `cliente2@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/notas-servico`);
+  await page.getByRole("link", { name: /Tomadores salvos/ }).click();
+  await page.waitForURL(/\/notas-servico\/tomadores$/);
+  await expect(page.getByText("Nenhum tomador salvo ainda")).toBeVisible();
+
+  await page.getByRole("button", { name: "Novo tomador" }).click();
+  const dialogo = page.getByRole("dialog");
+  await dialogo.getByLabel("Pessoa (CPF)").check();
+  await dialogo.locator("#tom_documento").fill("111.444.777-35");
+  await dialogo.locator("#tom_nome").fill("Beltrana Souza (fictícia)");
+  await dialogo.locator("#tom_email").fill("beltrana@exemplo.com");
+  await dialogo.getByRole("button", { name: "Salvar tomador" }).click();
+  await expect(page.getByRole("cell", { name: "Beltrana Souza (fictícia)", exact: true })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "111.444.777-35", exact: true })).toBeVisible();
+
+  // CPF inválido é recusado com o campo destacado
+  await page.getByRole("button", { name: "Novo tomador" }).click();
+  await dialogo.getByLabel("Pessoa (CPF)").check();
+  await dialogo.locator("#tom_documento").fill("111.111.111-11");
+  await dialogo.locator("#tom_nome").fill("Errado");
+  await dialogo.getByRole("button", { name: "Salvar tomador" }).click();
+  await expect(dialogo.getByText("CPF inválido.")).toBeVisible();
+  await dialogo.getByRole("button", { name: "Voltar" }).click();
+
+  // Editar: muda o nome (o CPF fica travado)
+  await page.getByRole("button", { name: "Editar Beltrana Souza (fictícia)" }).click();
+  await expect(dialogo.locator("#tom_documento")).toHaveAttribute("readonly", "");
+  await dialogo.locator("#tom_nome").fill("Beltrana Souza Lima (fictícia)");
+  await dialogo.getByRole("button", { name: "Salvar tomador" }).click();
+  await expect(page.getByRole("cell", { name: "Beltrana Souza Lima (fictícia)", exact: true })).toBeVisible();
+
+  // Excluir, com confirmação
+  await page.getByRole("button", { name: "Excluir Beltrana Souza Lima (fictícia)" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Excluir" }).click();
+  await expect(page.getByText("Nenhum tomador salvo ainda")).toBeVisible();
+  const { count } = await servico!.from("nfse_tomadores").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  expect(count).toBe(0);
 });
 
 test("colaborador sem a permissão não vê a emissão", async ({ page }) => {

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Alerta } from "@/components/ui/feedback";
@@ -18,7 +20,7 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
   if (!ctx.pode("nfse.configurar")) return <Alerta tom="alerta">Somente a equipe do escritório configura a emissão de notas.</Alerta>;
   const base = `/e/${empresaId}`;
 
-  const [{ data: cfg }, { data: servicos }, { data: emp }, { data: cert }, { data: lista }] = await Promise.all([
+  const [{ data: cfg }, { data: servicos }, { data: emp }, { data: cert }, { data: lista }, { count: tomadores }] = await Promise.all([
     ctx.supabase.from("nfse_emissao_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase
       .from("nfse_servicos")
@@ -28,6 +30,7 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
     ctx.supabase.from("empresas").select("regime_tributario, municipio_ibge, tipo_pessoa, cnae, atividade_principal, dados_receita").eq("id", empresaId).maybeSingle(),
     ctx.supabase.from("certificados_digitais").select("valido_ate").eq("empresa_id", empresaId).is("revogado_em", null).maybeSingle(),
     ctx.supabase.from("nfse_lista_servicos").select("codigo, descricao, descricao_subitem, descricao_item").order("codigo"),
+    ctx.supabase.from("nfse_tomadores").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId),
   ]);
   const codigo = cfg?.codigo_municipio ?? emp?.municipio_ibge ?? null;
   const { data: municipio } = codigo ? await ctx.supabase.from("municipios").select("nome, uf").eq("ibge", codigo).maybeSingle() : { data: null };
@@ -117,6 +120,26 @@ export default async function ConfiguracaoNfse({ params }: PageProps<"/e/[empres
           </CardContent>
         </Card>
       </div>
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Tomadores salvos</CardTitle>
+          <CardDescription>
+            CPF e CNPJ dos clientes da empresa, para escolher na hora de emitir sem digitar de novo. Na emissão também dá para marcar “Salvar este tomador”.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {tomadores ? `${tomadores} tomador${tomadores === 1 ? "" : "es"} salvo${tomadores === 1 ? "" : "s"}.` : "Nenhum tomador salvo ainda."}
+          </p>
+          {ctx.pode("nfse.emitir") ? (
+            <Button asChild variante="contorno">
+              <Link href={`${base}/notas-servico/tomadores`}>
+                <Users /> Cadastrar e gerenciar tomadores
+              </Link>
+            </Button>
+          ) : null}
+        </CardContent>
+      </Card>
     </>
   );
 }

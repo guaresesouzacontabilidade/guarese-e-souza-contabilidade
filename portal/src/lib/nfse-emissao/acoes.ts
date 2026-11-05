@@ -25,6 +25,44 @@ async function contexto(empresaId: string, permissao: "nfse.emitir" | "nfse.conf
   return ctx.pode(permissao) ? ctx : null;
 }
 
+type TipoTomador = "cnpj" | "cpf" | "nao_identificado";
+type EnderecoTomador = Record<string, string | null>;
+
+/** Lê e confere os dados do tomador de um formulário (pedido da nota ou cadastro de tomador). */
+function lerTomador(fd: FormData, tiposAceitos: TipoTomador[]) {
+  const erros: Record<string, string[]> = {};
+  const tipo = texto(fd, "tomador_tipo") as TipoTomador;
+  if (!tiposAceitos.includes(tipo)) erros.tomador_tipo = [tiposAceitos.length === 2 ? "Escolha CPF ou CNPJ." : "Escolha para quem é a nota."];
+  const documento = somenteDigitos(texto(fd, "tomador_documento"));
+  const nome = texto(fd, "tomador_nome");
+  const email = texto(fd, "tomador_email").toLowerCase();
+  const telefone = somenteDigitos(texto(fd, "tomador_telefone"));
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) erros.tomador_email = ["E-mail inválido."];
+  let endereco: EnderecoTomador | null = null;
+  if (tipo === "cnpj") {
+    if (!validarCnpj(documento)) erros.tomador_documento = ["CNPJ inválido."];
+    if (nome.length < 2) erros.tomador_nome = ["Informe o nome (razão social) do tomador."];
+    endereco = {
+      logradouro: texto(fd, "end_logradouro") || null,
+      numero: texto(fd, "end_numero") || null,
+      complemento: texto(fd, "end_complemento") || null,
+      bairro: texto(fd, "end_bairro") || null,
+      codigo_municipio: somenteDigitos(texto(fd, "end_codigo_municipio")) || null,
+      municipio: texto(fd, "end_municipio") || null,
+      uf: texto(fd, "end_uf").toUpperCase() || null,
+      cep: somenteDigitos(texto(fd, "end_cep")) || null,
+    };
+    if (!endereco.logradouro) erros.end_logradouro = ["Informe o endereço do tomador."];
+    if (!endereco.cep || endereco.cep.length !== 8) erros.end_cep = ["CEP com 8 números."];
+    if (!endereco.codigo_municipio || endereco.codigo_municipio.length !== 7) erros.end_codigo_municipio = ["Busque o CNPJ na Receita para trazer o município."];
+  } else if (tipo === "cpf") {
+    if (!validarCpf(documento)) erros.tomador_documento = ["CPF inválido."];
+    if (nome.length < 2) erros.tomador_nome = ["Informe o nome do tomador."];
+  }
+  if (telefone && (telefone.length < 6 || telefone.length > 20)) erros.tomador_telefone = ["Telefone inválido."];
+  return { tipo, documento, nome, email, telefone, endereco, erros };
+}
+
 export interface TomadorReceita {
   nome: string;
   email: string | null;
@@ -107,33 +145,9 @@ export async function pedirNota(empresaId: string, _anterior: ResultadoAcao, fd:
   const descricao = texto(fd, "descricao");
   if (descricao.length < 3) erros.descricao = ["Descreva o serviço prestado."];
   if (descricao.length > 1000) erros.descricao = ["A descrição pode ter até 1.000 caracteres."];
-  const tipo = texto(fd, "tomador_tipo");
-  if (!["cnpj", "cpf", "nao_identificado"].includes(tipo)) erros.tomador_tipo = ["Escolha para quem é a nota."];
-  const documento = somenteDigitos(texto(fd, "tomador_documento"));
-  const nome = texto(fd, "tomador_nome");
-  const email = texto(fd, "tomador_email").toLowerCase();
-  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) erros.tomador_email = ["E-mail inválido."];
-  let endereco: Record<string, string | null> | null = null;
-  if (tipo === "cnpj") {
-    if (!validarCnpj(documento)) erros.tomador_documento = ["CNPJ inválido."];
-    if (nome.length < 2) erros.tomador_nome = ["Informe o nome (razão social) do tomador."];
-    endereco = {
-      logradouro: texto(fd, "end_logradouro") || null,
-      numero: texto(fd, "end_numero") || null,
-      complemento: texto(fd, "end_complemento") || null,
-      bairro: texto(fd, "end_bairro") || null,
-      codigo_municipio: somenteDigitos(texto(fd, "end_codigo_municipio")) || null,
-      municipio: texto(fd, "end_municipio") || null,
-      uf: texto(fd, "end_uf").toUpperCase() || null,
-      cep: somenteDigitos(texto(fd, "end_cep")) || null,
-    };
-    if (!endereco.logradouro) erros.end_logradouro = ["Informe o endereço do tomador."];
-    if (!endereco.cep || endereco.cep.length !== 8) erros.end_cep = ["CEP com 8 números."];
-    if (!endereco.codigo_municipio || endereco.codigo_municipio.length !== 7) erros.end_codigo_municipio = ["Busque o CNPJ na Receita para trazer o município."];
-  } else if (tipo === "cpf") {
-    if (!validarCpf(documento)) erros.tomador_documento = ["CPF inválido."];
-    if (nome.length < 2) erros.tomador_nome = ["Informe o nome do tomador."];
-  }
+  const tomador = lerTomador(fd, ["cnpj", "cpf", "nao_identificado"]);
+  Object.assign(erros, tomador.erros);
+  const { tipo, documento, nome, email, endereco } = tomador;
   const competencia = texto(fd, "competencia");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(competencia)) erros.competencia = ["Informe a data da prestação."];
   if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
@@ -173,7 +187,7 @@ export async function pedirNota(empresaId: string, _anterior: ResultadoAcao, fd:
       tomador_documento: tipo === "nao_identificado" ? null : documento,
       tomador_nome: tipo === "nao_identificado" ? null : nome,
       tomador_email: email || null,
-      tomador_telefone: somenteDigitos(texto(fd, "tomador_telefone")) || null,
+      tomador_telefone: tomador.telefone || null,
       tomador_endereco: endereco,
       informacoes_complementares: texto(fd, "informacoes_complementares") || null,
       confirmar_repetida: fd.get("confirmar_repetida") === "on",
@@ -184,7 +198,50 @@ export async function pedirNota(empresaId: string, _anterior: ResultadoAcao, fd:
     return falha(mensagemErro(error));
   }
   processarFilaDepois({ tipos: ["emitir_nfse"], limite: 5 });
-  return sucesso("Nota enviada ao Emissor Nacional.", { id: (data as { id: string }).id });
+  // "Salvar este tomador para as próximas notas" (não atrapalha a nota se não der certo)
+  let extra = "";
+  if (fd.get("salvar_tomador") === "on" && tipo !== "nao_identificado") {
+    const { error: erroTomador } = await ctx.supabase.rpc("nfse_tomador_salvar", {
+      p_empresa_id: empresaId,
+      p_dados: { tipo, documento, nome, email: email || null, telefone: tomador.telefone || null, endereco, usado: true } as never,
+    });
+    extra = erroTomador ? ` O tomador não foi salvo: ${mensagemErro(erroTomador)}` : " Tomador salvo para as próximas notas.";
+  }
+  return sucesso(`Nota enviada ao Emissor Nacional.${extra}`, { id: (data as { id: string }).id });
+}
+
+export interface TomadorSalvo {
+  id: string;
+  tipo: "cnpj" | "cpf";
+  documento: string;
+  nome: string;
+  email: string | null;
+  telefone: string | null;
+  endereco: TomadorReceita["endereco"] | null;
+  ultimo_uso_em?: string | null;
+}
+
+/** Cadastra ou atualiza (pelo mesmo CPF/CNPJ) um tomador salvo da empresa. */
+export async function salvarTomador(empresaId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao<{ id?: string }>> {
+  const ctx = await contexto(empresaId, "nfse.emitir");
+  if (!ctx) return falha("Sem permissão para emitir notas desta empresa.");
+  const t = lerTomador(fd, ["cnpj", "cpf"]);
+  if (Object.keys(t.erros).length) return falha("Revise os campos destacados.", t.erros);
+  const { data, error } = await ctx.supabase.rpc("nfse_tomador_salvar", {
+    p_empresa_id: empresaId,
+    p_dados: { tipo: t.tipo, documento: t.documento, nome: t.nome, email: t.email || null, telefone: t.telefone || null, endereco: t.endereco } as never,
+  });
+  if (error) return falha(mensagemErro(error));
+  return sucesso("Tomador salvo.", { id: data as string });
+}
+
+/** Exclui um tomador salvo (as notas já emitidas não mudam). */
+export async function excluirTomador(empresaId: string, id: string): Promise<ResultadoAcao> {
+  const ctx = await contexto(empresaId, "nfse.emitir");
+  if (!ctx || !UUID.test(id)) return falha("Sem permissão para emitir notas desta empresa.");
+  const { error } = await ctx.supabase.rpc("nfse_tomador_excluir", { p_empresa_id: empresaId, p_id: id });
+  if (error) return falha(mensagemErro(error));
+  return sucesso("Tomador excluído.");
 }
 
 export async function tentarDeNovo(empresaId: string, id: string): Promise<ResultadoAcao> {
