@@ -31,6 +31,13 @@ describe("catálogo", () => {
     expect(ordenar(lista, "az").map((x) => x.id)).toEqual(["a", "c", "b"]);
   });
 
+  it("em destaque e novidades, produto sem foto fica depois dos com foto; no preço, não", () => {
+    const lista = [p("sem", "Novo sem foto", { publicado_em: "2026-12-01T00:00:00Z", preco: 5 }), p("com", "Antigo com foto", { fotos: ["/f/1"], preco: 9 })];
+    expect(ordenar(lista, "novos").map((x) => x.id)).toEqual(["com", "sem"]);
+    expect(ordenar(lista, "destaque").map((x) => x.id)).toEqual(["com", "sem"]);
+    expect(ordenar(lista, "menor").map((x) => x.id)).toEqual(["sem", "com"]);
+  });
+
   it("árvore de categorias com contagem, sem as vazias; subcategoria acha a principal", () => {
     const produtos = [p("1", "x", { categoria_id: "b" }), p("2", "y", { categoria_id: "b" }), p("3", "z", { categoria_id: "m" }), p("4", "w", { categoria_id: "pr" })];
     const arvore = arvoreCategorias(cats, produtos);

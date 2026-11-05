@@ -37,7 +37,7 @@ export const ORDENS: { valor: Ordem; rotulo: string }[] = [
   { valor: "az", rotulo: "Nome (A–Z)" },
 ];
 
-/** Ordena; os esgotados vão sempre para o fim. */
+/** Ordena; os esgotados vão sempre para o fim e, em "destaque" e "novidades", os sem foto ficam depois dos com foto. */
 export function ordenar<T extends ProdutoResumo>(produtos: T[], ordem: Ordem): T[] {
   const nome = (a: T, b: T) => a.nome.localeCompare(b.nome, "pt-BR");
   const novos = (a: T, b: T) => b.publicado_em.localeCompare(a.publicado_em);
@@ -48,7 +48,8 @@ export function ordenar<T extends ProdutoResumo>(produtos: T[], ordem: Ordem): T
     maior: (a, b) => b.preco - a.preco || nome(a, b),
     az: nome,
   };
-  return [...produtos].sort((a, b) => Number(b.disponivel) - Number(a.disponivel) || regra[ordem](a, b));
+  const comFoto = (p: T) => (ordem === "destaque" || ordem === "novos" ? Number(p.fotos.length > 0) : 0);
+  return [...produtos].sort((a, b) => Number(b.disponivel) - Number(a.disponivel) || comFoto(b) - comFoto(a) || regra[ordem](a, b));
 }
 
 export interface NoCategoria extends Categoria {
