@@ -587,7 +587,7 @@ function FormCategoria({ empresaId, categoria, principais, aoSalvar }: { empresa
                 ))}
             </Select>
           </Campo>
-          <Campo rotulo="Ordem" htmlFor={`cat-ordem-${id}`}>
+          <Campo rotulo="Ordem" htmlFor={`cat-ordem-${id}`} ajuda="1, 2, 3… vêm primeiro; 0 segue pela quantidade de produtos.">
             <Input id={`cat-ordem-${id}`} name="ordem" defaultValue={categoria?.ordem ?? 0} inputMode="numeric" />
           </Campo>
           <div className="flex items-center gap-3">

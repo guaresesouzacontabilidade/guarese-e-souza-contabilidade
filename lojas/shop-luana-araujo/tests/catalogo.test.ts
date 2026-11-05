@@ -11,7 +11,7 @@ const cats: Categoria[] = [
   { id: "m", pai_id: null, nome: "Maquiagens", slug: "maquiagens", ordem: 0 },
   { id: "b", pai_id: "m", nome: "Bases", slug: "bases", ordem: 0 },
   { id: "g", pai_id: "m", nome: "Gloss", slug: "gloss", ordem: 1 },
-  { id: "pr", pai_id: null, nome: "Prata 925", slug: "prata-925", ordem: 1 },
+  { id: "pr", pai_id: null, nome: "Prata 925", slug: "prata-925", ordem: 0 },
   { id: "vazia", pai_id: null, nome: "Vazia", slug: "vazia", ordem: 2 },
 ];
 
@@ -43,6 +43,18 @@ describe("catálogo", () => {
     expect(produtosDaCategoria(arvore[0], produtos).map((x) => x.id)).toEqual(["1", "2", "3"]);
     expect(acharCategoria(arvore, "vazia")).toBeNull();
     expect(frasePrincipal(arvore)).toBe("Maquiagens e prata 925");
+  });
+
+  it("sem ordem definida no portal, as categorias com mais produtos vêm primeiro", () => {
+    const iguais: Categoria[] = [
+      { id: "a", pai_id: null, nome: "Acessórios", slug: "acessorios", ordem: 0 },
+      { id: "p", pai_id: null, nome: "Prata 925", slug: "prata-925", ordem: 0 },
+      { id: "m", pai_id: null, nome: "Maquiagens", slug: "maquiagens", ordem: 0 },
+    ];
+    const produtos = [p("1", "x", { categoria_id: "p" }), p("2", "y", { categoria_id: "p" }), p("3", "z", { categoria_id: "m" }), p("4", "w", { categoria_id: "a" }), p("5", "v", { categoria_id: "m" }), p("6", "u", { categoria_id: "p" })];
+    expect(arvoreCategorias(iguais, produtos).map((c) => c.slug)).toEqual(["prata-925", "maquiagens", "acessorios"]);
+    // numerada no portal vem antes, mesmo com menos produtos
+    expect(arvoreCategorias(iguais.map((c) => (c.id === "a" ? { ...c, ordem: 1 } : c)), produtos).map((c) => c.slug)).toEqual(["acessorios", "prata-925", "maquiagens"]);
   });
 
   it("endereços, telefone, CNPJ e moeda", () => {

@@ -26,7 +26,7 @@ export function MenuCategorias({ arvore, rotulo = "Abrir o menu", variante = "ic
           <Menu className="size-6" strokeWidth={1.5} aria-hidden="true" />
         </button>
       ) : (
-        <button type="button" onClick={abrir} className="py-2 text-[0.75rem] font-medium uppercase tracking-[0.16em] text-prata hover:text-white">
+        <button type="button" onClick={abrir} className="whitespace-nowrap py-2 text-[0.75rem] font-medium uppercase tracking-[0.14em] text-prata hover:text-white" aria-label="Todas as categorias">
           {rotulo}
         </button>
       )}

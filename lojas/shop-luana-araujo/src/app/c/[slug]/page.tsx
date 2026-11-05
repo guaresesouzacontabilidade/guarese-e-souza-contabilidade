@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { acharCategoria, arvoreCategorias, produtosDaCategoria } from "@/lib/catalogo";
 import { obterVitrine } from "@/lib/portal";
 import { ListaProdutos } from "@/components/lista-produtos";
+import { Subcategorias } from "@/components/subcategorias";
 
 export const revalidate = 60;
 
@@ -58,22 +59,11 @@ export default async function PaginaCategoria({ params }: PageProps<"/c/[slug]">
       </nav>
       <h1 className="mt-4 text-4xl md:text-5xl">{categoria.nome}</h1>
       {principal.filhas.length ? (
-        <nav aria-label={`Subcategorias de ${principal.nome}`} className="mt-6">
-          <ul className="faixa-rolagem scroll-px-4 -mx-4 px-4 md:mx-0 md:flex-wrap md:px-0">
-            <li>
-              <Link href={`/c/${principal.slug}`} className="opcao" aria-current={!pai ? "page" : undefined}>
-                Todos
-              </Link>
-            </li>
-            {principal.filhas.map((f) => (
-              <li key={f.id}>
-                <Link href={`/c/${f.slug}`} className="opcao" aria-current={f.id === categoria.id ? "page" : undefined}>
-                  {f.nome}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <Subcategorias
+          principal={{ slug: principal.slug, nome: principal.nome }}
+          filhas={principal.filhas.map((f) => ({ id: f.id, nome: f.nome, slug: f.slug }))}
+          atual={pai ? categoria.id : null}
+        />
       ) : null}
       <div className="mt-8">
         <ListaProdutos key={categoria.id} produtos={produtos} />

@@ -23,7 +23,7 @@ export default async function CategoriasDoSite({ params }: PageProps<"/e/[empres
   for (const p of produtos) if (p.categoria_id) porCategoria.set(p.categoria_id, (porCategoria.get(p.categoria_id) ?? 0) + 1);
   return (
     <>
-      <CabecalhoPagina titulo="Categorias do site" descricao="Dois níveis: categoria principal (ex.: Maquiagens) e as de dentro (ex.: Bases). A ordem define a sequência no menu do site." voltar={{ href: `/e/${empresaId}/loja/site`, rotulo: "Site da loja" }} />
+      <CabecalhoPagina titulo="Categorias do site" descricao="Dois níveis: categoria principal (ex.: Maquiagens) e as de dentro (ex.: Bases). No menu do site, as numeradas (1, 2, 3…) vêm primeiro; as com ordem 0 seguem das com mais produtos para as com menos." voltar={{ href: `/e/${empresaId}/loja/site`, rotulo: "Site da loja" }} />
       <NavegacaoLoja empresaId={empresaId} configurar />
       <NavegacaoSite empresaId={empresaId} gerente />
       <Card>

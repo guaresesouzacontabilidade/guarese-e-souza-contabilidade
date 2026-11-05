@@ -57,22 +57,28 @@ export interface NoCategoria extends Categoria {
   total: number;
 }
 
-/** Árvore de categorias com a contagem de produtos; só entram as que têm produto. */
+/**
+ * Árvore de categorias com a contagem de produtos; só entram as que têm produto.
+ * Ordem: as numeradas no portal (1, 2, 3…) primeiro; as demais (ordem 0, como
+ * as importadas), das com mais produtos para as com menos, depois pelo nome.
+ */
 export function arvoreCategorias(categorias: Categoria[], produtos: Pick<ProdutoResumo, "categoria_id">[]): NoCategoria[] {
   const porCategoria = new Map<string, number>();
   for (const p of produtos) if (p.categoria_id) porCategoria.set(p.categoria_id, (porCategoria.get(p.categoria_id) ?? 0) + 1);
-  const ordem = (a: Categoria, b: Categoria) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR");
-  const raizes = categorias.filter((c) => !c.pai_id).sort(ordem);
-  return raizes
+  const posicao = (c: NoCategoria) => (c.ordem > 0 ? c.ordem : Number.MAX_SAFE_INTEGER);
+  const ordem = (a: NoCategoria, b: NoCategoria) => posicao(a) - posicao(b) || b.total - a.total || a.nome.localeCompare(b.nome, "pt-BR");
+  return categorias
+    .filter((c) => !c.pai_id)
     .map((r) => {
       const filhas = categorias
         .filter((c) => c.pai_id === r.id)
-        .sort(ordem)
         .map((f) => ({ ...f, filhas: [], total: porCategoria.get(f.id) ?? 0 }))
-        .filter((f) => f.total > 0);
+        .filter((f) => f.total > 0)
+        .sort(ordem);
       return { ...r, filhas, total: (porCategoria.get(r.id) ?? 0) + filhas.reduce((s, f) => s + f.total, 0) };
     })
-    .filter((r) => r.total > 0);
+    .filter((r) => r.total > 0)
+    .sort(ordem);
 }
 
 /** Acha a categoria pelo endereço e devolve também a principal (quando é subcategoria). */

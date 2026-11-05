@@ -19,13 +19,17 @@ export function Cabecalho({ loja, arvore }: { loja: Loja; arvore: NoCategoria[] 
             <MenuCategorias arvore={arvore} />
           </div>
           <Logo nome={loja.nome} className="justify-self-center md:justify-self-start" />
-          <nav className="hidden items-center justify-center gap-7 md:flex" aria-label="Principais categorias">
-            {principais.map((c) => (
-              <Link key={c.id} href={`/c/${c.slug}`} className="py-2 text-[0.75rem] font-medium uppercase tracking-[0.16em] text-prata transition-colors hover:text-white">
+          <nav className="hidden items-center justify-center gap-5 md:flex lg:gap-7" aria-label="Principais categorias">
+            {principais.map((c, i) => (
+              <Link
+                key={c.id}
+                href={`/c/${c.slug}`}
+                className={`whitespace-nowrap py-2 text-[0.75rem] font-medium uppercase tracking-[0.14em] text-prata transition-colors hover:text-white ${i >= 2 ? "hidden lg:inline" : ""} ${i >= 4 ? "lg:hidden xl:inline" : ""}`}
+              >
                 {c.nome}
               </Link>
             ))}
-            {arvore.length > principais.length ? <MenuCategorias arvore={arvore} rotulo="Mais categorias" variante="texto" /> : null}
+            {arvore.length > 2 ? <MenuCategorias arvore={arvore} rotulo="Todas" variante="texto" /> : null}
           </nav>
           <div className="flex items-center justify-end gap-1">
             <form action="/busca" role="search" className="hidden lg:block">
