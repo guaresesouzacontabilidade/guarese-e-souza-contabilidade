@@ -24,6 +24,7 @@ export function Comprar({ produto: p, url, whatsapp, enderecoSite }: Props) {
   const botao = React.useRef<HTMLButtonElement>(null);
   const opcoes = React.useRef<HTMLDivElement>(null);
   const rotulo = p.rotulo_variacao || "Opção";
+  const pedirOpcao = rotulo.toLowerCase() === "opção" ? "Escolha uma opção" : `Escolha uma opção de ${rotulo.toLowerCase()}`;
   const maximo = Math.max(1, p.maximo);
 
   React.useEffect(() => {
@@ -37,7 +38,7 @@ export function Comprar({ produto: p, url, whatsapp, enderecoSite }: Props) {
   const adicionar = () => {
     if (!p.disponivel) return;
     if (p.variacoes.length && !variacao) {
-      setErro(`Escolha ${rotulo.toLowerCase()} antes de pôr na sacola.`);
+      setErro(`${pedirOpcao} antes de pôr na sacola.`);
       opcoes.current?.scrollIntoView({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
       opcoes.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
       return;
@@ -135,7 +136,7 @@ export function Comprar({ produto: p, url, whatsapp, enderecoSite }: Props) {
         >
           <div className="flex items-center gap-4">
             <div className="min-w-0">
-              <p className="truncate text-xs text-suave">{variacao ? `${rotulo}: ${variacao}` : p.variacoes.length ? `Escolha ${rotulo.toLowerCase()}` : p.nome}</p>
+              <p className="truncate text-xs text-suave">{variacao ? `${rotulo}: ${variacao}` : p.variacoes.length ? pedirOpcao : p.nome}</p>
               <p className="text-base font-semibold tabular-nums">{moeda(p.preco)}</p>
             </div>
             <button type="button" onClick={adicionar} className="botao flex-1" tabIndex={botaoVisivel ? -1 : 0}>
