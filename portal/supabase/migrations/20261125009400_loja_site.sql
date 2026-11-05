@@ -318,9 +318,19 @@ begin
     v_slug := left(v_base, 64) || '-' || v_n;
   end loop;
   if p_id is null then
-    insert into public.loja_site_categorias (empresa_id, pai_id, nome, slug, ordem)
-    values (p_empresa_id, p_pai_id, trim(p_nome), v_slug, coalesce(p_ordem, 0))
-    returning id into v_id;
+    begin
+      insert into public.loja_site_categorias (empresa_id, pai_id, nome, slug, ordem)
+      values (p_empresa_id, p_pai_id, trim(p_nome), v_slug, coalesce(p_ordem, 0))
+      returning id into v_id;
+    exception
+      when unique_violation then
+        -- Outro produto da mesma importação criou esta categoria no mesmo instante: usa a que ficou gravada
+        select id into v_id from public.loja_site_categorias
+         where empresa_id = p_empresa_id and pai_id is not distinct from p_pai_id and lower(nome) = lower(trim(p_nome));
+        if v_id is null then
+          raise exception 'Já existe uma categoria com o endereço "%". Use outro nome.', v_slug;
+        end if;
+    end;
   else
     update public.loja_site_categorias
        set pai_id = p_pai_id, nome = trim(p_nome), slug = v_slug, ordem = coalesce(p_ordem, ordem)
