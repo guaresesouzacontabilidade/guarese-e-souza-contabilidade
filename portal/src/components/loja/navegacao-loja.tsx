@@ -13,9 +13,25 @@ export function NavegacaoLoja({ empresaId, configurar }: { empresaId: string; co
     { rotulo: "Caixa", href: `${base}/caixa` },
     { rotulo: "Produtos e estoque", href: `${base}/produtos` },
     { rotulo: "Vendas e orçamentos", href: `${base}/vendas` },
+    { rotulo: "Site da loja", href: `${base}/site` },
   ];
   if (configurar) itens.push({ rotulo: "Configurações", href: `${base}/configuracoes` });
   return <SubNavegacao itens={itens} />;
+}
+
+/** Abas do site da loja (vitrine na internet ligada ao portal). */
+export function NavegacaoSite({ empresaId, gerente }: { empresaId: string; gerente: boolean }) {
+  const base = `/e/${empresaId}/loja/site`;
+  const itens = [{ rotulo: "Pedidos do site", href: base, exato: true }];
+  if (gerente) {
+    itens.push(
+      { rotulo: "Produtos no site", href: `${base}/produtos`, exato: false },
+      { rotulo: "Categorias", href: `${base}/categorias`, exato: false },
+      { rotulo: "Configurar o site", href: `${base}/configurar`, exato: false },
+      { rotulo: "Importar da FácilZap", href: `${base}/importar`, exato: false },
+    );
+  }
+  return <SubNavegacao itens={itens} className="mb-4" />;
 }
 
 /** Abas da modalidade "notas e transporte". */
