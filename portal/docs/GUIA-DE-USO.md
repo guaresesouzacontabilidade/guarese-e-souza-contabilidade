@@ -26,6 +26,10 @@ No canto superior direito (iniciais do nome) → **Minha conta**:
 - **Dispositivos conectados**: onde a conta está aberta; dá para encerrar um aparelho ou todos os outros.
 - **Privacidade e seus dados (LGPD)**: baixar uma cópia dos seus dados e fazer pedidos ao escritório (correção, exclusão etc.).
 
+### Baixar arquivos no celular
+
+No celular, os botões de baixar do portal (PDF e XML das notas, documentos, relatórios, planilhas) **não abrem outra tela**: o portal prepara o arquivo e entrega ao aparelho, e você continua na mesma tela. No **Android**, o arquivo vai para a pasta **Downloads** (o aviso tem o botão **Compartilhar**, para mandar pelo WhatsApp ou e-mail). No **iPhone**, aparece **Arquivo pronto**: toque em **Salvar ou compartilhar** e escolha **Salvar em Arquivos**, o WhatsApp ou o e-mail. No computador, o PDF continua abrindo numa aba nova.
+
 ### Aparência do portal
 
 No topo, ao lado do sino, o botão de **Aparência** troca as cores do portal (a escolha fica guardada no aparelho): **Clara (Luz)**, **Escura (Aurora)**, **Bronze**, **Grafite (cores da logo)** (clara, grafite sobre branco, como a logo oficial), **Vidro líquido** (a aparência padrão) ou **Igual ao sistema** (segue o modo claro/escuro do computador ou celular). Quem já tinha escolhido outra aparência continua com a sua.
