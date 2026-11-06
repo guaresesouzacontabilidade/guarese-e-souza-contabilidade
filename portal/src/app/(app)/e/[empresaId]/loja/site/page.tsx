@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
-import { LojaIndisponivel, NavegacaoLoja, NavegacaoSite } from "@/components/loja/navegacao-loja";
+import { LojaIndisponivel, NavegacaoLoja, NavegacaoSite, SiteNaoLiberado } from "@/components/loja/navegacao-loja";
+import { siteLiberado } from "@/lib/vitrine/liberacao";
 import { hojeLocal, obterContextoLoja } from "@/lib/gestao/contexto";
 import { hora } from "@/lib/gestao/rotulos";
 import { carregarSite } from "@/lib/vitrine/dados";
@@ -28,6 +29,7 @@ export default async function PaginaSite({ params }: PageProps<"/e/[empresaId]/l
   const { empresaId } = await params;
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
+  if (!(await siteLiberado(empresaId))) return <SiteNaoLiberado empresaId={empresaId} equipe={ctx.equipe} />;
   const gerente = ctx.gerente || ctx.equipe;
   const inicioMes = hojeLocal().slice(0, 8) + "01";
   const [site, { data: pedidos }, { data: vendasMes }, { count: noSite }] = await Promise.all([

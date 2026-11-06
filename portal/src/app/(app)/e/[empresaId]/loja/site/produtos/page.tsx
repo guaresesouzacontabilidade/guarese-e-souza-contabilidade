@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { EstadoVazio } from "@/components/ui/feedback";
-import { LojaIndisponivel, NavegacaoLoja, NavegacaoSite } from "@/components/loja/navegacao-loja";
+import { LojaIndisponivel, NavegacaoLoja, NavegacaoSite, SiteNaoLiberado } from "@/components/loja/navegacao-loja";
+import { siteLiberado } from "@/lib/vitrine/liberacao";
 import { ListaProdutosSite, type ProdutoListaSite } from "@/components/loja/site";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { carregarCategoriasSite, carregarProdutosSite, miniatura, nomeCompletoCategoria } from "@/lib/vitrine/dados";
@@ -13,6 +14,7 @@ export default async function ProdutosNoSite({ params }: PageProps<"/e/[empresaI
   const { empresaId } = await params;
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
+  if (!(await siteLiberado(empresaId))) return <SiteNaoLiberado empresaId={empresaId} equipe={ctx.equipe} />;
   if (!ctx.gerente) return <EstadoVazio titulo="Só quem gerencia a loja mexe nos produtos do site" />;
   const [produtos, categorias] = await Promise.all([carregarProdutosSite(ctx.supabase, empresaId), carregarCategoriasSite(ctx.supabase, empresaId)]);
   const lista: ProdutoListaSite[] = produtos.map((p) => {

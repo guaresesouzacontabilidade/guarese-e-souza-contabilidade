@@ -2947,6 +2947,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"loja_site_liberacoes": {
+                  Row: {
+                    "created_at": string,"empresa_id": string,"liberado_por": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"empresa_id": string,"liberado_por"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"empresa_id"?: string,"liberado_por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_liberacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_liberacoes_liberado_por_fkey"
+      columns: ["liberado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"loja_site_categorias": {
                   Row: {
                     "ativa": boolean,"created_at": string,"empresa_id": string,"id": string,"nome": string,"ordem": number,"pai_id": string | null,"slug": string,"updated_at": string
@@ -6026,6 +6051,8 @@ isOneToOne: false
       } },
 "loja_site_banner_excluir":
 { Args: { "p_empresa_id": string,"p_id": string }; Returns: (string)[]
+                           },"loja_site_liberar":
+{ Args: { "p_empresa_id": string,"p_liberar": boolean }; Returns: undefined
                            },"loja_site_banner_imagens":
 { Args: { "p_celular": string,"p_computador": string,"p_empresa_id": string,"p_id": string }; Returns: (string)[]
                            },"loja_site_banner_salvar":

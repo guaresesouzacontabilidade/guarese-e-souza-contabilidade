@@ -11,6 +11,7 @@ select plan(14);
 select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
 set local role authenticated;
 select public.gestao_configurar(current_setting('testes.empresa_a')::uuid, '{"ativa": true, "perfil_fiscal": "comercio"}');
+select public.loja_site_liberar(current_setting('testes.empresa_a')::uuid, true);
 reset role;
 
 select pg_temp.como('00000000-0000-0000-0000-0000000000b1');

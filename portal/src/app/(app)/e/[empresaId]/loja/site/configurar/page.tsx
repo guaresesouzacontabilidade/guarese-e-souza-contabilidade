@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EstadoVazio } from "@/components/ui/feedback";
-import { LojaIndisponivel, NavegacaoLoja, NavegacaoSite } from "@/components/loja/navegacao-loja";
+import { LojaIndisponivel, NavegacaoLoja, NavegacaoSite, SiteNaoLiberado } from "@/components/loja/navegacao-loja";
 import { ChaveSite, FormSite } from "@/components/loja/site";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
+import { siteLiberado } from "@/lib/vitrine/liberacao";
 import { carregarSite } from "@/lib/vitrine/dados";
 import { envPublico } from "@/lib/env";
 
@@ -26,6 +27,7 @@ export default async function ConfigurarSite({ params }: PageProps<"/e/[empresaI
   const { empresaId } = await params;
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
+  if (!(await siteLiberado(empresaId))) return <SiteNaoLiberado empresaId={empresaId} equipe={ctx.equipe} />;
   if (!ctx.gerente) {
     return <EstadoVazio titulo="Só quem gerencia a loja configura o site" descricao="Peça a permissão “Gerenciar a loja” ao responsável pela empresa." />;
   }

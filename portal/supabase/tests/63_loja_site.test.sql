@@ -14,6 +14,9 @@ select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
 set local role authenticated;
 select public.gestao_configurar(current_setting('testes.empresa_a')::uuid, '{"ativa": true, "perfil_fiscal": "comercio"}');
 select public.gestao_configurar(current_setting('testes.empresa_b')::uuid, '{"ativa": true, "perfil_fiscal": "comercio"}');
+-- O escritório libera o site da loja para as duas empresas (65_loja_site_liberacao testa a trava)
+select public.loja_site_liberar(current_setting('testes.empresa_a')::uuid, true);
+select public.loja_site_liberar(current_setting('testes.empresa_b')::uuid, true);
 reset role;
 
 -- Quem só vende não configura o site

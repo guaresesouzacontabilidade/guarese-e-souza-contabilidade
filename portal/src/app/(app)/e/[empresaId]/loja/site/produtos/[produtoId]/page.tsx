@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EstadoVazio } from "@/components/ui/feedback";
-import { LojaIndisponivel, NavegacaoLoja, NavegacaoSite } from "@/components/loja/navegacao-loja";
+import { LojaIndisponivel, NavegacaoLoja, NavegacaoSite, SiteNaoLiberado } from "@/components/loja/navegacao-loja";
+import { siteLiberado } from "@/lib/vitrine/liberacao";
 import { FormProdutoSite, FotosProduto } from "@/components/loja/site";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { formatarMoeda } from "@/lib/dinheiro";
@@ -27,6 +28,7 @@ export default async function ProdutoNoSite({ params }: PageProps<"/e/[empresaId
   if (!UUID.test(produtoId)) notFound();
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
+  if (!(await siteLiberado(empresaId))) return <SiteNaoLiberado empresaId={empresaId} equipe={ctx.equipe} />;
   if (!ctx.gerente) return <EstadoVazio titulo="Só quem gerencia a loja mexe nos produtos do site" />;
   const [produtos, categorias, site] = await Promise.all([
     carregarProdutosSite(ctx.supabase, empresaId),

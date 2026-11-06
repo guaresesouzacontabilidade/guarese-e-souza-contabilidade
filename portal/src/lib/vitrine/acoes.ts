@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { exigirPermissao } from "@/lib/auth/sessao";
+import { exigirPermissao, obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { lerValorBR } from "@/lib/dinheiro";
 import type { Json } from "@/lib/supabase/database.types";
@@ -19,6 +19,19 @@ function revalidar(empresaId: string) {
 
 /** Quem gerencia a loja (a função do banco confere de novo e exige a loja ligada). */
 const gerente = (empresaId: string) => exigirPermissao(empresaId, "gestao.gerenciar");
+
+// -----------------------------------------------------------------------------
+// Liberação do site para a empresa (só o escritório)
+// -----------------------------------------------------------------------------
+export async function liberarSiteLoja(empresaId: string, liberar: boolean): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId)) return falha("Registro inválido.");
+  const ctx = await obterContextoEmpresa(empresaId);
+  if (!ctx.equipe) return falha("Só o escritório libera o site da loja.");
+  const { error } = await ctx.supabase.rpc("loja_site_liberar", { p_empresa_id: empresaId, p_liberar: liberar });
+  if (error) return falha(mensagemErro(error));
+  revalidar(empresaId);
+  return sucesso(liberar ? "Site da loja liberado para esta empresa." : "Site da loja desligado para esta empresa. O site sai do ar; os cadastros ficam guardados.");
+}
 
 // -----------------------------------------------------------------------------
 // Configuração do site
