@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { arvoreCategorias, linkWhatsApp, ordenar, produtosDaCategoria, urlProduto, valorEntrega, type NoCategoria } from "@/lib/catalogo";
+import { arvoreCategorias, ordenar, produtosDaCategoria, valorEntrega, type NoCategoria } from "@/lib/catalogo";
 import { obterVitrine } from "@/lib/portal";
 import { frasePrincipal } from "@/lib/textos";
 import type { ProdutoResumo } from "@/lib/tipos";
+import { Abertura } from "@/components/abertura";
 import { CartaoProduto } from "@/components/cartao-produto";
-import { IconeWhatsApp } from "@/components/icones";
 
 export const revalidate = 60;
 
@@ -50,51 +50,17 @@ export default async function Inicio() {
   const arvore = arvoreCategorias(categorias, produtos);
   const comFoto = produtos.filter((p) => p.fotos.length && p.disponivel);
   const vitrine = ordenar(comFoto, "destaque");
-  const mosaico = vitrine.slice(0, 3);
+  const capa = vitrine[0] ?? null;
   const novidades = ordenar(comFoto, "novos").slice(0, 8);
   const destaques = comFoto.filter((p) => p.destaque).slice(0, 8);
   const maiores = [...arvore].sort((a, b) => b.total - a.total).slice(0, 3);
   const frase = frasePrincipal(arvore);
-  const usadas = new Set(mosaico.map((p) => p.fotos[0]));
+  const usadas = new Set(capa ? [capa.fotos[0]] : []);
 
   return (
     <>
-      {/* Abertura: o que a loja vende, como comprar e as fotos dos próprios produtos */}
-      <section className="border-b border-linha bg-superficie">
-        <div className="conteudo grid items-center gap-10 py-10 md:grid-cols-[1fr_1.05fr] md:gap-14 md:py-16 lg:py-20">
-          <div className="max-w-xl">
-            {loja.cidade ? <p className="sobretitulo">{loja.cidade}</p> : null}
-            <h1 className="mt-4 text-[2.5rem] leading-[1.05] md:text-6xl">{frase || loja.nome}</h1>
-            <p className="mt-5 max-w-md text-[0.9375rem] leading-relaxed text-suave md:text-base">
-              Escolha pelo site e envie o pedido. A conversa no WhatsApp da loja já abre com tudo anotado para combinar o pagamento e a entrega.
-            </p>
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:flex">
-              <Link href="#novidades" className="botao px-4">
-                Ver novidades
-              </Link>
-              {loja.whatsapp ? (
-                <a href={linkWhatsApp(loja.whatsapp, "Olá! Vim pelo site da loja.")} className="botao-contorno px-4" target="_blank" rel="noopener noreferrer">
-                  <IconeWhatsApp className="size-4" /> WhatsApp
-                </a>
-              ) : null}
-            </div>
-          </div>
-          {mosaico.length === 3 ? (
-            <div className="grid grid-cols-[1.25fr_1fr] gap-2.5 md:gap-3">
-              {mosaico.map((p, i) => (
-                <Link
-                  key={p.id}
-                  href={urlProduto(p)}
-                  className={`group relative overflow-hidden bg-areia ${i === 0 ? "row-span-2 aspect-[4/5] md:aspect-auto" : "aspect-square"}`}
-                  aria-label={p.nome}
-                >
-                  <Image src={p.fotos[0]} alt="" fill priority sizes="(min-width: 768px) 30vw, 55vw" className="object-cover transition duration-700 ease-out group-hover:scale-[1.03]" />
-                </Link>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </section>
+      {/* Abertura: faixa preta da marca com o que a loja vende e uma foto grande de produto */}
+      <Abertura cidade={loja.cidade} frase={frase || loja.nome} whatsapp={loja.whatsapp} foto={capa} />
 
       {/* Entregas: informação real da loja, cadastrada no portal */}
       {loja.entregas.length ? (
