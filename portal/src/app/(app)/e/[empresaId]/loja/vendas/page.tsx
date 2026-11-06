@@ -42,7 +42,7 @@ export default async function PaginaVendas({ params, searchParams }: PageProps<"
 
   let q = ctx.supabase
     .from("vendas")
-    .select("id, numero, status, data, validade, cliente_nome, total, nfe_emissao_id, venda_pagamentos(forma, valor)", { count: "exact" })
+    .select("id, numero, status, data, validade, cliente_nome, total, nfe_emissao_id, origem, venda_pagamentos(forma, valor)", { count: "exact" })
     .eq("empresa_id", empresaId)
     .eq("tipo", tipo)
     .gte("data", inicio)
@@ -150,7 +150,14 @@ export default async function PaginaVendas({ params, searchParams }: PageProps<"
                           </Link>
                         </Td>
                         <Td className="numero">{formatarData(v.data)}</Td>
-                        <Td>{v.cliente_nome ?? "Consumidor"}</Td>
+                        <Td>
+                          {v.cliente_nome ?? "Consumidor"}
+                          {v.origem === "site" ? (
+                            <Badge variante="info" className="ml-2">
+                              Site
+                            </Badge>
+                          ) : null}
+                        </Td>
                         <Td className="text-xs">
                           {tipo === "venda"
                             ? [...new Set(v.venda_pagamentos.map((p) => FORMAS_PAGAMENTO[p.forma as FormaPagamento]))].join(" + ")
