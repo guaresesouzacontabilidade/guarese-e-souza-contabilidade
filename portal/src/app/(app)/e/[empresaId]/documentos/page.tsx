@@ -129,9 +129,10 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
           { valor: "escritorio", rotulo: "Do escritório para a empresa", href: urlCom(base, {}, { origem: "escritorio" }) },
         ]}
       />
-      <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-7" role="search">
+      {/* Busca e botão na primeira linha; os filtros embaixo, com espaço para o texto inteiro */}
+      <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="search">
         {origem === "escritorio" ? <input type="hidden" name="origem" value="escritorio" /> : null}
-        <div className="relative lg:col-span-2">
+        <div className="relative sm:col-span-2 lg:col-span-3">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input name="busca" defaultValue={busca} placeholder="Buscar pelo nome do arquivo" className="pl-9" aria-label="Buscar documento" />
         </div>
@@ -177,10 +178,10 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
             ))}
           </Select>
         ) : null}
-        <Button type="submit" variante="secundario">
+        <Button type="submit" variante="secundario" className="lg:col-start-4 lg:row-start-1">
           Filtrar
         </Button>
-        <div className="flex flex-wrap items-center gap-4 text-sm sm:col-span-2 lg:col-span-7">
+        <div className="flex flex-wrap items-center gap-4 text-sm sm:col-span-2 lg:col-span-4">
           <label className="inline-flex items-center gap-2">
             <Checkbox name="zip" value="1" defaultChecked={comZip} /> Mostrar arquivos extraídos de ZIP
           </label>

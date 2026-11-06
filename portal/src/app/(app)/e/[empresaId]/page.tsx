@@ -75,8 +75,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
       : Promise.resolve({ count: 0 }),
     ctx.pode("calculos.ver") ? ctx.supabase.rpc("dados_previsao_impostos", { p_empresa_id: empresaId, p_competencia: comp }) : Promise.resolve({ data: null }),
     verVencimentos
-      ? ctx.supabase.from("vencimentos").select("id, descricao, validade").eq("empresa_id", empresaId).eq("situacao", "ativo").lte("validade", somarDias(hoje, 30)).order("validade").limit(6)
-      : Promise.resolve({ data: [] }),
+      ? ctx.supabase.from("vencimentos").select("id, descricao, validade", { count: "exact" }).eq("empresa_id", empresaId).eq("situacao", "ativo").lte("validade", somarDias(hoje, 30)).order("validade").limit(6)
+      : Promise.resolve({ data: [], count: 0 }),
     verDocs
       ? ctx.supabase
           .from("documentos_fiscais")
@@ -180,6 +180,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
             nome={nomeEmpresa}
             logo={acesso.logo_path ? `/api/empresas/${empresaId}/logo?v=${encodeURIComponent(acesso.logo_atualizado_em ?? "1")}` : null}
             tamanho="lg"
+            /* No celular o nome da empresa já está no topo: a marca grande só empurraria o conteúdo para baixo */
+            className="hidden sm:inline-flex"
           />
           <div className="w-full min-w-0 sm:w-auto">
             <p className="text-sm text-muted-foreground">
@@ -240,7 +242,19 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
             </Button>
           }
         >
-          {vencendo.data.map((v) => `${v.descricao}: ${situacaoVencimento(v.validade, hoje).rotulo.toLowerCase()} (${formatarData(v.validade)})`).join(" · ")}
+          {/* Lista curta (os 3 mais urgentes) em vez de texto corrido; o resto fica em Ver vencimentos */}
+          <ul className="space-y-0.5">
+            {vencendo.data.slice(0, 3).map((v) => (
+              <li key={v.id}>
+                <span className="font-medium">{v.descricao}</span> · {situacaoVencimento(v.validade, hoje).rotulo.toLowerCase()} ({formatarData(v.validade)})
+              </li>
+            ))}
+          </ul>
+          {(vencendo.count ?? vencendo.data.length) > 3 ? (
+            <p className="text-xs">
+              e mais {(vencendo.count ?? vencendo.data.length) - 3} {(vencendo.count ?? vencendo.data.length) - 3 === 1 ? "documento" : "documentos"}
+            </p>
+          ) : null}
         </Alerta>
       ) : null}
 

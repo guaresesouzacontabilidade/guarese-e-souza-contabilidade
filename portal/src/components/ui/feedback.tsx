@@ -26,13 +26,14 @@ export function Alerta({
 }) {
   const { classe, Icone } = tons[tom];
   return (
-    <div role={tom === "perigo" ? "alert" : "status"} className={cn("flex gap-3 rounded-lg border p-3 text-sm", classe, className)}>
+    <div role={tom === "perigo" ? "alert" : "status"} className={cn("flex flex-wrap gap-x-3 gap-y-2 rounded-lg border p-3 text-sm", classe, className)}>
       <Icone className="mt-0.5 size-4 shrink-0" />
       <div className="min-w-0 flex-1 space-y-1">
         {titulo ? <p className="font-semibold">{titulo}</p> : null}
         {children ? <div className="leading-relaxed">{children}</div> : null}
       </div>
-      {acao ? <div className="shrink-0">{acao}</div> : null}
+      {/* No celular o botão vai para baixo do texto (alinhado a ele), para não espremer o aviso */}
+      {acao ? <div className="w-full pl-7 sm:w-auto sm:shrink-0 sm:pl-0">{acao}</div> : null}
     </div>
   );
 }

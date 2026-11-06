@@ -1,10 +1,14 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/** Tabela responsiva: rola horizontalmente em telas pequenas. */
+/**
+ * Tabela responsiva: rola horizontalmente em telas pequenas. O `relative` segura
+ * dentro da caixa os textos só para leitor de tela (sr-only, posição absoluta),
+ * que sem ele escapam e alargam a página inteira no celular.
+ */
 export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-border">
+    <div className="relative w-full overflow-x-auto rounded-xl border border-border">
       <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );

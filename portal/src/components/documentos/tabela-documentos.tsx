@@ -167,11 +167,12 @@ export function TabelaDocumentos({ linhas, podeBaixar, podeRevisar, multiempresa
               />
             </Th>
             <Th>Documento</Th>
-            {multiempresa ? <Th>Empresa</Th> : null}
-            <Th>Competência</Th>
-            <Th>Recebido em</Th>
-            <Th>Situação</Th>
-            <Th className="text-right">Tamanho</Th>
+            {/* No celular ficam só documento e baixar; competência, empresa e situação vão para baixo do nome do documento */}
+            {multiempresa ? <Th className="hidden md:table-cell">Empresa</Th> : null}
+            <Th className="hidden sm:table-cell">Competência</Th>
+            <Th className="hidden md:table-cell">Recebido em</Th>
+            <Th className="hidden sm:table-cell">Situação</Th>
+            <Th className="hidden text-right md:table-cell">Tamanho</Th>
             <Th className="w-10">
               <span className="sr-only">Ações</span>
             </Th>
@@ -180,54 +181,61 @@ export function TabelaDocumentos({ linhas, podeBaixar, podeRevisar, multiempresa
         <TBody>
           {linhas.map((l) => {
             const st = l.status ? STATUS_DOCUMENTO[l.status] : null;
+            const selos = (
+              <>
+                {l.direcao === "escritorio" ? <Badge variante="primario">Do escritório</Badge> : st ? <Badge variante={st.tom}>{st.rotulo}</Badge> : null}
+                {l.verificacao_status === "bloqueado" ? (
+                  <Badge variante="perigo">
+                    <ShieldAlert /> Bloqueado
+                  </Badge>
+                ) : null}
+                {l.recebido_apos_fechamento ? (
+                  <Badge variante="alerta">
+                    <Lock /> Após fechamento
+                  </Badge>
+                ) : null}
+                {podeRevisar && l.requer_conferencia ? <Badge variante="alerta">Conferir leitura</Badge> : null}
+                {podeRevisar && l.sugestao ? (
+                  <Badge variante="info">
+                    <Sparkles /> Sugestão
+                  </Badge>
+                ) : null}
+                {l.processamento_status === "pendente" || l.processamento_status === "processando" ? <Badge variante="neutro">Processando</Badge> : null}
+              </>
+            );
             return (
               <Tr key={l.id} data-state={selecionados.has(l.id) ? "selected" : undefined} className="data-[state=selected]:bg-bege/40">
                 <Td>
                   <Checkbox aria-label={`Selecionar ${l.nome}`} checked={selecionados.has(l.id)} onChange={() => alternar(l.id)} />
                 </Td>
-                <Td className="max-w-[22rem]">
+                <Td className="max-w-[12.5rem] sm:max-w-[16rem] lg:max-w-[22rem]">
                   <Link href={hrefDocumento(l)} className="block truncate font-medium text-foreground hover:underline" title={l.titulo ?? l.nome}>
                     {l.titulo ?? l.nome}
                   </Link>
                   <span className="block truncate text-xs text-muted-foreground">
                     {l.categoria}
+                    <span className="sm:hidden"> · {formatarCompetencia(l.competencia)}</span>
                     {l.zip_origem_id ? " · extraído de ZIP" : ""}
                     {l.versao_atual > 1 ? ` · versão ${l.versao_atual}` : ""}
                     {l.direcao === "escritorio" && l.vencimento ? ` · vence ${formatarData(l.vencimento)}` : ""}
                   </span>
+                  {multiempresa && l.empresa_nome ? <span className="block truncate text-xs text-muted-foreground md:hidden">{l.empresa_nome}</span> : null}
+                  {/* No celular a situação vem aqui embaixo, para o botão de baixar caber na tela */}
+                  <div className="mt-1 flex flex-wrap gap-1 sm:hidden">{selos}</div>
                 </Td>
-                {multiempresa ? <Td className="max-w-[14rem] truncate text-sm">{l.empresa_nome}</Td> : null}
-                <Td className="whitespace-nowrap">{formatarCompetencia(l.competencia)}</Td>
-                <Td className="whitespace-nowrap text-sm">
+                {multiempresa ? <Td className="hidden max-w-[14rem] truncate text-sm md:table-cell">{l.empresa_nome}</Td> : null}
+                <Td className="hidden whitespace-nowrap sm:table-cell">{formatarCompetencia(l.competencia)}</Td>
+                <Td className="hidden whitespace-nowrap text-sm md:table-cell">
                   {formatarDataHora(l.enviado_em)}
                   {l.enviado_por ? <span className="block text-xs text-muted-foreground">{l.enviado_por}</span> : null}
                 </Td>
-                <Td>
-                  <div className="flex flex-wrap gap-1">
-                    {l.direcao === "escritorio" ? <Badge variante="primario">Do escritório</Badge> : st ? <Badge variante={st.tom}>{st.rotulo}</Badge> : null}
-                    {l.verificacao_status === "bloqueado" ? (
-                      <Badge variante="perigo">
-                        <ShieldAlert /> Bloqueado
-                      </Badge>
-                    ) : null}
-                    {l.recebido_apos_fechamento ? (
-                      <Badge variante="alerta">
-                        <Lock /> Após fechamento
-                      </Badge>
-                    ) : null}
-                    {podeRevisar && l.requer_conferencia ? <Badge variante="alerta">Conferir leitura</Badge> : null}
-                    {podeRevisar && l.sugestao ? (
-                      <Badge variante="info">
-                        <Sparkles /> Sugestão
-                      </Badge>
-                    ) : null}
-                    {l.processamento_status === "pendente" || l.processamento_status === "processando" ? <Badge variante="neutro">Processando</Badge> : null}
-                  </div>
+                <Td className="hidden sm:table-cell">
+                  <div className="flex flex-wrap gap-1">{selos}</div>
                 </Td>
-                <Td className="whitespace-nowrap text-right text-sm text-muted-foreground">{formatarTamanho(l.tamanho)}</Td>
-                <Td>
+                <Td className="hidden whitespace-nowrap text-right text-sm text-muted-foreground md:table-cell">{formatarTamanho(l.tamanho)}</Td>
+                <Td className="px-1 sm:px-3">
                   {podeBaixar && l.verificacao_status !== "bloqueado" ? (
-                    <Button asChild variante="fantasma" tamanho="iconeSm" aria-label={`Baixar ${l.nome}`}>
+                    <Button asChild variante="fantasma" tamanho="iconeSm" className="size-10 sm:size-8" aria-label={`Baixar ${l.nome}`}>
                       <a href={`/api/documentos/${l.id}/arquivo?modo=baixar`}>
                         <Download />
                       </a>

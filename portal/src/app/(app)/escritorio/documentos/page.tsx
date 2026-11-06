@@ -106,8 +106,9 @@ export default async function FilaDocumentos({ searchParams }: PageProps<"/escri
         <Indicador rotulo="Aguardando correção do cliente" valor={correcao.count ?? 0} tom={(correcao.count ?? 0) > 0 ? "perigo" : "neutro"} href={urlCom(rota, {}, { situacao: "correcao" })} />
         <Indicador rotulo="Recebidos após fechamento" valor={fechamento.count ?? 0} detalhe="sem avaliação" tom={(fechamento.count ?? 0) > 0 ? "alerta" : "neutro"} href={urlCom(rota, {}, { situacao: "todas", fechamento: "1" })} />
       </div>
-      <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-6" role="search">
-        <div className="relative lg:col-span-2">
+      {/* Busca e botão na primeira linha; os quatro filtros embaixo, com espaço para o texto inteiro */}
+      <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="search">
+        <div className="relative sm:col-span-2 lg:col-span-3">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input name="busca" defaultValue={busca} placeholder="Nome do arquivo" className="pl-9" aria-label="Buscar documento" />
         </div>
@@ -144,7 +145,7 @@ export default async function FilaDocumentos({ searchParams }: PageProps<"/escri
             </option>
           ))}
         </Select>
-        <div className="flex flex-wrap items-center gap-4 text-sm sm:col-span-2 lg:col-span-5">
+        <div className="flex flex-wrap items-center gap-4 text-sm sm:col-span-2 lg:col-span-4">
           <label className="inline-flex items-center gap-2">
             <Checkbox name="conferir" value="1" defaultChecked={conferir} /> Somente leituras a conferir
           </label>
@@ -155,7 +156,7 @@ export default async function FilaDocumentos({ searchParams }: PageProps<"/escri
             Limpar filtros
           </Link>
         </div>
-        <Button type="submit" variante="secundario">
+        <Button type="submit" variante="secundario" className="lg:col-start-4 lg:row-start-1">
           Filtrar
         </Button>
       </form>
