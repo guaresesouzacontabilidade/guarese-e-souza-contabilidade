@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BedDouble, Building2, CalendarPlus, FileCheck2, MessagesSquare, PackageCheck, PawPrint, ReceiptText, Route, ShoppingCart, Truck, Upload } from "lucide-react";
+import { BedDouble, Building2, CalendarDays, CalendarPlus, FileCheck2, MessagesSquare, PackageCheck, PawPrint, ReceiptText, Route, ShoppingCart, Truck, Upload } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { competenciaAtual, hojeISO, somarDias, somarMeses } from "@/lib/competencia";
@@ -75,8 +75,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
       : Promise.resolve({ count: 0 }),
     ctx.pode("calculos.ver") ? ctx.supabase.rpc("dados_previsao_impostos", { p_empresa_id: empresaId, p_competencia: comp }) : Promise.resolve({ data: null }),
     verVencimentos
-      ? ctx.supabase.from("vencimentos").select("id, descricao, validade").eq("empresa_id", empresaId).eq("situacao", "ativo").lte("validade", somarDias(hoje, 30)).order("validade").limit(6)
-      : Promise.resolve({ data: [] }),
+      ? ctx.supabase.from("vencimentos").select("id, descricao, validade", { count: "exact" }).eq("empresa_id", empresaId).eq("situacao", "ativo").lte("validade", somarDias(hoje, 30)).order("validade").limit(6)
+      : Promise.resolve({ data: [], count: 0 }),
     verDocs
       ? ctx.supabase
           .from("documentos_fiscais")
@@ -159,7 +159,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
     hotel && ctx.pode("gestao.vender") ? { rotulo: "Nova reserva", href: `${base}/hotel/reservas/nova`, icone: CalendarPlus } : null,
     clinica && ctx.pode("gestao.vender") ? { rotulo: "Painel da clínica", href: `${base}/veterinaria`, icone: PawPrint } : null,
     clinica && ctx.pode("gestao.vender") ? { rotulo: "Agenda da clínica", href: `${base}/veterinaria/agenda`, icone: CalendarPlus } : null,
-    ctx.pode("documentos.enviar") ? { rotulo: "Enviar documentos", href: `${base}/enviar`, icone: Upload } : null,
+    // "Enviar documentos" já está no topo e no quadro do mês: aqui entra outro caminho útil
+    verAgenda ? { rotulo: "Pagamentos e prazos", href: `${base}/agenda`, icone: CalendarDays } : null,
     transporte && ctx.pode("nfe.emitir") ? { rotulo: "Ordens de carregamento", href: `${base}/loja/carregamentos`, icone: Truck } : null,
     acesso.loja && !transporte && !hotel && !clinica && ctx.pode("gestao.vender") ? { rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart } : null,
     ctx.pode("nfe.emitir") ? { rotulo: "Emitir nota de produto", href: `${base}/notas-produto`, icone: PackageCheck } : null,
@@ -180,6 +181,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
             nome={nomeEmpresa}
             logo={acesso.logo_path ? `/api/empresas/${empresaId}/logo?v=${encodeURIComponent(acesso.logo_atualizado_em ?? "1")}` : null}
             tamanho="lg"
+            /* No celular o nome da empresa já está no topo: a marca grande só empurraria o conteúdo para baixo */
+            className="hidden sm:inline-flex"
           />
           <div className="w-full min-w-0 sm:w-auto">
             <p className="text-sm text-muted-foreground">
@@ -240,7 +243,19 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
             </Button>
           }
         >
-          {vencendo.data.map((v) => `${v.descricao}: ${situacaoVencimento(v.validade, hoje).rotulo.toLowerCase()} (${formatarData(v.validade)})`).join(" · ")}
+          {/* Lista curta (os 3 mais urgentes) em vez de texto corrido; o resto fica em Ver vencimentos */}
+          <ul className="space-y-0.5">
+            {vencendo.data.slice(0, 3).map((v) => (
+              <li key={v.id}>
+                <span className="font-medium">{v.descricao}</span> · {situacaoVencimento(v.validade, hoje).rotulo.toLowerCase()} ({formatarData(v.validade)})
+              </li>
+            ))}
+          </ul>
+          {(vencendo.count ?? vencendo.data.length) > 3 ? (
+            <p className="text-xs">
+              e mais {(vencendo.count ?? vencendo.data.length) - 3} {(vencendo.count ?? vencendo.data.length) - 3 === 1 ? "documento" : "documentos"}
+            </p>
+          ) : null}
         </Alerta>
       ) : null}
 
@@ -425,6 +440,13 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
 
         {verDocs ? (
           <Bloco titulo="Notas do mês" href={ligada("notas_automaticas") ? `${base}/notas-automaticas` : undefined} rotuloLink="Abrir notas automáticas">
+            {(saidas.count ?? 0) + (entradas.count ?? 0) === 0 ? (
+              // Sem notas: uma frase clara em vez de "0" e "0", que parece erro
+              <div className="space-y-1 text-sm">
+                <p className="font-medium text-titulo">Nenhuma nota de {nomeMes(Number(comp.slice(5, 7))).toLowerCase()} no portal ainda.</p>
+                <p className="text-muted-foreground">As notas aparecem aqui quando os arquivos XML chegam ao portal.</p>
+              </div>
+            ) : (
             <dl className="space-y-2 text-sm">
               <div className="flex items-baseline justify-between border-b border-border pb-2">
                 <dt className="text-muted-foreground">Notas de saída</dt>
@@ -439,7 +461,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
                 </dd>
               </div>
             </dl>
-            <p className="text-xs text-muted-foreground">{formatarCompetencia(comp, true)}, das notas que estão no portal.</p>
+            )}
+            {(saidas.count ?? 0) + (entradas.count ?? 0) > 0 ? <p className="text-xs text-muted-foreground">{formatarCompetencia(comp, true)}, das notas que estão no portal.</p> : null}
           </Bloco>
         ) : null}
 

@@ -498,7 +498,9 @@ function SinoNotificacoes({ naoLidasIniciais, usuarioId, chavePush }: { naoLidas
         <Button variante="fantasma" tamanho="icone" aria-label={`Notificações${naoLidas ? ` (${naoLidas} não lidas)` : ""}`} className="relative">
           <Bell className="size-5" />
           {naoLidas > 0 ? (
-            <span className="absolute right-1.5 top-1.5 flex min-w-4 items-center justify-center rounded-full bg-perigo px-1 text-[10px] font-bold text-white">
+            // No canto de cima do sino (sem cobrir o desenho), em vermelho forte fixo: o "perigo" dos temas escuros é
+            // rosa claro e o número branco ficava ilegível
+            <span className="pointer-events-none absolute left-1/2 top-0.5 ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none tabular-nums text-white ring-2 ring-card">
               {naoLidas > 99 ? "99+" : naoLidas}
             </span>
           ) : null}
