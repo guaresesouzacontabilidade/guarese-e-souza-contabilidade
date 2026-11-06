@@ -28,7 +28,7 @@ venda (baixa o estoque, entra no Financeiro e pode sair a NF-e).
 
 | Endereço | O que tem |
 | --- | --- |
-| `/` | início: abertura com fotos dos produtos, entregas, categorias, novidades, destaques e como comprar |
+| `/` | início: banners de campanha (quando há algum no ar) ou a abertura com foto de produto, entregas, categorias, novidades, destaques e como comprar |
 | `/c/<categoria>` | categoria com subcategorias, ordenar e "ver mais" |
 | `/p/<id>/<nome>` | produto: fotos, preço, escolha da opção (cor, tom, tamanho), quantidade, entrega e descrição |
 | `/busca` | busca sem acento e com palavras em qualquer ordem |
@@ -45,6 +45,7 @@ como pede o Decreto 7.962/2013 para lojas virtuais.
 | Produtos, preço, estoque | Portal → Loja → Produtos e estoque |
 | Fotos, nome no site, descrição, opções, categoria, destaque, promoção | Portal → Loja → Site da loja → Produtos no site |
 | Categorias e a ordem do menu | Portal → Site da loja → Categorias |
+| Banners de campanha (imagem para computador 1920 × 600 e para celular 1080 × 1080, link, período e ordem) | Portal → Site da loja → Banners |
 | WhatsApp, Instagram, endereço, aviso do topo, entregas, pagamentos, textos "Sobre" e "Trocas" | Portal → Site da loja → Configurar o site |
 | Ligar ou desligar o site ("loja fechada no momento") | Portal → Configurar o site → "Site ligado" |
 | Cores e fontes | `src/app/globals.css` (bloco `@theme`) |

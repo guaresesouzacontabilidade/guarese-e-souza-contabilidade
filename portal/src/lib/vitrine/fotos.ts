@@ -26,11 +26,11 @@ export function formatoFoto(bytes: Uint8Array): "jpeg" | "png" | "webp" | null {
 }
 
 /**
- * Prepara a foto para o site: dois WebP (600 e 1200 px de largura, sem
+ * Prepara a foto para o site: dois WebP (por padrão 600 e 1200 px de largura, sem
  * aumentar fotos pequenas), já leves para o celular. Devolve null quando o
  * arquivo não é uma imagem aceita.
  */
-export async function prepararFoto(bytes: Uint8Array): Promise<{ p: Buffer; g: Buffer } | null> {
+export async function prepararFoto(bytes: Uint8Array, larguras: { p: number; g: number } = LARGURAS): Promise<{ p: Buffer; g: Buffer } | null> {
   if (!formatoFoto(bytes) || bytes.length > FOTO_MAX_BYTES) return null;
   const { createCanvas, loadImage } = await import("@napi-rs/canvas");
   let img: Awaited<ReturnType<typeof loadImage>>;
@@ -50,5 +50,5 @@ export async function prepararFoto(bytes: Uint8Array): Promise<{ p: Buffer; g: B
     g.drawImage(img, 0, 0, w, h);
     return c.encode("webp", 82);
   };
-  return { p: await gerar(LARGURAS.p), g: await gerar(LARGURAS.g) };
+  return { p: await gerar(larguras.p), g: await gerar(larguras.g) };
 }

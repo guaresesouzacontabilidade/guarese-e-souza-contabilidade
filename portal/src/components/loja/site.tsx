@@ -450,10 +450,13 @@ export function FormProdutoSite({ empresaId, produto: p, categorias }: { empresa
   );
 }
 
-/** Reduz a foto no próprio aparelho (lado maior até 1.600 px) antes de enviar: envio rápido e dentro do limite. */
-async function reduzirFoto(arquivo: File): Promise<Blob> {
+/**
+ * Reduz a foto no próprio aparelho (por padrão, lado maior até 1.600 px) antes de
+ * enviar: envio rápido e dentro do limite.
+ */
+export async function reduzirFoto(arquivo: File, largura = 1600, altura = 1600): Promise<Blob> {
   const bitmap = await createImageBitmap(arquivo);
-  const escala = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const escala = Math.min(1, largura / bitmap.width, altura / bitmap.height);
   const w = Math.round(bitmap.width * escala);
   const h = Math.round(bitmap.height * escala);
   const c = document.createElement("canvas");

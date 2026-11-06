@@ -17,8 +17,13 @@ export async function lerVitrine(slug: string, chave: string) {
   const { data, error } = await criarClienteAdmin().rpc("loja_site_vitrine", { p_slug: slug, p_chave_hash: hashChave(chave) });
   if (error) throw new Error(error.message);
   if (!data) return null;
-  const v = data as { aberta: boolean; loja: Json; categorias?: Json[]; produtos?: ComFotos[] };
-  return { ...v, categorias: v.categorias ?? [], produtos: (v.produtos ?? []).map(comUrls) };
+  const v = data as { aberta: boolean; loja: Json; categorias?: Json[]; produtos?: ComFotos[]; banners?: { computador: string; celular: string }[] };
+  return {
+    ...v,
+    categorias: v.categorias ?? [],
+    produtos: (v.produtos ?? []).map(comUrls),
+    banners: (v.banners ?? []).map((b) => ({ ...b, computador: urlFotoBase(b.computador), celular: urlFotoBase(b.celular) })),
+  };
 }
 
 export async function lerProdutoVitrine(slug: string, chave: string, produtoId: string) {

@@ -27,6 +27,7 @@ export function NavegacaoSite({ empresaId, gerente }: { empresaId: string; geren
     itens.push(
       { rotulo: "Produtos no site", href: `${base}/produtos`, exato: false },
       { rotulo: "Categorias", href: `${base}/categorias`, exato: false },
+      { rotulo: "Banners", href: `${base}/banners`, exato: false },
       { rotulo: "Configurar o site", href: `${base}/configurar`, exato: false },
       { rotulo: "Importar da FácilZap", href: `${base}/importar`, exato: false },
     );

@@ -6,6 +6,7 @@ import { obterVitrine } from "@/lib/portal";
 import { frasePrincipal } from "@/lib/textos";
 import type { ProdutoResumo } from "@/lib/tipos";
 import { Abertura } from "@/components/abertura";
+import { BannersCampanha } from "@/components/banners-campanha";
 import { CartaoProduto } from "@/components/cartao-produto";
 
 export const revalidate = 60;
@@ -46,7 +47,7 @@ function fotoDaCategoria(c: NoCategoria, produtos: ProdutoResumo[], usadas: Set<
 }
 
 export default async function Inicio() {
-  const { loja, categorias, produtos } = await obterVitrine();
+  const { loja, categorias, produtos, banners = [] } = await obterVitrine();
   const arvore = arvoreCategorias(categorias, produtos);
   const comFoto = produtos.filter((p) => p.fotos.length && p.disponivel);
   const vitrine = ordenar(comFoto, "destaque");
@@ -55,12 +56,19 @@ export default async function Inicio() {
   const destaques = comFoto.filter((p) => p.destaque).slice(0, 8);
   const maiores = [...arvore].sort((a, b) => b.total - a.total).slice(0, 3);
   const frase = frasePrincipal(arvore);
-  const usadas = new Set(capa ? [capa.fotos[0]] : []);
+  const usadas = new Set(capa && !banners.length ? [capa.fotos[0]] : []);
 
   return (
     <>
-      {/* Abertura: faixa preta da marca com o que a loja vende e uma foto grande de produto */}
-      <Abertura cidade={loja.cidade} frase={frase || loja.nome} whatsapp={loja.whatsapp} foto={capa} />
+      {/* Em campanha, os banners cadastrados no portal; fora dela, a abertura: faixa preta da marca com uma foto grande de produto */}
+      {banners.length ? (
+        <>
+          <h1 className="sr-only">{frase ? `${loja.nome}: ${frase}` : loja.nome}</h1>
+          <BannersCampanha banners={banners} />
+        </>
+      ) : (
+        <Abertura cidade={loja.cidade} frase={frase || loja.nome} whatsapp={loja.whatsapp} foto={capa} />
+      )}
 
       {/* Entregas: informação real da loja, cadastrada no portal */}
       {loja.entregas.length ? (

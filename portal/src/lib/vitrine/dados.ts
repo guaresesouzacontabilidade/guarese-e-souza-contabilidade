@@ -123,3 +123,26 @@ export async function carregarProdutosSite(supabase: Supa, empresaId: string): P
 
 /** Miniatura (600 px) de uma foto do site. */
 export const miniatura = (caminho: string) => `${urlFotoBase(caminho)}-p.webp`;
+
+export interface BannerSite {
+  id: string;
+  titulo: string;
+  imagem_computador: string | null;
+  imagem_celular: string | null;
+  link: string | null;
+  inicio: string | null;
+  fim: string | null;
+  ordem: number;
+  ativo: boolean;
+}
+
+export async function carregarBannersSite(supabase: Supa, empresaId: string): Promise<BannerSite[]> {
+  const { data } = await supabase
+    .from("loja_site_banners")
+    .select("id, titulo, imagem_computador, imagem_celular, link, inicio, fim, ordem, ativo")
+    .eq("empresa_id", empresaId)
+    .order("ordem")
+    .order("created_at")
+    .limit(200);
+  return data ?? [];
+}

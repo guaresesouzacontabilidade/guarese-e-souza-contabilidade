@@ -2922,6 +2922,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"loja_site_banners": {
+                  Row: {
+                    "ativo": boolean,"atualizado_por": string | null,"created_at": string,"empresa_id": string,"fim": string | null,"id": string,"imagem_celular": string | null,"imagem_computador": string | null,"inicio": string | null,"link": string | null,"ordem": number,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"created_at"?: string,"empresa_id": string,"fim"?: string | null,"id"?: string,"imagem_celular"?: string | null,"imagem_computador"?: string | null,"inicio"?: string | null,"link"?: string | null,"ordem"?: number,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"fim"?: string | null,"id"?: string,"imagem_celular"?: string | null,"imagem_computador"?: string | null,"inicio"?: string | null,"link"?: string | null,"ordem"?: number,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_banners_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_banners_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"loja_site_categorias": {
                   Row: {
                     "ativa": boolean,"created_at": string,"empresa_id": string,"id": string,"nome": string,"ordem": number,"pai_id": string | null,"slug": string,"updated_at": string
@@ -5999,7 +6024,13 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
-"loja_site_categoria_excluir":
+"loja_site_banner_excluir":
+{ Args: { "p_empresa_id": string,"p_id": string }; Returns: (string)[]
+                           },"loja_site_banner_imagens":
+{ Args: { "p_celular": string,"p_computador": string,"p_empresa_id": string,"p_id": string }; Returns: (string)[]
+                           },"loja_site_banner_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },"loja_site_categoria_excluir":
 { Args: { "p_empresa_id": string,"p_id": string }; Returns: undefined
                            },"loja_site_categoria_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string

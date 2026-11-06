@@ -35,12 +35,15 @@ async function demo(): Promise<Demo> {
   return JSON.parse(await readFile(process.env.VITRINE_DEMO as string, "utf8")) as Demo;
 }
 
-/** Endereço das fotos no armazenamento do portal → mesmo caminho em /fotos do próprio site. */
-function pelasFotosDoSite<T extends { fotos?: string[] }>(item: T): T {
+/** Endereço de uma foto no armazenamento do portal → mesmo caminho em /fotos do próprio site. */
+function pelaRotaDeFotos(foto: string): string {
   const origem = process.env.FOTOS_URL?.replace(/\/$/, "");
-  if (!origem || !item.fotos) return item;
-  const prefixo = `${origem}/storage/v1/object/public/loja-site/`;
-  return { ...item, fotos: item.fotos.map((f) => (f.startsWith(prefixo) ? `/fotos/${f.slice(prefixo.length)}` : f)) };
+  const prefixo = origem ? `${origem}/storage/v1/object/public/loja-site/` : null;
+  return prefixo && foto.startsWith(prefixo) ? `/fotos/${foto.slice(prefixo.length)}` : foto;
+}
+
+function pelasFotosDoSite<T extends { fotos?: string[] }>(item: T): T {
+  return item.fotos ? { ...item, fotos: item.fotos.map(pelaRotaDeFotos) } : item;
 }
 
 async function pedirAoPortal<T>(caminho: string, init?: RequestInit & { next?: { revalidate?: number; tags?: string[] } }): Promise<T | null> {
@@ -58,11 +61,15 @@ async function pedirAoPortal<T>(caminho: string, init?: RequestInit & { next?: {
 export async function obterVitrine(): Promise<Vitrine> {
   if (emDemonstracao()) {
     const d = await demo();
-    return { aberta: d.aberta, loja: d.loja, categorias: d.categorias, produtos: d.produtos };
+    return { aberta: d.aberta, loja: d.loja, banners: d.banners ?? [], categorias: d.categorias, produtos: d.produtos };
   }
   const v = await pedirAoPortal<Vitrine>("", { next: { revalidate: REVALIDAR_SEGUNDOS, tags: ["vitrine"] } });
   if (!v) throw new Error("Loja não encontrada no portal: confira LOJA_SLUG e PORTAL_CHAVE.");
-  return { ...v, produtos: (v.produtos ?? []).map(pelasFotosDoSite) };
+  return {
+    ...v,
+    banners: (v.banners ?? []).map((b) => ({ ...b, computador: pelaRotaDeFotos(b.computador), celular: pelaRotaDeFotos(b.celular) })),
+    produtos: (v.produtos ?? []).map(pelasFotosDoSite),
+  };
 }
 
 /** Produto com descrição, todas as fotos e as variações. */

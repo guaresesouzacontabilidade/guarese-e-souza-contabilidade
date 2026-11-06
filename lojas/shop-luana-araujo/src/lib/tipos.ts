@@ -67,9 +67,24 @@ export interface ProdutoDetalhe extends Omit<ProdutoResumo, "opcoes"> {
   codigo: string;
 }
 
+/** Banner de campanha no ar (o portal só manda os ligados e dentro do período). */
+export interface Banner {
+  id: string;
+  /** Nome do banner: texto alternativo da imagem */
+  titulo: string;
+  /** Endereço-base das imagens (-p.webp e -g.webp) */
+  computador: Foto;
+  /** Igual a `computador` quando o banner não tem imagem própria para celular */
+  celular: Foto;
+  /** Página do site aberta ao tocar (/c/..., /p/... ou /busca?q=...) */
+  link: string | null;
+}
+
 export interface Vitrine {
   aberta: boolean;
   loja: Loja;
+  /** Banners de campanha no ar, na ordem */
+  banners?: Banner[];
   categorias: Categoria[];
   produtos: ProdutoResumo[];
 }
