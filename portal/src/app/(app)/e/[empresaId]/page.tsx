@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BedDouble, Building2, CalendarPlus, FileCheck2, MessagesSquare, PackageCheck, PawPrint, ReceiptText, Route, ShoppingCart, Truck, Upload } from "lucide-react";
+import { BedDouble, Building2, CalendarDays, CalendarPlus, FileCheck2, MessagesSquare, PackageCheck, PawPrint, ReceiptText, Route, ShoppingCart, Truck, Upload } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { competenciaAtual, hojeISO, somarDias, somarMeses } from "@/lib/competencia";
@@ -159,7 +159,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
     hotel && ctx.pode("gestao.vender") ? { rotulo: "Nova reserva", href: `${base}/hotel/reservas/nova`, icone: CalendarPlus } : null,
     clinica && ctx.pode("gestao.vender") ? { rotulo: "Painel da clínica", href: `${base}/veterinaria`, icone: PawPrint } : null,
     clinica && ctx.pode("gestao.vender") ? { rotulo: "Agenda da clínica", href: `${base}/veterinaria/agenda`, icone: CalendarPlus } : null,
-    ctx.pode("documentos.enviar") ? { rotulo: "Enviar documentos", href: `${base}/enviar`, icone: Upload } : null,
+    // "Enviar documentos" já está no topo e no quadro do mês: aqui entra outro caminho útil
+    verAgenda ? { rotulo: "Pagamentos e prazos", href: `${base}/agenda`, icone: CalendarDays } : null,
     transporte && ctx.pode("nfe.emitir") ? { rotulo: "Ordens de carregamento", href: `${base}/loja/carregamentos`, icone: Truck } : null,
     acesso.loja && !transporte && !hotel && !clinica && ctx.pode("gestao.vender") ? { rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart } : null,
     ctx.pode("nfe.emitir") ? { rotulo: "Emitir nota de produto", href: `${base}/notas-produto`, icone: PackageCheck } : null,
@@ -439,6 +440,13 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
 
         {verDocs ? (
           <Bloco titulo="Notas do mês" href={ligada("notas_automaticas") ? `${base}/notas-automaticas` : undefined} rotuloLink="Abrir notas automáticas">
+            {(saidas.count ?? 0) + (entradas.count ?? 0) === 0 ? (
+              // Sem notas: uma frase clara em vez de "0" e "0", que parece erro
+              <div className="space-y-1 text-sm">
+                <p className="font-medium text-titulo">Nenhuma nota de {nomeMes(Number(comp.slice(5, 7))).toLowerCase()} no portal ainda.</p>
+                <p className="text-muted-foreground">As notas aparecem aqui quando os arquivos XML chegam ao portal.</p>
+              </div>
+            ) : (
             <dl className="space-y-2 text-sm">
               <div className="flex items-baseline justify-between border-b border-border pb-2">
                 <dt className="text-muted-foreground">Notas de saída</dt>
@@ -453,7 +461,8 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
                 </dd>
               </div>
             </dl>
-            <p className="text-xs text-muted-foreground">{formatarCompetencia(comp, true)}, das notas que estão no portal.</p>
+            )}
+            {(saidas.count ?? 0) + (entradas.count ?? 0) > 0 ? <p className="text-xs text-muted-foreground">{formatarCompetencia(comp, true)}, das notas que estão no portal.</p> : null}
           </Bloco>
         ) : null}
 
