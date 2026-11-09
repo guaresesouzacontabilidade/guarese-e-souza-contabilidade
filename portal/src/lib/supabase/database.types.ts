@@ -2922,6 +2922,143 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"loja_site_banners": {
+                  Row: {
+                    "ativo": boolean,"atualizado_por": string | null,"created_at": string,"empresa_id": string,"fim": string | null,"id": string,"imagem_celular": string | null,"imagem_computador": string | null,"inicio": string | null,"link": string | null,"ordem": number,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"created_at"?: string,"empresa_id": string,"fim"?: string | null,"id"?: string,"imagem_celular"?: string | null,"imagem_computador"?: string | null,"inicio"?: string | null,"link"?: string | null,"ordem"?: number,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"fim"?: string | null,"id"?: string,"imagem_celular"?: string | null,"imagem_computador"?: string | null,"inicio"?: string | null,"link"?: string | null,"ordem"?: number,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_banners_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_banners_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"loja_site_liberacoes": {
+                  Row: {
+                    "created_at": string,"empresa_id": string,"liberado_por": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"empresa_id": string,"liberado_por"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"empresa_id"?: string,"liberado_por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_liberacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_liberacoes_liberado_por_fkey"
+      columns: ["liberado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"loja_site_categorias": {
+                  Row: {
+                    "ativa": boolean,"created_at": string,"empresa_id": string,"id": string,"nome": string,"ordem": number,"pai_id": string | null,"slug": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"nome": string,"ordem"?: number,"pai_id"?: string | null,"slug": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"nome"?: string,"ordem"?: number,"pai_id"?: string | null,"slug"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_categorias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_categorias_pai_fk"
+      columns: ["empresa_id","pai_id"]
+isOneToOne: false
+      referencedRelation: "loja_site_categorias"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"loja_site_produtos": {
+                  Row: {
+                    "atualizado_por": string | null,"categoria_id": string | null,"created_at": string,"descricao": string | null,"destaque": boolean,"empresa_id": string,"fotos": (string)[],"nome": string | null,"origem_externa": string | null,"preco_de": number | null,"produto_id": string,"publicado_em": string,"rotulo_variacao": string,"updated_at": string,"variacoes": (string)[],"visivel": boolean
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"categoria_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"destaque"?: boolean,"empresa_id": string,"fotos"?: (string)[],"nome"?: string | null,"origem_externa"?: string | null,"preco_de"?: number | null,"produto_id": string,"publicado_em"?: string,"rotulo_variacao"?: string,"updated_at"?: string,"variacoes"?: (string)[],"visivel"?: boolean
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"categoria_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"destaque"?: boolean,"empresa_id"?: string,"fotos"?: (string)[],"nome"?: string | null,"origem_externa"?: string | null,"preco_de"?: number | null,"produto_id"?: string,"publicado_em"?: string,"rotulo_variacao"?: string,"updated_at"?: string,"variacoes"?: (string)[],"visivel"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_produtos_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_produtos_categoria_fk"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "loja_site_categorias"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "loja_site_produtos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_produtos_produto_fk"
+      columns: ["empresa_id","produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"loja_sites": {
+                  Row: {
+                    "ativo": boolean,"atualizado_por": string | null,"aviso": string | null,"chave_gerada_em": string | null,"chave_hash": string | null,"chave_inicio": string | null,"cidade": string | null,"created_at": string,"email": string | null,"empresa_id": string,"endereco_loja": string | null,"endereco_site": string | null,"entregas": Json,"horario": string | null,"instagram": string | null,"nome": string,"pagamentos": (string)[],"pedido_minimo": number | null,"politica_trocas": string | null,"slug": string,"sobre": string | null,"updated_at": string,"whatsapp": string | null
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"aviso"?: string | null,"chave_gerada_em"?: string | null,"chave_hash"?: string | null,"chave_inicio"?: string | null,"cidade"?: string | null,"created_at"?: string,"email"?: string | null,"empresa_id": string,"endereco_loja"?: string | null,"endereco_site"?: string | null,"entregas"?: Json,"horario"?: string | null,"instagram"?: string | null,"nome": string,"pagamentos"?: (string)[],"pedido_minimo"?: number | null,"politica_trocas"?: string | null,"slug": string,"sobre"?: string | null,"updated_at"?: string,"whatsapp"?: string | null
+                  }
+                  Update: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"aviso"?: string | null,"chave_gerada_em"?: string | null,"chave_hash"?: string | null,"chave_inicio"?: string | null,"cidade"?: string | null,"created_at"?: string,"email"?: string | null,"empresa_id"?: string,"endereco_loja"?: string | null,"endereco_site"?: string | null,"entregas"?: Json,"horario"?: string | null,"instagram"?: string | null,"nome"?: string,"pagamentos"?: (string)[],"pedido_minimo"?: number | null,"politica_trocas"?: string | null,"slug"?: string,"sobre"?: string | null,"updated_at"?: string,"whatsapp"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_sites_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_sites_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"maquininha_adquirentes": {
                   Row: {
                     "ativo": boolean,"codigo": string,"nome": string,"observacao": string | null,"ordem": number,"tipo": string
@@ -4511,13 +4648,13 @@ isOneToOne: false
                   ]
                 },"venda_itens": {
                   Row: {
-                    "codigo": string,"comprimento_m": number | null,"custo_unitario": number | null,"desconto": number,"descricao": string,"empresa_id": string,"id": string,"ordem": number,"pecas": number | null,"preco_tabela": number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"venda_id": string
+                    "codigo": string,"comprimento_m": number | null,"custo_unitario": number | null,"desconto": number,"descricao": string,"empresa_id": string,"id": string,"ordem": number,"pecas": number | null,"preco_tabela": number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"variacao": string | null,"venda_id": string
                   }
                   Insert: {
-                    "codigo": string,"comprimento_m"?: number | null,"custo_unitario"?: number | null,"desconto"?: number,"descricao": string,"empresa_id": string,"id"?: string,"ordem": number,"pecas"?: number | null,"preco_tabela"?: number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"venda_id": string
+                    "codigo": string,"comprimento_m"?: number | null,"custo_unitario"?: number | null,"desconto"?: number,"descricao": string,"empresa_id": string,"id"?: string,"ordem": number,"pecas"?: number | null,"preco_tabela"?: number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"variacao"?: string | null,"venda_id": string
                   }
                   Update: {
-                    "codigo"?: string,"comprimento_m"?: number | null,"custo_unitario"?: number | null,"desconto"?: number,"descricao"?: string,"empresa_id"?: string,"id"?: string,"ordem"?: number,"pecas"?: number | null,"preco_tabela"?: number | null,"preco_unitario"?: number,"produto_id"?: string,"quantidade"?: number,"total"?: number,"unidade"?: string,"venda_id"?: string
+                    "codigo"?: string,"comprimento_m"?: number | null,"custo_unitario"?: number | null,"desconto"?: number,"descricao"?: string,"empresa_id"?: string,"id"?: string,"ordem"?: number,"pecas"?: number | null,"preco_tabela"?: number | null,"preco_unitario"?: number,"produto_id"?: string,"quantidade"?: number,"total"?: number,"unidade"?: string,"variacao"?: string | null,"venda_id"?: string
                   }
                   Relationships: [
                     {
@@ -4555,13 +4692,13 @@ isOneToOne: false
                   ]
                 },"vendas": {
                   Row: {
-                    "cancelada_em": string | null,"cancelada_por": string | null,"cliente_documento": string | null,"cliente_id": string | null,"cliente_nome": string | null,"cliente_telefone": string | null,"created_at": string,"data": string,"desconto": number,"empresa_id": string,"entrega": string | null,"frete": number,"id": string,"motivo_cancelamento": string | null,"nfe_emissao_id": string | null,"numero": number,"observacao": string | null,"orcamento_id": string | null,"sessao_id": string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco": number,"updated_at": string,"validade": string | null,"vendedor_id": string | null
+                    "cancelada_em": string | null,"cancelada_por": string | null,"cliente_documento": string | null,"cliente_id": string | null,"cliente_nome": string | null,"cliente_telefone": string | null,"created_at": string,"data": string,"desconto": number,"empresa_id": string,"entrega": string | null,"frete": number,"id": string,"motivo_cancelamento": string | null,"nfe_emissao_id": string | null,"numero": number,"observacao": string | null,"orcamento_id": string | null,"origem": string,"sessao_id": string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco": number,"updated_at": string,"validade": string | null,"vendedor_id": string | null
                   }
                   Insert: {
-                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id": string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacao"?: string | null,"orcamento_id"?: string | null,"sessao_id"?: string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id": string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
                   }
                   Update: {
-                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id"?: string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacao"?: string | null,"orcamento_id"?: string | null,"sessao_id"?: string | null,"status"?: string,"subtotal"?: number,"tipo"?: string,"total"?: number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id"?: string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status"?: string,"subtotal"?: number,"tipo"?: string,"total"?: number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -5912,7 +6049,37 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
-"maquininha_carteira":
+"loja_site_banner_excluir":
+{ Args: { "p_empresa_id": string,"p_id": string }; Returns: (string)[]
+                           },"loja_site_liberar":
+{ Args: { "p_empresa_id": string,"p_liberar": boolean }; Returns: undefined
+                           },"loja_site_banner_imagens":
+{ Args: { "p_celular": string,"p_computador": string,"p_empresa_id": string,"p_id": string }; Returns: (string)[]
+                           },"loja_site_banner_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },"loja_site_categoria_excluir":
+{ Args: { "p_empresa_id": string,"p_id": string }; Returns: undefined
+                           },"loja_site_categoria_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },"loja_site_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },"loja_site_definir_chave":
+{ Args: { "p_empresa_id": string,"p_hash": string,"p_inicio": string }; Returns: undefined
+                           },"loja_site_importar":
+{ Args: { "p_empresa_id": string,"p_itens": Json }; Returns: Json
+                           },"loja_site_pedido":
+{ Args: { "p_chave_hash": string,"p_dados": Json,"p_slug": string }; Returns: Json
+                           },"loja_site_produto_fotos":
+{ Args: { "p_empresa_id": string,"p_fotos": (string)[],"p_produto_id": string }; Returns: (string)[]
+                           },"loja_site_produto_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_produto_id": string }; Returns: undefined
+                           },"loja_site_visibilidade":
+{ Args: { "p_empresa_id": string,"p_produtos": (string)[],"p_visivel": boolean }; Returns: number
+                           },"loja_site_vitrine":
+{ Args: { "p_chave_hash": string,"p_slug": string }; Returns: Json
+                           },"loja_site_vitrine_produto":
+{ Args: { "p_chave_hash": string,"p_produto_id": string,"p_slug": string }; Returns: Json
+                           },"maquininha_carteira":
 { Args: { "p_fim": string,"p_inicio": string }; Returns: Json
                            },
 "maquininha_concluir_importacao":

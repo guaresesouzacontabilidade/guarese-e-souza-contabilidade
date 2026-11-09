@@ -3,9 +3,10 @@ import Link from "next/link";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alerta } from "@/components/ui/feedback";
-import { LojaIndisponivel, NavegacaoCarregamentos, NavegacaoLoja } from "@/components/loja/navegacao-loja";
+import { LiberacaoSite, LojaIndisponivel, NavegacaoCarregamentos, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { FormConfigLoja } from "@/components/loja/configuracao-loja";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
+import { siteLiberado } from "@/lib/vitrine/liberacao";
 
 export const metadata: Metadata = { title: "Configurações da loja" };
 
@@ -20,6 +21,7 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
     ctx.supabase.from("nfe_operacoes").select("id, nome, cfop").eq("empresa_id", empresaId).eq("ativa", true).order("nome"),
     ctx.supabase.from("nfe_emitentes").select("id, nome, inscricao_estadual, serie").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
+  const liberacao = ctx.equipe && ctx.lojaAtiva && !ctx.notas ? await siteLiberado(empresaId) : null;
   return (
     <>
       <CabecalhoPagina
@@ -86,6 +88,7 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
           </div>
         ) : (
             <div className="space-y-3">
+              {liberacao !== null ? <LiberacaoSite empresaId={empresaId} liberado={liberacao} /> : null}
               {ctx.hotel ? (
                 <Alerta tom="info" titulo="Hotel">
                   Os horários de check-in e check-out, a taxa de serviço e a política de cancelamento ficam em{" "}
