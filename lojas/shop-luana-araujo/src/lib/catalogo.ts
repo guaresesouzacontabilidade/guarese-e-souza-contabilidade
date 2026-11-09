@@ -98,7 +98,7 @@ export function produtosDaCategoria<T extends Pick<ProdutoResumo, "categoria_id"
 }
 
 export function valorEntrega(e: Entrega): string {
-  if (e.valor === null) return "A combinar";
+  if (e.valor == null) return "A combinar";
   if (e.valor === 0) return "Grátis";
   return moeda(e.valor);
 }

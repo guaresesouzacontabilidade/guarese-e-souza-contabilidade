@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acharCategoria, arvoreCategorias, buscar, cnpjVisivel, linkWhatsApp, mensagemPedido, moeda, ordenar, produtosDaCategoria, slug, telefoneVisivel, urlProduto } from "@/lib/catalogo";
+import { acharCategoria, arvoreCategorias, buscar, cnpjVisivel, linkWhatsApp, mensagemPedido, moeda, ordenar, produtosDaCategoria, slug, telefoneVisivel, urlProduto, valorEntrega } from "@/lib/catalogo";
 import { frasePrincipal } from "@/lib/textos";
 import { criarLimitador, validarPedido } from "@/lib/validar-pedido";
 import type { Categoria, ProdutoResumo } from "@/lib/tipos";
@@ -107,5 +107,14 @@ describe("validação do pedido antes de mandar ao portal", () => {
   it("limita pedidos por endereço", () => {
     const lim = criarLimitador(2, 1000);
     expect([lim("a", 0), lim("a", 1), lim("a", 2), lim("b", 2), lim("a", 1500)]).toEqual([true, true, false, true, true]);
+  });
+});
+
+describe("valor da entrega", () => {
+  it("frete a combinar (sem valor, como o portal guarda), grátis e com preço", () => {
+    expect(valorEntrega({ id: "outras", nome: "Outras cidades", valor: null })).toBe("A combinar");
+    expect(valorEntrega({ id: "outras", nome: "Outras cidades" } as unknown as Parameters<typeof valorEntrega>[0])).toBe("A combinar");
+    expect(valorEntrega({ id: "retirada", nome: "Retirada", valor: 0 })).toBe("Grátis");
+    expect(valorEntrega({ id: "palmas", nome: "Palmas", valor: 25 })).toMatch(/25,00/);
   });
 });
