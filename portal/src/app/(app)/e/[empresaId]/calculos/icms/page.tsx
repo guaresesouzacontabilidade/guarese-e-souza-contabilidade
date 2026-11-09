@@ -129,7 +129,6 @@ export default async function ApuracaoIcms({ params, searchParams }: PageProps<"
   const linhaComp = res.linhas.find((l) => l.chave === "complementacao");
   type DadosDareTo = {
     empresa: { inscricao_estadual: string | null; demonstracao: boolean };
-    acesso: { situacao: string } | null;
     hoje: string;
     emissoes: EmissaoDareTela[];
   };
@@ -145,19 +144,7 @@ export default async function ApuracaoIcms({ params, searchParams }: PageProps<"
     ? null
     : envPublico.ambiente() !== "producao" || dareTo.empresa.demonstracao
       ? "Fora do portal oficial (demonstração ou teste) o robô não acessa a SEFAZ-TO. No portal oficial, este botão emite o DARE de verdade."
-      : !dareTo.acesso
-        ? (
-            <>
-              O robô do DARE está desconectado: o administrador cadastra o acesso à SEFAZ-TO em{" "}
-              <Link href="/escritorio/configuracoes?aba=integracoes" className="text-primary hover:underline">
-                Configurações → Integrações
-              </Link>
-              .
-            </>
-          )
-        : dareTo.acesso.situacao !== "conectado"
-          ? "O acesso à SEFAZ-TO ainda não passou no teste. O administrador usa “Testar conexão” em Configurações → Integrações."
-          : !conferida
+      : !conferida
             ? "Confira a apuração do mês (botão “Conferir” acima) antes de emitir o DARE: o valor do DARE é o da conferência."
             : mudou
               ? "A apuração mudou depois da conferência. Confira de novo antes de emitir o DARE."
@@ -336,8 +323,8 @@ export default async function ApuracaoIcms({ params, searchParams }: PageProps<"
             <CardHeader>
               <CardTitle>DARE da complementação de alíquota (SEFAZ-TO)</CardTitle>
               <CardDescription>
-                O robô entra no sistema de DARE da SEFAZ-TO com o acesso do escritório, emite o DARE com o valor conferido e o vencimento do dia 9 e publica o PDF oficial na
-                agenda de pagamentos da empresa.
+                O robô preenche o DARE avulso da SEFAZ-TO (CNPJ, inscrição, receita 105, vencimento do dia 9, competência e a observação), confere o total calculado pela
+                SEFAZ, emite e publica o PDF oficial na agenda de pagamentos da empresa.
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -1157,63 +1157,6 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"dare_to_acesso": {
-                  Row: {
-                    "atualizado_por": string | null,"created_at": string,"id": number,"login_mascarado": string,"situacao": string,"ultima_mensagem": string | null,"ultimo_teste_em": string | null,"updated_at": string
-                  }
-                  Insert: {
-                    "atualizado_por"?: string | null,"created_at"?: string,"id"?: number,"login_mascarado": string,"situacao"?: string,"ultima_mensagem"?: string | null,"ultimo_teste_em"?: string | null,"updated_at"?: string
-                  }
-                  Update: {
-                    "atualizado_por"?: string | null,"created_at"?: string,"id"?: number,"login_mascarado"?: string,"situacao"?: string,"ultima_mensagem"?: string | null,"ultimo_teste_em"?: string | null,"updated_at"?: string
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "dare_to_acesso_atualizado_por_fkey"
-      columns: ["atualizado_por"]
-isOneToOne: false
-      referencedRelation: "perfis"
-      referencedColumns: ["id"]
-    }
-                  ]
-                },"dare_to_acesso_segredo": {
-                  Row: {
-                    "conteudo_cifrado": string,"created_at": string,"id": number
-                  }
-                  Insert: {
-                    "conteudo_cifrado": string,"created_at"?: string,"id"?: number
-                  }
-                  Update: {
-                    "conteudo_cifrado"?: string,"created_at"?: string,"id"?: number
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "dare_to_acesso_segredo_id_fkey"
-      columns: ["id"]
-isOneToOne: true
-      referencedRelation: "dare_to_acesso"
-      referencedColumns: ["id"]
-    }
-                  ]
-                },"dare_to_testes": {
-                  Row: {
-                    "created_at": string,"feito_por": string | null,"id": string,"mapeamento": Json | null,"mensagem": string | null,"ok": boolean
-                  }
-                  Insert: {
-                    "created_at"?: string,"feito_por"?: string | null,"id"?: string,"mapeamento"?: Json | null,"mensagem"?: string | null,"ok": boolean
-                  }
-                  Update: {
-                    "created_at"?: string,"feito_por"?: string | null,"id"?: string,"mapeamento"?: Json | null,"mensagem"?: string | null,"ok"?: boolean
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "dare_to_testes_feito_por_fkey"
-      columns: ["feito_por"]
-isOneToOne: false
-      referencedRelation: "perfis"
-      referencedColumns: ["id"]
-    }
-                  ]
                 },"declaracoes_faturamento": {
                   Row: {
                     "assinada_em": string | null,"assinada_path": string | null,"assinada_por": string | null,"assinatura_digital": boolean | null,"cancelada_em": string | null,"cancelada_por": string | null,"cidade": string,"contador_crc": string,"contador_nome": string,"criado_em": string,"criado_por": string | null,"data_declaracao": string,"empresa_id": string,"finalidade": string | null,"id": string,"meses": NonNullable<Json>,"motivo_cancelamento": string | null,"observacao": string | null,"periodo_fim": string,"periodo_inicio": string,"representante_cargo": string | null,"representante_cpf": string | null,"representante_nome": string,"situacao": string,"total": number,"uf": string | null
@@ -5708,15 +5651,6 @@ isOneToOne: false
                            },
 "dare_to_emitidos_mes":
 { Args: { "p_competencia": string }; Returns: { "created_at": string,"documento_id": string | null,"empresa_id": string,"numero": string,"total": number,"vencimento": string }[]
-                           },
-"dare_to_registrar_teste":
-{ Args: { "p_mapeamento"?: Json,"p_mensagem": string,"p_ok": boolean }; Returns: undefined
-                           },
-"dare_to_remover_acesso":
-{ Args: Record<PropertyKey, never>; Returns: undefined
-                           },
-"dare_to_salvar_acesso":
-{ Args: { "p_conteudo_cifrado": string,"p_login_mascarado": string }; Returns: undefined
                            },
 "definir_inicio_notas":
 { Args: { "p_desde": string,"p_empresa_id": string }; Returns: Json

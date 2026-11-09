@@ -134,7 +134,7 @@ export function EmitirDareTo({
               ) : null}
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <Button asChild variante="fantasma" tamanho="sm">
-                  <a href="https://dare.sefaz.to.gov.br" target="_blank" rel="noopener noreferrer">
+                  <a href="https://www.sefaz.to.gov.br/dare/servlet/hnetccwkda" target="_blank" rel="noopener noreferrer">
                     <ExternalLink /> Emitir pelo site da SEFAZ-TO
                   </a>
                 </Button>

@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, Bot, Clock, CloudDownload, FileSearch, HardDrive, Landmark, Mail, MessageCircle, ShieldAlert } from "lucide-react";
+import { BellRing, Bot, Clock, CloudDownload, FileSearch, HardDrive, Mail, MessageCircle, ShieldAlert } from "lucide-react";
 import { exigirAdmin } from "@/lib/auth/sessao";
 import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
 import { envServidor } from "@/lib/env-servidor";
-import { envPublico } from "@/lib/env";
-import { AcessoDareTo, type AcessoDareToTela } from "@/components/dare-to/acesso";
 import { whatsappConectado } from "@/lib/whatsapp/cloud-api";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { AbasLink } from "@/components/ui/abas";
@@ -192,14 +190,12 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
     const clamav = envServidor.clamav();
     const cron = Boolean(envServidor.cronSecret());
     const seteDias = diasAtras(7);
-    const [{ data: rotinas }, { count: pendentes }, { count: falhas }, { count: comCertificado }, { data: acessoDare }] = await Promise.all([
+    const [{ data: rotinas }, { count: pendentes }, { count: falhas }, { count: comCertificado }] = await Promise.all([
       s.supabase.from("rotinas_status").select("rotina, ultima_execucao, ok, erro"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "pendente"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "falhou").gte("created_at", seteDias),
       s.supabase.from("notas_automaticas").select("empresa_id", { count: "exact", head: true }).gt("certificado_valido_ate", new Date().toISOString()),
-      s.supabase.from("dare_to_acesso").select("login_mascarado, situacao, ultimo_teste_em, ultima_mensagem").maybeSingle(),
     ]);
-    const ambiente = envPublico.ambiente();
     const chaveCertificados = Boolean(envServidor.certificadosChave());
     const semRede = envServidor.notasSemRede();
     const fila = rotinas?.find((r) => r.rotina === "fila");
@@ -215,8 +211,7 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
     conteudo = (
       <div className="space-y-5">
         <Alerta tom="info">
-          Chaves e senhas das integrações ficam guardadas somente na hospedagem (variáveis de ambiente) ou, no caso dos certificados digitais e do acesso à SEFAZ-TO, cifradas
-          com uma chave que só o servidor tem; nunca aparecem nesta tela nem no navegador. Quando uma integração está
+          Chaves e senhas das integrações ficam guardadas somente na hospedagem (variáveis de ambiente) e nunca aparecem nesta tela nem no navegador. Quando uma integração está
           desconectada, o portal não finge que enviou: o envio fica registrado como “não configurado”.
         </Alerta>
         <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
@@ -328,24 +323,6 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
                 </Link>
               </p>
             )}
-          </Integracao>
-
-          <Integracao
-            icone={Landmark}
-            titulo="DARE da SEFAZ-TO (robô)"
-            situacao={
-              <Situacao
-                ok={!acessoDare ? false : acessoDare.situacao === "conectado" ? true : null}
-                texto={!acessoDare ? "Desconectado" : acessoDare.situacao === "conectado" ? "Conectado" : acessoDare.situacao === "erro" ? "Verificar" : "Não testado"}
-              />
-            }
-          >
-            <p>
-              Emite o DARE da complementação de alíquota do Simples (receita 105) das empresas do Tocantins, com o valor conferido na apuração do ICMS e o vencimento do dia 9,
-              e publica o PDF oficial na agenda de pagamentos da empresa. O sistema da SEFAZ-TO (dare.sefaz.to.gov.br) exige o login do governo do Tocantins de quem emite os
-              DAREs do escritório. Sem acesso cadastrado e testado, nenhum DARE é emitido pelo portal.
-            </p>
-            <AcessoDareTo acesso={(acessoDare as AcessoDareToTela | null) ?? null} oficial={ambiente === "producao"} demonstracao={ambiente === "demonstracao"} />
           </Integracao>
 
           <Integracao icone={FileSearch} titulo="Leitura de documentos (OCR)" situacao={<Situacao ok={envServidor.ocrAtivo()} texto={envServidor.ocrAtivo() ? "Ativa" : "Desligada"} />}>

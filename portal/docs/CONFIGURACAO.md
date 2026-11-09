@@ -22,7 +22,7 @@ O script de publicação (`scripts/publicar.ts`) cadastra automaticamente as var
 | `WHATSAPP_TOKEN`, `WHATSAPP_API_VERSION` | | WhatsApp Business Platform (seção 4) |
 | `CLAMAV_HOST`, `CLAMAV_PORT` | | antivírus ClamAV (seção 6) |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | ✔ (as duas chaves) | notificações no aparelho (seção 12); a chave privada é **somente servidor** |
-| `CERTIFICADOS_CHAVE` | ✔ | chave que cifra os certificados A1 das notas automáticas (seção 13) e o acesso à SEFAZ-TO do robô do DARE — **somente servidor**, criada uma vez e mantida |
+| `CERTIFICADOS_CHAVE` | ✔ | chave que cifra os certificados A1 das notas automáticas (seção 13) — **somente servidor**, criada uma vez e mantida |
 | `NOTAS_AUTOMATICAS_SEM_REDE` | | `1` desliga as consultas à SEFAZ e ao Ambiente Nacional (demonstração e testes; seção 13) |
 | `PORTAL_URL`, `WORKER_INTERVALO_SEGUNDOS`, `WORKER_ROTINA_DIARIA` | | processador contínuo opcional (seção 5) |
 

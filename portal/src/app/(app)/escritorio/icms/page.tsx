@@ -99,10 +99,7 @@ export default async function IcmsCarteira({ searchParams }: PageProps<"/escrito
   let bloqueioLote: string | null = null;
   let semConferencia = 0;
   if (comComplementacaoTo.length) {
-    const [{ data: acessoDare }, { data: jaEmitidos }] = await Promise.all([
-      s.supabase.from("dare_to_acesso").select("situacao").maybeSingle(),
-      s.supabase.rpc("dare_to_emitidos_mes", { p_competencia: comp }),
-    ]);
+    const { data: jaEmitidos } = await s.supabase.rpc("dare_to_emitidos_mes", { p_competencia: comp });
     for (const e of jaEmitidos ?? []) emitidos.set(e.empresa_id, { numero: e.numero });
     const hoje = hojeISO();
     const vencimento = (l: Linha) => l.r?.linhas.find((x) => x.chave === "complementacao")?.vencimento ?? `${somarMeses(comp, 1).slice(0, 7)}-09`;
@@ -111,13 +108,7 @@ export default async function IcmsCarteira({ searchParams }: PageProps<"/escrito
       .filter((l) => l.e.conferida_em && !l.mudou && !emitidos.has(l.e.id) && valor(l, "complementacao").gte(3) && vencimento(l) >= hoje)
       .map((l) => ({ id: l.e.id, nome: l.e.nome, valor: valor(l, "complementacao").toFixed(2) }));
     bloqueioLote =
-      envPublico.ambiente() !== "producao"
-        ? "Fora do portal oficial (demonstração ou teste) o robô não acessa a SEFAZ-TO. No portal oficial, a emissão funciona de verdade."
-        : !acessoDare
-          ? "O robô do DARE está desconectado: o administrador cadastra o acesso à SEFAZ-TO em Configurações → Integrações."
-          : acessoDare.situacao !== "conectado"
-            ? "O acesso à SEFAZ-TO ainda não passou no teste (Configurações → Integrações → Testar conexão)."
-            : null;
+      envPublico.ambiente() !== "producao" ? "Fora do portal oficial (demonstração ou teste) o robô não acessa a SEFAZ-TO. No portal oficial, a emissão funciona de verdade." : null;
   }
 
   return (

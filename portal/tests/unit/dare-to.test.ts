@@ -1,222 +1,219 @@
 import { describe, expect, it } from "vitest";
 import {
   ErroDareTo,
+  conferirDareTo,
   emitirDareTo,
+  enderecoDoRelatorio,
+  lerCampos,
+  lerGxState,
   linhaDigitavelDoTexto,
-  mascararLogin,
+  normalizarLocal,
   numeroDoDare,
-  papelDoCampo,
-  testarDareTo,
   valorBr,
+  valorDoSite,
   type Buscar,
   type PedidoDareTo,
 } from "@/lib/dare-to/robo";
-import { lerFormularios } from "@/lib/dare-to/html";
 
 /**
- * Simulação do TOauth e do sistema de DARE (só para o teste): as telas seguem o
- * padrão de um sistema Rails com entrada pelo login do governo do Tocantins.
+ * Simulação do DARE avulso da SEFAZ-TO (só para o teste), com os mesmos nomes
+ * de página e de campo do site real (GeneXus): identificação (hnetccwkda),
+ * seleção da inscrição (hnetcccnco) e formulário (hdrewp02).
  */
-const DARE = "https://dare.sefaz.to.gov.br";
-const AUTH = "https://toauth.ati.to.gov.br";
+const BASE = "https://sefaz.to.gov.br/dare/servlet";
+const estado = (extra: Record<string, unknown> = {}) =>
+  `<input type="hidden" name="GXState" value='${JSON.stringify({ _EventName: "", _EventGridId: "", _EventRowId: "", GX_AJAX_KEY: "ABC", AJAX_SECURITY_TOKEN: "tok", ...extra })}'/>`;
+const erro = (msg: string) => `<span class="ErrorViewer gx_ev" id="gxErrorViewer"><div>${msg}</div></span>`;
+
+const LINHAS = [
+  ["0", "1", "29.000.001-0", "WJE VAREJAO DAS MADEIRAS LTDA", "VAREJAO FILIAL", "1", "55.981.291/0001-38", "1718204", "TO"],
+  ["0", "2", "29.542.854-6", "WJE VAREJAO DAS MADEIRAS LTDA", "VAREJÃO DAS MADEIRAS", "1", "55.981.291/0001-38", "1718204", "TO"],
+];
 
 interface Opcoes {
-  /** Página do formulário de emissão (HTML). */
-  formulario?: string;
-  /** Pedir a autorização do aplicativo depois do login. */
-  autorizar?: boolean;
-  /** Redirecionar o authorize para fora do governo. */
-  desvio?: string;
-  textoPdf?: string;
+  subcodigo?: boolean;
+  /** O total que a SEFAZ calcula (padrão: o valor informado). */
+  totalSefaz?: string;
+  confirmar?: "redirecionar" | "popup" | "erro";
 }
 
-const FORM_PADRAO = `
-<html><head><title>Emitir DARE</title></head><body>
-<form action="/dares" method="post">
-  <input type="hidden" name="authenticity_token" value="tok-form">
-  <label for="dare_ie">Inscrição Estadual *</label><input id="dare_ie" name="dare[inscricao_estadual]" required>
-  <label for="dare_receita">Receita</label>
-  <select id="dare_receita" name="dare[receita_id]" required><option value="">Selecione</option><option value="3">100 - ICMS NORMAL</option><option value="7">105 - ICMS COMPLEMENTACAO DE ALIQUOTA</option></select>
-  <label for="dare_ref">Referência (MM/AAAA)</label><input id="dare_ref" name="dare[referencia]" required>
-  <label for="dare_venc">Data de vencimento</label><input id="dare_venc" name="dare[vencimento]" required>
-  <label for="dare_valor">Valor principal</label><input id="dare_valor" name="dare[valor]" required>
-  <label for="dare_obs">Informações complementares</label><textarea id="dare_obs" name="dare[informacoes]" maxlength="60"></textarea>
-  <input type="submit" name="commit" value="Gerar DARE">
-</form></body></html>`;
+function formulario(campos: Record<string, string>, op: Opcoes, msg = "") {
+  const sel = (nome: string, ops: [string, string][], valor: string) =>
+    `<select id="${nome}" name="${nome}">${ops.map(([v, t]) => `<option value="${v}"${v === valor ? ' selected="selected"' : ""}>${t}</option>`).join("")}</select>`;
+  const inp = (nome: string, valor: string) => `<input type="text" id="${nome}" name="${nome}" value="${valor}"/>`;
+  const ie = campos.vDREINSEST ?? "";
+  return `<html><body>${msg ? erro(msg) : erro("").replace("<div></div>", "")}<form id="MAINFORM" name="MAINFORM" method="post" action="hdrewp02">
+    ${inp("vDRERAZSOC", "WJE VAREJAO DAS MADEIRAS LTDA")}${inp("vDREINSEST", ie)}
+    ${sel("vUFCDGORI", [["TO", "TO"]], "TO")}${sel("vMUNCDGORI", [["0", ""], ["1718204", "PORTO NACIONAL - 1718204"]], "1718204")}
+    ${sel("vDRECDGMUN", [["0", ""], ["1700251", "ABREULANDIA - 1700251"], ["1718204", "PORTO NACIONAL                -    1718204"]], campos.vDRECDGMUN ?? "0")}
+    ${sel("vDRETDCORI", [["5", "OUTROS A ESPECIFICAR"], ["2", "NFA - NOTA FISCAL AVULSA"]], campos.vDRETDCORI ?? "5")}
+    ${inp("vDREDOCORI", "")}${inp("vDREDSCDOC", "")}${inp("vDRENROPAR", "0")}
+    ${sel("vDRECDGRCT", [["0", ""], ["105", "105 - ICMS COMPLEMENTAÇÃO DE ALÍQUOTA - SIMPLES NACIONAL"], ["110", "110 - ICMS NORMAL"]], campos.vDRECDGRCT ?? "0")}
+    ${sel("vSUBCDGRCT", op.subcodigo && campos.vDRECDGRCT === "105" ? [["0", ""], ["1", "1 - ALGUM"]] : [["0", ""]], "0")}
+    ${inp("vDREDTAVEN", campos.vDREDTAVEN ?? "09/11/2026")}${inp("vDREREFCHAR", campos.vDREREFCHAR ?? "  /")}
+    ${inp("vDREVLRPRI", campos.vDREVLRPRI ?? "0,00")}${inp("vDREVLRMLT", "0,00")}${inp("vDREVLRJUR", "0,00")}${inp("vDREVLRATM", "0,00")}${inp("vDREVLRTSE", "0,00")}
+    ${inp("vDREVLRTOT", campos.vDREVLRTOT ?? "0,00")}
+    <input type="button" name="BUTTON1" value="Atualizar Valores"/>
+    <textarea name="vDREINFCOM" id="vDREINFCOM">${campos.vDREINFCOM ?? ""}</textarea>
+    <input type="button" name="BTN_ENTER" value="Confirmar"/>
+    ${estado({ CONINSEST: ie })}</form></body></html>`;
+}
 
 function servidor(op: Opcoes = {}) {
-  const envios: { url: string; corpo: URLSearchParams }[] = [];
+  const envios: { pagina: string; evento: string; corpo: URLSearchParams }[] = [];
+  let ieEscolhida = "";
   const buscar: Buscar = async (url, init) => {
     const u = new URL(url);
     const metodo = init?.method ?? "GET";
-    const cookies = String((init?.headers as Record<string, string>)?.Cookie ?? "");
     const corpo = new URLSearchParams(String(init?.body ?? ""));
-    if (metodo === "POST") envios.push({ url, corpo });
-    const html = (b: string, status = 200, extra: Record<string, string> = {}) => new Response(b, { status, headers: { "content-type": "text/html; charset=utf-8", ...extra } });
-    const ir = (local: string, extra: Record<string, string> = {}) => new Response(null, { status: 302, headers: { location: local, ...extra } });
-    const rota = `${metodo} ${u.origin}${u.pathname}`;
+    const pag = u.pathname.split("/").pop()!;
+    const gx = corpo.get("GXState") ? (JSON.parse(corpo.get("GXState")!) as Record<string, string>) : {};
+    if (metodo === "POST") envios.push({ pagina: pag, evento: gx._EventName, corpo });
+    const html = (b: string, status = 200) => new Response(b, { status, headers: { "content-type": "text/html;charset=utf-8", "set-cookie": "JSESSIONID=abc; Path=/dare" } });
+    // O servidor real responde com http e a porta 443
+    const ir = (p: string) => new Response(null, { status: 302, headers: { location: `http://sefaz.to.gov.br:443/dare/servlet/${p}` } });
+    const comSessao = String((init?.headers as Record<string, string>)?.Cookie ?? "").includes("JSESSIONID=abc");
 
-    switch (rota) {
-      case `GET ${DARE}/users/sign_in`:
-        return ir(`${AUTH}/oauth/authorize?client_id=abc&redirect_uri=${encodeURIComponent(`${DARE}/toauth`)}&response_type=code`);
-      case `GET ${AUTH}/oauth/authorize`:
-        if (op.desvio) return ir(op.desvio);
-        if (!cookies.includes("toauth_sess=ok")) return ir(`${AUTH}/users/sign_in?return_to=%2Foauth%2Fauthorize`);
-        if (op.autorizar && !cookies.includes("autorizado=1"))
-          return html(`<form action="/oauth/authorize" method="post"><input type="hidden" name="client_id" value="abc"><input type="submit" name="commit" value="Autorizar"></form>`);
-        return ir(`${DARE}/toauth?code=c0d1g0`);
-      case `POST ${AUTH}/oauth/authorize`:
-        return ir(`${DARE}/toauth?code=c0d1g0`, { "set-cookie": "autorizado=1; path=/" });
-      case `GET ${AUTH}/users/sign_in`:
-        return html(
-          `<form action="/users/sign_in" method="post"><input type="hidden" name="authenticity_token" value="tok-login"><input name="user[login]" placeholder="E-mail ou CPF" type="text"><input name="user[password]" type="password"><input type="submit" name="commit" value="Entrar"></form>`,
-          200,
-          { "set-cookie": "_toauth=pre; path=/; HttpOnly" },
-        );
-      case `POST ${AUTH}/users/sign_in`:
-        if (corpo.get("user[login]") === "12345678901" && corpo.get("user[password]") === "senha-certa" && corpo.get("authenticity_token") === "tok-login") {
-          return ir(`${AUTH}/oauth/authorize`, { "set-cookie": "toauth_sess=ok; path=/" });
-        }
-        return html(`<div class="alert alert-danger">Login ou senha inválidos.</div><form action="/users/sign_in" method="post"><input name="user[login]"><input name="user[password]" type="password"></form>`);
-      case `GET ${DARE}/toauth`:
-        return u.searchParams.get("code") === "c0d1g0" ? ir(`${DARE}/`, { "set-cookie": "_dare_session=s1; path=/; secure" }) : html("código inválido", 401);
-      case `GET ${DARE}/`:
-        if (!cookies.includes("_dare_session=s1")) return ir(`${DARE}/users/sign_in`);
-        return html(`<title>DARE</title><a href="/dares">Meus DAREs</a> <a href="/dares/new">Emitir DARE</a> <a href="/users/sign_out">Sair</a>`);
-      case `GET ${DARE}/dares/new`:
-        return html(op.formulario ?? FORM_PADRAO);
-      case `POST ${DARE}/dares`:
-        return ir(`${DARE}/dares/987`);
-      case `GET ${DARE}/dares/987`:
-        return html(`<h1>DARE gerado</h1><p>Nosso Número: 2026.1109.0000.987</p><a href="/dares/987.pdf">Imprimir</a>`);
-      case `GET ${DARE}/dares/987.pdf`:
-        return new Response(Buffer.from("%PDF-1.4 dare de teste"), { status: 200, headers: { "content-type": "application/pdf" } });
-      default:
-        return html("não encontrado", 404);
+    if (u.host !== "sefaz.to.gov.br") return html("fora", 404);
+    if (pag === "hnetccwkda" && metodo === "GET")
+      return html(`<form id="MAINFORM" name="MAINFORM" method="post" action="hnetccwkda"><input type="text" id="vINSCRICAOESTADUAL" name="vINSCRICAOESTADUAL" value=""/><input type="text" id="vCECPFCNPJ" name="vCECPFCNPJ" value=""/><input type="button" name="BUTTON1" value="Consultar"/>${estado()}</form>`);
+    if (pag === "hnetccwkda" && metodo === "POST") {
+      if (gx._EventName !== "EENTER.") return html(erro("evento?"));
+      return corpo.get("vCECPFCNPJ") === "55981291000138" && comSessao ? ir("hnetcccnco") : html(`${erro("Contribuinte não cadastrado!")}<form id="MAINFORM" action="hnetccwkda">${estado()}</form>`);
     }
+    if (pag === "hnetcccnco" && metodo === "GET")
+      return html(`<form id="MAINFORM" name="MAINFORM" method="post" action="hnetcccnco"><input type="hidden" name="SfileContainerDataV" value='${JSON.stringify(LINHAS)}'/><input type="button" name="BUTTON1" value="Confirmar"/>${estado({ SfileContainerData: "{}" })}</form>`);
+    if (pag === "hnetcccnco" && metodo === "POST") {
+      const linha = gx.SFILE_ROW;
+      if (!linha || gx._EventRowId !== linha || gx._EventGridId !== "17") return html(erro("Nenhuma inscrição estadual selecionada&#033;"));
+      ieEscolhida = corpo.get(`vCECPFCNPJ_${linha}`) ?? "";
+      return ir("hdrewp02");
+    }
+    if (pag === "hdrewp02" && metodo === "GET") return html(formulario({ vDREINSEST: ieEscolhida }, op));
+    if (pag === "hdrewp02" && metodo === "POST") {
+      const campos = Object.fromEntries(corpo.entries());
+      campos.vDREINSEST = ieEscolhida;
+      if (gx._EventName === "EVDRECDGRCT.CLICK.") return html(formulario(campos, op));
+      if (gx._EventName === "E'CALCULAR'.") return html(formulario({ ...campos, vDREVLRTOT: op.totalSefaz ?? campos.vDREVLRPRI }, op));
+      if (gx._EventName === "E'CONFIRM'.") {
+        if (op.confirmar === "erro") return html(formulario(campos, op, "Data de vencimento inválida."));
+        if (op.confirmar === "popup") return html(`<script>gx.ajax.dispatchCommands([{"popup":{"url":"adrerel02?987,1"}}])</script>`);
+        return ir("adrerel02?987,1");
+      }
+    }
+    if (pag === "adrerel02") return new Response(Buffer.from("%PDF-1.4 dare de teste"), { status: 200, headers: { "content-type": "application/pdf" } });
+    return html("não encontrado", 404);
   };
   const lerTextoPdf = async () =>
-    op.textoPdf ??
-    "DOCUMENTO DE ARRECADACAO DE RECEITAS ESTADUAIS Inscricao Estadual 29.123.456-7 Receita 105 Referencia 10/2026 Vencimento 09/11/2026 Valor 200,00 Nosso Numero 202611090000987 85810000002-1 00000385000-2 26110900009-3 87000000000-4";
+    "DOCUMENTO DE ARRECADACAO DE RECEITAS ESTADUAIS I. Estadual 29.542.854-6 CNPJ 55.981.291/0001-38 Receita 105 Referencia 10/2026 Vencimento 09/11/2026 Valor Total 1.234,56 Nosso Numero 202611090000987 85810000012-1 34560385000-2 26110900009-3 87000000000-4";
   return { buscar, envios, lerTextoPdf };
 }
 
-const CRED = { login: "123.456.789-01", senha: "senha-certa" };
 const PEDIDO: PedidoDareTo = {
-  inscricaoEstadual: "291234567",
-  documento: "11222333000181",
+  inscricaoEstadual: "295428546",
+  documento: "55981291000138",
+  municipioIbge: "1718204",
   receita: "105",
   periodo: "2026-10",
   vencimento: "2026-11-09",
-  valor: "200.00",
-  informacao: "Complementação de alíquota — Simples Nacional — referência 10/2026",
+  valor: "1234.56",
+  observacao: "ICMS complementação de alíquota — Simples Nacional — competência 10/2026",
 };
 
-describe("DARE-TO: leitura das telas", () => {
-  it("reconhece os campos pelos rótulos", () => {
-    const [f] = lerFormularios(FORM_PADRAO, `${DARE}/dares/new`);
-    expect(f.acao).toBe(`${DARE}/dares`);
-    const papeis = Object.fromEntries(f.campos.map((c) => [c.nome, papelDoCampo(c)]));
-    expect(papeis).toMatchObject({
-      "dare[inscricao_estadual]": "inscricao",
-      "dare[receita_id]": "receita",
-      "dare[referencia]": "referencia",
-      "dare[vencimento]": "vencimento",
-      "dare[valor]": "valor",
-      "dare[informacoes]": "informacao",
-      authenticity_token: null,
-    });
-    // "Valor dos juros", "Valor total" e subcódigo não são o valor principal nem a receita
-    expect(papelDoCampo({ nome: "x", tipo: "text", id: null, rotulo: "Valor dos juros", valor: "", obrigatorio: false, desabilitado: false, maxLength: null, opcoes: [] })).toBeNull();
-    expect(papelDoCampo({ nome: "x", tipo: "text", id: null, rotulo: "Valor total", valor: "", obrigatorio: false, desabilitado: false, maxLength: null, opcoes: [] })).toBeNull();
-    expect(papelDoCampo({ nome: "x", tipo: "select", id: null, rotulo: "Subcódigo da receita", valor: "", obrigatorio: true, desabilitado: false, maxLength: null, opcoes: [] })).toBeNull();
-    expect(papelDoCampo({ nome: "x", tipo: "text", id: null, rotulo: "Mês/Ano de referência", valor: "", obrigatorio: true, desabilitado: false, maxLength: null, opcoes: [] })).toBe("referencia");
-  });
-
-  it("número do DARE, linha digitável, valor e login mascarado", () => {
-    expect(numeroDoDare("Nosso Número: 2026.1109.0000.987")).toBe("202611090000987");
-    expect(numeroDoDare("Sem número aqui")).toBeNull();
-    expect(linhaDigitavelDoTexto("85810000002-1 00000385000-2 26110900009-3 87000000000-4")).toBe("85810000002-1 00000385000-2 26110900009-3 87000000000-4");
+describe("DARE-TO: leitura das páginas", () => {
+  it("estado GeneXus, campos atuais, valores e endereços", () => {
+    const html = formulario({ vDREINSEST: "29.542.854-6", vDRECDGRCT: "105", vDREINFCOM: "A &amp; B" }, {});
+    expect(lerGxState(html)?.AJAX_SECURITY_TOKEN).toBe("tok");
+    const c = lerCampos(html);
+    expect(c).toMatchObject({ vDRECDGRCT: "105", vDRETDCORI: "5", vMUNCDGORI: "1718204", vDREINFCOM: "A & B" });
+    expect(c).not.toHaveProperty("BUTTON1");
+    expect(c).not.toHaveProperty("GXState");
+    expect(normalizarLocal("http://sefaz.to.gov.br:443/dare/servlet/hnetcccnco", `${BASE}/hnetccwkda`)).toBe(`${BASE}/hnetcccnco`);
+    expect(valorDoSite("1.234,56")).toBe("1234.56");
     expect(valorBr("1234.5")).toBe("1.234,50");
-    expect(mascararLogin("123.456.789-01")).toBe("***.456.789-**");
-    expect(mascararLogin("joao@escritorio.com.br")).toBe("jo***@escritorio.com.br");
+    expect(numeroDoDare("Nosso Número: 2026.1109.0000.987")).toBe("202611090000987");
+    expect(linhaDigitavelDoTexto("85810000012-1 34560385000-2 26110900009-3 87000000000-4")).toBe("85810000012-1 34560385000-2 26110900009-3 87000000000-4");
+    expect(enderecoDoRelatorio(`gx.ajax.dispatchCommands([{"popup":{"url":"adrerel02?987,1"}}])`, `${BASE}/hdrewp02`)).toBe(`${BASE}/adrerel02?987,1`);
+    expect(enderecoDoRelatorio(`<a href="https://golpe.example.com/x.pdf">x</a>`, `${BASE}/hdrewp02`)).toBeNull();
   });
 });
 
-describe("DARE-TO: teste de conexão (sem emitir)", () => {
-  it("entra pelo TOauth, acha o formulário e guarda só a estrutura", async () => {
+describe("DARE-TO: conferência (sem confirmar)", () => {
+  it("consulta o CNPJ, escolhe a inscrição da empresa e confere o total calculado pela SEFAZ", async () => {
     const { buscar, envios } = servidor();
-    const r = await testarDareTo(CRED, buscar);
-    expect(r.ok).toBe(true);
-    expect(r.mapeamento.escolhido?.caminho).toBe("/dares/new");
-    expect(r.mapeamento.escolhido?.papeis).toMatchObject({ receita: "dare[receita_id]", valor: "dare[valor]" });
-    // Nada foi enviado ao DARE (só o login no TOauth)
-    expect(envios.map((e) => new URL(e.url).host)).toEqual(["toauth.ati.to.gov.br"]);
-    const guardado = JSON.stringify(r.mapeamento);
-    expect(guardado).not.toContain("senha-certa");
-    expect(guardado).not.toContain("tok-form");
-    expect(guardado).not.toContain("c0d1g0");
+    const p = await conferirDareTo(PEDIDO, buscar);
+    expect(p).toEqual({ razaoSocial: "WJE VAREJAO DAS MADEIRAS LTDA", inscricaoEstadual: "29.542.854-6", municipio: "PORTO NACIONAL", total: "1234.56" });
+    expect(envios.map((e) => `${e.pagina} ${e.evento}`)).toEqual(["hnetccwkda EENTER.", "hnetcccnco EENTER.", "hdrewp02 EVDRECDGRCT.CLICK.", "hdrewp02 E'CALCULAR'."]);
+    // Escolheu a 2ª linha (a inscrição da empresa), não a 1ª
+    expect(JSON.parse(envios[1].corpo.get("GXState")!)).toMatchObject({ SFILE_ROW: "0002", _EventRowId: "0002", _EventGridId: "17" });
   });
 
-  it("aceita a autorização do aplicativo pedida no primeiro acesso", async () => {
-    const { buscar } = servidor({ autorizar: true });
-    expect((await testarDareTo(CRED, buscar)).ok).toBe(true);
+  it("preenche município, receita 105, vencimento do dia 9, competência, valor e a observação", async () => {
+    const { buscar, envios } = servidor();
+    await conferirDareTo(PEDIDO, buscar);
+    const c = envios.find((e) => e.evento === "E'CALCULAR'.")!.corpo;
+    expect(Object.fromEntries(["vDRECDGMUN", "vDRETDCORI", "vDRECDGRCT", "vSUBCDGRCT", "vDREDTAVEN", "vDREREFCHAR", "vDREVLRPRI", "vDREVLRMLT", "vDREVLRJUR", "vDREINFCOM"].map((k) => [k, c.get(k)]))).toEqual({
+      vDRECDGMUN: "1718204",
+      vDRETDCORI: "5",
+      vDRECDGRCT: "105",
+      vSUBCDGRCT: "0",
+      vDREDTAVEN: "09/11/2026",
+      vDREREFCHAR: "10/2026",
+      vDREVLRPRI: "1.234,56",
+      vDREVLRMLT: "0,00",
+      vDREVLRJUR: "0,00",
+      vDREINFCOM: "ICMS COMPLEMENTACAO DE ALIQUOTA - SIMPLES NACIONAL - COMPETENCIA 10/2026",
+    });
   });
 
-  it("senha errada: mensagem do governo do Tocantins", async () => {
+  it("CNPJ não encontrado: mensagem da SEFAZ", async () => {
     const { buscar } = servidor();
-    await expect(testarDareTo({ login: CRED.login, senha: "errada" }, buscar)).rejects.toThrow(/não aceitou o login: Login ou senha inválidos/);
-  });
-
-  it("redirecionamento para fora do governo: para por segurança e não manda a senha", async () => {
-    const { buscar, envios } = servidor({ desvio: "https://golpe.example.com/oauth" });
-    const e = await testarDareTo(CRED, buscar).catch((x: unknown) => x);
+    const e = await conferirDareTo({ ...PEDIDO, documento: "11222333000181" }, buscar).catch((x: unknown) => x);
     expect(e).toBeInstanceOf(ErroDareTo);
-    expect((e as ErroDareTo).etapa).toBe("conexao");
-    expect(envios).toHaveLength(0);
+    expect((e as ErroDareTo).message).toMatch(/não encontrou o contribuinte do CNPJ 11222333000181: Contribuinte não cadastrado!/);
   });
 
-  it("campo obrigatório desconhecido: não fica pronto e diz qual é", async () => {
-    const form = FORM_PADRAO.replace(
-      "<input type=\"submit\"",
-      '<label for="sub">Subcódigo</label><select id="sub" name="dare[subcodigo]" required><option value="">Selecione</option><option value="1">1</option></select><input type="submit"',
-    );
-    const { buscar } = servidor({ formulario: form });
-    const r = await testarDareTo(CRED, buscar);
-    expect(r.ok).toBe(false);
-    expect(r.mensagem).toContain("Subcódigo");
+  it("inscrição estadual que não aparece para o CNPJ: para", async () => {
+    const { buscar } = servidor();
+    await expect(conferirDareTo({ ...PEDIDO, inscricaoEstadual: "290000999" }, buscar)).rejects.toThrow(/inscrição estadual 290000999 não aparece/);
+  });
+
+  it("SEFAZ calcula total diferente (multa, juros): não confirma", async () => {
+    const { buscar, envios } = servidor({ totalSefaz: "1.300,00" });
+    await expect(conferirDareTo(PEDIDO, buscar)).rejects.toThrow(/calculou o DARE em R\$ 1\.300,00, diferente do valor da apuração \(R\$ 1\.234,56\)/);
+    expect(envios.some((e) => e.evento === "E'CONFIRM'.")).toBe(false);
+  });
+
+  it("receita passou a pedir subcódigo: para sem emitir", async () => {
+    const { buscar } = servidor({ subcodigo: true });
+    await expect(conferirDareTo(PEDIDO, buscar)).rejects.toThrow(/passou a pedir subcódigo/);
   });
 });
 
 describe("DARE-TO: emissão", () => {
-  it("preenche receita 105, mês, vencimento do dia 9 e valor; baixa e confere o PDF", async () => {
+  it("confirma, segue para o relatório e confere o PDF", async () => {
     const { buscar, envios, lerTextoPdf } = servidor();
-    const r = await emitirDareTo(CRED, PEDIDO, { buscar, lerTextoPdf });
+    const r = await emitirDareTo(PEDIDO, { buscar, lerTextoPdf });
     expect(r.numero).toBe("202611090000987");
     expect(r.pdf.subarray(0, 5).toString()).toBe("%PDF-");
-    expect(r.linhaDigitavel).toBe("85810000002-1 00000385000-2 26110900009-3 87000000000-4");
-    const envio = envios.find((e) => e.url === `${DARE}/dares`)!.corpo;
-    expect(envio.get("dare[inscricao_estadual]")).toBe("291234567");
-    expect(envio.get("dare[receita_id]")).toBe("7");
-    expect(envio.get("dare[referencia]")).toBe("10/2026");
-    expect(envio.get("dare[vencimento]")).toBe("09/11/2026");
-    expect(envio.get("dare[valor]")).toBe("200,00");
-    // Sem acento, travessão vira hífen e respeita o tamanho do campo (60)
-    expect(envio.get("dare[informacoes]")).toMatch(/^COMPLEMENTACAO DE ALIQUOTA - SIMPLES NACIONAL - REFERENCIA/);
-    expect(envio.get("dare[informacoes]")!.length).toBeLessThanOrEqual(60);
-    expect(envio.get("authenticity_token")).toBe("tok-form");
-    expect(envio.get("commit")).toBe("Gerar DARE");
+    expect(r.linhaDigitavel).toBe("85810000012-1 34560385000-2 26110900009-3 87000000000-4");
+    expect(r.previa.total).toBe("1234.56");
+    expect(envios.at(-1)!.evento).toBe("E'CONFIRM'.");
   });
 
-  it("receita que não está na lista: não emite", async () => {
-    const { buscar, envios, lerTextoPdf } = servidor();
-    await expect(emitirDareTo(CRED, { ...PEDIDO, receita: "999" }, { buscar, lerTextoPdf })).rejects.toThrow(/não oferece a receita 999/);
-    expect(envios.some((e) => e.url === `${DARE}/dares`)).toBe(false);
+  it("relatório aberto em janela (comando do GeneXus)", async () => {
+    const { buscar, lerTextoPdf } = servidor({ confirmar: "popup" });
+    expect((await emitirDareTo(PEDIDO, { buscar, lerTextoPdf })).numero).toBe("202611090000987");
+  });
+
+  it("SEFAZ recusa no Confirmar: mensagem dela", async () => {
+    const { buscar, lerTextoPdf } = servidor({ confirmar: "erro" });
+    await expect(emitirDareTo(PEDIDO, { buscar, lerTextoPdf })).rejects.toThrow(/não emitiu o DARE: Data de vencimento inválida/);
   });
 
   it("PDF com outro valor: não anexa e avisa", async () => {
     const { buscar } = servidor();
-    const lerTextoPdf = async () => "Inscricao 291234567 Vencimento 09/11/2026 Valor 210,00 Nosso Numero 202611090000987";
-    await expect(emitirDareTo(CRED, PEDIDO, { buscar, lerTextoPdf })).rejects.toThrow(/não confere \(valor R\$ 200,00\)/);
+    const lerTextoPdf = async () => "I. Estadual 29.542.854-6 Vencimento 09/11/2026 Valor 1.300,00 Nosso Numero 202611090000987";
+    await expect(emitirDareTo(PEDIDO, { buscar, lerTextoPdf })).rejects.toThrow(/não confere \(valor R\$ 1\.234,56\)/);
   });
 });
