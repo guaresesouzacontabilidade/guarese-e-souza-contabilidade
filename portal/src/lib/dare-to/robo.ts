@@ -363,13 +363,13 @@ async function preencherECalcular(s: Sessao, form: Pagina, pedido: PedidoDareTo)
 
 /** Endereço do relatório (PDF) na resposta do Confirmar: redirecionamento, comando de janela ou link. */
 export function enderecoDoRelatorio(html: string, base: string): string | null {
-  const conhecidas = /hnetccwkda|hnetcccnco|hdrewp02/i;
+  const conhecidas = /hnetccwkda|hnetcccnco|hdrewp02|static\//i; // hnetccwkdapg também cai aqui (começa com hnetccwkda)
   const candidatos = [
     ...[...html.matchAll(/"(?:redirect|popup)"\s*:\s*\{\s*"url"\s*:\s*"([^"]+)"/g)].map((m) => m[1].replace(/\\\//g, "/")),
     ...[...html.matchAll(/window\.open\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]),
     ...[...html.matchAll(/location(?:\.href)?\s*=\s*['"]([^'"]+)['"]/g)].map((m) => m[1]),
-    // Outro programa do próprio sistema citado na resposta (o relatório do DARE, "a...?parâmetros")
-    ...[...html.matchAll(/\/dare\/servlet\/(a[a-z0-9]{5,12}(?:\?[^"'<>\s]*)?)/gi), ...html.matchAll(/["'](a[a-z0-9]{5,12}\?[^"'<>\s]+)["']/gi)]
+    // Outro programa do próprio sistema citado na resposta (o relatório do DARE, "nome?parâmetros")
+    ...[...html.matchAll(/\/dare\/servlet\/([a-z][a-z0-9]{5,14}(?:\?[^"'<>\s]*)?)/gi), ...html.matchAll(/["']([a-z][a-z0-9]{5,14}\?[^"'<>\s]+)["']/gi)]
       .map((m) => m[1])
       .filter((u) => !conhecidas.test(u)),
     ...[...html.matchAll(/<(?:a|iframe|embed|object)\b[^>]*(?:href|src|data)="([^"]+)"/gi)].map((m) => decodificar(m[1])).filter((u) => /\.pdf|servlet\/a|rel|dare/i.test(u) && !/static|barra\.to\.gov\.br|adobe/i.test(u)),
@@ -414,8 +414,17 @@ export async function emitirDareTo(pedido: PedidoDareTo, opcoes: { buscar?: Busc
   const form = await abrirFormulario(s, pedido);
   const { pagina: calculado, previa } = await preencherECalcular(s, form, pedido);
 
-  // Confirmar
+  // Confirmar: a SEFAZ registra o DARE e abre a tela "Forma de Pagamento" (PIX, Imprimir DARE, cartão)
   let resp = await s.evento(calculado, "E'CONFIRM'.", {});
+  let numeroSefaz: string | null = null;
+  let codigoBarras: string | null = null;
+  if (!ehPdf(resp) && /IMGIMPDARE/.test(resp.html)) {
+    const st = lerGxState(resp.html) ?? {};
+    numeroSefaz = soDigitos(String(st.DRENOSNUM ?? "")) || null;
+    codigoBarras = soDigitos(String(st.DRECDGBAR ?? "")) || null;
+    // "Imprimir DARE"
+    resp = await s.evento(resp, "EIMGIMPDARE.CLICK.", {});
+  }
   if (!ehPdf(resp)) {
     const msgs = mensagensDaSefaz(resp.html);
     const relatorio = enderecoDoRelatorio(resp.html, resp.url);
@@ -430,9 +439,14 @@ export async function emitirDareTo(pedido: PedidoDareTo, opcoes: { buscar?: Busc
       tipo: resp.tipo,
       mensagens: mensagensDaSefaz(resp.html),
       enderecos: [...new Set([...resp.html.matchAll(/(?:servlet\/|url"\s*:\s*")([a-z0-9]{6,14})/gi)].map((m) => m[1]))].slice(0, 10),
+      estado: Object.keys(lerGxState(resp.html) ?? {}).slice(0, 40),
+      botoes: [...new Set([...resp.html.matchAll(/execEvt\('([^']+)'/g)].map((m) => m[1]))].slice(0, 10),
     });
-    const numero = numeroDoDare(textoVisivel(resp.html));
-    throw new ErroDareTo(`${numero ? `O DARE nº ${numero} foi registrado na SEFAZ-TO, mas o` : "O"} PDF do DARE não veio. Emita a 2ª via pelo site e anexe na empresa.`, "pdf");
+    const numero = numeroSefaz ?? numeroDoDare(textoVisivel(resp.html));
+    throw new ErroDareTo(
+      `${numero ? `O DARE nº ${numero} foi registrado na SEFAZ-TO, mas o` : "O"} PDF do DARE não veio.${codigoBarras ? ` Código de barras: ${codigoBarras}.` : ""} Emita a 2ª via pelo site e anexe na empresa.`,
+      "pdf",
+    );
   }
 
   let texto: string;
@@ -450,7 +464,7 @@ export async function emitirDareTo(pedido: PedidoDareTo, opcoes: { buscar?: Busc
     contribuinteOk ? "" : "inscrição/CNPJ da empresa",
   ].filter(Boolean);
   const linhaDigitavel = linhaDigitavelDoTexto(texto);
-  const numero = numeroDoDare(texto) ?? (linhaDigitavel ? soDigitos(linhaDigitavel) : null);
+  const numero = numeroSefaz ?? numeroDoDare(texto) ?? (linhaDigitavel ? soDigitos(linhaDigitavel) : null);
   if (problemas.length) {
     throw new ErroDareTo(`O DARE${numero ? ` nº ${numero}` : ""} foi gerado, mas o PDF não confere (${problemas.join(", ")}). Ele não foi anexado: confira no site da SEFAZ-TO.`, "pdf");
   }

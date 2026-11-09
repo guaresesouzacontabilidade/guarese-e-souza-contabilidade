@@ -97,9 +97,16 @@ function servidor(op: Opcoes = {}) {
       if (gx._EventName === "E'CALCULAR'.") return html(formulario({ ...campos, vDREVLRTOT: op.totalSefaz ?? campos.vDREVLRPRI }, op));
       if (gx._EventName === "E'CONFIRM'.") {
         if (op.confirmar === "erro") return html(formulario(campos, op, "Data de vencimento inválida."));
-        if (op.confirmar === "popup") return html(`<script>gx.ajax.dispatchCommands([{"popup":{"url":"adrerel02?987,1"}}])</script>`);
-        return ir("adrerel02?987,1");
+        return ir("hnetccwkdapg");
       }
+    }
+    // Tela "Forma de Pagamento" (como a do site: PIX, Imprimir DARE, cartão), com o nosso número no estado
+    if (pag === "hnetccwkdapg" && metodo === "GET")
+      return html(`<form id="MAINFORM" name="MAINFORM" method="post" action="hnetccwkdapg"><img id="IMGCPPIX" onclick="gx.evt.execEvt('EIMGCPPIX.CLICK.',this)"/><img id="IMGIMPDARE" onclick="gx.evt.execEvt('EIMGIMPDARE.CLICK.',this)"/><img id="IMGPGCRT"/>${estado({ DRENOSNUM: "202611090000987", DRECDGBAR: "85810000012345603850002261109000093870000000004", sCallerURL: "/dare/servlet/hdrewp02" })}</form>`);
+    if (pag === "hnetccwkdapg" && metodo === "POST") {
+      if (gx._EventName !== "EIMGIMPDARE.CLICK.") return html("evento?");
+      if (op.confirmar === "popup") return html(`<script>gx.ajax.dispatchCommands([{"popup":{"url":"adrerel02?987,1"}}])</script>${estado()}`);
+      return ir("adrerel02?987,1");
     }
     if (pag === "adrerel02") return new Response(Buffer.from("%PDF-1.4 dare de teste"), { status: 200, headers: { "content-type": "application/pdf" } });
     return html("não encontrado", 404);
@@ -198,7 +205,13 @@ describe("DARE-TO: emissão", () => {
     expect(r.pdf.subarray(0, 5).toString()).toBe("%PDF-");
     expect(r.linhaDigitavel).toBe("85810000012-1 34560385000-2 26110900009-3 87000000000-4");
     expect(r.previa.total).toBe("1234.56");
-    expect(envios.at(-1)!.evento).toBe("E'CONFIRM'.");
+    expect(envios.slice(-2).map((e) => `${e.pagina} ${e.evento}`)).toEqual(["hdrewp02 E'CONFIRM'.", "hnetccwkdapg EIMGIMPDARE.CLICK."]);
+  });
+
+  it("sem o PDF: avisa com o número e o código de barras da tela de pagamento", async () => {
+    const { buscar, lerTextoPdf } = servidor();
+    const semPdf: Buscar = async (url, init) => (new URL(url).pathname.endsWith("adrerel02") ? new Response("<html>erro</html>", { status: 200, headers: { "content-type": "text/html" } }) : buscar(url, init));
+    await expect(emitirDareTo(PEDIDO, { buscar: semPdf, lerTextoPdf })).rejects.toThrow(/DARE nº 202611090000987 foi registrado na SEFAZ-TO, mas o PDF do DARE não veio\. Código de barras: 858100000123/);
   });
 
   it("relatório aberto em janela (comando do GeneXus)", async () => {
