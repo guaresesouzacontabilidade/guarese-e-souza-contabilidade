@@ -382,7 +382,7 @@ export function SacolaPagina({ loja }: { loja: LojaSacola }) {
                 <dt>Total</dt>
                 <dd className="tabular-nums">
                   {moeda(total)}
-                  {entrega && entrega.valor === null ? <span className="text-sm font-normal text-suave"> + frete</span> : null}
+                  {entrega && entrega.valor == null ? <span className="text-sm font-normal text-suave"> + frete</span> : null}
                 </dd>
               </div>
             </dl>

@@ -1,6 +1,6 @@
 import "server-only";
 import { readFile } from "node:fs/promises";
-import type { DadosPedido, PedidoRegistrado, ProdutoDetalhe, Vitrine } from "./tipos";
+import type { DadosPedido, Loja, PedidoRegistrado, ProdutoDetalhe, Vitrine } from "./tipos";
 
 /**
  * Ligação com o Portal Guarese's ON. O site não tem banco: o catálogo, o estoque
@@ -42,6 +42,11 @@ function pelaRotaDeFotos(foto: string): string {
   return prefixo && foto.startsWith(prefixo) ? `/fotos/${foto.slice(prefixo.length)}` : foto;
 }
 
+/** Frete "a combinar": o portal guarda a entrega sem o campo valor; aqui ele vira null. */
+function comEntregasNormalizadas<T extends { loja: Loja }>(v: T): T {
+  return { ...v, loja: { ...v.loja, entregas: (v.loja.entregas ?? []).map((e) => ({ ...e, valor: typeof e.valor === "number" ? e.valor : null })) } };
+}
+
 function pelasFotosDoSite<T extends { fotos?: string[] }>(item: T): T {
   return item.fotos ? { ...item, fotos: item.fotos.map(pelaRotaDeFotos) } : item;
 }
@@ -61,15 +66,15 @@ async function pedirAoPortal<T>(caminho: string, init?: RequestInit & { next?: {
 export async function obterVitrine(): Promise<Vitrine> {
   if (emDemonstracao()) {
     const d = await demo();
-    return { aberta: d.aberta, loja: d.loja, banners: d.banners ?? [], categorias: d.categorias, produtos: d.produtos };
+    return comEntregasNormalizadas({ aberta: d.aberta, loja: d.loja, banners: d.banners ?? [], categorias: d.categorias, produtos: d.produtos });
   }
   const v = await pedirAoPortal<Vitrine>("", { next: { revalidate: REVALIDAR_SEGUNDOS, tags: ["vitrine"] } });
   if (!v) throw new Error("Loja não encontrada no portal: confira LOJA_SLUG e PORTAL_CHAVE.");
-  return {
+  return comEntregasNormalizadas({
     ...v,
     banners: (v.banners ?? []).map((b) => ({ ...b, computador: pelaRotaDeFotos(b.computador), celular: pelaRotaDeFotos(b.celular) })),
     produtos: (v.produtos ?? []).map(pelasFotosDoSite),
-  };
+  });
 }
 
 /** Produto com descrição, todas as fotos e as variações. */
@@ -121,7 +126,7 @@ async function pedidoDemonstracao(dados: DadosPedido): Promise<RespostaPedido> {
       numero: 1001,
       subtotal,
       frete,
-      frete_a_combinar: entrega.valor === null,
+      frete_a_combinar: entrega.valor == null,
       total: subtotal + frete,
       entrega: entrega.nome,
       endereco: dados.endereco ?? null,
