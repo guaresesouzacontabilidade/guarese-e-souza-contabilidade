@@ -441,7 +441,7 @@ Rotina do mês:
 4. Se aparecer o aviso de **notas lidas antes da leitura completa**, clique em **Atualizar a leitura das notas** (o portal relê os XML guardados para trazer o frete de cada item e o crédito do Simples).
 5. Clique em **Conferir o mês**: os valores ficam guardados, o saldo credor passa para o mês seguinte e a **previsão de impostos do cliente** passa a mostrar essas guias. Para mudar depois, use **Reabrir** (com motivo; fica na auditoria).
 
-O vencimento mostrado é o dia 9 do mês seguinte (calendário fiscal da SEFAZ-TO) ou o prazo da obrigação ICMS em **Obrigações e prazos**, quando houver. O portal **não transmite a EFD**. As guias do Tocantins (DARE) são emitidas no portal da SEFAZ-TO; para Mato Grosso, o DAR do ICMS normal sai pelo robô (veja "DAR do ICMS pelo robô"). Por enquanto as regras de complementação e diferencial estão cadastradas só para o **Tocantins**; para empresa de outro estado, calcule à parte e lance como outra guia.
+O vencimento mostrado é o dia 9 do mês seguinte (calendário fiscal da SEFAZ-TO) ou o prazo da obrigação ICMS em **Obrigações e prazos**, quando houver. O portal **não transmite a EFD**. O DARE da **complementação de alíquota** do Tocantins (Simples, receita 105) sai pelo robô da SEFAZ-TO (veja "DARE da complementação pelo robô"); as outras guias do Tocantins são emitidas no portal da SEFAZ-TO. Para Mato Grosso, o DAR do ICMS normal sai pelo robô (veja "DAR do ICMS pelo robô"). Por enquanto as regras de complementação e diferencial estão cadastradas só para o **Tocantins**; para empresa de outro estado, calcule à parte e lance como outra guia.
 
 #### EFD ICMS/IPI (gerar o SPED Fiscal no portal)
 Em **Cálculos → EFD ICMS/IPI** (só a equipe vê), o portal monta o arquivo da EFD ICMS/IPI do mês com os XML guardados e a **Apuração do ICMS** — para empresas do Lucro Presumido ou Real contribuintes do ICMS (o Simples Nacional não entrega a EFD). O arquivo segue o Guia Prático da EFD ICMS/IPI 3.2.2 (leiaute 020, de 2026).
@@ -475,6 +475,20 @@ Para empresas de **Mato Grosso** no regime normal, a página **Cálculos → EFD
 4. Clique em **Gerar o DAR na SEFAZ-MT e publicar**. O robô só publica se o total registrado pela SEFAZ for igual ao calculado. Depois aparecem o número do DAR, a linha digitável (com o botão para copiar o código de barras) e o link da guia. O histórico do mês fica no quadro.
 
 Se o site da SEFAZ-MT estiver fora do ar, mudar ou pedir captcha, o robô para e avisa, e nada é publicado. Nesse caso, gere o DAR pelo site e anexe o PDF em Documentos (Guia de pagamento). Na demonstração, o robô não acessa a SEFAZ (os dados são fictícios); a prévia funciona.
+
+#### DARE da complementação pelo robô (Tocantins)
+Para empresas do **Tocantins** no **Simples Nacional** (ou MEI), a página **Cálculos → Apuração do ICMS** tem o quadro **DARE da complementação de alíquota (SEFAZ-TO)**. O robô entra no sistema de DARE da SEFAZ-TO (dare.sefaz.to.gov.br) com o acesso do escritório, emite o DARE da receita **105 — complementação de alíquota** com o valor **conferido** e o **vencimento do dia 9** do mês seguinte, baixa o **PDF oficial** e publica a guia na **agenda de pagamentos** do cliente, com o "paguei".
+
+**Antes da primeira vez (administrador):** em **Configurações → Integrações → DARE da SEFAZ-TO (robô)**, informe o **CPF ou e-mail** e a **senha** do login do governo do Tocantins (TOauth) de quem emite os DAREs do escritório e clique em **Guardar acesso**. A senha fica **cifrada** no servidor e nunca volta para a tela. Depois clique em **Testar conexão**: o robô entra no sistema e confere se reconhece todos os campos do formulário, **sem emitir nada**. Só com o teste aprovado ("Conectado") o botão de emitir liga. Se a SEFAZ-TO mudar a tela, o teste mostra o que mudou e guarda a estrutura das telas (só os nomes dos campos) para ajustar o robô.
+
+**Emitir uma empresa:**
+1. Confira a apuração do mês (botão **Conferir**). O DARE usa o valor da conferência; se as notas ou a destinação mudarem depois, confira de novo.
+2. No quadro do DARE, confira receita, referência, vencimento e valor e clique em **Emitir o DARE e publicar**.
+3. O robô só publica se o PDF da SEFAZ trouxer o mesmo valor, o vencimento e a inscrição/CNPJ da empresa. Depois aparecem o número do DARE, o botão para copiar o código de barras e o link da guia.
+
+**Emitir todas de uma vez:** em **Apuração do ICMS** da carteira (menu Fiscal), o quadro **DARE da complementação** mostra as empresas prontas (conferidas, valor a partir de R$ 3,00, vencimento ainda não passou e sem DARE emitido) e o botão **Emitir os DAREs**. O robô emite uma empresa por vez e mostra o resultado de cada uma; mantenha a página aberta até terminar.
+
+O robô **não emite**: abaixo de **R$ 3,00** (a SEFAZ-TO não emite DARE abaixo desse valor; ele se acumula para o mês seguinte — Portaria SEFAZ nº 703/2026), depois do vencimento (emita pelo site, que calcula multa e juros), sem a inscrição estadual da empresa, ou se o site pedir captcha, mudar ou estiver fora do ar. Nesses casos ele avisa e nada é publicado; use **Emitir pelo site da SEFAZ-TO** e anexe o PDF em Documentos (Guia de pagamento). Na demonstração e no computador de teste o robô não acessa a SEFAZ-TO.
 
 #### Comparativo de regimes (planejamento tributário)
 Em **Cálculos → Comparativo de regimes** (só a equipe vê), o portal mostra quanto a empresa teria pago no **Simples Nacional**, no **Lucro Presumido** e no **Lucro Real** nos 12 meses escolhidos, com os mesmos dados da previsão (notas, receita informada, colaboradores e pró-labore):

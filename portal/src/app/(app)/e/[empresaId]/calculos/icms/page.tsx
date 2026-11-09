@@ -25,6 +25,8 @@ import { somarMeses } from "@/lib/competencia";
 import { parametro } from "@/lib/busca";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarCompetencia, formatarData, formatarDataHora, formatarDocumento } from "@/lib/formatos";
+import { envPublico } from "@/lib/env";
+import { EmitirDareTo, type EmissaoDareTela } from "@/components/dare-to/emitir";
 
 export const metadata: Metadata = { title: "Apuração do ICMS" };
 
@@ -122,6 +124,50 @@ export default async function ApuracaoIcms({ params, searchParams }: PageProps<"
     const { data } = await ctx.supabase.rpc("dados_previsao_impostos", { p_empresa_id: empresaId, p_competencia: comp });
     if (data) das = icmsNoDas(data as unknown as DadosPrevisao, comp);
   }
+
+  // DARE da complementação de alíquota (Tocantins): robô da SEFAZ-TO
+  const linhaComp = res.linhas.find((l) => l.chave === "complementacao");
+  type DadosDareTo = {
+    empresa: { inscricao_estadual: string | null; demonstracao: boolean };
+    acesso: { situacao: string } | null;
+    hoje: string;
+    emissoes: EmissaoDareTela[];
+  };
+  let dareTo: DadosDareTo | null = null;
+  if ((dados.empresa.uf ?? "").toUpperCase() === "TO" && res.modo === "simples") {
+    const { data } = await ctx.supabase.rpc("dados_dare_to", { p_empresa_id: empresaId, p_competencia: comp });
+    if (data) dareTo = data as unknown as DadosDareTo;
+  }
+  const compGuardada = conferida?.resultado?.linhas.find((l) => l.chave === "complementacao") ?? null;
+  const valorDare = compGuardada ? dec(compGuardada.valor) : (linhaComp?.valor ?? dec(0));
+  const vencimentoDare = compGuardada?.vencimento ?? linhaComp?.vencimento ?? `${somarMeses(comp, 1).slice(0, 7)}-09`;
+  const bloqueioDare = !dareTo
+    ? null
+    : envPublico.ambiente() !== "producao" || dareTo.empresa.demonstracao
+      ? "Fora do portal oficial (demonstração ou teste) o robô não acessa a SEFAZ-TO. No portal oficial, este botão emite o DARE de verdade."
+      : !dareTo.acesso
+        ? (
+            <>
+              O robô do DARE está desconectado: o administrador cadastra o acesso à SEFAZ-TO em{" "}
+              <Link href="/escritorio/configuracoes?aba=integracoes" className="text-primary hover:underline">
+                Configurações → Integrações
+              </Link>
+              .
+            </>
+          )
+        : dareTo.acesso.situacao !== "conectado"
+          ? "O acesso à SEFAZ-TO ainda não passou no teste. O administrador usa “Testar conexão” em Configurações → Integrações."
+          : !conferida
+            ? "Confira a apuração do mês (botão “Conferir” acima) antes de emitir o DARE: o valor do DARE é o da conferência."
+            : mudou
+              ? "A apuração mudou depois da conferência. Confira de novo antes de emitir o DARE."
+              : (dareTo.empresa.inscricao_estadual ?? "").replace(/\D/g, "").length < 8
+                ? "Cadastre a inscrição estadual da empresa antes de emitir o DARE."
+                : valorDare.lt(3)
+                  ? "Valor abaixo de R$ 3,00: a SEFAZ-TO não emite DARE abaixo desse valor; ele se acumula para o mês seguinte (Portaria SEFAZ nº 703/2026)."
+                  : vencimentoDare < dareTo.hoje
+                    ? `O vencimento (${formatarData(vencimentoDare)}) já passou: emita pelo site da SEFAZ-TO, que calcula a multa e os juros.`
+                    : null;
 
   if (res.mensagem) {
     return (
@@ -284,6 +330,29 @@ export default async function ApuracaoIcms({ params, searchParams }: PageProps<"
             )}
           </CardContent>
         </Card>
+
+        {dareTo && (valorDare.gt(0) || dareTo.emissoes.length) ? (
+          <Card id="dare-to">
+            <CardHeader>
+              <CardTitle>DARE da complementação de alíquota (SEFAZ-TO)</CardTitle>
+              <CardDescription>
+                O robô entra no sistema de DARE da SEFAZ-TO com o acesso do escritório, emite o DARE com o valor conferido e o vencimento do dia 9 e publica o PDF oficial na
+                agenda de pagamentos da empresa.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmitirDareTo
+                empresaId={empresaId}
+                competencia={comp}
+                valor={valorDare.toFixed(2)}
+                vencimento={vencimentoDare}
+                bloqueio={bloqueioDare}
+                emissoes={dareTo.emissoes}
+                conferida={Boolean(compGuardada)}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
 
         {das && das.detalhes.length ? (
           <p className="text-xs text-muted-foreground">ICMS dentro do DAS: {das.detalhes.join(" ")}</p>

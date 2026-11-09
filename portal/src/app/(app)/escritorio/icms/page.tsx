@@ -6,7 +6,10 @@ import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmitirDaresLote, type CandidataDare } from "@/components/dare-to/lote";
+import { hojeISO, somarMeses } from "@/lib/competencia";
+import { envPublico } from "@/lib/env";
 import { Table, TBody, TFoot, THead, Td, Th, Tr } from "@/components/ui/table";
 import { SeletorCompetencia } from "@/components/calculos/seletor-competencia";
 import { carregarIcms } from "@/lib/calculos/icms-carregar";
@@ -89,6 +92,34 @@ export default async function IcmsCarteira({ searchParams }: PageProps<"/escrito
   const conferidas = linhas.filter((l) => l.e.conferida_em).length;
   const aConferir = linhas.filter((l) => !l.e.conferida_em && l.r && l.r.modo !== "nao_contribuinte" && l.r.modo !== "sem_regime" && (l.e.notas > 0 || l.r.totalGuias.gt(0))).length;
 
+  // DARE da complementação (Tocantins): emissão em lote pelo robô da SEFAZ-TO
+  const comComplementacaoTo = linhas.filter((l) => (l.e.uf ?? "").toUpperCase() === "TO" && l.r?.modo === "simples" && valor(l, "complementacao").gt(0));
+  const emitidos = new Map<string, { numero: string }>();
+  let candidatas: CandidataDare[] = [];
+  let bloqueioLote: string | null = null;
+  let semConferencia = 0;
+  if (comComplementacaoTo.length) {
+    const [{ data: acessoDare }, { data: jaEmitidos }] = await Promise.all([
+      s.supabase.from("dare_to_acesso").select("situacao").maybeSingle(),
+      s.supabase.rpc("dare_to_emitidos_mes", { p_competencia: comp }),
+    ]);
+    for (const e of jaEmitidos ?? []) emitidos.set(e.empresa_id, { numero: e.numero });
+    const hoje = hojeISO();
+    const vencimento = (l: Linha) => l.r?.linhas.find((x) => x.chave === "complementacao")?.vencimento ?? `${somarMeses(comp, 1).slice(0, 7)}-09`;
+    semConferencia = comComplementacaoTo.filter((l) => !l.e.conferida_em || l.mudou).length;
+    candidatas = comComplementacaoTo
+      .filter((l) => l.e.conferida_em && !l.mudou && !emitidos.has(l.e.id) && valor(l, "complementacao").gte(3) && vencimento(l) >= hoje)
+      .map((l) => ({ id: l.e.id, nome: l.e.nome, valor: valor(l, "complementacao").toFixed(2) }));
+    bloqueioLote =
+      envPublico.ambiente() !== "producao"
+        ? "Fora do portal oficial (demonstração ou teste) o robô não acessa a SEFAZ-TO. No portal oficial, a emissão funciona de verdade."
+        : !acessoDare
+          ? "O robô do DARE está desconectado: o administrador cadastra o acesso à SEFAZ-TO em Configurações → Integrações."
+          : acessoDare.situacao !== "conectado"
+            ? "O acesso à SEFAZ-TO ainda não passou no teste (Configurações → Integrações → Testar conexão)."
+            : null;
+  }
+
   return (
     <>
       {cabecalho}
@@ -101,6 +132,21 @@ export default async function IcmsCarteira({ searchParams }: PageProps<"/escrito
             <Indicador rotulo="Conferidas" valor={String(conferidas)} detalhe={`de ${linhas.length} ${linhas.length === 1 ? "empresa" : "empresas"}`} tom="sucesso" />
             <Indicador rotulo="A conferir" valor={String(aConferir)} detalhe="Com notas ou guias no mês" tom={aConferir ? "alerta" : "neutro"} />
           </div>
+          {comComplementacaoTo.length ? (
+            <Card id="dare-to-lote">
+              <CardHeader>
+                <CardTitle>DARE da complementação de alíquota (SEFAZ-TO)</CardTitle>
+                <CardDescription>
+                  {comComplementacaoTo.length} {comComplementacaoTo.length === 1 ? "empresa do Tocantins tem" : "empresas do Tocantins têm"} complementação em {mes}
+                  {emitidos.size ? `; ${emitidos.size} com DARE emitido` : ""}
+                  {semConferencia ? `; ${semConferencia} ainda sem conferência (confira antes de emitir)` : ""}.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <EmitirDaresLote competencia={comp} candidatas={candidatas} bloqueio={bloqueioLote} />
+              </CardContent>
+            </Card>
+          ) : null}
           <Card>
             <CardContent className="px-0 sm:px-0">
               <Table>
@@ -136,6 +182,7 @@ export default async function IcmsCarteira({ searchParams }: PageProps<"/escrito
                             <Badge variante="alerta">a conferir</Badge>
                           )}
                           {l.r?.semXml.notas.length ? <Badge variante="alerta">{l.r.semXml.notas.length} sem XML</Badge> : null}
+                          {emitidos.get(l.e.id) ? <Badge variante="info">DARE nº {emitidos.get(l.e.id)!.numero}</Badge> : null}
                         </span>
                       </Td>
                       <Td className="hidden md:table-cell text-right numero">{l.r?.propria ? formatarMoeda(l.r.propria.aRecolher) : "—"}</Td>
