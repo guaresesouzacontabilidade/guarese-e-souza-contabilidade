@@ -415,7 +415,8 @@ function calcularNota(ctx: CtxEntradas, nota: NotaEntradaDados): NotaCalculada {
       despesas = despesasNota.times(valorItem).div(somaProdutos);
       rateado = true;
     }
-    const valorOperacao = nota.modelo === "57" ? dec(nota.valor_total) : Decimal.max(0, valorItem.minus(dec(it.desconto)).plus(despesas).plus(dec(it.ipi)));
+    const ipi = nota.modelo === "57" ? ZERO : dec(it.ipi);
+    const valorOperacao = nota.modelo === "57" ? dec(nota.valor_total) : Decimal.max(0, valorItem.minus(dec(it.desconto)).plus(despesas).plus(ipi));
     const icmsDestacado = dec(it.icms);
     const creditoSimples = dec(it.cred_sn);
     const st = nota.modelo !== "57" && itemComSt(it);
@@ -448,10 +449,13 @@ function calcularNota(ctx: CtxEntradas, nota: NotaEntradaDados): NotaCalculada {
     if (interestadual && entraNoCalculo && regras && interna != null && aliqInter != null && !st) {
       const dif = interna - aliqInter;
       if (modo === "simples" && destinacao === "revenda" && dif > 0 && reducao != null) {
-        const base = valorOperacao.times(new Decimal(100 - reducao)).div(CEM);
+        // Revenda ou industrialização entre contribuintes: o IPI não integra a base do ICMS
+        // (CF, art. 155, § 2º, XI; LC 87/1996, art. 13, § 2º). No uso e consumo e no ativo (DIFAL) ele integra.
+        const semIpi = Decimal.max(0, valorOperacao.minus(ipi));
+        const base = semIpi.times(new Decimal(100 - reducao)).div(CEM);
         complementacao = base.times(dif).div(CEM);
         memoria.push(
-          `Complementação: ${moeda(centavos(valorOperacao))}${reducao ? ` com redução de ${reducao}% na base (${moeda(centavos(base))})` : ""} × (${pctTxt(interna)} − ${pctTxt(aliqInter)}) = ${moeda(centavos(complementacao))}`,
+          `Complementação: ${moeda(centavos(semIpi))}${ipi.gt(0) ? ` (sem o IPI de ${moeda(centavos(ipi))}, que não entra na base na compra para revenda)` : ""}${reducao ? ` com redução de ${reducao}% na base (${moeda(centavos(base))})` : ""} × (${pctTxt(interna)} − ${pctTxt(aliqInter)}) = ${moeda(centavos(complementacao))}`,
         );
       }
       if ((modo === "simples" || modo === "normal") && (destinacao === "uso_consumo" || destinacao === "ativo") && dif > 0) {

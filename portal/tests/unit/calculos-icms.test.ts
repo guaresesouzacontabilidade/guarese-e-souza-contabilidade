@@ -189,6 +189,18 @@ describe("ICMS: Simples Nacional no Tocantins", () => {
     expect(linha(r, "complementacao")).toBe("40.00");
   });
 
+  it("IPI fora da base da complementação (revenda) e dentro do DIFAL (uso e consumo) — nota de SC a 7%", () => {
+    const revenda = nota("SC", [{ valor: 1000, ipi: 100, icms: 70, p_icms: 7 }]);
+    const uso = nota("SC", [{ valor: 1000, ipi: 100, icms: 70, p_icms: 7 }], { destinacao: "uso_consumo" });
+    const r = calcularIcms(dados("simples_nacional", { entradas: [revenda, uso] }));
+    // Valor da operação continua com o IPI (1.100), mas a complementação usa 1.000: 1.000 × 25% × 13% = 32,50 (com IPI daria 35,75)
+    expect(r.notas[0].itens[0].valorOperacao.toFixed(2)).toBe("1100.00");
+    expect(linha(r, "complementacao")).toBe("32.50");
+    expect(r.notas[0].itens[0].memoria[0]).toContain("sem o IPI de");
+    // Uso e consumo: o IPI integra a base do DIFAL: 1.100 × 13% = 143,00
+    expect(linha(r, "difal")).toBe("143.00");
+  });
+
   it("2027: redução de 50% na base da complementação", () => {
     const r = calcularIcms({ ...dados("simples_nacional", { entradas: [nota("GO", [{ valor: 1000, icms: 120 }])] }), competencia: "2027-03-01" });
     expect(linha(r, "complementacao")).toBe("40.00");
