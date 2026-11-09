@@ -1,0 +1,319 @@
+@import "tailwindcss";
+@import "@fontsource-variable/cormorant";
+@import "@fontsource-variable/montserrat";
+
+/*
+ * Identidade da Shop Luana Araújo: preto e prata da logo, fundo branco quente,
+ * títulos em serifa (Cormorant, da família da logo) e texto em Montserrat.
+ * Direção definida com a skill ui-ux-pro-max (Minimalism & Swiss, paleta
+ * "Luxury/Premium Brand"), com o dourado sugerido trocado pela prata da marca.
+ */
+@theme {
+  --font-titulo: "Cormorant Variable", "Cormorant", Georgia, "Times New Roman", serif;
+  --font-sans: "Montserrat Variable", "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-fundo: #fafaf9;
+  --color-superficie: #ffffff;
+  --color-areia: #f3f2f0;
+  --color-tinta: #1c1917;
+  --color-texto: #0c0a09;
+  --color-suave: #57534e;
+  --color-linha: #e7e5e4;
+  --color-borda: #d6d3d1;
+  --color-noite: #0c0a09;
+  --color-prata: #cfd0d3;
+  --color-prata-media: #a8a9ab;
+  --color-alerta: #9a3412;
+  --color-erro: #b91c1c;
+  --color-sucesso: #166534;
+
+  --ease-suave: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5.5rem;
+  }
+  body {
+    background: var(--color-fundo);
+    color: var(--color-texto);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-titulo);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: 0.005em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a,
+  button,
+  [role="button"],
+  label[for],
+  summary,
+  select {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-tinta);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .no-escuro :focus-visible,
+  .no-escuro:focus-visible {
+    outline-color: var(--color-prata);
+  }
+  ::selection {
+    background: var(--color-tinta);
+    color: var(--color-fundo);
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+/* Largura de leitura com respiro lateral (utilitário, para aceitar md:, lg: etc.) */
+@utility conteudo {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@layer components {
+
+  /* Rótulo pequeno em caixa alta (acima de títulos e em botões finos) */
+  .sobretitulo {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-suave);
+  }
+
+  .botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 2px;
+    background: var(--color-tinta);
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition:
+      background-color 200ms var(--ease-suave),
+      transform 120ms var(--ease-suave);
+  }
+  .botao:hover {
+    background: #000;
+  }
+  .botao:active {
+    transform: scale(0.985);
+  }
+  .botao:disabled {
+    background: var(--color-prata-media);
+    cursor: not-allowed;
+    transform: none;
+  }
+  .botao-contorno {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--color-tinta);
+    border-radius: 2px;
+    color: var(--color-tinta);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition:
+      background-color 200ms var(--ease-suave),
+      color 200ms var(--ease-suave);
+  }
+  .botao-contorno:hover {
+    background: var(--color-tinta);
+    color: #fff;
+  }
+
+  /* Escolha (categoria, cor, entrega): contorno fino; marcada fica preta */
+  .opcao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-borda);
+    border-radius: 2px;
+    background: var(--color-superficie);
+    font-size: 0.875rem;
+    color: var(--color-texto);
+    white-space: nowrap;
+    transition:
+      border-color 150ms var(--ease-suave),
+      background-color 150ms var(--ease-suave),
+      color 150ms var(--ease-suave);
+  }
+  .opcao:hover {
+    border-color: var(--color-tinta);
+  }
+  .opcao[aria-pressed="true"],
+  .opcao[aria-current="page"],
+  .opcao[aria-checked="true"] {
+    background: var(--color-tinta);
+    border-color: var(--color-tinta);
+    color: #fff;
+  }
+
+  .campo {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid var(--color-borda);
+    border-radius: 2px;
+    background: var(--color-superficie);
+    color: var(--color-texto);
+    font-size: 1rem;
+    transition: border-color 150ms var(--ease-suave);
+  }
+  .campo:hover {
+    border-color: var(--color-suave);
+  }
+  .campo:focus {
+    border-color: var(--color-tinta);
+    outline: 1px solid var(--color-tinta);
+    outline-offset: 0;
+  }
+  .campo[aria-invalid="true"] {
+    border-color: var(--color-erro);
+  }
+
+  /* Faixas que rolam para o lado no celular (categorias, produtos) */
+  .faixa-rolagem {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .faixa-rolagem::-webkit-scrollbar {
+    display: none;
+  }
+  .faixa-rolagem > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  /* Texto longo (descrição, políticas) */
+  .texto-corrido {
+    color: var(--color-texto);
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.surgir {
+  animation: surgir 320ms var(--ease-suave) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Troca de tela suave (View Transitions do navegador, ligadas pelo marcador em
+ * components/transicao-de-tela.tsx): a tela atual se desfaz e a nova surge subindo de leve. O cabeçalho e o
+ * botão do WhatsApp ficam parados. Sem suporte no navegador, a troca é instantânea,
+ * como antes. Quem pediu menos movimento ao aparelho não vê animação.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root) {
+  animation: 160ms ease-in both vt-sumir;
+}
+::view-transition-new(root) {
+  animation: 340ms var(--ease-suave) 80ms both vt-surgir;
+}
+@keyframes vt-sumir {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-surgir {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+::view-transition-group(.marcador-tela) {
+  display: none;
+}
+::view-transition-group(cabecalho),
+::view-transition-group(whatsapp) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(cabecalho),
+::view-transition-old(whatsapp) {
+  display: none;
+}
+::view-transition-new(cabecalho),
+::view-transition-new(whatsapp) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

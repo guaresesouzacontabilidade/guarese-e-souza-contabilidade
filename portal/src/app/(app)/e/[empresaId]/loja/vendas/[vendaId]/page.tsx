@@ -61,7 +61,8 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
   const nfe = v.nfe as { id: string; numero: number; serie: number; situacao: string } | null;
   const itens = [...(v.venda_itens ?? [])].sort((a, b) => a.ordem - b.ordem);
   const pagamentos = v.venda_pagamentos ?? [];
-  const titulo = `${orcamento ? "Orçamento" : "Venda"} nº ${v.numero}`;
+  const doSite = v.origem === "site";
+  const titulo = `${orcamento ? (doSite ? "Pedido do site" : "Orçamento") : "Venda"} nº ${v.numero}`;
   const situacao =
     v.status === "concluida"
       ? { rotulo: "Concluída", variante: "sucesso" as const }
@@ -80,6 +81,7 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
         titulo={
           <span className="flex flex-wrap items-center gap-2">
             {titulo} <Badge variante={situacao.variante}>{situacao.rotulo}</Badge>
+            {doSite && !orcamento ? <Badge variante="info">Pedido do site</Badge> : null}
           </span>
         }
         descricao={`${formatarData(v.data)} às ${hora(v.created_at)}${nome(v.vendedor) ? ` · ${orcamento ? "feito" : "vendido"} por ${nome(v.vendedor)}` : ""}${sessao ? ` · ${sessao.caixa_nome}` : ""}`}
@@ -170,6 +172,7 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
                     <Tr key={i.id}>
                       <Td>
                         {i.descricao}
+                        {i.variacao ? <span className="block text-sm font-medium">Opção escolhida: {i.variacao}</span> : null}
                         <span className="block text-xs text-muted-foreground">
                           {i.codigo}
                           {i.pecas ? ` · ${formatarQuantidade(i.pecas, 3)} peça(s)${i.comprimento_m ? ` de ${formatarQuantidade(i.comprimento_m, 3)} m` : ""}` : ""}
@@ -246,6 +249,11 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
                 <p className="font-medium">{v.cliente_nome ?? "Consumidor (sem identificação)"}</p>
                 {v.cliente_documento ? <p className="text-muted-foreground">{formatarDocumento(v.cliente_documento)}</p> : null}
                 {v.cliente_telefone ? <p className="text-muted-foreground">{formatarTelefone(v.cliente_telefone)}</p> : null}
+                {doSite && v.cliente_telefone ? (
+                  <a href={`https://wa.me/55${v.cliente_telefone}?text=${encodeURIComponent(`Olá, ${v.cliente_nome ?? ""}! Aqui é da loja, sobre o seu pedido nº ${v.numero} pelo site.`)}`} target="_blank" rel="noopener noreferrer" className="inline-block pt-1 text-primary hover:underline">
+                    Chamar no WhatsApp
+                  </a>
+                ) : null}
                 {orcamento && v.validade ? <p className="pt-2">Válido até {formatarData(v.validade)}</p> : null}
               </CardContent>
             </Card>

@@ -91,8 +91,13 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
 export async function excluirProdutoLoja(empresaId: string, produtoId: string): Promise<ResultadoAcao<{ resultado: "excluido" | "desativado" }>> {
   if (!UUID.test(empresaId) || !UUID.test(produtoId)) return falha("Registro inválido.");
   const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const { data: noSite } = await ctx.supabase.from("loja_site_produtos").select("fotos").eq("produto_id", produtoId).maybeSingle();
   const { data, error } = await ctx.supabase.rpc("gestao_produto_excluir", { p_empresa_id: empresaId, p_produto_id: produtoId });
   if (error) return falha(mensagemErro(error));
+  // Produto apagado: as fotos do site saem do armazenamento junto
+  if (data === "excluido" && noSite?.fotos?.length) {
+    await ctx.supabase.storage.from("loja-site").remove(noSite.fotos.flatMap((f) => [`${f}-p.webp`, `${f}-g.webp`]));
+  }
   revalidarLoja(empresaId);
   const resultado = data === "excluido" ? "excluido" : "desativado";
   return sucesso(

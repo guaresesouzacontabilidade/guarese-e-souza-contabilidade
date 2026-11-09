@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { Store, Truck } from "lucide-react";
+import { Globe, Store, Truck } from "lucide-react";
 import { SubNavegacao } from "@/components/ui/subnav";
-import { EstadoVazio } from "@/components/ui/feedback";
+import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
+import { BotaoAcao } from "@/components/ui/acao";
+import { liberarSiteLoja } from "@/lib/vitrine/acoes";
+import { siteLiberado } from "@/lib/vitrine/liberacao";
 
-/** Abas da gestão da loja. */
-export function NavegacaoLoja({ empresaId, configurar }: { empresaId: string; configurar: boolean }) {
+/** Abas da gestão da loja ("Site da loja" só nas empresas em que o escritório liberou o site). */
+export async function NavegacaoLoja({ empresaId, configurar }: { empresaId: string; configurar: boolean }) {
   const base = `/e/${empresaId}/loja`;
   const itens = [
     { rotulo: "Painel", href: base, exato: true },
@@ -14,8 +17,72 @@ export function NavegacaoLoja({ empresaId, configurar }: { empresaId: string; co
     { rotulo: "Produtos e estoque", href: `${base}/produtos` },
     { rotulo: "Vendas e orçamentos", href: `${base}/vendas` },
   ];
+  if (await siteLiberado(empresaId)) itens.push({ rotulo: "Site da loja", href: `${base}/site` });
   if (configurar) itens.push({ rotulo: "Configurações", href: `${base}/configuracoes` });
   return <SubNavegacao itens={itens} />;
+}
+
+/** Abas do site da loja (vitrine na internet ligada ao portal). */
+export function NavegacaoSite({ empresaId, gerente }: { empresaId: string; gerente: boolean }) {
+  const base = `/e/${empresaId}/loja/site`;
+  const itens = [{ rotulo: "Pedidos do site", href: base, exato: true }];
+  if (gerente) {
+    itens.push(
+      { rotulo: "Produtos no site", href: `${base}/produtos`, exato: false },
+      { rotulo: "Categorias", href: `${base}/categorias`, exato: false },
+      { rotulo: "Banners", href: `${base}/banners`, exato: false },
+      { rotulo: "Configurar o site", href: `${base}/configurar`, exato: false },
+      { rotulo: "Importar da FácilZap", href: `${base}/importar`, exato: false },
+    );
+  }
+  return <SubNavegacao itens={itens} className="mb-4" />;
+}
+
+/** Tela do site da loja numa empresa sem a liberação do escritório. */
+export function SiteNaoLiberado({ empresaId, equipe }: { empresaId: string; equipe: boolean }) {
+  return (
+    <EstadoVazio
+      icone={Globe}
+      titulo="Site da loja não liberado para esta empresa"
+      descricao={
+        equipe
+          ? "O site da loja (vitrine na internet com pedidos pelo WhatsApp, ligada a esta loja) só funciona nas empresas liberadas pelo escritório."
+          : "O site da loja é um serviço opcional. Fale com o escritório para saber mais."
+      }
+      acao={
+        equipe ? (
+          <BotaoAcao acao={liberarSiteLoja.bind(null, empresaId, true)} confirmar={{ titulo: "Liberar o site da loja para esta empresa?", descricao: "A aba “Site da loja” passa a aparecer para quem gerencia a loja desta empresa.", textoConfirmar: "Liberar" }}>
+            Liberar o site para esta empresa
+          </BotaoAcao>
+        ) : undefined
+      }
+    />
+  );
+}
+
+/** Liberação do site da loja (em Configurações da loja; só o escritório vê). */
+export function LiberacaoSite({ empresaId, liberado }: { empresaId: string; liberado: boolean }) {
+  return (
+    <Alerta tom={liberado ? "sucesso" : "info"} titulo={liberado ? "Site da loja liberado" : "Site da loja"}>
+      {liberado
+        ? "A empresa tem o site da loja (vitrine na internet com pedidos pelo WhatsApp). Desligar tira o site do ar na hora; os cadastros ficam guardados."
+        : "Serviço opcional: vitrine na internet ligada a esta loja, com pedidos pelo WhatsApp. Só aparece para a empresa depois de liberado aqui."}
+      <div className="mt-2">
+        <BotaoAcao
+          variante="contorno"
+          tamanho="sm"
+          acao={liberarSiteLoja.bind(null, empresaId, !liberado)}
+          confirmar={
+            liberado
+              ? { titulo: "Desligar o site da loja?", descricao: "O site sai do ar e para de receber pedidos. Os produtos, fotos e banners ficam guardados para religar depois.", textoConfirmar: "Desligar", perigo: true }
+              : { titulo: "Liberar o site da loja para esta empresa?", descricao: "A aba “Site da loja” passa a aparecer para quem gerencia a loja desta empresa.", textoConfirmar: "Liberar" }
+          }
+        >
+          {liberado ? "Desligar o site" : "Liberar o site para esta empresa"}
+        </BotaoAcao>
+      </div>
+    </Alerta>
+  );
 }
 
 /** Abas da modalidade "notas e transporte". */
