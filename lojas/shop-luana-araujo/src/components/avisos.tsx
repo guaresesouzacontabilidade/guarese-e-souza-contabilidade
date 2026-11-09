@@ -55,6 +55,7 @@ export function WhatsAppFlutuante({ numero }: { numero: string }) {
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-5 right-4 z-40 inline-flex size-14 items-center justify-center rounded-full bg-tinta text-prata shadow-[0_6px_24px_rgba(12,10,9,0.28)] transition-transform hover:scale-105 hover:text-white md:bottom-8 md:right-8"
+      style={{ viewTransitionName: "whatsapp" }}
       aria-label="Falar com a loja no WhatsApp"
     >
       <IconeWhatsApp className="size-6" />
