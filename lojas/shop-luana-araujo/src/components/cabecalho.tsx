@@ -13,7 +13,7 @@ export function Cabecalho({ loja, arvore }: { loja: Loja; arvore: NoCategoria[] 
       {loja.aviso ? (
         <div className="no-escuro bg-noite px-3 py-2 text-center text-[0.625rem] font-medium uppercase tracking-[0.1em] text-prata sm:text-[0.6875rem] sm:tracking-[0.16em]">{loja.aviso}</div>
       ) : null}
-      <header className="no-escuro sticky top-0 z-40 border-b border-white/10 bg-tinta">
+      <header className="no-escuro sticky top-0 z-40 border-b border-white/10 bg-tinta" style={{ viewTransitionName: "cabecalho" }}>
         <div className="conteudo grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 md:h-20 md:grid-cols-[auto_1fr_auto] md:gap-8">
           <div className="flex items-center md:hidden">
             <MenuCategorias arvore={arvore} />

@@ -266,3 +266,54 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Troca de tela suave (View Transitions do navegador, ligadas pelo marcador em
+ * components/transicao-de-tela.tsx): a tela atual se desfaz e a nova surge subindo de leve. O cabeçalho e o
+ * botão do WhatsApp ficam parados. Sem suporte no navegador, a troca é instantânea,
+ * como antes. Quem pediu menos movimento ao aparelho não vê animação.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root) {
+  animation: 160ms ease-in both vt-sumir;
+}
+::view-transition-new(root) {
+  animation: 340ms var(--ease-suave) 80ms both vt-surgir;
+}
+@keyframes vt-sumir {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-surgir {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+::view-transition-group(.marcador-tela) {
+  display: none;
+}
+::view-transition-group(cabecalho),
+::view-transition-group(whatsapp) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(cabecalho),
+::view-transition-old(whatsapp) {
+  display: none;
+}
+::view-transition-new(cabecalho),
+::view-transition-new(whatsapp) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

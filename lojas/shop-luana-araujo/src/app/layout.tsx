@@ -6,6 +6,7 @@ import { Cabecalho } from "@/components/cabecalho";
 import { Rodape } from "@/components/rodape";
 import { AvisoSacola, WhatsAppFlutuante } from "@/components/avisos";
 import { IconeWhatsApp } from "@/components/icones";
+import { TransicaoDeTela } from "@/components/transicao-de-tela";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -59,6 +60,7 @@ export default async function Layout({ children }: LayoutProps<"/">) {
           )}
         </main>
         <Rodape loja={loja} />
+        <TransicaoDeTela />
         <AvisoSacola />
         {loja.whatsapp ? <WhatsAppFlutuante numero={loja.whatsapp} /> : null}
       </body>
