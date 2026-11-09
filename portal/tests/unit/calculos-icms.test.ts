@@ -114,14 +114,14 @@ describe("ICMS: Simples Nacional no Tocantins", () => {
         entradas: [
           nota("SP", [{ valor: 1000, icms: 70, p_icms: 7 }]), // 7%: 1.000 × 25% × 13% = 32,50
           nota("GO", [{ valor: 1000, icms: 120, p_icms: 12 }]), // 12%: 1.000 × 25% × 8% = 20,00
-          nota("GO", [{ valor: 500, orig: "1", icms: 20, p_icms: 4 }]), // importado 4%: 500 × 25% × 16% = 20,00
+          nota("GO", [{ valor: 500, orig: "1", icms: 20, p_icms: 4 }]), // importado: alíquota da região (GO 12%, decisão do escritório): 500 × 25% × 8% = 10,00
           nota("GO", [{ valor: 800, cst: "60" }]), // ST: fora
           nota("TO", [{ valor: 900, icms: 180 }]), // mesmo estado: fora
         ],
       }),
     );
     expect(r.modo).toBe("simples");
-    expect(linha(r, "complementacao")).toBe("72.50");
+    expect(linha(r, "complementacao")).toBe("62.50");
     expect(r.linhas.find((l) => l.chave === "complementacao")?.vencimento).toBe("2026-10-09");
     expect(r.resumoEntradas.interestaduais).toBe(4);
     expect(linha(r, "icms_proprio")).toBeUndefined();
@@ -142,19 +142,23 @@ describe("ICMS: Simples Nacional no Tocantins", () => {
     expect(linha(r, "complementacao")).toBeUndefined();
   });
 
-  it("nota de SP com itens 2.102 e 2.556: complementação 3,25% e DIFAL 13%; importado a 4%: complementação 4%", () => {
+  it("nota de SP com itens 2.102 e 2.556: complementação 3,25% e DIFAL 13%; importado com a alíquota da região (7%): complementação 3,25%", () => {
     const r = calcularIcms(
       dados("simples_nacional", {
         entradas: [
           nota("SP", [
             { valor: 1000, icms: 70, p_icms: 7 }, // revenda (2.102): 1.000 × 25% × 13% = 32,50
             { valor: 200, icms: 14, p_icms: 7, destinacao: "uso_consumo" }, // uso e consumo (2.556): 200 × 13% = 26,00
-            { valor: 400, icms: 16, p_icms: 4, orig: "2" }, // importado (4%): 400 × 25% × 16% = 16,00
+            { valor: 400, icms: 16, p_icms: 4, orig: "2" }, // importado: 7% de SP (decisão do escritório): 400 × 25% × 13% = 13,00
           ]),
         ],
       }),
     );
-    expect(linha(r, "complementacao")).toBe("48.50");
+    expect(linha(r, "complementacao")).toBe("45.50");
+    const importado = r.notas[0].itens[2];
+    expect(importado.aliquotaInterestadual).toBe(7);
+    expect(importado.memoria.join(" ")).toContain("por decisão do escritório, o cálculo usa a alíquota da região (7%)");
+    expect(r.fontes.some((f) => f.titulo.startsWith("Decisão do escritório"))).toBe(true);
     expect(linha(r, "difal")).toBe("26.00");
   });
 
