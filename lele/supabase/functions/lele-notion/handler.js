@@ -2,8 +2,9 @@
 // Escrita em JavaScript puro (APIs web: fetch, crypto) para rodar no Supabase (Deno) e nos testes (Node).
 //
 // POST { action, code, ... }   code = código de sincronização (identifica a pessoa)
-//   config                      → { configured }
-//   start   { returnUrl }       → { url }   (endereço de autorização do Notion)
+//   config                      → { configured, oauth }
+//   start   { returnUrl }       → { url }   (endereço de autorização do Notion, se o OAuth estiver configurado)
+//   saveToken { token }         → { connected, workspace }  (chave de integração interna do Notion)
 //   status                      → { connected, workspace, icon }
 //   pages   { query }           → { items: [{ id, type, title, icon, lastEdited }] }
 //   page    { id }              → { id, title, icon, blocks, truncated }
@@ -271,7 +272,32 @@ export function createHandler({ env, db, fetchImpl = fetch, now = () => Date.now
 
   async function handleAction(body) {
     const { action } = body;
-    if (action === 'config') return { configured };
+    // A chave de integração interna funciona sempre; o botão "Conectar" (OAuth) só com a integração pública.
+    if (action === 'config') return { configured: true, oauth: configured };
+    if (action === 'saveToken') {
+      const vault = await vaultOf(body.code);
+      const token = String(body.token || '').trim();
+      if (!/^(secret_|ntn_)\S{20,200}$/.test(token)) {
+        throw new HttpError(400, 'Essa chave não parece certa. Ela começa com “ntn_” ou “secret_”.');
+      }
+      const res = await fetchImpl(`${NOTION}/users/me`, {
+        headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
+      });
+      if (res.status === 401) throw new HttpError(400, 'O Notion não aceitou essa chave. Copie de novo a “Internal Integration Secret”.');
+      if (!res.ok) throw new HttpError(502, `Notion respondeu ${res.status}`);
+      const me = await res.json();
+      const workspace = me.bot?.workspace_name || null;
+      await db.saveToken({
+        vault,
+        access_token: token,
+        refresh_token: null,
+        workspace_name: workspace,
+        workspace_icon: null,
+        bot_id: me.id || null,
+        updated_at: new Date(now()).toISOString(),
+      });
+      return { connected: true, workspace };
+    }
     if (action === 'start') {
       if (!configured) throw new HttpError(503, 'A ligação com o Notion ainda não foi configurada.');
       const vault = await vaultOf(body.code);

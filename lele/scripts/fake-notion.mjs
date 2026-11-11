@@ -94,6 +94,11 @@ export function createFakeNotion(pages = SAMPLE_PAGES, { pageSize = 100 } = {}) 
     const path = u.pathname.replace('/v1', '');
     calls.push(`${init.method || 'GET'} ${path}`);
     if (path === '/oauth/token') return ok({ access_token: 'fake-token', refresh_token: 'fake-refresh', workspace_name: 'Notion da Lelé', bot_id: 'bot-1' });
+    if (path === '/users/me') {
+      const auth = init.headers?.Authorization || '';
+      if (auth.includes('invalida')) return new Response('{}', { status: 401 });
+      return ok({ object: 'user', id: 'bot-interno', type: 'bot', bot: { owner: { type: 'workspace', workspace: true }, workspace_name: 'Notion da Lelé' } });
+    }
     if (path === '/search') return ok({ results: [...meta.values()], has_more: false, next_cursor: null });
     let m = path.match(/^\/pages\/(.+)$/);
     if (m) return meta.has(m[1]) ? ok(meta.get(m[1])) : new Response('{}', { status: 404 });

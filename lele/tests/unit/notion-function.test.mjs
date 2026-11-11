@@ -87,11 +87,21 @@ test('sem conexão, ler páginas pede para conectar; desconectar apaga o token',
   assert.equal(fake.tokens.size, 0);
 });
 
-test('sem configurar o Notion, start avisa', async () => {
+test('sem a integração pública, start avisa, mas a chave interna funciona', async () => {
   const fake = createFakeNotion();
   const h = createHandler({ env: { SUPABASE_URL: 'https://p.supabase.co' }, db: fake.db, fetchImpl: fake.fetchImpl });
-  assert.deepEqual((await post(h, { action: 'config' })).body, { configured: false });
+  assert.deepEqual((await post(h, { action: 'config' })).body, { configured: true, oauth: false });
   assert.equal((await post(h, { action: 'start', code: CODE })).status, 503);
+  // Chave com formato errado e chave recusada pelo Notion.
+  assert.equal((await post(h, { action: 'saveToken', code: CODE, token: 'abc' })).status, 400);
+  const bad = await post(h, { action: 'saveToken', code: CODE, token: 'ntn_invalida_1234567890123456' });
+  assert.equal(bad.status, 400);
+  assert.match(bad.body.message, /não aceitou/);
+  // Chave boa: conecta e já lista as páginas.
+  const ok = await post(h, { action: 'saveToken', code: CODE, token: 'ntn_boa_12345678901234567890' });
+  assert.deepEqual(ok.body, { connected: true, workspace: 'Notion da Lelé' });
+  assert.deepEqual((await post(h, { action: 'status', code: CODE })).body, { connected: true, workspace: 'Notion da Lelé', icon: null });
+  assert.equal((await post(h, { action: 'pages', code: CODE })).body.items.length, 2);
 });
 
 test('espera e tenta de novo quando o Notion pede calma (429)', async () => {

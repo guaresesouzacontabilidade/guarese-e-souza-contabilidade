@@ -181,7 +181,7 @@ function NotionImport({ close }) {
     !visible.length &&
     !error &&
     html`<p class="muted small" style="text-align:center">
-      Nenhuma página encontrada. Se faltar alguma, conecte de novo e marque as páginas que o app pode ler.
+      Nenhuma página encontrada. No Notion, abra a página de anotações › <b>•••</b> › <b>Conexões</b> › <b>App da Lelé</b> e volte aqui.
     </p>`}
     <div class="note-list">
       ${visible.map(

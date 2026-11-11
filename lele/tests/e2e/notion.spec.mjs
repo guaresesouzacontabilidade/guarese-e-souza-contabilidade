@@ -45,3 +45,26 @@ test('conecta o Notion e gera um baralho por tópico', async ({ page, context })
   await expect(page.getByText('Tudo em dia com o Notion.')).toBeVisible({ timeout: 15000 });
   expect(errors).toEqual([]);
 });
+
+test('conecta com a chave de integração interna e importa', async ({ page }) => {
+  const errors = await start(page);
+  await page.getByRole('button', { name: 'Ajustes', exact: true }).click();
+  await page.getByRole('button', { name: /Usar chave de integração/ }).click();
+  const key = page.getByLabel('Chave de integração do Notion');
+  await key.fill('ntn_invalida_1234567890123456');
+  await page.getByRole('button', { name: 'Conectar', exact: true }).last().click();
+  await expect(page.getByRole('alert')).toContainText('não aceitou');
+  await key.fill('ntn_boa_12345678901234567890');
+  await page.getByRole('button', { name: 'Conectar', exact: true }).last().click();
+  await expect(page.getByText('Conectado a “Notion da Lelé”', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: /Gerar cartões do Notion/ }).click();
+  await page.getByText('Farmacologia', { exact: true }).click();
+  await page.getByRole('button', { name: 'Gerar cartões de 1 página' }).click();
+  await expect(page.getByText('2 cartões novos em 1 baralho novo.')).toBeVisible({ timeout: 15000 });
+  await page.getByRole('button', { name: 'Criar 2 cartões' }).click();
+  await expect(page.getByRole('heading', { name: 'Notion' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Farmacologia/ })).toBeVisible();
+  // O 400 é da chave errada de propósito, no começo do teste.
+  expect(errors.filter((e) => !e.includes('status of 400'))).toEqual([]);
+});
