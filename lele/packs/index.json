@@ -1,0 +1,11 @@
+[
+  {
+    "id": "bemvinda",
+    "version": 1,
+    "title": "Comece por aqui",
+    "description": "Seis cartões rápidos que mostram como o app funciona.",
+    "emoji": "💗",
+    "file": "bemvinda.json",
+    "starter": true
+  }
+]
