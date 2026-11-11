@@ -58,7 +58,8 @@ export function planNotionImport(pages) {
       const willAdd = plan.create.some((n) => n.deckId === deckId);
       if (deckNeeded && willAdd) {
         const name = mode === 'topic' ? topic.name : result.title;
-        const group = mode === 'topic' ? result.title : page.group || 'Notion';
+        // Página sem títulos: o baralho já tem o nome da página, então vai para o grupo "Notion".
+        const group = mode === 'topic' && topic.name !== result.title ? result.title : page.group || 'Notion';
         const color = DECK_COLORS[parseInt(hashText(deckId), 36) % DECK_COLORS.length];
         plan.decks.push({ id: deckId, name, group, color, emoji: page.icon || '📝', createdAt: base, notion: page.id });
       }
