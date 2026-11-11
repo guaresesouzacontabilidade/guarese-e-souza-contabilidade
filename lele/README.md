@@ -49,17 +49,17 @@ O banco guarda só um *hash* do código. A tabela não é acessível pela API: t
 O app usa **o mesmo projeto Supabase do Meu Dia**, numa tabela própria (`lele_records`), sem misturar com os dados
 do Meu Dia (`meudia_records`). A URL e a chave *publishable* já estão em `js/config.js`.
 
-Falta só criar a tabela e as funções, uma vez:
+A tabela e as funções já foram criadas nesse projeto (migração `supabase/migrations/20261111120000_app_da_lele_init.sql`,
+aplicada em 11/11/2026). Ao abrir o app e tocar em **Começar**, a sincronização liga sozinha (Ajustes › Sincronização
+mostra “Sincronizado”).
 
-1. Abra o projeto do Meu Dia no [Supabase](https://supabase.com/dashboard) › **SQL Editor** › **New query**.
-2. Cole todo o conteúdo de `supabase/migrations/20261111120000_app_da_lele_init.sql` e toque em **Run**.
-3. Pronto: ao abrir o app e tocar em **Começar**, a sincronização liga sozinha (Ajustes › Sincronização mostra
-   “Sincronizado”).
+O painel do Supabase mostra avisos de que `lele_pull`/`lele_push` podem ser chamadas sem login e de que a tabela tem
+RLS sem políticas: é de propósito. A tabela fica fechada e o acesso só acontece pelas funções, protegidas pelo código.
 
 Observação: no plano gratuito, o Supabase “dorme” o projeto depois de cerca de uma semana sem nenhum uso
 (do Meu Dia ou do App da Lelé). Os cartões continuam no aparelho; é só reativar no painel.
 
-Para usar outro projeto, troque a URL e a chave em `js/config.js` e rode o mesmo SQL nele.
+Para usar outro projeto, troque a URL e a chave em `js/config.js` e rode o mesmo SQL no SQL Editor dele.
 
 Sem `js/config.js` preenchido o app funciona só no aparelho (com backup por arquivo).
 
