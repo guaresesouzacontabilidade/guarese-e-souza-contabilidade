@@ -34,6 +34,8 @@ export const TODAS_PERMISSOES = [
   "gestao.gerenciar",
   "cte.emitir",
   "cte.configurar",
+  "escalas.ver",
+  "escalas.gerenciar",
 ] as const;
 
 export type Permissao = (typeof TODAS_PERMISSOES)[number];
@@ -178,6 +180,17 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
     ],
   },
   {
+    grupo: "Escalas de trabalho",
+    itens: [
+      { chave: "escalas.ver", rotulo: "Ver escalas", descricao: "Ver as escalas de horário publicadas (dá para liberar ao gerente da loja)." },
+      {
+        chave: "escalas.gerenciar",
+        rotulo: "Montar escalas",
+        descricao: "Cadastrar os funcionários da escala, montar, conferir com a CLT, pedir ajuda ao assistente de IA e publicar.",
+      },
+    ],
+  },
+  {
     grupo: "Comunicação",
     itens: [{ chave: "mensagens.usar", rotulo: "Mensagens", descricao: "Usar a central de mensagens." }],
   },
@@ -190,7 +203,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
     "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir", "nfe.emitir",
-    "gestao.vender", "gestao.gerenciar", "cte.emitir",
+    "gestao.vender", "gestao.gerenciar", "cte.emitir", "escalas.ver", "escalas.gerenciar",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
 };

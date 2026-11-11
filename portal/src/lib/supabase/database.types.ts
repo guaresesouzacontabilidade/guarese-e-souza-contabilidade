@@ -1665,6 +1665,125 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"escala_funcionarios": {
+                  Row: {
+                    "ativo": boolean,"cargo": string | null,"created_at": string,"criado_por": string | null,"domingo_quinzenal": boolean,"empresa_id": string,"id": string,"jornada_semanal": number,"menor_idade": boolean,"nao_trabalha": (number)[],"nome": string,"preferencias": string | null,"setor": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cargo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"domingo_quinzenal"?: boolean,"empresa_id": string,"id"?: string,"jornada_semanal"?: number,"menor_idade"?: boolean,"nao_trabalha"?: (number)[],"nome": string,"preferencias"?: string | null,"setor"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cargo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"domingo_quinzenal"?: boolean,"empresa_id"?: string,"id"?: string,"jornada_semanal"?: number,"menor_idade"?: boolean,"nao_trabalha"?: (number)[],"nome"?: string,"preferencias"?: string | null,"setor"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escala_funcionarios_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escala_funcionarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escala_ia_usos": {
+                  Row: {
+                    "concluido_em": string | null,"created_at": string,"empresa_id": string,"erro": string | null,"id": number,"modelo": string,"situacao": string,"tipo": string,"tokens_entrada": number | null,"tokens_saida": number | null,"user_id": string | null
+                  }
+                  Insert: {
+                    "concluido_em"?: string | null,"created_at"?: string,"empresa_id": string,"erro"?: string | null,"id"?: never,"modelo": string,"situacao"?: string,"tipo": string,"tokens_entrada"?: number | null,"tokens_saida"?: number | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "concluido_em"?: string | null,"created_at"?: string,"empresa_id"?: string,"erro"?: string | null,"id"?: never,"modelo"?: string,"situacao"?: string,"tipo"?: string,"tokens_entrada"?: number | null,"tokens_saida"?: number | null,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escala_ia_usos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escala_ia_usos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escalas": {
+                  Row: {
+                    "competencia": string,"config": NonNullable<Json>,"created_at": string,"criado_por": string | null,"empresa_id": string,"grade": NonNullable<Json>,"ia_resumo": string | null,"id": string,"nome": string,"publicada_em": string | null,"publicada_por": string | null,"status": string,"updated_at": string
+                  }
+                  Insert: {
+                    "competencia": string,"config"?: NonNullable<Json>,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"grade"?: NonNullable<Json>,"ia_resumo"?: string | null,"id"?: string,"nome": string,"publicada_em"?: string | null,"publicada_por"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "competencia"?: string,"config"?: NonNullable<Json>,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"grade"?: NonNullable<Json>,"ia_resumo"?: string | null,"id"?: string,"nome"?: string,"publicada_em"?: string | null,"publicada_por"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escalas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escalas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escalas_publicada_por_fkey"
+      columns: ["publicada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio_ia": {
+                  Row: {
+                    "ativa": boolean,"atualizado_por": string | null,"chave_final": string | null,"id": number,"limite_diario": number,"modelo": string,"testada_em": string | null,"teste_erro": string | null,"teste_ok": boolean | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"atualizado_por"?: string | null,"chave_final"?: string | null,"id"?: number,"limite_diario"?: number,"modelo"?: string,"testada_em"?: string | null,"teste_erro"?: string | null,"teste_ok"?: boolean | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"atualizado_por"?: string | null,"chave_final"?: string | null,"id"?: number,"limite_diario"?: number,"modelo"?: string,"testada_em"?: string | null,"teste_erro"?: string | null,"teste_ok"?: boolean | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_ia_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio_ia_segredo": {
+                  Row: {
+                    "chave_cifrada": string,"created_at": string,"id": number
+                  }
+                  Insert: {
+                    "chave_cifrada": string,"created_at"?: string,"id"?: number
+                  }
+                  Update: {
+                    "chave_cifrada"?: string,"created_at"?: string,"id"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_ia_segredo_id_fkey"
+      columns: ["id"]
+isOneToOne: true
+      referencedRelation: "escritorio_ia"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"escritorio": {
                   Row: {
                     "avisos_whatsapp_ativo": boolean,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnpj": string,"complemento": string | null,"contador_crc": string | null,"contador_nome": string | null,"descricao_sistema": string,"email": string | null,"exigir_2fa_clientes": boolean,"exigir_2fa_equipe": boolean,"id": number,"instagram": string | null,"lembretes_dias": (number)[],"lembretes_email_ativo": boolean,"lembretes_whatsapp_ativo": boolean,"logo_atualizado_em": string | null,"logo_path": string | null,"logradouro": string | null,"mensagem_login": string,"nome_fantasia": string,"nome_sistema": string,"numero": string | null,"razao_social": string,"retencao_padrao_anos": number,"site": string | null,"telefone": string | null,"uf": string | null,"updated_at": string,"updated_by": string | null,"upload_tamanho_maximo_mb": number,"whatsapp": string | null,"whatsapp_phone_number_id": string | null,"whatsapp_template_aviso": string | null,"whatsapp_template_idioma": string,"whatsapp_template_lembrete": string | null,"zip_max_arquivos": number,"zip_max_tamanho_mb": number
@@ -5645,6 +5764,28 @@ isOneToOne: false
                            },
 "dar_vincular_documento":
 { Args: { "p_documento_id": string,"p_id": string }; Returns: undefined
+                           },
+"escala_ia_concluir":
+{ Args: { "p_erro": string,"p_ok": boolean,"p_tokens_entrada": number,"p_tokens_saida": number,"p_uso_id": number }; Returns: undefined
+                           },
+"escala_ia_reservar":
+{ Args: { "p_empresa_id": string,"p_tipo": string }; Returns: {
+              "modelo": string,"uso_id": number
+            }[]
+                           },
+"escala_ia_situacao":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "ligada": boolean,"limite_diario": number,"usados_hoje": number
+            }[]
+                           },
+"escritorio_ia_configurar":
+{ Args: { "p_ativa": boolean,"p_limite_diario": number,"p_modelo": string }; Returns: undefined
+                           },
+"escritorio_ia_registrar_teste":
+{ Args: { "p_erro": string,"p_ok": boolean }; Returns: undefined
+                           },
+"escritorio_ia_salvar_chave":
+{ Args: { "p_chave_cifrada": string,"p_chave_final": string }; Returns: undefined
                            },
 "dados_dare_to":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json

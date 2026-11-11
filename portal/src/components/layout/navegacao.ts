@@ -45,6 +45,7 @@ import {
   Stethoscope,
   Syringe,
   Lightbulb,
+  ClipboardClock,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -186,6 +187,7 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
   const financeiro: ItemMenu[] = [];
   const impostos: ItemMenu[] = [];
   const falar: ItemMenu[] = [];
+  const equipeEmpresa: ItemMenu[] = [];
   const configuracoes: ItemMenu[] = [];
 
   if (transporte) {
@@ -257,6 +259,7 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     impostos.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });
     impostos.push({ rotulo: "Declarações", href: `${base}/declaracoes`, icone: FileSignature });
   }
+  if (p.has("escalas.gerenciar") || p.has("escalas.ver")) equipeEmpresa.push({ rotulo: "Escalas de trabalho", href: `${base}/escalas`, icone: ClipboardClock });
   if (p.has("mensagens.usar")) {
     falar.push({ rotulo: "Mensagens", href: `${base}/mensagens`, icone: MessagesSquare });
     falar.push({ rotulo: "Solicitações", href: `${base}/solicitacoes`, icone: ClipboardList });
@@ -274,6 +277,7 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     { id: "pagamentos", rotulo: "Pagamentos e prazos", icone: CalendarDays, itens: pagamentos },
     { id: "financeiro", rotulo: "Financeiro", icone: Wallet, itens: financeiro },
     { id: "impostos", rotulo: "Impostos e relatórios", icone: Calculator, itens: impostos },
+    { id: "equipe", rotulo: "Funcionários", icone: ClipboardClock, itens: equipeEmpresa },
     { id: "falar", rotulo: "Falar com o escritório", icone: MessagesSquare, itens: falar },
     { id: "configuracoes", rotulo: "Configurações", icone: Settings, itens: configuracoes },
   ];

@@ -267,6 +267,21 @@ O escritório emite a **declaração de faturamento** da empresa (para banco, al
 - **Simulação de rescisão**: escolha um colaborador, vários ou **todos**, o tipo de desligamento (sem justa causa, pedido de demissão, acordo, justa causa, fim do contrato de experiência) e a data. O portal mostra as verbas, o FGTS, a multa e o **custo total para a empresa**. Também dá para simular sem cadastro (**Simulação avulsa**).
 - **Colaboradores**: cadastro simples (nome, cargo, admissão, salário). Ele alimenta a folha da previsão e a simulação de rescisão. Quando alguém sair, informe a **data de saída**.
 
+### Escalas de trabalho (com assistente de IA)
+Menu **Funcionários → Escalas de trabalho**. Serve para montar a escala de horários do mês, com os modelos usados no mercado, e conferir com a CLT antes de publicar para a equipe.
+- **1. Funcionários**: cadastre cada pessoa com nome, cargo, **jornada do contrato** (44h, 36h, 30h...), os dias em que **não trabalha** (ex.: estuda no sábado), se tem **domingo de folga a cada 15 dias** (regra das empregadas mulheres, art. 386 da CLT) e se é **menor de 18 anos**. Salário e documentos não entram aqui. Se a empresa já usa os **Cálculos**, o botão **Trazer do cadastro de colaboradores** copia nome e cargo.
+- **2. Nova escala**: escolha o mês. O portal monta a escala com os funcionários ativos, os feriados nacionais do mês e os turnos e modelos da escala anterior (na primeira vez, 6x1 no turno comercial).
+- **3. Ajuste a configuração** (no editor):
+  - **Turnos e funcionamento**: horários de cada turno (entrada, saída e intervalo), dias e horários em que a empresa abre, **mínimo de pessoas por turno** em cada dia, regras da convenção coletiva (intervalo de 30 minutos, abrir nos feriados, revezamento de 8 horas) e os feriados do estado e do município.
+  - **Pessoas e modelos**: o modelo de cada pessoa — **5x2, 6x1, 12x36, 24x48, 4x3, 5x1, 6x2, turnos de revezamento, jornada parcial ou personalizada** —, o turno, a folga de preferência e a posição no ciclo. **Espalhar folgas** coloca cada pessoa num dia diferente.
+  - Clique em **Salvar e gerar a escala**: o portal distribui as folgas respeitando o mínimo de cada turno, no máximo 6 dias seguidos de trabalho e o domingo de folga na vez de cada um.
+- **4. Grade do mês**: escolha em **Marcar** um turno, folga, férias ou afastamento e clique nos dias para trocar. Contorno **vermelho** é ponto fora da regra; **amarelo**, atenção. A última linha mostra quantos estão escalados em cada turno contra o mínimo.
+- **5. Conferência da CLT**: lista o que precisa de ajuste (jornada acima de 8h/44h, intervalo, menos de 11 horas entre jornadas, 7º dia seguido, domingos seguidos, feriado no comércio, menor à noite, falta de gente no turno), com a base legal. Clique num item para ver o dia na grade.
+- **6. Publicar**: quem tem a permissão **Ver escalas** (por exemplo, o gerente da loja) passa a ver a escala. Com pontos fora da regra, o portal pede confirmação. **Imprimir** gera a folha com as logos para afixar no mural.
+- **Assistente de IA**: descreva a empresa em palavras simples (“padaria aberta todo dia das 6h às 20h, 2 no balcão de manhã e 1 à tarde”) para receber uma **proposta** de modelos, turnos e cobertura, ou peça um **ajuste** (“troque a folga do dia 10 para o dia 12”). A proposta aparece conferida e **só muda a escala se você clicar em Aplicar**. Os nomes não são enviados: a IA recebe apelidos (P1, P2...). Fica **desconectado** até o escritório ligar (veja Configurações do administrador).
+- **Modelos de escala**: a aba explica cada modelo, para quem serve, o que a lei pede (acordo escrito na 12x36, convenção coletiva na 24x48...) e os cuidados.
+- A conferência segue a CLT e a Constituição; a **convenção coletiva da categoria** pode trazer regras próprias. Na dúvida, fale com o escritório.
+
 ### Economia de impostos (auditor fiscal)
 O escritório confere as suas notas fiscais de compra e de venda e as notas de serviço dos últimos 5 anos procurando imposto pago a mais (por exemplo, PIS/Cofins de produtos monofásicos ou ICMS já pago por substituição tributária cobrados de novo, ISS retido pelo cliente e cobrado de novo no DAS, ou impostos federais retidos de empresa do Simples) e pontos de atenção. Quando o escritório encontra e confirma algo, você recebe um aviso e vê em **Economia de impostos**: o mês, a explicação em linguagem simples, o **valor estimado** e o **prazo para pedir de volta** (5 anos do pagamento).
 - Toque em **Quero que o escritório cuide disso** para pedir que o escritório confira a apuração e faça o pedido de restituição. O pedido vira uma **Solicitação**, onde você acompanha tudo.
@@ -647,6 +662,8 @@ Em **Empresas → (empresa) → Ferramentas**, marque só o que aquela empresa u
 
 ### Configurações (administrador)
 Dados e logomarca do escritório (inclusive o **contador responsável e o CRC**, que saem nas declarações, e o **CPF, e-mail e telefone do contador**, exigidos na EFD ICMS/IPI e vistos só pela equipe), verificação em duas etapas obrigatória, limites de envio, lembretes (dias, e-mail e WhatsApp), situação das integrações e LGPD (pedidos dos titulares e prazos de guarda). Detalhes em `CONFIGURACAO.md`.
+
+**Assistente de IA das escalas** (aba **Integrações**): fica desconectado até você cadastrar a chave da Anthropic. Crie uma conta em console.anthropic.com, coloque créditos, gere uma chave em **API Keys** e cole no campo **Chave da API da Anthropic** — o portal testa, guarda cifrada e mostra só o final. Depois marque **Ligar o assistente**, escolha o modelo (Opus 5.5, recomendado, ou Sonnet 5.5, mais rápido e barato) e o **limite de pedidos por dia** em cada empresa. **Remover chave** desliga em todas as empresas.
 
 ### Auditoria (administrador)
 Quem fez o quê e quando: entradas, alterações de cadastro e de permissões, lançamentos, fechamentos, downloads de documentos e de relatórios. Filtre por período, pessoa, empresa e tipo de evento, abra o detalhe para ver o que mudou e exporte em CSV.

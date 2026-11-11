@@ -34,6 +34,7 @@ import { semearTransportadoraCompleta } from "./demo-transportadora";
 import { semearHotel } from "./demo-hotel";
 import { semearVeterinaria } from "./demo-veterinaria";
 import { semearEstudos } from "./demo-estudos";
+import { semearEscalas } from "./demo-escalas";
 import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
@@ -224,6 +225,7 @@ async function main() {
   // Cálculos: parâmetros, receita informada e colaboradores fictícios
   if (await semearCalculos(admin, { padaria: ids[0], oficina: ids[1] })) console.log("  Cálculos e colaboradores de demonstração criados");
   if (await semearVencimentos(admin, { padaria: ids[0], oficina: ids[1] })) console.log("  Vencimentos de demonstração criados");
+  if (await semearEscalas(admin, ids[0])) console.log("  Escala de trabalho de demonstração criada (padaria, mês atual, publicada)");
   const pagas = await semearAgenda(admin, ids);
   if (pagas) console.log(`  Agenda de pagamentos: ${pagas} guia(s) de demonstração marcada(s) como paga(s)`);
   const solicitacoes = await semearSolicitacoes(admin, { url, publica }, { padaria: ids[0], oficina: ids[1] }, {

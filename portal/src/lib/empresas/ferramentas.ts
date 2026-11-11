@@ -41,6 +41,13 @@ export const FERRAMENTAS = [
   { chave: "auditor", grupo: "Impostos e relatórios", rotulo: "Auditor fiscal (economia de impostos)", rotas: ["/auditor-fiscal"], permissoes: ["auditor.ver", "auditor.gerenciar"] },
   { chave: "relatorios", grupo: "Impostos e relatórios", rotulo: "Relatórios", rotas: ["/relatorios"], permissoes: [] },
   { chave: "declaracoes", grupo: "Impostos e relatórios", rotulo: "Declarações (faturamento)", rotas: ["/declaracoes"], permissoes: [] },
+  {
+    chave: "escalas",
+    grupo: "Equipe",
+    rotulo: "Escalas de trabalho (com assistente de IA)",
+    rotas: ["/escalas"],
+    permissoes: ["escalas.ver", "escalas.gerenciar"],
+  },
   { chave: "solicitacoes", grupo: "Atendimento", rotulo: "Solicitações ao escritório", rotas: ["/solicitacoes"], permissoes: [] },
 ] as const satisfies readonly { chave: string; grupo: string; rotulo: string; descricao?: string; rotas: readonly string[]; permissoes: readonly Permissao[] }[];
 

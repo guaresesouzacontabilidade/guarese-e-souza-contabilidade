@@ -303,3 +303,18 @@ Não precisa de chave nova: usa o certificado A1 já cadastrado da empresa (cifr
 - **Banco**: `nfe_config`, `nfe_emitentes`, `nfe_produtos`, `nfe_operacoes`, `nfe_destinatarios`, `nfe_transportadores`, `nfe_emissoes`, `nfe_eventos`, `nfe_guias` (leitura com `nfe.emitir` ou `nfe.configurar`; escrita só pelas funções); permissões `nfe.emitir` (equipe e titular) e `nfe.configurar` (só equipe). Empresa de demonstração não liga a emissão em produção.
 - **Demonstração e testes**: com `NOTAS_AUTOMATICAS_SEM_REDE=1`, nada é enviado (a nota fica "Sem resposta" com o aviso). Os testes automáticos usam um servidor local no papel da SEFAZ e notas fictícias.
 - **Próxima etapa (não incluída)**: MDF-e, inutilização de numeração, LCDPR e SPED/Sintegra.
+
+## 20. Escalas de trabalho e assistente de IA (Claude, da Anthropic)
+
+A ferramenta de escalas funciona sem nenhuma chave: cadastro dos funcionários, modelos de escala, gerador da grade e conferência da CLT rodam dentro do portal (`src/lib/escalas`). Só o **assistente de IA** depende de serviço externo e fica **desconectado** até ser ativado.
+
+- **Ativar o assistente** (administrador do escritório, em **Configurações → Integrações**):
+  1. Criar uma conta em console.anthropic.com, colocar créditos e gerar uma chave em **API Keys** (começa com `sk-ant-`).
+  2. Colar a chave no cartão **Inteligência artificial (Claude, da Anthropic)** e clicar em **Guardar chave**. O portal testa a chave (consulta o modelo, sem gastar créditos), cifra com `CERTIFICADOS_CHAVE` e guarda em `escritorio_ia_segredo` — tabela sem acesso pelo navegador, fora da auditoria. A tela mostra só os 4 últimos caracteres.
+  3. Marcar **Ligar o assistente**, escolher o modelo e o limite diário por empresa e salvar.
+- **Modelos**: `claude-opus-5-5` (padrão) ou `claude-sonnet-5-5`. Nenhum dos dois exige retenção adicional de dados. A chamada usa a API comercial (`@anthropic-ai/sdk`, `src/lib/escalas/ia.ts`) com saída estruturada (JSON conferido no servidor), esforço `medium` e o plano B de recusa do próprio serviço (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`). Tempo máximo da página do editor: 180 s.
+- **O que vai para a Anthropic** (`src/lib/escalas/ia-prompt.ts` e `apelidos.ts`): apelidos P1, P2... no lugar dos nomes; cargo, jornada, restrições, preferências e o texto do pedido com nomes, CPF e telefones trocados ou removidos; turnos, funcionamento, cobertura, feriados e, no ajuste, a grade atual. Nunca documentos, salário ou CPF.
+- **Controle de uso**: `escala_ia_reservar` confere a permissão `escalas.gerenciar`, se o assistente está ligado e o limite do dia (fuso de São Paulo) com trava por empresa; `escala_ia_concluir` registra o resultado e os tokens. A tabela `escala_ia_usos` não guarda o conteúdo.
+- **Banco**: `escala_funcionarios`, `escalas` (configuração e grade em JSON, conferidas por `src/lib/escalas/tipos.ts`), `escala_ia_usos`, `escritorio_ia` e `escritorio_ia_segredo`. Permissões `escalas.ver` (vê as publicadas) e `escalas.gerenciar` (monta e publica; equipe e titular por padrão). A ferramenta pode ser desligada por empresa em **Ferramentas** (chave `escalas`).
+- **Demonstração**: a padaria tem funcionários e uma escala fictícios (`scripts/demo-escalas.ts`); sem chave, o assistente aparece como desconectado.
+- **Regras conferidas** (`src/lib/escalas/conferencia.ts`, fontes em `modelos.ts`): Constituição, art. 7º, XIII, XIV e XV; CLT, arts. 58-A, 59, 59-A, 66, 67, 71, 73, 386, 404 e 413; Lei 605/1949; Lei 10.101/2000, art. 6º e 6º-A; Portaria MTP 671/2021 (domingo a cada 7 semanas nas atividades autorizadas); TST, OJ 410 da SDI-1 e Súmulas 146 e 423. Feriados nacionais com a Lei 14.759/2023 (20 de novembro).

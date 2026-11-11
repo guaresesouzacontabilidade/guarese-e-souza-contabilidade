@@ -21,6 +21,8 @@ import {
   ResponderPedido,
 } from "@/components/escritorio/configuracoes";
 import { formatarDataHora, formatarRelativo } from "@/lib/formatos";
+import { ConfigurarIa } from "@/components/escalas/ia-config";
+import { MODELOS_IA } from "@/lib/escalas/ia";
 
 export const metadata: Metadata = { title: "Configurações" };
 
@@ -190,12 +192,15 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
     const clamav = envServidor.clamav();
     const cron = Boolean(envServidor.cronSecret());
     const seteDias = diasAtras(7);
-    const [{ data: rotinas }, { count: pendentes }, { count: falhas }, { count: comCertificado }] = await Promise.all([
+    const [{ data: rotinas }, { count: pendentes }, { count: falhas }, { count: comCertificado }, { data: cfgIa }, { count: usosIa }] = await Promise.all([
       s.supabase.from("rotinas_status").select("rotina, ultima_execucao, ok, erro"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "pendente"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "falhou").gte("created_at", seteDias),
       s.supabase.from("notas_automaticas").select("empresa_id", { count: "exact", head: true }).gt("certificado_valido_ate", new Date().toISOString()),
+      s.supabase.from("escritorio_ia").select("ativa, chave_final, modelo, limite_diario, testada_em, teste_ok, teste_erro").eq("id", 1).maybeSingle(),
+      s.supabase.from("escala_ia_usos").select("id", { count: "exact", head: true }).eq("situacao", "ok").gte("created_at", diasAtras(30)),
     ]);
+    const iaLigada = Boolean(cfgIa?.ativa && cfgIa.chave_final);
     const chaveCertificados = Boolean(envServidor.certificadosChave());
     const semRede = envServidor.notasSemRede();
     const fila = rotinas?.find((r) => r.rotina === "fila");
@@ -211,8 +216,9 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
     conteudo = (
       <div className="space-y-5">
         <Alerta tom="info">
-          Chaves e senhas das integrações ficam guardadas somente na hospedagem (variáveis de ambiente) e nunca aparecem nesta tela nem no navegador. Quando uma integração está
-          desconectada, o portal não finge que enviou: o envio fica registrado como “não configurado”.
+          Chaves e senhas das integrações ficam guardadas na hospedagem (variáveis de ambiente) ou, no caso da inteligência artificial, cifradas no banco com a chave do
+          servidor — e nunca aparecem nesta tela nem no navegador. Quando uma integração está desconectada, o portal não finge que enviou: o envio fica registrado como “não
+          configurado”.
         </Alerta>
         <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
           <Integracao icone={Mail} titulo="E-mail (SMTP)" situacao={<Situacao ok={Boolean(smtp)} texto={smtp ? "Conectado" : "Desconectado"} />}>
@@ -340,11 +346,27 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
             </p>
           </Integracao>
 
-          <Integracao icone={Bot} titulo="Inteligência artificial" situacao={<Situacao ok={null} texto="Não utilizada" />}>
+          <Integracao
+            icone={Bot}
+            titulo="Inteligência artificial (Claude, da Anthropic)"
+            situacao={<Situacao ok={iaLigada && cfgIa?.teste_ok !== false} texto={iaLigada ? (cfgIa?.teste_ok === false ? "Verificar" : "Conectada") : "Desconectada"} />}
+          >
             <p>
-              O portal não envia documentos nem dados de clientes para serviços de inteligência artificial. Sugestões de conciliação, classificação e resumos dos relatórios são
-              calculados por regras dentro do próprio portal.
+              Usada só no <span className="font-medium text-foreground">assistente das escalas de trabalho</span>, quando alguém da empresa pede uma proposta ou um ajuste. Vai
+              para a Anthropic apenas o necessário para montar a escala: apelidos (P1, P2...) no lugar dos nomes, cargo, jornada, restrições, horários e o texto do pedido. Nenhum
+              documento, CPF ou salário é enviado. Pelos termos comerciais da Anthropic, esses dados não são usados para treinar a IA e são apagados em até 30 dias.
             </p>
+            <p>
+              Conciliação, classificação, resumos dos relatórios e a leitura de documentos continuam sem IA externa: são calculados por regras dentro do próprio portal.
+            </p>
+            {!iaLigada ? <p>Desconectada até a ativação: cadastre a chave da Anthropic abaixo e ligue o assistente. Enquanto isso, nenhum dado é enviado.</p> : null}
+            {cfgIa?.testada_em ? (
+              <p>
+                Último teste: {formatarDataHora(cfgIa.testada_em)} — {cfgIa.teste_ok ? "funcionando" : `falhou (${cfgIa.teste_erro ?? "sem detalhe"})`}. Pedidos atendidos nos últimos 30
+                dias: {usosIa ?? 0}.
+              </p>
+            ) : null}
+            {cfgIa ? <ConfigurarIa cfg={{ ativa: cfgIa.ativa, chave_final: cfgIa.chave_final, modelo: cfgIa.modelo, limite_diario: cfgIa.limite_diario }} modelos={MODELOS_IA} /> : null}
           </Integracao>
 
           <Integracao icone={HardDrive} titulo="Banco de dados e arquivos" situacao={<Situacao ok texto="Conectado" />}>
