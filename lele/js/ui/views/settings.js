@@ -375,10 +375,10 @@ function NotionSection() {
     try {
       const cfg = await callNotion('config');
       if (!cfg.configured) return alive.current && setSt({ notConfigured: true });
-      if (!store.getState().meta.syncCode) return alive.current && setSt({ connected: false });
+      if (!store.getState().meta.syncCode) return alive.current && setSt({ connected: false, oauth: cfg.oauth });
       const s = await callNotion('status');
       if (!alive.current) return;
-      setSt(s);
+      setSt({ ...s, oauth: cfg.oauth });
       if (s.connected) setWaiting((w) => {
         if (w) toast('Notion conectado! 🎉');
         return false;
@@ -474,10 +474,17 @@ function NotionSection() {
         </span>
       </div>
       <div class="row" style="flex-wrap:wrap;gap:8px">
-        <button class="btn btn--primary btn--sm" disabled=${busy === 'connect'} onClick=${connect}>
+        ${st.oauth &&
+        html`<button class="btn btn--primary btn--sm" disabled=${busy === 'connect'} onClick=${connect}>
           ${busy === 'connect' ? 'Abrindo…' : waiting ? 'Abrir o Notion de novo' : 'Conectar'}
+        </button>`}
+        ${st.oauth && waiting && html`<button class="btn btn--secondary btn--sm" onClick=${refresh}>Já autorizei</button>`}
+        <button
+          class=${`btn btn--sm ${st.oauth ? 'btn--ghost' : 'btn--primary'}`}
+          onClick=${() => openNotionKey((r) => setSt({ connected: true, workspace: r.workspace, oauth: st.oauth }))}
+        >
+          <${Icon} name="key-round" size="sm" /> ${st.oauth ? 'Usar chave de integração' : 'Colar chave de integração'}
         </button>
-        ${waiting && html`<button class="btn btn--secondary btn--sm" onClick=${refresh}>Já autorizei</button>`}
       </div>`;
   else
     body = html`
@@ -508,4 +515,59 @@ function NotionSection() {
     <h2 class="section__title" style="margin-bottom:12px">Notion</h2>
     <div class="list">${body}</div>
   </div>`;
+}
+
+// Conectar com a chave de uma integração interna do Notion (sem cadastro público).
+function openNotionKey(onSaved) {
+  openSheet(({ close }) => html`<${NotionKeySheet} close=${close} onSaved=${onSaved} />`, { label: 'Chave do Notion' });
+}
+
+function NotionKeySheet({ close, onSaved }) {
+  const [token, setToken] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const save = async (e) => {
+    e?.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const r = await callNotion('saveToken', { token: token.trim() });
+      toast(`Notion conectado${r.workspace ? ` a “${r.workspace}”` : ''}! 🎉`);
+      onSaved?.(r);
+      close();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return html`<${SheetParts}
+    title="Chave do Notion"
+    close=${close}
+    foot=${html`<button class="btn btn--primary" disabled=${busy || token.trim().length < 20} onClick=${save}>${busy ? 'Conferindo…' : 'Conectar'}</button>`}
+  >
+    <ol class="steps">
+      <li>No Notion onde estão as anotações, abra <b>notion.so/profile/integrations</b> e crie uma integração do tipo <b>Internal</b> chamada “App da Lelé”.</li>
+      <li>Copie a <b>Internal Integration Secret</b> (começa com <code>ntn_</code>) e cole abaixo.</li>
+      <li>Em cada página de anotações (ou numa página que tenha as outras dentro), toque em <b>•••</b> › <b>Conexões</b> › <b>App da Lelé</b>.</li>
+    </ol>
+    <form onSubmit=${save}>
+      <label class="field">
+        <span class="field__label">Chave de integração</span>
+        <input
+          class="input"
+          type="password"
+          value=${token}
+          onInput=${(e) => setToken(e.currentTarget.value)}
+          placeholder="ntn_…"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-label="Chave de integração do Notion"
+        />
+        <p class="field__hint">A chave vai direto para o servidor do app, ligada ao seu código de sincronização, e serve só para ler as páginas que você conectar.</p>
+      </label>
+      ${error && html`<div class="notice notice--warn" role="alert">${error}</div>`}
+    </form>
+  <//>`;
 }

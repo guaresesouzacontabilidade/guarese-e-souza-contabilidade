@@ -87,15 +87,25 @@ O navegador não pode falar direto com a API do Notion, então há uma Edge Func
 guarda o token na tabela fechada `lele_notion` (ligado ao hash do código de sincronização) e lê as páginas.
 Tabelas em `supabase/migrations/20261112120000_lele_notion.sql`.
 
-### Ativar (uma vez)
+### Ativar
+
+**Jeito simples (chave de integração interna), feito pela própria Lelé no app:**
+
+1. No Notion onde estão as anotações: https://www.notion.so/profile/integrations › **New integration** › tipo **Internal**,
+   nome “App da Lelé”. Copie a **Internal Integration Secret** (começa com `ntn_`).
+2. No app: **Ajustes › Notion › Colar chave de integração** e cole. A chave vai direto do aparelho para a função
+   (nunca por chat), que confere com o Notion e guarda na tabela fechada, ligada ao código de sincronização.
+3. Em cada página de anotações (ou numa página-mãe): **•••** › **Conexões** › **App da Lelé**.
+
+**Opcional: botão “Conectar” (OAuth, integração pública):**
 
 1. Em https://www.notion.so/profile/integrations › **New integration**: tipo **Public**, nome “App da Lelé”.
    - Redirect URI: `https://ijwoglxhwbihpriauhay.supabase.co/functions/v1/lele-notion`
    - Site: `https://guaresesouzacontabilidade.github.io/guarese-e-souza-contabilidade/lele/`
    - Privacidade e Termos: `https://guaresesouzacontabilidade.github.io/guarese-e-souza-contabilidade/lele/privacidade.html`
    - Capacidades: só **Read content**; informações de usuário: nenhuma.
-2. Copie o **OAuth client ID** e o **OAuth client secret** da integração.
-3. No Supabase do Meu Dia › **Edge Functions › Secrets**, crie `NOTION_CLIENT_ID` e `NOTION_CLIENT_SECRET`.
+2. No Supabase do Meu Dia › **Edge Functions › Secrets**, crie `NOTION_CLIENT_ID` e `NOTION_CLIENT_SECRET`.
+   O botão “Conectar” aparece sozinho em Ajustes quando os dois existirem.
 
 Atualizar a função: `supabase functions deploy lele-notion --no-verify-jwt` (Supabase CLI) a partir de `lele/`.
 

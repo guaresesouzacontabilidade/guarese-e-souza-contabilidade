@@ -1,7 +1,7 @@
 // Service worker do App da Lelé: abre sem internet e se atualiza sozinho.
 // A lista ASSETS e a VERSION são geradas por `npm run precache` — não edite à mão.
 
-const VERSION = '7950295c2b1e';
+const VERSION = '11339b4847f6';
 const ASSETS = [
   './',
   './assets/fonts/fraunces-italic.woff2',
