@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacidade e termos · App da Lelé</title>
+    <link rel="icon" href="./assets/icons/icon.svg" type="image/svg+xml" />
+    <style>
+      :root { color-scheme: light dark; --ink: #2b1622; --bg: #fbf5f2; --accent: #d93a76; }
+      @media (prefers-color-scheme: dark) { :root { --ink: #fbeff4; --bg: #170d13; --accent: #ff6b9e; } }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      main { max-width: 680px; margin: 0 auto; padding: 32px 18px 48px; }
+      h1 { font-size: 30px; line-height: 1.2; } h2 { font-size: 20px; margin-top: 28px; color: var(--accent); }
+      li { margin: 6px 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>App da Lelé: privacidade e termos de uso</h1>
+      <p>O App da Lelé é um app pessoal e gratuito de flashcards para estudo, sem anúncios e sem fins comerciais.</p>
+
+      <h2>Que dados o app usa</h2>
+      <ul>
+        <li><b>Seus baralhos, cartões e histórico de estudo.</b> Ficam no seu aparelho. Com a sincronização ligada, ficam também numa cópia na nuvem (Supabase), identificada só por um código aleatório. O banco guarda apenas um resumo criptográfico (hash) desse código.</li>
+        <li><b>Notion (opcional).</b> Se você conectar, o app lê <b>somente</b> as páginas que você escolher na tela de autorização do Notion, apenas para transformá-las em flashcards. O app nunca escreve, altera ou apaga nada no seu Notion.</li>
+        <li>O token de acesso do Notion fica guardado numa tabela fechada, acessível apenas pela função do próprio app, ligado ao seu código de sincronização.</li>
+      </ul>
+
+      <h2>O que o app não faz</h2>
+      <ul>
+        <li>Não vende, não compartilha e não usa seus dados para publicidade.</li>
+        <li>Não tem rastreadores nem análise de uso.</li>
+      </ul>
+
+      <h2>Como desconectar e apagar</h2>
+      <ul>
+        <li>No app: Ajustes › Notion › Desconectar o Notion (apaga o token guardado).</li>
+        <li>No Notion: Configurações › Conexões › App da Lelé › Desconectar.</li>
+        <li>Para apagar os dados do aparelho: Ajustes › Apagar dados deste aparelho.</li>
+      </ul>
+
+      <h2>Termos de uso</h2>
+      <p>O app é oferecido como está, para uso pessoal de estudo. O conteúdo dos cartões é seu. Use com bom senso: flashcards ajudam a memorizar, mas não substituem fontes médicas oficiais.</p>
+    </main>
+  </body>
+</html>

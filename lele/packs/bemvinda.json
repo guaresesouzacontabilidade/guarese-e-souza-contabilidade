@@ -1,0 +1,49 @@
+{
+  "id": "bemvinda",
+  "version": 1,
+  "decks": [{ "key": "inicio", "name": "Comece por aqui", "group": "", "color": "#E0457B", "emoji": "💗" }],
+  "notes": [
+    {
+      "id": "1",
+      "deck": "inicio",
+      "type": "basic",
+      "front": "Oi, Lelé! Como funciona este app?",
+      "back": "Você lê a pergunta, pensa na resposta e toca no cartão para virar.\n\nDepois conta para o app como foi: **Errei**, **Difícil**, **Bom** ou **Fácil**."
+    },
+    {
+      "id": "2",
+      "deck": "inicio",
+      "type": "basic",
+      "front": "Quando usar cada botão?",
+      "back": "- **Errei**: não lembrou -> volta em 1 min\n- **Difícil**: lembrou com esforço\n- **Bom**: lembrou normalmente\n- **Fácil**: sabia de cor -> só volta daqui a dias"
+    },
+    {
+      "id": "3",
+      "deck": "inicio",
+      "type": "cloze",
+      "front": "Na repetição espaçada, quanto mais você acerta um cartão, {{c1::mais tempo}} ele demora para voltar.",
+      "extra": "É assim que a memória de longo prazo se forma, sem decoreba de véspera."
+    },
+    {
+      "id": "4",
+      "deck": "inicio",
+      "type": "cloze",
+      "front": "Para criar um cartão de lacunas, selecione um trecho do texto e toque em {{c1::Ocultar}}.",
+      "extra": "Cada lacuna vira um cartão separado. Ótimo para listas, tríades e critérios."
+    },
+    {
+      "id": "5",
+      "deck": "inicio",
+      "type": "basic",
+      "front": "Dá para criar vários cartões de uma vez?",
+      "back": "Sim! Em **Importar**, cole uma lista com uma pergunta por linha:\n\nCausa mais comum de IAM ; Aterosclerose coronariana\n\nOu blocos separados por linha em branco (1ª linha = pergunta)."
+    },
+    {
+      "id": "6",
+      "deck": "inicio",
+      "type": "basic",
+      "front": "Qual o segredo para não acumular revisões?",
+      "back": "Estudar **um pouquinho todo dia**. ==Constância vence maratona.==\n\nSua sequência de dias aparece em Progresso 🔥"
+    }
+  ]
+}

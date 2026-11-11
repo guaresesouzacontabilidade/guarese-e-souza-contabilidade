@@ -1,0 +1,25 @@
+{
+  "name": "app-da-lele",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App da Lelé — flashcards com repetição espaçada para estudar medicina (PWA).",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "vendor": "node scripts/vendor.mjs",
+    "icons": "node scripts/icons.mjs",
+    "precache": "node scripts/precache.mjs",
+    "check": "node scripts/precache.mjs --check",
+    "test": "TZ=America/Sao_Paulo node --test \"tests/unit/*.test.mjs\"",
+    "test:e2e": "playwright test --trace off"
+  },
+  "devDependencies": {
+    "@fontsource-variable/fraunces": "5.3.0",
+    "@fontsource-variable/nunito": "5.3.0",
+    "@playwright/test": "1.63.0",
+    "esbuild": "0.28.2",
+    "htm": "3.1.1",
+    "lucide-static": "1.57.0",
+    "preact": "10.29.8"
+  }
+}
