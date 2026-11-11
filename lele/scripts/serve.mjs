@@ -5,6 +5,8 @@ import { readFile, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { createHandler } from '../supabase/functions/lele-notion/handler.js';
+import { createFakeNotion } from './fake-notion.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.PORT || 4180);
@@ -54,9 +56,52 @@ function fakeRpc(name, body) {
   throw new Error('função desconhecida');
 }
 
+// Função lele-notion de verdade, falando com um Notion de mentira.
+const fakeNotion = createFakeNotion();
+const notionHandler = createHandler({
+  env: { NOTION_CLIENT_ID: 'fake', NOTION_CLIENT_SECRET: 'fake', SUPABASE_URL: `http://localhost:${port}/fake-cloud` },
+  db: fakeNotion.db,
+  fetchImpl: fakeNotion.fetchImpl,
+});
+
+async function nodeToFetch(req, url) {
+  let body;
+  if (req.method === 'POST') {
+    body = '';
+    for await (const chunk of req) body += chunk;
+  }
+  return new Request(url, { method: req.method, body, headers: { 'Content-Type': 'application/json' } });
+}
+
+async function sendFetchResponse(res, r) {
+  const headers = Object.fromEntries(r.headers.entries());
+  res.writeHead(r.status, headers);
+  res.end(Buffer.from(await r.arrayBuffer()));
+}
+
 createServer(async (req, res) => {
   try {
     let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    if (FAKE && p === '/fake-cloud/functions/v1/lele-notion') {
+      const url = `http://localhost:${port}${req.url}`;
+      const r = await notionHandler(await nodeToFetch(req, url));
+      // A tela de autorização do Notion vira uma página local que autoriza na hora.
+      if (req.method === 'POST' && r.status === 200) {
+        const data = await r.json();
+        if (data.url) data.url = data.url.replace('https://api.notion.com/v1/oauth/authorize', `http://localhost:${port}/fake-notion/authorize`);
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify(data));
+        return;
+      }
+      await sendFetchResponse(res, r);
+      return;
+    }
+    if (FAKE && p === '/fake-notion/authorize') {
+      const q = new URL(req.url, 'http://x').searchParams;
+      res.writeHead(302, { Location: `/fake-cloud/functions/v1/lele-notion?code=fake-code&state=${q.get('state')}` });
+      res.end();
+      return;
+    }
     if (FAKE && p.startsWith('/fake-cloud/rest/v1/rpc/')) {
       let raw = '';
       for await (const chunk of req) raw += chunk;

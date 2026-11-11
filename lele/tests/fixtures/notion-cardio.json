@@ -1,0 +1,31 @@
+{
+  "id": "page-cardio-0001",
+  "title": "Cardiologia",
+  "blocks": [
+    { "id": "b01", "type": "paragraph", "text": "Resumo da aula de cardio, semana 3." },
+    { "id": "b02", "type": "heading", "level": 1, "text": "Insuficiência cardíaca" },
+    { "id": "b03", "type": "bulleted", "text": "**Furosemida**: diurético de alça, alivia congestão" },
+    { "id": "b04", "type": "bulleted", "text": "Classificação NYHA", "children": [
+      { "id": "b05", "type": "bulleted", "text": "I: sem limitação" },
+      { "id": "b06", "type": "bulleted", "text": "IV: sintomas em repouso" }
+    ] },
+    { "id": "b07", "type": "paragraph", "text": "A principal causa de IC no Brasil é a **cardiopatia isquêmica**, seguida da ==hipertensiva==." },
+    { "id": "b08", "type": "heading", "level": 2, "text": "Tratamento" },
+    { "id": "b09", "type": "toggle", "text": "Quais drogas reduzem mortalidade na ICFEr?", "children": [
+      { "id": "b10", "type": "bulleted", "text": "IECA/BRA ou sacubitril-valsartana" },
+      { "id": "b11", "type": "bulleted", "text": "Betabloqueador" },
+      { "id": "b12", "type": "bulleted", "text": "Espironolactona" },
+      { "id": "b13", "type": "bulleted", "text": "iSGLT2" }
+    ] },
+    { "id": "b14", "type": "heading", "level": 1, "text": "Pericardite" },
+    { "id": "b15", "type": "paragraph", "text": "Qual o achado clássico no ECG?" },
+    { "id": "b16", "type": "paragraph", "text": "Supra de ST difuso com infra de PR" },
+    { "id": "b17", "type": "table", "hasColumnHeader": true, "children": [
+      { "id": "r0", "type": "row", "cells": ["Droga", "Dose", "Duração"] },
+      { "id": "r1", "type": "row", "cells": ["AAS", "750–1000 mg 8/8h", "1–2 semanas"] },
+      { "id": "r2", "type": "row", "cells": ["Colchicina", "0,5 mg 12/12h", "3 meses"] }
+    ] },
+    { "id": "b18", "type": "paragraph", "text": "**Tudo isto é um título em negrito**" },
+    { "id": "b19", "type": "paragraph", "text": "Consulta às 10:30 com o professor" }
+  ]
+}

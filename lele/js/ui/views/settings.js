@@ -1,5 +1,5 @@
 // Ajustes: nome, estudo, aparência, sincronização, backup.
-import { html, useState } from '../../vendor/preact.js';
+import { html, useState, useEffect, useRef } from '../../vendor/preact.js';
 import * as store from '../../data/store.js';
 import { cloudEnabled, createVault, joinVault, disconnect, syncNow, formatCode } from '../../services/sync.js';
 import { exportBackup, readBackup, restoreBackup } from '../../data/backup.js';
@@ -7,6 +7,9 @@ import { isIOS, isStandalone } from '../../services/install.js';
 import { toast, confirm, openSheet, SheetParts, useSync } from '../state.js';
 import { Icon, Switch, Stepper, Segmented, plural } from '../components.js';
 import { loveNoteAvailable, openLoveNote } from '../sheets/loveNote.js';
+import { notionAvailable, callNotion, startNotionConnect } from '../../services/notion.js';
+import { openNotionImport, refreshFromNotion } from '../sheets/notion.js';
+import { importedNotionPages } from '../../data/notionImport.js';
 
 export const APP_VERSION = '1.0.0';
 
@@ -70,6 +73,8 @@ export function SettingsView() {
         </div>
       </div>
     </div>
+
+    <${NotionSection} />
 
     <${SyncSection} />
 
@@ -357,4 +362,150 @@ function DangerRow() {
     <span class="row__icon"><${Icon} name="trash-2" /></span>
     <span class="row__body"><span class="row__title">Apagar dados deste aparelho</span></span>
   </button>`;
+}
+
+function NotionSection() {
+  const [st, setSt] = useState({ loading: true });
+  const [busy, setBusy] = useState('');
+  const [waiting, setWaiting] = useState(false);
+  const alive = useRef(true);
+  const pagesCount = Object.keys(importedNotionPages()).length;
+
+  async function refresh() {
+    try {
+      const cfg = await callNotion('config');
+      if (!cfg.configured) return alive.current && setSt({ notConfigured: true });
+      if (!store.getState().meta.syncCode) return alive.current && setSt({ connected: false });
+      const s = await callNotion('status');
+      if (!alive.current) return;
+      setSt(s);
+      if (s.connected) setWaiting((w) => {
+        if (w) toast('Notion conectado! 🎉');
+        return false;
+      });
+    } catch (err) {
+      if (alive.current) setSt({ error: err.message });
+    }
+  }
+
+  useEffect(() => {
+    alive.current = true;
+    if (notionAvailable()) refresh();
+    const onVisible = () => document.visibilityState === 'visible' && refresh();
+    document.addEventListener('visibilitychange', onVisible);
+    addEventListener('focus', onVisible);
+    return () => {
+      alive.current = false;
+      document.removeEventListener('visibilitychange', onVisible);
+      removeEventListener('focus', onVisible);
+    };
+  }, []);
+
+  // Esperando a autorização no Notion: confere a cada 3 s (por até 5 min).
+  useEffect(() => {
+    if (!waiting) return;
+    const t = setInterval(refresh, 3000);
+    const stop = setTimeout(() => setWaiting(false), 5 * 60 * 1000);
+    return () => {
+      clearInterval(t);
+      clearTimeout(stop);
+    };
+  }, [waiting]);
+
+  if (!notionAvailable()) return null;
+
+  async function connect() {
+    setBusy('connect');
+    try {
+      await startNotionConnect();
+      setWaiting(true);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function update() {
+    setBusy('update');
+    try {
+      const { created, updated } = await refreshFromNotion();
+      toast(created || updated ? `${plural(created, 'cartão novo', 'cartões novos')}${updated ? ` · ${updated} atualizado(s)` : ''} 🎉` : 'Tudo em dia com o Notion.');
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function disconnect() {
+    const ok = await confirm({
+      title: 'Desconectar o Notion?',
+      text: 'Os cartões que já vieram do Notion continuam no app. Para voltar a importar, é só conectar de novo.',
+      confirmLabel: 'Desconectar',
+    });
+    if (!ok) return;
+    try {
+      await callNotion('disconnect');
+      setSt({ connected: false });
+      toast('Notion desconectado');
+    } catch (err) {
+      toast(err.message);
+    }
+  }
+
+  let body;
+  if (st.loading) body = html`<div class="row"><span class="row__icon">📝</span><span class="row__body"><span class="row__sub">Verificando…</span></span></div>`;
+  else if (st.notConfigured)
+    body = html`<div class="row"><span class="row__icon">📝</span><span class="row__body"><span class="row__title">Quase pronto</span>
+      <span class="row__sub">A ligação com o Notion ainda está sendo ativada. Volte aqui daqui a pouco.</span></span></div>`;
+  else if (st.error)
+    body = html`<div class="row"><span class="row__icon">📝</span><span class="row__body"><span class="row__title">Notion</span><span class="row__sub">${st.error}</span></span>
+      <button class="btn btn--ghost btn--sm" onClick=${refresh}>Tentar de novo</button></div>`;
+  else if (!st.connected)
+    body = html`
+      <div class="row">
+        <span class="row__icon">📝</span>
+        <span class="row__body">
+          <span class="row__title">Conectar com o Notion</span>
+          <span class="row__sub">${waiting
+            ? 'Autorize no Notion e volte para cá. Assim que terminar, aparece aqui sozinho.'
+            : 'Transforme suas anotações em flashcards: cada tópico vira um baralho.'}</span>
+        </span>
+      </div>
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <button class="btn btn--primary btn--sm" disabled=${busy === 'connect'} onClick=${connect}>
+          ${busy === 'connect' ? 'Abrindo…' : waiting ? 'Abrir o Notion de novo' : 'Conectar'}
+        </button>
+        ${waiting && html`<button class="btn btn--secondary btn--sm" onClick=${refresh}>Já autorizei</button>`}
+      </div>`;
+  else
+    body = html`
+      <div class="row">
+        <span class="row__icon">📝</span>
+        <span class="row__body">
+          <span class="row__title">Conectado${st.workspace ? ` a “${st.workspace}”` : ''}</span>
+          <span class="row__sub">${pagesCount ? `${plural(pagesCount, 'página importada', 'páginas importadas')}` : 'Escolha as páginas para virar cartões'}</span>
+        </span>
+      </div>
+      <button class="row" onClick=${openNotionImport}>
+        <span class="row__icon"><${Icon} name="wand-sparkles" /></span>
+        <span class="row__body"><span class="row__title">Gerar cartões do Notion</span><span class="row__sub">Escolher páginas e revisar antes de criar</span></span>
+        <${Icon} name="chevron-right" />
+      </button>
+      ${pagesCount > 0 &&
+      html`<button class="row" disabled=${busy === 'update'} onClick=${update}>
+        <span class="row__icon"><${Icon} name="refresh-cw" /></span>
+        <span class="row__body"><span class="row__title">${busy === 'update' ? 'Atualizando…' : 'Atualizar do Notion'}</span>
+        <span class="row__sub">Traz o que você escreveu de novo, sem mexer no que editou aqui</span></span>
+      </button>`}
+      <button class="row" onClick=${disconnect}>
+        <span class="row__icon"><${Icon} name="log-out" /></span>
+        <span class="row__body"><span class="row__title">Desconectar o Notion</span></span>
+      </button>`;
+
+  return html`<div class="section">
+    <h2 class="section__title" style="margin-bottom:12px">Notion</h2>
+    <div class="list">${body}</div>
+  </div>`;
 }

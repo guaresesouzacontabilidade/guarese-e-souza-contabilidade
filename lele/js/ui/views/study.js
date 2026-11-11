@@ -230,7 +230,7 @@ function Face({ note, ord, side, deck, media }) {
   const isCloze = note.type === 'cloze';
   return html`<div class=${`flash__face ${side === 'back' ? 'flash__back' : ''}`}>
     <div class="flash__scroll">
-      <div class="flash__deck"><span>${deck?.emoji || '📚'}</span> ${deck?.name || ''}</div>
+      <div class="flash__deck"><span>${deck?.emoji || '📚'}</span> ${deck?.name || ''}${note.context ? ` · ${note.context}` : ''}</div>
       <div class=${`flash__content rich ${longText ? 'flash__content--left' : ''}`}>
         ${side === 'back' && !isCloze
           ? html`<div class="flash__question rich" dangerouslySetInnerHTML=${{ __html: renderSide(note, ord, 'front') }}></div>

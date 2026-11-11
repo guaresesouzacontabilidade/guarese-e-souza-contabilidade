@@ -6,6 +6,8 @@ import { parseImport, SEPARATORS } from '../../core/importer.js';
 import { plainText } from '../../core/rich.js';
 import { openSheet, SheetParts, toast, navigate } from '../state.js';
 import { Icon, plural } from '../components.js';
+import { notionAvailable } from '../../services/notion.js';
+import { openNotionImport } from './notion.js';
 
 export function openImport({ deckId = null } = {}) {
   openSheet(({ close }) => html`<${ImportSheet} close=${close} deckId=${deckId} />`, { label: 'Importar cartões' });
@@ -64,6 +66,18 @@ function ImportSheet({ close, deckId }) {
       ${result?.cards.length ? `Importar ${plural(result.cards.length, 'cartão', 'cartões')}` : 'Importar'}
     </button>`}
   >
+    ${notionAvailable() &&
+    html`<button
+      class="import-from-notion"
+      onClick=${() => {
+        close();
+        openNotionImport();
+      }}
+    >
+      <span class="import-from-notion__icon">📝</span>
+      <span style="flex:1"><b>Gerar do Notion</b><span class="muted">Suas anotações viram cartões, um baralho por tópico</span></span>
+      <${Icon} name="chevron-right" />
+    </button>`}
     <label class="field">
       <span class="field__label">Para o baralho</span>
       <select class="select" value=${target} onChange=${(e) => setTarget(e.currentTarget.value)}>

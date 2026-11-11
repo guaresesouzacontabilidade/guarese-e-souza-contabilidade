@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const RUNTIME = ['index.html', 'manifest.webmanifest', 'css', 'js', 'assets', 'packs'];
+const RUNTIME = ['index.html', 'notion-ok.html', 'privacidade.html', 'manifest.webmanifest', 'css', 'js', 'assets', 'packs'];
 
 async function walk(rel) {
   const abs = path.join(root, rel);

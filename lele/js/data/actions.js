@@ -49,6 +49,8 @@ function noteTombstones(note) {
 export function saveNote(input) {
   const prev = input.id ? store.get('notes', input.id) : null;
   const note = {
+    // Mantém o que o editor não mostra (pausado, contexto, origem no Notion…).
+    ...(prev || {}),
     id: input.id || store.newId('n'),
     deckId: input.deckId,
     type: input.type || 'basic',
@@ -60,6 +62,11 @@ export function saveNote(input) {
     imageSide: input.imageSide || 'back',
     createdAt: prev?.createdAt || Date.now(),
   };
+  delete note.updatedAt;
+  // Cartão que veio do Notion e foi editado aqui: "Atualizar do Notion" não mexe mais nele.
+  if (prev?.source && ['type', 'front', 'back', 'extra'].some((k) => (prev[k] || '') !== (note[k] || ''))) {
+    note.source = { ...prev.source, edited: true };
+  }
   const entries = [['notes', note]];
   if (prev) {
     // Lacunas removidas: os cartões delas somem; imagem trocada: a antiga também.

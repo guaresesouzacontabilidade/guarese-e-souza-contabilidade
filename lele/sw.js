@@ -1,7 +1,7 @@
 // Service worker do App da Lelé: abre sem internet e se atualiza sozinho.
 // A lista ASSETS e a VERSION são geradas por `npm run precache` — não edite à mão.
 
-const VERSION = 'ad40e0c8ac39';
+const VERSION = '0b062ac28c42';
 const ASSETS = [
   './',
   './assets/fonts/fraunces-italic.woff2',
@@ -19,6 +19,7 @@ const ASSETS = [
   './js/core/dates.js',
   './js/core/importer.js',
   './js/core/notes.js',
+  './js/core/notionCards.js',
   './js/core/queue.js',
   './js/core/rich.js',
   './js/core/srs.js',
@@ -26,6 +27,7 @@ const ASSETS = [
   './js/data/actions.js',
   './js/data/backup.js',
   './js/data/idb.js',
+  './js/data/notionImport.js',
   './js/data/packs.js',
   './js/data/store.js',
   './js/main.js',
@@ -33,6 +35,7 @@ const ASSETS = [
   './js/services/fx.js',
   './js/services/image.js',
   './js/services/install.js',
+  './js/services/notion.js',
   './js/services/sync.js',
   './js/ui/app.js',
   './js/ui/components.js',
@@ -40,6 +43,7 @@ const ASSETS = [
   './js/ui/sheets/editor.js',
   './js/ui/sheets/import.js',
   './js/ui/sheets/loveNote.js',
+  './js/ui/sheets/notion.js',
   './js/ui/sheets/search.js',
   './js/ui/state.js',
   './js/ui/summary.js',
@@ -52,8 +56,10 @@ const ASSETS = [
   './js/vendor/icons.js',
   './js/vendor/preact.js',
   './manifest.webmanifest',
+  './notion-ok.html',
   './packs/bemvinda.json',
-  './packs/index.json'
+  './packs/index.json',
+  './privacidade.html'
 ];
 
 const CACHE = `lele-${VERSION}`;

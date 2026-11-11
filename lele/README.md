@@ -17,6 +17,7 @@ tema claro/escuro e sincronização entre aparelhos.
 | **Importar** | Cola uma lista ou abre um arquivo `.txt/.csv/.tsv/.md`: `pergunta ; resposta`, tabulação (planilha/Anki), `::`, `|`, ou blocos separados por linha em branco. Linhas com `{{…}}` viram lacunas. Mostra a prévia antes de importar. |
 | **Progresso** | Sequência e recorde, calendário dos últimos meses, revisões por dia (30 dias), % de acertos, previsão dos próximos 7 dias e cartões por fase (novos, aprendendo, recentes, dominados). |
 | **Ajustes** | Nome, cartões novos por dia, tema, sons, sincronização (código), instalar no iPhone, backup (salvar/restaurar `.json`), apagar dados do aparelho. |
+| **Notion** | Ajustes › Notion › **Conectar**: ela entra na conta do Notion e escolhe as páginas que o app pode ler (só leitura). Em **Gerar cartões do Notion**, escolhe as páginas e o app cria os cartões sozinho, **um baralho por tópico** (títulos da página; ou um baralho por página), mostrando tudo antes de salvar. **Atualizar do Notion** traz só o que é novo ou mudou, sem mexer no que ela apagou ou editou no app. A conexão vale para todos os aparelhos dela. |
 | **Baralhos prontos** | Pacotes em `packs/` entram com um toque (“Chegaram cartões novos…”). Ao atualizar um pacote, só entram as notas novas: nada do que ela editou ou apagou é sobrescrito. |
 | **Toque pessoal** | Recado escondido configurável em `js/personal.js` (aparece depois da primeira revisão completa e em Ajustes). |
 
@@ -62,6 +63,41 @@ Observação: no plano gratuito, o Supabase “dorme” o projeto depois de cerc
 Para usar outro projeto, troque a URL e a chave em `js/config.js` e rode o mesmo SQL no SQL Editor dele.
 
 Sem `js/config.js` preenchido o app funciona só no aparelho (com backup por arquivo).
+
+## Ligação com o Notion
+
+### Como as anotações viram cartões (sem IA, de graça)
+
+| No Notion | Vira |
+| --- | --- |
+| Título (H1/H2/H3) | Tópico → um baralho (subtítulos aparecem no cartão como contexto) |
+| Toggle (▸ título com conteúdo dentro) | Pergunta = título do toggle, resposta = conteúdo |
+| `Termo: definição` (também `—`, `–`, `->`, `=`) | Pergunta = termo, resposta = definição |
+| Item de lista com subitens | Pergunta = item, resposta = subitens |
+| Frase terminando em `?` | Pergunta; resposta = subitens ou o parágrafo seguinte |
+| Trechos em **negrito** ou com marca-texto | Lacunas (`{{c1::…}}`) |
+| Tabela | Uma linha = um cartão (1ª coluna → demais colunas com o nome de cada coluna) |
+
+Texto corrido sem nenhuma marcação não vira cartão (a lógica está em `js/core/notionCards.js`, com testes).
+
+### Como funciona por dentro
+
+O navegador não pode falar direto com a API do Notion, então há uma Edge Function no Supabase do Meu Dia:
+`supabase/functions/lele-notion` (código em `handler.js`, testado no Node). Ela faz o login com o Notion (OAuth),
+guarda o token na tabela fechada `lele_notion` (ligado ao hash do código de sincronização) e lê as páginas.
+Tabelas em `supabase/migrations/20261112120000_lele_notion.sql`.
+
+### Ativar (uma vez)
+
+1. Em https://www.notion.so/profile/integrations › **New integration**: tipo **Public**, nome “App da Lelé”.
+   - Redirect URI: `https://ijwoglxhwbihpriauhay.supabase.co/functions/v1/lele-notion`
+   - Site: `https://guaresesouzacontabilidade.github.io/guarese-e-souza-contabilidade/lele/`
+   - Privacidade e Termos: `https://guaresesouzacontabilidade.github.io/guarese-e-souza-contabilidade/lele/privacidade.html`
+   - Capacidades: só **Read content**; informações de usuário: nenhuma.
+2. Copie o **OAuth client ID** e o **OAuth client secret** da integração.
+3. No Supabase do Meu Dia › **Edge Functions › Secrets**, crie `NOTION_CLIENT_ID` e `NOTION_CLIENT_SECRET`.
+
+Atualizar a função: `supabase functions deploy lele-notion --no-verify-jwt` (Supabase CLI) a partir de `lele/`.
 
 ## Adicionar baralhos prontos
 
