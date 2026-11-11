@@ -39,11 +39,6 @@ export interface RegrasIcmsUf {
   };
   /** Dia do mês seguinte em que vencem o ICMS apurado, a complementação e o diferencial. */
   vencimento: { dia: number; texto: string; fontes: Fonte[] };
-  /**
-   * Mercadoria importada (origem 1, 2, 3 ou 8): o fornecedor destaca 4% (Resolução do Senado nº 13/2012).
-   * Quando ligado, a complementação e o diferencial usam a alíquota da região (7% ou 12%) em vez dos 4%.
-   */
-  importadoAliquotaRegional?: { ativo: boolean; fonte: Fonte };
 }
 
 const RICMS_TO: Fonte = {
@@ -88,15 +83,6 @@ export const REGRAS_ICMS: Record<string, RegrasIcmsUf> = {
             url: "https://dtri.sefaz.to.gov.br/legislacao/consultas/2023/Consulta10.2023.htm",
           },
         ],
-      },
-    },
-    // Decisão do escritório (09/11/2026): importado com a alíquota da região, não os 4%. Para voltar aos 4%, mude "ativo" para false.
-    importadoAliquotaRegional: {
-      ativo: true,
-      fonte: {
-        titulo:
-          "Decisão do escritório (09/11/2026): na complementação e no diferencial do Tocantins, mercadoria importada usa a alíquota interestadual da região (7% ou 12%); o fornecedor destaca 4% pela Resolução do Senado nº 13/2012",
-        url: "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/Congresso/RSF-13-2012.htm",
       },
     },
     vencimento: {

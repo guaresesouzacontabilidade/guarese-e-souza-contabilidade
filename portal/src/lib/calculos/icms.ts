@@ -422,12 +422,7 @@ function calcularNota(ctx: CtxEntradas, nota: NotaEntradaDados): NotaCalculada {
     const st = nota.modelo !== "57" && itemComSt(it);
     const aliqDest = it.p_icms != null && dec(it.p_icms).gt(0) ? dec(it.p_icms).toNumber() : null;
     const importado = ORIGENS_IMPORTADAS.has(String(it.orig ?? ""));
-    // Importado com a alíquota da região (decisão do escritório nas regras do estado) em vez dos 4%
-    const importadoRegional = importado && Boolean(regras?.importadoAliquotaRegional?.ativo);
-    const aliqInter = interestadual && uf ? aliquotaInterestadual(ufEmit, uf, importado && !importadoRegional) : null;
-    if (importadoRegional && aliqInter != null) {
-      memoria.push(`Importado (origem ${it.orig}): o fornecedor destaca 4% (Resolução do Senado nº 13/2012); por decisão do escritório, o cálculo usa a alíquota da região (${pctTxt(aliqInter)}).`);
-    }
+    const aliqInter = interestadual && uf ? aliquotaInterestadual(ufEmit, uf, importado) : null;
 
     // Crédito (regime normal)
     let credito = ZERO;
@@ -801,10 +796,6 @@ export function calcularIcms(dados: DadosIcms): ResultadoIcms {
       .filter((n) => n[campo].gt(0))
       .map((n) => `NF-e ${n.numero ?? "s/n"}${n.emitente ? ` — ${n.emitente}` : ""} (${n.emitenteUf}): ${moeda(centavos(n[campo]))}`);
   if (regras) {
-    // Importado calculado com a alíquota da região (decisão do escritório): aparece na base legal usada
-    if (regras.importadoAliquotaRegional?.ativo && notas.some((n) => n.interestadual && n.itens.some((i) => i.memoria.some((m) => m.startsWith("Importado (origem"))))) {
-      addFonte(regras.importadoAliquotaRegional.fonte);
-    }
     if (modo === "simples") {
       for (const f of regras.complementacao.fontes) addFonte(f);
       addLinha({
