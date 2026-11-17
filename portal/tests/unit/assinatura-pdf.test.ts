@@ -61,6 +61,20 @@ function conferir(pdf: Buffer, credencial: Credencial) {
   };
 }
 
+describe("política de assinatura AD-RB (arquivo oficial do ITI)", () => {
+  it("usa o resumo declarado dentro da política, não o hash do arquivo da LPA", async () => {
+    const { readFileSync } = await import("node:fs");
+    // Cópia do http://politicas.icpbrasil.gov.br/PA_PAdES_AD_RB_v1_3.der
+    const pa = readFileSync(new URL("./apoio/PA_PAdES_AD_RB_v1_3.der", import.meta.url));
+    // O arquivo é o oficial: SHA-256 igual ao publicado na LPA_PAdES.der
+    expect(createHash("sha256").update(pa).digest("hex")).toBe("23da544aef71f7a75dc85fa6e17a83875741e4baef41ec178258a5c86ace54dd");
+    // O atributo leva o signPolicyHash (último campo da política: OCTET STRING de 32 bytes)
+    expect(pa.subarray(-34, -32).toString("hex")).toBe("0420");
+    expect(pa.subarray(-32).toString("hex")).toBe(POLITICA_AD_RB.hashSha256);
+    expect(pa.includes(oid(POLITICA_AD_RB.oid))).toBe(true);
+  });
+});
+
 describe("assinatura digital de PDF (PAdES, política AD-RB da ICP-Brasil)", () => {
   const credencial = credencialDeTeste();
   const info = { nome: "ESCRITÓRIO TESTE", motivo: "Recibo de honorários", local: "Porto Nacional/TO", contato: "contato@exemplo.com.br", data: new Date("2026-11-17T20:00:00Z") };
@@ -80,6 +94,7 @@ describe("assinatura digital de PDF (PAdES, política AD-RB da ICP-Brasil)", () 
     expect(r).toEqual({ valida: true, digestConfere: true, temPolitica: true, temCertificadoV2: true, semHorarioNoCms: true });
     const texto = assinado.toString("latin1");
     expect(texto).toContain("/SubFilter /ETSI.CAdES.detached");
+    expect(texto).toContain("/Filter /PBAD_PAdES");
     expect(texto).toContain("/AcroForm << /Fields");
     expect(texto).toContain("/Extensions << /ESIC << /BaseVersion /1.7 /ExtensionLevel 2 >> >>");
     expect(POLITICA_AD_RB.oid).toBe("2.16.76.1.7.1.11.1.3");

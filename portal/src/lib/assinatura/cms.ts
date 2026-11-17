@@ -8,14 +8,16 @@ import { conjunto, contexto, emissorESerie, ia5, inteiro, nulo, octetos, oid, pe
  * assinados content-type, message-digest, signing-certificate-v2 e
  * signature-policy-identifier, com SHA-256 e RSA de 2048 bits ou mais.
  *
- * O hash da política é o publicado na Lista de Políticas de Assinatura do
- * ITI (http://politicas.icpbrasil.gov.br/LPA_PAdES.der) e confere com o
- * SHA-256 do arquivo da política
- * (http://politicas.icpbrasil.gov.br/PA_PAdES_AD_RB_v1_3.der).
+ * No atributo vai o resumo declarado DENTRO da política (campo
+ * signPolicyHash, o último do arquivo PA_PAdES_AD_RB_v1_3.der), que é o que o
+ * Verificador de Conformidade do ITI confere. Não confundir com o hash do
+ * arquivo inteiro publicado na LPA (23da544a…), que só serve para conferir
+ * que o arquivo da política baixado é o oficial; com ele o ITI reprova
+ * ("o resumo criptográfico da política está incorreto").
  */
 export const POLITICA_AD_RB = {
   oid: "2.16.76.1.7.1.11.1.3",
-  hashSha256: "23da544aef71f7a75dc85fa6e17a83875741e4baef41ec178258a5c86ace54dd",
+  hashSha256: "23e4be4b9b362172e4ebb0e72b86a133ece5aad843d8651c6e38a0ba3f08fc60",
   uri: "http://politicas.icpbrasil.gov.br/PA_PAdES_AD_RB_v1_3.der",
 } as const;
 

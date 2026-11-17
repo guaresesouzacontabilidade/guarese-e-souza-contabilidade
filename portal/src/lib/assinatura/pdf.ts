@@ -94,7 +94,8 @@ export function prepararParaAssinatura(original: Buffer, info: { nome: string; m
     {
       n: sigRef,
       corpo:
-        `<<\n/Type /Sig\n/Filter /Adobe.PPKLite\n/SubFilter /ETSI.CAdES.detached\n${MARCA_BYTE_RANGE}\n` +
+        // Filter exigido pela política da ICP-Brasil (o leitor usa o SubFilter para o formato)
+        `<<\n/Type /Sig\n/Filter /PBAD_PAdES\n/SubFilter /ETSI.CAdES.detached\n${MARCA_BYTE_RANGE}\n` +
         `/Contents <${"0".repeat(ESPACO_ASSINATURA * 2)}>\n` +
         `/Name ${textoPdf(info.nome)}\n/Reason ${textoPdf(info.motivo)}\n/Location ${textoPdf(info.local)}\n/ContactInfo ${textoPdf(info.contato)}\n` +
         `/M (${dataPdf(info.data)})\n>>`,
