@@ -642,6 +642,17 @@ Na empresa → **Declarações → Nova declaração de faturamento**:
 
 A **logo da empresa** se envia em **Empresas → (a empresa) → Dados cadastrais → Logo da empresa** (PNG ou JPG, até 2 MB; prefira fundo transparente). Ela fica guardada de forma privada: só quem acessa a empresa a vê.
 
+### Recibos de honorários (equipe)
+Menu **Financeiro → Recibos de honorários → Novo recibo**:
+1. **Quem pagou?** Uma **empresa da carteira** (o nome e o CNPJ vêm do cadastro) ou **outra pessoa ou empresa** (digite o nome e, se quiser, o CPF ou CNPJ).
+2. **Valor recebido**: para empresa da carteira, já vem o valor do último recibo dela — é só conferir. Escolha o **mês dos honorários**, a **data do recibo** (não pode ser no futuro) e, se quiser, a **forma de pagamento** e o **nº da nota fiscal (NFS-e)**, quando houver nota do mesmo pagamento. Em **Mais opções** dá para trocar o texto do "referente a" (ex.: serviço de abertura da empresa) e pôr uma observação.
+3. **Publicar para o cliente** (vem marcado): o PDF entra nos documentos da empresa, em **Recibos**, e o cliente vê em **Meus documentos → Do escritório para a empresa**. Se desmarcar, dá para publicar depois pelo botão **Publicar para o cliente** na lista.
+4. **Emitir recibo**: sai o PDF no modelo do escritório — faixas e logo no topo, contador e CRC, dados do escritório, **RECIBO Nº 007/2026**, o valor, o quadro recebedor/pagador/referência, o texto com o valor por extenso, local e data e a assinatura. A numeração é **por ano** e não se repete.
+- Os dados do escritório e do contador vêm de **Configurações → Dados do escritório** e ficam gravados no recibo: mudar o cadastro depois não altera os recibos já emitidos.
+- Errou? **Cancelar** (com motivo): o recibo continua na lista, o PDF passa a sair com a marca **CANCELADO**, o número não volta e o PDF publicado sai dos documentos do cliente. Emita outro com o valor certo.
+- Só a equipe do escritório vê a lista e baixa os PDFs; o cliente vê apenas os recibos publicados para a empresa dele. Emissão, cancelamento e cada download ficam na auditoria.
+- O recibo comprova que o cliente pagou. Ele **não substitui a nota fiscal de serviço (NFS-e)** que o escritório, como empresa, deve emitir pelas regras da prefeitura.
+
 ### Ferramentas de cada empresa (personalizar o portal do cliente)
 Em **Empresas → (empresa) → Ferramentas**, marque só o que aquela empresa usa: emitir nota de serviço, nota de produto (com as ordens de carregamento e a NF-e da venda da loja), CT-e, notas automáticas, agenda de pagamentos, vencimentos, contas e fluxo de caixa, maquininhas, conciliação, fechamento, cálculos e previsão, auditor fiscal, relatórios, declarações e solicitações. Clique em **Salvar ferramentas**.
 - A ferramenta desmarcada **some do menu, do painel e dos atalhos** da empresa — para o cliente e para a equipe. Quem abrir o endereço da tela vê o aviso de ferramenta desligada (a equipe, com o atalho para religar).

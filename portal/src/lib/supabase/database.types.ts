@@ -1784,6 +1784,43 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"recibos_honorarios": {
+                  Row: {
+                    "ano": number,"cancelado_em": string | null,"cancelado_por": string | null,"cidade": string,"competencia": string | null,"criado_em": string,"criado_por": string | null,"data_recibo": string,"descricao": string | null,"documento_id": string | null,"emitente": NonNullable<Json>,"empresa_id": string | null,"forma_pagamento": string | null,"id": string,"motivo_cancelamento": string | null,"nfse_numero": string | null,"numero": number,"observacao": string | null,"pagador_documento": string | null,"pagador_nome": string,"referencia": string,"situacao": string,"uf": string | null,"valor": number
+                  }
+                  Insert: {
+                    "ano": number,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"cidade": string,"competencia"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_recibo": string,"descricao"?: string | null,"documento_id"?: string | null,"emitente": NonNullable<Json>,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"nfse_numero"?: string | null,"numero": number,"observacao"?: string | null,"pagador_documento"?: string | null,"pagador_nome": string,"referencia"?: string,"situacao"?: string,"uf"?: string | null,"valor": number
+                  }
+                  Update: {
+                    "ano"?: number,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"cidade"?: string,"competencia"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_recibo"?: string,"descricao"?: string | null,"documento_id"?: string | null,"emitente"?: NonNullable<Json>,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"nfse_numero"?: string | null,"numero"?: number,"observacao"?: string | null,"pagador_documento"?: string | null,"pagador_nome"?: string,"referencia"?: string,"situacao"?: string,"uf"?: string | null,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recibos_honorarios_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recibos_honorarios_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recibos_honorarios_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recibos_honorarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"escritorio": {
                   Row: {
                     "avisos_whatsapp_ativo": boolean,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnpj": string,"complemento": string | null,"contador_crc": string | null,"contador_nome": string | null,"descricao_sistema": string,"email": string | null,"exigir_2fa_clientes": boolean,"exigir_2fa_equipe": boolean,"id": number,"instagram": string | null,"lembretes_dias": (number)[],"lembretes_email_ativo": boolean,"lembretes_whatsapp_ativo": boolean,"logo_atualizado_em": string | null,"logo_path": string | null,"logradouro": string | null,"mensagem_login": string,"nome_fantasia": string,"nome_sistema": string,"numero": string | null,"razao_social": string,"retencao_padrao_anos": number,"site": string | null,"telefone": string | null,"uf": string | null,"updated_at": string,"updated_by": string | null,"upload_tamanho_maximo_mb": number,"whatsapp": string | null,"whatsapp_phone_number_id": string | null,"whatsapp_template_aviso": string | null,"whatsapp_template_idioma": string,"whatsapp_template_lembrete": string | null,"zip_max_arquivos": number,"zip_max_tamanho_mb": number
@@ -5786,6 +5823,17 @@ isOneToOne: false
                            },
 "escritorio_ia_salvar_chave":
 { Args: { "p_chave_cifrada": string,"p_chave_final": string }; Returns: undefined
+                           },
+"recibo_cancelar":
+{ Args: { "p_motivo": string,"p_recibo_id": string }; Returns: string
+                           },
+"recibo_emitir":
+{ Args: { "p_dados": Json }; Returns: {
+              "ano": number,"id": string,"numero": number
+            }[]
+                           },
+"recibo_vincular_documento":
+{ Args: { "p_documento_id": string,"p_recibo_id": string }; Returns: undefined
                            },
 "dados_dare_to":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json

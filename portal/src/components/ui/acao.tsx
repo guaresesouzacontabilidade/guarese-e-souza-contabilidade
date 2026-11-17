@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useActionState, useEffect, useRef, useTransition } from "react";
+import { startTransition, useActionState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -19,6 +19,12 @@ interface FormularioAcaoProps {
   aoSucesso?: (estado: ResultadoAcao) => void;
   resetarAoSucesso?: boolean;
   atualizarAoSucesso?: boolean;
+  /**
+   * Mantém o que foi digitado quando o servidor recusa (erro de validação).
+   * Sem isso, o React limpa os campos depois de cada envio, mesmo com erro.
+   * Com sucesso, o formulário é limpo como antes.
+   */
+  manterAoErrar?: boolean;
   id?: string;
 }
 
@@ -30,6 +36,7 @@ export function FormularioAcao({
   aoSucesso,
   resetarAoSucesso = false,
   atualizarAoSucesso = true,
+  manterAoErrar = false,
   id,
 }: FormularioAcaoProps) {
   const [estado, despachar, pendente] = useActionState(async (anterior: ResultadoAcao, fd: FormData) => {
@@ -47,14 +54,30 @@ export function FormularioAcao({
     if (estado === ultimo.current) return;
     ultimo.current = estado;
     if (estado.ok) {
-      if (resetarAoSucesso) ref.current?.reset();
+      if (resetarAoSucesso || manterAoErrar) ref.current?.reset();
       aoSucesso?.(estado);
       if (atualizarAoSucesso) router.refresh();
     }
-  }, [estado, aoSucesso, resetarAoSucesso, atualizarAoSucesso, router]);
+  }, [estado, aoSucesso, resetarAoSucesso, manterAoErrar, atualizarAoSucesso, router]);
 
   return (
-    <form ref={ref} action={despachar} className={className} id={id} noValidate>
+    <form
+      ref={ref}
+      action={manterAoErrar ? undefined : despachar}
+      onSubmit={
+        manterAoErrar
+          ? (e) => {
+              // Envio sem o "action" do formulário: o React não limpa os campos sozinho
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
+              startTransition(() => despachar(fd));
+            }
+          : undefined
+      }
+      className={className}
+      id={id}
+      noValidate
+    >
       {estado.mensagem && !estado.ok ? <Alerta tom="perigo" className="mb-4">{estado.mensagem}</Alerta> : null}
       {typeof children === "function" ? children({ estado, pendente }) : children}
     </form>

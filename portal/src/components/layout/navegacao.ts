@@ -28,6 +28,7 @@ import {
   FileSignature,
   Landmark,
   ReceiptText,
+  Receipt,
   Store,
   ShoppingCart,
   Boxes,
@@ -149,6 +150,7 @@ export function gruposEscritorio(admin: boolean): GrupoMenu[] {
       icone: Wallet,
       itens: [
         { rotulo: "Financeiro da carteira", href: "/escritorio/financeiro", icone: Wallet },
+        { rotulo: "Recibos de honorários", href: "/escritorio/recibos", icone: Receipt },
         { rotulo: "Conciliação", href: "/escritorio/conciliacao", icone: GitCompareArrows },
         { rotulo: "Relatórios", href: "/escritorio/relatorios", icone: FileBarChart },
       ],
