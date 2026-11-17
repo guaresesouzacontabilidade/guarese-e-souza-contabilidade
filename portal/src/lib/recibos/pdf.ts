@@ -51,6 +51,8 @@ export interface ReciboPdf {
   logo: { dados: string } | null;
   situacao: "emitido" | "cancelado";
   motivoCancelamento?: string | null;
+  /** Assinatura digital (ICP-Brasil) que vai ser aplicada ao arquivo: o texto sai abaixo da assinatura. */
+  assinatura?: { titular: string; documento: string; data: Date } | null;
 }
 
 const ESCURO = "#3b3330";
@@ -233,6 +235,19 @@ export async function gerarPdfRecibo(r: ReciboPdf): Promise<Buffer> {
           },
           { text: e.razao_social.toUpperCase(), bold: true, margin: [0, 4, 0, 0] },
           { text: `CNPJ: ${formatarDocumento(e.cnpj)}`, fontSize: 9.5 },
+          ...(r.assinatura && !cancelado
+            ? [
+                {
+                  text: [
+                    { text: "Assinado digitalmente", bold: true },
+                    ` por ${r.assinatura.titular} (${r.assinatura.documento.length === 11 ? "CPF" : "CNPJ"} ${formatarDocumento(r.assinatura.documento)}) em ${dataHoraBrasilia(r.assinatura.data)}, com certificado ICP-Brasil. Confira em validar.iti.gov.br.`,
+                  ],
+                  fontSize: 7.5,
+                  color: CINZA,
+                  margin: [40, 8, 40, 0] as [number, number, number, number],
+                },
+              ]
+            : []),
         ],
       },
       ...(r.observacao ? [{ text: r.observacao, fontSize: 8.5, color: CINZA, alignment: "center", margin: [0, 26, 0, 0] } as Content] : []),
@@ -249,6 +264,13 @@ export async function gerarPdfRecibo(r: ReciboPdf): Promise<Buffer> {
     ],
   };
   return pm.createPdf(doc).getBuffer();
+}
+
+/** "17/11/2026 às 17:00" no horário de Brasília. */
+function dataHoraBrasilia(d: Date) {
+  const f = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).formatToParts(d);
+  const v = (t: string) => f.find((p) => p.type === t)?.value ?? "";
+  return `${v("day")}/${v("month")}/${v("year")} às ${v("hour")}:${v("minute")}`;
 }
 
 const ESTADOS: Record<string, string> = {

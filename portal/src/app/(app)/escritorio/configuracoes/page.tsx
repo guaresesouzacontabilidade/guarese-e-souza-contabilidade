@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, Bot, Clock, CloudDownload, FileSearch, HardDrive, Mail, MessageCircle, ShieldAlert } from "lucide-react";
+import { BellRing, Bot, Clock, CloudDownload, FileSearch, FileSignature, HardDrive, Mail, MessageCircle, ShieldAlert } from "lucide-react";
 import { exigirAdmin } from "@/lib/auth/sessao";
 import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
 import { envServidor } from "@/lib/env-servidor";
@@ -23,6 +23,7 @@ import {
 import { formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { ConfigurarIa } from "@/components/escalas/ia-config";
 import { MODELOS_IA } from "@/lib/escalas/ia";
+import { CertificadoEscritorio } from "@/components/recibos/certificado-escritorio";
 
 export const metadata: Metadata = { title: "Configurações" };
 
@@ -192,14 +193,16 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
     const clamav = envServidor.clamav();
     const cron = Boolean(envServidor.cronSecret());
     const seteDias = diasAtras(7);
-    const [{ data: rotinas }, { count: pendentes }, { count: falhas }, { count: comCertificado }, { data: cfgIa }, { count: usosIa }] = await Promise.all([
+    const [{ data: rotinas }, { count: pendentes }, { count: falhas }, { count: comCertificado }, { data: cfgIa }, { count: usosIa }, { data: certEsc }] = await Promise.all([
       s.supabase.from("rotinas_status").select("rotina, ultima_execucao, ok, erro"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "pendente"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "falhou").gte("created_at", seteDias),
       s.supabase.from("notas_automaticas").select("empresa_id", { count: "exact", head: true }).gt("certificado_valido_ate", new Date().toISOString()),
       s.supabase.from("escritorio_ia").select("ativa, chave_final, modelo, limite_diario, testada_em, teste_ok, teste_erro").eq("id", 1).maybeSingle(),
       s.supabase.from("escala_ia_usos").select("id", { count: "exact", head: true }).eq("situacao", "ok").gte("created_at", diasAtras(30)),
+      s.supabase.from("escritorio_certificado").select("titular, documento, emissor, valido_ate, cadastrado_em").maybeSingle(),
     ]);
+    const certVencido = certEsc ? new Date(certEsc.valido_ate) <= new Date() : false;
     const iaLigada = Boolean(cfgIa?.ativa && cfgIa.chave_final);
     const chaveCertificados = Boolean(envServidor.certificadosChave());
     const semRede = envServidor.notasSemRede();
@@ -216,8 +219,8 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
     conteudo = (
       <div className="space-y-5">
         <Alerta tom="info">
-          Chaves e senhas das integrações ficam guardadas na hospedagem (variáveis de ambiente) ou, no caso da inteligência artificial, cifradas no banco com a chave do
-          servidor — e nunca aparecem nesta tela nem no navegador. Quando uma integração está desconectada, o portal não finge que enviou: o envio fica registrado como “não
+          Chaves e senhas das integrações ficam guardadas na hospedagem (variáveis de ambiente) ou, no caso da inteligência artificial e do certificado do escritório,
+          cifradas no banco com a chave do servidor — e nunca aparecem nesta tela nem no navegador. Quando uma integração está desconectada, o portal não finge que enviou: o envio fica registrado como “não
           configurado”.
         </Alerta>
         <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
@@ -329,6 +332,36 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
                 </Link>
               </p>
             )}
+          </Integracao>
+
+          <Integracao
+            icone={FileSignature}
+            titulo="Assinatura digital dos recibos (certificado do escritório)"
+            situacao={
+              <Situacao
+                ok={!chaveCertificados ? false : certEsc ? !certVencido : false}
+                texto={!chaveCertificados ? "Desconectada" : certEsc ? (certVencido ? "Certificado vencido" : "Conectada") : "Desconectada"}
+              />
+            }
+          >
+            <p>
+              Cada recibo de honorários sai assinado digitalmente no próprio servidor do portal, no padrão da ICP-Brasil para PDF (PAdES, política AD-RB). A assinatura pode ser
+              conferida por qualquer pessoa em validar.iti.gov.br. Use o certificado <span className="font-medium text-foreground">A1</span> (arquivo .pfx) do escritório
+              (e-CNPJ) ou do contador (e-CPF); o A3, em cartão ou token, não pode ser usado por um servidor. A senha não é guardada; a chave fica cifrada e nunca vai ao
+              navegador.
+            </p>
+            {!chaveCertificados ? (
+              <p className="mt-2">Desconectada até a ativação: falta a chave de criptografia dos certificados (variável CERTIFICADOS_CHAVE na hospedagem).</p>
+            ) : certEsc ? (
+              <p className="mt-2">
+                Assina: <span className="font-medium text-foreground">{certEsc.titular}</span> · emitido por {certEsc.emissor ?? "—"} · válido até{" "}
+                {new Date(certEsc.valido_ate).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                {certVencido ? " (vencido: os recibos saem sem assinatura até a troca)" : ""}.
+              </p>
+            ) : (
+              <p className="mt-2">Desconectada até o cadastro do certificado: enquanto isso, os recibos saem sem assinatura digital.</p>
+            )}
+            {chaveCertificados ? <CertificadoEscritorio cadastrado={Boolean(certEsc)} /> : null}
           </Integracao>
 
           <Integracao icone={FileSearch} titulo="Leitura de documentos (OCR)" situacao={<Situacao ok={envServidor.ocrAtivo()} texto={envServidor.ocrAtivo() ? "Ativa" : "Desligada"} />}>

@@ -92,6 +92,18 @@ describe("recibo de honorários em PDF", () => {
     expect(texto).toContain("Recibo cancelado: Valor lançado errado.");
   });
 
+  it("mostra quem assinou digitalmente (e não mostra no cancelado)", async () => {
+    const assinatura = { titular: "ESCRITORIO EXEMPLO LTDA", documento: "62935399000150", data: new Date("2026-11-17T20:00:00Z") };
+    const pdf = await gerarPdfRecibo({ ...RECIBO, assinatura });
+    if (process.env.RECIBO_AMOSTRA) writeFileSync(process.env.RECIBO_AMOSTRA.replace(/\.pdf$/, "-assinado.pdf"), pdf);
+    const { texto, paginas } = await textoDoPdf(pdf);
+    expect(paginas).toBe(1);
+    expect(texto).toContain("Assinado digitalmente por ESCRITORIO EXEMPLO LTDA (CNPJ 62.935.399/0001-50) em 17/11/2026 às 17:00");
+    expect(texto).toContain("validar.iti.gov.br");
+    const cancelado = await textoDoPdf(await gerarPdfRecibo({ ...RECIBO, assinatura, situacao: "cancelado" }));
+    expect(cancelado.texto).not.toContain("Assinado digitalmente");
+  });
+
   it("usa o texto próprio do 'referente a' quando informado", async () => {
     const { texto } = await textoDoPdf(
       await gerarPdfRecibo({ ...RECIBO, competencia: null, referencia: "Abertura de empresa", descricao: "serviço de abertura da empresa." }),

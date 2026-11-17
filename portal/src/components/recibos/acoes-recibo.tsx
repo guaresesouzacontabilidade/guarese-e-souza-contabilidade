@@ -1,18 +1,27 @@
 "use client";
 
 import * as React from "react";
-import { Ban, Send } from "lucide-react";
+import { Ban, Send, ShieldCheck } from "lucide-react";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Campo, Textarea } from "@/components/ui/form";
-import { cancelarRecibo, publicarRecibo } from "@/lib/recibos/acoes";
+import { assinarRecibo, cancelarRecibo, publicarRecibo } from "@/lib/recibos/acoes";
 
 /** Publica depois, nos documentos da empresa (Recibos). */
 export function PublicarRecibo({ reciboId }: { reciboId: string }) {
   return (
     <BotaoAcao variante="contorno" tamanho="sm" acao={publicarRecibo.bind(null, reciboId)}>
       <Send /> Publicar para o cliente
+    </BotaoAcao>
+  );
+}
+
+/** Assina digitalmente um recibo emitido sem assinatura (ex.: antes do certificado). */
+export function AssinarRecibo({ reciboId }: { reciboId: string }) {
+  return (
+    <BotaoAcao variante="contorno" tamanho="sm" acao={assinarRecibo.bind(null, reciboId)}>
+      <ShieldCheck /> Assinar
     </BotaoAcao>
   );
 }

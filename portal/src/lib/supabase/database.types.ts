@@ -1786,13 +1786,13 @@ isOneToOne: true
                   ]
                 },"recibos_honorarios": {
                   Row: {
-                    "ano": number,"cancelado_em": string | null,"cancelado_por": string | null,"cidade": string,"competencia": string | null,"criado_em": string,"criado_por": string | null,"data_recibo": string,"descricao": string | null,"documento_id": string | null,"emitente": NonNullable<Json>,"empresa_id": string | null,"forma_pagamento": string | null,"id": string,"motivo_cancelamento": string | null,"nfse_numero": string | null,"numero": number,"observacao": string | null,"pagador_documento": string | null,"pagador_nome": string,"referencia": string,"situacao": string,"uf": string | null,"valor": number
+                    "ano": number,"arquivo_path": string | null,"assinado_em": string | null,"assinatura_documento": string | null,"assinatura_titular": string | null,"cancelado_em": string | null,"cancelado_por": string | null,"cidade": string,"competencia": string | null,"criado_em": string,"criado_por": string | null,"data_recibo": string,"descricao": string | null,"documento_id": string | null,"emitente": NonNullable<Json>,"empresa_id": string | null,"forma_pagamento": string | null,"id": string,"motivo_cancelamento": string | null,"nfse_numero": string | null,"numero": number,"observacao": string | null,"pagador_documento": string | null,"pagador_nome": string,"referencia": string,"situacao": string,"uf": string | null,"valor": number
                   }
                   Insert: {
-                    "ano": number,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"cidade": string,"competencia"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_recibo": string,"descricao"?: string | null,"documento_id"?: string | null,"emitente": NonNullable<Json>,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"nfse_numero"?: string | null,"numero": number,"observacao"?: string | null,"pagador_documento"?: string | null,"pagador_nome": string,"referencia"?: string,"situacao"?: string,"uf"?: string | null,"valor": number
+                    "ano": number,"arquivo_path"?: string | null,"assinado_em"?: string | null,"assinatura_documento"?: string | null,"assinatura_titular"?: string | null,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"cidade": string,"competencia"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_recibo": string,"descricao"?: string | null,"documento_id"?: string | null,"emitente": NonNullable<Json>,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"nfse_numero"?: string | null,"numero": number,"observacao"?: string | null,"pagador_documento"?: string | null,"pagador_nome": string,"referencia"?: string,"situacao"?: string,"uf"?: string | null,"valor": number
                   }
                   Update: {
-                    "ano"?: number,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"cidade"?: string,"competencia"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_recibo"?: string,"descricao"?: string | null,"documento_id"?: string | null,"emitente"?: NonNullable<Json>,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"nfse_numero"?: string | null,"numero"?: number,"observacao"?: string | null,"pagador_documento"?: string | null,"pagador_nome"?: string,"referencia"?: string,"situacao"?: string,"uf"?: string | null,"valor"?: number
+                    "ano"?: number,"arquivo_path"?: string | null,"assinado_em"?: string | null,"assinatura_documento"?: string | null,"assinatura_titular"?: string | null,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"cidade"?: string,"competencia"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_recibo"?: string,"descricao"?: string | null,"documento_id"?: string | null,"emitente"?: NonNullable<Json>,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"nfse_numero"?: string | null,"numero"?: number,"observacao"?: string | null,"pagador_documento"?: string | null,"pagador_nome"?: string,"referencia"?: string,"situacao"?: string,"uf"?: string | null,"valor"?: number
                   }
                   Relationships: [
                     {
@@ -1833,6 +1833,44 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"escritorio_certificado": {
+                  Row: {
+                    "cadastrado_em": string,"cadastrado_por": string | null,"documento": string,"emissor": string | null,"id": number,"impressao_digital": string,"numero_serie": string | null,"titular": string,"valido_ate": string,"valido_de": string
+                  }
+                  Insert: {
+                    "cadastrado_em"?: string,"cadastrado_por"?: string | null,"documento": string,"emissor"?: string | null,"id"?: number,"impressao_digital": string,"numero_serie"?: string | null,"titular": string,"valido_ate": string,"valido_de": string
+                  }
+                  Update: {
+                    "cadastrado_em"?: string,"cadastrado_por"?: string | null,"documento"?: string,"emissor"?: string | null,"id"?: number,"impressao_digital"?: string,"numero_serie"?: string | null,"titular"?: string,"valido_ate"?: string,"valido_de"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_certificado_cadastrado_por_fkey"
+      columns: ["cadastrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio_certificado_segredo": {
+                  Row: {
+                    "conteudo_cifrado": string,"created_at": string,"id": number
+                  }
+                  Insert: {
+                    "conteudo_cifrado": string,"created_at"?: string,"id"?: number
+                  }
+                  Update: {
+                    "conteudo_cifrado"?: string,"created_at"?: string,"id"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_certificado_segredo_id_fkey"
+      columns: ["id"]
+isOneToOne: true
+      referencedRelation: "escritorio_certificado"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"escritorio_contador": {
                   Row: {
@@ -5834,6 +5872,15 @@ isOneToOne: false
                            },
 "recibo_vincular_documento":
 { Args: { "p_documento_id": string,"p_recibo_id": string }; Returns: undefined
+                           },
+"escritorio_certificado_definir":
+{ Args: { "p_conteudo_cifrado": string,"p_documento": string,"p_emissor": string,"p_impressao_digital": string,"p_numero_serie": string,"p_titular": string,"p_valido_ate": string,"p_valido_de": string }; Returns: undefined
+                           },
+"escritorio_certificado_remover":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"recibo_registrar_assinatura":
+{ Args: { "p_documento": string,"p_path": string,"p_recibo_id": string,"p_titular": string }; Returns: undefined
                            },
 "dados_dare_to":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json

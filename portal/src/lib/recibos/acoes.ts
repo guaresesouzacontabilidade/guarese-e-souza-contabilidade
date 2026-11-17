@@ -10,21 +10,25 @@ import { lerValorBR } from "@/lib/dinheiro";
 import { validarCnpj, validarCpf } from "@/lib/formatos";
 import { publicarPdfNosDocumentos } from "@/lib/guias/publicar-pdf";
 import type { Database } from "@/lib/supabase/database.types";
+import { arquivoAssinado, certificadoDoEscritorio, gerarArquivoRecibo } from "./arquivo";
 import { carregarRecibo } from "./carregar";
 import { FORMAS_PAGAMENTO, numeroRecibo } from "./comum";
-import { gerarPdfRecibo, nomeArquivoRecibo } from "./pdf";
+import { nomeArquivoRecibo } from "./pdf";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ROTA = "/escritorio/recibos";
 const texto = (fd: FormData, campo: string, max = 500) => String(fd.get(campo) ?? "").trim().slice(0, max);
 
-/** Gera o PDF do recibo e publica em "Recibos", nos documentos da empresa. */
-async function publicarNosDocumentos(supabase: SupabaseClient<Database>, reciboId: string): Promise<{ erro: string } | { ok: true }> {
+/**
+ * Publica o PDF do recibo em "Recibos", nos documentos da empresa: o arquivo
+ * assinado, quando existe (ou o que acabou de ser gerado).
+ */
+async function publicarNosDocumentos(supabase: SupabaseClient<Database>, reciboId: string, pronto?: Buffer): Promise<{ erro: string } | { ok: true }> {
   const r = await carregarRecibo(supabase, reciboId);
   if (!r) return { erro: "Recibo não encontrado." };
   if (!r.linha.empresa_id) return { erro: "Este recibo é de um pagador avulso (sem empresa no portal)." };
   if (r.linha.situacao !== "emitido") return { erro: "Este recibo foi cancelado." };
-  const pdf = await gerarPdfRecibo(r.pdf);
+  const pdf = pronto ?? (await arquivoAssinado(r.linha)) ?? (await gerarArquivoRecibo(supabase, r.linha)).pdf;
   const competencia = r.linha.competencia ?? competenciaDe(r.linha.data_recibo);
   const pub = await publicarPdfNosDocumentos(supabase, {
     empresaId: r.linha.empresa_id,
@@ -89,13 +93,17 @@ export async function emitirRecibo(_anterior: ResultadoAcao, fd: FormData): Prom
   const recibo = emitido?.[0];
   if (error || !recibo) return falha(mensagemErro(error));
 
-  let aviso = "";
+  // Assina (com o certificado do escritório cadastrado) e guarda o arquivo
+  const avisos: string[] = [];
+  const carregado = await carregarRecibo(s.supabase, recibo.id);
+  const arquivo = carregado ? await gerarArquivoRecibo(s.supabase, carregado.linha) : null;
+  if (arquivo?.erro) avisos.push("assinatura");
   if (modo === "carteira" && fd.get("publicar") === "on") {
-    const pub = await publicarNosDocumentos(s.supabase, recibo.id);
-    if ("erro" in pub) aviso = "&aviso=publicar";
+    const pub = await publicarNosDocumentos(s.supabase, recibo.id, arquivo?.pdf);
+    if ("erro" in pub) avisos.push("publicar");
   }
   revalidatePath(ROTA);
-  redirect(`${ROTA}?emitido=${recibo.id}${aviso}`);
+  redirect(`${ROTA}?emitido=${recibo.id}${avisos.map((a) => `&aviso=${a}`).join("")}`);
 }
 
 /** Publica depois (para o cliente ver em Documentos › Recibos). */
@@ -106,6 +114,30 @@ export async function publicarRecibo(reciboId: string): Promise<ResultadoAcao> {
   if ("erro" in pub) return falha(`Não foi possível publicar: ${pub.erro}`);
   revalidatePath(ROTA);
   return sucesso("Recibo publicado nos documentos da empresa (Recibos).");
+}
+
+/**
+ * Assina um recibo emitido antes do certificado (ou quando a assinatura
+ * falhou). Se ele já estava publicado, a versão assinada substitui a outra
+ * nos documentos do cliente.
+ */
+export async function assinarRecibo(reciboId: string): Promise<ResultadoAcao> {
+  if (!UUID.test(reciboId)) return falha("Recibo inválido.");
+  const s = await exigirEquipe();
+  if (!(await certificadoDoEscritorio(s.supabase))) return falha("Cadastre antes o certificado do escritório (Configurações › Integrações).");
+  const r = await carregarRecibo(s.supabase, reciboId);
+  if (!r) return falha("Recibo não encontrado.");
+  if (r.linha.situacao !== "emitido") return falha("Este recibo foi cancelado.");
+  const arquivo = await gerarArquivoRecibo(s.supabase, r.linha);
+  if (!arquivo.assinado) return falha(`Não foi possível assinar: ${arquivo.erro ?? "certificado indisponível"}.`);
+  let aviso = "";
+  if (r.linha.documento_id) {
+    const { error } = await s.supabase.rpc("excluir_documento", { p_documento_id: r.linha.documento_id, p_motivo: "Trocado pela versão assinada digitalmente" });
+    const pub = error ? { erro: mensagemErro(error) } : await publicarNosDocumentos(s.supabase, reciboId, arquivo.pdf);
+    if ("erro" in pub) aviso = ` Atenção: a versão assinada não substituiu a publicada (${pub.erro}).`;
+  }
+  revalidatePath(ROTA);
+  return sucesso(`Recibo nº ${numeroRecibo(r.linha)} assinado digitalmente.${aviso}`);
 }
 
 /** Cancelamento (equipe), com motivo: o número não volta e o PDF publicado sai dos documentos do cliente. */
