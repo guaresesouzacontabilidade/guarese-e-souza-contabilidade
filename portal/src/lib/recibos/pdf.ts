@@ -133,6 +133,45 @@ export async function gerarPdfRecibo(r: ReciboPdf): Promise<Buffer> {
     e.contador_crc,
   ].filter((t): t is string => Boolean(t));
 
+  // Carimbo da assinatura digital (só no recibo assinado e não cancelado)
+  const carimbo: Content | null =
+    r.assinatura && !cancelado
+      ? {
+          columns: [
+            { width: "*", text: "" },
+            {
+              width: 250,
+              columns: [
+                {
+                  width: 30,
+                  canvas: [
+                    { type: "ellipse", x: 13, y: 15, r1: 12, r2: 12, lineWidth: 1.2, lineColor: ESCURO },
+                    { type: "polyline", points: [{ x: 7, y: 15.5 }, { x: 11.5, y: 20 }, { x: 19.5, y: 10.5 }], lineWidth: 1.8, lineColor: ESCURO, lineCap: "round", lineJoin: "round" },
+                  ],
+                },
+                {
+                  width: "*",
+                  alignment: "left",
+                  lineHeight: 1.15,
+                  stack: [
+                    { text: "Documento assinado digitalmente", bold: true, fontSize: 8.5 },
+                    { text: r.assinatura.titular.toUpperCase(), fontSize: 7.5 },
+                    {
+                      text: `${r.assinatura.documento.length === 11 ? "CPF" : "CNPJ"} ${formatarDocumento(r.assinatura.documento)} · ${dataHoraBrasilia(r.assinatura.data)}`,
+                      fontSize: 7.5,
+                      color: CINZA,
+                    },
+                    { text: "Certificado ICP-Brasil · verifique em validar.iti.gov.br", fontSize: 7.5, color: CINZA },
+                  ],
+                },
+              ],
+            },
+            { width: "*", text: "" },
+          ],
+          margin: [0, 0, 0, 6],
+        }
+      : null;
+
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
     pageMargins: [margem, 36, margem, 70],
@@ -224,8 +263,10 @@ export async function gerarPdfRecibo(r: ReciboPdf): Promise<Buffer> {
       {
         unbreakable: true,
         alignment: "center",
-        margin: [0, 56, 0, 0],
+        margin: [0, carimbo ? 22 : 56, 0, 0],
         stack: [
+          // Carimbo da assinatura digital em cima da linha, no lugar da assinatura à mão
+          ...(carimbo ? [carimbo] : []),
           {
             columns: [
               { width: "*", text: "" },
@@ -235,19 +276,6 @@ export async function gerarPdfRecibo(r: ReciboPdf): Promise<Buffer> {
           },
           { text: e.razao_social.toUpperCase(), bold: true, margin: [0, 4, 0, 0] },
           { text: `CNPJ: ${formatarDocumento(e.cnpj)}`, fontSize: 9.5 },
-          ...(r.assinatura && !cancelado
-            ? [
-                {
-                  text: [
-                    { text: "Assinado digitalmente", bold: true },
-                    ` por ${r.assinatura.titular} (${r.assinatura.documento.length === 11 ? "CPF" : "CNPJ"} ${formatarDocumento(r.assinatura.documento)}) em ${dataHoraBrasilia(r.assinatura.data)}, com certificado ICP-Brasil. Confira em validar.iti.gov.br.`,
-                  ],
-                  fontSize: 7.5,
-                  color: CINZA,
-                  margin: [40, 8, 40, 0] as [number, number, number, number],
-                },
-              ]
-            : []),
         ],
       },
       ...(r.observacao ? [{ text: r.observacao, fontSize: 8.5, color: CINZA, alignment: "center", margin: [0, 26, 0, 0] } as Content] : []),

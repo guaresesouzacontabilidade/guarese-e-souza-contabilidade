@@ -57,7 +57,10 @@ const referencia = (texto: string, chave: string) => {
 
 /** Acrescenta o campo de assinatura com o espaço reservado (atualização incremental). */
 export function prepararParaAssinatura(original: Buffer, info: { nome: string; motivo: string; local: string; contato: string; data: Date }): Buffer {
-  const pdf = original.toString("latin1");
+  // A assinatura ETSI.CAdES.detached (PAdES) é do PDF 1.7: o cabeçalho passa a
+  // dizer 1.7 (mesmo tamanho, antes de assinar) e o catálogo declara a extensão ESIC.
+  let pdf = original.toString("latin1");
+  if (/^%PDF-1\.[0-6]/.test(pdf)) pdf = `%PDF-1.7${pdf.slice(8)}`;
   const posStartxref = pdf.lastIndexOf("startxref");
   if (posStartxref < 0) throw new ErroAssinatura("PDF sem startxref.");
   const xrefAnterior = Number(/startxref\s+(\d+)/.exec(pdf.slice(posStartxref))?.[1]);
@@ -101,7 +104,13 @@ export function prepararParaAssinatura(original: Buffer, info: { nome: string; m
       corpo: `<<\n/Type /Annot\n/Subtype /Widget\n/FT /Sig\n/T ${textoPdf("Assinatura do escritório")}\n/V ${sigRef} 0 R\n/F 132\n/Rect [0 0 0 0]\n/P ${paginaRef} 0 R\n>>`,
     },
     { n: paginaRef, corpo: `<<${paginaNova}\n>>` },
-    { n: raiz, corpo: `<<${catalogo.texto}\n/AcroForm << /Fields [${campoRef} 0 R] /SigFlags 3 >>\n>>` },
+    {
+      n: raiz,
+      corpo:
+        `<<${catalogo.texto.replace(/\/Version\s*\/[0-9.]+/, "")}\n/Version /1.7\n` +
+        (/\/Extensions/.test(catalogo.texto) ? "" : "/Extensions << /ESIC << /BaseVersion /1.7 /ExtensionLevel 2 >> >>\n") +
+        `/AcroForm << /Fields [${campoRef} 0 R] /SigFlags 3 >>\n>>`,
+    },
   ];
 
   let saida = pdf.endsWith("\n") ? pdf : `${pdf}\n`;

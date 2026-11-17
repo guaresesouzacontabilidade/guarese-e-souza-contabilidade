@@ -98,10 +98,12 @@ describe("recibo de honorários em PDF", () => {
     if (process.env.RECIBO_AMOSTRA) writeFileSync(process.env.RECIBO_AMOSTRA.replace(/\.pdf$/, "-assinado.pdf"), pdf);
     const { texto, paginas } = await textoDoPdf(pdf);
     expect(paginas).toBe(1);
-    expect(texto).toContain("Assinado digitalmente por ESCRITORIO EXEMPLO LTDA (CNPJ 62.935.399/0001-50) em 17/11/2026 às 17:00");
-    expect(texto).toContain("validar.iti.gov.br");
+    expect(texto).toContain("Documento assinado digitalmente ESCRITORIO EXEMPLO LTDA CNPJ 62.935.399/0001-50 · 17/11/2026 às 17:00");
+    expect(texto).toContain("verifique em validar.iti.gov.br");
+    // O carimbo vem antes (em cima) da linha de assinatura com o nome do escritório
+    expect(texto.indexOf("Documento assinado digitalmente")).toBeLessThan(texto.lastIndexOf("GUARESE'S ON SOLUÇÕES EMPRESARIAIS LTDA"));
     const cancelado = await textoDoPdf(await gerarPdfRecibo({ ...RECIBO, assinatura, situacao: "cancelado" }));
-    expect(cancelado.texto).not.toContain("Assinado digitalmente");
+    expect(cancelado.texto).not.toContain("assinado digitalmente");
   });
 
   it("usa o texto próprio do 'referente a' quando informado", async () => {

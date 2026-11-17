@@ -73,12 +73,16 @@ describe("assinatura digital de PDF (PAdES, política AD-RB da ICP-Brasil)", () 
       writeFileSync(`${process.env.ASSINATURA_AMOSTRA}.pdf`, assinado);
       writeFileSync(`${process.env.ASSINATURA_AMOSTRA}.pem`, credencial.certificados[0]);
     }
-    expect(assinado.subarray(0, original.length).equals(original)).toBe(true); // atualização incremental: o original fica intacto
+    // Atualização incremental: o original fica intacto (só o cabeçalho passa a PDF 1.7)
+    expect(assinado.subarray(0, 8).toString("latin1")).toBe("%PDF-1.7");
+    expect(assinado.subarray(8, original.length).equals(original.subarray(8))).toBe(true);
     const r = conferir(assinado, credencial);
     expect(r).toEqual({ valida: true, digestConfere: true, temPolitica: true, temCertificadoV2: true, semHorarioNoCms: true });
     const texto = assinado.toString("latin1");
     expect(texto).toContain("/SubFilter /ETSI.CAdES.detached");
     expect(texto).toContain("/AcroForm << /Fields");
+    expect(texto).toContain("/Extensions << /ESIC << /BaseVersion /1.7 /ExtensionLevel 2 >> >>");
+    expect(POLITICA_AD_RB.oid).toBe("2.16.76.1.7.1.11.1.3");
     expect(texto).toContain("/M (D:20261117200000Z)");
   });
 

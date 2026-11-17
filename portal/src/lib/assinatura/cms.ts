@@ -3,19 +3,20 @@ import { conjunto, contexto, emissorESerie, ia5, inteiro, nulo, octetos, oid, pe
 
 /**
  * Assinatura CMS destacada (CAdES) no padrão da ICP-Brasil para PDF:
- * política AD-RB do PAdES (PA_PAdES_AD_RB_v1_1, OID 2.16.76.1.7.1.11.1.1),
- * que exige os atributos assinados content-type, message-digest,
- * signing-certificate-v2 e signature-policy-identifier, com SHA-256 e RSA
- * de 2048 bits ou mais.
+ * política AD-RB do PAdES em vigor (PA_PAdES_AD_RB_v1_3, OID
+ * 2.16.76.1.7.1.11.1.3, de 23/07/2025 a 22/10/2037), que exige os atributos
+ * assinados content-type, message-digest, signing-certificate-v2 e
+ * signature-policy-identifier, com SHA-256 e RSA de 2048 bits ou mais.
  *
  * O hash da política é o publicado na Lista de Políticas de Assinatura do
- * ITI (LPA_PAdES.der) e confere com o SHA-256 do arquivo da política
- * (http://politicas.icpbrasil.gov.br/PA_PAdES_AD_RB_v1_1.der, válida até 2029).
+ * ITI (http://politicas.icpbrasil.gov.br/LPA_PAdES.der) e confere com o
+ * SHA-256 do arquivo da política
+ * (http://politicas.icpbrasil.gov.br/PA_PAdES_AD_RB_v1_3.der).
  */
 export const POLITICA_AD_RB = {
-  oid: "2.16.76.1.7.1.11.1.1",
-  hashSha256: "95752d26ca974d46675ae7fb787b606a71ea941f26b59f6b6a321f97d63b9cb1",
-  uri: "http://politicas.icpbrasil.gov.br/PA_PAdES_AD_RB_v1_1.der",
+  oid: "2.16.76.1.7.1.11.1.3",
+  hashSha256: "23da544aef71f7a75dc85fa6e17a83875741e4baef41ec178258a5c86ace54dd",
+  uri: "http://politicas.icpbrasil.gov.br/PA_PAdES_AD_RB_v1_3.der",
 } as const;
 
 const OID = {

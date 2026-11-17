@@ -189,7 +189,7 @@ export default async function Recibos({ searchParams }: PageProps<"/escritorio/r
                         <Download /> PDF
                       </a>
                     </Button>
-                    {!cancelado && podeAssinar && !r.arquivo_path ? <AssinarRecibo reciboId={r.id} /> : null}
+                    {!cancelado && podeAssinar ? <AssinarRecibo reciboId={r.id} deNovo={Boolean(r.arquivo_path)} /> : null}
                     {!cancelado && r.empresa_id && !r.documento_id ? <PublicarRecibo reciboId={r.id} /> : null}
                     {!cancelado ? <CancelarRecibo reciboId={r.id} numero={numero} publicado={Boolean(r.documento_id)} /> : null}
                   </div>
@@ -249,7 +249,7 @@ export default async function Recibos({ searchParams }: PageProps<"/escritorio/r
                               <Download /> PDF
                             </a>
                           </Button>
-                          {!cancelado && podeAssinar && !r.arquivo_path ? <AssinarRecibo reciboId={r.id} /> : null}
+                          {!cancelado && podeAssinar ? <AssinarRecibo reciboId={r.id} deNovo={Boolean(r.arquivo_path)} /> : null}
                           {!cancelado && r.empresa_id && !r.documento_id ? <PublicarRecibo reciboId={r.id} /> : null}
                           {!cancelado ? <CancelarRecibo reciboId={r.id} numero={numero} publicado={Boolean(r.documento_id)} /> : null}
                         </div>

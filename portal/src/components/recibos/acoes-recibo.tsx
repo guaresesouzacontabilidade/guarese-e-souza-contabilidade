@@ -17,11 +17,24 @@ export function PublicarRecibo({ reciboId }: { reciboId: string }) {
   );
 }
 
-/** Assina digitalmente um recibo emitido sem assinatura (ex.: antes do certificado). */
-export function AssinarRecibo({ reciboId }: { reciboId: string }) {
+/** Assina digitalmente um recibo sem assinatura (ex.: antes do certificado) ou assina de novo (ex.: certificado trocado). */
+export function AssinarRecibo({ reciboId, deNovo = false }: { reciboId: string; deNovo?: boolean }) {
   return (
-    <BotaoAcao variante="contorno" tamanho="sm" acao={assinarRecibo.bind(null, reciboId)}>
-      <ShieldCheck /> Assinar
+    <BotaoAcao
+      variante={deNovo ? "fantasma" : "contorno"}
+      tamanho="sm"
+      acao={assinarRecibo.bind(null, reciboId)}
+      confirmar={
+        deNovo
+          ? {
+              titulo: "Assinar este recibo de novo?",
+              descricao: "O PDF é gerado e assinado outra vez com o certificado atual. Se já estava publicado, a versão nova substitui a anterior nos documentos do cliente.",
+              textoConfirmar: "Assinar de novo",
+            }
+          : undefined
+      }
+    >
+      <ShieldCheck /> {deNovo ? "Assinar de novo" : "Assinar"}
     </BotaoAcao>
   );
 }

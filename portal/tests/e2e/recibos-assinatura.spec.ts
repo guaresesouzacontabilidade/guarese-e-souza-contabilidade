@@ -121,7 +121,7 @@ test("administrador cadastra o certificado e o recibo sai assinado digitalmente"
   const bytes = readFileSync((await arquivo.path())!);
   expect(bytes.toString("latin1")).toContain("/SubFilter /ETSI.CAdES.detached");
   const { text } = await extractText(await getDocumentProxy(new Uint8Array(bytes)), { mergePages: true });
-  expect(text.replace(/\s+/g, " ")).toContain("Assinado digitalmente por ESCRITORIO TESTE FICTICIO");
+  expect(text.replace(/\s+/g, " ")).toContain("Documento assinado digitalmente ESCRITORIO TESTE FICTICIO");
   const guardado = await servico!.storage.from("recibos").download(r!.arquivo_path!);
   expect(Buffer.from(await guardado.data!.arrayBuffer()).equals(bytes)).toBe(true);
   if (existsSync("/usr/bin/pdfsig")) {
@@ -134,11 +134,22 @@ test("administrador cadastra o certificado e o recibo sai assinado digitalmente"
 
   // 5. O recibo emitido antes do certificado é assinado pelo botão "Assinar"
   const linhaAntes = page.getByRole("row").filter({ hasText: "ANTES DO CERTIFICADO" });
-  await linhaAntes.getByRole("button", { name: "Assinar" }).click();
+  await linhaAntes.getByRole("button", { name: "Assinar", exact: true }).click();
   await expect(page.getByText(/assinado digitalmente\./).first()).toBeVisible({ timeout: 30_000 });
   await expect(linhaAntes.locator('[title="Assinado digitalmente (ICP-Brasil)"]')).toBeVisible();
   const { data: antes } = await servico!.from("recibos_honorarios").select("arquivo_path").eq("id", antesId).single();
   expect(antes!.arquivo_path).toBeTruthy();
+
+  // 6. "Assinar de novo" gera outro arquivo assinado e apaga o anterior
+  await linhaAntes.getByRole("button", { name: "Assinar de novo" }).click();
+  await page.getByRole("button", { name: "Assinar de novo" }).last().click();
+  await expect(async () => {
+    const { data: depois } = await servico!.from("recibos_honorarios").select("arquivo_path").eq("id", antesId).single();
+    expect(depois!.arquivo_path).not.toBe(antes!.arquivo_path);
+    expect(depois!.arquivo_path).toMatch(/-\d+\.pdf$/);
+  }).toPass({ timeout: 30_000 });
+  const { data: velho } = await servico!.storage.from("recibos").download(antes!.arquivo_path!);
+  expect(velho).toBeNull();
 });
 
 async function emitirAvulso(page: Page, nome: string, valor: string) {
