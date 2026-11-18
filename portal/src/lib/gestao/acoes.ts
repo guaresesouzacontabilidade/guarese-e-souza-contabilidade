@@ -68,6 +68,17 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
   }
   const { error } = await ctx.supabase.rpc("gestao_configurar", { p_empresa_id: empresaId, p_dados: dados as Json });
   if (error) return falha(mensagemErro(error));
+  // Etiqueta da balança (só vem no formulário da loja completa)
+  if (fd.has("balanca_etiqueta")) {
+    const etiqueta = texto(fd, "balanca_etiqueta");
+    const digitos = Number(texto(fd, "balanca_digitos_codigo")) || 4;
+    const { error: e2 } = await ctx.supabase.rpc("gestao_balanca_configurar", {
+      p_empresa_id: empresaId,
+      p_etiqueta: (etiqueta === "preco" || etiqueta === "peso" ? etiqueta : null) as unknown as string,
+      p_digitos_codigo: digitos,
+    });
+    if (e2) return falha(mensagemErro(e2));
+  }
   revalidarLoja(empresaId);
   revalidatePath(`/e/${empresaId}`, "layout");
   if (!(ctx.equipe && dados.ativa)) return sucesso("Configurações salvas.");
@@ -124,6 +135,10 @@ export async function salvarProdutoLoja(empresaId: string, produtoId: string | n
   if (unidade === "M3" && Boolean(medidas[0][1]) !== Boolean(medidas[1][1])) {
     erros.largura_cm = ["Para a cubagem, informe a espessura e a largura da peça."];
   }
+  // Peso do prato/embalagem: só produto por quilo
+  const taraTexto = unidade === "KG" ? texto(fd, "tara_kg") : "";
+  const tara = taraTexto ? numero(taraTexto) : null;
+  if (taraTexto && (!tara || Number(tara) < 0 || Number(tara) >= 10)) erros.tara_kg = ["Informe o peso em kg (ex.: 0,350)."];
   if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
   const dados = {
     codigo: texto(fd, "codigo"),
@@ -146,6 +161,12 @@ export async function salvarProdutoLoja(empresaId: string, produtoId: string | n
     p_dados: dados as Json,
   });
   if (error) return falha(mensagemErro(error));
+  const { error: erroTara } = await ctx.supabase.rpc("gestao_produto_tara", {
+    p_empresa_id: empresaId,
+    p_produto_id: data as string,
+    p_tara_kg: (tara ?? null) as unknown as number,
+  });
+  if (erroTara) return falha(`Produto salvo, mas o peso do prato não: ${mensagemErro(erroTara)}`, { tara_kg: [mensagemErro(erroTara)] });
   revalidarLoja(empresaId);
   return sucesso(produtoId ? "Produto atualizado." : "Produto cadastrado.", { id: data as string });
 }

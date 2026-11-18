@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Banknote, CreditCard, FileCheck2, FileText, Loader2, MapPin, Plus, QrCode, Receipt, Search, ShoppingCart, Trash2, UserPlus, UserRound, Wallet, X } from "lucide-react";
+import { Banknote, CreditCard, FileCheck2, FileText, Loader2, MapPin, Plus, QrCode, Receipt, Scale, Search, ShoppingCart, Trash2, UserPlus, UserRound, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Campo, Checkbox, Input, Select } from "@/components/ui/form";
@@ -19,6 +19,8 @@ import { FORMAS_PAGAMENTO, formatarQuantidade, modoMedida, quantidadePorPecas, s
 import { buscarProdutos } from "@/lib/gestao/busca-produtos";
 import { EM_ANDAMENTO, SITUACAO_NFE, type SituacaoNfe } from "@/lib/nfe-emissao/rotulos";
 import { FormDestinatario, type Destinatario } from "@/components/nfe/cadastros";
+import { PainelBalanca, useBalanca } from "@/components/loja/balanca";
+import { MENSAGEM_LEITURA, lerEtiquetaBalanca, mesmoCodigo, pesoLiquido, pesoPeloValor, type ConfigEtiqueta } from "@/lib/gestao/balanca";
 
 export interface ProdutoPdv {
   id: string;
@@ -33,6 +35,8 @@ export interface ProdutoPdv {
   espessura_cm: string | null;
   largura_cm: string | null;
   comprimento_m: string | null;
+  /** Peso do prato/embalagem descontado na pesagem (produto por quilo). */
+  tara_kg: string | null;
 }
 
 export interface ClientePdv {
@@ -50,6 +54,10 @@ interface Linha {
   quantidade: string;
   preco: string;
   desconto: string;
+  /** Produto por quilo com peso do prato: o peso lido na balança (a quantidade cobrada é o peso menos o prato). */
+  bruto: string;
+  /** Veio da etiqueta da balança: o peso impresso já é o cobrado. */
+  daEtiqueta?: boolean;
 }
 
 interface Pagamento {
@@ -86,6 +94,9 @@ const BR = (v: Decimal | number | string | null | undefined) => (v === null || v
 const ler = (t: string) => lerValorBR(t) ?? new Decimal(0);
 let seq = 0;
 const novaChave = () => `k${++seq}`;
+/** Produto vendido por quilo: pesado no caixa. */
+const porQuilo = (p: ProdutoPdv) => p.unidade === "KG";
+const formatarPeso = (d: Decimal) => d.toFixed(3).replace(".", ",");
 
 function quantidadeDaLinha(l: Linha): Decimal | null {
   if (modoMedida(l.produto) !== "direto") return quantidadePorPecas(l.produto, ler(l.pecas), l.comprimento ? ler(l.comprimento) : null);
@@ -113,6 +124,7 @@ export function PontoDeVenda({
   permitirPrazo,
   orcamento,
   nfe,
+  etiqueta = null,
 }: {
   empresaId: string;
   sessaoId: string;
@@ -123,6 +135,8 @@ export function PontoDeVenda({
   orcamento: OrcamentoInicial | null;
   /** NF-e na hora da venda (caixinha "Emitir NF-e"). */
   nfe: NfeNaVenda;
+  /** Etiqueta impressa pela balança (código de barras que começa com 2), quando a loja usa. */
+  etiqueta?: ConfigEtiqueta | null;
 }) {
   const router = useRouter();
   const porId = React.useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
@@ -132,7 +146,7 @@ export function PontoDeVenda({
     (orcamento?.itens ?? []).flatMap((i) => {
       const p = porId.get(i.produto_id);
       if (!p) return [];
-      return [{ chave: novaChave(), produto: p, pecas: i.pecas ? formatarQuantidade(i.pecas, 3) : "", comprimento: i.comprimento_m ? formatarQuantidade(i.comprimento_m, 3) : "", quantidade: i.pecas ? "" : formatarQuantidade(i.quantidade), preco: BR(i.preco_unitario), desconto: Number(i.desconto) ? BR(i.desconto) : "" }];
+      return [{ chave: novaChave(), produto: p, pecas: i.pecas ? formatarQuantidade(i.pecas, 3) : "", comprimento: i.comprimento_m ? formatarQuantidade(i.comprimento_m, 3) : "", quantidade: i.pecas ? "" : formatarQuantidade(i.quantidade), preco: BR(i.preco_unitario), desconto: Number(i.desconto) ? BR(i.desconto) : "", bruto: "" }];
     }),
   );
   const [cliente, setCliente] = React.useState<ClientePdv | null>(orcamento?.cliente ?? null);
@@ -150,6 +164,9 @@ export function PontoDeVenda({
   const [enderecoNfe, setEnderecoNfe] = React.useState(false);
   const [novoCliente, setNovoCliente] = React.useState(false);
   const buscaRef = React.useRef<HTMLInputElement>(null);
+  const balanca = useBalanca();
+  const temProdutoPorQuilo = React.useMemo(() => produtos.some(porQuilo), [produtos]);
+  const [focarPeso, setFocarPeso] = React.useState<string | null>(null);
 
   const subtotal = linhas.reduce((s, l) => s.plus(totalDaLinha(l)), new Decimal(0));
   const total = subtotal.minus(ler(desconto)).plus(ler(frete));
@@ -162,27 +179,81 @@ export function PontoDeVenda({
   const termo = busca.trim().toLowerCase();
   const { itens: encontrados, total: totalEncontrados } = React.useMemo(() => buscarProdutos(produtos, busca, 30), [produtos, busca]);
 
-  function adicionar(p: ProdutoPdv) {
+  function adicionar(p: ProdutoPdv, pesado?: { quantidade: string; desconto?: string }) {
     const modo = modoMedida(p);
+    const chave = novaChave();
+    const pesar = porQuilo(p) && !pesado;
     setLinhas((ls) => [
       ...ls,
       {
-        chave: novaChave(),
+        chave,
         produto: p,
         pecas: modo === "direto" ? "" : "1",
         comprimento: modo === "direto" ? "" : p.comprimento_m ? formatarQuantidade(p.comprimento_m, 3) : "",
-        quantidade: modo === "direto" ? "1" : "",
+        quantidade: pesado ? pesado.quantidade : pesar ? "" : modo === "direto" ? "1" : "",
         preco: BR(p.valor_unitario),
-        desconto: "",
+        desconto: pesado?.desconto ?? "",
+        bruto: "",
+        daEtiqueta: Boolean(pesado),
       },
     ]);
     setBusca("");
-    buscaRef.current?.focus();
+    if (pesar) {
+      // Produto por quilo: lê a balança (se conectada) ou deixa o cursor no peso
+      if (balanca.conectada) void lerBalancaNaLinha(chave, p);
+      else setFocarPeso(chave);
+    } else buscaRef.current?.focus();
+  }
+
+  /** Peso digitado ou lido: com peso do prato, guarda o lido e cobra o líquido. */
+  function definirPeso(chave: string, produto: ProdutoPdv, texto: string) {
+    const tara = produto.tara_kg ? new Decimal(produto.tara_kg) : null;
+    const linha = linhas.find((l) => l.chave === chave);
+    if (!tara || tara.lte(0) || linha?.daEtiqueta) return atualizarLinha(chave, "quantidade", texto);
+    const lido = lerValorBR(texto);
+    setLinhas((ls) =>
+      ls.map((l) => (l.chave === chave ? { ...l, bruto: texto, quantidade: lido && lido.gt(0) ? formatarPeso(pesoLiquido(lido, tara)) : "" } : l)),
+    );
+  }
+
+  async function lerBalancaNaLinha(chave: string, produto: ProdutoPdv) {
+    const r = await balanca.lerPeso();
+    if (r.estado === "estavel" && r.pesoKg && r.pesoKg.gt(0)) {
+      definirPeso(chave, produto, formatarPeso(r.pesoKg));
+      buscaRef.current?.focus();
+    } else {
+      toast.error(r.estado === "estavel" ? "A balança está sem peso. Coloque o prato e leia de novo." : MENSAGEM_LEITURA[r.estado]);
+      setFocarPeso(chave);
+    }
+  }
+
+  /** Etiqueta da balança (EAN-13 iniciado em 2): produto e peso ou preço já impressos. */
+  function adicionarPelaEtiqueta(codigo: string): boolean {
+    if (!etiqueta) return false;
+    const e = lerEtiquetaBalanca(codigo, etiqueta);
+    if (!e) return false;
+    const p = produtos.find((x) => mesmoCodigo(x.codigo, e.codigoProduto));
+    if (!p) {
+      toast.error(`A etiqueta é do produto ${e.codigoProduto}, que não está no cadastro da loja com esse código.`);
+      return true;
+    }
+    if (e.pesoKg) {
+      adicionar(p, { quantidade: formatarPeso(e.pesoKg) });
+      return true;
+    }
+    const r = e.valor && p.valor_unitario ? pesoPeloValor(e.valor, p.valor_unitario) : null;
+    if (!r) {
+      toast.error(`O produto ${p.descricao} está sem preço por quilo no cadastro.`);
+      return true;
+    }
+    adicionar(p, { quantidade: formatarPeso(r.pesoKg), desconto: r.desconto.gt(0) ? BR(r.desconto) : "" });
+    return true;
   }
 
   function aoTeclarBusca(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     e.preventDefault();
+    if (/^2[0-9]{12}$/.test(termo) && adicionarPelaEtiqueta(termo)) return;
     const exato = produtos.find((p) => p.gtin === termo || p.codigo.toLowerCase() === termo);
     if (exato) adicionar(exato);
     else if (encontrados.length === 1) adicionar(encontrados[0]);
@@ -298,6 +369,7 @@ export function PontoDeVenda({
         ) : null}
         <Card>
           <CardContent className="space-y-3 pt-5">
+            {temProdutoPorQuilo ? <PainelBalanca balanca={balanca} /> : null}
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -372,7 +444,43 @@ export function PontoDeVenda({
                         </Button>
                       </div>
                       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        {modo === "direto" ? (
+                        {porQuilo(l.produto) ? (
+                          <Campo rotulo={l.produto.tara_kg && !l.daEtiqueta ? "Peso na balança (kg)" : "Peso (kg)"} htmlFor={`q-${l.chave}`} className="col-span-2 sm:col-span-1">
+                            <div className="flex gap-1.5">
+                              <Input
+                                id={`q-${l.chave}`}
+                                inputMode="decimal"
+                                placeholder="0,000"
+                                value={l.produto.tara_kg && !l.daEtiqueta ? l.bruto : l.quantidade}
+                                onChange={(e) => definirPeso(l.chave, l.produto, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    buscaRef.current?.focus();
+                                  }
+                                }}
+                                ref={(el) => {
+                                  if (el && focarPeso === l.chave) {
+                                    el.focus();
+                                    setFocarPeso(null);
+                                  }
+                                }}
+                              />
+                              {balanca.conectada ? (
+                                <Button
+                                  variante="contorno"
+                                  tamanho="icone"
+                                  aria-label={`Ler a balança para ${l.produto.descricao}`}
+                                  title="Ler a balança"
+                                  disabled={balanca.lendo}
+                                  onClick={() => lerBalancaNaLinha(l.chave, l.produto)}
+                                >
+                                  {balanca.lendo ? <Loader2 className="animate-spin" /> : <Scale />}
+                                </Button>
+                              ) : null}
+                            </div>
+                          </Campo>
+                        ) : modo === "direto" ? (
                           <Campo rotulo={`Quantidade (${un(l.produto.unidade)})`} htmlFor={`q-${l.chave}`}>
                             <Input id={`q-${l.chave}`} inputMode="decimal" value={l.quantidade} onChange={(e) => atualizarLinha(l.chave, "quantidade", e.target.value)} />
                           </Campo>
@@ -396,6 +504,15 @@ export function PontoDeVenda({
                       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
                         <span className="text-muted-foreground">
                           {modo !== "direto" ? (q ? `${formatarQuantidade(q)} ${un(l.produto.unidade)}` : "informe peças e comprimento") : null}
+                          {l.daEtiqueta
+                            ? "peso da etiqueta da balança"
+                            : porQuilo(l.produto) && l.produto.tara_kg && Number(l.produto.tara_kg) > 0
+                            ? q
+                              ? `− prato ${formatarPeso(new Decimal(l.produto.tara_kg))} kg = ${formatarPeso(q)} kg cobrados`
+                              : `o prato (${formatarPeso(new Decimal(l.produto.tara_kg))} kg) é descontado do peso`
+                            : porQuilo(l.produto) && !q
+                              ? "pese o produto"
+                              : null}
                           {semEstoque ? <Badge variante="alerta" className="ml-2">acima do estoque ({formatarQuantidade(l.produto.estoque_atual)})</Badge> : null}
                         </span>
                         <span className="font-semibold numero">{formatarMoeda(totalDaLinha(l))}</span>

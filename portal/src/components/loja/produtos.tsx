@@ -35,6 +35,8 @@ export interface ProdutoLoja {
   espessura_cm: string | null;
   largura_cm: string | null;
   comprimento_m: string | null;
+  /** Peso do prato/embalagem descontado na pesagem (só produto por quilo). */
+  tara_kg?: string | null;
 }
 
 const num = (v: string | null | undefined, casas = 4) => (v == null || v === "" ? "" : formatarQuantidade(v, casas));
@@ -115,6 +117,17 @@ export function FormProduto({ empresaId, produto, grupos, aoSalvar }: { empresaI
                 </p>
               ) : null}
             </div>
+          ) : null}
+          {unidade === "KG" ? (
+            <Campo
+              rotulo="Peso do prato ou da embalagem (kg)"
+              htmlFor={`tara-${idp}`}
+              erro={estado.erros?.tara_kg}
+              ajuda="Descontado do peso da balança no caixa (ex.: 0,350 para o prato do self-service). Deixe em branco se a balança já desconta."
+              className="max-w-sm"
+            >
+              <Input id={`tara-${idp}`} name="tara_kg" defaultValue={produto?.tara_kg ? new Decimal(produto.tara_kg).toFixed(3).replace(".", ",") : ""} inputMode="decimal" placeholder="0,000" />
+            </Campo>
           ) : null}
           <div className="grid gap-4 sm:grid-cols-3">
             <Campo rotulo={`Preço de venda (por ${un(unidade)})`} htmlFor={`preco-${idp}`} obrigatorio erro={estado.erros?.valor_unitario}>

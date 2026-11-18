@@ -2278,13 +2278,13 @@ isOneToOne: false
                   ]
                 },"gestao_config": {
                   Row: {
-                    "margem_entrada": number | null,"ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"entrada_automatica": boolean,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"empresa_id": string,"mensagem_comprovante": string | null,"nfe_emitente_id": string | null,"modalidade": string,"nfe_marcada_padrao": boolean,"proximo_numero_ordem": number,"nfe_operacao_id": string | null,"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number
+                    "ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"balanca_digitos_codigo": number,"balanca_etiqueta": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"empresa_id": string,"entrada_automatica": boolean,"margem_entrada": number | null,"mensagem_comprovante": string | null,"modalidade": string,"nfe_emitente_id": string | null,"nfe_marcada_padrao": boolean,"nfe_operacao_id": string | null,"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_ordem": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number
                   }
                   Insert: {
-                    "margem_entrada"?: number | null,"ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"entrada_automatica"?: boolean,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id": string,"mensagem_comprovante"?: string | null,"nfe_emitente_id"?: string | null,"modalidade"?: string,"nfe_marcada_padrao"?: boolean,"proximo_numero_ordem"?: number,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"balanca_digitos_codigo"?: number,"balanca_etiqueta"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id": string,"entrada_automatica"?: boolean,"margem_entrada"?: number | null,"mensagem_comprovante"?: string | null,"modalidade"?: string,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_ordem"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
                   }
                   Update: {
-                    "margem_entrada"?: number | null,"ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"entrada_automatica"?: boolean,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id"?: string,"mensagem_comprovante"?: string | null,"nfe_emitente_id"?: string | null,"modalidade"?: string,"nfe_marcada_padrao"?: boolean,"proximo_numero_ordem"?: number,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"balanca_digitos_codigo"?: number,"balanca_etiqueta"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id"?: string,"entrada_automatica"?: boolean,"margem_entrada"?: number | null,"mensagem_comprovante"?: string | null,"modalidade"?: string,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_ordem"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
                   }
                   Relationships: [
                     {
@@ -2322,6 +2322,18 @@ isOneToOne: false
       columns: ["empresa_id"]
 isOneToOne: true
       referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_nfe_emitente_id_fkey"
+      columns: ["nfe_emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_nfe_operacao_id_fkey"
+      columns: ["nfe_operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
       referencedColumns: ["id"]
     }
                   ]
@@ -3746,13 +3758,13 @@ isOneToOne: false
                   ]
                 },"nfe_produtos": {
                   Row: {
-                    "ativo": boolean,"cest": string | null,"codigo": string,"comprimento_m": number | null,"controla_estoque": boolean,"created_at": string,"custo_medio": number,"descricao": string,"empresa_id": string,"espessura_cm": number | null,"estoque_atual": number,"estoque_minimo": number | null,"grupo": string | null,"gtin": string | null,"id": string,"largura_cm": number | null,"ncm": string,"operacao_id": string | null,"origem": number,"peso_kg": number | null,"preco_custo": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
+                    "ativo": boolean,"cest": string | null,"codigo": string,"comprimento_m": number | null,"controla_estoque": boolean,"created_at": string,"custo_medio": number,"descricao": string,"empresa_id": string,"espessura_cm": number | null,"estoque_atual": number,"estoque_minimo": number | null,"grupo": string | null,"gtin": string | null,"id": string,"largura_cm": number | null,"ncm": string,"operacao_id": string | null,"origem": number,"peso_kg": number | null,"preco_custo": number | null,"tara_kg": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
                   }
                   Insert: {
-                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao": string,"empresa_id": string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm": string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
+                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao": string,"empresa_id": string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm": string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"tara_kg"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
                   }
                   Update: {
-                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao"?: string,"empresa_id"?: string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm"?: string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
+                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao"?: string,"empresa_id"?: string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm"?: string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"tara_kg"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
                   }
                   Relationships: [
                     {
@@ -5881,6 +5893,12 @@ isOneToOne: false
                            },
 "recibo_registrar_assinatura":
 { Args: { "p_documento": string,"p_path": string,"p_recibo_id": string,"p_titular": string }; Returns: undefined
+                           },
+"gestao_balanca_configurar":
+{ Args: { "p_digitos_codigo": number,"p_empresa_id": string,"p_etiqueta": string }; Returns: undefined
+                           },
+"gestao_produto_tara":
+{ Args: { "p_empresa_id": string,"p_produto_id": string,"p_tara_kg": number }; Returns: undefined
                            },
 "dados_dare_to":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json

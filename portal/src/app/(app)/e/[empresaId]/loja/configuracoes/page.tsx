@@ -66,6 +66,8 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
                       nfe_operacao_id: cfg.nfe_operacao_id,
                       nfe_emitente_id: cfg.nfe_emitente_id,
                       nfe_marcada_padrao: cfg.nfe_marcada_padrao,
+                      balanca_etiqueta: cfg.balanca_etiqueta,
+                      balanca_digitos_codigo: cfg.balanca_digitos_codigo,
                     }
                   : null
               }

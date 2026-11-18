@@ -81,7 +81,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
   const [produtosR, clientesR, cfgR, orcR, nfe] = await Promise.all([
     ctx.supabase
       .from("nfe_produtos")
-      .select("id, codigo, descricao, unidade, gtin, grupo, valor_unitario, estoque_atual, controla_estoque, espessura_cm, largura_cm, comprimento_m")
+      .select("id, codigo, descricao, unidade, gtin, grupo, valor_unitario, estoque_atual, controla_estoque, espessura_cm, largura_cm, comprimento_m, tara_kg")
       .eq("empresa_id", empresaId)
       .eq("ativo", true)
       .order("descricao")
@@ -94,7 +94,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
       .contains("papeis", ["cliente"])
       .order("nome")
       .limit(5000),
-    ctx.supabase.from("gestao_config").select("permitir_venda_prazo").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("gestao_config").select("permitir_venda_prazo, balanca_etiqueta, balanca_digitos_codigo").eq("empresa_id", empresaId).maybeSingle(),
     orcamentoId
       ? ctx.supabase
           .from("vendas")
@@ -120,6 +120,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
     espessura_cm: texto(p.espessura_cm),
     largura_cm: texto(p.largura_cm),
     comprimento_m: texto(p.comprimento_m),
+    tara_kg: texto(p.tara_kg),
   }));
   const clientes: ClientePdv[] = (clientesR.data ?? []).map((c) => ({ id: c.id, nome: c.nome, documento: c.documento, telefone: c.telefone }));
 
@@ -188,6 +189,11 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
         permitirPrazo={cfgR.data?.permitir_venda_prazo ?? true}
         orcamento={orcamento}
         nfe={nfe}
+        etiqueta={
+          cfgR.data?.balanca_etiqueta === "preco" || cfgR.data?.balanca_etiqueta === "peso"
+            ? { formato: cfgR.data.balanca_etiqueta, digitosCodigo: ([4, 5, 6].includes(cfgR.data.balanca_digitos_codigo) ? cfgR.data.balanca_digitos_codigo : 4) as 4 | 5 | 6 }
+            : null
+        }
       />
     </>
   );

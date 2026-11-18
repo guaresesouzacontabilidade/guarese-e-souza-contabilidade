@@ -23,6 +23,8 @@ export interface ConfigLoja {
   nfe_operacao_id: string | null;
   nfe_emitente_id: string | null;
   nfe_marcada_padrao: boolean;
+  balanca_etiqueta?: string | null;
+  balanca_digitos_codigo?: number;
 }
 
 export interface OpcoesNfeLoja {
@@ -148,6 +150,26 @@ export function FormConfigLoja({
                 <Campo rotulo="Mensagem no rodapé do comprovante" htmlFor="mensagem_comprovante" ajuda="Ex.: horário de funcionamento, política de troca, chave PIX.">
                   <Textarea id="mensagem_comprovante" name="mensagem_comprovante" rows={3} maxLength={500} defaultValue={c?.mensagem_comprovante ?? ""} />
                 </Campo>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Campo
+                    rotulo="Etiqueta da balança"
+                    htmlFor="balanca_etiqueta"
+                    ajuda="Para balança que imprime etiqueta com código de barras (começa com 2): o caixa lê a etiqueta e já põe o produto com o peso ou o preço."
+                  >
+                    <Select id="balanca_etiqueta" name="balanca_etiqueta" defaultValue={c?.balanca_etiqueta ?? ""}>
+                      <option value="">Não uso etiqueta da balança</option>
+                      <option value="preco">A etiqueta traz o preço total</option>
+                      <option value="peso">A etiqueta traz o peso</option>
+                    </Select>
+                  </Campo>
+                  <Campo rotulo="Dígitos do código do produto na etiqueta" htmlFor="balanca_digitos_codigo" ajuda="Veja na configuração da balança (o mais comum é 4).">
+                    <Select id="balanca_digitos_codigo" name="balanca_digitos_codigo" defaultValue={String(c?.balanca_digitos_codigo ?? 4)}>
+                      <option value="4">4 dígitos</option>
+                      <option value="5">5 dígitos</option>
+                      <option value="6">6 dígitos</option>
+                    </Select>
+                  </Campo>
+                </div>
               </section>
 
               <section className="space-y-4">
