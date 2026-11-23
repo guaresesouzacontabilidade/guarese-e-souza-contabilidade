@@ -135,6 +135,27 @@ export function montarPixCopiaECola(d: DadosPix) {
   return `${semCrc}${crc16(semCrc)}`;
 }
 
+/**
+ * Pix copia e cola dinâmico (cobrança criada no banco): o aplicativo de quem
+ * paga busca o valor do dia no endereço (location) do banco.
+ */
+export function montarPixDinamico(d: { location: string; nome: string; cidade: string }) {
+  const conta = [campo("00", "br.gov.bcb.pix"), campo("25", d.location.replace(/^https?:\/\//, ""))].join("");
+  const corpo = [
+    campo("00", "01"),
+    campo("01", "12"),
+    campo("26", conta),
+    campo("52", "0000"),
+    campo("53", "986"),
+    campo("58", "BR"),
+    campo("59", textoPix(d.nome, 25) || "RECEBEDOR"),
+    campo("60", textoPix(d.cidade, 15) || "BRASIL"),
+    campo("62", campo("05", "***")),
+  ].join("");
+  const semCrc = `${corpo}6304`;
+  return `${semCrc}${crc16(semCrc)}`;
+}
+
 /** Lê os campos de um Pix copia e cola (para conferência nos testes e na tela). */
 export function lerPixCopiaECola(texto: string) {
   const campos: Record<string, string> = {};

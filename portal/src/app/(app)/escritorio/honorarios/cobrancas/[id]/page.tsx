@@ -10,6 +10,7 @@ import { BotaoAcao } from "@/components/ui/acao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AcaoComMotivo, BaixarCobranca, CopiarPix } from "@/components/honorarios/cobrancas";
+import { ConferirNoBanco } from "@/components/honorarios/banco";
 import { exigirHonorarios } from "@/lib/honorarios/acesso";
 import { alternarRoboCobranca, aprovarCobrancas, reenviarCobranca } from "@/lib/honorarios/acoes";
 import { numeroCobranca, situacaoExibida } from "@/lib/honorarios/comum";
@@ -55,6 +56,8 @@ export default async function Cobranca({ params, searchParams }: PageProps<"/esc
     c.recibo_id ? s.supabase.from("recibos_honorarios").select("id, ano, numero, situacao").eq("id", c.recibo_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
 
+  const { data: cfgBanco } = await s.supabase.from("honorarios_config").select("banco_ativo").single();
+  const bancoAtivo = Boolean(cfgBanco?.banco_ativo) && c.situacao === "aberta";
   const hoje = hojeISO();
   const sit = situacaoExibida(c, hoje);
   const pagar = valorParaPagar(c, hoje);
@@ -254,7 +257,17 @@ export default async function Cobranca({ params, searchParams }: PageProps<"/esc
                     </Button>
                   ) : null}
                 </div>
-                <p className="text-xs text-muted-foreground">Pix comum com a chave do escritório: ao cair o dinheiro, registre o pagamento aqui (a confirmação automática vem com a ligação ao banco).</p>
+                {c.banco_pix ? (
+                  <p className="text-xs text-muted-foreground">Pix do Sicredi: o banco calcula multa e juros na hora e o pagamento dá baixa sozinho.</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Pix comum com a chave do escritório: ao cair o dinheiro, registre o pagamento aqui.</p>
+                )}
+                {c.banco_erro ? <Alerta tom="alerta">Banco: {c.banco_erro}</Alerta> : null}
+                {bancoAtivo ? (
+                  <div className="flex justify-center">
+                    <ConferirNoBanco id={c.id} criar={!c.banco_txid} />
+                  </div>
+                ) : null}
               </>
             ) : c.situacao === "aberta" ? (
               <Alerta tom="alerta">A cobrança foi enviada sem Pix (não havia chave cadastrada). Cadastre a chave nas configurações; as próximas cobranças saem com QR code.</Alerta>

@@ -46,8 +46,11 @@ export function valorParaPagar(c: Pick<LinhaCobranca, "valor" | "vencimento" | "
 }
 
 /** Pix copia e cola da cobrança aberta (null sem chave configurada na aprovação). */
-export function pixDaCobranca(c: Pick<LinhaCobranca, "pix_chave" | "pix_nome" | "pix_cidade" | "pix_txid" | "situacao">, valor: string) {
-  if (c.situacao !== "aberta" || !c.pix_chave) return null;
+export function pixDaCobranca(c: Pick<LinhaCobranca, "pix_chave" | "pix_nome" | "pix_cidade" | "pix_txid" | "situacao" | "banco_pix">, valor: string) {
+  if (c.situacao !== "aberta") return null;
+  // Cobrança criada no banco: Pix dinâmico (o banco calcula multa e juros na hora e confirma o pagamento)
+  if (c.banco_pix) return c.banco_pix;
+  if (!c.pix_chave) return null;
   return montarPixCopiaECola({ chave: c.pix_chave, nome: c.pix_nome ?? "", cidade: c.pix_cidade ?? "", valor, txid: c.pix_txid });
 }
 

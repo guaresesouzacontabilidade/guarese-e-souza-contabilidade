@@ -17,7 +17,7 @@ import { numeroCobranca } from "./comum";
 export async function reciboDaCobranca(
   supabase: SupabaseClient<Database>,
   cobrancaId: string,
-  opcoes: { publicar: boolean },
+  opcoes: { publicar: boolean; servico?: boolean },
 ): Promise<{ reciboId: string | null; avisos: string[] }> {
   const avisos: string[] = [];
   const { data: c } = await supabase.from("honorarios_cobrancas").select("*").eq("id", cobrancaId).single();
@@ -45,12 +45,15 @@ export async function reciboDaCobranca(
   });
   const recibo = emitido?.[0];
   if (error || !recibo) return { reciboId: null, avisos: [`o recibo não foi emitido (${mensagemErro(error)})`] };
-  await supabase.rpc("honorarios_cobranca_vincular_recibo", { p_id: cobrancaId, p_recibo_id: recibo.id });
+  // Pela confirmação do banco (servidor), a ligação também agenda o agradecimento com o recibo
+  if (opcoes.servico) await supabase.rpc("honorarios_banco_vincular_recibo", { p_id: cobrancaId, p_recibo_id: recibo.id });
+  else await supabase.rpc("honorarios_cobranca_vincular_recibo", { p_id: cobrancaId, p_recibo_id: recibo.id });
 
   const carregado = await carregarRecibo(supabase, recibo.id);
   const arquivo = carregado ? await gerarArquivoRecibo(supabase, carregado.linha) : null;
   if (arquivo?.erro) avisos.push(`o recibo saiu sem assinatura digital (${arquivo.erro})`);
-  if (opcoes.publicar && c.empresa_id) {
+  // A publicação nos documentos é feita pela equipe (a baixa automática deixa para a tela de recibos)
+  if (opcoes.publicar && c.empresa_id && !opcoes.servico) {
     const pub = await publicarReciboNosDocumentos(supabase, recibo.id, arquivo?.pdf);
     if ("erro" in pub) avisos.push(`o recibo não foi publicado ao cliente (${pub.erro})`);
   }

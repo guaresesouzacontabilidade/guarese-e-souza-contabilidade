@@ -35,11 +35,12 @@ function parametro(t: string) {
  */
 export async function prepararEnvioCobranca(admin: ClienteAdmin, envio: Envio, site: string): Promise<EnvioCobrancaPreparado> {
   if (!envio.referencia_id) return { dispensado: "Envio sem cobrança." };
-  const [{ data: c }, { data: etapa }, { data: cfg }] = await Promise.all([
+  const [{ data: lida }, { data: etapa }, { data: cfg }] = await Promise.all([
     admin.from("honorarios_cobrancas").select("*").eq("id", envio.referencia_id).maybeSingle(),
     admin.from("honorarios_lembretes").select("motivo, dias").eq("envio_id", envio.id).maybeSingle(),
     admin.from("honorarios_config").select("*").eq("id", 1).single(),
   ]);
+  let c = lida;
   if (!c) return { dispensado: "Cobrança não encontrada." };
   const motivo = etapa?.motivo ?? "manual";
   if (motivo === "pagamento" ? c.situacao !== "paga" : c.situacao !== "aberta") {
@@ -47,6 +48,14 @@ export async function prepararEnvioCobranca(admin: ClienteAdmin, envio: Envio, s
   }
   if (motivo !== "pagamento" && envio.canal === "whatsapp" && !c.whatsapp_autorizado) {
     return { dispensado: "O cliente não autoriza mais cobrança por WhatsApp neste número." };
+  }
+
+  // Com a ligação ao banco ativa, a cobrança é criada no banco antes do envio (Pix dinâmico com confirmação automática)
+  if (motivo !== "pagamento" && cfg?.banco_ativo && !c.banco_pix && c.banco_situacao !== "erro") {
+    const { criarNoBanco } = await import("./banco");
+    await criarNoBanco(admin, c.id).catch(() => undefined);
+    const { data: nova } = await admin.from("honorarios_cobrancas").select("*").eq("id", c.id).single();
+    if (nova) c = nova;
   }
 
   const hoje = hojeISO();

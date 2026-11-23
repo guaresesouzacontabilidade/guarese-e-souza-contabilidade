@@ -2413,6 +2413,19 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"honorarios_banco_segredo": {
+                  Row: {
+                    "atualizado_em": string,"conteudo_cifrado": string,"id": number
+                  }
+                  Insert: {
+                    "atualizado_em"?: string,"conteudo_cifrado": string,"id"?: number
+                  }
+                  Update: {
+                    "atualizado_em"?: string,"conteudo_cifrado"?: string,"id"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"honorarios_cobranca_itens": {
                   Row: {
                     "categoria_id": string,"cobranca_id": string,"descricao": string,"id": string,"ordem": number,"quantidade": number,"valor": number,"valor_unitario": number
@@ -2440,13 +2453,13 @@ isOneToOne: false
                   ]
                 },"honorarios_cobrancas": {
                   Row: {
-                    "ano": number,"aprovada_em": string | null,"aprovada_por": string | null,"baixa_observacao": string | null,"baixada_em": string | null,"baixada_por": string | null,"cancelada_em": string | null,"cobrar_encargos": boolean,"competencia": string | null,"contato_email": string | null,"contato_whatsapp": string | null,"created_at": string,"criado_por": string | null,"desconto": number,"descricao": string,"empresa_id": string | null,"ficha_id": string | null,"forma_pagamento": string | null,"id": string,"juros": number,"juros_mes_percentual": number,"motivo_cancelamento": string | null,"multa": number,"multa_percentual": number,"numero": number,"pagador_documento": string | null,"pagador_nome": string,"pago_em": string | null,"pix_chave": string | null,"pix_cidade": string | null,"pix_nome": string | null,"pix_txid": string | null,"recibo_id": string | null,"robo_ativo": boolean,"situacao": string,"tipo": string,"token_publico": string | null,"updated_at": string,"valor": number,"valor_pago": number | null,"vencimento": string,"whatsapp_autorizado": boolean
+                    "ano": number,"aprovada_em": string | null,"aprovada_por": string | null,"baixa_observacao": string | null,"baixada_em": string | null,"baixada_por": string | null,"banco_atualizado_em": string | null,"banco_e2e": string | null,"banco_erro": string | null,"banco_pix": string | null,"banco_situacao": string | null,"banco_txid": string | null,"cancelada_em": string | null,"cobrar_encargos": boolean,"competencia": string | null,"contato_email": string | null,"contato_whatsapp": string | null,"created_at": string,"criado_por": string | null,"desconto": number,"descricao": string,"empresa_id": string | null,"ficha_id": string | null,"forma_pagamento": string | null,"id": string,"juros": number,"juros_mes_percentual": number,"motivo_cancelamento": string | null,"multa": number,"multa_percentual": number,"numero": number,"pagador_documento": string | null,"pagador_nome": string,"pago_em": string | null,"pix_chave": string | null,"pix_cidade": string | null,"pix_nome": string | null,"pix_txid": string | null,"recibo_id": string | null,"robo_ativo": boolean,"situacao": string,"tipo": string,"token_publico": string | null,"updated_at": string,"valor": number,"valor_pago": number | null,"vencimento": string,"whatsapp_autorizado": boolean
                   }
                   Insert: {
-                    "ano": number,"aprovada_em"?: string | null,"aprovada_por"?: string | null,"baixa_observacao"?: string | null,"baixada_em"?: string | null,"baixada_por"?: string | null,"cancelada_em"?: string | null,"cobrar_encargos"?: boolean,"competencia"?: string | null,"contato_email"?: string | null,"contato_whatsapp"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"descricao": string,"empresa_id"?: string | null,"ficha_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"juros_mes_percentual"?: number,"motivo_cancelamento"?: string | null,"multa"?: number,"multa_percentual"?: number,"numero": number,"pagador_documento"?: string | null,"pagador_nome": string,"pago_em"?: string | null,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_txid"?: string | null,"recibo_id"?: string | null,"robo_ativo"?: boolean,"situacao"?: string,"tipo": string,"token_publico"?: string | null,"updated_at"?: string,"valor": number,"valor_pago"?: number | null,"vencimento": string,"whatsapp_autorizado"?: boolean
+                    "ano": number,"aprovada_em"?: string | null,"aprovada_por"?: string | null,"baixa_observacao"?: string | null,"baixada_em"?: string | null,"baixada_por"?: string | null,"banco_atualizado_em"?: string | null,"banco_e2e"?: string | null,"banco_erro"?: string | null,"banco_pix"?: string | null,"banco_situacao"?: string | null,"banco_txid"?: string | null,"cancelada_em"?: string | null,"cobrar_encargos"?: boolean,"competencia"?: string | null,"contato_email"?: string | null,"contato_whatsapp"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"descricao": string,"empresa_id"?: string | null,"ficha_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"juros_mes_percentual"?: number,"motivo_cancelamento"?: string | null,"multa"?: number,"multa_percentual"?: number,"numero": number,"pagador_documento"?: string | null,"pagador_nome": string,"pago_em"?: string | null,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_txid"?: string | null,"recibo_id"?: string | null,"robo_ativo"?: boolean,"situacao"?: string,"tipo": string,"token_publico"?: string | null,"updated_at"?: string,"valor": number,"valor_pago"?: number | null,"vencimento": string,"whatsapp_autorizado"?: boolean
                   }
                   Update: {
-                    "ano"?: number,"aprovada_em"?: string | null,"aprovada_por"?: string | null,"baixa_observacao"?: string | null,"baixada_em"?: string | null,"baixada_por"?: string | null,"cancelada_em"?: string | null,"cobrar_encargos"?: boolean,"competencia"?: string | null,"contato_email"?: string | null,"contato_whatsapp"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"descricao"?: string,"empresa_id"?: string | null,"ficha_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"juros_mes_percentual"?: number,"motivo_cancelamento"?: string | null,"multa"?: number,"multa_percentual"?: number,"numero"?: number,"pagador_documento"?: string | null,"pagador_nome"?: string,"pago_em"?: string | null,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_txid"?: string | null,"recibo_id"?: string | null,"robo_ativo"?: boolean,"situacao"?: string,"tipo"?: string,"token_publico"?: string | null,"updated_at"?: string,"valor"?: number,"valor_pago"?: number | null,"vencimento"?: string,"whatsapp_autorizado"?: boolean
+                    "ano"?: number,"aprovada_em"?: string | null,"aprovada_por"?: string | null,"baixa_observacao"?: string | null,"baixada_em"?: string | null,"baixada_por"?: string | null,"banco_atualizado_em"?: string | null,"banco_e2e"?: string | null,"banco_erro"?: string | null,"banco_pix"?: string | null,"banco_situacao"?: string | null,"banco_txid"?: string | null,"cancelada_em"?: string | null,"cobrar_encargos"?: boolean,"competencia"?: string | null,"contato_email"?: string | null,"contato_whatsapp"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"descricao"?: string,"empresa_id"?: string | null,"ficha_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"juros_mes_percentual"?: number,"motivo_cancelamento"?: string | null,"multa"?: number,"multa_percentual"?: number,"numero"?: number,"pagador_documento"?: string | null,"pagador_nome"?: string,"pago_em"?: string | null,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_txid"?: string | null,"recibo_id"?: string | null,"robo_ativo"?: boolean,"situacao"?: string,"tipo"?: string,"token_publico"?: string | null,"updated_at"?: string,"valor"?: number,"valor_pago"?: number | null,"vencimento"?: string,"whatsapp_autorizado"?: boolean
                   }
                   Relationships: [
                     {
@@ -2489,13 +2502,13 @@ isOneToOne: false
                   ]
                 },"honorarios_config": {
                   Row: {
-                    "aprovacao_automatica": boolean,"cobrar_encargos": boolean,"competencia_referencia": string,"dia_geracao": number,"email_ativo": boolean,"geracao_automatica": boolean,"id": number,"juros_mes_percentual": number,"mensagens": NonNullable<Json>,"multa_percentual": number,"pix_chave": string | null,"pix_cidade": string | null,"pix_nome": string | null,"pix_tipo": string | null,"recibo_automatico": boolean,"recibo_publicar": boolean,"regua": (number)[],"robo_ativo": boolean,"updated_at": string,"updated_by": string | null,"whatsapp_ativo": boolean,"whatsapp_template": string | null
+                    "aprovacao_automatica": boolean,"banco_ambiente": string,"banco_ativo": boolean,"banco_cadastrado_em": string | null,"banco_certificado_validade": string | null,"banco_conferido_em": string | null,"banco_pix": string | null,"banco_testado_em": string | null,"banco_teste_erro": string | null,"banco_teste_ok": boolean | null,"banco_url_api": string | null,"banco_url_token": string | null,"banco_webhook_em": string | null,"banco_webhook_segredo": string | null,"cobrar_encargos": boolean,"competencia_referencia": string,"dia_geracao": number,"email_ativo": boolean,"geracao_automatica": boolean,"id": number,"juros_mes_percentual": number,"mensagens": NonNullable<Json>,"multa_percentual": number,"pix_chave": string | null,"pix_cidade": string | null,"pix_nome": string | null,"pix_tipo": string | null,"recibo_automatico": boolean,"recibo_publicar": boolean,"regua": (number)[],"robo_ativo": boolean,"updated_at": string,"updated_by": string | null,"whatsapp_ativo": boolean,"whatsapp_template": string | null
                   }
                   Insert: {
-                    "aprovacao_automatica"?: boolean,"cobrar_encargos"?: boolean,"competencia_referencia"?: string,"dia_geracao"?: number,"email_ativo"?: boolean,"geracao_automatica"?: boolean,"id"?: number,"juros_mes_percentual"?: number,"mensagens"?: NonNullable<Json>,"multa_percentual"?: number,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_tipo"?: string | null,"recibo_automatico"?: boolean,"recibo_publicar"?: boolean,"regua"?: (number)[],"robo_ativo"?: boolean,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_ativo"?: boolean,"whatsapp_template"?: string | null
+                    "aprovacao_automatica"?: boolean,"banco_ambiente"?: string,"banco_ativo"?: boolean,"banco_cadastrado_em"?: string | null,"banco_certificado_validade"?: string | null,"banco_conferido_em"?: string | null,"banco_pix"?: string | null,"banco_testado_em"?: string | null,"banco_teste_erro"?: string | null,"banco_teste_ok"?: boolean | null,"banco_url_api"?: string | null,"banco_url_token"?: string | null,"banco_webhook_em"?: string | null,"banco_webhook_segredo"?: string | null,"cobrar_encargos"?: boolean,"competencia_referencia"?: string,"dia_geracao"?: number,"email_ativo"?: boolean,"geracao_automatica"?: boolean,"id"?: number,"juros_mes_percentual"?: number,"mensagens"?: NonNullable<Json>,"multa_percentual"?: number,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_tipo"?: string | null,"recibo_automatico"?: boolean,"recibo_publicar"?: boolean,"regua"?: (number)[],"robo_ativo"?: boolean,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_ativo"?: boolean,"whatsapp_template"?: string | null
                   }
                   Update: {
-                    "aprovacao_automatica"?: boolean,"cobrar_encargos"?: boolean,"competencia_referencia"?: string,"dia_geracao"?: number,"email_ativo"?: boolean,"geracao_automatica"?: boolean,"id"?: number,"juros_mes_percentual"?: number,"mensagens"?: NonNullable<Json>,"multa_percentual"?: number,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_tipo"?: string | null,"recibo_automatico"?: boolean,"recibo_publicar"?: boolean,"regua"?: (number)[],"robo_ativo"?: boolean,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_ativo"?: boolean,"whatsapp_template"?: string | null
+                    "aprovacao_automatica"?: boolean,"banco_ambiente"?: string,"banco_ativo"?: boolean,"banco_cadastrado_em"?: string | null,"banco_certificado_validade"?: string | null,"banco_conferido_em"?: string | null,"banco_pix"?: string | null,"banco_testado_em"?: string | null,"banco_teste_erro"?: string | null,"banco_teste_ok"?: boolean | null,"banco_url_api"?: string | null,"banco_url_token"?: string | null,"banco_webhook_em"?: string | null,"banco_webhook_segredo"?: string | null,"cobrar_encargos"?: boolean,"competencia_referencia"?: string,"dia_geracao"?: number,"email_ativo"?: boolean,"geracao_automatica"?: boolean,"id"?: number,"juros_mes_percentual"?: number,"mensagens"?: NonNullable<Json>,"multa_percentual"?: number,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_tipo"?: string | null,"recibo_automatico"?: boolean,"recibo_publicar"?: boolean,"regua"?: (number)[],"robo_ativo"?: boolean,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_ativo"?: boolean,"whatsapp_template"?: string | null
                   }
                   Relationships: [
                     {
@@ -6480,6 +6493,27 @@ isOneToOne: false
                            },
 "honorarios_acesso_definir":
 { Args: { "p_ativo": boolean,"p_user_id": string }; Returns: undefined
+                           },
+"honorarios_banco_baixar":
+{ Args: { "p_data": string,"p_e2e": string,"p_id": string,"p_valor": number }; Returns: Json
+                           },
+"honorarios_banco_configurar":
+{ Args: { "p_dados": Json }; Returns: undefined
+                           },
+"honorarios_banco_guardar":
+{ Args: { "p_ambiente": string,"p_conteudo": string,"p_url_api": string,"p_url_token": string,"p_validade": string }; Returns: undefined
+                           },
+"honorarios_banco_registrar_cobranca":
+{ Args: { "p_erro": string,"p_id": string,"p_pix": string,"p_situacao": string,"p_txid": string }; Returns: undefined
+                           },
+"honorarios_banco_remover":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"honorarios_banco_resultado_teste":
+{ Args: { "p_erro": string,"p_ok": boolean,"p_webhook": boolean }; Returns: undefined
+                           },
+"honorarios_banco_vincular_recibo":
+{ Args: { "p_id": string,"p_recibo_id": string }; Returns: undefined
                            },
 "honorarios_cobranca_baixar":
 { Args: { "p_dados": Json,"p_id": string }; Returns: Json

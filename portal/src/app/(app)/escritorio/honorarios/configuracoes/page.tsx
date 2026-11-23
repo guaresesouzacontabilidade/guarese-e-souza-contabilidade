@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AcessoPessoa, FormGeracao, FormMensagens, FormPix, FormRobo } from "@/components/honorarios/configuracoes";
 import { NovaCategoria } from "@/components/honorarios/lancamentos";
+import { AcoesSicredi, FormSicredi } from "@/components/honorarios/banco";
+import { formatarData, formatarDataHora } from "@/lib/formatos";
 import { exigirHonorarios } from "@/lib/honorarios/acesso";
 import { TIPOS_CATEGORIA_ESCRITORIO, type TipoCategoriaEscritorio } from "@/lib/honorarios/comum";
 import { textoPix } from "@/lib/honorarios/pix";
@@ -40,6 +42,45 @@ export default async function ConfiguracoesHonorarios() {
         </CardHeader>
         <CardContent>
           <FormPix cfg={config} sugestao={{ nome: textoPix(esc?.razao_social ?? "", 25), cidade: textoPix(esc?.cidade ?? "", 15) }} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            Pix Sicredi — confirmação automática{" "}
+            <Badge variante={cfg.banco_ativo ? "sucesso" : cfg.banco_teste_ok ? "info" : "neutro"}>
+              {cfg.banco_ativo ? "Ligada" : cfg.banco_teste_ok ? "Testada, desligada" : cfg.banco_pix ? "Cadastrada, falta testar" : "Desconectada"}
+            </Badge>
+          </CardTitle>
+          <CardDescription>
+            Com a API Pix do Sicredi, cada cobrança enviada é criada no banco (com multa e juros calculados pelo banco) e o pagamento dá baixa sozinho, com o recibo. Até a ativação, vale o Pix comum.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {cfg.banco_pix ? (
+            <ul className="space-y-1 text-sm">
+              <li>Ambiente: {cfg.banco_ambiente === "producao" ? "produção" : "homologação"} · cadastrado em {formatarDataHora(cfg.banco_cadastrado_em)}</li>
+              <li>Certificado válido até {formatarData(cfg.banco_certificado_validade?.slice(0, 10))}</li>
+              <li>
+                Último teste: {cfg.banco_testado_em ? `${formatarDataHora(cfg.banco_testado_em)} — ${cfg.banco_teste_ok ? "funcionando" : `falhou (${cfg.banco_teste_erro})`}` : "ainda não testado"}
+              </li>
+              <li>Aviso automático de pagamento: {cfg.banco_webhook_em ? `cadastrado em ${formatarDataHora(cfg.banco_webhook_em)}` : "não cadastrado (o portal confere a cada 15 minutos)"}</li>
+            </ul>
+          ) : null}
+          {admin ? (
+            <>
+              <AcoesSicredi cadastrado={Boolean(cfg.banco_pix)} testeOk={Boolean(cfg.banco_teste_ok)} ativo={cfg.banco_ativo} />
+              <details className="rounded-lg border border-border p-3" open={!cfg.banco_pix}>
+                <summary className="cursor-pointer text-sm font-medium">{cfg.banco_pix ? "Trocar as credenciais" : "Cadastrar as credenciais do Sicredi"}</summary>
+                <div className="pt-4">
+                  <FormSicredi cadastrado={Boolean(cfg.banco_pix)} />
+                </div>
+              </details>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Só o administrador cadastra e liga a conexão com o banco.</p>
+          )}
         </CardContent>
       </Card>
 

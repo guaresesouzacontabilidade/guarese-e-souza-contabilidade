@@ -104,7 +104,14 @@ export default async function HonorariosCliente({ params }: PageProps<"/e/[empre
                   {c.descricao}
                   <span className="block text-xs text-muted-foreground">pago em {formatarData(c.pago_em)}</span>
                 </span>
-                <span className="font-medium">{formatarMoeda(c.valor_pago)}</span>
+                <span className="flex items-center gap-3">
+                  <span className="font-medium">{formatarMoeda(c.valor_pago)}</span>
+                  {c.recibo_id ? (
+                    <a href={`/api/honorarios/${c.id}/recibo`} className="text-xs text-primary underline">
+                      Recibo
+                    </a>
+                  ) : null}
+                </span>
               </li>
             ))}
           </ul>

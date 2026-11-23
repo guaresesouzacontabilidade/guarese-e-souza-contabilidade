@@ -14,6 +14,8 @@ async function executar(req: Request) {
   if (!cronAutorizado(req)) return new NextResponse("Não autorizado.", { status: 401 });
   const admin = criarClienteAdmin();
   try {
+    // Pix pelo banco (Sicredi): confere os recebidos a cada 15 minutos, caso o aviso do banco falhe
+    await (await import("@/lib/honorarios/banco")).agendarConferenciaPeriodica(admin).catch(() => undefined);
     const r = await processarFila({ limite: 100, tempoMaximoMs: 50_000 });
     await registrarRotina(admin, "fila", { ok: true, resultado: r });
     return NextResponse.json({ ok: true, ...r });

@@ -13,6 +13,7 @@ type Manipulador = (admin: ClienteAdmin, job: Job, contexto: ContextoTarefa) => 
 const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
   enviar_envio: async () => (await import("@/lib/notificacoes/envio")).executarEnvio,
   enviar_push: async () => (await import("@/lib/notificacoes/push")).executarPush,
+  pix_banco: async () => (await import("@/lib/honorarios/banco")).executarPixBanco,
   processar_documento: async () => (await import("@/lib/documentos/processar")).processarDocumento,
   sugerir_conciliacao: async () => (await import("@/lib/conciliacao/motor")).executarSugestoes,
   remover_arquivos: async () => (await import("@/lib/documentos/processar")).removerArquivos,
