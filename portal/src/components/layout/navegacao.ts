@@ -172,6 +172,7 @@ export function gruposEscritorio(admin: boolean, honorarios = false): GrupoMenu[
               { rotulo: "Painel dos honorários", href: "/escritorio/honorarios", icone: HandCoins, exato: true },
               { rotulo: "Cobranças", href: "/escritorio/honorarios/cobrancas", icone: Banknote },
               { rotulo: "Clientes e valores", href: "/escritorio/honorarios/fichas", icone: Users },
+              { rotulo: "Contratos", href: "/escritorio/honorarios/contratos", icone: FileSignature },
               { rotulo: "Lançamentos do escritório", href: "/escritorio/honorarios/lancamentos", icone: FileSpreadsheet },
               { rotulo: "DRE do escritório", href: "/escritorio/honorarios/dre", icone: BookOpenCheck },
               { rotulo: "Configurações da cobrança", href: "/escritorio/honorarios/configuracoes", icone: Settings },
@@ -272,6 +273,8 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
   }
   // Cobranças do escritório para a empresa (o cliente que cuida do financeiro)
   if (!equipe && p.has("financeiro.ver")) pagamentos.push({ rotulo: "Honorários do escritório", href: `${base}/honorarios`, icone: HandCoins });
+  // Contratos com o escritório: o sócio titular (que assina) e quem cuida do financeiro
+  if (!equipe && (empresa.papel === "cliente_titular" || p.has("financeiro.ver"))) documentos.push({ rotulo: "Contratos com o escritório", href: `${base}/contratos`, icone: FileSignature });
   if (p.has("financeiro.ver")) financeiro.push({ rotulo: "Contas e fluxo de caixa", href: `${base}/financeiro`, icone: Wallet });
   // Rentabilidade da frota: transportadoras (CT-e, transporte ou caminhões cadastrados); a equipe vê em todas
   if (p.has("financeiro.ver") && (equipe || empresa.frota || empresa.cte || transporte)) {

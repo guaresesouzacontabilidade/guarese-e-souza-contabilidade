@@ -80,6 +80,12 @@ Menu **Pagamentos e prazos → Honorários do escritório** (para quem cuida do 
 - A cobrança também chega por **e-mail** (com o QR code e o PDF) e, se você autorizou, por **WhatsApp**, com um link que abre a página de pagamento no celular, sem precisar entrar no portal.
 - Pagou? O escritório confere e envia o **recibo** por e-mail; ele também fica em **Documentos**. Os pagamentos feitos aparecem em **Pagamentos feitos**.
 
+### Contratos com o escritório
+Menu **Documentos → Contratos com o escritório**:
+- O escritório envia o contrato de prestação de serviços (e, depois, aditivos ou o distrato). Você recebe o aviso no portal e por e-mail.
+- Abra, leia o texto inteiro (ou baixe o PDF) e, se você é o **sócio titular**, assine: confirme seu **nome completo** e **CPF**, clique em **Enviar código**, digite o código de 6 números que chegou no seu e-mail, marque que leu e clique em **Assinar**.
+- Depois de assinado, baixe a **via assinada**: ela traz no fim o registro das assinaturas (seus dados, data e hora, e a assinatura digital do escritório). Ela também fica em **Documentos → Contratos**.
+
 ### Agenda de pagamentos
 As guias publicadas pelo escritório (DAS, DARF, FGTS etc.) aparecem no mês do vencimento, com o valor e a situação: **a vencer**, **vence hoje**, **vencida** ou **paga**. Use as setas para trocar de mês.
 
@@ -674,6 +680,16 @@ Menu **Honorários** — só para o **administrador** e para quem ele liberar em
 - Todo pagamento registrado entra sozinho em **Lançamentos do escritório**, com descrição e linha da DRE: cada item na sua linha (honorários mensais, 13º, extras, serviços avulsos), **multa e juros** em receitas financeiras e **desconto** como dedução.
 - As **despesas** (aluguel, folha, sistemas, impostos do escritório) e outras entradas você lança em **Nova despesa** e **Nova entrada**. Sem a linha da DRE, o lançamento fica em **A classificar** e **não entra no resultado** até alguém classificar.
 - **DRE do escritório**: o resultado mês a mês, **pelo mês do serviço** ou **pelo dia em que o dinheiro entrou**; clique numa linha para ver os lançamentos. Abaixo: **previsto x recebido**, **receita por cliente** e o que fica **fora da DRE** (retirada e dinheiro dos sócios, compra de equipamentos). As linhas ficam em **Configurações da cobrança → Linhas da DRE** (dá para criar outras).
+
+### Contratos de prestação de serviços (gerados pela ficha)
+Menu **Honorários → Contratos** (ou o quadro **Contrato** na ficha do cliente):
+1. **Gerar contrato**: o portal monta o texto com o que está marcado na **ficha do cliente** — serviços incluídos, honorário mensal (com o valor por extenso), vencimento, extras de funcionários e notas, 13º, reajuste, multa e juros. Escolha o **aviso prévio** (30, 60 ou 90 dias), até que dia o cliente manda os documentos, o **foro** e, se quiser, uma **cláusula adicional**.
+2. Confira o texto na tela (ou no PDF) e clique em **Enviar ao cliente**. O sócio titular recebe o aviso no portal e por e-mail. Depois de enviado, o texto não muda.
+3. O sócio titular assina no portal (nome, CPF e código por e-mail). Você recebe um aviso no sino. Na tela do contrato aparecem os dados da assinatura; clique em **Publicar nos documentos do cliente** para a via assinada ir para **Documentos → Contratos**.
+- **Aditivo**: mudou a ficha (valor, vencimento, serviços, extras, 13º, reajuste)? No contrato assinado, clique em **Gerar aditivo**: o portal compara com o que foi assinado e escreve só o que mudou.
+- **Distrato**: quando o cliente sai, **Gerar distrato** com a data do encerramento, a última competência do escritório e o prazo de devolução dos documentos.
+- O texto segue as cláusulas mínimas da **Resolução CFC nº 1.590/2020** (partes, serviços, o que cabe ao cliente, duração, honorários, prazo de pagamento, reajuste, responsabilidades, aditivo, Carta de Responsabilidade da Administração, Lei nº 9.613/1998, rescisão com aviso prévio e foro), mais LGPD e assinatura eletrônica. É um modelo: confira antes do primeiro envio.
+- Com o **certificado digital do escritório** cadastrado (o mesmo dos recibos), o PDF enviado e a via final saem assinados digitalmente.
 
 ### Recibos de honorários (equipe)
 Menu **Financeiro → Recibos de honorários → Novo recibo**:

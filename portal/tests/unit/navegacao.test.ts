@@ -20,7 +20,7 @@ describe("menu agrupado", () => {
   it("empresa: grupo sem permissão não aparece; transporte junta as ordens às notas", () => {
     const so = gruposEmpresa(empresa(["documentos.ver", "documentos.enviar"]), false);
     expect(so.map((g) => g.id)).toEqual(["inicio", "notas", "documentos", "pagamentos", "configuracoes"]);
-    expect(so.find((g) => g.id === "documentos")!.itens.map((i) => i.rotulo)).toEqual(["Enviar documentos", "Meus documentos", "Pendências"]);
+    expect(so.find((g) => g.id === "documentos")!.itens.map((i) => i.rotulo)).toEqual(["Enviar documentos", "Meus documentos", "Pendências", "Contratos com o escritório"]);
 
     const graos = gruposEmpresa(empresa(["nfe.emitir", "cte.emitir", "documentos.ver"], { loja: true, modalidade: "notas", cte: true }), false);
     const notas = graos.find((g) => g.id === "notas")!;
@@ -41,7 +41,7 @@ describe("menu agrupado", () => {
     expect(grupoAtivo(`/e/${ID}`, grupos)?.id).toBe("inicio");
     expect(grupoAtivo(`/e/${ID}/nada`, grupos)).toBeNull();
     // A lista completa continua com todos os itens, na ordem dos grupos
-    expect(menuEmpresa(empresa(["mensagens.usar"]), false).map((i) => i.rotulo)).toEqual(["Início", "Mensagens", "Solicitações", "Configurações"]);
+    expect(menuEmpresa(empresa(["mensagens.usar"]), false).map((i) => i.rotulo)).toEqual(["Início", "Contratos com o escritório", "Mensagens", "Solicitações", "Configurações"]);
   });
 });
 

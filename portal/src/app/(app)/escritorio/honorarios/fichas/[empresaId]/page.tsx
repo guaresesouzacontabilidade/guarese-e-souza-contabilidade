@@ -5,6 +5,8 @@ import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FormularioFicha, type FichaForm } from "@/components/honorarios/ficha";
+import { GerarContrato } from "@/components/honorarios/contratos";
+import { SITUACOES_CONTRATO, TIPOS_CONTRATO, numeroContrato } from "@/lib/honorarios/contratos-comum";
 import { exigirHonorarios } from "@/lib/honorarios/acesso";
 import { numeroCobranca, situacaoExibida } from "@/lib/honorarios/comum";
 import { competenciaAtual, hojeISO, somarMeses } from "@/lib/competencia";
@@ -17,11 +19,13 @@ export default async function Ficha({ params }: PageProps<"/escritorio/honorario
   const s = await exigirHonorarios();
   const { empresaId } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(empresaId)) notFound();
-  const [{ data: empresa }, { data: ficha }, { data: cobrancas }, { data: cfg }] = await Promise.all([
+  const [{ data: empresa }, { data: ficha }, { data: cobrancas }, { data: cfg }, { data: contratos }, { data: esc }] = await Promise.all([
     s.supabase.from("empresas").select("id, razao_social, nome_fantasia, email").eq("id", empresaId).maybeSingle(),
     s.supabase.from("honorarios_fichas").select("*").eq("empresa_id", empresaId).maybeSingle(),
     s.supabase.from("honorarios_cobrancas").select("id, ano, numero, descricao, valor, vencimento, situacao").eq("empresa_id", empresaId).order("vencimento", { ascending: false }).limit(12),
     s.supabase.from("honorarios_config").select("competencia_referencia").single(),
+    s.supabase.from("honorarios_contratos").select("id, ano, numero, tipo, situacao").eq("empresa_id", empresaId).neq("situacao", "cancelado").order("created_at", { ascending: false }).limit(5),
+    s.supabase.from("escritorio").select("cidade, uf").eq("id", 1).single(),
   ]);
   if (!empresa) notFound();
   const nome = empresa.nome_fantasia ?? empresa.razao_social;
@@ -64,6 +68,29 @@ export default async function Ficha({ params }: PageProps<"/escritorio/honorario
           <FormularioFicha ficha={dados} empresaNome={nome} />
         </CardContent>
       </Card>
+      {ficha ? (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
+          <div className="text-sm">
+            <p className="font-semibold">Contrato</p>
+            {contratos?.length ? (
+              <p className="text-muted-foreground">
+                {contratos.map((c, i) => (
+                  <span key={c.id}>
+                    {i ? " · " : ""}
+                    <Link href={`/escritorio/honorarios/contratos/${c.id}`} className="underline">
+                      {TIPOS_CONTRATO[c.tipo as keyof typeof TIPOS_CONTRATO]} nº {numeroContrato(c)}
+                    </Link>{" "}
+                    ({SITUACOES_CONTRATO[c.situacao as keyof typeof SITUACOES_CONTRATO].rotulo.toLowerCase()})
+                  </span>
+                ))}
+              </p>
+            ) : (
+              <p className="text-muted-foreground">O contrato sai pronto com o que está marcado nesta ficha.</p>
+            )}
+          </div>
+          {!contratos?.some((c) => c.tipo === "contrato") ? <GerarContrato empresaId={empresaId} foro={[esc?.cidade, esc?.uf].filter(Boolean).join("/") || "Porto Nacional/TO"} /> : null}
+        </section>
+      ) : null}
       {cobrancas?.length ? (
         <section className="space-y-2">
           <h2 className="font-semibold">Últimas cobranças</h2>

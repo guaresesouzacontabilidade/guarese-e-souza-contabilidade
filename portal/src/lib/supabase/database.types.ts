@@ -2506,6 +2506,86 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"honorarios_contrato_codigos": {
+                  Row: {
+                    "codigo_hash": string,"contrato_id": string,"criado_em": string,"expira_em": string,"tentativas": number,"user_id": string
+                  }
+                  Insert: {
+                    "codigo_hash": string,"contrato_id": string,"criado_em"?: string,"expira_em": string,"tentativas"?: number,"user_id": string
+                  }
+                  Update: {
+                    "codigo_hash"?: string,"contrato_id"?: string,"criado_em"?: string,"expira_em"?: string,"tentativas"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_contrato_codigos_contrato_id_fkey"
+      columns: ["contrato_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_contratos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contrato_codigos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_contratos": {
+                  Row: {
+                    "aceite_cpf": string | null,"aceite_em": string | null,"aceite_email": string | null,"aceite_ip": string | null,"aceite_metodo": string | null,"aceite_nome": string | null,"aceite_user_agent": string | null,"aceite_user_id": string | null,"ano": number,"arquivo_assinado": boolean,"arquivo_hash": string | null,"arquivo_path": string | null,"cancelado_em": string | null,"clausulas": NonNullable<Json>,"contrato_origem_id": string | null,"created_at": string,"criado_por": string | null,"dados": NonNullable<Json>,"documento_id": string | null,"empresa_id": string,"enviado_em": string | null,"enviado_por": string | null,"ficha_id": string | null,"final_hash": string | null,"final_path": string | null,"id": string,"motivo_cancelamento": string | null,"numero": number,"situacao": string,"tipo": string,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "aceite_cpf"?: string | null,"aceite_em"?: string | null,"aceite_email"?: string | null,"aceite_ip"?: string | null,"aceite_metodo"?: string | null,"aceite_nome"?: string | null,"aceite_user_agent"?: string | null,"aceite_user_id"?: string | null,"ano": number,"arquivo_assinado"?: boolean,"arquivo_hash"?: string | null,"arquivo_path"?: string | null,"cancelado_em"?: string | null,"clausulas": NonNullable<Json>,"contrato_origem_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dados": NonNullable<Json>,"documento_id"?: string | null,"empresa_id": string,"enviado_em"?: string | null,"enviado_por"?: string | null,"ficha_id"?: string | null,"final_hash"?: string | null,"final_path"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"numero": number,"situacao"?: string,"tipo": string,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "aceite_cpf"?: string | null,"aceite_em"?: string | null,"aceite_email"?: string | null,"aceite_ip"?: string | null,"aceite_metodo"?: string | null,"aceite_nome"?: string | null,"aceite_user_agent"?: string | null,"aceite_user_id"?: string | null,"ano"?: number,"arquivo_assinado"?: boolean,"arquivo_hash"?: string | null,"arquivo_path"?: string | null,"cancelado_em"?: string | null,"clausulas"?: NonNullable<Json>,"contrato_origem_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dados"?: NonNullable<Json>,"documento_id"?: string | null,"empresa_id"?: string,"enviado_em"?: string | null,"enviado_por"?: string | null,"ficha_id"?: string | null,"final_hash"?: string | null,"final_path"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"numero"?: number,"situacao"?: string,"tipo"?: string,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_contratos_aceite_user_id_fkey"
+      columns: ["aceite_user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_contrato_origem_id_fkey"
+      columns: ["contrato_origem_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_contratos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_ficha_id_fkey"
+      columns: ["ficha_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_fichas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"honorarios_fichas": {
                   Row: {
                     "canal_email": boolean,"canal_whatsapp": boolean,"contato_email": string | null,"contato_nome": string | null,"contato_whatsapp": string | null,"created_at": string,"criado_por": string | null,"decimo_terceiro": boolean,"decimo_terceiro_mes": number,"dia_vencimento": number,"empresa_id": string,"fim": string | null,"funcionarios_inclusos": number | null,"id": string,"inicio": string,"notas_inclusas": number | null,"observacao": string | null,"reajuste_indice": string,"reajuste_mes": number | null,"robo_pausado_ate": string | null,"servicos": (string)[],"situacao": string,"updated_at": string,"valor_funcionario_extra": number | null,"valor_mensal": number,"valor_nota_extra": number | null,"whatsapp_autorizado": boolean
@@ -6424,6 +6504,27 @@ isOneToOne: false
                            },
 "honorarios_config_salvar":
 { Args: { "p_dados": Json }; Returns: undefined
+                           },
+"honorarios_contrato_aceitar":
+{ Args: { "p_codigo": string,"p_contrato_id": string,"p_cpf": string,"p_hash": string,"p_ip": string,"p_nome": string,"p_user_agent": string,"p_user_id": string }; Returns: undefined
+                           },
+"honorarios_contrato_cancelar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"honorarios_contrato_enviar":
+{ Args: { "p_id": string }; Returns: number
+                           },
+"honorarios_contrato_registrar_arquivo":
+{ Args: { "p_assinado": boolean,"p_hash": string,"p_id": string,"p_path": string }; Returns: undefined
+                           },
+"honorarios_contrato_registrar_codigo":
+{ Args: { "p_codigo": string,"p_contrato_id": string,"p_user_id": string }; Returns: undefined
+                           },
+"honorarios_contrato_registrar_final":
+{ Args: { "p_documento_id": string,"p_hash": string,"p_id": string,"p_path": string }; Returns: undefined
+                           },
+"honorarios_contrato_salvar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: string
                            },
 "honorarios_ficha_salvar":
 { Args: { "p_dados": Json,"p_id": string }; Returns: string

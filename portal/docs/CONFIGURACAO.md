@@ -345,3 +345,13 @@ Funciona sem chaves externas: fichas, cobranças, Pix comum, baixa, recibo e DRE
 - **DRE**: `escritorio_lancamentos` (descrição obrigatória; sem linha da DRE = "a classificar", fora do resultado) e `escritorio_categorias` (plano de contas do escritório, com as linhas do sistema usadas pela baixa). A baixa (`honorarios_cobranca_baixar`) cria um lançamento por item, um de multa e juros e um de desconto; `honorarios_cobranca_estornar` desfaz.
 - **Banco**: `honorarios_config`, `honorarios_fichas`, `honorarios_cobrancas`, `honorarios_cobranca_itens`, `honorarios_lembretes`, `honorarios_geracoes`, `honorarios_acessos`, `escritorio_categorias`, `escritorio_lancamentos` (migração `20261203010000_honorarios_cobrancas.sql`, testes `71_honorarios_cobrancas.test.sql`).
 
+## 23. Contratos de prestação de serviços (gerados pela ficha)
+
+Funcionam sem chaves externas. O código de confirmação vai pelo e-mail do portal (seção 3); com o e-mail desconectado, a assinatura usa só a sessão do portal (senha), e isso fica registrado.
+
+- **Texto** (`src/lib/honorarios/contrato.ts`, testes em `tests/unit/contrato.test.ts`): cláusulas mínimas do art. 2º da Resolução CFC nº 1.590/2020, montadas pela ficha; aditivo pela diferença entre a ficha e o último contrato/aditivo assinado; distrato pelos arts. 6º a 10.
+- **Arquivos** (bucket privado `contratos`): o PDF enviado (assinado com o certificado do escritório, quando cadastrado) e a via final com o registro das assinaturas. O resumo SHA-256 do PDF enviado fica no contrato e o aceite só vale para esse mesmo arquivo.
+- **Aceite** (`honorarios_contrato_registrar_codigo` e `honorarios_contrato_aceitar`, só pela chave de serviço, depois de o servidor conferir a sessão): só o sócio titular da empresa; código de 6 números guardado como hash, vale 15 minutos, 5 tentativas, um pedido por minuto; registra nome, CPF, e-mail, data e hora, IP e navegador.
+- **Acesso**: o financeiro do escritório monta e envia; o cliente vê os contratos da própria empresa já enviados (titular ou quem tem `financeiro.ver`).
+- **Banco**: `honorarios_contratos`, `honorarios_contrato_codigos`, categoria de documento `esc_contrato` (migração `20261204010000_honorarios_contratos.sql`, testes `72_honorarios_contratos.test.sql`).
+

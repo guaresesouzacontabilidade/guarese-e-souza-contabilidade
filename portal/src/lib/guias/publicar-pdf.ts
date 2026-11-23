@@ -16,7 +16,7 @@ export async function publicarPdfNosDocumentos(
   d: {
     empresaId: string;
     competencia: string;
-    categoria: "esc_guia" | "esc_recibo";
+    categoria: "esc_guia" | "esc_recibo" | "esc_contrato";
     nomeArquivo: string;
     titulo: string;
     vencimento?: string | null;
