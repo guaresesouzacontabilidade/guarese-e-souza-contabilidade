@@ -587,8 +587,8 @@ export function EmitirNota({
               GTA — Guia de Trânsito Animal <span className="text-perigo">*</span>
             </h3>
             <p className="text-xs text-muted-foreground">
-              Obrigatória nesta venda. A GTA é emitida antes do transporte no órgão de defesa agropecuária (no Tocantins, a ADAPEC). O número vai nas informações
-              complementares da nota. Mais de uma GTA na mesma carga? Use “+ GTA”.
+              Obrigatória nesta venda. Primeiro emita a GTA no órgão de defesa agropecuária (no Tocantins, a ADAPEC; em Goiás, a Agrodefesa) e depois a nota,
+              com o número da GTA, que vai nas informações complementares. Mais de uma GTA na mesma carga? Use “+ GTA”.
             </p>
           </div>
           {gtas.map((g, i) => (
