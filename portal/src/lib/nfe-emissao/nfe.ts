@@ -296,8 +296,13 @@ function informacoesXml(n: NotaCalculada): string {
   const partes = [n.entrada.informacoesComplementares, ...n.textosAutomaticos].filter((x): x is string => Boolean(x && x.trim()));
   const cpl = partes.length ? textoLeiaute(partes.join(" "), 5000) : "";
   const fisco = n.entrada.informacoesFisco ? textoLeiaute(n.entrada.informacoesFisco, 2000) : "";
-  if (!cpl && !fisco) return "";
-  return `<infAdic>${fisco ? `<infAdFisco>${textoXml(fisco)}</infAdFisco>` : ""}${cpl ? `<infCpl>${textoXml(cpl)}</infCpl>` : ""}</infAdic>`;
+  // GTA também em campo próprio do contribuinte (obsCont), legível pelo sistema do comprador (até 10 no leiaute)
+  const obs = (n.entrada.gtas ?? [])
+    .slice(0, 10)
+    .map((g) => `<obsCont xCampo="GTA"><xTexto>${textoXml(textoLeiaute(`${g.numero}${g.serie ? ` serie ${g.serie}` : ""} ${g.uf}`, 60))}</xTexto></obsCont>`)
+    .join("");
+  if (!cpl && !fisco && !obs) return "";
+  return `<infAdic>${fisco ? `<infAdFisco>${textoXml(fisco)}</infAdFisco>` : ""}${cpl ? `<infCpl>${textoXml(cpl)}</infCpl>` : ""}${obs}</infAdic>`;
 }
 
 export interface NfeMontada {

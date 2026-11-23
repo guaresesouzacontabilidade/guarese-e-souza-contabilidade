@@ -31,6 +31,8 @@ export interface OpcaoOperacao {
   destino: keyof typeof DESTINO;
   finalidade: number;
   freteIcmsRetido: boolean;
+  /** Venda de animais vivos: a nota só sai com o número da GTA */
+  exigeGta?: boolean;
 }
 export interface OpcaoProduto {
   id: string;
@@ -39,6 +41,8 @@ export interface OpcaoProduto {
   unidade: string;
   valorUnitario: number | null;
   pesoKg: number | null;
+  /** Regra fiscal própria do produto (operação), quando tem */
+  operacaoId?: string | null;
 }
 export interface OpcaoDestinatario {
   id: string;
@@ -74,6 +78,13 @@ export function lerNumeroBR(t: string, casas: number): string | null {
 }
 const mostrar = (n: string | null, casas = 4) =>
   n == null ? "" : Number(n).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: casas });
+
+interface LinhaGta {
+  chave: number;
+  numero: string;
+  serie: string;
+  uf: string;
+}
 
 interface Item {
   chave: number;
@@ -151,6 +162,11 @@ export function EmitirNota({
   const [referencias, setReferencias] = React.useState((inicial?.referencias ?? []).join("\n"));
   const [informacoes, setInformacoes] = React.useState(inicial?.informacoes ?? "");
   const [pedidoCompra, setPedidoCompra] = React.useState(inicial?.pedido_compra ?? "");
+  const [gtas, setGtas] = React.useState<LinhaGta[]>(() =>
+    inicial?.gtas?.length
+      ? inicial.gtas.map((g, n) => ({ chave: n + 1, numero: g.numero, serie: g.serie ?? "", uf: g.uf ?? "" }))
+      : [{ chave: 1, numero: "", serie: "", uf: "" }],
+  );
   const [novoCliente, setNovoCliente] = React.useState(false);
   const [novoTransp, setNovoTransp] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
@@ -165,6 +181,14 @@ export function EmitirNota({
   const reterFrete = Boolean(operacao?.freteIcmsRetido) && (modalidade === "0" || (freteDeOutro && reterMesmoAssim));
   const emitente = emitentes.find((e) => e.id === emitenteId);
   const destinatario = destinatarios.find((d) => d.id === destinatarioId);
+  // GTA: a operação da nota exige, ou a regra própria de algum produto da venda (o banco confere do mesmo jeito)
+  const exigeGta =
+    Boolean(operacao?.exigeGta) ||
+    (operacao?.finalidade === 1 &&
+      itens.some((i) => {
+        const p = produtos.find((x) => x.id === i.produto_id);
+        return Boolean(p?.operacaoId && operacoes.find((o) => o.id === p.operacaoId)?.exigeGta);
+      }));
   const somaProdutos = itens.reduce((s, i) => {
     const q = lerNumeroBR(i.quantidade, 4);
     const v = lerNumeroBR(i.valor, 10);
@@ -219,6 +243,10 @@ export function EmitirNota({
       .map((r) => r.replace(/\D/g, ""))
       .filter(Boolean);
     if (refs.some((r) => r.length !== 44)) return "Cada chave de acesso referenciada tem 44 números.";
+    const gtasPedido = exigeGta
+      ? gtas.filter((g) => g.numero.trim()).map((g) => ({ numero: g.numero.trim(), serie: g.serie.trim() || undefined, uf: g.uf || undefined }))
+      : [];
+    if (exigeGta && !gtasPedido.length) return "Informe o número da GTA (Guia de Trânsito Animal) dos animais.";
     return {
       emitente_id: emitenteId,
       operacao_id: operacaoId,
@@ -242,6 +270,7 @@ export function EmitirNota({
       },
       pagamento: { forma, descricao: descricaoPag.trim(), a_prazo: aPrazo, parcelas: pars },
       referencias: refs,
+      gtas: gtasPedido,
       informacoes: informacoes.trim(),
       pedido_compra: pedidoCompra.trim(),
     };
@@ -551,13 +580,81 @@ export function EmitirNota({
         ) : null}
       </section>
 
+      {exigeGta ? (
+        <section className="space-y-3 rounded-lg border border-border p-3 sm:p-4" aria-labelledby="gta-titulo">
+          <div>
+            <h3 id="gta-titulo" className="text-sm font-medium">
+              GTA — Guia de Trânsito Animal <span className="text-perigo">*</span>
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Obrigatória nesta venda. A GTA é emitida antes do transporte no órgão de defesa agropecuária (no Tocantins, a ADAPEC). O número vai nas informações
+              complementares da nota. Mais de uma GTA na mesma carga? Use “+ GTA”.
+            </p>
+          </div>
+          {gtas.map((g, i) => (
+            <div key={g.chave} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_7rem_auto]">
+              <Campo rotulo="Número da GTA" htmlFor={`gta-num-${g.chave}`} obrigatorio={i === 0} className="col-span-3 sm:col-span-1">
+                <Input
+                  id={`gta-num-${g.chave}`}
+                  maxLength={30}
+                  autoComplete="off"
+                  value={g.numero}
+                  onChange={(e) => setGtas(gtas.map((x) => (x.chave === g.chave ? { ...x, numero: e.target.value } : x)))}
+                />
+              </Campo>
+              <Campo rotulo="Série" htmlFor={`gta-serie-${g.chave}`}>
+                <Input
+                  id={`gta-serie-${g.chave}`}
+                  maxLength={10}
+                  autoComplete="off"
+                  value={g.serie}
+                  onChange={(e) => setGtas(gtas.map((x) => (x.chave === g.chave ? { ...x, serie: e.target.value.toUpperCase() } : x)))}
+                />
+              </Campo>
+              <Campo rotulo="Estado" htmlFor={`gta-uf-${g.chave}`}>
+                <Select id={`gta-uf-${g.chave}`} value={g.uf} onChange={(e) => setGtas(gtas.map((x) => (x.chave === g.chave ? { ...x, uf: e.target.value } : x)))}>
+                  <option value="">{emitente?.uf || "—"}</option>
+                  {UFS.filter((u) => u !== emitente?.uf).map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </Select>
+              </Campo>
+              <Button
+                type="button"
+                variante="fantasma"
+                tamanho="sm"
+                className="mb-0.5"
+                disabled={gtas.length === 1}
+                onClick={() => setGtas(gtas.filter((x) => x.chave !== g.chave))}
+                title="Remover esta GTA"
+                aria-label={`Remover a GTA ${i + 1}`}
+              >
+                <Trash2 />
+              </Button>
+            </div>
+          ))}
+          {gtas.length < 10 ? (
+            <Button
+              type="button"
+              variante="contorno"
+              tamanho="sm"
+              onClick={() => setGtas([...gtas, { chave: (seq.current += 1), numero: "", serie: "", uf: "" }])}
+            >
+              <Plus /> GTA
+            </Button>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">
         {operacao && operacao.finalidade !== 1 ? (
           <Campo rotulo="Chave da nota referenciada" htmlFor="refs" obrigatorio={operacao.finalidade === 4} ajuda="Na devolução, a chave (44 números) da nota que está sendo devolvida.">
             <Textarea id="refs" rows={2} value={referencias} onChange={(e) => setReferencias(e.target.value)} />
           </Campo>
         ) : null}
-        <Campo rotulo="Informações complementares" htmlFor="info" ajuda="Somadas ao texto padrão da operação. FUNRURAL, FETHAB e frete entram sozinhos.">
+        <Campo rotulo="Informações complementares" htmlFor="info" ajuda="Somadas ao texto padrão da operação. FUNRURAL, FETHAB, frete e GTA entram sozinhos.">
           <Textarea id="info" rows={3} maxLength={2000} value={informacoes} onChange={(e) => setInformacoes(e.target.value)} />
         </Campo>
         <Campo rotulo="Pedido de compra do cliente" htmlFor="pedido">

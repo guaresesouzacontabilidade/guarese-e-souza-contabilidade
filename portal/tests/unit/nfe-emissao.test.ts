@@ -223,6 +223,51 @@ describe("XML da NF-e", () => {
     expect(assinaturaConfere(nfe.xml)).toBe(true);
   });
 
+  it.skipIf(!temXmllint)("venda de gado do produtor com GTA: informações complementares, obsCont e esquemas oficiais", () => {
+    const gado: EntradaNfe = {
+      ...vendaMilho,
+      serie: 920,
+      natureza: "VENDA DE GADO BOVINO",
+      emitente: { ...vendaMilho.emitente, tipo: "cpf", documento: "52998224725", nome: "Produtor Fictício" },
+      destinatario: { ...vendaMilho.destinatario, endereco: { ...vendaMilho.destinatario.endereco, codigoMunicipio: "5103403", municipio: "Cuiabá", uf: "MT" } },
+      itens: [
+        {
+          ...vendaMilho.itens[0],
+          codigo: "BOI",
+          descricao: "BOVINO VIVO",
+          ncm: "01022990",
+          cfop: "5101",
+          unidade: "CB",
+          quantidade: "20",
+          valorUnitario: "3150",
+          pesoKgUnidade: null,
+          icms: { cst: "40" },
+          pis: { cst: "08" },
+          cofins: { cst: "08" },
+          ibscbs: { cst: "410", classificacao: "410014", reducaoIbs: 0, reducaoCbs: 0 },
+        },
+      ],
+      transporte: { modalidade: 1 },
+      pagamento: { forma: "90", aPrazo: false },
+      funrural: { percentual: 1.5, modo: "retido_adquirente" },
+      contribuicoes: [],
+      informacoesComplementares: null,
+      gtas: [
+        { numero: "1234567", serie: "B", uf: "MT" },
+        { numero: "998877", serie: null, uf: "MT" },
+      ],
+    };
+    const n = calcularNota(gado);
+    expect(n.textosAutomaticos[0]).toBe("Animais acompanhados de GTA nº 1234567, série B (MT); GTA nº 998877 (MT).");
+    const nfe = nfeAssinada(gado, chaves);
+    expect(nfe.xml).toContain("Animais acompanhados de GTA nº 1234567, série B (MT); GTA nº 998877 (MT).");
+    expect(nfe.xml).toContain('<obsCont xCampo="GTA"><xTexto>1234567 serie B MT</xTexto></obsCont><obsCont xCampo="GTA"><xTexto>998877 MT</xTexto></obsCont></infAdic>');
+    expect(validarXsd(nfe.xml, "nfe_v4.00.xsd")).toBe("ok");
+    expect(assinaturaConfere(nfe.xml)).toBe(true);
+    // GTA fora do formato (o banco já recusa; o servidor confere de novo)
+    expect(() => calcularNota({ ...gado, gtas: [{ numero: "12 34", uf: "MT" }] })).toThrow(/GTA inválida/);
+  });
+
   it.skipIf(!temXmllint)("passa nos esquemas: produtor rural com diferimento, DIFAL, Simples Nacional e devolução", () => {
     const produtor = nfeAssinada(
       {

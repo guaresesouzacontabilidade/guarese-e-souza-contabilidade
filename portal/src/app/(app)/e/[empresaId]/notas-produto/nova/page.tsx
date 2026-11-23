@@ -24,8 +24,8 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
   const [{ data: cfg }, { data: emitentes }, { data: operacoes }, { data: produtos }, { data: destinatarios }, { data: transportadores }] = await Promise.all([
     ctx.supabase.from("nfe_config").select("ativa, ambiente").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("nfe_emitentes").select("id, nome, serie, inscricao_estadual, municipio:municipios(uf)").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
-    ctx.supabase.from("nfe_operacoes").select("id, nome, natureza, cfop, destino, finalidade, frete_icms_retido").eq("empresa_id", empresaId).eq("ativa", true).order("nome"),
-    ctx.supabase.from("nfe_produtos").select("id, codigo, descricao, unidade, valor_unitario, peso_kg").eq("empresa_id", empresaId).eq("ativo", true).order("descricao"),
+    ctx.supabase.from("nfe_operacoes").select("id, nome, natureza, cfop, destino, finalidade, frete_icms_retido, exige_gta").eq("empresa_id", empresaId).eq("ativa", true).order("nome"),
+    ctx.supabase.from("nfe_produtos").select("id, codigo, descricao, unidade, valor_unitario, peso_kg, operacao_id").eq("empresa_id", empresaId).eq("ativo", true).order("descricao"),
     ctx.supabase.from("nfe_destinatarios").select("id, nome, documento, municipio:municipios(uf)").eq("empresa_id", empresaId).order("nome").limit(2000),
     ctx.supabase.from("nfe_transportadores").select("id, nome, documento, placa, placa_uf, rntc").eq("empresa_id", empresaId).order("nome").limit(1000),
   ]);
@@ -56,6 +56,8 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
     if (origem) {
       inicial = origem.pedido as unknown as PedidoNfe;
       if (origemId === corrigirId && origem.situacao === "rejeitada") corrigir = { id: origem.id, numero: Number(origem.numero) };
+      // Cópia de outra nota: a GTA é de cada transporte e não se repete (na correção da rejeitada, continua a mesma)
+      if (!corrigir && inicial) inicial = { ...inicial, gtas: [] };
     }
   }
 
@@ -128,6 +130,7 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
               destino: o.destino as OpcaoOperacao["destino"],
               finalidade: o.finalidade,
               freteIcmsRetido: o.frete_icms_retido,
+              exigeGta: o.exige_gta,
             }))}
             produtos={produtos.map((p) => ({
               id: p.id,
@@ -136,6 +139,7 @@ export default async function NovaNfe({ params, searchParams }: PageProps<"/e/[e
               unidade: p.unidade,
               valorUnitario: p.valor_unitario == null ? null : Number(p.valor_unitario),
               pesoKg: p.peso_kg == null ? null : Number(p.peso_kg),
+              operacaoId: p.operacao_id,
             }))}
             destinatarios={(destinatarios ?? []).map((d) => ({ id: d.id, nome: d.nome, documento: d.documento, uf: (d.municipio as { uf?: string } | null)?.uf ?? null }))}
             transportadores={(transportadores ?? []).map((t) => ({ id: t.id, nome: t.nome, documento: t.documento, placa: t.placa, placaUf: t.placa_uf, rntc: t.rntc }))}

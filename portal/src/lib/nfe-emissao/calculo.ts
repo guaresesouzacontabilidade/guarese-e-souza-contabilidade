@@ -141,6 +141,18 @@ export interface TransportadorNfe {
   uf?: string | null;
 }
 
+/** Guia de Trânsito Animal: emitida no órgão de defesa agropecuária do estado; a nota só a cita. */
+export interface GtaNfe {
+  numero: string;
+  serie?: string | null;
+  uf: string;
+}
+
+/** "GTA nº 123456, série B (TO)" — uma por GTA, para as informações complementares e a tela. */
+export function textoGta(g: GtaNfe): string {
+  return `GTA nº ${g.numero}${g.serie ? `, série ${g.serie}` : ""} (${g.uf})`;
+}
+
 export interface EntradaNfe {
   ambiente: AmbienteNfe;
   emitidaEm: Date;
@@ -188,6 +200,8 @@ export interface EntradaNfe {
   icmsPorOperacao?: boolean;
   informacoesComplementares?: string | null;
   informacoesFisco?: string | null;
+  /** GTA (Guia de Trânsito Animal) dos animais da nota, conferidas no banco */
+  gtas?: GtaNfe[] | null;
   responsavelTecnico?: { cnpj: string; contato: string; email: string; telefone: string } | null;
   autorizadosXml?: string[];
   pedidoCompra?: string | null;
@@ -703,6 +717,11 @@ export function calcularNota(e: EntradaNfe): NotaCalculada {
   };
   const pct = (v: Dec) => `${fmt(v, 2).replace(".", ",")}%`;
   const textosAutomaticos: string[] = [];
+  const gtas = e.gtas ?? [];
+  for (const g of gtas) {
+    if (!/^[0-9A-Z]{1,20}$/.test(g.numero) || (g.serie && !/^[0-9A-Z]{1,5}$/.test(g.serie)) || !/^[A-Z]{2}$/.test(g.uf)) erro("GTA inválida.");
+  }
+  if (gtas.length) textosAutomaticos.push(`Animais acompanhados de ${gtas.map(textoGta).join("; ")}.`);
   if (icmsFrete) {
     textosAutomaticos.push(
       `ICMS sobre o frete retido pelo remetente: base ${real(icmsFrete.vBCRet)}, alíquota ${pct(icmsFrete.pICMSRet)}, valor ${real(icmsFrete.vICMSRet)}.`,

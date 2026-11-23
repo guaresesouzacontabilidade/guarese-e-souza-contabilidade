@@ -115,6 +115,7 @@ export interface OperacaoNfe {
   frete_cfop: string | null;
   frete_codigo_receita: string | null;
   incide_funrural: boolean;
+  exige_gta: boolean;
   contribuicoes: ContribuicaoNfe[];
   informacoes: string | null;
   ativa: boolean;
@@ -417,6 +418,7 @@ const MODELOS_PRODUTO = [
   { rotulo: "Milho em grão (tonelada)", codigo: "MILHO-T", descricao: "MILHO EM GRAOS", ncm: "10059010", unidade: "TON", peso: "1000" },
   { rotulo: "Soja em grão (saca de 60 kg)", codigo: "SOJA", descricao: "SOJA EM GRAOS", ncm: "12019000", unidade: "SC", peso: "60" },
   { rotulo: "Soja em grão (tonelada)", codigo: "SOJA-T", descricao: "SOJA EM GRAOS", ncm: "12019000", unidade: "TON", peso: "1000" },
+  { rotulo: "Bovino vivo — gado de corte (por cabeça)", codigo: "BOI", descricao: "BOVINO VIVO", ncm: "01022990", unidade: "CB", peso: "" },
 ];
 
 /** Operações que podem ser a regra própria de um produto: de venda (NF-e normal) e ligadas. */
@@ -479,13 +481,19 @@ function FormProduto({
               <Campo rotulo="Código" htmlFor="pr-cod" obrigatorio erro={e.codigo} ajuda="Código interno do produto.">
                 <Input id="pr-cod" name="codigo" maxLength={60} value={v.codigo} onChange={(ev) => setV({ ...v, codigo: ev.target.value })} />
               </Campo>
-              <Campo rotulo="NCM" htmlFor="pr-ncm" obrigatorio erro={e.ncm} ajuda="8 números (milho em grão: 1005.90.10; soja: 1201.90.00).">
+              <Campo
+                rotulo="NCM"
+                htmlFor="pr-ncm"
+                obrigatorio
+                erro={e.ncm}
+                ajuda="8 números (milho em grão: 1005.90.10; soja: 1201.90.00; gado de corte: 0102.29.90 — reprodutor e búfalo têm outro código)."
+              >
                 <Input id="pr-ncm" name="ncm" inputMode="numeric" maxLength={10} value={v.ncm} onChange={(ev) => setV({ ...v, ncm: ev.target.value })} />
               </Campo>
               <Campo rotulo="Descrição" htmlFor="pr-desc" obrigatorio erro={e.descricao} className="sm:col-span-2">
                 <Input id="pr-desc" name="descricao" maxLength={120} value={v.descricao} onChange={(ev) => setV({ ...v, descricao: ev.target.value })} />
               </Campo>
-              <Campo rotulo="Unidade" htmlFor="pr-un" obrigatorio erro={e.unidade} ajuda="Ex.: SC (saca), TON, KG, UN.">
+              <Campo rotulo="Unidade" htmlFor="pr-un" obrigatorio erro={e.unidade} ajuda="Ex.: SC (saca), TON, KG, UN, CB (cabeça).">
                 <Input id="pr-un" name="unidade" maxLength={6} list="pr-unidades" value={v.unidade} onChange={(ev) => setV({ ...v, unidade: ev.target.value.toUpperCase() })} />
                 <datalist id="pr-unidades">
                   {["SC", "TON", "KG", "UN", "CX", "LT", "M3", "CB"].map((u) => (
@@ -704,11 +712,50 @@ interface ModeloOperacao {
   consumidor_final?: boolean;
   difal_metodo?: string;
   incide_funrural?: boolean;
+  /** Venda de animais vivos: a nota só sai com o número da GTA */
+  exige_gta?: boolean;
+  /** Produtor pessoa física: PIS e Cofins sem incidência (CST 08) */
+  pis_cst?: string;
+  cofins_cst?: string;
+  /** O que o escritório precisa conferir antes de salvar (aparece em destaque no formulário) */
+  conferir?: string[];
   /** Mercadoria com o ICMS já retido pelo fornecedor: CSOSN 500 no Simples, CST 60 no regime normal */
   st?: boolean;
 }
 
+/** Pontos da tributação do gado no Tocantins que mudam com frequência: o escritório escolhe, o portal não chuta. */
+const CONFERIR_GADO_TO = [
+  "ICMS: escolha o CST e a alíquota conforme a lei em vigor. No Tocantins, confira a isenção da venda interna do produtor com inscrição ativa (Lei 1.173/2000) e o diferimento na venda para abate, até a entrada no frigorífico, com TARE (Portaria SEFAZ 1.727/2000).",
+  "Para outro estado: confira a alíquota interestadual, a redução da carga e o crédito presumido do gado vivo (Portaria SEFAZ 1.727/2000 e alterações) e se o ICMS é pago antes da saída.",
+  "IBS/CBS: produtor rural que não é contribuinte costuma usar a classificação 410014 (LC 214/2025, art. 164).",
+  "FUNRURAL: o percentual e quem recolhe (o comprador retém ou o produtor recolhe) ficam na configuração da emissão.",
+];
+
 const MODELOS_OPERACAO: ModeloOperacao[] = [
+  {
+    rotulo: "Venda de gado (bovinos vivos) dentro do estado (5101, com GTA e FUNRURAL)",
+    nome: "Venda de gado - dentro do estado",
+    natureza: "VENDA DE GADO BOVINO",
+    destino: "interna",
+    cfop: "5101",
+    incide_funrural: true,
+    exige_gta: true,
+    pis_cst: "08",
+    cofins_cst: "08",
+    conferir: CONFERIR_GADO_TO,
+  },
+  {
+    rotulo: "Venda de gado (bovinos vivos) para outro estado (6101, com GTA e FUNRURAL)",
+    nome: "Venda de gado - outro estado",
+    natureza: "VENDA DE GADO BOVINO",
+    destino: "interestadual",
+    cfop: "6101",
+    incide_funrural: true,
+    exige_gta: true,
+    pis_cst: "08",
+    cofins_cst: "08",
+    conferir: CONFERIR_GADO_TO,
+  },
   { rotulo: "Venda de produção própria para outro estado (6101)", nome: "Venda de produção - outro estado", natureza: "VENDA DE PRODUCAO DO ESTABELECIMENTO", destino: "interestadual", cfop: "6101" },
   { rotulo: "Venda de produção própria dentro do estado (5101)", nome: "Venda de produção - dentro do estado", natureza: "VENDA DE PRODUCAO DO ESTABELECIMENTO", destino: "interna", cfop: "5101" },
   {
@@ -867,6 +914,7 @@ function FormOperacao({
         empresaId={empresaId}
         id={operacao?.id ?? null}
         base={base}
+        conferir={modelo?.conferir}
         simples={simples}
         regimeNormal={Boolean(pisCofins)}
         classes={classes}
@@ -880,6 +928,7 @@ function CamposOperacao({
   empresaId,
   id,
   base,
+  conferir,
   simples,
   regimeNormal,
   classes,
@@ -888,6 +937,8 @@ function CamposOperacao({
   empresaId: string;
   id: string | null;
   base: Partial<OperacaoNfe>;
+  /** Pontos que o escritório confere antes de salvar (modelo escolhido) */
+  conferir?: string[];
   simples: boolean;
   /** Empresa do Lucro Real ou Presumido (paga PIS e Cofins sobre as vendas). */
   regimeNormal: boolean;
@@ -919,6 +970,15 @@ function CamposOperacao({
         const e = estado.erros ?? {};
         return (
           <>
+            {conferir?.length ? (
+              <Alerta tom="alerta" titulo="Confira antes de salvar">
+                <ul className="list-disc space-y-1 pl-5">
+                  {conferir.map((t) => (
+                    <li key={t}>{t}</li>
+                  ))}
+                </ul>
+              </Alerta>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2 [&>*]:min-w-0">
               <Campo rotulo="Nome da operação" htmlFor="op-nome" obrigatorio erro={e.nome} ajuda="Como aparece para quem emite (ex.: Venda de milho para GO).">
                 <Input id="op-nome" name="nome" maxLength={80} defaultValue={base.nome ?? ""} />
@@ -1174,6 +1234,16 @@ function CamposOperacao({
                   <span className="block text-xs text-muted-foreground">Usa o percentual da configuração da emissão.</span>
                 </span>
               </label>
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox name="exige_gta" defaultChecked={base.exige_gta ?? false} className="mt-0.5 shrink-0" />
+                <span>
+                  Exige GTA (venda de animais vivos)
+                  <span className="block text-xs text-muted-foreground">
+                    A nota só sai com o número da Guia de Trânsito Animal, que vai nas informações complementares. Vale também quando esta operação é a regra própria de um
+                    produto.
+                  </span>
+                </span>
+              </label>
               <p className="text-xs text-muted-foreground">
                 Contribuições pagas por nota, como o FETHAB em MT (percentual da UPF por tonelada). Confira o percentual e o valor da UPF vigentes; o portal calcula pelo peso dos
                 produtos e cria a guia.
@@ -1238,6 +1308,7 @@ export function OperacoesNfe({
                     {o.cofins_aliquota != null && !SEM_PIS_COFINS.includes(o.cofins_cst) ? ` ${num(o.cofins_aliquota)}%` : ""}
                     {o.ibscbs_cclass_trib ? ` — IBS/CBS ${o.ibscbs_cclass_trib}` : ""}
                     {o.incide_funrural ? " — FUNRURAL" : ""}
+                    {o.exige_gta ? " — exige GTA" : ""}
                   </p>
                   {guias.length ? <p className="text-xs text-muted-foreground">Guias por nota: {guias.join(", ")}</p> : null}
                 </div>

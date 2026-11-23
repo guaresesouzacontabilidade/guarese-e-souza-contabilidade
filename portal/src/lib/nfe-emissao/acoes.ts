@@ -213,6 +213,7 @@ export async function salvarOperacao(empresaId: string, id: string | null, _ante
       frete_cfop: texto(fd, "frete_cfop"),
       frete_codigo_receita: texto(fd, "frete_codigo_receita"),
       incide_funrural: marcado(fd, "incide_funrural"),
+      exige_gta: marcado(fd, "exige_gta"),
       contribuicoes,
       informacoes: texto(fd, "informacoes"),
       ativa: !marcado(fd, "inativa"),
@@ -364,6 +365,11 @@ const esquemaPedido = z.object({
     parcelas: z.array(z.object({ vencimento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), valor: z.string().regex(/^\d+(\.\d{1,2})?$/) })).max(120).default([]),
   }),
   referencias: z.array(z.string().regex(/^\d{44}$/, "Chave de acesso com 44 números.")).max(20).default([]),
+  /** GTA dos animais (obrigatória quando a operação exige; o banco confere) */
+  gtas: z
+    .array(z.object({ numero: z.string().max(30), serie: z.string().max(10).optional(), uf: z.string().max(2).optional() }))
+    .max(10, "No máximo 10 GTAs por nota.")
+    .default([]),
   informacoes: z.string().max(2000).optional(),
   pedido_compra: z.string().max(15).optional(),
   confirmar_repetida: z.boolean().optional(),
