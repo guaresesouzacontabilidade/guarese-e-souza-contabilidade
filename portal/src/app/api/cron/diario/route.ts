@@ -13,7 +13,9 @@ export const maxDuration = 60;
  * licenças e certidões (30, 15 e 5 dias antes e no vencimento); garante a
  * próxima busca das notas automáticas das empresas com certificado; no dia 2
  * de cada mês, reanalisa as notas no auditor fiscal (a faixa do Simples muda);
- * apaga os lotes de XML vencidos (ficam 7 dias).
+ * apaga os lotes de XML vencidos (ficam 7 dias); nos honorários do
+ * escritório, gera as cobranças do mês no dia escolhido e agenda os
+ * lembretes da régua de cobrança (só em dia útil, às 9h).
  */
 async function executar(req: Request) {
   if (!cronAutorizado(req)) return new NextResponse("Não autorizado.", { status: 401 });
@@ -34,6 +36,8 @@ async function executar(req: Request) {
   const lotes = await admin.rpc("rotina_lotes_xml");
   // Robô de planejamento tributário: um estudo por empresa ativa (pela fila)
   const estudos = await admin.rpc("rotina_estudos");
+  // Honorários do escritório: cobranças do mês no dia escolhido e lembretes da régua (dias úteis)
+  const honorarios = await admin.rpc("rotina_honorarios");
   const resultado = {
     ...(data as Record<string, unknown>),
     obrigacoes: operacional.data,
@@ -42,6 +46,7 @@ async function executar(req: Request) {
     auditor_fiscal: auditor.error ? { erro: auditor.error.message } : auditor.data,
     lotes_xml: lotes.error ? { erro: lotes.error.message } : lotes.data,
     estudos_tributarios: estudos.error ? { erro: estudos.error.message } : estudos.data,
+    honorarios: honorarios.error ? { erro: honorarios.error.message } : honorarios.data,
   };
   await registrarRotina(admin, "diaria", { ok: true, resultado });
   const fila = await processarFila({ limite: 50, tempoMaximoMs: 30_000 });

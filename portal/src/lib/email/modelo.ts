@@ -15,12 +15,22 @@ export interface DadosModeloEmail {
    * a marca do escritório.
    */
   remetente?: { nome: string; contatos: string[] };
+  /** Quadro em destaque (ex.: Pix da cobrança): título, linhas, imagem anexada (cid) e código para copiar. */
+  destaque?: { titulo: string; linhas: string[]; imagemCid?: string; codigo?: string };
 }
 
-export function modeloEmail({ titulo, paragrafos, botao, aviso, remetente }: DadosModeloEmail) {
+export function modeloEmail({ titulo, paragrafos, botao, aviso, remetente, destaque }: DadosModeloEmail) {
   const corpo = paragrafos
     .map((p) => `<p style="margin:0 0 12px;line-height:1.6;white-space:pre-line;">${esc(p)}</p>`)
     .join("");
+  const quadro = destaque
+    ? `<div style="margin:18px 0;padding:16px;border:1px solid #e7e2dc;border-radius:10px;background:#faf8f5;">
+<p style="margin:0 0 8px;font-weight:bold;color:#4a2c1d;">${esc(destaque.titulo)}</p>
+${destaque.imagemCid ? `<p style="margin:0 0 10px;"><img src="cid:${esc(destaque.imagemCid)}" width="200" height="200" alt="QR code do Pix" style="display:block;border:0;"></p>` : ""}
+${destaque.linhas.map((l) => `<p style="margin:0 0 6px;line-height:1.5;">${esc(l)}</p>`).join("")}
+${destaque.codigo ? `<p style="margin:8px 0 0;font-size:12px;color:#6b625b;">Pix copia e cola:</p><p style="margin:4px 0 0;font-family:Consolas,Menlo,monospace;font-size:12px;word-break:break-all;background:#ffffff;border:1px dashed #cfc8c1;border-radius:6px;padding:8px;">${esc(destaque.codigo)}</p>` : ""}
+</div>`
+    : "";
   const btn = botao
     ? `<p style="margin:24px 0;"><a href="${esc(botao.url)}" style="display:inline-block;background:#4a2c1d;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;">${esc(botao.texto)}</a></p>
        <p style="font-size:12px;color:#6b625b;line-height:1.5;">Se o botão não funcionar, copie este endereço no navegador:<br><span style="word-break:break-all;">${esc(botao.url)}</span></p>`
@@ -36,7 +46,7 @@ ${
     : `<div style="font-size:19px;font-weight:bold;color:#4a2c1d;">Portal Guarese&rsquo;s ON</div>
 <div style="font-size:12px;color:#6b625b;">Documentos, contabilidade e gestão financeira em um só lugar.</div>`
 }</td></tr>
-<tr><td style="padding:26px 28px;"><h1 style="margin:0 0 14px;font-size:18px;color:#4a2c1d;">${esc(titulo)}</h1>${corpo}${btn}
+<tr><td style="padding:26px 28px;"><h1 style="margin:0 0 14px;font-size:18px;color:#4a2c1d;">${esc(titulo)}</h1>${corpo}${quadro}${btn}
 ${aviso ? `<p style="font-size:12px;color:#6b625b;line-height:1.5;">${esc(aviso)}</p>` : ""}</td></tr>
 <tr><td style="padding:14px 28px;border-top:1px solid #efe6da;font-size:11px;color:#8a8079;line-height:1.5;">
 ${
@@ -52,6 +62,7 @@ Esta é uma mensagem automática do portal. Não responda a este e-mail; use a c
     titulo,
     "",
     ...paragrafos,
+    destaque ? `\n${destaque.titulo}\n${destaque.linhas.join("\n")}${destaque.codigo ? `\nPix copia e cola: ${destaque.codigo}` : ""}` : "",
     botao ? `\n${botao.texto}: ${botao.url}` : "",
     aviso ? `\n${aviso}` : "",
     remetente ? `\n${[remetente.nome, ...remetente.contatos].join(" · ")}` : "",

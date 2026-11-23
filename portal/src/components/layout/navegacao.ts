@@ -47,6 +47,9 @@ import {
   Syringe,
   Lightbulb,
   ClipboardClock,
+  HandCoins,
+  BookOpenCheck,
+  FileSpreadsheet,
   type LucideIcon,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
@@ -88,8 +91,12 @@ export interface GrupoMenu {
   itens: ItemMenu[];
 }
 
-/** Grupos do escritório: as ferramentas que andam juntas ficam no mesmo grupo. */
-export function gruposEscritorio(admin: boolean): GrupoMenu[] {
+/**
+ * Grupos do escritório: as ferramentas que andam juntas ficam no mesmo grupo.
+ * "Honorários" (o financeiro do próprio escritório) só aparece para o
+ * administrador e quem ele autorizar.
+ */
+export function gruposEscritorio(admin: boolean, honorarios = false): GrupoMenu[] {
   const grupos: GrupoMenu[] = [
     {
       id: "visao",
@@ -155,6 +162,23 @@ export function gruposEscritorio(admin: boolean): GrupoMenu[] {
         { rotulo: "Relatórios", href: "/escritorio/relatorios", icone: FileBarChart },
       ],
     },
+    ...(honorarios
+      ? [
+          {
+            id: "honorarios",
+            rotulo: "Honorários",
+            icone: HandCoins,
+            itens: [
+              { rotulo: "Painel dos honorários", href: "/escritorio/honorarios", icone: HandCoins, exato: true },
+              { rotulo: "Cobranças", href: "/escritorio/honorarios/cobrancas", icone: Banknote },
+              { rotulo: "Clientes e valores", href: "/escritorio/honorarios/fichas", icone: Users },
+              { rotulo: "Lançamentos do escritório", href: "/escritorio/honorarios/lancamentos", icone: FileSpreadsheet },
+              { rotulo: "DRE do escritório", href: "/escritorio/honorarios/dre", icone: BookOpenCheck },
+              { rotulo: "Configurações da cobrança", href: "/escritorio/honorarios/configuracoes", icone: Settings },
+            ],
+          },
+        ]
+      : []),
     {
       id: "escritorio",
       rotulo: "Escritório",
@@ -246,6 +270,8 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     pagamentos.push({ rotulo: "Agenda de pagamentos", href: `${base}/agenda`, icone: CalendarDays });
     pagamentos.push({ rotulo: "Vencimentos", href: `${base}/vencimentos`, icone: CalendarX2 });
   }
+  // Cobranças do escritório para a empresa (o cliente que cuida do financeiro)
+  if (!equipe && p.has("financeiro.ver")) pagamentos.push({ rotulo: "Honorários do escritório", href: `${base}/honorarios`, icone: HandCoins });
   if (p.has("financeiro.ver")) financeiro.push({ rotulo: "Contas e fluxo de caixa", href: `${base}/financeiro`, icone: Wallet });
   // Rentabilidade da frota: transportadoras (CT-e, transporte ou caminhões cadastrados); a equipe vê em todas
   if (p.has("financeiro.ver") && (equipe || empresa.frota || empresa.cte || transporte)) {
@@ -291,8 +317,8 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
 }
 
 /** Todos os itens, na ordem dos grupos. */
-export function menuEscritorio(admin: boolean): ItemMenu[] {
-  return gruposEscritorio(admin).flatMap((g) => g.itens);
+export function menuEscritorio(admin: boolean, honorarios = false): ItemMenu[] {
+  return gruposEscritorio(admin, honorarios).flatMap((g) => g.itens);
 }
 
 export function menuEmpresa(empresa: EmpresaMenu, equipe: boolean): ItemMenu[] {

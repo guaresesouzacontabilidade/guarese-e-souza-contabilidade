@@ -38,7 +38,7 @@ import { ConviteAvisos } from "@/components/notificacoes/avisos";
 import { avisosAtivosParaUsuario, renovarAvisos } from "@/components/notificacoes/aparelho";
 
 interface Props {
-  usuario: { id: string; nome: string; email: string; tipo: "admin" | "equipe" | "cliente" };
+  usuario: { id: string; nome: string; email: string; tipo: "admin" | "equipe" | "cliente"; honorarios?: boolean };
   empresas: EmpresaMenu[];
   logoUrl: string | null;
   naoLidas: number;
@@ -88,14 +88,15 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
   // Grupo da página atual: as outras telas do grupo aparecem como abas no topo
   const grupoDaPagina = useMemo(() => {
     if (idNaUrl && empresaAtual) return grupoAtivo(caminho, gruposEmpresa(empresaAtual, equipe));
-    if (equipe && caminho.startsWith("/escritorio")) return grupoAtivo(caminho, gruposEscritorio(usuario.tipo === "admin"));
+    if (equipe && caminho.startsWith("/escritorio")) return grupoAtivo(caminho, gruposEscritorio(usuario.tipo === "admin", usuario.honorarios));
     return null;
-  }, [idNaUrl, empresaAtual, equipe, caminho, usuario.tipo]);
+  }, [idNaUrl, empresaAtual, equipe, caminho, usuario.tipo, usuario.honorarios]);
 
   const conteudoMenu = (
     <MenuLateral
       equipe={equipe}
       admin={usuario.tipo === "admin"}
+      honorarios={Boolean(usuario.honorarios)}
       empresa={empresaAtual}
       empresaNaUrl={Boolean(idNaUrl)}
       caminho={caminho}
@@ -251,6 +252,7 @@ function AbasGrupo({ grupo, caminho }: { grupo: GrupoMenu; caminho: string }) {
 function MenuLateral({
   equipe,
   admin,
+  honorarios,
   empresa,
   empresaNaUrl,
   caminho,
@@ -258,6 +260,7 @@ function MenuLateral({
 }: {
   equipe: boolean;
   admin: boolean;
+  honorarios: boolean;
   empresa: EmpresaMenu | null;
   empresaNaUrl: boolean;
   caminho: string;
@@ -280,7 +283,7 @@ function MenuLateral({
         {equipe ? (
           <div className="space-y-1">
             <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted">Escritório</p>
-            <GruposMenu grupos={gruposEscritorio(admin)} caminho={caminho} prefixo="escritorio" />
+            <GruposMenu grupos={gruposEscritorio(admin, honorarios)} caminho={caminho} prefixo="escritorio" />
           </div>
         ) : null}
         {empresa && (!equipe || empresaNaUrl) ? (

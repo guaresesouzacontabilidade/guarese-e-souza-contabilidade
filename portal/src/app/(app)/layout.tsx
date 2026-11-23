@@ -6,16 +6,19 @@ import { envServidor } from "@/lib/env-servidor";
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
   const sessao = await exigirSessao();
-  const [empresas, escritorio, naoLidas] = await Promise.all([
+  const equipe = sessao.perfil.tipo !== "cliente";
+  const [empresas, escritorio, naoLidas, honorarios] = await Promise.all([
     obterEmpresasDoUsuario(),
     obterEscritorioPublico(),
     sessao.supabase.from("notificacoes").select("id", { count: "exact", head: true }).is("lida_em", null),
+    // Financeiro do escritório: a linha da configuração só aparece para quem tem acesso
+    equipe ? sessao.supabase.from("honorarios_config").select("id", { count: "exact", head: true }) : Promise.resolve({ count: 0 }),
   ]);
   return (
     <>
       <BannerAmbiente />
       <AppShell
-        usuario={{ id: sessao.usuarioId, nome: sessao.perfil.nome, email: sessao.perfil.email, tipo: sessao.perfil.tipo as "admin" | "equipe" | "cliente" }}
+        usuario={{ id: sessao.usuarioId, nome: sessao.perfil.nome, email: sessao.perfil.email, tipo: sessao.perfil.tipo as "admin" | "equipe" | "cliente", honorarios: (honorarios.count ?? 0) > 0 }}
         empresas={empresas.map((e) => ({
           id: e.id,
           nome: e.nome_fantasia ?? e.razao_social,

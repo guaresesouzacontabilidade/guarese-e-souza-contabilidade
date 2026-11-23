@@ -35,6 +35,11 @@ const nextConfig: NextConfig = {
     ],
     "/api/relatorios/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"],
     "/api/financeiro/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"],
+    // PDF da cobrança de honorários (download, link de pagamento e anexo do e-mail do robô)
+    "/api/honorarios/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"],
+    "/pagar/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"],
+    "/api/cron/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"],
+    "/escritorio/honorarios/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"],
   },
   images: {
     remotePatterns: supabaseHost

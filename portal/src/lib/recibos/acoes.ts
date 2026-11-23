@@ -2,49 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
-import { competenciaDe, hojeISO, lerCompetencia } from "@/lib/competencia";
+import { hojeISO, lerCompetencia } from "@/lib/competencia";
 import { lerValorBR } from "@/lib/dinheiro";
 import { validarCnpj, validarCpf } from "@/lib/formatos";
-import { publicarPdfNosDocumentos } from "@/lib/guias/publicar-pdf";
-import type { Database } from "@/lib/supabase/database.types";
-import { arquivoAssinado, certificadoDoEscritorio, gerarArquivoRecibo } from "./arquivo";
+import { certificadoDoEscritorio, gerarArquivoRecibo } from "./arquivo";
+import { publicarReciboNosDocumentos } from "./publicar";
 import { carregarRecibo } from "./carregar";
 import { FORMAS_PAGAMENTO, numeroRecibo } from "./comum";
-import { nomeArquivoRecibo } from "./pdf";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ROTA = "/escritorio/recibos";
 const texto = (fd: FormData, campo: string, max = 500) => String(fd.get(campo) ?? "").trim().slice(0, max);
-
-/**
- * Publica o PDF do recibo em "Recibos", nos documentos da empresa: o arquivo
- * assinado, quando existe (ou o que acabou de ser gerado).
- */
-async function publicarNosDocumentos(supabase: SupabaseClient<Database>, reciboId: string, pronto?: Buffer): Promise<{ erro: string } | { ok: true }> {
-  const r = await carregarRecibo(supabase, reciboId);
-  if (!r) return { erro: "Recibo não encontrado." };
-  if (!r.linha.empresa_id) return { erro: "Este recibo é de um pagador avulso (sem empresa no portal)." };
-  if (r.linha.situacao !== "emitido") return { erro: "Este recibo foi cancelado." };
-  const pdf = pronto ?? (await arquivoAssinado(r.linha)) ?? (await gerarArquivoRecibo(supabase, r.linha)).pdf;
-  const competencia = r.linha.competencia ?? competenciaDe(r.linha.data_recibo);
-  const pub = await publicarPdfNosDocumentos(supabase, {
-    empresaId: r.linha.empresa_id,
-    competencia,
-    categoria: "esc_recibo",
-    nomeArquivo: nomeArquivoRecibo(r.pdf),
-    titulo: `Recibo nº ${numeroRecibo(r.linha)} — ${r.linha.referencia}`,
-    valor: String(r.linha.valor),
-    pdf,
-    rotulo: { nome: "o recibo", publicado: "publicado" },
-  });
-  if ("erro" in pub) return pub;
-  const { error } = await supabase.rpc("recibo_vincular_documento", { p_recibo_id: reciboId, p_documento_id: pub.documentoId });
-  if (error) return { erro: mensagemErro(error) };
-  return { ok: true };
-}
 
 /** Emissão (equipe): pagador da carteira ou avulso, número do ano reservado no banco. */
 export async function emitirRecibo(_anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
@@ -99,7 +69,7 @@ export async function emitirRecibo(_anterior: ResultadoAcao, fd: FormData): Prom
   const arquivo = carregado ? await gerarArquivoRecibo(s.supabase, carregado.linha) : null;
   if (arquivo?.erro) avisos.push("assinatura");
   if (modo === "carteira" && fd.get("publicar") === "on") {
-    const pub = await publicarNosDocumentos(s.supabase, recibo.id, arquivo?.pdf);
+    const pub = await publicarReciboNosDocumentos(s.supabase, recibo.id, arquivo?.pdf);
     if ("erro" in pub) avisos.push("publicar");
   }
   revalidatePath(ROTA);
@@ -110,7 +80,7 @@ export async function emitirRecibo(_anterior: ResultadoAcao, fd: FormData): Prom
 export async function publicarRecibo(reciboId: string): Promise<ResultadoAcao> {
   if (!UUID.test(reciboId)) return falha("Recibo inválido.");
   const s = await exigirEquipe();
-  const pub = await publicarNosDocumentos(s.supabase, reciboId);
+  const pub = await publicarReciboNosDocumentos(s.supabase, reciboId);
   if ("erro" in pub) return falha(`Não foi possível publicar: ${pub.erro}`);
   revalidatePath(ROTA);
   return sucesso("Recibo publicado nos documentos da empresa (Recibos).");
@@ -133,7 +103,7 @@ export async function assinarRecibo(reciboId: string): Promise<ResultadoAcao> {
   let aviso = "";
   if (r.linha.documento_id) {
     const { error } = await s.supabase.rpc("excluir_documento", { p_documento_id: r.linha.documento_id, p_motivo: "Trocado pela versão assinada digitalmente" });
-    const pub = error ? { erro: mensagemErro(error) } : await publicarNosDocumentos(s.supabase, reciboId, arquivo.pdf);
+    const pub = error ? { erro: mensagemErro(error) } : await publicarReciboNosDocumentos(s.supabase, reciboId, arquivo.pdf);
     if ("erro" in pub) aviso = ` Atenção: a versão assinada não substituiu a publicada (${pub.erro}).`;
   }
   revalidatePath(ROTA);

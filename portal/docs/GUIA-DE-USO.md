@@ -74,6 +74,12 @@ O **checklist do mês** mostra o que a empresa precisa enviar e o prazo de cada 
 
 Se um item não existir no mês, use **Não se aplica** e explique; o escritório confirma. O portal envia lembretes antes e depois do prazo.
 
+### Honorários do escritório
+Menu **Pagamentos e prazos → Honorários do escritório** (para quem cuida do financeiro da empresa):
+- Cada cobrança do escritório aparece com o **valor**, o **vencimento**, o **QR code do Pix** e o **Pix copia e cola** (botão **Copiar**). Depois do vencimento, o valor já vem com a multa e os juros do dia.
+- A cobrança também chega por **e-mail** (com o QR code e o PDF) e, se você autorizou, por **WhatsApp**, com um link que abre a página de pagamento no celular, sem precisar entrar no portal.
+- Pagou? O escritório confere e envia o **recibo** por e-mail; ele também fica em **Documentos**. Os pagamentos feitos aparecem em **Pagamentos feitos**.
+
 ### Agenda de pagamentos
 As guias publicadas pelo escritório (DAS, DARF, FGTS etc.) aparecem no mês do vencimento, com o valor e a situação: **a vencer**, **vence hoje**, **vencida** ou **paga**. Use as setas para trocar de mês.
 
@@ -646,6 +652,28 @@ Na empresa → **Declarações → Nova declaração de faturamento**:
 5. Colha as assinaturas e envie a versão assinada em **Enviar a assinada** (o cliente também pode enviar). A declaração emitida não muda: para corrigir, **Cancelar** (com motivo; o PDF passa a sair com a marca "CANCELADA") e emita outra — **Usar como base** abre uma nova já preenchida com os dados dela. Emissão, cancelamento, envio e cada download ficam na auditoria.
 
 A **logo da empresa** se envia em **Empresas → (a empresa) → Dados cadastrais → Logo da empresa** (PNG ou JPG, até 2 MB; prefira fundo transparente). Ela fica guardada de forma privada: só quem acessa a empresa a vê.
+
+### Honorários do escritório (cobrança com Pix, robô e DRE)
+Menu **Honorários** — só para o **administrador** e para quem ele liberar em **Honorários → Configurações da cobrança → Quem mexe no financeiro do escritório**. O resto da equipe não vê o menu.
+
+**Começar (uma vez):**
+1. **Configurações da cobrança → Pix do escritório**: escolha o tipo e digite a **chave Pix** cadastrada no banco do escritório, o nome (como aparece no banco) e a cidade.
+2. Na mesma tela: o **dia de gerar** as cobranças do mês, se a cobrança paga o **mês anterior** ou o **próprio mês**, a **multa** e os **juros** de atraso, e se o recibo sai e é publicado sozinho ao registrar o pagamento.
+3. **Robô de cobrança**: os dias dos lembretes em relação ao vencimento (ex.: `-5, 0, 3, 10, 30` — 5 dias antes, no dia, 3, 10 e 30 dias depois) e os canais (e-mail e WhatsApp). Em **Textos das mensagens** dá para trocar o texto de cada lembrete.
+4. **Clientes e valores**: abra cada empresa e preencha a **ficha**: honorário mensal, dia do vencimento, serviços incluídos, **extras automáticos** (funcionários e notas acima do limite, com o valor de cada um a mais), **13º honorário**, o contato que recebe a cobrança (e-mail e WhatsApp — marque a autorização do cliente para WhatsApp) e, se precisar, pausar os lembretes até uma data.
+
+**Todo mês:**
+1. No dia escolhido, o portal **gera sozinho** as cobranças de todas as fichas ativas (ou clique em **Gerar cobranças do mês** no painel). Os extras entram sozinhos: o portal conta os funcionários e as notas do mês da empresa.
+2. Em **Cobranças → Para conferir**, revise a lista (dá para abrir e **Editar** qualquer uma) e clique em **Enviar aos clientes**. Cada cliente recebe por e-mail (com QR code, Pix copia e cola e PDF), por WhatsApp (quando ligado e autorizado) e um aviso no portal.
+3. O **robô** manda os lembretes nos dias da régua, às 9h, só em dia útil (o que cair no fim de semana ou feriado sai no próximo dia útil). Depois do vencimento, o Pix do lembrete já vem com multa e juros. Ele **para sozinho** quando a cobrança é paga ou cancelada; dá para **pausar** uma cobrança ou um cliente.
+4. Caiu o Pix no banco? Abra a cobrança e clique em **Registrar pagamento**: a data e o valor já vêm preenchidos. O que passar do valor vira **multa e juros**; se o cliente pagou a menos, informe o **desconto**. O recibo sai assinado (com o certificado do escritório) e vai para os documentos do cliente, que recebe o agradecimento por e-mail. Lançou por engano? **Desfazer pagamento** (com motivo) tira da DRE e cancela o recibo.
+- **Cobrança avulsa**: **Nova cobrança avulsa** para serviços fora da mensalidade (abertura de empresa, imposto de renda, certidões), para uma empresa da carteira ou outra pessoa. Cada item vai para a sua **linha da DRE**.
+- **Pix comum**: o QR code usa a chave do escritório com o valor certo e o número da cobrança; o banco do escritório não avisa o portal sozinho, por isso o pagamento é registrado pela equipe. A confirmação automática vem com a ligação ao banco (API Pix), numa próxima etapa.
+
+**Lançamentos e DRE do escritório:**
+- Todo pagamento registrado entra sozinho em **Lançamentos do escritório**, com descrição e linha da DRE: cada item na sua linha (honorários mensais, 13º, extras, serviços avulsos), **multa e juros** em receitas financeiras e **desconto** como dedução.
+- As **despesas** (aluguel, folha, sistemas, impostos do escritório) e outras entradas você lança em **Nova despesa** e **Nova entrada**. Sem a linha da DRE, o lançamento fica em **A classificar** e **não entra no resultado** até alguém classificar.
+- **DRE do escritório**: o resultado mês a mês, **pelo mês do serviço** ou **pelo dia em que o dinheiro entrou**; clique numa linha para ver os lançamentos. Abaixo: **previsto x recebido**, **receita por cliente** e o que fica **fora da DRE** (retirada e dinheiro dos sócios, compra de equipamentos). As linhas ficam em **Configurações da cobrança → Linhas da DRE** (dá para criar outras).
 
 ### Recibos de honorários (equipe)
 Menu **Financeiro → Recibos de honorários → Novo recibo**:

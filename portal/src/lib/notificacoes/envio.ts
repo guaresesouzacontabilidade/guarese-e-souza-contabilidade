@@ -108,7 +108,13 @@ export async function executarEnvio(admin: ClienteAdmin, job: Job) {
   const site = envPublico.siteUrl();
   let resultado: Awaited<ReturnType<typeof enviarEmail>>;
 
-  if (envio.canal === "email") {
+  if (envio.tipo === "cobranca") {
+    // Cobrança de honorários do escritório (robô de cobrança)
+    const { prepararEnvioCobranca } = await import("@/lib/honorarios/envio");
+    const p = await prepararEnvioCobranca(admin, envio, site);
+    if ("dispensado" in p) return dispensar(admin, envio.id, p.dispensado);
+    resultado = p.canal === "email" ? await enviarEmail(envio.destinatario, p.assunto, p.conteudo, p.anexos) : await enviarModeloWhatsapp(p.cfg, envio.destinatario, p.parametros);
+  } else if (envio.canal === "email") {
     let link: string | null = null;
     if (envio.referencia_tipo === "notificacao" && envio.referencia_id) {
       const { data: n } = await admin.from("notificacoes").select("link, tipo, lida_em").eq("id", envio.referencia_id).maybeSingle();

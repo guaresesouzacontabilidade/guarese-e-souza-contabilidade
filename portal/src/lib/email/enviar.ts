@@ -35,6 +35,8 @@ export interface AnexoEmail {
   nome: string;
   conteudo: Buffer;
   tipo: string;
+  /** Imagem mostrada dentro do e-mail (cid:...), em vez de anexo solto. */
+  cid?: string;
 }
 
 export async function enviarEmail(
@@ -55,7 +57,7 @@ export async function enviarEmail(
       replyTo: opcoes.responderPara,
       html,
       text: texto,
-      attachments: anexos.map((a) => ({ filename: a.nome, content: a.conteudo, contentType: a.tipo })),
+      attachments: anexos.map((a) => ({ filename: a.nome, content: a.conteudo, contentType: a.tipo, ...(a.cid ? { cid: a.cid } : {}) })),
     });
     return { enviado: true, id: info.messageId ?? null };
   } catch (e) {
