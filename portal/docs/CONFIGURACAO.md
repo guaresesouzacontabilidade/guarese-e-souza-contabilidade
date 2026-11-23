@@ -80,7 +80,7 @@ Depois, em **Configurações → Integrações**, use **Enviar e-mail de teste p
 Fica **desconectado** até que três coisas estejam prontas; enquanto isso nenhuma mensagem é enviada por WhatsApp.
 
 1. Em https://developers.facebook.com, criar um app do tipo **Business** e adicionar o produto **WhatsApp**, com um número de telefone do escritório verificado.
-2. Gerar um **token permanente** (Meta Business Suite → Configurações do negócio → Usuários do sistema → gerar token com as permissões `whatsapp_business_messaging` e `whatsapp_business_management`). Cadastrar na Vercel como `WHATSAPP_TOKEN` (marcar como “Sensitive”).
+2. Gerar um **token permanente** (Meta Business Suite → Configurações do negócio → Usuários do sistema → gerar token com as permissões `whatsapp_business_messaging` e `whatsapp_business_management`). Guardar o token nas **configurações do ambiente do Claude Code** como `WHATSAPP_TOKEN` (nunca no chat): na próxima publicação na produção, o script `scripts/publicar.ts` o cadastra na Vercel como segredo. (Quem publica à mão cadastra direto na Vercel como `WHATSAPP_TOKEN`, marcado como “Sensitive”.)
 3. Criar e aprovar um **modelo de mensagem** (categoria “Utilidade”), em português, com 4 variáveis, por exemplo:
 
    > Olá! A empresa {{1}} tem {{3}} documento(s) pendente(s) referente(s) a {{2}}. Envie pelo portal: {{4}}

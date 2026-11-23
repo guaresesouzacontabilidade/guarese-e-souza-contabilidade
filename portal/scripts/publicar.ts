@@ -220,6 +220,21 @@ function variaveisEmail(): Record<string, { valor: string; segredo?: boolean }> 
   };
 }
 
+/**
+ * WhatsApp (API oficial da Meta). Com o token permanente guardado na variável
+ * WHATSAPP_TOKEN (configurações do ambiente, nunca no chat), o script o
+ * cadastra na hospedagem. Sem o token, o WhatsApp fica desconectado.
+ */
+function variaveisWhatsapp(): Record<string, { valor: string; segredo?: boolean }> {
+  // A demonstração não envia mensagens de verdade: o WhatsApp real fica só na produção.
+  if (!PRODUCAO) return {};
+  const token = process.env.WHATSAPP_TOKEN?.trim();
+  if (!token) return {};
+  ok("WhatsApp: token cadastrado");
+  const versao = process.env.WHATSAPP_API_VERSION?.trim();
+  return { WHATSAPP_TOKEN: { valor: token, segredo: true }, ...(versao ? { WHATSAPP_API_VERSION: { valor: versao } } : {}) };
+}
+
 async function configurarLogin(ref: string, site: string) {
   passo("Supabase: configurando o login");
   const modelo = (arq: string) => readFileSync(join(RAIZ, "supabase", "templates", arq), "utf8");
@@ -491,10 +506,12 @@ async function main() {
   const segredoCron = estado.segredoCron ?? randomBytes(32).toString("hex");
   const notificacoes = await chavesNotificacao(projeto.id);
   const certificados = await chaveCertificados(projeto.id);
+  const whatsapp = variaveisWhatsapp();
   const variaveis = (site: string) => ({
     ...notificacoes,
     ...certificados,
     ...variaveisEmail(),
+    ...whatsapp,
     NEXT_PUBLIC_SUPABASE_URL: { valor: chaves.url },
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: { valor: chaves.publica },
     SUPABASE_SECRET_KEY: { valor: chaves.secreta, segredo: true },
