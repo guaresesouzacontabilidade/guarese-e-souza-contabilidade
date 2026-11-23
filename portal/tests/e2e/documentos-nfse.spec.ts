@@ -39,6 +39,8 @@ const servico = clienteServico();
 test.skip(!servico, "Precisa do Supabase local (.env.local).");
 
 let empresaId = "";
+const TOMADA = /^NFS-e tomada\b/;
+const PRESTADA = /^NFS-e prestada\b/;
 let tomada: { fiscalId: string; nome: string } | null = null;
 let prestadas = 0;
 
@@ -74,15 +76,16 @@ test("filtro de categoria separa NFS-e tomadas e prestadas", async ({ page }) =>
   await page.goto(`/e/${empresaId}/documentos?categoria=${encodeURIComponent("nfse:tomadas")}`);
   await expect(page.getByLabel("Categoria")).toHaveValue("nfse:tomadas");
   await expect(page.getByText(tomada!.nome).first()).toBeVisible();
-  await expect(page.getByText("NFS-e tomada", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("NFS-e prestada", { exact: true })).toHaveCount(0);
+  // A categoria abre a linha de detalhes do documento (ex.: "NFS-e tomada · 10/2026")
+  await expect(page.getByText(TOMADA).first()).toBeVisible();
+  await expect(page.getByText(PRESTADA)).toHaveCount(0);
 
   await page.goto(`/e/${empresaId}/documentos?categoria=${encodeURIComponent("nfse:prestadas")}`);
-  await expect(page.getByText("NFS-e prestada", { exact: true })).toHaveCount(prestadas);
+  await expect(page.getByText(PRESTADA)).toHaveCount(prestadas);
   await expect(page.getByText(tomada!.nome)).toHaveCount(0);
 
   // Categoria geral continua trazendo as duas
   await page.goto(`/e/${empresaId}/documentos?categoria=nfse`);
   await expect(page.getByText(tomada!.nome).first()).toBeVisible();
-  await expect(page.getByText("NFS-e prestada", { exact: true })).toHaveCount(prestadas);
+  await expect(page.getByText(PRESTADA)).toHaveCount(prestadas);
 });

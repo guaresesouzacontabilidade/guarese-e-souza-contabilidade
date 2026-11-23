@@ -163,7 +163,9 @@ test("escritório baixa a planilha da carteira e pede os XML completos de todas 
     .eq("operacao", "entrada")
     .eq("modelo", "55")
     .eq("competencia", `${competencia}-01`);
-  expect(p.notas.filter((l) => l["XML completo no portal"] === "Sim").length).toBe(comXml ?? 0);
+  // A planilha traz a carteira toda (outras empresas de demonstração também têm notas): conta só as duas do teste
+  const doTeste = new Set(["Oficina Exemplo (DEMO)", "Padaria Pão Dourado (DEMO)"]);
+  expect(p.notas.filter((l) => doTeste.has(l.Empresa) && l["XML completo no portal"] === "Sim").length).toBe(comXml ?? 0);
   const chaves = p.notas.map((l) => l["Chave de acesso"]).filter(Boolean);
   expect(new Set(chaves).size).toBe(chaves.length);
   const resumoOficina = p.resumo.find((l) => l.Empresa === "Oficina Exemplo (DEMO)");
