@@ -335,6 +335,9 @@ describe("NFS-e — Ambiente de Dados Nacional", () => {
     expect(comMotivo.mensagem).toBe("E2245: Não há procuração");
     // CNPJ informado na consulta, só com letras e números
     expect(urlDistribuicaoNfse(7, "producao", undefined, "11.222.333/0001-81")).toBe("https://adn.nfse.gov.br/contribuintes/DFe/7?lote=true&cnpjConsulta=11222333000181");
+    // Produtor rural com e-CPF: o CPF vai em cpfConsulta (CPF em cnpjConsulta o ADN recusa com E2243)
+    expect(urlDistribuicaoNfse(7, "producao", undefined, "042.082.851-68")).toBe("https://adn.nfse.gov.br/contribuintes/DFe/7?lote=true&cpfConsulta=04208285168");
+    expect(urlDistribuicaoNfse(7, "producao", undefined, "123")).toBe("https://adn.nfse.gov.br/contribuintes/DFe/7?lote=true");
   });
 
   it("recusa em outro formato: guarda o motivo lido ou um trecho da resposta (sem CPF/CNPJ)", () => {

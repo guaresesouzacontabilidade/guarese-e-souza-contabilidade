@@ -41,7 +41,7 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
 
   const [{ data: cfg }, { data: emp }, { data: cert }, { data: emitentes, error }, { data: produtos }, { data: operacoes }, { data: classes }] = await Promise.all([
     ctx.supabase.from("nfe_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
-    ctx.supabase.from("empresas").select("tipo_pessoa, regime_tributario").eq("id", empresaId).maybeSingle(),
+    ctx.supabase.from("empresas").select("tipo_pessoa, regime_tributario, uf").eq("id", empresaId).maybeSingle(),
     ctx.supabase.from("certificados_digitais").select("valido_ate").eq("empresa_id", empresaId).is("revogado_em", null).maybeSingle(),
     ctx.supabase.from("nfe_emitentes").select("*, municipio:municipios(nome, uf)").eq("empresa_id", empresaId).order("serie"),
     ctx.supabase.from("nfe_produtos").select("*").eq("empresa_id", empresaId).order("descricao"),
@@ -180,7 +180,14 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <OperacoesNfe empresaId={empresaId} operacoes={listaOperacoes} simples={simples} pisCofins={pisCofins} classes={(classes ?? []) as ClasseIbsCbs[]} />
+          <OperacoesNfe
+            empresaId={empresaId}
+            operacoes={listaOperacoes}
+            simples={simples}
+            pisCofins={pisCofins}
+            classes={(classes ?? []) as ClasseIbsCbs[]}
+            uf={listaEmitentes.find((e) => e.uf)?.uf ?? emp?.uf ?? null}
+          />
         </CardContent>
       </Card>
     </>

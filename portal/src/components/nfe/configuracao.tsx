@@ -719,17 +719,40 @@ interface ModeloOperacao {
   cofins_cst?: string;
   /** O que o escritório precisa conferir antes de salvar (aparece em destaque no formulário) */
   conferir?: string[];
+  /** Venda de gado: os pontos a conferir dependem do estado de quem emite */
+  gado?: boolean;
   /** Mercadoria com o ICMS já retido pelo fornecedor: CSOSN 500 no Simples, CST 60 no regime normal */
   st?: boolean;
 }
 
-/** Pontos da tributação do gado no Tocantins que mudam com frequência: o escritório escolhe, o portal não chuta. */
-const CONFERIR_GADO_TO = [
-  "ICMS: escolha o CST e a alíquota conforme a lei em vigor. No Tocantins, confira a isenção da venda interna do produtor com inscrição ativa (Lei 1.173/2000) e o diferimento na venda para abate, até a entrada no frigorífico, com TARE (Portaria SEFAZ 1.727/2000).",
-  "Para outro estado: confira a alíquota interestadual, a redução da carga e o crédito presumido do gado vivo (Portaria SEFAZ 1.727/2000 e alterações) e se o ICMS é pago antes da saída.",
+/**
+ * Pontos da tributação do gado que mudam por estado e com frequência: o escritório escolhe
+ * o ICMS, o portal não chuta. Aparecem em destaque conforme o estado de quem emite.
+ */
+const CONFERIR_GADO_COMUM = [
   "IBS/CBS: produtor rural que não é contribuinte costuma usar a classificação 410014 (LC 214/2025, art. 164).",
   "FUNRURAL: o percentual e quem recolhe (o comprador retém ou o produtor recolhe) ficam na configuração da emissão.",
 ];
+const CONFERIR_GADO: Record<string, string[]> = {
+  TO: [
+    "ICMS: escolha o CST e a alíquota conforme a lei em vigor. No Tocantins, confira a isenção da venda interna do produtor com inscrição ativa (Lei 1.173/2000) e o diferimento na venda para abate, até a entrada no frigorífico, com TARE (Portaria SEFAZ 1.727/2000).",
+    "Para outro estado: confira a alíquota interestadual, a redução da carga e o crédito presumido do gado vivo (Portaria SEFAZ 1.727/2000 e alterações) e se o ICMS é pago antes da saída.",
+  ],
+  GO: [
+    "ICMS: escolha o CST e a alíquota conforme a lei em vigor. Em Goiás, confira no RCTE (Decreto 4.852/1997, Anexo IX, alterado pelo Decreto 10.579/2024) a isenção ou o diferimento da venda interna de gado (para abate em frigorífico, recria ou engorda).",
+    "Para outro estado: a alíquota interestadual saindo de Goiás é, em regra, 12%. Confira se há benefício no Anexo IX do RCTE e se o ICMS é pago antes da saída.",
+    "FUNDEINFRA: em Goiás, a isenção ou o benefício do ICMS do gado bovino e bubalino depende da contribuição ao FUNDEINFRA (0,50% pela tabela da Secretaria da Economia; Lei 21.671/2022). Na venda interna isenta para abate, quem recolhe é o destinatário. Quando o produtor recolher, cadastre em \"Contribuição\" abaixo (confira a alíquota e o código de receita em vigor).",
+    "GTA: em Goiás, a GTA sai primeiro na Agrodefesa; o número dela é pedido na emissão.",
+  ],
+};
+const CONFERIR_GADO_OUTROS = [
+  "ICMS: escolha o CST e a alíquota conforme a lei do estado: isenção, diferimento e redução na venda de gado mudam de estado para estado.",
+  "Para outro estado: confira a alíquota interestadual, os benefícios do estado e se o ICMS é pago antes da saída.",
+  "Contribuições estaduais ligadas ao gado (por exemplo, FETHAB em MT e FUNDEINFRA em GO): cadastre em \"Contribuição\" abaixo quando houver.",
+];
+function conferirGado(uf: string | null | undefined): string[] {
+  return [...(CONFERIR_GADO[uf ?? ""] ?? CONFERIR_GADO_OUTROS), ...CONFERIR_GADO_COMUM];
+}
 
 const MODELOS_OPERACAO: ModeloOperacao[] = [
   {
@@ -742,7 +765,7 @@ const MODELOS_OPERACAO: ModeloOperacao[] = [
     exige_gta: true,
     pis_cst: "08",
     cofins_cst: "08",
-    conferir: CONFERIR_GADO_TO,
+    gado: true,
   },
   {
     rotulo: "Venda de gado (bovinos vivos) para outro estado (6101, com GTA e FUNRURAL)",
@@ -754,7 +777,7 @@ const MODELOS_OPERACAO: ModeloOperacao[] = [
     exige_gta: true,
     pis_cst: "08",
     cofins_cst: "08",
-    conferir: CONFERIR_GADO_TO,
+    gado: true,
   },
   { rotulo: "Venda de produção própria para outro estado (6101)", nome: "Venda de produção - outro estado", natureza: "VENDA DE PRODUCAO DO ESTABELECIMENTO", destino: "interestadual", cfop: "6101" },
   { rotulo: "Venda de produção própria dentro do estado (5101)", nome: "Venda de produção - dentro do estado", natureza: "VENDA DE PRODUCAO DO ESTABELECIMENTO", destino: "interna", cfop: "5101" },
@@ -870,6 +893,15 @@ function EditorContribuicoes({ inicial }: { inicial: ContribuicaoNfe[] }) {
         >
           <Plus /> FETHAB (MT)
         </Button>
+        <Button
+          type="button"
+          variante="contorno"
+          tamanho="sm"
+          disabled={linhas.length >= 10}
+          onClick={() => setLinhas([...linhas, { nome: "FUNDEINFRA", tipo: "percentual_valor", valor: "", valorUpf: "", ncms: "", codigoReceita: "" }])}
+        >
+          <Plus /> FUNDEINFRA (GO)
+        </Button>
       </div>
     </div>
   );
@@ -881,6 +913,7 @@ function FormOperacao({
   simples,
   pisCofins,
   classes,
+  uf,
   aoSalvar,
 }: {
   empresaId: string;
@@ -888,6 +921,8 @@ function FormOperacao({
   simples: boolean;
   pisCofins: PisCofinsPadrao;
   classes: ClasseIbsCbs[];
+  /** Estado de quem emite (os pontos a conferir da venda de gado mudam por estado) */
+  uf: string | null;
   aoSalvar: () => void;
 }) {
   const [modelo, setModelo] = React.useState<ModeloOperacao | null>(null);
@@ -914,7 +949,7 @@ function FormOperacao({
         empresaId={empresaId}
         id={operacao?.id ?? null}
         base={base}
-        conferir={modelo?.conferir}
+        conferir={modelo?.gado ? conferirGado(uf) : modelo?.conferir}
         simples={simples}
         regimeNormal={Boolean(pisCofins)}
         classes={classes}
@@ -1275,6 +1310,7 @@ export function OperacoesNfe({
   simples,
   pisCofins = null,
   classes,
+  uf = null,
 }: {
   empresaId: string;
   operacoes: OperacaoNfe[];
@@ -1282,6 +1318,8 @@ export function OperacoesNfe({
   /** Alíquotas básicas do PIS e da Cofins do regime (operações novas já vêm tributadas). */
   pisCofins?: PisCofinsPadrao;
   classes: ClasseIbsCbs[];
+  /** Estado de quem emite (os pontos a conferir da venda de gado mudam por estado) */
+  uf?: string | null;
 }) {
   const [editando, setEditando] = React.useState<OperacaoNfe | "novo" | null>(null);
   return (
@@ -1334,6 +1372,7 @@ export function OperacoesNfe({
               simples={simples}
               pisCofins={pisCofins}
               classes={classes}
+              uf={uf}
               aoSalvar={() => setEditando(null)}
             />
           ) : null}

@@ -12,7 +12,7 @@ import { ROTULO_GRUPO, type GrupoMonofasico } from "@/lib/auditor-fiscal/catalog
 import { SITUACAO_EXECUCAO } from "@/lib/auditor-fiscal/rotulos";
 import { ROTULO_SEGMENTO_ST, type SegmentoExclusaoSt } from "@/lib/auditor-fiscal/st-estadual";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCnpj, formatarCompetencia, formatarData, formatarRelativo } from "@/lib/formatos";
+import { formatarDocumento, formatarCompetencia, formatarData, formatarRelativo } from "@/lib/formatos";
 import { SITUACAO_SPED } from "@/lib/sped/rotulos";
 import { mensagemErro } from "@/lib/acoes";
 
@@ -124,7 +124,7 @@ export default async function AuditorFiscalCarteira() {
                       <Link href={`/e/${l.id}/auditor-fiscal`} className="font-medium text-primary hover:underline">
                         {l.nome_fantasia ?? l.razao_social}
                       </Link>
-                      <span className="block text-xs text-muted-foreground">{l.documento ? formatarCnpj(l.documento) : ""}</span>
+                      <span className="block text-xs text-muted-foreground">{l.documento ? formatarDocumento(l.documento) : ""}</span>
                     </Td>
                     <Td className="numero text-right font-medium text-sucesso">{l.r?.economia ? formatarMoeda(l.r.economia) : "—"}</Td>
                     <Td className="hidden text-right sm:table-cell">{l.r?.paraRevisar ? <Badge variante="alerta">{l.r.paraRevisar}</Badge> : "—"}</Td>

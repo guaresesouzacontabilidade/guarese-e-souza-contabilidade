@@ -34,7 +34,7 @@ import {
 import { contarSemXml, estadoSemXml, podeConfirmar } from "@/lib/notas-automaticas/situacao-xml";
 import { envServidor } from "@/lib/env-servidor";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCnpj, formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
+import { formatarDocumento, formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { competenciaAtual, diasEntre, hojeISO } from "@/lib/competencia";
 
 export const metadata: Metadata = { title: "Notas automáticas" };
@@ -231,8 +231,8 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                       <dd className="font-medium break-words">{certificado.titular}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">CNPJ</dt>
-                      <dd>{certificado.documento ? formatarCnpj(certificado.documento) : "—"}</dd>
+                      <dt className="text-muted-foreground">{certificado.documento?.replace(/\D/g, "").length === 11 ? "CPF" : "CNPJ"}</dt>
+                      <dd>{certificado.documento ? formatarDocumento(certificado.documento) : "—"}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">Validade</dt>
@@ -513,7 +513,7 @@ export default async function NotasAutomaticas({ params }: PageProps<"/e/[empres
                       <Td>
                         <span className="block font-medium">{r.emitente_nome ?? "—"}</span>
                         <span className="block text-xs text-muted-foreground">
-                          {r.emitente_documento ? formatarCnpj(r.emitente_documento) : ""}
+                          {r.emitente_documento ? formatarDocumento(r.emitente_documento) : ""}
                           {r.tipo_operacao === "saida" ? " · nota de entrada do emitente (ex.: devolução)" : ""}
                           <span className="sm:hidden"> · {r.data_emissao ? formatarData(r.data_emissao.slice(0, 10)) : ""}</span>
                         </span>

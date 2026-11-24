@@ -29,6 +29,8 @@ const CHAVE_SECRETA = process.env.SUPABASE_SECRET_KEY ?? "";
 const local = /127\.0\.0\.1|localhost/.test(URL_SUPABASE) && Boolean(CHAVE_SECRETA);
 
 const CNPJ = "11222333000181";
+/** CPF fictício (válido) para o caso do produtor rural com e-CPF. */
+const CPF = "11144477735";
 const CHAVE_RESUMO = "17260955566677000188550010000099991000099991";
 const CHAVE_NFE = "17260998765432000198550010000004561876543215";
 const fixture = (nome: string) => readFileSync(`tests/fixtures/${nome}`, "utf8");
@@ -146,7 +148,13 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
         if (req.url?.startsWith("/nfse/DFe/")) {
           const nsu = Number(/DFe\/(\d+)/.exec(req.url)?.[1]);
           consultasNfse.push(req.url.replace("/nfse", ""));
-          const comCnpj = req.url.includes(`cnpjConsulta=${CNPJ}`);
+          // Como o ADN real: CPF no parâmetro de CNPJ é recusado (E2243); o CPF vai em cpfConsulta
+          if (/cnpjConsulta=\d{11}(?!\d)/.test(req.url)) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ StatusProcessamento: "REJEICAO", Erros: [{ Codigo: "E2243", Descricao: "O CNPJ informado na consulta deve ter o mesmo CNPJ Base do Contribuinte solicitante." }] }));
+            return;
+          }
+          const comCnpj = req.url.includes(`cnpjConsulta=${CNPJ}`) || req.url.includes(`cpfConsulta=${CPF}`);
           const rejeita =
             modoAdn === "rejeicao_sempre" || (modoAdn === "rejeicao_sem_cnpj" && !comCnpj) || (modoAdn === "rejeicao_sem_nota_nova" && nsu > 1);
           if (rejeita) {
@@ -449,8 +457,21 @@ describe.skipIf(!local)("notas automáticas — busca de ponta a ponta (Supabase
       expect(c.exec?.resultado).toBe("erro");
       expect(c.exec?.mensagem).toContain("mesmo pedindo uma nota já recebida e informando o CNPJ");
       expect(c.cfg).toMatchObject({ nfse_ult_nsu: 1, erros_seguidos: 1 });
+
+      // Produtor rural com e-CPF: o CPF vai em cpfConsulta, nunca em cnpjConsulta (E2243)
+      const { error: erroPf } = await admin.from("empresas").update({ tipo_pessoa: "PF", documento: CPF }).eq("id", empresaId);
+      expect(erroPf).toBeNull();
+      const d = await rodar("rejeicao_sem_cnpj", 9);
+      expect(d.r.erros).toEqual([]);
+      expect(d.exec).toMatchObject({ resultado: "sem_novidades", codigo: "HTTP 200 (com CPF)" });
+      expect(d.consultas).toEqual(["/DFe/2?lote=true", "/DFe/1?lote=true", `/DFe/1?lote=true&cpfConsulta=${CPF}`]);
+      const e = await rodar("rejeicao_sempre", 10);
+      expect(e.consultas.some((u) => u.includes("cnpjConsulta"))).toBe(false);
+      expect(e.exec?.mensagem).toContain("informando o CPF do produtor");
+      expect(e.exec?.mensagem).not.toContain("E2243");
     } finally {
       modoAdn = "antigo";
+      await admin.from("empresas").update({ tipo_pessoa: "PJ", documento: CNPJ }).eq("id", empresaId);
     }
   }, 120_000);
 });

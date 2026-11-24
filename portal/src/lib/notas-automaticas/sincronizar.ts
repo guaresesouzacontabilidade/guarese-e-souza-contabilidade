@@ -440,8 +440,10 @@ async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoSer
   let resultado: "novos" | "sem_novidades" | "limite" | "erro" = "sem_novidades";
   let mensagem: string | null = null;
   let erro: string | null = null;
-  // Depois que a consulta com o CNPJ informado funcionar, as próximas desta busca também o informam
+  // Depois que a consulta com o CNPJ (ou o CPF, no produtor com e-CPF) informado funcionar,
+  // as próximas desta busca também o informam
   let comCnpj = false;
+  const cpf = /^[0-9]{11}$/.test(c.cnpj);
   const consultar = async (nsu: number, cnpj: boolean) => {
     const resp = await requisitar(urlDistribuicaoNfse(nsu, AMBIENTE, c.urls.nfse, cnpj ? c.cnpj : undefined), {
       metodo: "GET",
@@ -463,7 +465,7 @@ async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoSer
         // Nada se perde: o NSU só avança com nota recebida.
         const tentativas: { nsu: number; cnpj: boolean; rotulo: string }[] = [];
         if (ult > 0) tentativas.push({ nsu: ult, cnpj: comCnpj, rotulo: "última nota" });
-        if (!comCnpj) tentativas.push({ nsu: Math.max(ult, 1), cnpj: true, rotulo: "com CNPJ" });
+        if (!comCnpj) tentativas.push({ nsu: Math.max(ult, 1), cnpj: true, rotulo: cpf ? "com CPF" : "com CNPJ" });
         for (const t of tentativas) {
           const conferida = await consultar(t.nsu, t.cnpj);
           if (conferida.r.situacao === "erro" && conferida.r.semMotivo) continue;
@@ -473,7 +475,9 @@ async function buscarNfse(c: Contexto, ultInicial: number): Promise<ResultadoSer
           break;
         }
         if (r.situacao === "erro" && r.semMotivo) {
-          const conferencias = tentativas.map((t) => (t.cnpj && t.rotulo === "com CNPJ" ? "informando o CNPJ da empresa" : "pedindo uma nota já recebida"));
+          const conferencias = tentativas.map((t) =>
+            t.cnpj && t.rotulo !== "última nota" ? (cpf ? "informando o CPF do produtor" : "informando o CNPJ da empresa") : "pedindo uma nota já recebida",
+          );
           r = {
             ...r,
             mensagem:

@@ -15,7 +15,7 @@ import { BotaoRodarRobo } from "@/components/estudos/acoes-estudo";
 import { buscarTudo } from "@/lib/supabase/paginar";
 import { parametro } from "@/lib/busca";
 import { formatarMoeda } from "@/lib/dinheiro";
-import { formatarCnpj, formatarRelativo } from "@/lib/formatos";
+import { formatarDocumento, formatarRelativo } from "@/lib/formatos";
 import { mensagemErro } from "@/lib/acoes";
 import { ESTADO_ESTUDO, NOME_TIPO, SITUACAO_ESTUDO, TIPOS_ESTUDO, estudandoAgora } from "@/lib/estudos/rotulos";
 
@@ -157,7 +157,7 @@ export default async function OportunidadesDaCarteira({ searchParams }: PageProp
                         <Link href={`/escritorio/oportunidades/${e.empresa_id}#${e.tipo}`} className="font-medium text-primary hover:underline">
                           {emp?.nome_fantasia || emp?.razao_social || "Empresa"}
                         </Link>
-                        <span className="block text-xs text-muted-foreground">{emp?.documento ? formatarCnpj(emp.documento) : ""}</span>
+                        <span className="block text-xs text-muted-foreground">{emp?.documento ? formatarDocumento(emp.documento) : ""}</span>
                       </Td>
                       <Td className="max-w-[420px]">
                         <span className="block text-xs text-muted-foreground">{NOME_TIPO[e.tipo] ?? e.tipo}</span>

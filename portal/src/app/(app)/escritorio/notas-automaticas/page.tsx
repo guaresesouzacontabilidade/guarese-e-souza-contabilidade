@@ -19,7 +19,7 @@ import { SITUACAO_NOTAS, situacaoNotas } from "@/lib/notas-automaticas/rotulos";
 import { estadoSemXml } from "@/lib/notas-automaticas/situacao-xml";
 import { envServidor } from "@/lib/env-servidor";
 import { competenciaAtual, diasEntre, hojeISO, somarDias } from "@/lib/competencia";
-import { formatarCnpj, formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
+import { formatarDocumento, formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { mensagemErro } from "@/lib/acoes";
 
 export const metadata: Metadata = { title: "Notas automáticas" };
@@ -256,7 +256,7 @@ export default async function NotasAutomaticasCarteira() {
                         <Link href={`/e/${l.id}/notas-automaticas`} className="font-medium text-primary hover:underline">
                           {l.nome_fantasia ?? l.razao_social}
                         </Link>
-                        <span className="block text-xs text-muted-foreground">{l.documento ? formatarCnpj(l.documento) : ""}</span>
+                        <span className="block text-xs text-muted-foreground">{l.documento ? formatarDocumento(l.documento) : ""}</span>
                         {l.semXml.pendentes + l.semXml.aCaminho + l.semXml.recusadas ? (
                           <span className="block text-xs text-alerta-fg">
                             {l.semXml.pendentes + l.semXml.aCaminho + l.semXml.recusadas} NF-e sem o XML completo

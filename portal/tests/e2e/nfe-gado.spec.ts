@@ -77,7 +77,8 @@ test("equipe cria a venda de gado pelo modelo e a nota só sai com a GTA", async
   const dialogo = page.getByRole("dialog");
   await dialogo.locator("#op-modelo").selectOption({ label: "Venda de gado (bovinos vivos) para outro estado (6101, com GTA e FUNRURAL)" });
   await expect(dialogo.getByText("Confira antes de salvar")).toBeVisible();
-  await expect(dialogo.getByText(/Lei 1\.173\/2000/)).toBeVisible();
+  // Produtor de MT: pontos gerais a conferir (TO e GO têm listas próprias)
+  await expect(dialogo.getByText(/FETHAB em MT e FUNDEINFRA em GO/)).toBeVisible();
   await expect(dialogo.locator("#op-cfop")).toHaveValue("6101");
   await expect(dialogo.getByLabel(/Exige GTA/)).toBeChecked();
   await expect(dialogo.locator('input[name="incide_funrural"]')).toBeChecked();

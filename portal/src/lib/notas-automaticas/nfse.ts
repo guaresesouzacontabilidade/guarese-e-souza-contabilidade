@@ -13,10 +13,16 @@ export const URLS_NFSE = {
   homologacao: "https://adn.producaorestrita.nfse.gov.br/contribuintes",
 } as const;
 
-/** Endereço da distribuição por NSU; com `cnpjConsulta`, informa o CNPJ consultado (o do certificado, ou outro da mesma raiz). */
-export function urlDistribuicaoNfse(nsu: number, ambiente: Ambiente, base: string = URLS_NFSE[ambiente], cnpjConsulta?: string) {
-  const cnpj = (cnpjConsulta ?? "").toUpperCase().replace(/[^0-9A-Z]/g, "");
-  return `${base}/DFe/${Math.max(0, Math.trunc(nsu))}?lote=true${cnpj ? `&cnpjConsulta=${cnpj}` : ""}`;
+/**
+ * Endereço da distribuição por NSU. Com `documentoConsulta`, informa quem é consultado:
+ * CNPJ (o do certificado, ou outro da mesma raiz) vai em `cnpjConsulta`; CPF (produtor
+ * rural com e-CPF) vai em `cpfConsulta`. Os dois nunca vão juntos (o ADN recusa, E2244),
+ * e CPF nunca vai em `cnpjConsulta` (o ADN recusa, E2243: "CNPJ Base" diferente).
+ */
+export function urlDistribuicaoNfse(nsu: number, ambiente: Ambiente, base: string = URLS_NFSE[ambiente], documentoConsulta?: string) {
+  const doc = (documentoConsulta ?? "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+  const parametro = /^[0-9A-Z]{12}[0-9]{2}$/.test(doc) ? `&cnpjConsulta=${doc}` : /^[0-9]{11}$/.test(doc) ? `&cpfConsulta=${doc}` : "";
+  return `${base}/DFe/${Math.max(0, Math.trunc(nsu))}?lote=true${parametro}`;
 }
 
 export interface DocumentoNfse {
