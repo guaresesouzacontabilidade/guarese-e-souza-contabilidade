@@ -53,7 +53,8 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
                 cfg
                   ? {
                       ativa: cfg.ativa,
-                      modalidade: cfg.modalidade === "notas" || cfg.modalidade === "hotel" || cfg.modalidade === "veterinaria" ? cfg.modalidade : "loja",
+                      modalidade:
+                        cfg.modalidade === "notas" || cfg.modalidade === "hotel" || cfg.modalidade === "veterinaria" || cfg.modalidade === "fisioterapia" ? cfg.modalidade : "loja",
                       perfil_fiscal: cfg.perfil_fiscal,
                       permitir_estoque_negativo: cfg.permitir_estoque_negativo,
                       permitir_venda_prazo: cfg.permitir_venda_prazo,

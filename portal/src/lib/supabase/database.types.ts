@@ -2209,6 +2209,382 @@ isOneToOne: false
       referencedColumns: ["ibge"]
     }
                   ]
+                },"fisio_adendos": {
+                  Row: {
+                    "avaliacao_id": string | null,"created_at": string,"criado_por": string | null,"empresa_id": string,"evolucao_id": string | null,"id": string,"profissional_id": string,"texto": string
+                  }
+                  Insert: {
+                    "avaliacao_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"evolucao_id"?: string | null,"id"?: string,"profissional_id": string,"texto": string
+                  }
+                  Update: {
+                    "avaliacao_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"evolucao_id"?: string | null,"id"?: string,"profissional_id"?: string,"texto"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_adendos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_adendos_empresa_id_avaliacao_id_fkey"
+      columns: ["empresa_id","avaliacao_id"]
+isOneToOne: false
+      referencedRelation: "fisio_avaliacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_adendos_empresa_id_evolucao_id_fkey"
+      columns: ["empresa_id","evolucao_id"]
+isOneToOne: false
+      referencedRelation: "fisio_evolucoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_adendos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_adendos_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"fisio_agenda": {
+                  Row: {
+                    "confirmado_em": string | null,"created_at": string,"criado_por": string | null,"duracao_min": number,"empresa_id": string,"id": string,"inicio": string,"motivo": string | null,"nome_avulso": string | null,"observacoes": string | null,"paciente_id": string | null,"pacote_id": string | null,"profissional_id": string | null,"sala": string | null,"serie_id": string | null,"status": string,"telefone_avulso": string | null,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "confirmado_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id": string,"id"?: string,"inicio": string,"motivo"?: string | null,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"pacote_id"?: string | null,"profissional_id"?: string | null,"sala"?: string | null,"serie_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "confirmado_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id"?: string,"id"?: string,"inicio"?: string,"motivo"?: string | null,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"pacote_id"?: string | null,"profissional_id"?: string | null,"sala"?: string | null,"serie_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_agenda_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_agenda_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_agenda_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_agenda_empresa_id_pacote_id_fkey"
+      columns: ["empresa_id","pacote_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacotes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_agenda_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"fisio_avaliacoes": {
+                  Row: {
+                    "agendamento_id": string | null,"amplitude_movimento": string | null,"antecedentes": string | null,"cancelado_motivo": string | null,"cid": string | null,"condutas": string | null,"created_at": string,"criado_por": string | null,"data_hora": string,"diagnostico": string | null,"dor_eva": number | null,"dor_local": string | null,"empresa_id": string,"exame_fisico": string | null,"exames_complementares": string | null,"finalizado_em": string | null,"finalizado_por": string | null,"forca_muscular": string | null,"frequencia_semanal": number | null,"habitos": string | null,"historia_atual": string | null,"historia_pregressa": string | null,"id": string,"medicamentos": string | null,"numero": number,"objetivos": string | null,"paciente_id": string,"profissional_id": string,"prognostico": string | null,"queixa_principal": string | null,"sessoes_previstas": number | null,"status": string,"testes_especiais": string | null,"tipo": string,"tratamentos_anteriores": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "agendamento_id"?: string | null,"amplitude_movimento"?: string | null,"antecedentes"?: string | null,"cancelado_motivo"?: string | null,"cid"?: string | null,"condutas"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"diagnostico"?: string | null,"dor_eva"?: number | null,"dor_local"?: string | null,"empresa_id": string,"exame_fisico"?: string | null,"exames_complementares"?: string | null,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"forca_muscular"?: string | null,"frequencia_semanal"?: number | null,"habitos"?: string | null,"historia_atual"?: string | null,"historia_pregressa"?: string | null,"id"?: string,"medicamentos"?: string | null,"numero": number,"objetivos"?: string | null,"paciente_id": string,"profissional_id": string,"prognostico"?: string | null,"queixa_principal"?: string | null,"sessoes_previstas"?: number | null,"status"?: string,"testes_especiais"?: string | null,"tipo"?: string,"tratamentos_anteriores"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "agendamento_id"?: string | null,"amplitude_movimento"?: string | null,"antecedentes"?: string | null,"cancelado_motivo"?: string | null,"cid"?: string | null,"condutas"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"diagnostico"?: string | null,"dor_eva"?: number | null,"dor_local"?: string | null,"empresa_id"?: string,"exame_fisico"?: string | null,"exames_complementares"?: string | null,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"forca_muscular"?: string | null,"frequencia_semanal"?: number | null,"habitos"?: string | null,"historia_atual"?: string | null,"historia_pregressa"?: string | null,"id"?: string,"medicamentos"?: string | null,"numero"?: number,"objetivos"?: string | null,"paciente_id"?: string,"profissional_id"?: string,"prognostico"?: string | null,"queixa_principal"?: string | null,"sessoes_previstas"?: number | null,"status"?: string,"testes_especiais"?: string | null,"tipo"?: string,"tratamentos_anteriores"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_avaliacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_empresa_id_agendamento_id_fkey"
+      columns: ["empresa_id","agendamento_id"]
+isOneToOne: false
+      referencedRelation: "fisio_agenda"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_finalizado_por_fkey"
+      columns: ["finalizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_config": {
+                  Row: {
+                    "atualizado_por": string | null,"cidade_documentos": string | null,"created_at": string,"duracao_padrao_min": number,"email": string | null,"empresa_id": string,"endereco": string | null,"falta_desconta_sessao": boolean,"horario_fim": string,"horario_inicio": string,"mensagem_confirmacao": string | null,"nome_clinica": string | null,"proximo_numero_documento": number,"proximo_numero_registro": number,"registro_crefito": string | null,"telefone": string | null,"updated_at": string,"valor_sessao": number
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"falta_desconta_sessao"?: boolean,"horario_fim"?: string,"horario_inicio"?: string,"mensagem_confirmacao"?: string | null,"nome_clinica"?: string | null,"proximo_numero_documento"?: number,"proximo_numero_registro"?: number,"registro_crefito"?: string | null,"telefone"?: string | null,"updated_at"?: string,"valor_sessao"?: number
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"falta_desconta_sessao"?: boolean,"horario_fim"?: string,"horario_inicio"?: string,"mensagem_confirmacao"?: string | null,"nome_clinica"?: string | null,"proximo_numero_documento"?: number,"proximo_numero_registro"?: number,"registro_crefito"?: string | null,"telefone"?: string | null,"updated_at"?: string,"valor_sessao"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_documentos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"criado_por": string | null,"emitido_em": string,"empresa_id": string,"id": string,"numero": number,"paciente_id": string,"profissional_id": string,"texto": string,"tipo": string,"titulo": string
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"criado_por"?: string | null,"emitido_em"?: string,"empresa_id": string,"id"?: string,"numero": number,"paciente_id": string,"profissional_id": string,"texto": string,"tipo": string,"titulo": string
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"criado_por"?: string | null,"emitido_em"?: string,"empresa_id"?: string,"id"?: string,"numero"?: number,"paciente_id"?: string,"profissional_id"?: string,"texto"?: string,"tipo"?: string,"titulo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_documentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_documentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_documentos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_documentos_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"fisio_evolucoes": {
+                  Row: {
+                    "agendamento_id": string | null,"alta_motivo": string | null,"analise": string | null,"cancelado_motivo": string | null,"condutas": (string)[],"created_at": string,"criado_por": string | null,"data_hora": string,"dor_antes": number | null,"dor_depois": number | null,"empresa_id": string,"finalizado_em": string | null,"finalizado_por": string | null,"id": string,"intercorrencias": string | null,"numero": number,"objetivo": string | null,"orientacoes": string | null,"paciente_id": string,"plano": string | null,"profissional_id": string,"status": string,"subjetivo": string | null,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "agendamento_id"?: string | null,"alta_motivo"?: string | null,"analise"?: string | null,"cancelado_motivo"?: string | null,"condutas"?: (string)[],"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"dor_antes"?: number | null,"dor_depois"?: number | null,"empresa_id": string,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"id"?: string,"intercorrencias"?: string | null,"numero": number,"objetivo"?: string | null,"orientacoes"?: string | null,"paciente_id": string,"plano"?: string | null,"profissional_id": string,"status"?: string,"subjetivo"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "agendamento_id"?: string | null,"alta_motivo"?: string | null,"analise"?: string | null,"cancelado_motivo"?: string | null,"condutas"?: (string)[],"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"dor_antes"?: number | null,"dor_depois"?: number | null,"empresa_id"?: string,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"id"?: string,"intercorrencias"?: string | null,"numero"?: number,"objetivo"?: string | null,"orientacoes"?: string | null,"paciente_id"?: string,"plano"?: string | null,"profissional_id"?: string,"status"?: string,"subjetivo"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_evolucoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_empresa_id_agendamento_id_fkey"
+      columns: ["empresa_id","agendamento_id"]
+isOneToOne: false
+      referencedRelation: "fisio_agenda"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_finalizado_por_fkey"
+      columns: ["finalizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_pacientes": {
+                  Row: {
+                    "aceita_whatsapp": boolean,"ativo": boolean,"bairro": string | null,"carteirinha": string | null,"cep": string | null,"cidade": string | null,"complemento": string | null,"consentimento_em": string | null,"consentimento_por": string | null,"contato_emergencia": string | null,"convenio": string | null,"cpf": string | null,"created_at": string,"criado_por": string | null,"email": string | null,"empresa_id": string,"estado_civil": string | null,"genero": string | null,"id": string,"logradouro": string | null,"medico_encaminhador": string | null,"nascimento": string | null,"naturalidade": string | null,"nome": string,"nome_social": string | null,"numero": string | null,"observacoes": string | null,"profissao": string | null,"responsavel": string | null,"telefone": string | null,"uf": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "aceita_whatsapp"?: boolean,"ativo"?: boolean,"bairro"?: string | null,"carteirinha"?: string | null,"cep"?: string | null,"cidade"?: string | null,"complemento"?: string | null,"consentimento_em"?: string | null,"consentimento_por"?: string | null,"contato_emergencia"?: string | null,"convenio"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"email"?: string | null,"empresa_id": string,"estado_civil"?: string | null,"genero"?: string | null,"id"?: string,"logradouro"?: string | null,"medico_encaminhador"?: string | null,"nascimento"?: string | null,"naturalidade"?: string | null,"nome": string,"nome_social"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"profissao"?: string | null,"responsavel"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "aceita_whatsapp"?: boolean,"ativo"?: boolean,"bairro"?: string | null,"carteirinha"?: string | null,"cep"?: string | null,"cidade"?: string | null,"complemento"?: string | null,"consentimento_em"?: string | null,"consentimento_por"?: string | null,"contato_emergencia"?: string | null,"convenio"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"email"?: string | null,"empresa_id"?: string,"estado_civil"?: string | null,"genero"?: string | null,"id"?: string,"logradouro"?: string | null,"medico_encaminhador"?: string | null,"nascimento"?: string | null,"naturalidade"?: string | null,"nome"?: string,"nome_social"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"profissao"?: string | null,"responsavel"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_pacientes_consentimento_por_fkey"
+      columns: ["consentimento_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_pacientes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_pacientes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_pacotes": {
+                  Row: {
+                    "convenio": string | null,"created_at": string,"criado_por": string | null,"descricao": string,"empresa_id": string,"guia": string | null,"id": string,"inicio": string,"observacao": string | null,"paciente_id": string,"sessoes": number,"status": string,"updated_at": string,"validade": string | null,"valor_total": number
+                  }
+                  Insert: {
+                    "convenio"?: string | null,"created_at"?: string,"criado_por"?: string | null,"descricao": string,"empresa_id": string,"guia"?: string | null,"id"?: string,"inicio": string,"observacao"?: string | null,"paciente_id": string,"sessoes": number,"status"?: string,"updated_at"?: string,"validade"?: string | null,"valor_total"?: number
+                  }
+                  Update: {
+                    "convenio"?: string | null,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"guia"?: string | null,"id"?: string,"inicio"?: string,"observacao"?: string | null,"paciente_id"?: string,"sessoes"?: number,"status"?: string,"updated_at"?: string,"validade"?: string | null,"valor_total"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_pacotes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_pacotes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_pacotes_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"fisio_profissionais": {
+                  Row: {
+                    "ativo": boolean,"cor": string,"created_at": string,"crefito": string,"crefito_regiao": number,"email": string | null,"empresa_id": string,"especialidade": string | null,"id": string,"nome": string,"perfil_id": string | null,"repasse_percentual": number,"responsavel_tecnico": boolean,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cor"?: string,"created_at"?: string,"crefito": string,"crefito_regiao": number,"email"?: string | null,"empresa_id": string,"especialidade"?: string | null,"id"?: string,"nome": string,"perfil_id"?: string | null,"repasse_percentual"?: number,"responsavel_tecnico"?: boolean,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cor"?: string,"created_at"?: string,"crefito"?: string,"crefito_regiao"?: number,"email"?: string | null,"empresa_id"?: string,"especialidade"?: string | null,"id"?: string,"nome"?: string,"perfil_id"?: string | null,"repasse_percentual"?: number,"responsavel_tecnico"?: boolean,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_profissionais_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_profissionais_perfil_id_fkey"
+      columns: ["perfil_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_recebimentos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"created_at": string,"data": string,"descricao": string,"empresa_id": string,"forma": string,"id": string,"lancamento_id": string | null,"observacao": string | null,"paciente_id": string,"pacote_id": string | null,"registrado_por": string | null,"valor": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"data": string,"descricao": string,"empresa_id": string,"forma": string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"paciente_id": string,"pacote_id"?: string | null,"registrado_por"?: string | null,"valor": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"data"?: string,"descricao"?: string,"empresa_id"?: string,"forma"?: string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"paciente_id"?: string,"pacote_id"?: string | null,"registrado_por"?: string | null,"valor"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_recebimentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_recebimentos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_recebimentos_empresa_id_pacote_id_fkey"
+      columns: ["empresa_id","pacote_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacotes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_recebimentos_lancamento_id_fkey"
+      columns: ["lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_recebimentos_registrado_por_fkey"
+      columns: ["registrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"frota_despesas": {
                   Row: {
                     "created_at": string,"criado_por": string | null,"data": string,"descricao": string,"documento": string | null,"empresa_id": string,"fornecedor": string | null,"grupo": string,"id": string,"km": number | null,"litros": number | null,"valor": number,"veiculo_id": string
@@ -6421,6 +6797,70 @@ isOneToOne: false
                            },
 "fechar_competencia":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_observacao"?: string }; Returns: undefined
+                           },
+"fisio_adendo_registrar":
+{ Args: { "p_id": string,"p_texto": string,"p_tipo": string }; Returns: string
+                           },
+"fisio_agenda_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: number
+                           },
+"fisio_agenda_status":
+{ Args: { "p_agenda_id": string,"p_motivo"?: string,"p_status": string,"p_toda_serie"?: boolean }; Returns: undefined
+                           },
+"fisio_avaliacao_abrir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"fisio_avaliacao_finalizar":
+{ Args: { "p_avaliacao_id": string }; Returns: undefined
+                           },
+"fisio_avaliacao_salvar":
+{ Args: { "p_avaliacao_id": string,"p_dados": Json }; Returns: undefined
+                           },
+"fisio_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"fisio_documento_cancelar":
+{ Args: { "p_documento_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"fisio_documento_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"fisio_evolucao_abrir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"fisio_evolucao_finalizar":
+{ Args: { "p_evolucao_id": string }; Returns: undefined
+                           },
+"fisio_evolucao_salvar":
+{ Args: { "p_dados": Json,"p_evolucao_id": string }; Returns: undefined
+                           },
+"fisio_paciente_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"fisio_pacote_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"fisio_pacotes_resumo":
+{ Args: { "p_empresa_id": string,"p_paciente_id"?: string }; Returns: {
+              "agendadas": number,"convenio": string,"descricao": string,"guia": string,"id": string,"inicio": string,"paciente_id": string,"recebido": number,"sessoes": number,"status": string,"usadas": number,"validade": string,"valor_total": number
+            }[]
+                           },
+"fisio_profissional_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"fisio_recebimento_estornar":
+{ Args: { "p_motivo": string,"p_recebimento_id": string }; Returns: undefined
+                           },
+"fisio_recebimento_registrar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"fisio_registro_cancelar":
+{ Args: { "p_id": string,"p_motivo": string,"p_tipo": string }; Returns: undefined
+                           },
+"fisio_repasse":
+{ Args: { "p_empresa_id": string,"p_mes": string }; Returns: {
+              "avaliacoes": number,"faltas": number,"nome": string,"profissional_id": string,"repasse": number,"repasse_percentual": number,"sessoes": number,"valor_sessoes": number
+            }[]
                            },
 "gerar_checklist_competencia":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: number

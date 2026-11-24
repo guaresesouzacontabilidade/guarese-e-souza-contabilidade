@@ -1,4 +1,5 @@
 import {
+  Activity,
   LayoutDashboard,
   LayoutGrid,
   PackageCheck,
@@ -72,7 +73,7 @@ export interface EmpresaMenu {
   /** Gestão da loja ligada para a empresa. */
   loja: boolean;
   /** Modalidade da gestão: loja completa, só notas e transporte, hotel ou clínica veterinária. */
-  modalidade: "loja" | "notas" | "hotel" | "veterinaria" | null;
+  modalidade: "loja" | "notas" | "hotel" | "veterinaria" | "fisioterapia" | null;
   /** CT-e configurado pelo escritório (ligado ou em conferência). */
   cte?: boolean;
   /** Tem caminhões cadastrados (rentabilidade da frota). */
@@ -205,8 +206,10 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
   const transporte = empresa.loja && empresa.modalidade === "notas";
   const hotel = empresa.loja && empresa.modalidade === "hotel";
   const clinica = empresa.loja && empresa.modalidade === "veterinaria";
+  const fisio = empresa.loja && empresa.modalidade === "fisioterapia";
   const hospedagem: ItemMenu[] = [];
   const veterinaria: ItemMenu[] = [];
+  const fisioterapia: ItemMenu[] = [];
   const loja: ItemMenu[] = [];
   const notas: ItemMenu[] = [];
   const documentos: ItemMenu[] = [];
@@ -249,6 +252,14 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     loja.push({ rotulo: "Produtos e estoque", href: `${base}/loja/produtos`, icone: Boxes });
     loja.push({ rotulo: "Vendas", href: `${base}/loja/vendas`, icone: ReceiptText });
     if (p.has("gestao.gerenciar")) configuracoes.push({ rotulo: "Configurações da clínica", href: `${base}/veterinaria/configuracoes`, icone: PawPrint });
+  } else if (fisio && p.has("gestao.vender")) {
+    // Clínica de fisioterapia: agenda, pacientes (prontuário só para os fisioterapeutas), pacotes e recebimentos
+    fisioterapia.push({ rotulo: "Painel da clínica", href: `${base}/fisioterapia`, icone: Activity, exato: true });
+    fisioterapia.push({ rotulo: "Agenda", href: `${base}/fisioterapia/agenda`, icone: CalendarRange });
+    fisioterapia.push({ rotulo: "Pacientes", href: `${base}/fisioterapia/pacientes`, icone: Users });
+    fisioterapia.push({ rotulo: "Recebimentos", href: `${base}/fisioterapia/recebimentos`, icone: ReceiptText });
+    if (p.has("gestao.gerenciar")) fisioterapia.push({ rotulo: "Repasse dos fisioterapeutas", href: `${base}/fisioterapia/repasse`, icone: HandCoins });
+    if (p.has("gestao.gerenciar")) configuracoes.push({ rotulo: "Configurações da clínica", href: `${base}/fisioterapia/configuracoes`, icone: Activity });
   } else if (empresa.loja && p.has("gestao.vender")) {
     loja.push({ rotulo: "Loja", href: `${base}/loja`, icone: Store, exato: true });
     loja.push({ rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart });
@@ -302,6 +313,7 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     { id: "inicio", rotulo: "Início", icone: Home, itens: [{ rotulo: "Início", href: base, icone: Home, exato: true }] },
     { id: "hotel", rotulo: "Hotel", icone: BedDouble, itens: hospedagem },
     { id: "veterinaria", rotulo: "Clínica", icone: PawPrint, itens: veterinaria },
+    { id: "fisioterapia", rotulo: "Clínica", icone: Activity, itens: fisioterapia },
     { id: "loja", rotulo: hotel ? "Restaurante e bar" : clinica ? "Pet shop e farmácia" : "Loja", icone: hotel ? UtensilsCrossed : Store, itens: loja },
     { id: "notas", rotulo: transporte ? "Notas e transporte" : "Notas", icone: transporte ? Truck : ReceiptText, itens: notas },
     { id: "documentos", rotulo: "Documentos", icone: FolderOpen, itens: documentos },

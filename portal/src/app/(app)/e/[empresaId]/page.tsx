@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BedDouble, Building2, CalendarDays, CalendarPlus, FileCheck2, MessagesSquare, PackageCheck, PawPrint, ReceiptText, Route, ShoppingCart, Truck, Upload } from "lucide-react";
+import { Activity, BedDouble, Building2, CalendarDays, CalendarPlus, FileCheck2, MessagesSquare, PackageCheck, PawPrint, ReceiptText, Route, ShoppingCart, Truck, Upload } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { competenciaAtual, hojeISO, somarDias, somarMeses } from "@/lib/competencia";
@@ -154,7 +154,10 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
   const transporte = acesso.loja && acesso.gestao_modalidade === "notas";
   const hotel = acesso.loja && acesso.gestao_modalidade === "hotel";
   const clinica = acesso.loja && acesso.gestao_modalidade === "veterinaria";
+  const fisio = acesso.loja && acesso.gestao_modalidade === "fisioterapia";
   const atalhos = [
+    fisio && ctx.pode("gestao.vender") ? { rotulo: "Painel da clínica", href: `${base}/fisioterapia`, icone: Activity } : null,
+    fisio && ctx.pode("gestao.vender") ? { rotulo: "Agenda da clínica", href: `${base}/fisioterapia/agenda`, icone: CalendarPlus } : null,
     hotel && ctx.pode("gestao.vender") ? { rotulo: "Painel do hotel", href: `${base}/hotel`, icone: BedDouble } : null,
     hotel && ctx.pode("gestao.vender") ? { rotulo: "Nova reserva", href: `${base}/hotel/reservas/nova`, icone: CalendarPlus } : null,
     clinica && ctx.pode("gestao.vender") ? { rotulo: "Painel da clínica", href: `${base}/veterinaria`, icone: PawPrint } : null,
@@ -162,7 +165,7 @@ export default async function VisaoGeralEmpresa({ params }: PageProps<"/e/[empre
     // "Enviar documentos" já está no topo e no quadro do mês: aqui entra outro caminho útil
     verAgenda ? { rotulo: "Pagamentos e prazos", href: `${base}/agenda`, icone: CalendarDays } : null,
     transporte && ctx.pode("nfe.emitir") ? { rotulo: "Ordens de carregamento", href: `${base}/loja/carregamentos`, icone: Truck } : null,
-    acesso.loja && !transporte && !hotel && !clinica && ctx.pode("gestao.vender") ? { rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart } : null,
+    acesso.loja && !transporte && !hotel && !clinica && !fisio && ctx.pode("gestao.vender") ? { rotulo: "Vender", href: `${base}/loja/vender`, icone: ShoppingCart } : null,
     ctx.pode("nfe.emitir") ? { rotulo: "Emitir nota de produto", href: `${base}/notas-produto`, icone: PackageCheck } : null,
     ctx.pode("cte.configurar") || (ctx.pode("cte.emitir") && acesso.cte) ? { rotulo: "Emitir CT-e (frete)", href: `${base}/cte`, icone: Route } : null,
     ctx.pode("nfse.emitir") ? { rotulo: "Emitir nota de serviço", href: `${base}/notas-servico`, icone: ReceiptText } : null,

@@ -95,8 +95,8 @@ export interface EmpresaAcesso {
   demonstracao: boolean;
   /** Gestão ligada para a empresa (em qualquer modalidade). */
   loja: boolean;
-  /** Modalidade da gestão ligada: loja completa, só notas e transporte, hotel ou clínica veterinária (null quando desligada). */
-  gestao_modalidade: "loja" | "notas" | "hotel" | "veterinaria" | null;
+  /** Modalidade da gestão ligada: loja completa, só notas e transporte, hotel, clínica veterinária ou de fisioterapia (null quando desligada). */
+  gestao_modalidade: "loja" | "notas" | "hotel" | "veterinaria" | "fisioterapia" | null;
   /** CT-e configurado pelo escritório para a empresa (ligado ou em conferência; visível a quem emite ou configura o CT-e). */
   cte: boolean;
   /** Caminhões cadastrados na rentabilidade da frota (visível a quem vê o financeiro). */
@@ -127,8 +127,8 @@ export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> =
     frota: (frota_veiculos?.[0]?.count ?? 0) > 0,
     loja: gestao?.ativa === true,
     gestao_modalidade: gestao?.ativa
-      ? gestao.modalidade === "notas" || gestao.modalidade === "hotel" || gestao.modalidade === "veterinaria"
-        ? (gestao.modalidade as "notas" | "hotel" | "veterinaria")
+      ? gestao.modalidade === "notas" || gestao.modalidade === "hotel" || gestao.modalidade === "veterinaria" || gestao.modalidade === "fisioterapia"
+        ? (gestao.modalidade as "notas" | "hotel" | "veterinaria" | "fisioterapia")
         : ("loja" as const)
       : null,
   });

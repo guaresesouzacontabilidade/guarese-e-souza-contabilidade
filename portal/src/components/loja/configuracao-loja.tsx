@@ -10,7 +10,7 @@ import { MODALIDADES_GESTAO } from "@/lib/gestao/carregamentos";
 
 export interface ConfigLoja {
   ativa: boolean;
-  modalidade: "loja" | "notas" | "hotel" | "veterinaria";
+  modalidade: "loja" | "notas" | "hotel" | "veterinaria" | "fisioterapia";
   perfil_fiscal: string;
   permitir_estoque_negativo: boolean;
   permitir_venda_prazo: boolean;
@@ -48,10 +48,11 @@ export function FormConfigLoja({
   nfe: OpcoesNfeLoja | null;
 }) {
   const c = config;
-  const [modalidade, setModalidade] = React.useState<"loja" | "notas" | "hotel" | "veterinaria">(c?.modalidade ?? "loja");
+  const [modalidade, setModalidade] = React.useState<"loja" | "notas" | "hotel" | "veterinaria" | "fisioterapia">(c?.modalidade ?? "loja");
   const notas = modalidade === "notas";
   const hotel = modalidade === "hotel";
   const clinica = modalidade === "veterinaria";
+  const fisio = modalidade === "fisioterapia";
   const opcoesConta = (atual: string | null) => (
     <>
       {!atual ? <option value="">Criar automaticamente</option> : null}
@@ -78,7 +79,9 @@ export function FormConfigLoja({
                       ? "Libera as ordens de carregamento ligadas à NF-e. Não cria caixa nem contas da loja."
                       : hotel
                         ? "Libera reservas, quartos, check-in e check-out, a conta do hóspede e o restaurante e bar (caixa, produtos e estoque). Ao ligar, o portal cria as contas “Caixa da recepção”, “Banco (PIX e transferências)” e “Maquininha de cartão” no Financeiro, se ainda não existirem."
-                        : clinica
+                        : fisio
+                          ? "Libera a agenda dos fisioterapeutas, os pacientes, o prontuário (avaliação, evolução de cada sessão e alta, que só os fisioterapeutas leem), os pacotes de sessões, os recebimentos e o repasse. Ao ligar, o portal cria as contas “Caixa da clínica”, “Banco (PIX e transferências)” e “Maquininha de cartão” no Financeiro, se ainda não existirem."
+                          : clinica
                           ? "Libera a agenda, os tutores e animais, o prontuário, as receitas, as vacinas com lembretes, os atestados e as contas da clínica, além do pet shop (caixa, produtos e estoque). Ao ligar, o portal cria as contas “Caixa da clínica”, “Banco (PIX e transferências)” e “Maquininha de cartão” no Financeiro, se ainda não existirem."
                           : "Libera o caixa, as vendas, o estoque e os orçamentos. Ao ligar, o portal cria as contas “Caixa da loja”, “Banco (PIX e transferências)” e “Maquininha de cartão” no Financeiro, se ainda não existirem."}
                   </span>
@@ -87,13 +90,17 @@ export function FormConfigLoja({
               <Campo
                 rotulo="Modalidade"
                 htmlFor="modalidade"
-                ajuda="Notas e transporte: para quem vende grãos e só precisa das notas e dos carregamentos. Hotel: para hotéis e pousadas (reservas, quartos, conta do hóspede e restaurante). Clínica veterinária: agenda, prontuário, receitas, vacinas e contas."
+                ajuda="Notas e transporte: para quem vende grãos e só precisa das notas e dos carregamentos. Hotel: para hotéis e pousadas (reservas, quartos, conta do hóspede e restaurante). Clínica veterinária: agenda, prontuário, receitas, vacinas e contas. Clínica de fisioterapia: agenda, pacientes, avaliação e evolução, pacotes e recebimentos."
               >
                 <Select
                   id="modalidade"
                   name="modalidade"
                   value={modalidade}
-                  onChange={(e) => setModalidade(e.target.value === "notas" || e.target.value === "hotel" || e.target.value === "veterinaria" ? e.target.value : "loja")}
+                  onChange={(e) =>
+                    setModalidade(
+                      e.target.value === "notas" || e.target.value === "hotel" || e.target.value === "veterinaria" || e.target.value === "fisioterapia" ? e.target.value : "loja",
+                    )
+                  }
                 >
                   {Object.entries(MODALIDADES_GESTAO).map(([v, r]) => (
                     <option key={v} value={v}>

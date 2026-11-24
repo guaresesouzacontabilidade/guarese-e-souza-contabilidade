@@ -33,6 +33,7 @@ import { semearFrota } from "./demo-frota";
 import { semearTransportadoraCompleta } from "./demo-transportadora";
 import { semearHotel } from "./demo-hotel";
 import { semearVeterinaria } from "./demo-veterinaria";
+import { semearFisioterapia } from "./demo-fisioterapia";
 import { semearEstudos } from "./demo-estudos";
 import { semearEscalas } from "./demo-escalas";
 import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
@@ -324,6 +325,17 @@ async function main() {
   ) {
     console.log("  Clínica veterinária fictícia: tutores, animais, prontuário, vacinas, receitas, atestados, agenda do dia, contas e lembretes");
   }
+  if (
+    await semearFisioterapia(admin, comoAdmin, { url, publica }, {
+      dominio: DOMINIO,
+      contadorId: idEquipe,
+      inicioAtendimento: competencia(-12),
+      garantirUsuario: (email, nome) => garantirUsuario(admin, email, nome, "cliente", senha),
+      permissoesTitular: titular,
+    })
+  ) {
+    console.log("  Clínica de fisioterapia fictícia: fisioterapeutas, pacientes, prontuário (avaliação, evolução e alta), pacotes, agenda de hoje e recebimentos");
+  }
   if (await semearEstudos(admin)) {
     console.log("  Robô tributário: configuração e receita fictícias da clínica (o robô encontra a oportunidade do Fator R ao rodar)");
   }
@@ -361,6 +373,7 @@ async function main() {
   console.log(`  Grãos:          graos@${DOMINIO} (dono) e balanca@${DOMINIO} (ordens de carregamento e pesagem)`);
   console.log(`  Hotel:          hotel@${DOMINIO} (dono) e recepcao@${DOMINIO} (recepção)`);
   console.log(`  Clínica vet.:   veterinaria@${DOMINIO} (dona e veterinária) e atendimento@${DOMINIO} (recepção da clínica)`);
+  console.log(`  Fisioterapia:   fisioterapia@${DOMINIO} (dona e fisioterapeuta), fisio2@${DOMINIO} (fisioterapeuta) e recepcao.fisio@${DOMINIO} (recepção)`);
   console.log(`  Transportadora: transportadora@${DOMINIO} (dono; frota, ordens de carregamento, CT-e em conferência, financeiro e documentos)`);
   console.log(MANTER_SENHAS ? "  Senhas: mantidas (não foram alteradas)" : `  Senha de todos: ${senha}`);
   console.log(`  Empresas:       ${empresas.map((e) => e.nome_fantasia).join(", ")}, Fazenda Exemplo (DEMO) — só a equipe, Madeireira Reflorestar (DEMO), Grãos Cerrado (DEMO)\n`);
