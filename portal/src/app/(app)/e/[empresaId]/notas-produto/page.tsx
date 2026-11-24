@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookUser, FileText, PlugZap, Plus, Settings2 } from "lucide-react";
+import { BookUser, FileText, PlugZap, Plus, Settings2, Truck } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
@@ -30,7 +30,7 @@ export default async function NotasProduto({ params, searchParams }: PageProps<"
   const comp = lerCompetencia(parametro(sp, "competencia")) ?? competenciaAtual();
   const fim = ultimoDiaDoMes(comp);
 
-  const [{ data: cfg }, { data: notas, error }, { data: cert }, { count: guiasAGerar }] = await Promise.all([
+  const [{ data: cfg }, { data: notas, error }, { data: cert }, { count: guiasAGerar }, { data: ufs }] = await Promise.all([
     ctx.supabase.from("nfe_config").select("ativa, ambiente").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase
       .from("nfe_emissoes")
@@ -42,7 +42,10 @@ export default async function NotasProduto({ params, searchParams }: PageProps<"
       .limit(300),
     ctx.supabase.from("notas_automaticas").select("certificado_valido_ate").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("nfe_guias").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("situacao", "a_gerar"),
+    ctx.supabase.from("nfe_emitentes").select("municipio:municipios(uf)").eq("empresa_id", empresaId).limit(50),
   ]);
+  // GTA pelo SIDAGO: só para quem emite em Goiás
+  const goias = (ufs ?? []).some((e) => (e.municipio as unknown as { uf?: string } | null)?.uf === "GO");
   if (error) return <Alerta tom="perigo">Não foi possível carregar as notas: {mensagemErro(error)}</Alerta>;
   const lista = notas ?? [];
   const ativa = Boolean(cfg?.ativa);
@@ -64,6 +67,13 @@ export default async function NotasProduto({ params, searchParams }: PageProps<"
                 <BookUser /> Clientes e transportadores
               </Link>
             </Button>
+            {goias ? (
+              <Button asChild variante="contorno">
+                <Link href={`${base}/gta`}>
+                  <Truck /> GTA (SIDAGO)
+                </Link>
+              </Button>
+            ) : null}
             {configurar ? (
               <Button asChild variante="contorno">
                 <Link href={`${base}/configuracao`}>

@@ -2727,6 +2727,124 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"gta_conferencias": {
+                  Row: {
+                    "created_at": string,"empresa_id": string,"feito_por": string | null,"id": string,"mapeamento": Json | null,"mensagem": string | null,"ok": boolean,"pedido_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"empresa_id": string,"feito_por"?: string | null,"id"?: string,"mapeamento"?: Json | null,"mensagem"?: string | null,"ok": boolean,"pedido_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"empresa_id"?: string,"feito_por"?: string | null,"id"?: string,"mapeamento"?: Json | null,"mensagem"?: string | null,"ok"?: boolean,"pedido_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gta_conferencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_conferencias_feito_por_fkey"
+      columns: ["feito_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_conferencias_pedido_id_fkey"
+      columns: ["pedido_id"]
+isOneToOne: false
+      referencedRelation: "gta_pedidos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gta_pedidos": {
+                  Row: {
+                    "animais": NonNullable<Json>,"created_at": string,"criado_por": string | null,"data_saida": string,"destino_codigo": string | null,"destino_documento": string | null,"destino_ie": string | null,"destino_municipio_ibge": string | null,"destino_nome": string,"emitente_id": string | null,"empresa_id": string,"especie": string,"finalidade": string,"gta_numero": string | null,"gta_serie": string | null,"id": string,"nf_chave": string | null,"nf_numero": number | null,"nf_serie": number | null,"nfe_emissao_id": string | null,"observacoes": string | null,"placa": string | null,"placa_uf": string | null,"status": string,"total_animais": number,"transportador_documento": string | null,"transportador_nome": string | null,"transporte": string,"ultima_conferencia_em": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "animais": NonNullable<Json>,"created_at"?: string,"criado_por"?: string | null,"data_saida": string,"destino_codigo"?: string | null,"destino_documento"?: string | null,"destino_ie"?: string | null,"destino_municipio_ibge"?: string | null,"destino_nome": string,"emitente_id"?: string | null,"empresa_id": string,"especie"?: string,"finalidade": string,"gta_numero"?: string | null,"gta_serie"?: string | null,"id"?: string,"nf_chave"?: string | null,"nf_numero"?: number | null,"nf_serie"?: number | null,"nfe_emissao_id"?: string | null,"observacoes"?: string | null,"placa"?: string | null,"placa_uf"?: string | null,"status"?: string,"total_animais": number,"transportador_documento"?: string | null,"transportador_nome"?: string | null,"transporte"?: string,"ultima_conferencia_em"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "animais"?: NonNullable<Json>,"created_at"?: string,"criado_por"?: string | null,"data_saida"?: string,"destino_codigo"?: string | null,"destino_documento"?: string | null,"destino_ie"?: string | null,"destino_municipio_ibge"?: string | null,"destino_nome"?: string,"emitente_id"?: string | null,"empresa_id"?: string,"especie"?: string,"finalidade"?: string,"gta_numero"?: string | null,"gta_serie"?: string | null,"id"?: string,"nf_chave"?: string | null,"nf_numero"?: number | null,"nf_serie"?: number | null,"nfe_emissao_id"?: string | null,"observacoes"?: string | null,"placa"?: string | null,"placa_uf"?: string | null,"status"?: string,"total_animais"?: number,"transportador_documento"?: string | null,"transportador_nome"?: string | null,"transporte"?: string,"ultima_conferencia_em"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gta_pedidos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_pedidos_destino_municipio_ibge_fkey"
+      columns: ["destino_municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    },{
+      foreignKeyName: "gta_pedidos_emitente_id_fkey"
+      columns: ["emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_pedidos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_pedidos_nfe_emissao_id_fkey"
+      columns: ["nfe_emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gta_sidago_acesso": {
+                  Row: {
+                    "atualizado_por": string | null,"created_at": string,"empresa_id": string,"login_mascarado": string,"situacao": string,"ultima_mensagem": string | null,"ultimo_teste_em": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"created_at"?: string,"empresa_id": string,"login_mascarado": string,"situacao"?: string,"ultima_mensagem"?: string | null,"ultimo_teste_em"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"login_mascarado"?: string,"situacao"?: string,"ultima_mensagem"?: string | null,"ultimo_teste_em"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gta_sidago_acesso_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_sidago_acesso_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gta_sidago_segredo": {
+                  Row: {
+                    "conteudo_cifrado": string,"created_at": string,"empresa_id": string
+                  }
+                  Insert: {
+                    "conteudo_cifrado": string,"created_at"?: string,"empresa_id": string
+                  }
+                  Update: {
+                    "conteudo_cifrado"?: string,"created_at"?: string,"empresa_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gta_sidago_segredo_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "gta_sidago_acesso"
+      referencedColumns: ["empresa_id"]
+    }
+                  ]
                 },"guia_pagamentos": {
                   Row: {
                     "comprovante_documento_id": string | null,"empresa_id": string,"guia_documento_id": string,"informado_em": string,"informado_por": string | null,"observacao": string | null,"pago_em": string,"valor_pago": number | null
@@ -6930,6 +7048,24 @@ isOneToOne: false
                            },
 "gestao_venda_vincular_nfe":
 { Args: { "p_nfe_id": string,"p_venda_id": string }; Returns: undefined
+                           },
+"gta_conferencia_registrar":
+{ Args: { "p_mapeamento": Json,"p_mensagem": string,"p_ok": boolean,"p_pedido_id": string }; Returns: string
+                           },
+"gta_pedido_excluir":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"gta_pedido_registrar_emissao":
+{ Args: { "p_id": string,"p_numero": string,"p_serie": string }; Returns: undefined
+                           },
+"gta_pedido_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"gta_sidago_remover_acesso":
+{ Args: { "p_empresa_id": string }; Returns: undefined
+                           },
+"gta_sidago_salvar_acesso":
+{ Args: { "p_conteudo_cifrado": string,"p_empresa_id": string,"p_login_mascarado": string }; Returns: undefined
                            },
 "honorarios_acesso_definir":
 { Args: { "p_ativo": boolean,"p_user_id": string }; Returns: undefined

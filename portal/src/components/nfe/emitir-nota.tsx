@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Calculator, Loader2, Plus, Send, Trash2, UserPlus, Truck } from "lucide-react";
@@ -590,6 +591,14 @@ export function EmitirNota({
               Obrigatória nesta venda. Primeiro emita a GTA no órgão de defesa agropecuária (no Tocantins, a ADAPEC; em Goiás, a Agrodefesa) e depois a nota,
               com o número da GTA, que vai nas informações complementares. Mais de uma GTA na mesma carga? Use “+ GTA”.
             </p>
+            {emitente?.uf === "GO" ? (
+              <p className="mt-1 text-xs">
+                <Link href={`/e/${empresaId}/notas-produto/gta`} className="font-medium underline" target="_blank">
+                  Preparar e conferir a GTA no SIDAGO
+                </Link>{" "}
+                <span className="text-muted-foreground">(abre em outra aba, sem perder esta nota)</span>
+              </p>
+            ) : null}
           </div>
           {gtas.map((g, i) => (
             <div key={g.chave} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_7rem_auto]">
