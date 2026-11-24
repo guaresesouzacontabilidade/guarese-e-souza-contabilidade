@@ -278,8 +278,10 @@ begin
 end;
 $$;
 
--- Resultado da conferência no SIDAGO (o servidor chama depois de rodar o robô)
-create or replace function public.gta_conferencia_registrar(p_pedido_id uuid, p_ok boolean, p_mensagem text, p_mapeamento jsonb)
+-- Resultado da conferência no SIDAGO. Só o servidor registra (depois de rodar o
+-- robô e de conferir a permissão de quem pediu): um usuário não consegue marcar
+-- um pedido como "conferido" sem o robô ter rodado.
+create or replace function public.gta_conferencia_registrar(p_pedido_id uuid, p_ok boolean, p_mensagem text, p_mapeamento jsonb, p_usuario uuid)
 returns uuid
 language plpgsql
 security definer
@@ -293,9 +295,8 @@ begin
   if g.id is null then
     raise exception 'Pedido de GTA não encontrado.';
   end if;
-  perform app.gta_exigir(g.empresa_id);
-  insert into public.gta_conferencias (empresa_id, pedido_id, ok, mensagem, mapeamento)
-  values (g.empresa_id, g.id, coalesce(p_ok, false), left(p_mensagem, 500), p_mapeamento)
+  insert into public.gta_conferencias (empresa_id, pedido_id, ok, mensagem, mapeamento, feito_por)
+  values (g.empresa_id, g.id, coalesce(p_ok, false), left(p_mensagem, 500), p_mapeamento, p_usuario)
   returning id into v_id;
   if g.status <> 'emitida' then
     update public.gta_pedidos set status = case when p_ok then 'conferido' else 'erro' end, ultima_conferencia_em = now() where id = g.id;
@@ -356,8 +357,11 @@ grant select, insert, update, delete on public.gta_sidago_acesso, public.gta_sid
 
 revoke execute on function app.gta_exigir(uuid) from public, anon, authenticated;
 revoke execute on function public.gta_sidago_salvar_acesso(uuid, text, text), public.gta_sidago_remover_acesso(uuid), public.gta_pedido_salvar(uuid, uuid, jsonb),
-  public.gta_pedido_excluir(uuid), public.gta_conferencia_registrar(uuid, boolean, text, jsonb), public.gta_pedido_registrar_emissao(uuid, text, text)
+  public.gta_pedido_excluir(uuid), public.gta_pedido_registrar_emissao(uuid, text, text)
   from public, anon;
 grant execute on function public.gta_sidago_salvar_acesso(uuid, text, text), public.gta_sidago_remover_acesso(uuid), public.gta_pedido_salvar(uuid, uuid, jsonb),
-  public.gta_pedido_excluir(uuid), public.gta_conferencia_registrar(uuid, boolean, text, jsonb), public.gta_pedido_registrar_emissao(uuid, text, text)
+  public.gta_pedido_excluir(uuid), public.gta_pedido_registrar_emissao(uuid, text, text)
   to authenticated;
+-- Resultado do robô: só o servidor
+revoke execute on function public.gta_conferencia_registrar(uuid, boolean, text, jsonb, uuid) from public, anon, authenticated;
+grant execute on function public.gta_conferencia_registrar(uuid, boolean, text, jsonb, uuid) to service_role;

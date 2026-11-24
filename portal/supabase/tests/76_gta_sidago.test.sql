@@ -7,7 +7,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(18);
+select plan(19);
 
 \ir 00_setup.sql.inc
 
@@ -41,9 +41,16 @@ select is((select jsonb_array_length(animais) from public.gta_pedidos where id =
 select is((select placa || '/' || placa_uf || '/' || nf_numero || '-' || nf_serie from public.gta_pedidos where id = current_setting('testes.gta')::uuid),
   'ABC1D23/GO/15-920', 'placa e nota fiscal guardadas no formato');
 
--- 3. Conferência do robô e GTA emitida no SIDAGO
+-- 3. Conferência do robô (só o servidor registra) e GTA emitida no SIDAGO
+select throws_ok(format($$select public.gta_conferencia_registrar(%L, true, 'conferido sem robô', '{}'::jsonb, null)$$, current_setting('testes.gta')),
+  '42501', null, 'usuário não marca o pedido como conferido pela API');
+reset role;
+set local role service_role;
 select ok(public.gta_conferencia_registrar(current_setting('testes.gta')::uuid, true, 'Formulário da GTA encontrado (modo conferência: nada foi enviado).',
-  '{"login": "ok", "campos": []}'::jsonb) is not null, 'conferência registrada');
+  '{"login": "ok", "campos": []}'::jsonb, '00000000-0000-0000-0000-0000000000a1') is not null, 'conferência registrada pelo servidor');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000a1');
+set local role authenticated;
 select is((select status from public.gta_pedidos where id = current_setting('testes.gta')::uuid), 'conferido', 'pedido conferido');
 select is((select situacao from public.gta_sidago_acesso where empresa_id = current_setting('testes.empresa_a')::uuid), 'conectado', 'acesso marcado como conectado');
 select throws_like(format($$select public.gta_pedido_registrar_emissao(%L, 'GTA nº 12', null)$$, current_setting('testes.gta')), '%Número da GTA inválido%',

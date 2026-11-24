@@ -7050,7 +7050,7 @@ isOneToOne: false
 { Args: { "p_nfe_id": string,"p_venda_id": string }; Returns: undefined
                            },
 "gta_conferencia_registrar":
-{ Args: { "p_mapeamento": Json,"p_mensagem": string,"p_ok": boolean,"p_pedido_id": string }; Returns: string
+{ Args: { "p_mapeamento": Json,"p_mensagem": string,"p_ok": boolean,"p_pedido_id": string,"p_usuario": string }; Returns: string
                            },
 "gta_pedido_excluir":
 { Args: { "p_id": string }; Returns: undefined

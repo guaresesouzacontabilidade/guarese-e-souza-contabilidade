@@ -214,17 +214,24 @@ export async function conferirPedidoGta(empresaId: string, id: string): Promise<
       const mensagem = achou
         ? `Formulário da GTA encontrado no SIDAGO (${r.formulario!.campos.length} campos). Modo conferência: nada foi enviado nem emitido.`
         : "Entrou no SIDAGO, mas não achou o formulário da GTA pelos links do menu. O mapa das páginas abertas ficou guardado para ajustar o robô.";
-      const { error } = await ctx.supabase.rpc("gta_conferencia_registrar", { p_pedido_id: id, p_ok: achou, p_mensagem: mensagem, p_mapeamento: r as unknown as Json });
+      const { error } = await admin.rpc("gta_conferencia_registrar", {
+        p_pedido_id: id,
+        p_ok: achou,
+        p_mensagem: mensagem,
+        p_mapeamento: r as unknown as Json,
+        p_usuario: ctx.sessao.usuarioId,
+      });
       if (error) return falha(mensagemErro(error));
       revalidar(empresaId);
       return achou ? sucesso(mensagem) : falha(mensagem);
     } catch (e) {
       const mensagem = e instanceof ErroSidago ? e.message : "Não foi possível conferir no SIDAGO. Tente de novo em alguns minutos.";
-      await ctx.supabase.rpc("gta_conferencia_registrar", {
+      await admin.rpc("gta_conferencia_registrar", {
         p_pedido_id: id,
         p_ok: false,
         p_mensagem: mensagem,
         p_mapeamento: { login: e instanceof ErroSidago && e.etapa === "login" ? "erro" : "sem_resposta", etapa: e instanceof ErroSidago ? e.etapa : "conexao" },
+        p_usuario: ctx.sessao.usuarioId,
       });
       revalidar(empresaId);
       return falha(mensagem);
