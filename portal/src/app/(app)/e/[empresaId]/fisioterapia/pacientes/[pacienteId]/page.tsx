@@ -154,7 +154,7 @@ export default async function PaginaPacienteFisio({ params }: PageProps<"/e/[emp
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <div className="space-y-4 xl:col-span-2">
+        <div className="min-w-0 space-y-4 xl:col-span-2">
           <Card>
             <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
               <div>
@@ -260,7 +260,7 @@ export default async function PaginaPacienteFisio({ params }: PageProps<"/e/[emp
           </Card>
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2">
               <CardTitle>Pacotes</CardTitle>
