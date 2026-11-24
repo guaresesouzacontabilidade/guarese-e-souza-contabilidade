@@ -106,8 +106,30 @@ async function produto(filtro: { id?: string; codigo?: string; descricao?: strin
 test.beforeAll(async () => {
   const { data: emp } = await servico!.from("empresas").select("id").eq("razao_social", MADEIREIRA).single();
   empresaId = emp!.id;
-  const { data: prego } = await servico!.from("nfe_produtos").select("id").eq("empresa_id", empresaId).like("descricao", "Prego 17 x 27%").single();
-  pregoId = prego!.id;
+  const { data: prego } = await servico!.from("nfe_produtos").select("id").eq("empresa_id", empresaId).like("descricao", "Prego 17 x 27%").maybeSingle();
+  if (prego) {
+    pregoId = prego.id;
+    return;
+  }
+  // O prego da demonstração (produto em kg) sumiu deste banco: volta como na carga da demonstração
+  const { data: novo, error } = await servico!
+    .from("nfe_produtos")
+    .insert({
+      empresa_id: empresaId,
+      codigo: "PREGO-17X27",
+      descricao: "Prego 17 x 27 com cabeça (kg)",
+      grupo: "Ferragens",
+      ncm: "73170090",
+      unidade: "KG",
+      valor_unitario: 18.9,
+      preco_custo: 11.5,
+      controla_estoque: true,
+      estoque_minimo: 10,
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  pregoId = novo!.id;
 });
 
 test("planilha: modelo, prévia com erro, importação e atualização do mesmo código", async ({ page }) => {
@@ -178,18 +200,37 @@ test("planilha: modelo, prévia com erro, importação e atualização do mesmo 
 
 test("excluir produto com compra por nota no histórico só desativa (e o histórico fica)", async ({ page }) => {
   test.setTimeout(120_000);
+  // Produto próprio do teste, com uma entrada de compra no histórico (não depende da ordem dos testes nem da demonstração)
+  const { data: comCompra, error } = await servico!
+    .from("nfe_produtos")
+    .insert({ empresa_id: empresaId, codigo: `CMP-${sufixo}`, descricao: `Produto com compra E2E ${sufixo}`, ncm: "73170090", unidade: "KG", controla_estoque: true })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  const id = comCompra!.id as string;
   try {
+    const { error: e2 } = await servico!.from("estoque_movimentos").insert({
+      empresa_id: empresaId,
+      produto_id: id,
+      tipo: "entrada_compra",
+      quantidade: 10,
+      custo_unitario: 11,
+      saldo_apos: 10,
+      custo_medio_apos: 11,
+      observacao: "Compra por nota (teste automático E2E)",
+    });
+    if (e2) throw new Error(e2.message);
     await entrar(page, `madeireira@${DOMINIO}`);
-    await page.goto(`/e/${empresaId}/loja/produtos/${pregoId}`);
+    await page.goto(`/e/${empresaId}/loja/produtos/${id}`);
     await page.getByRole("button", { name: "Excluir", exact: true }).click();
     await page.getByRole("button", { name: "Excluir produto" }).click();
     await expect(page.getByText(/foi desativado/)).toBeVisible({ timeout: 30_000 });
-    const prego = await produto({ id: pregoId });
-    expect(prego!.ativo).toBe(false);
-    const { count } = await servico!.from("estoque_movimentos").select("id", { count: "exact", head: true }).eq("produto_id", pregoId);
+    expect((await produto({ id }))!.ativo).toBe(false);
+    const { count } = await servico!.from("estoque_movimentos").select("id", { count: "exact", head: true }).eq("produto_id", id);
     expect(count).toBeGreaterThan(0);
   } finally {
-    await servico!.from("nfe_produtos").update({ ativo: true }).eq("id", pregoId);
+    await servico!.from("estoque_movimentos").delete().eq("produto_id", id);
+    await servico!.from("nfe_produtos").delete().eq("id", id);
   }
 });
 

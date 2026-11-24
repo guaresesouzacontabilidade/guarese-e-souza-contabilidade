@@ -39,7 +39,8 @@ test("escritório cadastra o WhatsApp do cliente e o cliente controla os avisos"
   const empresaId = cliente.url().match(/\/e\/([0-9a-f-]{36})/)![1];
 
   await escritorio.goto(`/escritorio/empresas/${empresaId}?aba=usuarios`);
-  const linha = escritorio.locator("tr", { hasText: `cliente@${DOMINIO}` });
+  // E-mail exato (outro usuário de teste pode ter um e-mail que termina igual, como "novo.cliente@...")
+  const linha = escritorio.locator("tr", { hasText: new RegExp(`(?<![\\w.])cliente@${DOMINIO.replace(/\./g, "\\.")}`) });
   await linha.getByRole("button", { name: /Ações para/ }).click();
   await escritorio.getByRole("menuitem", { name: "WhatsApp para avisos" }).click();
   await escritorio.getByLabel("WhatsApp (com DDD)").fill("(63) 99999-1234");
@@ -58,13 +59,13 @@ test("escritório cadastra o WhatsApp do cliente e o cliente controla os avisos"
   await expect(cliente.getByText("Preferências salvas")).toBeVisible({ timeout: 30_000 });
 
   await escritorio.reload();
-  await expect(escritorio.locator("tr", { hasText: `cliente@${DOMINIO}` })).toContainText("sem autorização para avisos");
+  await expect(linha).toContainText("sem autorização para avisos");
 
   // Volta ao estado original da demonstração (sem WhatsApp cadastrado)
-  await escritorio.locator("tr", { hasText: `cliente@${DOMINIO}` }).getByRole("button", { name: /Ações para/ }).click();
+  await linha.getByRole("button", { name: /Ações para/ }).click();
   await escritorio.getByRole("menuitem", { name: "WhatsApp para avisos" }).click();
   await escritorio.getByLabel("WhatsApp (com DDD)").fill("");
   await escritorio.getByRole("dialog").getByRole("button", { name: "Salvar" }).click();
-  await expect(escritorio.locator("tr", { hasText: `cliente@${DOMINIO}` })).toContainText("WhatsApp não cadastrado", { timeout: 30_000 });
+  await expect(linha).toContainText("WhatsApp não cadastrado", { timeout: 30_000 });
   await contextoCliente.close();
 });

@@ -72,9 +72,13 @@ test("equipe gera e baixa o XML do mês; outro cliente não baixa; lote da carte
   const carteira = equipe.locator("#lotes-xml");
   await carteira.locator("#lote-competencia").selectOption("2026-09");
   await carteira.getByRole("button", { name: "Gerar para a carteira" }).click();
-  await expect(equipe.getByText(/Gerando os XML de 09\/2026 de 2 empresas/)).toBeVisible({ timeout: 30_000 });
+  // Quantas empresas da carteira têm notas no mês muda com os dados da demonstração (ao menos a Padaria e a Oficina)
+  const gerando = equipe.getByText(/Gerando os XML de 09\/2026 de \d+ empresas/).first();
+  await expect(gerando).toBeVisible({ timeout: 30_000 });
+  const empresas = Number(/de (\d+) empresas/.exec(await gerando.innerText())![1]);
+  expect(empresas).toBeGreaterThanOrEqual(2);
   const pedido = carteira.locator("div.rounded-md", { hasText: "pedido em" }).first();
-  await expect(pedido.getByText("2 de 2 empresas prontas")).toBeVisible({ timeout: 240_000 });
-  await expect(pedido.getByRole("link", { name: /Baixar/ })).toHaveCount(2);
+  await expect(pedido.getByText(`${empresas} de ${empresas} empresas prontas`)).toBeVisible({ timeout: 240_000 });
+  await expect(pedido.getByRole("link", { name: /Baixar/ })).toHaveCount(empresas);
   await ctxEquipe.close();
 });

@@ -77,8 +77,26 @@ test("preferências de aviso e ativação dos avisos no aparelho", async ({ brow
   await page.goto("/conta#avisos");
   const cartao = page.locator("#avisos");
 
-  // Espera a verificação do aparelho terminar antes de decidir.
-  await expect(cartao.getByRole("button", { name: /Ativar neste aparelho|Enviar aviso de teste/ })).toBeVisible({ timeout: 30_000 });
+  // Preferência por pessoa (e volta ao padrão): vale com ou sem o aviso no aparelho
+  await page.selectOption("#pref-arquivos", "responsavel");
+  await cartao.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText("Preferências salvas").first()).toBeVisible({ timeout: 30_000 });
+  await page.reload();
+  await expect(page.locator("#pref-arquivos")).toHaveValue("responsavel");
+  await page.selectOption("#pref-arquivos", "todas");
+  await cartao.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText("Preferências salvas").first()).toBeVisible({ timeout: 30_000 });
+
+  // Aviso no aparelho: espera a verificação do aparelho terminar antes de decidir.
+  // Sem as chaves no servidor (VAPID), o portal diz que está desligado e não oferece ativar — nada é simulado.
+  const desligado = cartao.getByText(/ainda não foram ligadas no servidor do portal/);
+  await expect(cartao.getByRole("button", { name: /Ativar neste aparelho|Enviar aviso de teste/ }).or(desligado)).toBeVisible({ timeout: 30_000 });
+  if (await desligado.isVisible()) {
+    await expect(cartao.getByRole("button", { name: "Ativar neste aparelho" })).toHaveCount(0);
+    test.info().annotations.push({ type: "aviso", description: "Servidor sem as chaves das notificações no aparelho: só a parte das preferências foi testada." });
+    await contexto.close();
+    return;
+  }
   const ativar = cartao.getByRole("button", { name: "Ativar neste aparelho" });
   if (await ativar.count()) {
     await ativar.click();
@@ -87,18 +105,8 @@ test("preferências de aviso e ativação dos avisos no aparelho", async ({ brow
   await expect(cartao.getByText("este aparelho", { exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(cartao.getByRole("button", { name: "Enviar aviso de teste" })).toBeVisible();
 
-  // Preferência por pessoa (e volta ao padrão)
-  await page.selectOption("#pref-arquivos", "responsavel");
-  await cartao.getByRole("button", { name: "Salvar" }).click();
-  await expect(page.getByText("Preferências salvas")).toBeVisible({ timeout: 30_000 });
-  await page.reload();
-  await expect(page.locator("#pref-arquivos")).toHaveValue("responsavel");
-  await page.selectOption("#pref-arquivos", "todas");
-  await page.locator("#avisos").getByRole("button", { name: "Salvar" }).click();
-  await expect(page.getByText("Preferências salvas").first()).toBeVisible({ timeout: 30_000 });
-
   // Desativar remove o aparelho da lista
-  await page.locator("#avisos").getByRole("button", { name: "Desativar neste aparelho" }).click();
-  await expect(page.locator("#avisos").getByRole("button", { name: "Ativar neste aparelho" })).toBeVisible({ timeout: 30_000 });
+  await cartao.getByRole("button", { name: "Desativar neste aparelho" }).click();
+  await expect(cartao.getByRole("button", { name: "Ativar neste aparelho" })).toBeVisible({ timeout: 30_000 });
   await contexto.close();
 });

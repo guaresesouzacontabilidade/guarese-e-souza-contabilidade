@@ -32,7 +32,8 @@ test("cliente acompanha e cadastra vencimentos; escritório vê a carteira", asy
   await page.goto(`${empresa}/vencimentos`);
   await expect(page.getByText("Certificado digital A1 (e-CNPJ)")).toBeVisible();
   // A certidão de demonstração venceu 3 dias antes da criação dos dados: o número de dias muda com a data
-  await expect(page.getByText(/Vencido há \d+ dias?/)).toBeVisible();
+  // (com o tempo, outros documentos da demonstração também vencem)
+  await expect(page.getByText(/Vencido há \d+ dias?/).first()).toBeVisible();
 
   // Novo vencimento
   const descricao = `Licença do bombeiro ${Date.now()}`;

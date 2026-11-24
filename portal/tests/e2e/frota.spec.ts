@@ -31,6 +31,8 @@ async function entrar(page: Page, email: string) {
   await page.click('button[type="submit"]');
   await page.waitForURL((u) => /^\/(aceite|e\/|escritorio|conta|painel)/.test(u.pathname), { timeout: 90_000 });
   await page.waitForLoadState("load");
+  // O painel pode mandar para o aceite dos termos logo depois de abrir: espera assentar antes de conferir
+  await page.waitForLoadState("networkidle");
   if (page.url().includes("/aceite")) {
     for (const b of await page.locator('input[type="checkbox"]').all()) await b.check();
     await page.click('button[type="submit"]');

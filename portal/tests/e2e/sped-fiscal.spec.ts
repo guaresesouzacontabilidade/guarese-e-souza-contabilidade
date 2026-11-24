@@ -50,6 +50,16 @@ test("equipe confere o SPED com os XML; arquivo retificado passa a valer; client
 
   // Conferência da EFD de demonstração
   await expect(page.getByRole("heading", { name: "Conferência do SPED Fiscal" })).toBeVisible();
+  // Arquivo de teste que sobrou de uma rodada interrompida: sai da conferência e o da demonstração volta a valer
+  const sobra = page.locator("tr", { hasText: /sped-retificado-e2e-\d+\.txt/ });
+  for (let i = 0; i < 5 && (await sobra.count()); i++) {
+    await sobra.first().getByRole("link").first().click();
+    await page.waitForURL(/arquivo=/);
+    await page.getByRole("button", { name: "Excluir" }).click();
+    await page.getByRole("button", { name: "Tirar da conferência" }).click();
+    await expect(page.getByText(/Arquivo tirado da conferência/)).toBeVisible({ timeout: 30_000 });
+    await page.waitForURL(new RegExp(`/e/${empresa}/auditor-fiscal/sped$`));
+  }
   // Se a EFD foi conferida antes de algum XML da demonstração chegar, a equipe confere de novo
   if (!(await page.getByText("Nota emitida e não escriturada").isVisible())) {
     await page.getByRole("button", { name: "Conferir de novo" }).first().click();
@@ -90,8 +100,8 @@ test("equipe confere o SPED com os XML; arquivo retificado passa a valer; client
   await page.goto(`/e/${empresa}/auditor-fiscal/sped`);
   await expect(async () => {
     await page.reload();
-    await expect(page.getByText(`sped-retificado-e2e-${numero}.txt`).first()).toBeVisible({ timeout: 2_000 });
-    await expect(page.getByText("Conferido").first()).toBeVisible({ timeout: 2_000 });
+    // "Conferido" na linha do arquivo novo (o anterior já estava conferido)
+    await expect(page.locator("tr", { hasText: `sped-retificado-e2e-${numero}.txt` }).getByText("Conferido")).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 180_000 });
   await expect(page.getByText("arquivo substituto")).toBeVisible();
   await expect(page.getByText(`NF-e ${numero}/1`)).toBeVisible();

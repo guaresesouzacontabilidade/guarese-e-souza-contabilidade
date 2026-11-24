@@ -47,7 +47,8 @@ test("venda de grãos no Lucro Real: PIS e Cofins tributados e aviso quando a op
   const { data: emp } = await servico!.from("empresas").select("id").eq("razao_social", GRAOS).single();
   await entrar(page, `contador@${DOMINIO}`);
   await page.goto(`/e/${emp!.id}/notas-produto/configuracao`);
-  await expect(page.getByText("Venda de grãos para outro estado (DEMO)")).toBeVisible();
+  // (o nome também aparece na escolha da regra fiscal própria dos produtos, com o CFOP)
+  await expect(page.getByText("Venda de grãos para outro estado (DEMO)", { exact: true })).toBeVisible();
   await expect(page.getByText(/PIS 01\s*1,65% \/ Cofins 01\s*7,6%/).first()).toBeVisible();
   await expect(page.getByText("Operações de venda sem PIS e Cofins")).toHaveCount(0);
 
