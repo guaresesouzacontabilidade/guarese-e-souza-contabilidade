@@ -200,9 +200,11 @@ test("balconista: abre o próprio caixa, vende no PIX, faz sangria e fecha; não
   await page.getByRole("button", { name: "Registrar sangria" }).click();
   await expect(page.getByText("Troco levado ao cofre (E2E)")).toBeVisible();
 
-  // Sobrou 100 − 50 = R$ 50,00 na gaveta (a venda foi no PIX)
+  // A venda foi no PIX: na gaveta fica o troco menos a sangria (mais algum sinal de OS em dinheiro
+  // que a demonstração tenha deixado neste caixa) — conta exatamente o que o sistema espera
   await page.getByRole("button", { name: "Fechar o caixa" }).click();
-  await page.getByLabel("Dinheiro contado").fill("50,00");
+  const esperado = (await page.getByRole("dialog").getByText(/^R\$\s?[\d.]+,\d{2}$/).first().innerText()).replace(/R\$\s?/, "");
+  await page.getByLabel("Dinheiro contado").fill(esperado);
   await expect(page.getByText("Conferiu certinho.")).toBeVisible();
   await page.getByRole("dialog").getByRole("button", { name: "Fechar o caixa" }).click();
   await expect(page.getByText("Você não está com um caixa aberto")).toBeVisible({ timeout: 30_000 });

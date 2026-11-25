@@ -1,21 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileText } from "lucide-react";
+import { FileText, NotebookPen } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alerta } from "@/components/ui/feedback";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { AbrirCaixa } from "@/components/loja/formularios-caixa";
-import { PontoDeVenda, type ClientePdv, type OrcamentoInicial, type ProdutoPdv } from "@/components/loja/ponto-de-venda";
+import { PontoDeVenda } from "@/components/loja/ponto-de-venda";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { nfeNaVenda } from "@/lib/gestao/nfe-venda";
+import { carregarPdv } from "@/lib/gestao/pdv-dados";
 import { formatarDataHora } from "@/lib/formatos";
 
 export const metadata: Metadata = { title: "Vender" };
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const texto = (v: unknown) => (v === null || v === undefined ? null : String(v));
 
 export default async function PaginaVender({ params, searchParams }: PageProps<"/e/[empresaId]/loja/vender">) {
   const { empresaId } = await params;
@@ -48,106 +46,52 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
               <AbrirCaixa empresaId={empresaId} sugestaoNome={`Caixa ${n}`} />
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Caixas abertos agora</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {(abertos ?? []).length ? (
-                (abertos ?? []).map((s) => (
-                  <div key={s.id} className="rounded-lg border border-border p-2.5">
-                    <p className="font-medium">{s.caixa_nome}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {(s.operador as { nome?: string } | null)?.nome ?? "—"} · desde {formatarDataHora(s.aberto_em)}
-                    </p>
-                    {ctx.gerente ? (
-                      <Link href={`/e/${empresaId}/loja/caixa/${s.id}`} className="text-xs text-primary hover:underline">
-                        Ver o caixa
-                      </Link>
-                    ) : null}
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground">Nenhum caixa aberto.</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Só um orçamento?</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <p className="text-muted-foreground">Para orçamento não precisa abrir o caixa. Depois é só imprimir ou mandar pelo WhatsApp.</p>
+                <Button asChild variante="contorno" className="w-full">
+                  <Link href={`/e/${empresaId}/loja/orcamento`}>
+                    <NotebookPen /> Fazer orçamento
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Caixas abertos agora</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {(abertos ?? []).length ? (
+                  (abertos ?? []).map((s) => (
+                    <div key={s.id} className="rounded-lg border border-border p-2.5">
+                      <p className="font-medium">{s.caixa_nome}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(s.operador as { nome?: string } | null)?.nome ?? "—"} · desde {formatarDataHora(s.aberto_em)}
+                      </p>
+                      {ctx.gerente ? (
+                        <Link href={`/e/${empresaId}/loja/caixa/${s.id}`} className="text-xs text-primary hover:underline">
+                          Ver o caixa
+                        </Link>
+                      ) : null}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">Nenhum caixa aberto.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </>
     );
   }
 
-  const orcamentoId = typeof sp.orcamento === "string" && UUID.test(sp.orcamento) ? sp.orcamento : null;
-  const [produtosR, clientesR, cfgR, orcR, nfe] = await Promise.all([
-    ctx.supabase
-      .from("nfe_produtos")
-      .select("id, codigo, descricao, unidade, gtin, grupo, valor_unitario, estoque_atual, controla_estoque, espessura_cm, largura_cm, comprimento_m, tara_kg")
-      .eq("empresa_id", empresaId)
-      .eq("ativo", true)
-      .order("descricao")
-      .limit(5000),
-    ctx.supabase
-      .from("contrapartes")
-      .select("id, nome, documento, telefone")
-      .eq("empresa_id", empresaId)
-      .eq("ativo", true)
-      .contains("papeis", ["cliente"])
-      .order("nome")
-      .limit(5000),
-    ctx.supabase.from("gestao_config").select("permitir_venda_prazo, balanca_etiqueta, balanca_digitos_codigo").eq("empresa_id", empresaId).maybeSingle(),
-    orcamentoId
-      ? ctx.supabase
-          .from("vendas")
-          .select("id, numero, status, cliente_id, cliente_nome, desconto, frete, observacao, entrega, venda_itens(ordem, produto_id, pecas, comprimento_m, quantidade, preco_unitario, desconto)")
-          .eq("id", orcamentoId)
-          .eq("empresa_id", empresaId)
-          .eq("tipo", "orcamento")
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    nfeNaVenda(ctx.supabase, empresaId, ctx.pode("nfe.emitir")),
-  ]);
-
-  const produtos: ProdutoPdv[] = (produtosR.data ?? []).map((p) => ({
-    id: p.id,
-    codigo: p.codigo,
-    descricao: p.descricao,
-    unidade: p.unidade,
-    gtin: p.gtin,
-    grupo: p.grupo,
-    valor_unitario: texto(p.valor_unitario),
-    estoque_atual: String(p.estoque_atual ?? 0),
-    controla_estoque: p.controla_estoque,
-    espessura_cm: texto(p.espessura_cm),
-    largura_cm: texto(p.largura_cm),
-    comprimento_m: texto(p.comprimento_m),
-    tara_kg: texto(p.tara_kg),
-  }));
-  const clientes: ClientePdv[] = (clientesR.data ?? []).map((c) => ({ id: c.id, nome: c.nome, documento: c.documento, telefone: c.telefone }));
-
-  const o = orcR.data;
-  const orcamento: OrcamentoInicial | null =
-    o && o.status === "aberto"
-      ? {
-          id: o.id,
-          numero: Number(o.numero),
-          cliente: clientes.find((c) => c.id === o.cliente_id) ?? null,
-          clienteNome: o.cliente_id ? null : o.cliente_nome,
-          itens: [...(o.venda_itens ?? [])]
-            .sort((a, b) => a.ordem - b.ordem)
-            .map((i) => ({
-              produto_id: i.produto_id,
-              pecas: texto(i.pecas),
-              comprimento_m: texto(i.comprimento_m),
-              quantidade: String(i.quantidade),
-              preco_unitario: String(i.preco_unitario),
-              desconto: String(i.desconto),
-            })),
-          desconto: String(o.desconto),
-          frete: String(o.frete),
-          observacao: o.observacao,
-          entrega: o.entrega,
-        }
-      : null;
+  const [dados, nfe] = await Promise.all([carregarPdv(ctx.supabase, empresaId, sp.orcamento), nfeNaVenda(ctx.supabase, empresaId, ctx.pode("nfe.emitir"))]);
+  const { orcamento } = dados;
 
   return (
     <>
@@ -163,12 +107,12 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
         }
       />
       <NavegacaoLoja empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
-      {orcamentoId && !orcamento ? (
+      {dados.orcamentoFechado ? (
         <Alerta tom="alerta" className="mb-4">
           Este orçamento não está mais em aberto (já virou venda ou foi cancelado).
         </Alerta>
       ) : null}
-      {!produtos.length ? (
+      {!dados.produtos.length ? (
         <Alerta tom="info" className="mb-4" titulo="Nenhum produto cadastrado">
           {ctx.gerente ? (
             <>
@@ -184,16 +128,12 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
         empresaId={empresaId}
         sessaoId={meu.id}
         caixaNome={meu.caixa_nome}
-        produtos={produtos}
-        clientes={clientes}
-        permitirPrazo={cfgR.data?.permitir_venda_prazo ?? true}
+        produtos={dados.produtos}
+        clientes={dados.clientes}
+        permitirPrazo={dados.permitirPrazo}
         orcamento={orcamento}
         nfe={nfe}
-        etiqueta={
-          cfgR.data?.balanca_etiqueta === "preco" || cfgR.data?.balanca_etiqueta === "peso"
-            ? { formato: cfgR.data.balanca_etiqueta, digitosCodigo: ([4, 5, 6].includes(cfgR.data.balanca_digitos_codigo) ? cfgR.data.balanca_digitos_codigo : 4) as 4 | 5 | 6 }
-            : null
-        }
+        etiqueta={dados.etiqueta}
       />
     </>
   );

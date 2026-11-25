@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, Banknote, CreditCard, FileText, QrCode, Receipt, ShoppingCart, Wallet } from "lucide-react";
+import { AlertTriangle, Banknote, CreditCard, FileText, NotebookPen, QrCode, Receipt, ShoppingCart, Wallet } from "lucide-react";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,11 +78,18 @@ export default async function PainelLoja({ params }: PageProps<"/e/[empresaId]/l
         titulo="Loja"
         descricao={`Hoje, ${formatarData(hoje)}. Tudo o que é vendido aqui já entra no Financeiro e na contabilidade.`}
         acoes={
-          <Button asChild tamanho="lg">
-            <Link href={`${base}/vender`}>
-              <ShoppingCart /> Vender
-            </Link>
-          </Button>
+          <>
+            <Button asChild tamanho="lg" variante="contorno">
+              <Link href={`${base}/orcamento`}>
+                <NotebookPen /> Orçamento
+              </Link>
+            </Button>
+            <Button asChild tamanho="lg">
+              <Link href={`${base}/vender`}>
+                <ShoppingCart /> Vender
+              </Link>
+            </Button>
+          </>
         }
       />
       <NavegacaoLoja empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />

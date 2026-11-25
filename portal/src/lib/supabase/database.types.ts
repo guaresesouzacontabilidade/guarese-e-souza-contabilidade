@@ -6078,13 +6078,13 @@ isOneToOne: false
                   ]
                 },"vendas": {
                   Row: {
-                    "cancelada_em": string | null,"cancelada_por": string | null,"cliente_documento": string | null,"cliente_id": string | null,"cliente_nome": string | null,"cliente_telefone": string | null,"created_at": string,"data": string,"desconto": number,"empresa_id": string,"entrega": string | null,"frete": number,"id": string,"motivo_cancelamento": string | null,"nfe_emissao_id": string | null,"numero": number,"observacao": string | null,"orcamento_id": string | null,"origem": string,"sessao_id": string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco": number,"updated_at": string,"validade": string | null,"vendedor_id": string | null
+                    "cancelada_em": string | null,"cancelada_por": string | null,"cliente_documento": string | null,"cliente_id": string | null,"cliente_nome": string | null,"cliente_telefone": string | null,"codigo_publico": string | null,"created_at": string,"data": string,"desconto": number,"empresa_id": string,"entrega": string | null,"frete": number,"id": string,"motivo_cancelamento": string | null,"nfe_emissao_id": string | null,"numero": number,"observacao": string | null,"orcamento_id": string | null,"origem": string,"sessao_id": string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco": number,"updated_at": string,"validade": string | null,"vendedor_id": string | null
                   }
                   Insert: {
-                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id": string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"codigo_publico"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id": string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
                   }
                   Update: {
-                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id"?: string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status"?: string,"subtotal"?: number,"tipo"?: string,"total"?: number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"codigo_publico"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id"?: string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status"?: string,"subtotal"?: number,"tipo"?: string,"total"?: number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -7400,6 +7400,9 @@ isOneToOne: false
                            },
 "gestao_inventario":
 { Args: { "p_empresa_id": string,"p_itens": Json,"p_observacao": string }; Returns: number
+                           },
+"gestao_orcamento_publico":
+{ Args: { "p_codigo": string }; Returns: Json
                            },
 "gestao_orcamento_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: Json

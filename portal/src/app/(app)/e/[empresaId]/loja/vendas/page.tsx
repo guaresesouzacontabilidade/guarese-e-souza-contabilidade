@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileText, Receipt, ShoppingCart, Wallet } from "lucide-react";
+import { FileText, NotebookPen, Receipt, ShoppingCart, Wallet } from "lucide-react";
 import { CabecalhoPagina, Indicador, Paginacao, urlCom } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,11 +77,18 @@ export default async function PaginaVendas({ params, searchParams }: PageProps<"
         titulo="Vendas e orçamentos"
         descricao="Todas as vendas do caixa e os orçamentos feitos para os clientes."
         acoes={
-          <Button asChild>
-            <Link href={`/e/${empresaId}/loja/vender`}>
-              <ShoppingCart /> Nova venda
-            </Link>
-          </Button>
+          <>
+            <Button asChild variante="contorno">
+              <Link href={`/e/${empresaId}/loja/orcamento`}>
+                <NotebookPen /> Novo orçamento
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href={`/e/${empresaId}/loja/vender`}>
+                <ShoppingCart /> Nova venda
+              </Link>
+            </Button>
+          </>
         }
       />
       <NavegacaoLoja empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />

@@ -13,6 +13,7 @@ export async function NavegacaoLoja({ empresaId, configurar }: { empresaId: stri
   const itens = [
     { rotulo: "Painel", href: base, exato: true },
     { rotulo: "Vender", href: `${base}/vender` },
+    { rotulo: "Orçamento", href: `${base}/orcamento` },
     { rotulo: "Caixa", href: `${base}/caixa` },
     { rotulo: "Produtos e estoque", href: `${base}/produtos` },
     { rotulo: "Vendas e orçamentos", href: `${base}/vendas` },

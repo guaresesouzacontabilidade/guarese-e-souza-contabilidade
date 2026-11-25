@@ -12,7 +12,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Alerta } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
-import { formatarDocumento } from "@/lib/formatos";
+import { formatarDocumento, formatarTelefone, validarCnpj, validarCpf } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 import { finalizarVenda, salvarClienteLoja, salvarOrcamento, situacaoNfeDaVenda, type ResultadoNfeVenda, type VendaEntrada } from "@/lib/gestao/acoes";
 import { FORMAS_PAGAMENTO, formatarQuantidade, modoMedida, quantidadePorPecas, secaoPeca, un, type FormaPagamento, type NfeNaVenda } from "@/lib/gestao/rotulos";
@@ -74,6 +74,9 @@ export interface OrcamentoInicial {
   numero: number;
   cliente: ClientePdv | null;
   clienteNome: string | null;
+  /** CPF/CNPJ e telefone de quem não tem cadastro. */
+  clienteDocumento?: string | null;
+  clienteTelefone?: string | null;
   itens: { produto_id: string; pecas: string | null; comprimento_m: string | null; quantidade: string; preco_unitario: string; desconto: string }[];
   desconto: string;
   frete: string;
@@ -116,6 +119,7 @@ function hojeMais(dias: number) {
 }
 
 export function PontoDeVenda({
+  modo = "venda",
   empresaId,
   sessaoId,
   caixaNome,
@@ -126,8 +130,11 @@ export function PontoDeVenda({
   nfe,
   etiqueta = null,
 }: {
+  /** "orcamento": só monta e salva o orçamento (sem caixa, sem pagamento). */
+  modo?: "venda" | "orcamento";
   empresaId: string;
-  sessaoId: string;
+  /** Caixa aberto de quem vende (o orçamento não precisa). */
+  sessaoId: string | null;
   caixaNome: string;
   produtos: ProdutoPdv[];
   clientes: ClientePdv[];
@@ -151,7 +158,10 @@ export function PontoDeVenda({
   );
   const [cliente, setCliente] = React.useState<ClientePdv | null>(orcamento?.cliente ?? null);
   const [clienteNome, setClienteNome] = React.useState(orcamento?.clienteNome ?? "");
+  const [clienteDocumento, setClienteDocumento] = React.useState(orcamento?.clienteDocumento ? formatarDocumento(orcamento.clienteDocumento) : "");
+  const [clienteTelefone, setClienteTelefone] = React.useState(orcamento?.clienteTelefone ? formatarTelefone(orcamento.clienteTelefone) : "");
   const [buscaCliente, setBuscaCliente] = React.useState("");
+  const soOrcamento = modo === "orcamento";
   const [desconto, setDesconto] = React.useState(orcamento && Number(orcamento.desconto) ? BR(orcamento.desconto) : "");
   const [frete, setFrete] = React.useState(orcamento && Number(orcamento.frete) ? BR(orcamento.frete) : "");
   const [observacao, setObservacao] = React.useState(orcamento?.observacao ?? "");
@@ -276,11 +286,15 @@ export function PontoDeVenda({
   }
 
   function montarVenda(): VendaEntrada {
+    const doc = clienteDocumento.replace(/\D/g, "");
+    const tel = clienteTelefone.replace(/\D/g, "").replace(/^55(?=[1-9][0-9]{9,10}$)/, "");
     return {
-      sessao_id: sessaoId,
+      sessao_id: sessaoId ?? undefined,
       orcamento_id: orcamento?.id ?? null,
       cliente_id: cliente?.id ?? null,
       cliente_nome: cliente ? undefined : clienteNome.trim() || undefined,
+      cliente_documento: cliente || !doc ? undefined : doc,
+      cliente_telefone: cliente || !tel ? undefined : tel,
       itens: linhas.map((l) => ({
         produto_id: l.produto.id,
         pecas: modoMedida(l.produto) !== "direto" ? l.pecas : null,
@@ -314,8 +328,20 @@ export function PontoDeVenda({
           ? "Falta o endereço do cliente para a nota."
           : null;
 
+  /** CPF/CNPJ e telefone de quem não tem cadastro (opcionais, mas certos quando informados). */
+  function problemaClienteAvulso(): string | null {
+    if (cliente) return null;
+    const doc = clienteDocumento.replace(/\D/g, "");
+    if (doc && !(doc.length === 11 ? validarCpf(doc) : doc.length === 14 ? validarCnpj(doc) : false)) return "CPF ou CNPJ do cliente inválido. Confira os números ou deixe em branco.";
+    const tel = clienteTelefone.replace(/\D/g, "").replace(/^55(?=[1-9][0-9]{9,10}$)/, "");
+    if (tel && !/^[1-9][0-9]{9,10}$/.test(tel)) return "Telefone do cliente com DDD (ex.: 63 99999-1234), ou deixe em branco.";
+    return null;
+  }
+
   async function concluir() {
     if (!linhas.length) return toast.error("Adicione pelo menos um produto.");
+    const avulso = problemaClienteAvulso();
+    if (avulso) return toast.error(avulso);
     if (pendenciaNfe) return toast.error(`${pendenciaNfe} Ou desmarque "Emitir NF-e".`);
     if (!pagamentos.length) return toast.error("Escolha a forma de pagamento.");
     if (!falta.isZero()) return toast.error(falta.gt(0) ? `Falta informar ${formatarMoeda(falta)} no pagamento.` : `Os pagamentos passam do total em ${formatarMoeda(falta.negated())}.`);
@@ -329,6 +355,8 @@ export function PontoDeVenda({
 
   async function guardarOrcamento() {
     if (!linhas.length) return toast.error("Adicione pelo menos um produto.");
+    const avulso = problemaClienteAvulso();
+    if (avulso) return toast.error(avulso);
     setEnviando("orcamento");
     const v = montarVenda();
     const r = await salvarOrcamento(empresaId, orcamento?.id ?? null, v);
@@ -345,11 +373,13 @@ export function PontoDeVenda({
     setPagamentos([]);
     setCliente(null);
     setClienteNome("");
+    setClienteDocumento("");
+    setClienteTelefone("");
     setDesconto("");
     setFrete("");
     setObservacao("");
     setEntrega("");
-    if (orcamento) router.replace(`/e/${empresaId}/loja/vender`);
+    if (orcamento) router.replace(`/e/${empresaId}/loja/${soOrcamento ? "orcamento" : "vender"}`);
     setTimeout(() => buscaRef.current?.focus(), 50);
   }
 
@@ -362,7 +392,11 @@ export function PontoDeVenda({
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
       <div className="min-w-0 space-y-4">
-        {orcamento ? (
+        {orcamento && soOrcamento ? (
+          <Alerta tom="info" titulo={`Editando o orçamento nº ${orcamento.numero}`}>
+            Ajuste os itens, os preços ou o cliente e salve. O número e o link do WhatsApp continuam os mesmos.
+          </Alerta>
+        ) : orcamento ? (
           <Alerta tom="info" titulo={`Venda a partir do orçamento nº ${orcamento.numero}`}>
             Confira os itens e os preços e informe o pagamento. Ao concluir, o orçamento fica marcado como convertido.
           </Alerta>
@@ -418,9 +452,9 @@ export function PontoDeVenda({
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <ShoppingCart className="size-5 text-primary" /> Itens da venda
+              <ShoppingCart className="size-5 text-primary" /> {soOrcamento ? "Itens do orçamento" : "Itens da venda"}
             </CardTitle>
-            <span className="text-sm text-muted-foreground">{caixaNome}</span>
+            {caixaNome ? <span className="text-sm text-muted-foreground">{caixaNome}</span> : null}
           </CardHeader>
           <CardContent>
             {linhas.length ? (
@@ -567,7 +601,35 @@ export function PontoDeVenda({
                     <UserPlus />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Para vender a prazo, escolha ou cadastre o cliente.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    aria-label="CPF ou CNPJ do cliente (opcional)"
+                    placeholder="CPF/CNPJ (opcional)"
+                    inputMode="numeric"
+                    value={clienteDocumento}
+                    onChange={(e) => setClienteDocumento(e.target.value)}
+                    onBlur={() => {
+                      const d = clienteDocumento.replace(/\D/g, "");
+                      if (d.length === 11 || d.length === 14) setClienteDocumento(formatarDocumento(d));
+                    }}
+                  />
+                  <Input
+                    aria-label="Telefone ou WhatsApp do cliente (opcional)"
+                    placeholder="Telefone (opcional)"
+                    inputMode="tel"
+                    value={clienteTelefone}
+                    onChange={(e) => setClienteTelefone(e.target.value)}
+                    onBlur={() => {
+                      const d = clienteTelefone.replace(/\D/g, "");
+                      if (d.length === 10 || d.length === 11) setClienteTelefone(formatarTelefone(d));
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {soOrcamento
+                    ? "Com o telefone, o orçamento vai direto para o WhatsApp do cliente. Saem no papel o nome, o CPF e o telefone."
+                    : "Para vender a prazo, escolha ou cadastre o cliente."}
+                </p>
               </>
             )}
           </CardContent>
@@ -575,7 +637,7 @@ export function PontoDeVenda({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Pagamento</CardTitle>
+            <CardTitle className="text-base">{soOrcamento ? "Valores do orçamento" : "Pagamento"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <dl className="space-y-1.5 text-sm">
@@ -594,6 +656,7 @@ export function PontoDeVenda({
               </div>
             </dl>
 
+            {soOrcamento ? null : (
             <div className="grid grid-cols-3 gap-2" role="group" aria-label="Formas de pagamento">
               {(["dinheiro", "pix", "cartao_debito", "cartao_credito", "a_prazo"] as FormaPagamento[])
                 .filter((f) => f !== "a_prazo" || permitirPrazo)
@@ -606,6 +669,7 @@ export function PontoDeVenda({
                   );
                 })}
             </div>
+            )}
 
             {pagamentos.length ? (
               <ul className="space-y-2" aria-label="Pagamentos da venda">
@@ -652,15 +716,15 @@ export function PontoDeVenda({
               </p>
             ) : null}
 
-            <details className="text-sm">
+            <details className="text-sm" open={soOrcamento || undefined}>
               <summary className="cursor-pointer text-muted-foreground">Observação e entrega</summary>
               <div className="mt-2 space-y-2">
-                <Input aria-label="Observação" placeholder="Observação (sai no comprovante)" value={observacao} onChange={(e) => setObservacao(e.target.value)} />
+                <Input aria-label="Observação" placeholder={soOrcamento ? "Observação (sai no orçamento)" : "Observação (sai no comprovante)"} value={observacao} onChange={(e) => setObservacao(e.target.value)} />
                 <Input aria-label="Endereço de entrega" placeholder="Endereço de entrega" value={entrega} onChange={(e) => setEntrega(e.target.value)} />
               </div>
             </details>
 
-            {nfe.configurada ? (
+            {nfe.configurada && !soOrcamento ? (
               <div className="space-y-2 rounded-lg border border-border p-2.5 text-sm">
                 <label className="flex items-center gap-2 font-medium">
                   <Checkbox checked={emitirNfe} disabled={!nfe.disponivel} onChange={(e) => setEmitirNfe(e.target.checked)} aria-label="Emitir NF-e ao concluir a venda" />
@@ -681,17 +745,30 @@ export function PontoDeVenda({
               </div>
             ) : null}
 
-            <Button className="h-12 w-full text-base" onClick={concluir} disabled={enviando !== null || !linhas.length}>
-              {enviando === "venda" ? <Loader2 className="animate-spin" /> : <Receipt />} {emitirNfe ? "Concluir venda e emitir NF-e" : "Concluir venda"}
-            </Button>
-            <div className="flex gap-2">
-              <Button variante="contorno" className="flex-1" onClick={guardarOrcamento} disabled={enviando !== null || !linhas.length}>
-                {enviando === "orcamento" ? <Loader2 className="animate-spin" /> : <FileText />} Salvar orçamento
-              </Button>
-              <Button variante="fantasma" onClick={novaVenda} disabled={enviando !== null}>
-                Limpar
-              </Button>
-            </div>
+            {soOrcamento ? (
+              <div className="flex gap-2">
+                <Button className="h-12 flex-1 text-base" onClick={guardarOrcamento} disabled={enviando !== null || !linhas.length}>
+                  {enviando === "orcamento" ? <Loader2 className="animate-spin" /> : <FileText />} Salvar orçamento
+                </Button>
+                <Button variante="fantasma" className="h-12" onClick={novaVenda} disabled={enviando !== null}>
+                  Limpar
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button className="h-12 w-full text-base" onClick={concluir} disabled={enviando !== null || !linhas.length}>
+                  {enviando === "venda" ? <Loader2 className="animate-spin" /> : <Receipt />} {emitirNfe ? "Concluir venda e emitir NF-e" : "Concluir venda"}
+                </Button>
+                <div className="flex gap-2">
+                  <Button variante="contorno" className="flex-1" onClick={guardarOrcamento} disabled={enviando !== null || !linhas.length}>
+                    {enviando === "orcamento" ? <Loader2 className="animate-spin" /> : <FileText />} Salvar orçamento
+                  </Button>
+                  <Button variante="fantasma" onClick={novaVenda} disabled={enviando !== null}>
+                    Limpar
+                  </Button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

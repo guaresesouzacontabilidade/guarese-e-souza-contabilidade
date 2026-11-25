@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileCheck2, Printer, ShoppingCart } from "lucide-react";
+import { FileCheck2, MessageCircle, Pencil, Printer, ShoppingCart } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,8 @@ import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { FORMAS_PAGAMENTO, formatarQuantidade, hora, parcelasDoPrazo, type FormaPagamento, un } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarData, formatarDataHora, formatarDocumento, formatarTelefone } from "@/lib/formatos";
+import { envPublico } from "@/lib/env";
+import { linkPublicoOrcamento, linkWhatsAppOrcamento, mensagemOrcamento, telefoneComDdd } from "@/lib/gestao/orcamento-link";
 
 export const metadata: Metadata = { title: "Venda" };
 
@@ -74,6 +76,14 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
   const podeCancelar = orcamento ? v.status === "aberto" : v.status === "concluida" && ctx.gerente && sessao?.status === "aberto" && !nfe;
   const nfeAtiva = nfe && !["cancelada", "descartada", "rejeitada", "denegada", "falha"].includes(nfe.situacao);
   const podeNfe = !orcamento && v.status === "concluida" && ctx.pode("nfe.emitir") && !nfeAtiva;
+  // Orçamento pelo WhatsApp do aparelho: a mensagem vai pronta com o link do orçamento (sem login)
+  const linkOrcamento = orcamento && v.status === "aberto" && v.codigo_publico ? linkPublicoOrcamento(envPublico.siteUrl(), v.codigo_publico) : null;
+  const whatsOrcamento = linkOrcamento
+    ? linkWhatsAppOrcamento(
+        v.cliente_telefone,
+        mensagemOrcamento({ cliente: v.cliente_nome, numero: v.numero, loja: ctx.acesso.nome_fantasia ?? ctx.acesso.razao_social, total: v.total, validade: v.validade, link: linkOrcamento }),
+      )
+    : null;
 
   return (
     <>
@@ -92,6 +102,20 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
               <Button asChild>
                 <Link href={`/e/${empresaId}/loja/vender?orcamento=${v.id}`}>
                   <ShoppingCart /> Vender este orçamento
+                </Link>
+              </Button>
+            ) : null}
+            {whatsOrcamento ? (
+              <Button asChild variante="secundario">
+                <a href={whatsOrcamento} target="_blank" rel="noopener noreferrer" data-testid="whatsapp-orcamento">
+                  <MessageCircle /> {telefoneComDdd(v.cliente_telefone) ? "Enviar pelo WhatsApp" : "Enviar pelo WhatsApp (escolher contato)"}
+                </a>
+              </Button>
+            ) : null}
+            {orcamento && v.status === "aberto" && !doSite ? (
+              <Button asChild variante="contorno">
+                <Link href={`/e/${empresaId}/loja/orcamento?editar=${v.id}`}>
+                  <Pencil /> Editar
                 </Link>
               </Button>
             ) : null}

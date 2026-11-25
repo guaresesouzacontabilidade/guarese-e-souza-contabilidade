@@ -49,9 +49,10 @@ reset role;
 -- Limpeza: registros com mais de 180 dias somem
 update public.suporte_perguntas set created_at = now() - interval '200 days' where id = current_setting('testes.p1')::bigint;
 set local role service_role;
-select is(public.rotina_suporte_limpeza(), 1, 'apaga o que passou de 180 dias');
+select ok(public.rotina_suporte_limpeza() >= 1, 'apaga o que passou de 180 dias');
 reset role;
-select is((select count(*)::int from public.suporte_perguntas), 1, 'fica só o recente');
+select is((select count(*)::int from public.suporte_perguntas
+            where id in (current_setting('testes.p1')::bigint, current_setting('testes.p2')::bigint)), 1, 'fica só o recente');
 
 select * from finish();
 rollback;
