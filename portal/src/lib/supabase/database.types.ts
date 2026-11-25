@@ -5037,6 +5037,168 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"os_config": {
+                  Row: {
+                    "atualizado_por": string | null,"created_at": string,"dias_semana": (number)[],"empresa_id": string,"executores_simultaneos": number,"hora_fim": string,"hora_inicio": string,"mensagem_pronta": string | null,"nome_exibicao": string | null,"proximo_numero": number,"rodape_impressao": string | null,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"created_at"?: string,"dias_semana"?: (number)[],"empresa_id": string,"executores_simultaneos"?: number,"hora_fim"?: string,"hora_inicio"?: string,"mensagem_pronta"?: string | null,"nome_exibicao"?: string | null,"proximo_numero"?: number,"rodape_impressao"?: string | null,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"created_at"?: string,"dias_semana"?: (number)[],"empresa_id"?: string,"executores_simultaneos"?: number,"hora_fim"?: string,"hora_inicio"?: string,"mensagem_pronta"?: string | null,"nome_exibicao"?: string | null,"proximo_numero"?: number,"rodape_impressao"?: string | null,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_equipe": {
+                  Row: {
+                    "ativo": boolean,"cor": string,"created_at": string,"empresa_id": string,"id": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cor"?: string,"created_at"?: string,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cor"?: string,"created_at"?: string,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_equipe_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_eventos": {
+                  Row: {
+                    "de_etapa": string | null,"detalhe": string | null,"em": string,"empresa_id": string,"id": number,"ordem_id": string,"para_etapa": string | null,"tipo": string,"usuario": string | null
+                  }
+                  Insert: {
+                    "de_etapa"?: string | null,"detalhe"?: string | null,"em"?: string,"empresa_id": string,"id"?: never,"ordem_id": string,"para_etapa"?: string | null,"tipo": string,"usuario"?: string | null
+                  }
+                  Update: {
+                    "de_etapa"?: string | null,"detalhe"?: string | null,"em"?: string,"empresa_id"?: string,"id"?: never,"ordem_id"?: string,"para_etapa"?: string | null,"tipo"?: string,"usuario"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_eventos_empresa_id_ordem_id_fkey"
+      columns: ["empresa_id","ordem_id"]
+isOneToOne: false
+      referencedRelation: "os_ordens"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_eventos_usuario_fkey"
+      columns: ["usuario"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_itens": {
+                  Row: {
+                    "descricao": string,"empresa_id": string,"id": string,"minutos_estimados": number,"ordem_id": string,"posicao": number,"quantidade": number,"servico_id": string | null,"unidade": string,"valor_unitario": number
+                  }
+                  Insert: {
+                    "descricao": string,"empresa_id": string,"id"?: string,"minutos_estimados"?: number,"ordem_id": string,"posicao"?: number,"quantidade": number,"servico_id"?: string | null,"unidade"?: string,"valor_unitario"?: number
+                  }
+                  Update: {
+                    "descricao"?: string,"empresa_id"?: string,"id"?: string,"minutos_estimados"?: number,"ordem_id"?: string,"posicao"?: number,"quantidade"?: number,"servico_id"?: string | null,"unidade"?: string,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_itens_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_itens_empresa_id_ordem_id_fkey"
+      columns: ["empresa_id","ordem_id"]
+isOneToOne: false
+      referencedRelation: "os_ordens"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_itens_empresa_id_servico_id_fkey"
+      columns: ["empresa_id","servico_id"]
+isOneToOne: false
+      referencedRelation: "os_servicos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"os_ordens": {
+                  Row: {
+                    "aberta_em": string,"cancelada_em": string | null,"cancelada_motivo": string | null,"cliente_documento": string | null,"cliente_nome": string,"cliente_telefone": string | null,"codigo_publico": string,"created_at": string,"criado_por": string | null,"descricao": string | null,"empresa_id": string,"entregue_em": string | null,"entregue_por": string | null,"etapa": string,"execucao_desde": string | null,"id": string,"iniciada_em": string | null,"minutos_estimados": number,"minutos_execucao": number,"minutos_pausa": number,"numero": number,"observacoes": string | null,"ordem": number,"pausa_motivo": string | null,"pausada": boolean,"pausada_em": string | null,"prazo": string | null,"previsao": string | null,"prioridade": string,"pronta_em": string | null,"responsavel_id": string | null,"retirado_por": string | null,"updated_at": string,"valor_total": number
+                  }
+                  Insert: {
+                    "aberta_em"?: string,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"cliente_documento"?: string | null,"cliente_nome": string,"cliente_telefone"?: string | null,"codigo_publico": string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id": string,"entregue_em"?: string | null,"entregue_por"?: string | null,"etapa"?: string,"execucao_desde"?: string | null,"id"?: string,"iniciada_em"?: string | null,"minutos_estimados"?: number,"minutos_execucao"?: number,"minutos_pausa"?: number,"numero": number,"observacoes"?: string | null,"ordem"?: number,"pausa_motivo"?: string | null,"pausada"?: boolean,"pausada_em"?: string | null,"prazo"?: string | null,"previsao"?: string | null,"prioridade"?: string,"pronta_em"?: string | null,"responsavel_id"?: string | null,"retirado_por"?: string | null,"updated_at"?: string,"valor_total"?: number
+                  }
+                  Update: {
+                    "aberta_em"?: string,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"cliente_documento"?: string | null,"cliente_nome"?: string,"cliente_telefone"?: string | null,"codigo_publico"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id"?: string,"entregue_em"?: string | null,"entregue_por"?: string | null,"etapa"?: string,"execucao_desde"?: string | null,"id"?: string,"iniciada_em"?: string | null,"minutos_estimados"?: number,"minutos_execucao"?: number,"minutos_pausa"?: number,"numero"?: number,"observacoes"?: string | null,"ordem"?: number,"pausa_motivo"?: string | null,"pausada"?: boolean,"pausada_em"?: string | null,"prazo"?: string | null,"previsao"?: string | null,"prioridade"?: string,"pronta_em"?: string | null,"responsavel_id"?: string | null,"retirado_por"?: string | null,"updated_at"?: string,"valor_total"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_ordens_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_ordens_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_ordens_empresa_id_responsavel_id_fkey"
+      columns: ["empresa_id","responsavel_id"]
+isOneToOne: false
+      referencedRelation: "os_equipe"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_ordens_entregue_por_fkey"
+      columns: ["entregue_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_servicos": {
+                  Row: {
+                    "ativo": boolean,"created_at": string,"empresa_id": string,"id": string,"minutos_fixos": number,"minutos_por_unidade": number,"nome": string,"setor": string | null,"unidade": string,"updated_at": string,"valor_unitario": number
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"minutos_fixos"?: number,"minutos_por_unidade"?: number,"nome": string,"setor"?: string | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number
+                  }
+                  Update: {
+                    "ativo"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"minutos_fixos"?: number,"minutos_por_unidade"?: number,"nome"?: string,"setor"?: string | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_servicos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"perfis": {
                   Row: {
                     "aceite_termos_em": string | null,"aceite_termos_versao": string | null,"anonimizado_em": string | null,"ativo": boolean,"cargo": string | null,"created_at": string,"email": string,"id": string,"nome": string,"preferencias": NonNullable<Json>,"telefone": string | null,"tipo": string,"ultimo_acesso_em": string | null,"updated_at": string
@@ -7535,6 +7697,39 @@ isOneToOne: false
 { Args: { "p_empresa_id": string,"p_limite"?: number }; Returns: {
               "quando": string,"quem": string,"texto": string
             }[]
+                           },
+"os_acompanhar":
+{ Args: { "p_codigo": string }; Returns: Json
+                           },
+"os_atribuir":
+{ Args: { "p_id": string,"p_responsavel_id": string }; Returns: undefined
+                           },
+"os_cancelar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"os_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"os_equipe_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"os_mover":
+{ Args: { "p_etapa": string,"p_id": string,"p_posicao"?: number,"p_retirado_por"?: string }; Returns: undefined
+                           },
+"os_pausar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"os_previsao":
+{ Args: { "p_empresa_id": string,"p_minutos": number,"p_prioridade": string }; Returns: string
+                           },
+"os_retomar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"os_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"os_servico_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
                            },
 "preparar_lote_xml":
 { Args: { "p_lote_id": string }; Returns: Json

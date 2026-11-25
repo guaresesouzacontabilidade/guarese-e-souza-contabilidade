@@ -48,6 +48,14 @@ export const FERRAMENTAS = [
     rotas: ["/escalas"],
     permissoes: ["escalas.ver", "escalas.gerenciar"],
   },
+  {
+    chave: "os",
+    grupo: "Serviços",
+    rotulo: "Ordens de serviço (esteira, tempos e relatório)",
+    descricao: "Vem desligada: ligue na empresa que contratou.",
+    rotas: ["/os"],
+    permissoes: ["os.operar", "os.gerenciar"],
+  },
   { chave: "solicitacoes", grupo: "Atendimento", rotulo: "Solicitações ao escritório", rotas: ["/solicitacoes"], permissoes: [] },
 ] as const satisfies readonly { chave: string; grupo: string; rotulo: string; descricao?: string; rotas: readonly string[]; permissoes: readonly Permissao[] }[];
 

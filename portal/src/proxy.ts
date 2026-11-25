@@ -26,12 +26,14 @@ const ROTAS_PUBLICAS = [
   "/pagar/",
   // Aviso de pagamento do banco (endereço com código secreto; o pagamento é conferido no banco)
   "/api/pix/",
+  // Acompanhamento da ordem de serviço pelo cliente (QR Code com código aleatório, sem login)
+  "/acompanhar/",
 ];
 
 const ROTAS_SEM_EXIGENCIA_MFA = ["/mfa", "/auth/sair", "/auth/confirm", "/definir-senha", "/redefinir-senha", "/desbloquear"];
 
 /** Rotas que não dependem do sinal de "portal aberto" (a própria saída e as rotinas do servidor). */
-const ROTAS_SEM_PRESENCA = ["/auth/sair", "/api/cron/", "/api/saude", "/desbloquear", "/pagar/", "/api/pix/"];
+const ROTAS_SEM_PRESENCA = ["/auth/sair", "/api/cron/", "/api/saude", "/desbloquear", "/pagar/", "/api/pix/", "/acompanhar/"];
 
 function rotaPublica(caminho: string) {
   return caminho === "/" ? false : ROTAS_PUBLICAS.some((r) => caminho === r || caminho.startsWith(r));

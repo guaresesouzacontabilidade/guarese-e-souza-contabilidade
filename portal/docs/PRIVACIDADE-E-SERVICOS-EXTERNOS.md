@@ -181,6 +181,12 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **Demonstração e testes**: fora do portal oficial, ou em empresa de demonstração, o robô não acessa o SIDAGO e diz isso na tela; nada é simulado.
 - **Inteligência artificial**: não é usada. Os dados não são usados para treinar nenhum modelo.
 
+## 16-E. Ordens de serviço
+
+- **Onde roda**: dentro do portal e do banco de dados. **Nada é enviado** a serviços externos ou a inteligência artificial. O aviso de "OS pronta" abre o WhatsApp da própria loja com a mensagem pronta; quem envia é a pessoa.
+- **Dados guardados**: nome, telefone e (opcional) CPF/CNPJ do cliente da loja, os serviços, os tempos de cada etapa, a equipe (só o nome e uma cor) e o histórico de quem mexeu em cada OS. Cada empresa só vê as próprias OS (o banco confere), e só quem tem a permissão de operar ou gerenciar as OS.
+- **Acompanhamento pelo cliente**: cada OS tem um código aleatório (no QR Code da via do cliente). A página pública, sem login, mostra só o número, a etapa, a previsão, os nomes dos serviços, o primeiro nome do cliente e o nome e o telefone da loja — nunca o telefone, o documento ou o valor do cliente. Não é indexada por buscadores.
+
 ## 17. Emissão de NFS-e
 
 - **Serviço externo**: o **Emissor Nacional da NFS-e** (Sefin Nacional, Receita Federal / Comitê Gestor da NFS-e), serviço público oficial. Só recebe dados quando a empresa pede uma nota (ou o cancelamento) e a emissão está ligada.

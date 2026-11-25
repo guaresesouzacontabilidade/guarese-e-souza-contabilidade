@@ -34,6 +34,7 @@ import { semearTransportadoraCompleta } from "./demo-transportadora";
 import { semearHotel } from "./demo-hotel";
 import { semearVeterinaria } from "./demo-veterinaria";
 import { semearFisioterapia } from "./demo-fisioterapia";
+import { semearOs } from "./demo-os";
 import { semearEstudos } from "./demo-estudos";
 import { semearEscalas } from "./demo-escalas";
 import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
@@ -336,6 +337,9 @@ async function main() {
   ) {
     console.log("  Clínica de fisioterapia fictícia: fisioterapeutas, pacientes, prontuário (avaliação, evolução e alta), pacotes, agenda de hoje e recebimentos");
   }
+  if (await semearOs(admin, { url, publica }, { dominio: DOMINIO })) {
+    console.log("  Madeireira: ordens de serviço ligadas (serviços com tempo, equipe, 3 semanas de histórico e a esteira de hoje)");
+  }
   if (await semearEstudos(admin)) {
     console.log("  Robô tributário: configuração e receita fictícias da clínica (o robô encontra a oportunidade do Fator R ao rodar)");
   }
@@ -369,7 +373,7 @@ async function main() {
   console.log(`  Cliente 1:      cliente@${DOMINIO}  (somente Padaria)`);
   console.log(`  Cliente 2:      cliente2@${DOMINIO} (somente Oficina)`);
   console.log(`  Colaborador:    colaborador@${DOMINIO} (Padaria, acesso restrito)`);
-  console.log(`  Madeireira:     madeireira@${DOMINIO} (dono) e balcao@${DOMINIO} (só vende no caixa)`);
+  console.log(`  Madeireira:     madeireira@${DOMINIO} (dono) e balcao@${DOMINIO} (vende no caixa e opera as ordens de serviço)`);
   console.log(`  Grãos:          graos@${DOMINIO} (dono) e balanca@${DOMINIO} (ordens de carregamento e pesagem)`);
   console.log(`  Hotel:          hotel@${DOMINIO} (dono) e recepcao@${DOMINIO} (recepção)`);
   console.log(`  Clínica vet.:   veterinaria@${DOMINIO} (dona e veterinária) e atendimento@${DOMINIO} (recepção da clínica)`);

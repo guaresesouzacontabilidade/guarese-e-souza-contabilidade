@@ -130,6 +130,21 @@ Quando o escritório liga a emissão para a sua empresa, a nota de serviço sai 
 - Pediu igual sem querer? O portal avisa quando uma nota com o mesmo tomador, valor e descrição foi pedida há poucos minutos.
 - Enquanto o escritório testa, as notas saem no **ambiente de teste** do governo, com a marca "sem validade jurídica" — elas não valem como nota fiscal.
 
+### Ordens de serviço (esteira de serviços)
+
+Para lojas que fazem serviços para o cliente (ex.: madeireira: corte de chapas, fita de borda, furação). O escritório liga a ferramenta em **Cadastro da empresa → Ferramentas → Ordens de serviço** (ela vem desligada). Depois aparece no menu **Ordens de serviço**.
+
+- **Primeiro, os serviços** (**Serviços e equipe**, só para quem gerencia): cadastre cada serviço com a **unidade** (chapa, metro, furo, peça...), os **minutos por unidade** e os **minutos fixos** de preparação (ex.: corte = 5 min fixos + 4 min por chapa) e o valor por unidade. Inclua também a **equipe** (quem faz os serviços; não precisa ter acesso ao portal) e o **horário de trabalho**, os **dias** e quantas OS a equipe faz ao mesmo tempo — é daí que sai a previsão de entrega.
+- **Abrir a OS**: **Nova OS** → nome e WhatsApp do cliente, os serviços e as quantidades (o **tempo estimado** e o **valor** somam sozinhos; serviço que não está no cadastro entra como "avulso", com o tempo digitado), a prioridade, o responsável, o prazo combinado e o que fazer (medidas, cores). O portal mostra a **previsão de entrega** olhando a fila de agora (a urgente passa na frente) e o horário da loja; o botão **Usar como prazo** copia a previsão.
+- **A esteira**: quatro colunas — **Chegou → Em execução → Pronta para entrega → Entregue**. Arraste o cartão de uma coluna para outra (no computador) ou use os botões do cartão (**Iniciar**, **Pronta**, **Entregar**; no celular é assim). Ao iniciar sem responsável, o portal pergunta **quem vai fazer**. O cartão mostra o **relógio** da etapa e, em execução, uma barra que fica verde, amarela (perto do estimado) ou vermelha (passou). Passou do prazo (ou da previsão) sem ficar pronta: selo **Atrasada**. Filtre por pessoa, busque por cliente ou número e use **Tela cheia** para deixar a esteira numa TV da oficina (ela se atualiza sozinha).
+- **Pausar**: falta de material, esperando o cliente, máquina parada — informe o motivo. O tempo parado **não conta** como execução.
+- **Pronta**: o botão **Avisar** abre o WhatsApp da loja com a mensagem pronta (com o link de acompanhamento). Nada é enviado sozinho.
+- **Entregar**: informe quem retirou (opcional). A OS entregue não muda mais (só quem gerencia reabre).
+- **Detalhe da OS** (clique no cartão): serviços com o tempo e o valor, os tempos (fila, execução, pausas, esperando retirada), o **histórico** (quem mudou e quando), editar, trocar o responsável, **Imprimir** (via da loja com a assinatura de retirada e via do cliente com o **QR Code**), copiar o **link do cliente** e cancelar (com motivo, só quem gerencia).
+- **Acompanhamento pelo cliente**: o QR Code da via do cliente abre uma página, sem login, com a etapa da OS, a previsão e o telefone da loja. Ela mostra só o primeiro nome — sem telefone, documento ou valor.
+- **Relatório** (só quem gerencia): no período, OS abertas, concluídas e entregues, % **entregue no prazo**, **real × estimado**, o **tempo médio** de cada etapa, OS por dia, cada **serviço** (o portal compara as OS entre si para descobrir quanto cada serviço leva de verdade e, com 3 OS ou mais e diferença acima de 20%, sugere **ajustar a estimativa** com um clique) e a **equipe** (concluídas, horas, média, no prazo). **Planilha (CSV)** baixa a lista das OS concluídas.
+- **Quem faz o quê**: "Operar a esteira" (abrir, mover, pausar, avisar e entregar — dá para liberar ao balcão) e "Gerenciar as OS" (serviços, equipe, horário, cancelar e relatório), em **Usuários** da empresa.
+
 ### Emitir nota de produto (NF-e — empresa ou produtor rural)
 Quando o escritório liga a emissão, a nota fiscal eletrônica de venda (modelo 55) sai pelo portal, assinada com o certificado digital e enviada à SEFAZ do estado. Serve para empresas e para o **produtor rural** (CPF e inscrição estadual de cada propriedade).
 1. Abra **Emitir nota de produto → Emitir NF-e**.

@@ -52,6 +52,9 @@ import {
   BookOpenCheck,
   FileSpreadsheet,
   type LucideIcon,
+  SquareKanban,
+  ChartColumn,
+  Wrench,
 } from "lucide-react";
 import type { Permissao } from "@/lib/permissoes";
 import { ferramentaDaRota } from "@/lib/empresas/ferramentas";
@@ -211,6 +214,7 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
   const veterinaria: ItemMenu[] = [];
   const fisioterapia: ItemMenu[] = [];
   const loja: ItemMenu[] = [];
+  const servicosOs: ItemMenu[] = [];
   const notas: ItemMenu[] = [];
   const documentos: ItemMenu[] = [];
   const pagamentos: ItemMenu[] = [];
@@ -301,6 +305,14 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     impostos.push({ rotulo: "Relatórios", href: `${base}/relatorios`, icone: FileBarChart });
     impostos.push({ rotulo: "Declarações", href: `${base}/declaracoes`, icone: FileSignature });
   }
+  // Ordens de serviço (esteira, relatório e cadastro dos serviços)
+  if (p.has("os.operar")) {
+    servicosOs.push({ rotulo: "Esteira de serviços", href: `${base}/os`, icone: SquareKanban, exato: true });
+    if (p.has("os.gerenciar")) {
+      servicosOs.push({ rotulo: "Relatório das OS", href: `${base}/os/relatorio`, icone: ChartColumn });
+      servicosOs.push({ rotulo: "Serviços e equipe", href: `${base}/os/configuracoes`, icone: Wrench });
+    }
+  }
   if (p.has("escalas.gerenciar") || p.has("escalas.ver")) equipeEmpresa.push({ rotulo: "Escalas de trabalho", href: `${base}/escalas`, icone: ClipboardClock });
   if (p.has("mensagens.usar")) {
     falar.push({ rotulo: "Mensagens", href: `${base}/mensagens`, icone: MessagesSquare });
@@ -315,6 +327,7 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     { id: "veterinaria", rotulo: "Clínica", icone: PawPrint, itens: veterinaria },
     { id: "fisioterapia", rotulo: "Clínica", icone: Activity, itens: fisioterapia },
     { id: "loja", rotulo: hotel ? "Restaurante e bar" : clinica ? "Pet shop e farmácia" : "Loja", icone: hotel ? UtensilsCrossed : Store, itens: loja },
+    { id: "os", rotulo: "Ordens de serviço", icone: SquareKanban, itens: servicosOs },
     { id: "notas", rotulo: transporte ? "Notas e transporte" : "Notas", icone: transporte ? Truck : ReceiptText, itens: notas },
     { id: "documentos", rotulo: "Documentos", icone: FolderOpen, itens: documentos },
     { id: "pagamentos", rotulo: "Pagamentos e prazos", icone: CalendarDays, itens: pagamentos },
