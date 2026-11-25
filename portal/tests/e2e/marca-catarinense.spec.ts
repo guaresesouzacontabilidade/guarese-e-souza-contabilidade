@@ -34,9 +34,11 @@ test("ícones e instalação com o nome Catarinense Tech, sem login", async ({ r
     expect(r.status(), icone.src).toBe(200);
     expect(r.headers()["content-type"]).toContain("image/png");
   }
-  for (const caminho of ["/icon.png", "/apple-icon.png", "/marca/simbolo.png", "/marca/selo-96.png"]) {
-    const r = await request.get(caminho);
+  // O iPhone também procura o ícone nos endereços padrão (sem eles, cria um ícone com a letra "C")
+  for (const caminho of ["/icon.png", "/apple-icon.png", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png", "/favicon.ico", "/marca/simbolo.png", "/marca/selo-96.png"]) {
+    const r = await request.get(caminho, { maxRedirects: 0 });
     expect(r.status(), caminho).toBe(200);
+    expect(r.headers()["content-type"], caminho).toMatch(/^image\//);
   }
 });
 
