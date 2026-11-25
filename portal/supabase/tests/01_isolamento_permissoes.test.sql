@@ -60,7 +60,7 @@ select throws_ok($$update public.perfis set tipo = 'admin' where id = auth.uid()
                  'cliente não consegue se promover a administrador');
 
 update public.escritorio set nome_fantasia = 'Hackeado' where id = 1;
-select is((select nome_fantasia from public.escritorio), 'GUARESE''S ON CONTABILIDADE', 'cliente não altera os dados do escritório');
+select is((select nome_fantasia from public.escritorio), 'CATARINENSE CONTABILIDADE & GESTAO', 'cliente não altera os dados do escritório');
 select is((select count(*)::int from public.auditoria), 0, 'cliente não lê o histórico de auditoria');
 
 select throws_ok(

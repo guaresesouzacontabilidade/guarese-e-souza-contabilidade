@@ -1,8 +1,8 @@
-# Portal Guarese's ON
+# Catarinense Tech
 
-Sistema web do escritório **GUARESE'S ON CONTABILIDADE** (GUARESE'S ON SOLUCOES EMPRESARIAIS LTDA — CNPJ 62.935.399/0001-50, Porto Nacional – TO) para receber documentos dos clientes, acompanhar pendências, conversar com cada empresa e mostrar a saúde financeira de cada negócio.
+**Catarinense Tech** — *Sua empresa conectada ao futuro.* Sistema web do escritório **CATARINENSE CONTABILIDADE & GESTAO** (CATARINENSE CONTABILIDADE & GESTAO LTDA — CNPJ 62.935.399/0001-50, Porto Nacional – TO) para receber documentos dos clientes, acompanhar pendências, conversar com cada empresa e mostrar a saúde financeira de cada negócio.
 
-> Bem-vindo ao seu Portal Guarese’s ON. Envie seus documentos, acompanhe suas pendências e entenda a saúde financeira da sua empresa.
+> Bem-vindo ao Catarinense Tech. Envie seus documentos, acompanhe suas pendências e entenda a saúde financeira da sua empresa.
 
 Todo o sistema está em português do Brasil, com valores em reais (R$) e datas no fuso de Tocantins.
 

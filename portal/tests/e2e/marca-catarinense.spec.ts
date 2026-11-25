@@ -47,8 +47,10 @@ test("tela de entrada e portal com a marca, o bordão e o vidro líquido claro",
   await expect(page.locator("html")).toHaveClass(/\bcatarinense\b/);
   await expect(page.getByRole("img", { name: "Catarinense Tech" }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sua empresa conectada ao futuro." })).toBeVisible();
-  // O nome antigo do sistema não aparece (os dados do escritório no rodapé vêm de Configurações)
+  // O nome antigo não aparece; o rodapé traz os dados do escritório (Configurações), já com a Catarinense
   await expect(page.locator("body")).not.toContainText("Portal Guarese");
+  await expect(page.locator("body")).not.toContainText("GUARESE");
+  await expect(page.getByRole("contentinfo")).toContainText("CATARINENSE CONTABILIDADE & GESTAO LTDA");
 
   await entrar(page, `contador@${DOMINIO}`);
   await page.goto("/escritorio");

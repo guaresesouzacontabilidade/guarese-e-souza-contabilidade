@@ -27,8 +27,8 @@ export interface EscritorioPublico {
 }
 
 const PADRAO: EscritorioPublico = {
-  nome_fantasia: "GUARESE'S ON CONTABILIDADE",
-  razao_social: "GUARESE'S ON SOLUCOES EMPRESARIAIS LTDA",
+  nome_fantasia: "CATARINENSE CONTABILIDADE & GESTAO",
+  razao_social: "CATARINENSE CONTABILIDADE & GESTAO LTDA",
   cnpj: "62935399000150",
   logradouro: "Praça do Centenário",
   numero: "713",
@@ -37,8 +37,8 @@ const PADRAO: EscritorioPublico = {
   uf: "TO",
   cep: "77500000",
   email: "onguaresescontato@gmail.com",
-  telefone: null,
-  whatsapp: null,
+  telefone: "63992969763",
+  whatsapp: "63992969763",
   site: null,
   instagram: null,
   nome_sistema: "Catarinense Tech",
