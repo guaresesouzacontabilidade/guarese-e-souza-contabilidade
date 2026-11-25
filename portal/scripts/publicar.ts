@@ -475,9 +475,10 @@ async function adicionarDominio(projetoId: string, dominio: string) {
 async function dominioProducao(projetoId: string, padrao: string) {
   if (DOMINIO) return `https://${DOMINIO}`;
   try {
-    const d = await vc<{ domains: { name: string }[] }>(`/v9/projects/${projetoId}/domains`);
-    const nomes = d.domains.map((x) => x.name);
-    // Domínio próprio (ex.: portal.onguaresescontabilidade.com.br) tem prioridade sobre o endereço da Vercel
+    const d = await vc<{ domains: { name: string; redirect?: string | null }[] }>(`/v9/projects/${projetoId}/domains`);
+    // Domínios que só redirecionam (ex.: o endereço antigo) não contam
+    const nomes = d.domains.filter((x) => !x.redirect).map((x) => x.name);
+    // Domínio próprio (ex.: portal.catarinensegestao.com.br) tem prioridade sobre o endereço da Vercel
     const nome = nomes.find((n) => !n.endsWith(".vercel.app")) ?? nomes.find((n) => n.endsWith(".vercel.app")) ?? nomes[0];
     return nome ? `https://${nome}` : padrao;
   } catch {

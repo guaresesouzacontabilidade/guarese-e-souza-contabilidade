@@ -31,7 +31,7 @@ const CELULAR = { width: 390, height: 844 };
 
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
-if (/onguaresescontabilidade\.com\.br/.test(BASE)) {
+if (/(catarinensegestao|onguaresescontabilidade)\.com\.br/.test(BASE)) {
   console.error("Recusado: os vídeos só podem ser gravados no ambiente de demonstração ou local.");
   process.exit(1);
 }

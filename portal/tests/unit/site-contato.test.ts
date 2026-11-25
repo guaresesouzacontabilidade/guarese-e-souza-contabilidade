@@ -16,7 +16,7 @@ const valido = {
   site: "",
   tempo: 8000,
 };
-const ORIGEM = "https://onguaresescontabilidade.com.br";
+const ORIGEM = "https://catarinensegestao.com.br";
 
 function pedido(corpo: unknown, origem: string | null = ORIGEM, ip = "10.0.0.1") {
   const h = new Headers({ "Content-Type": "application/json", "x-forwarded-for": ip });
@@ -45,6 +45,8 @@ describe("site: validação do formulário de contato", () => {
   });
 
   it("só aceita o site do escritório (e o endereço de teste dele)", () => {
+    expect(origemPermitida("https://catarinensegestao.com.br", true)).toBe(true);
+    expect(origemPermitida("https://www.catarinensegestao.com.br", true)).toBe(true);
     expect(origemPermitida("https://onguaresescontabilidade.com.br", true)).toBe(true);
     expect(origemPermitida("https://www.onguaresescontabilidade.com.br", true)).toBe(true);
     expect(origemPermitida("https://site-on-guareses.vercel.app", true)).toBe(true);

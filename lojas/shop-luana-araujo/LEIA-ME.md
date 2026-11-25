@@ -56,7 +56,7 @@ como pede o Decreto 7.962/2013 para lojas virtuais.
 
 | Variável | Valor |
 | --- | --- |
-| `PORTAL_URL` | `https://portal.onguaresescontabilidade.com.br` |
+| `PORTAL_URL` | `https://portal.catarinensegestao.com.br` |
 | `LOJA_SLUG` | o "endereço curto" da loja no portal (ex.: `shop-luana-araujo`) |
 | `PORTAL_CHAVE` | a chave gerada em Portal → Configurar o site (aparece uma vez só) |
 | `NEXT_PUBLIC_SITE_URL` | `https://shopluanaaraujo.com.br` |

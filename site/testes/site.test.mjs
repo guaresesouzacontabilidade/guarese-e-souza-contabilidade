@@ -14,7 +14,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const PROJETO = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const RAIZ = path.join(PROJETO, "dist");
-const API = "https://portal.onguaresescontabilidade.com.br/api/site/contato";
+const API = "https://portal.catarinensegestao.com.br/api/site/contato";
 let srv, base, navegador;
 
 before(async () => {
@@ -64,7 +64,7 @@ test("página inicial: seções do briefing, SEO, segurança e nada inventado à
   assert.equal(r.status(), 200);
   const csp = r.headers()["content-security-policy"];
   assert.match(csp, /script-src 'self' 'sha256-/);
-  assert.match(csp, /connect-src 'self' https:\/\/portal\.onguaresescontabilidade\.com\.br/);
+  assert.match(csp, /connect-src 'self' https:\/\/portal\.catarinensegestao\.com\.br/);
   assert.equal(await pagina.title(), "Catarinense Contabilidade & Gestão | Contabilidade em Porto Nacional (TO)");
   // Marca nova: nome e dados do CNPJ da Catarinense; nada da marca antiga
   const textoPagina = await pagina.locator("body").innerText();
@@ -87,7 +87,7 @@ test("página inicial: seções do briefing, SEO, segurança e nada inventado à
   assert.equal(await pagina.locator(".publico").count(), 3);
   assert.equal(await pagina.locator(".acordeao details").count(), 7);
   // Portal e WhatsApp
-  assert.equal(await pagina.locator('a[href="https://portal.onguaresescontabilidade.com.br"]').first().getAttribute("href"), "https://portal.onguaresescontabilidade.com.br");
+  assert.equal(await pagina.locator('a[href="https://portal.catarinensegestao.com.br"]').first().getAttribute("href"), "https://portal.catarinensegestao.com.br");
   assert.match(await pagina.locator(".whats-flutuante").getAttribute("href"), /^https:\/\/wa\.me\/5563992969763/);
   // Pergunta frequente abre
   await pagina.locator(".acordeao summary").first().click();

@@ -1,5 +1,5 @@
 /**
- * Formulário de contato do site institucional (onguaresescontabilidade.com.br):
+ * Formulário de contato do site institucional (catarinensegestao.com.br):
  * validação dos campos, origens aceitas e limite de envios por endereço.
  * A mensagem só vai para o e-mail do escritório; nada é guardado no banco.
  */
@@ -24,7 +24,13 @@ export const ASSUNTOS_CONTATO = ["Quero ser cliente", "Abrir uma empresa", "Troc
 /** Tempo mínimo (ms) entre abrir a página e enviar: menos que isso é robô. */
 export const TEMPO_MINIMO_MS = 2500;
 
-const ORIGENS_FIXAS = new Set(["https://onguaresescontabilidade.com.br", "https://www.onguaresescontabilidade.com.br"]);
+/** Domínio do site e o antigo (que redireciona para ele, mas uma página aberta antes da troca ainda envia de lá). */
+const ORIGENS_FIXAS = new Set([
+  "https://catarinensegestao.com.br",
+  "https://www.catarinensegestao.com.br",
+  "https://onguaresescontabilidade.com.br",
+  "https://www.onguaresescontabilidade.com.br",
+]);
 /** Endereço de teste do site na Vercel e as prévias do mesmo projeto (equipe portal-on-guareses). */
 const ORIGEM_TESTE = /^https:\/\/site-on-guareses(-[a-z0-9]+-portal-on-guareses)?\.vercel\.app$/;
 

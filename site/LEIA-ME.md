@@ -15,11 +15,17 @@ Posicionamento (do site antigo do escritório): médicos e clínicas, produtores
 rurais e empresas em geral. Publicado na Vercel, que roda `npm ci` e
 `npm run build` e publica a pasta `dist` (configurado no `vercel.json`).
 
-Endereço: **https://onguaresescontabilidade.com.br** (o `www` redireciona para
-ele). O domínio está no Registro.br, com duas entradas na zona DNS: tipo A
-(nome em branco) `76.76.21.21` e CNAME `www` → `cname.vercel-dns.com`. As
-entradas de e-mail do Google (MX e TXT) e a do portal (`portal`, CNAME para a
-Vercel) ficam como estão. O certificado (https) é renovado pela Vercel.
+Endereço: **https://catarinensegestao.com.br** (o `www` redireciona para
+ele). O domínio está no Registro.br, com três entradas na zona DNS: tipo A
+(nome em branco) `76.76.21.21`, CNAME `www` → `cname.vercel-dns.com` e CNAME
+`portal` → `cname.vercel-dns.com` (o portal fica em
+`https://portal.catarinensegestao.com.br`). O certificado (https) é renovado
+pela Vercel.
+
+Endereço antigo: `onguaresescontabilidade.com.br` (e o `www`) redireciona para
+o novo, e `portal.onguaresescontabilidade.com.br` redireciona para o portal
+novo, mantendo o caminho (links antigos continuam funcionando). Os
+redirecionamentos ficam em Vercel → Project → Settings → Domains.
 
 ## Pastas
 
@@ -44,7 +50,7 @@ Vercel) ficam como estão. O certificado (https) é renovado pela Vercel.
 
 ## Formulário de contato
 
-O formulário envia para `https://portal.onguaresescontabilidade.com.br/api/site/contato`
+O formulário envia para `https://portal.catarinensegestao.com.br/api/site/contato`
 (rota do portal), que manda a mensagem para o e-mail do escritório usando o
 servidor de e-mail já configurado no portal. Nada é guardado no banco. Se o
 envio não der certo, o site oferece o WhatsApp e o e-mail com a mensagem já
