@@ -3,25 +3,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type Database = {
   
-  "graphql_public": {
-          Tables: {
-            [_ in never]: never
-          }
-          Views: {
-            [_ in never]: never
-          }
-          Functions: {
-            "graphql":
-{ Args: { "extensions"?: Json,"operationName"?: string,"query"?: string,"variables"?: Json }; Returns: Json
-                           }
-          }
-          Enums: {
-            [_ in never]: never
-          }
-          CompositeTypes: {
-            [_ in never]: never
-          }
-        },"public": {
+  "public": {
           Tables: {
             "aceites_termos": {
                   Row: {
@@ -405,16 +387,22 @@ isOneToOne: true
                   ]
                 },"categorias_financeiras": {
                   Row: {
-                    "ativa": boolean,"codigo": string,"codigo_sistema": string | null,"created_at": string,"empresa_id": string,"id": string,"natureza": string | null,"nome": string,"pai_id": string | null,"sintetica": boolean,"tipo": string,"updated_at": string
+                    "ativa": boolean,"codigo": string,"codigo_sistema": string | null,"created_at": string,"dre_linha_id": string | null,"empresa_id": string,"id": string,"natureza": string | null,"nome": string,"pai_id": string | null,"sintetica": boolean,"tipo": string,"updated_at": string
                   }
                   Insert: {
-                    "ativa"?: boolean,"codigo": string,"codigo_sistema"?: string | null,"created_at"?: string,"empresa_id": string,"id"?: string,"natureza"?: never,"nome": string,"pai_id"?: string | null,"sintetica"?: boolean,"tipo": string,"updated_at"?: string
+                    "ativa"?: boolean,"codigo": string,"codigo_sistema"?: string | null,"created_at"?: string,"dre_linha_id"?: string | null,"empresa_id": string,"id"?: string,"natureza"?: never,"nome": string,"pai_id"?: string | null,"sintetica"?: boolean,"tipo": string,"updated_at"?: string
                   }
                   Update: {
-                    "ativa"?: boolean,"codigo"?: string,"codigo_sistema"?: string | null,"created_at"?: string,"empresa_id"?: string,"id"?: string,"natureza"?: never,"nome"?: string,"pai_id"?: string | null,"sintetica"?: boolean,"tipo"?: string,"updated_at"?: string
+                    "ativa"?: boolean,"codigo"?: string,"codigo_sistema"?: string | null,"created_at"?: string,"dre_linha_id"?: string | null,"empresa_id"?: string,"id"?: string,"natureza"?: never,"nome"?: string,"pai_id"?: string | null,"sintetica"?: boolean,"tipo"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "categorias_financeiras_dre_linha_fk"
+      columns: ["empresa_id","dre_linha_id"]
+isOneToOne: false
+      referencedRelation: "dre_modelo_linhas"
+      referencedColumns: ["empresa_id","id"]
+    },{
       foreignKeyName: "categorias_financeiras_empresa_id_fkey"
       columns: ["empresa_id"]
 isOneToOne: false
@@ -1424,6 +1412,56 @@ isOneToOne: false
       referencedColumns: ["empresa_id","id"]
     },{
       foreignKeyName: "documentos_fiscais_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dre_ajustes": {
+                  Row: {
+                    "categoria_id": string,"competencia": string,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"motivo": string,"valor": number
+                  }
+                  Insert: {
+                    "categoria_id": string,"competencia": string,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"motivo": string,"valor": number
+                  }
+                  Update: {
+                    "categoria_id"?: string,"competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"motivo"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dre_ajustes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dre_ajustes_empresa_id_categoria_id_fkey"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "categorias_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "dre_ajustes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dre_modelo_linhas": {
+                  Row: {
+                    "chave_padrao": string | null,"created_at": string,"destaque": boolean,"empresa_id": string,"id": string,"mostrar_contas": boolean,"oculta": boolean,"ordem": number,"rotulo": string,"tipo": string,"tipos": (string)[],"updated_at": string
+                  }
+                  Insert: {
+                    "chave_padrao"?: string | null,"created_at"?: string,"destaque"?: boolean,"empresa_id": string,"id"?: string,"mostrar_contas"?: boolean,"oculta"?: boolean,"ordem": number,"rotulo": string,"tipo": string,"tipos"?: (string)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "chave_padrao"?: string | null,"created_at"?: string,"destaque"?: boolean,"empresa_id"?: string,"id"?: string,"mostrar_contas"?: boolean,"oculta"?: boolean,"ordem"?: number,"rotulo"?: string,"tipo"?: string,"tipos"?: (string)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dre_modelo_linhas_empresa_id_fkey"
       columns: ["empresa_id"]
 isOneToOne: false
       referencedRelation: "empresas"
@@ -6982,6 +7020,9 @@ isOneToOne: false
 "carregamento_vincular_nfe":
 { Args: { "p_id": string,"p_nfe_id": string }; Returns: undefined
                            },
+"categoria_financeira_uso":
+{ Args: { "p_categoria_id": string }; Returns: Json
+                           },
 "classificar_movimento":
 { Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_contraparte_id"?: string,"p_data_competencia"?: string,"p_descricao"?: string,"p_documento_ids"?: (string)[],"p_movimento_id": string,"p_projeto_id"?: string }; Returns: Json
                            },
@@ -7255,6 +7296,9 @@ isOneToOne: false
                            },
 "estudo_rodar":
 { Args: { "p_empresa_id"?: string }; Returns: number
+                           },
+"excluir_categoria_financeira":
+{ Args: { "p_categoria_id": string,"p_destino_id"?: string }; Returns: Json
                            },
 "excluir_documento":
 { Args: { "p_documento_id": string,"p_motivo": string }; Returns: undefined
@@ -7659,6 +7703,9 @@ isOneToOne: false
 "iniciar_fechamento":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: string
                            },
+"inserir_linha_dre":
+{ Args: { "p_depois_de"?: string,"p_empresa_id": string,"p_rotulo": string,"p_tipo": string }; Returns: string
+                           },
 "jobs_concluir":
 { Args: { "p_id": number,"p_resultado"?: Json }; Returns: undefined
                            },
@@ -7767,6 +7814,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "aal": string,"atual": boolean,"atualizada_em": string,"criada_em": string,"id": string,"ip": string,"user_agent": string
             }[]
+                           },
+"mover_linha_dre":
+{ Args: { "p_direcao": number,"p_linha_id": string }; Returns: undefined
                            },
 "movimentos_sem_comprovante":
 { Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
@@ -7980,6 +8030,9 @@ isOneToOne: false
 "os_setor_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
                            },
+"personalizar_dre":
+{ Args: { "p_empresa_id": string }; Returns: number
+                           },
 "preparar_lote_xml":
 { Args: { "p_lote_id": string }; Returns: Json
                            },
@@ -8076,8 +8129,8 @@ isOneToOne: false
 { Args: { "p_conciliacao_id": string,"p_motivo"?: string }; Returns: undefined
                            },
 "relatorio_dre_composicao":
-{ Args: { "p_categoria_id"?: string,"p_centro_custo_id"?: string,"p_empresa_id": string,"p_fim": string,"p_inicio": string,"p_tipos": (string)[] }; Returns: {
-              "baixa_id": string,"categoria_nome": string,"contraparte": string,"data": string,"descricao": string,"lancamento_id": string,"origem": string,"tipo_categoria": string,"valor": number
+{ Args: { "p_categoria_id"?: string,"p_categorias"?: (string)[],"p_centro_custo_id"?: string,"p_empresa_id": string,"p_fim": string,"p_inicio": string,"p_tipos": (string)[] }; Returns: {
+              "ajuste_id": string,"baixa_id": string,"categoria_nome": string,"contraparte": string,"data": string,"descricao": string,"lancamento_id": string,"origem": string,"tipo_categoria": string,"valor": number
             }[]
                            },
 "relatorio_dre_linhas":
@@ -8106,6 +8159,9 @@ isOneToOne: false
                            },
 "responder_solicitacao_titular":
 { Args: { "p_id": string,"p_resposta": string,"p_status": string }; Returns: undefined
+                           },
+"restaurar_dre_padrao":
+{ Args: { "p_empresa_id": string }; Returns: number
                            },
 "resumo_checklist":
 { Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
@@ -8498,11 +8554,7 @@ export type CompositeTypes<
   : never
 
 export const Constants = {
-  "graphql_public": {
-          Enums: {
-            
-          }
-        },"public": {
+  "public": {
           Enums: {
             
           }

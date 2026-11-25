@@ -2,6 +2,7 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { Alerta } from "@/components/ui/feedback";
 import { SubNavegacao } from "@/components/ui/subnav";
 import { GuardaFerramenta } from "@/components/empresas/guarda-ferramenta";
+import { BotaoLancarCelular } from "@/components/financeiro/botao-lancar-celular";
 
 export default async function LayoutFinanceiro({ children, params }: LayoutProps<"/e/[empresaId]/financeiro">) {
   const { empresaId } = await params;
@@ -24,6 +25,7 @@ export default async function LayoutFinanceiro({ children, params }: LayoutProps
     <>
       <SubNavegacao itens={itens} />
       {children}
+      {ctx.pode("financeiro.editar") ? <BotaoLancarCelular base={`${b}/lancamentos/novo`} /> : null}
     </>
   );
 }

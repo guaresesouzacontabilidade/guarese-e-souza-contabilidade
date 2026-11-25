@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
         const proximas = (await carregarProjecao(s.supabase, empresaId, hoje, 30)).linhas.filter((l) => l.data <= somarDias(hoje, 30));
         blocos.push(...blocoIndicadores(p.indicadores, p.resumo), ...blocoDre(p.dre, periodo.rotulo), ...blocoProjecao(p.projecao, p.saldoHoje, proximas));
       } else if (tipo === "dre") {
-        blocos.push(...blocoDre(await carregarDre(s.supabase, empresaId, periodo.inicio, periodo.fim, { centro, projeto }), periodo.rotulo));
+        blocos.push(...blocoDre(await carregarDre(s.supabase, empresaId, periodo.inicio, periodo.fim, { centro, projeto }, { modelo: true }), periodo.rotulo));
       } else {
         const [fluxo, prev] = await Promise.all([carregarFluxo(s.supabase, empresaId, periodo.inicio, periodo.fim), carregarProjecao(s.supabase, empresaId, hoje, 90)]);
         blocos.push(...blocoFluxo(fluxo), ...blocoProjecao(prev.projecao, prev.saldoHoje, prev.linhas.filter((l) => l.data <= somarDias(hoje, 30))));
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         planilhaDre(wb, info, p.dre);
         planilhaProjecao(wb, info, prev.projecao, prev.saldoHoje, prev.linhas);
       } else if (tipo === "dre") {
-        planilhaDre(wb, info, await carregarDre(s.supabase, empresaId, periodo.inicio, periodo.fim, { centro, projeto }));
+        planilhaDre(wb, info, await carregarDre(s.supabase, empresaId, periodo.inicio, periodo.fim, { centro, projeto }, { modelo: true }));
       } else {
         const [fluxo, prev] = await Promise.all([carregarFluxo(s.supabase, empresaId, periodo.inicio, periodo.fim), carregarProjecao(s.supabase, empresaId, hoje, 90)]);
         planilhaFluxo(wb, info, fluxo);

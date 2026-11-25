@@ -317,6 +317,11 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
 > A visualização de uma guia no portal não comprova o pagamento.
 
 ### Financeiro (quando liberado)
+- **Lançar despesa ou receita**: botões **Despesa** e **Receita** no Financeiro (no celular, o botão **+** fixo no canto da tela). Na frente ficam só valor, data, descrição, conta e **Já foi pago** (com o banco ou caixa); fornecedor, mês do DRE, centro de custo, projeto e **parcelado ou todo mês** ficam em **Mais detalhes**.
+  - Na **Conta**, digite parte do nome para buscar (ex.: "alu" para Aluguel). As **mais usadas** aparecem como atalhos.
+  - O portal **sugere a conta** usada da última vez com o mesmo fornecedor ou com uma descrição parecida. A sugestão usa só o histórico da própria empresa (sem serviço externo); confira antes de salvar.
+  - Dá para anexar o **comprovante** (foto ou PDF): ele fica em Documentos, ligado ao lançamento.
+  - Depois de salvar, o formulário fica pronto para o próximo (mantém o tipo, a data e o banco). Num lançamento, **Lançar de novo** repete os dados com a data de hoje.
 - **Lançamentos**: contas a pagar e a receber, com vencimento, categoria e situação. Ao pagar ou receber, registre a baixa.
 - **Contas e saldos**: contas bancárias, caixa e cartões com os saldos.
 - **Operações**: transferências entre contas, cartão de crédito, maquininhas, empréstimos e estoque — registros com regras próprias para não distorcer o resultado.
@@ -324,10 +329,17 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
 - **Importar extratos**: extratos do banco (OFX ou planilha); as movimentações seguem para a conciliação.
 - **Notas fiscais**: notas lidas dos XML enviados. Lançamentos criados a partir de XML ou de leitura automática chegam como **sugeridos** e precisam ser confirmados.
 - **Cadastros**: plano de contas gerencial (categorias), clientes e fornecedores, centros de custo e projetos.
+  - **Plano de contas**: **Nova conta** e **Novo grupo** (o código vem sugerido), editar (lápis) e **excluir** (lixeira). Cada conta mostra em que linha do DRE aparece.
+  - Ao excluir uma conta com lançamentos, o portal mostra quantos são e pede a conta que vai recebê-los; move tudo e depois exclui. Ao excluir um grupo, as contas passam para o grupo escolhido.
+  - Conta com lançamento em mês já fechado pelo escritório não pode ser excluída, só **desativada** (some dos novos lançamentos; o histórico continua). As contas usadas pelo sistema (juros, tarifas, taxas da maquininha) também não são excluídas.
+  - Só quem pode editar o financeiro mexe no plano de contas, e toda exclusão fica no histórico.
 
 ### Relatórios
 - **Saúde financeira**: painel com indicadores, gráficos e um resumo em linguagem simples.
 - **DRE**: receitas, custos, despesas e resultado (lucro ou prejuízo) por mês, trimestre ou ano. Clique em uma linha para ver os lançamentos.
+  - **Personalizar (Modelo do DRE)**: renomeie as linhas, mude a ordem, crie **linhas de contas** (ex.: "Despesas com pessoal", trazendo as contas ou grupos que quiser) e **subtotais** (somam tudo o que está acima, ex.: "Margem de contribuição"). Também dá para recolher as contas de uma linha ou esconder um subtotal. O resultado líquido fica sempre por último e **Voltar ao padrão** desfaz tudo. O PDF e o Excel saem no modelo da empresa; os valores não mudam, só a apresentação.
+  - **Ajustes**: valores que entram só no resultado, sem mexer no caixa (depreciação, provisão de 13º e férias, correções). Informe conta, mês, valor e motivo; o ajuste aparece ao clicar na linha do DRE e fica no histórico. Mês fechado pelo escritório não aceita ajuste.
+  - Este é o DRE **gerencial**, feito com os lançamentos da empresa. O DRE contábil oficial vem do escritório em **Publicados**.
 - **Fluxo de caixa**: entradas e saídas realizadas e a projeção dos próximos meses.
 - **Publicados**: o pacote mensal preparado e revisado pelo escritório (pode ser **preliminar** ou **revisado**).
 - **Período**: escolha um mês, um trimestre, o ano, os últimos 12 meses ou **De um mês até outro…** (qualquer intervalo de até 36 meses, por exemplo de 04/2026 até 08/2026). O relatório mostra cada mês e o total, comparado com o mesmo número de meses imediatamente anteriores.

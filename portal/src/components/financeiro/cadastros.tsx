@@ -1,147 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Search, Wand2 } from "lucide-react";
+import { Pencil, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
+import { Campo, Checkbox, Input, Textarea } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
+import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { formatarDocumento } from "@/lib/formatos";
-import { TIPOS_CATEGORIA } from "@/lib/rotulos";
-import { aplicarPlanoPadrao, salvarCategoria, salvarCentroCusto, salvarContraparte, salvarProjeto } from "@/lib/financeiro/acoes-cadastros";
+import { salvarCentroCusto, salvarContraparte, salvarProjeto } from "@/lib/financeiro/acoes-cadastros";
 
-export interface Categoria {
-  id: string;
-  codigo: string;
-  nome: string;
-  tipo: string;
-  pai_id: string | null;
-  sintetica: boolean;
-  codigo_sistema: string | null;
-  ativa: boolean;
-}
-
-export function PlanoContas({ empresaId, categorias, podeEditar }: { empresaId: string; categorias: Categoria[]; podeEditar: boolean }) {
-  const [editando, setEditando] = useState<Categoria | "nova" | null>(null);
-  const grupos = categorias.filter((c) => c.sintetica);
-  const filhos = (id: string) => categorias.filter((c) => c.pai_id === id);
-  const soltas = categorias.filter((c) => !c.sintetica && !c.pai_id);
-  const e = editando === "nova" ? null : editando;
-  return (
-    <div className="space-y-4">
-      {podeEditar ? (
-        <div className="flex flex-wrap justify-end gap-2">
-          <BotaoAcao variante="contorno" acao={() => aplicarPlanoPadrao(empresaId)}>
-            <Wand2 /> Completar com o plano padrão
-          </BotaoAcao>
-          <Button onClick={() => setEditando("nova")}>
-            <Plus /> Nova categoria
-          </Button>
-        </div>
-      ) : null}
-      <p className="text-sm text-muted-foreground">
-        O tipo de cada categoria define onde ela aparece na DRE. Categorias “fora do resultado” (aportes, empréstimos, retiradas, investimentos) movimentam o caixa mas
-        não são receita nem despesa.
-      </p>
-      {categorias.length === 0 ? (
-        <EstadoVazio titulo="Plano de contas vazio" descricao="Aplique o plano padrão para começar." />
-      ) : (
-        <div className="space-y-4">
-          {[...grupos.map((g) => ({ g, itens: filhos(g.id) })), ...(soltas.length ? [{ g: null, itens: soltas }] : [])].map(({ g, itens }) => (
-            <div key={g?.id ?? "soltas"} className="overflow-hidden rounded-xl border border-border">
-              <div className="flex items-center justify-between bg-muted/70 px-4 py-2">
-                <p className="text-sm font-semibold text-titulo">{g ? `${g.codigo} ${g.nome}` : "Sem grupo"}</p>
-                {g && podeEditar ? (
-                  <Button tamanho="iconeSm" variante="fantasma" aria-label={`Editar ${g.nome}`} onClick={() => setEditando(g)}>
-                    <Pencil />
-                  </Button>
-                ) : null}
-              </div>
-              <ul className="divide-y divide-border">
-                {itens.map((c) => {
-                  const t = TIPOS_CATEGORIA[c.tipo];
-                  return (
-                    <li key={c.id} className="flex items-center justify-between gap-2 px-4 py-2 text-sm">
-                      <span className="min-w-0">
-                        <span className={c.ativa ? "" : "text-muted-foreground line-through"}>
-                          {c.codigo} {c.nome}
-                        </span>
-                        <span className="block text-xs text-muted-foreground">{t?.rotulo ?? c.tipo}</span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-2">
-                        {!t?.dre ? <Badge variante="info">Fora da DRE</Badge> : null}
-                        {c.codigo_sistema ? <Badge variante="neutro">Usada pelo sistema</Badge> : null}
-                        {podeEditar ? (
-                          <Button tamanho="iconeSm" variante="fantasma" aria-label={`Editar ${c.nome}`} onClick={() => setEditando(c)}>
-                            <Pencil />
-                          </Button>
-                        ) : null}
-                      </span>
-                    </li>
-                  );
-                })}
-                {!itens.length ? <li className="px-4 py-2 text-sm text-muted-foreground">Nenhuma subcategoria.</li> : null}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-      {editando ? (
-        <Dialog open onOpenChange={(v) => !v && setEditando(null)}>
-          <DialogContent titulo={e ? "Editar categoria" : "Nova categoria"}>
-            <FormularioAcao acao={salvarCategoria.bind(null, empresaId)} aoSucesso={() => setEditando(null)} className="space-y-4">
-              {({ estado, pendente }) => (
-                <>
-                  {e ? <input type="hidden" name="id" value={e.id} /> : null}
-                  <div className="grid gap-4 sm:grid-cols-[8rem_1fr]">
-                    <Campo rotulo="Código" htmlFor="cat-cod" obrigatorio erro={estado.erros?.codigo}>
-                      <Input id="cat-cod" name="codigo" defaultValue={e?.codigo ?? ""} />
-                    </Campo>
-                    <Campo rotulo="Nome" htmlFor="cat-nome" obrigatorio erro={estado.erros?.nome}>
-                      <Input id="cat-nome" name="nome" defaultValue={e?.nome ?? ""} />
-                    </Campo>
-                  </div>
-                  <Campo rotulo="Tipo (define a posição na DRE)" htmlFor="cat-tipo" obrigatorio ajuda={e?.codigo_sistema ? "Categoria usada automaticamente pelo sistema: o tipo não pode mudar." : undefined}>
-                    <Select id="cat-tipo" name="tipo" defaultValue={e?.tipo ?? "despesa_operacional"} disabled={Boolean(e?.codigo_sistema)}>
-                      {Object.entries(TIPOS_CATEGORIA).map(([v, t]) => (
-                        <option key={v} value={v}>
-                          {t.rotulo}
-                        </option>
-                      ))}
-                    </Select>
-                  </Campo>
-                  {e?.codigo_sistema ? <input type="hidden" name="tipo" value={e.tipo} /> : null}
-                  {!e?.sintetica ? (
-                    <Campo rotulo="Grupo" htmlFor="cat-pai">
-                      <Select id="cat-pai" name="pai_id" defaultValue={e?.pai_id ?? ""}>
-                        <option value="">—</option>
-                        {grupos.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.codigo} {g.nome}
-                          </option>
-                        ))}
-                      </Select>
-                    </Campo>
-                  ) : null}
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="hidden" name="ativa" value="false" />
-                    <Checkbox name="ativa" defaultChecked={e?.ativa ?? true} /> Ativa
-                  </label>
-                  <div className="flex justify-end">
-                    <BotaoEnviar pendente={pendente}>Salvar</BotaoEnviar>
-                  </div>
-                </>
-              )}
-            </FormularioAcao>
-          </DialogContent>
-        </Dialog>
-      ) : null}
-    </div>
-  );
-}
+export { PlanoContas, type Categoria } from "./plano-contas";
 
 export interface Contraparte {
   id: string;

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download, Plus, Receipt, Search } from "lucide-react";
+import { Download, Minus, Plus, Receipt, Search } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Paginacao, urlCom } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
@@ -113,11 +113,18 @@ export default async function PaginaLancamentos({ params, searchParams }: PagePr
               </a>
             </Button>
             {ctx.pode("financeiro.editar") ? (
-              <Button asChild>
-                <Link href={`${base}/novo`}>
-                  <Plus /> Novo lançamento
-                </Link>
-              </Button>
+              <>
+                <Button asChild variante="contorno" className="border-perigo/40">
+                  <Link href={`${base}/novo?tipo=pagar`}>
+                    <Minus className="text-perigo" /> Despesa
+                  </Link>
+                </Button>
+                <Button asChild variante="contorno" className="border-sucesso/40">
+                  <Link href={`${base}/novo?tipo=receber`}>
+                    <Plus className="text-sucesso" /> Receita
+                  </Link>
+                </Button>
+              </>
             ) : null}
           </>
         }

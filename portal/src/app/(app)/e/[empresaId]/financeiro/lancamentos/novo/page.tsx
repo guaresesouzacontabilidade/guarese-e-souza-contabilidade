@@ -33,6 +33,29 @@ export default async function NovoLancamento({ params, searchParams }: PageProps
     observacoes: "",
   };
 
+  // "Lançar de novo": copia um lançamento (conta, fornecedor, valor, descrição) com a data de hoje
+  const copiarId = UUID.test(parametro(sp, "copiar")) ? parametro(sp, "copiar") : null;
+  if (copiarId) {
+    const { data: l } = await ctx.supabase
+      .from("lancamentos")
+      .select("tipo, descricao, categoria_id, contraparte_id, centro_custo_id, projeto_id, conta_financeira_id, valor_previsto")
+      .eq("id", copiarId)
+      .eq("empresa_id", empresaId)
+      .maybeSingle();
+    if (l) {
+      Object.assign(valores, {
+        tipo: l.tipo,
+        descricao: l.descricao,
+        categoria_id: l.categoria_id ?? "",
+        contraparte_id: l.contraparte_id ?? "",
+        centro_custo_id: l.centro_custo_id ?? "",
+        projeto_id: l.projeto_id ?? "",
+        conta_financeira_id: l.conta_financeira_id ?? "",
+        valor: String(l.valor_previsto),
+      });
+    }
+  }
+
   // A partir de um documento (comprovante, boleto...): dados lidos servem de sugestão, conferidos pelo usuário.
   const documentoId = UUID.test(parametro(sp, "documento")) ? parametro(sp, "documento") : null;
   let aviso: string | null = null;
@@ -53,11 +76,15 @@ export default async function NovoLancamento({ params, searchParams }: PageProps
 
   return (
     <>
-      <CabecalhoPagina voltar={{ href: base, rotulo: "Lançamentos" }} titulo="Novo lançamento" descricao="Conta a pagar ou a receber. Para compras no cartão, vendas em maquininha, empréstimos e transferências, use “Operações”." />
+      <CabecalhoPagina
+        voltar={{ href: base, rotulo: "Lançamentos" }}
+        titulo={copiarId ? "Lançar de novo" : valores.tipo === "receber" ? "Nova receita" : "Nova despesa"}
+        descricao="Despesa ou receita, paga ou em aberto. Para compras no cartão, vendas em maquininha, empréstimos e transferências, use “Operações”."
+      />
       {aviso ? <Alerta tom="info" className="mb-4">{aviso}</Alerta> : null}
       <Card>
         <CardContent className="pt-5">
-          <FormularioLancamento empresaId={empresaId} opcoes={await carregarOpcoes(ctx, empresaId)} valores={valores} base={base} />
+          <FormularioLancamento empresaId={empresaId} opcoes={await carregarOpcoes(ctx, empresaId)} valores={valores} base={base} podeAnexar={ctx.pode("documentos.enviar") && ctx.pode("documentos.ver")} />
         </CardContent>
       </Card>
     </>

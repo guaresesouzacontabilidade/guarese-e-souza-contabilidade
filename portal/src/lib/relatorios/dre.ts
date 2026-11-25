@@ -54,11 +54,15 @@ export interface LinhaDre {
   percentual: number | null;
   categoria_id?: string;
   tipos?: string[];
+  /** DRE personalizado: contas que compõem a linha (para ver os lançamentos). */
+  categoria_ids?: string[];
 }
 
 export interface ResultadoDre {
   meses: string[];
   linhas: LinhaDre[];
+  /** As linhas seguem o modelo personalizado da empresa (os totais seguem o padrão). */
+  personalizado?: boolean;
   totais: Record<string, { valores: Record<string, string>; total: string }>;
 }
 

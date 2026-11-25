@@ -3,6 +3,7 @@ import type { ContextoEmpresa } from "@/lib/auth/sessao";
 import { somarDias, somarMeses, ultimoDiaDoMes } from "@/lib/competencia";
 import { Decimal, dec, somar } from "@/lib/dinheiro";
 import { composicaoDespesas, montarDre, type LinhaDreBruta, type ResultadoDre } from "./dre";
+import { linhasDoModelo, type CategoriaModeloDre, type LinhaModeloDre, type ModeloDre } from "./modelo-dre";
 import { projetarSaldo, resumirFluxo, type LinhaFluxoBruta, type LinhaProjetadaBruta, type Projecao, type ResultadoFluxo } from "./fluxo";
 import { calcularIndicadores, resumoExecutivo, type DadosSaude, type Indicador } from "./indicadores";
 import type { Periodo } from "./periodo";
@@ -15,16 +16,45 @@ function listaMeses(inicio: string, fim: string) {
   return r;
 }
 
-export async function carregarDre(supabase: Cliente, empresaId: string, inicio: string, fim: string, filtros: { centro?: string; projeto?: string } = {}): Promise<ResultadoDre> {
-  const { data, error } = await supabase.rpc("relatorio_dre_linhas", {
-    p_empresa_id: empresaId,
-    p_inicio: inicio,
-    p_fim: fim,
-    p_centro_custo_id: filtros.centro || undefined,
-    p_projeto_id: filtros.projeto || undefined,
-  });
+export async function carregarDre(
+  supabase: Cliente,
+  empresaId: string,
+  inicio: string,
+  fim: string,
+  filtros: { centro?: string; projeto?: string } = {},
+  opcoes: { modelo?: boolean } = {},
+): Promise<ResultadoDre> {
+  const [{ data, error }, modelo] = await Promise.all([
+    supabase.rpc("relatorio_dre_linhas", {
+      p_empresa_id: empresaId,
+      p_inicio: inicio,
+      p_fim: fim,
+      p_centro_custo_id: filtros.centro || undefined,
+      p_projeto_id: filtros.projeto || undefined,
+    }),
+    opcoes.modelo ? carregarModeloDre(supabase, empresaId) : Promise.resolve(null),
+  ]);
   if (error) throw new Error(`Não foi possível calcular o resultado: ${error.message}`);
-  return montarDre((data ?? []) as LinhaDreBruta[], listaMeses(inicio, fim));
+  const brutas = (data ?? []) as LinhaDreBruta[];
+  const meses = listaMeses(inicio, fim);
+  const dre = montarDre(brutas, meses);
+  // DRE personalizado: muda só a apresentação das linhas; os totais (indicadores) seguem o padrão.
+  if (modelo) return { ...dre, linhas: linhasDoModelo(brutas, meses, modelo), personalizado: true };
+  return dre;
+}
+
+/** Modelo do DRE da empresa (null quando segue o padrão). */
+export async function carregarModeloDre(supabase: Cliente, empresaId: string): Promise<ModeloDre | null> {
+  const { data: linhas, error } = await supabase
+    .from("dre_modelo_linhas")
+    .select("id, ordem, tipo, rotulo, chave_padrao, tipos, mostrar_contas, oculta, destaque")
+    .eq("empresa_id", empresaId)
+    .order("ordem");
+  if (error) throw new Error(`Não foi possível carregar o modelo do DRE: ${error.message}`);
+  if (!linhas?.length) return null;
+  const { data: categorias, error: e2 } = await supabase.from("categorias_financeiras").select("id, pai_id, tipo, dre_linha_id").eq("empresa_id", empresaId);
+  if (e2) throw new Error(`Não foi possível carregar o plano de contas: ${e2.message}`);
+  return { linhas: linhas as LinhaModeloDre[], categorias: (categorias ?? []) as CategoriaModeloDre[] };
 }
 
 /** Saldo das contas que compõem o disponível ao final de uma data (contas sem saldo inicial ainda contam zero). */

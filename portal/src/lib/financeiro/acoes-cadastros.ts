@@ -98,22 +98,84 @@ const esquemaCategoria = z.object({
 export async function salvarCategoria(empresaId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   try {
     const ctx = await contextoEdicao(empresaId);
+    const grupo = fd.get("sintetica") === "true";
     const dados = esquemaCategoria.safeParse({
       id: String(fd.get("id") ?? ""),
       codigo: String(fd.get("codigo") ?? ""),
       nome: String(fd.get("nome") ?? ""),
       tipo: fd.get("tipo"),
-      pai_id: String(fd.get("pai_id") ?? ""),
+      pai_id: grupo ? "" : String(fd.get("pai_id") ?? ""),
       ativa: fd.get("ativa") === null ? true : booleano(fd, "ativa"),
     });
     if (!dados.success) return falhaValidacao(dados.error);
     const { id, ...c } = dados.data;
     const { error } = id
       ? await ctx.supabase.from("categorias_financeiras").update(c).eq("id", id).eq("empresa_id", empresaId)
-      : await ctx.supabase.from("categorias_financeiras").insert({ ...c, empresa_id: empresaId, sintetica: false });
+      : await ctx.supabase.from("categorias_financeiras").insert({ ...c, empresa_id: empresaId, sintetica: grupo });
+    if (error) {
+      if (error.code === "23505") return falha("Já existe uma conta com esse código. Use outro código.", { codigo: ["Código já usado."] });
+      return falha(mensagemErro(error));
+    }
+    revalidar(empresaId);
+    revalidatePath(`/e/${empresaId}/relatorios`, "layout");
+    return sucesso(grupo ? (id ? "Grupo atualizado." : "Grupo criado.") : id ? "Conta atualizada." : "Conta criada.");
+  } catch (e) {
+    return falha(mensagemErro(e));
+  }
+}
+
+export interface UsoConta {
+  lancamentos: number;
+  recorrencias: number;
+  ajustes: number;
+  meses_fechados: string[];
+  contas_no_grupo: number;
+  sistema: boolean;
+  grupo: boolean;
+}
+
+/** Quanto a conta é usada (para a tela de exclusão). */
+export async function usoCategoria(empresaId: string, id: string): Promise<ResultadoAcao<UsoConta>> {
+  try {
+    const ctx = await contextoEdicao(empresaId);
+    const { data: cat } = await ctx.supabase.from("categorias_financeiras").select("id").eq("id", id).eq("empresa_id", empresaId).maybeSingle();
+    if (!cat) return falha("Conta não encontrada.");
+    const { data, error } = await ctx.supabase.rpc("categoria_financeira_uso", { p_categoria_id: id });
+    if (error) return falha(mensagemErro(error));
+    return sucesso(undefined, data as unknown as UsoConta);
+  } catch (e) {
+    return falha(mensagemErro(e));
+  }
+}
+
+/** Exclui a conta (movendo lançamentos, recorrências e ajustes) ou o grupo (movendo as contas). */
+export async function excluirCategoria(empresaId: string, id: string, destinoId: string | null): Promise<ResultadoAcao> {
+  try {
+    const ctx = await contextoEdicao(empresaId);
+    const { data: cat } = await ctx.supabase.from("categorias_financeiras").select("id, nome").eq("id", id).eq("empresa_id", empresaId).maybeSingle();
+    if (!cat) return falha("Conta não encontrada.");
+    const { data, error } = await ctx.supabase.rpc("excluir_categoria_financeira", { p_categoria_id: id, p_destino_id: destinoId ?? undefined });
+    if (error) return falha(mensagemErro(error));
+    const r = data as { contas_movidas: number; lancamentos_movidos: number; recorrencias_movidas: number; ajustes_movidos: number };
+    revalidar(empresaId);
+    revalidatePath(`/e/${empresaId}/relatorios`, "layout");
+    const movidos = r.lancamentos_movidos + r.recorrencias_movidas + r.ajustes_movidos;
+    if (r.contas_movidas) return sucesso(`Grupo "${cat.nome}" excluído. ${r.contas_movidas} conta(s) mudaram de grupo.`);
+    if (movidos) return sucesso(`Conta "${cat.nome}" excluída. ${movidos} lançamento(s) foram para a conta escolhida.`);
+    return sucesso(`Conta "${cat.nome}" excluída.`);
+  } catch (e) {
+    return falha(mensagemErro(e));
+  }
+}
+
+/** Desativa a conta: some dos novos lançamentos, o histórico continua. */
+export async function desativarCategoria(empresaId: string, id: string): Promise<ResultadoAcao> {
+  try {
+    const ctx = await contextoEdicao(empresaId);
+    const { error } = await ctx.supabase.from("categorias_financeiras").update({ ativa: false }).eq("id", id).eq("empresa_id", empresaId);
     if (error) return falha(mensagemErro(error));
     revalidar(empresaId);
-    return sucesso(id ? "Categoria atualizada." : "Categoria criada.");
+    return sucesso("Conta desativada. Ela não aparece mais nos novos lançamentos; o histórico continua.");
   } catch (e) {
     return falha(mensagemErro(e));
   }

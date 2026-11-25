@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileText, Pencil } from "lucide-react";
+import { CopyPlus, FileText, Pencil } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
@@ -126,12 +126,23 @@ export default async function PaginaLancamento({ params, searchParams }: PagePro
         titulo={l.descricao}
         descricao={`${l.tipo === "receber" ? "Conta a receber" : "Conta a pagar"} · ${ORIGEM_LANCAMENTO[l.origem] ?? l.origem}`}
         acoes={
-          podeEditar && l.situacao !== "cancelado" ? (
-            <Button asChild variante="contorno">
-              <Link href={`${base}/${lancamentoId}?editar=1`}>
-                <Pencil /> Editar
-              </Link>
-            </Button>
+          podeEditar ? (
+            <>
+              {l.categoria_id ? (
+                <Button asChild variante="contorno">
+                  <Link href={`${base}/novo?copiar=${lancamentoId}`}>
+                    <CopyPlus /> Lançar de novo
+                  </Link>
+                </Button>
+              ) : null}
+              {l.situacao !== "cancelado" ? (
+                <Button asChild variante="contorno">
+                  <Link href={`${base}/${lancamentoId}?editar=1`}>
+                    <Pencil /> Editar
+                  </Link>
+                </Button>
+              ) : null}
+            </>
           ) : null
         }
       />

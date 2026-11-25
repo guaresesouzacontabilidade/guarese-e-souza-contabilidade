@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FileDown, FileSpreadsheet, X } from "lucide-react";
+import { FileDown, FileSpreadsheet, ListTree, SlidersHorizontal, X } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, urlCom } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
@@ -32,7 +32,7 @@ export default async function PaginaDre({ params, searchParams }: PageProps<"/e/
   const detalhe = parametro(sp, "detalhe");
 
   const [dre, { data: centros }, { data: projetos }] = await Promise.all([
-    carregarDre(ctx.supabase, empresaId, periodo.inicio, periodo.fim, { centro, projeto }),
+    carregarDre(ctx.supabase, empresaId, periodo.inicio, periodo.fim, { centro, projeto }, { modelo: true }),
     ctx.supabase.from("centros_custo").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     ctx.supabase.from("projetos").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
@@ -46,6 +46,7 @@ export default async function PaginaDre({ params, searchParams }: PageProps<"/e/
         p_tipos: linhaDetalhe.tipos ?? [],
         p_categoria_id: linhaDetalhe.categoria_id ?? undefined,
         p_centro_custo_id: centro || undefined,
+        p_categorias: linhaDetalhe.categoria_id ? undefined : linhaDetalhe.categoria_ids,
       })
     : null;
   const exportar = (formato: string) =>
@@ -59,6 +60,16 @@ export default async function PaginaDre({ params, searchParams }: PageProps<"/e/
         descricao="Receitas, custos e despesas pela competência — quando a venda ou a despesa aconteceu, não quando foi paga. Clique em uma linha para ver os lançamentos que a compõem."
         acoes={
           <>
+            <Button asChild variante="contorno">
+              <Link href={`${base}/personalizar`}>
+                <ListTree /> {dre.personalizado ? "Modelo do DRE" : "Personalizar"}
+              </Link>
+            </Button>
+            <Button asChild variante="contorno">
+              <Link href={`${base}/ajustes`}>
+                <SlidersHorizontal /> Ajustes
+              </Link>
+            </Button>
             <Button asChild variante="contorno">
               <a href={exportar("pdf")}>
                 <FileDown /> PDF
@@ -137,17 +148,22 @@ export default async function PaginaDre({ params, searchParams }: PageProps<"/e/
               </THead>
               <TBody>
                 {(composicao?.data ?? []).map((c, i) => (
-                  <Tr key={`${c.lancamento_id}-${c.baixa_id ?? ""}-${i}`}>
+                  <Tr key={`${c.lancamento_id ?? c.ajuste_id}-${c.baixa_id ?? ""}-${i}`}>
                     <Td className="whitespace-nowrap text-sm">{formatarData(c.data)}</Td>
                     <Td className="max-w-[18rem]">
                       {c.lancamento_id ? (
                         <Link href={`/e/${empresaId}/financeiro/lancamentos/${c.lancamento_id}`} className="block truncate hover:underline">
                           {c.descricao}
                         </Link>
+                      ) : c.ajuste_id ? (
+                        <Link href={`${base}/ajustes`} className="block truncate hover:underline">
+                          {c.descricao}
+                        </Link>
                       ) : (
                         c.descricao
                       )}
                       {c.origem === "ajuste_baixa" ? <span className="text-xs text-muted-foreground">reconhecido na data do pagamento</span> : null}
+                      {c.origem === "ajuste_resultado" ? <span className="text-xs text-muted-foreground">ajuste no resultado (sem caixa)</span> : null}
                     </Td>
                     <Td className="max-w-[12rem] truncate text-sm">{c.contraparte ?? "—"}</Td>
                     <Td className="text-sm">{c.categoria_nome}</Td>
@@ -162,7 +178,8 @@ export default async function PaginaDre({ params, searchParams }: PageProps<"/e/
 
       <p className="mt-4 text-xs text-muted-foreground">
         Juros, multas, descontos e taxas de pagamentos entram no mês em que foram pagos. Transferências entre contas, aportes, retiradas de sócios,
-        empréstimos e investimentos não entram no resultado (aparecem no fluxo de caixa).
+        empréstimos e investimentos não entram no resultado (aparecem no fluxo de caixa). Ajustes no resultado (depreciação, provisões) entram só no
+        DRE, sem mexer no caixa.{dre.personalizado ? " Linhas no modelo personalizado da empresa." : ""}
       </p>
     </>
   );

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, ArrowDownLeft, ArrowRight, ArrowUpRight, Info, Landmark, Plus, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowDownLeft, ArrowRight, ArrowUpRight, Info, Landmark, Minus, Plus, Sparkles } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
@@ -87,11 +87,18 @@ export default async function VisaoFinanceira({ params }: PageProps<"/e/[empresa
         descricao="Saldos, contas a pagar e a receber e previsão de caixa. Valores vêm dos lançamentos confirmados, baixas e transferências registrados no portal."
         acoes={
           ctx.pode("financeiro.editar") ? (
-            <Button asChild>
-              <Link href={`${base}/lancamentos/novo`}>
-                <Plus /> Novo lançamento
-              </Link>
-            </Button>
+            <>
+              <Button asChild variante="contorno" className="border-perigo/40">
+                <Link href={`${base}/lancamentos/novo?tipo=pagar`}>
+                  <Minus className="text-perigo" /> Despesa
+                </Link>
+              </Button>
+              <Button asChild variante="contorno" className="border-sucesso/40">
+                <Link href={`${base}/lancamentos/novo?tipo=receber`}>
+                  <Plus className="text-sucesso" /> Receita
+                </Link>
+              </Button>
+            </>
           ) : null
         }
       />
