@@ -21,7 +21,7 @@ import {
   ResponderPedido,
 } from "@/components/escritorio/configuracoes";
 import { formatarDataHora, formatarRelativo } from "@/lib/formatos";
-import { ConfigurarIa } from "@/components/escalas/ia-config";
+import { ConfigurarIa, ConfigurarSuporteIa } from "@/components/escalas/ia-config";
 import { MODELOS_IA } from "@/lib/escalas/ia";
 import { CertificadoEscritorio } from "@/components/recibos/certificado-escritorio";
 
@@ -198,7 +198,7 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "pendente"),
       s.supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "falhou").gte("created_at", seteDias),
       s.supabase.from("notas_automaticas").select("empresa_id", { count: "exact", head: true }).gt("certificado_valido_ate", new Date().toISOString()),
-      s.supabase.from("escritorio_ia").select("ativa, chave_final, modelo, limite_diario, testada_em, teste_ok, teste_erro").eq("id", 1).maybeSingle(),
+      s.supabase.from("escritorio_ia").select("ativa, chave_final, modelo, limite_diario, testada_em, teste_ok, teste_erro, suporte_ativo, suporte_limite_usuario").eq("id", 1).maybeSingle(),
       s.supabase.from("escala_ia_usos").select("id", { count: "exact", head: true }).eq("situacao", "ok").gte("created_at", diasAtras(30)),
       s.supabase.from("escritorio_certificado").select("titular, documento, emissor, valido_ate, cadastrado_em").maybeSingle(),
     ]);
@@ -400,6 +400,7 @@ export default async function PaginaConfiguracoes({ searchParams }: PageProps<"/
               </p>
             ) : null}
             {cfgIa ? <ConfigurarIa cfg={{ ativa: cfgIa.ativa, chave_final: cfgIa.chave_final, modelo: cfgIa.modelo, limite_diario: cfgIa.limite_diario }} modelos={MODELOS_IA} /> : null}
+            {cfgIa ? <ConfigurarSuporteIa ativo={cfgIa.suporte_ativo} limite={cfgIa.suporte_limite_usuario} temChave={Boolean(cfgIa.chave_final)} /> : null}
           </Integracao>
 
           <Integracao icone={HardDrive} titulo="Banco de dados e arquivos" situacao={<Situacao ok texto="Conectado" />}>

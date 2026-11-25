@@ -15,7 +15,8 @@
     "criar-admin": "tsx scripts/criar-admin.ts",
     "seed:demo": "tsx --conditions=react-server scripts/seed-demo.ts",
     "worker": "tsx scripts/worker.ts",
-    "videos:gravar": "node scripts/videos/gravar.mjs"
+    "videos:gravar": "node scripts/videos/gravar.mjs",
+    "suporte:base": "tsx scripts/gerar-base-suporte.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

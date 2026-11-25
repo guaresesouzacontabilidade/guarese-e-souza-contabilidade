@@ -4,6 +4,7 @@ import { KeyRound, PlugZap, Trash2 } from "lucide-react";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Campo, Checkbox, Input, Select } from "@/components/ui/form";
 import { configurarIa, removerChaveIa, salvarChaveIa, testarIa } from "@/lib/escalas/acoes-ia-config";
+import { configurarSuporteIa } from "@/lib/suporte/acoes";
 
 export interface ConfigIaTela {
   ativa: boolean;
@@ -79,5 +80,35 @@ export function ConfigurarIa({ cfg, modelos }: { cfg: ConfigIaTela; modelos: rea
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** Assistente de IA no suporte 24h dos clientes (administrador do escritório). */
+export function ConfigurarSuporteIa({ ativo, limite, temChave }: { ativo: boolean; limite: number; temChave: boolean }) {
+  return (
+    <FormularioAcao acao={configurarSuporteIa} className="space-y-3 border-t border-border pt-3">
+      {({ estado, pendente }) => (
+        <>
+          <p className="text-sm font-medium text-foreground">Suporte 24h (botão “Ajuda” do portal)</p>
+          <label className="flex items-start gap-2 text-sm text-foreground">
+            <Checkbox name="suporte_ativo" defaultChecked={ativo} disabled={!temChave} className="mt-0.5" />
+            <span>
+              Usar o assistente para escrever as respostas do suporte
+              <span className="block text-xs text-muted-foreground">
+                {temChave
+                  ? "Vai só a pergunta, os trechos do guia de uso e os nomes das telas — nenhum dado da empresa. Desligado, o suporte responde pela busca no guia."
+                  : "Cadastre a chave primeiro. Enquanto isso, o suporte responde pela busca no guia."}
+              </span>
+            </span>
+          </label>
+          <Campo rotulo="Perguntas por pessoa por dia" htmlFor="suporte-limite" erro={estado.erros?.suporte_limite_usuario}>
+            <Input id="suporte-limite" name="suporte_limite_usuario" type="number" min={1} max={500} defaultValue={limite} className="w-32" />
+          </Campo>
+          <BotaoEnviar pendente={pendente} tamanho="sm" variante="contorno">
+            Salvar suporte
+          </BotaoEnviar>
+        </>
+      )}
+    </FormularioAcao>
   );
 }

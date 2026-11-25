@@ -15,6 +15,9 @@ export default defineConfig({
   use: {
     baseURL: process.env.PORTAL_URL ?? "http://localhost:3000",
     locale: "pt-BR",
+    // O navegador de teste no fuso do Brasil (como os clientes): sem isso, entre 21h e meia-noite
+    // a data "de hoje" do navegador já seria a de amanhã
+    timezoneId: "America/Araguaina",
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : undefined,
   },
 });

@@ -27,7 +27,10 @@ export default async function NovaSolicitacao({ params, searchParams }: PageProp
       />
       <Card className="max-w-5xl">
         <CardContent className="pt-6">
-          <FormNovaSolicitacao empresaId={empresaId} servicos={(data ?? []) as ServicoCatalogo[]} inicial={parametro(sp, "servico")} />
+          <FormNovaSolicitacao empresaId={empresaId} servicos={(data ?? []) as ServicoCatalogo[]} inicial={parametro(sp, "servico")}
+            tituloInicial={parametro(sp, "titulo").slice(0, 160) || undefined}
+            descricaoInicial={parametro(sp, "descricao").slice(0, 2000) || undefined}
+          />
         </CardContent>
       </Card>
     </>

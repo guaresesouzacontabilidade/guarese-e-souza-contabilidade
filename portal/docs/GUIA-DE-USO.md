@@ -26,6 +26,10 @@ No canto superior direito (iniciais do nome) → **Minha conta**:
 - **Dispositivos conectados**: onde a conta está aberta; dá para encerrar um aparelho ou todos os outros.
 - **Privacidade e seus dados (LGPD)**: baixar uma cópia dos seus dados e fazer pedidos ao escritório (correção, exclusão etc.).
 
+### Suporte 24h (botão Ajuda)
+
+No canto de baixo da tela, em todas as páginas, o botão **Ajuda** abre o suporte do portal. Escreva a dúvida do seu jeito (ex.: "onde pago o boleto?", "como emito uma nota?") ou toque numa das sugestões da tela em que você está. O suporte mostra a explicação do guia e o botão **Ir para** a tela certa — só das telas que você pode abrir. Se não resolver, **Mandar esta dúvida ao escritório** abre uma solicitação já com a pergunta escrita. Com o assistente de IA ligado pelo escritório, a resposta vem escrita pela IA, com base no guia (aparece o selo "Assistente com IA"); sem ele, aparece "Busca no guia". A conversa fica só nesta aba do navegador.
+
 ### Baixar arquivos no celular
 
 No celular, os botões de baixar do portal (PDF e XML das notas, documentos, relatórios, planilhas) **não abrem outra tela**: o portal prepara o arquivo e entrega ao aparelho, e você continua na mesma tela. No **Android**, o arquivo vai para a pasta **Downloads** (o aviso tem o botão **Compartilhar**, para mandar pelo WhatsApp ou e-mail). No **iPhone**, aparece **Arquivo pronto**: toque em **Salvar ou compartilhar** e escolha **Salvar em Arquivos**, o WhatsApp ou o e-mail. No computador, o PDF continua abrindo numa aba nova.

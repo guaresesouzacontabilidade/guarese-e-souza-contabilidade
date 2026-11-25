@@ -64,17 +64,17 @@ export async function perguntarIa<S extends z.ZodType>(
   credencial: { chave: string; modelo: string },
   pergunta: string,
   schema: S,
-  opcoes: { fetch?: typeof fetch } = {},
+  opcoes: { fetch?: typeof fetch; sistema?: string; esforco?: "low" | "medium" | "high"; maxTokens?: number } = {},
 ): Promise<RespostaIa<z.infer<S>>> {
   // create (e não parse): assim a recusa e o limite de tamanho são conferidos antes de ler o JSON
   const resposta = await cliente(credencial.chave, opcoes.fetch).beta.messages.create({
     model: credencial.modelo,
-    max_tokens: 16000,
+    max_tokens: opcoes.maxTokens ?? 16000,
     // Se o modelo recusar por engano (filtro de segurança), o próprio serviço tenta outro modelo
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
-    output_config: { effort: "medium", format: betaZodOutputFormat(schema) },
-    system: SISTEMA_ESCALAS,
+    output_config: { effort: opcoes.esforco ?? "medium", format: betaZodOutputFormat(schema) },
+    system: opcoes.sistema ?? SISTEMA_ESCALAS,
     messages: [{ role: "user", content: pergunta }],
   });
   if (resposta.stop_reason === "refusal") throw new ErroIa("O assistente não quis responder a este pedido. Escreva de outro jeito.");

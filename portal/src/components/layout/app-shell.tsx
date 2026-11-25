@@ -31,6 +31,7 @@ import { Gaveta } from "@/components/ui/dialog";
 import { Menu, MenuConteudo, MenuGatilho, MenuItem, MenuRotulo, MenuSeparador, Popover, PopoverConteudo, PopoverGatilho } from "@/components/ui/menu";
 import { formatarDocumento, formatarRelativo } from "@/lib/formatos";
 import { ROTULO_PAPEL } from "@/lib/permissoes";
+import { BotaoSuporte } from "@/components/suporte/botao-suporte";
 import { grupoAtivo, gruposEmpresa, gruposEscritorio, itemAtivo, type EmpresaMenu, type GrupoMenu, type ItemMenu } from "./navegacao";
 import { listarNotificacoes, marcarNotificacoesLidas, type NotificacaoResumo } from "./acoes-layout";
 import { criarClienteNavegador } from "@/lib/supabase/client";
@@ -136,6 +137,12 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
       </main>
 
       {!equipe && empresaAtual ? <NavegacaoInferior empresa={empresaAtual} caminho={caminho} abrirMenu={() => setMenuAberto(true)} /> : null}
+      <BotaoSuporte
+        equipe={equipe}
+        empresaId={empresaAtual?.id ?? null}
+        podeSolicitar={Boolean(empresaAtual?.permissoes.includes("mensagens.usar"))}
+        comBarraInferior={!equipe && Boolean(empresaAtual)}
+      />
     </div>
   );
 }

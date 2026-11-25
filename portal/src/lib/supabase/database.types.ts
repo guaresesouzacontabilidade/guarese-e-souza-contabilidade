@@ -1832,13 +1832,13 @@ isOneToOne: false
                   ]
                 },"escritorio_ia": {
                   Row: {
-                    "ativa": boolean,"atualizado_por": string | null,"chave_final": string | null,"id": number,"limite_diario": number,"modelo": string,"testada_em": string | null,"teste_erro": string | null,"teste_ok": boolean | null,"updated_at": string
+                    "ativa": boolean,"atualizado_por": string | null,"chave_final": string | null,"id": number,"limite_diario": number,"modelo": string,"suporte_ativo": boolean,"suporte_limite_usuario": number,"testada_em": string | null,"teste_erro": string | null,"teste_ok": boolean | null,"updated_at": string
                   }
                   Insert: {
-                    "ativa"?: boolean,"atualizado_por"?: string | null,"chave_final"?: string | null,"id"?: number,"limite_diario"?: number,"modelo"?: string,"testada_em"?: string | null,"teste_erro"?: string | null,"teste_ok"?: boolean | null,"updated_at"?: string
+                    "ativa"?: boolean,"atualizado_por"?: string | null,"chave_final"?: string | null,"id"?: number,"limite_diario"?: number,"modelo"?: string,"suporte_ativo"?: boolean,"suporte_limite_usuario"?: number,"testada_em"?: string | null,"teste_erro"?: string | null,"teste_ok"?: boolean | null,"updated_at"?: string
                   }
                   Update: {
-                    "ativa"?: boolean,"atualizado_por"?: string | null,"chave_final"?: string | null,"id"?: number,"limite_diario"?: number,"modelo"?: string,"testada_em"?: string | null,"teste_erro"?: string | null,"teste_ok"?: boolean | null,"updated_at"?: string
+                    "ativa"?: boolean,"atualizado_por"?: string | null,"chave_final"?: string | null,"id"?: number,"limite_diario"?: number,"modelo"?: string,"suporte_ativo"?: boolean,"suporte_limite_usuario"?: number,"testada_em"?: string | null,"teste_erro"?: string | null,"teste_ok"?: boolean | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -5654,6 +5654,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"suporte_ia_usos": {
+                  Row: {
+                    "created_at": string,"empresa_id": string | null,"erro": string | null,"id": number,"modelo": string,"ok": boolean | null,"tokens_entrada": number | null,"tokens_saida": number | null,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"empresa_id"?: string | null,"erro"?: string | null,"id"?: never,"modelo": string,"ok"?: boolean | null,"tokens_entrada"?: number | null,"tokens_saida"?: number | null,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"empresa_id"?: string | null,"erro"?: string | null,"id"?: never,"modelo"?: string,"ok"?: boolean | null,"tokens_entrada"?: number | null,"tokens_saida"?: number | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "suporte_ia_usos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "suporte_ia_usos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"tarefa_historico": {
                   Row: {
                     "acao": string,"comentario": string | null,"detalhes": Json | null,"empresa_id": string,"id": number,"ocorrido_em": string,"status_anterior": string | null,"status_novo": string | null,"tarefa_id": string,"usuario_id": string | null
@@ -7027,6 +7052,9 @@ isOneToOne: false
 "escritorio_ia_salvar_chave":
 { Args: { "p_chave_cifrada": string,"p_chave_final": string }; Returns: undefined
                            },
+"escritorio_ia_suporte":
+{ Args: { "p_ativo": boolean,"p_limite_usuario": number }; Returns: undefined
+                           },
 "escritorio_lancamento_excluir":
 { Args: { "p_id": string }; Returns: undefined
                            },
@@ -7989,6 +8017,14 @@ isOneToOne: false
                            },
 "substituir_documento":
 { Args: { "p_documento_id": string,"p_mime": string,"p_motivo": string,"p_nome_arquivo": string,"p_sha256": string,"p_tamanho": number }; Returns: Json
+                           },
+"suporte_ia_concluir":
+{ Args: { "p_erro": string,"p_ok": boolean,"p_tokens_entrada": number,"p_tokens_saida": number,"p_uso_id": number }; Returns: undefined
+                           },
+"suporte_ia_reservar":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "modelo": string,"uso_id": number
+            }[]
                            },
 "validar_atualizacao_normativa":
 { Args: { "p_id": string,"p_observacao"?: string }; Returns: undefined

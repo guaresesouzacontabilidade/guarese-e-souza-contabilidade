@@ -16,7 +16,20 @@ export interface ServicoCatalogo {
 }
 
 /** Nova solicitação: escolha do serviço (com o que costuma ser preciso enviar) e descrição. */
-export function FormNovaSolicitacao({ empresaId, servicos, inicial }: { empresaId: string; servicos: ServicoCatalogo[]; inicial?: string }) {
+export function FormNovaSolicitacao({
+  empresaId,
+  servicos,
+  inicial,
+  tituloInicial,
+  descricaoInicial,
+}: {
+  empresaId: string;
+  servicos: ServicoCatalogo[];
+  inicial?: string;
+  /** Vindos do suporte ("Falar com o escritório"): a dúvida já escrita */
+  tituloInicial?: string;
+  descricaoInicial?: string;
+}) {
   const [servico, setServico] = React.useState(inicial && servicos.some((s) => s.codigo === inicial) ? inicial : "");
   const escolhido = servicos.find((s) => s.codigo === servico);
   const porArea = Object.keys(AREAS_SERVICO)
@@ -69,10 +82,10 @@ export function FormNovaSolicitacao({ empresaId, servicos, inicial }: { empresaI
             </div>
           ) : null}
           <Campo rotulo="Resumo do pedido" htmlFor="sol-titulo" erro={estado.erros?.titulo} obrigatorio>
-            <Input id="sol-titulo" name="titulo" maxLength={160} placeholder="Ex.: Mudança de endereço para a Rua Nova, 50" />
+            <Input id="sol-titulo" name="titulo" maxLength={160} placeholder="Ex.: Mudança de endereço para a Rua Nova, 50" defaultValue={tituloInicial} />
           </Campo>
           <Campo rotulo="Detalhes" htmlFor="sol-desc" ajuda="Depois de abrir, você pode mandar anexos e conversar com o escritório na conversa da solicitação.">
-            <Textarea id="sol-desc" name="descricao" rows={4} maxLength={4000} />
+            <Textarea id="sol-desc" name="descricao" rows={4} maxLength={4000} defaultValue={descricaoInicial} />
           </Campo>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox name="urgente" /> É urgente
