@@ -319,7 +319,7 @@
   "publico": "cliente",
   "secao": "Ordens de serviço (esteira de serviços)",
   "titulo": "Ordens de serviço (esteira de serviços) › A esteira",
-  "texto": "quatro colunas — Chegou → Em execução → Pronta para entrega → Entregue. Arraste o cartão de uma coluna para outra (no computador) ou use os botões do cartão (Iniciar, Pronta, Entregar; no celular é assim). Ao iniciar sem responsável, o portal pergunta quem vai fazer. O cartão mostra o relógio da etapa e, em execução, uma barra que fica verde, amarela (perto do estimado) ou vermelha (passou). Passou do prazo (ou da previsão) sem ficar pronta: selo Atrasada. Filtre por pessoa, busque por cliente ou número e use Tela cheia para deixar a esteira numa TV da oficina (ela se atualiza sozinha)."
+  "texto": "desenhada como uma esteira de fábrica, com quatro estações — Chegou → Em execução → Pronta para entrega → Entregue. Cada OS é uma caixa com etiqueta em cima da esteira. Arraste a caixa de uma estação para outra (no computador) ou use os botões da etiqueta (Iniciar, Pronta, Entregar; no celular é assim, e a esteira rola de lado) — a caixa desliza até a estação seguinte. A esteira só gira quando há OS sendo feita: com tudo pausado ou nada em produção, ela para e o aviso no alto diz Esteira parada. Ao iniciar sem responsável, o portal pergunta quem vai fazer. O cartão mostra o relógio da etapa e, em execução, uma barra que fica verde, amarela (perto do estimado) ou vermelha (passou). Passou do prazo (ou da previsão) sem ficar pronta: selo Atrasada. Filtre por pessoa, busque por cliente ou número e use Tela cheia para deixar a esteira numa TV da oficina (ela se atualiza sozinha)."
  },
  {
   "id": "ordens-de-servico-esteira-de-servicos-pausar",

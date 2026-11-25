@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCheck, Clock, Expand, MessageCircle, Pause, Play, Plus, Search, Shrink, User } from "lucide-react";
+import { CheckCheck, ChevronsRight, Clock, Cog, Expand, MessageCircle, Pause, Play, Plus, Search, Shrink, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -42,12 +43,25 @@ export interface OsCartao extends TempoOs {
 
 type Etapa = (typeof ETAPAS_ESTEIRA)[number];
 const MOTIVOS_PAUSA = ["Falta de material", "Aguardando o cliente", "Máquina parada", "Intervalo"];
-const COR_ETAPA: Record<Etapa, string> = {
-  fila: "border-t-slate-400",
-  execucao: "border-t-sky-500",
-  pronta: "border-t-emerald-500",
-  entregue: "border-t-zinc-300 dark:border-t-zinc-600",
+/** O que cada estação da esteira representa na oficina. */
+const ESTACAO: Record<Etapa, string> = {
+  fila: "Entrada",
+  execucao: "Produção",
+  pronta: "Expedição",
+  entregue: "Saída · últimos 7 dias",
 };
+/** Colunas da esteira: no celular cada estação ocupa quase a tela e a esteira rola de lado. */
+const GRADE = "grid grid-cols-[repeat(4,min(82vw,20rem))] lg:grid-cols-4";
+
+/** Troca o estado com a caixa deslizando até a nova estação (quando o navegador permite). */
+function comDeslize(mudar: () => void) {
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+  if (typeof doc.startViewTransition !== "function" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    mudar();
+    return;
+  }
+  doc.startViewTransition(() => flushSync(mudar));
+}
 
 function ordenar(lista: OsCartao[], etapa: Etapa) {
   const da = lista.filter((o) => o.etapa === etapa);
@@ -147,6 +161,10 @@ export function Esteira({
   const ativos = lista.filter((o) => o.etapa === "fila" || o.etapa === "execucao");
   const cargaFila = lista.filter((o) => o.etapa === "fila").reduce((s, o) => s + (Number(o.minutos_estimados) || 0), 0);
   const atrasadasN = ativos.filter((o) => atrasada(o, agora)).length;
+  const emExecucao = lista.filter((o) => o.etapa === "execucao");
+  const pausadasN = emExecucao.filter((o) => o.pausada).length;
+  // A esteira só gira com alguma OS sendo feita agora
+  const rodando = emExecucao.some((o) => !o.pausada);
   const hoje = new Date(agora - 3 * 3600_000).toISOString().slice(0, 10);
   const entreguesHoje = lista.filter((o) => o.etapa === "entregue" && o.entregue_em && new Date(new Date(o.entregue_em).getTime() - 3 * 3600_000).toISOString().slice(0, 10) === hoje).length;
 
@@ -154,10 +172,10 @@ export function Esteira({
     const antes = lista;
     const destino = ordenar(lista.filter((x) => x.id !== o.id), etapa);
     const ordemLocal = ordem ?? (destino.length ? Math.max(...destino.map((x) => x.ordem)) + 1 : 1);
-    setLista((ls) => ls.map((x) => (x.id === o.id ? aplicar(x, etapa, ordemLocal) : x)));
+    comDeslize(() => setLista((ls) => ls.map((x) => (x.id === o.id ? aplicar(x, etapa, ordemLocal) : x))));
     const r = await moverOs(empresaId, o.id, etapa, ordem, retiradoPor);
     if (!r.ok) {
-      setLista(antes);
+      comDeslize(() => setLista(antes));
       toast.error(r.mensagem ?? "Não foi possível mover a OS.");
     } else if (o.etapa !== etapa) {
       toast.success(`OS nº ${o.numero}: ${ETAPA[etapa].rotulo.toLowerCase()}.`);
@@ -246,84 +264,133 @@ export function Esteira({
         </div>
       </div>
 
-      {/* Colunas */}
-      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0">
-        {ETAPAS_ESTEIRA.map((etapa) => {
-          const todas = ordenar(lista, etapa).filter(visivel);
-          // Entregues: só as mais recentes na esteira (as demais estão no relatório)
-          const col = etapa === "entregue" ? todas.slice(0, 6) : todas;
-          const ativo = alvo?.etapa === etapa;
-          return (
-            <section
-              key={etapa}
-              aria-label={ETAPA[etapa].rotulo}
-              data-testid={`coluna-${etapa}`}
-              className={cn(
-                "flex w-[85vw] max-w-sm shrink-0 snap-start flex-col rounded-2xl border border-t-4 border-border bg-muted/40 sm:w-80 lg:w-auto lg:max-w-none",
-                COR_ETAPA[etapa],
-                ativo && arrastando && "ring-2 ring-primary/50",
-              )}
-              onDragOver={(e) => {
-                if (!arrastando) return;
-                e.preventDefault();
-                const cartoes = [...e.currentTarget.querySelectorAll<HTMLElement>("[data-cartao]")].filter((c) => c.dataset.cartao !== arrastando);
-                const antes = cartoes.find((c) => e.clientY < c.getBoundingClientRect().top + c.getBoundingClientRect().height / 2);
-                const antesDe = antes?.dataset.cartao ?? null;
-                if (alvo?.etapa !== etapa || alvo.antesDe !== antesDe) setAlvo({ etapa, antesDe });
-              }}
-              onDragLeave={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) setAlvo((a) => (a?.etapa === etapa ? null : a));
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                aoSoltar(etapa);
-              }}
-            >
-              <header className="flex items-center justify-between gap-2 px-3 pb-2 pt-3">
-                <h2 className="text-sm font-semibold">{ETAPA[etapa].rotulo}</h2>
-                <Badge variante={ETAPA[etapa].variante}>{todas.length}</Badge>
-              </header>
-              <div className="flex min-h-24 flex-1 flex-col gap-2 px-2 pb-3">
-                {col.map((o) => (
-                  <React.Fragment key={o.id}>
-                    {ativo && alvo?.antesDe === o.id && arrastando !== o.id ? <div className="h-1 rounded-full bg-primary/60" /> : null}
-                    <Cartao
-                      o={o}
-                      agora={agora}
-                      pessoa={o.responsavel_id ? nomes.get(o.responsavel_id) : undefined}
-                      base={`/e/${empresaId}/os`}
-                      arrastando={arrastando === o.id}
-                      aoArrastar={() => setArrastando(o.id)}
-                      aoSoltar={() => {
-                        setArrastando(null);
-                        setAlvo(null);
-                      }}
-                      aoIniciar={() => pedirMover(o, "execucao", null)}
-                      aoPronta={() => pedirMover(o, "pronta", null)}
-                      aoEntregar={() => pedirMover(o, "entregue", null)}
-                      aoPausar={() => {
-                        setMotivo("");
-                        setPausar(o);
-                      }}
-                      aoRetomar={async () => {
-                        const r = await retomarOs(empresaId, o.id);
-                        if (!r.ok) toast.error(r.mensagem ?? "Não foi possível retomar.");
-                      }}
-                      whatsapp={linkWhatsApp(o.cliente_telefone, montarMensagem(mensagemPronta, { cliente: o.cliente_nome, numero: o.numero, link: `${siteUrl}/acompanhar/${o.codigo_publico}`, loja }))}
-                    />
-                  </React.Fragment>
-                ))}
-                {ativo && !alvo?.antesDe && arrastando ? <div className="h-1 rounded-full bg-primary/60" /> : null}
-                {todas.length > col.length ? <p className="px-2 text-center text-xs text-muted-foreground">e mais {todas.length - col.length} nos últimos 7 dias</p> : null}
-                {!col.length ? (
-                  <p className="px-2 py-6 text-center text-xs text-muted-foreground">
-                    {etapa === "fila" ? "Nenhuma OS esperando." : etapa === "entregue" ? "Entregas dos últimos 7 dias aparecem aqui." : "Arraste uma OS para cá."}
-                  </p>
-                ) : null}
-              </div>
-            </section>
-          );
-        })}
+      {/* Esteira */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm" data-testid="esteira-status">
+        <span className="luz-estacao" data-cor={rodando ? "verde" : pausadasN ? "amarela" : undefined} aria-hidden />
+        <span className="font-semibold">{rodando ? "Esteira rodando" : "Esteira parada"}</span>
+        <span className="text-muted-foreground">
+          {rodando
+            ? `${emExecucao.length - pausadasN} OS sendo feita(s) agora${pausadasN ? ` · ${pausadasN} pausada(s)` : ""}`
+            : pausadasN
+              ? `${pausadasN} OS pausada(s) na produção`
+              : "nenhuma OS em produção agora"}
+        </span>
+        <span className="ml-auto hidden text-xs text-muted-foreground sm:inline">Arraste as caixas de uma estação para outra ou use os botões.</span>
+      </div>
+
+      <div className="-mx-4 snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:overflow-visible lg:px-0">
+        <div className="w-max lg:w-full">
+          {/* Placas das estações */}
+          <div className={GRADE}>
+            {ETAPAS_ESTEIRA.map((etapa, i) => {
+              const n = lista.filter((o) => o.etapa === etapa).filter(visivel).length;
+              const luz = etapa === "execucao" ? (rodando ? "verde" : pausadasN ? "amarela" : undefined) : etapa === "pronta" && n ? "verde" : etapa === "fila" && n ? "amarela" : undefined;
+              return (
+                <div key={etapa} className="snap-start px-1.5 pb-2.5">
+                  <div className="placa-estacao flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2 shadow-sm">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-md bg-zinc-800 font-mono text-sm font-bold text-amber-400" aria-hidden>
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-sm font-semibold leading-tight">{ETAPA[etapa].rotulo}</h2>
+                      <p className="truncate text-[11px] text-muted-foreground">{ESTACAO[etapa]}</p>
+                    </div>
+                    {etapa === "execucao" && rodando ? <Cog className="size-5 shrink-0 animate-[girar_2.4s_linear_infinite] text-sky-500" aria-hidden /> : null}
+                    <span className="luz-estacao shrink-0" data-cor={luz} aria-hidden />
+                    <Badge variante={ETAPA[etapa].variante}>{n}</Badge>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* A faixa da esteira, dividida nas 4 estações */}
+          <div className={cn("esteira-faixa rounded-xl", GRADE)} data-rodando={rodando ? "true" : "false"}>
+            {ETAPAS_ESTEIRA.map((etapa, i) => {
+              const todas = ordenar(lista, etapa).filter(visivel);
+              // Entregues: só as mais recentes na esteira (as demais estão no relatório)
+              const col = etapa === "entregue" ? todas.slice(0, 6) : todas;
+              const ativo = alvo?.etapa === etapa;
+              return (
+                <section
+                  key={etapa}
+                  aria-label={ETAPA[etapa].rotulo}
+                  data-testid={`coluna-${etapa}`}
+                  className={cn("relative flex min-h-[18rem] flex-col gap-3.5 px-3 pb-6 pt-5", i > 0 && "esteira-divisa", ativo && arrastando && "bg-amber-300/10 ring-2 ring-inset ring-amber-400/70")}
+                  onDragOver={(e) => {
+                    if (!arrastando) return;
+                    e.preventDefault();
+                    const cartoes = [...e.currentTarget.querySelectorAll<HTMLElement>("[data-cartao]")].filter((c) => c.dataset.cartao !== arrastando);
+                    const antes = cartoes.find((c) => e.clientY < c.getBoundingClientRect().top + c.getBoundingClientRect().height / 2);
+                    const antesDe = antes?.dataset.cartao ?? null;
+                    if (alvo?.etapa !== etapa || alvo.antesDe !== antesDe) setAlvo({ etapa, antesDe });
+                  }}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) setAlvo((a) => (a?.etapa === etapa ? null : a));
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    aoSoltar(etapa);
+                  }}
+                >
+                  {i > 0 ? (
+                    <span className="absolute -left-[15px] top-1/2 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-full bg-zinc-800 text-amber-400 shadow ring-2 ring-[#2a2e35]" aria-hidden>
+                      <ChevronsRight className="size-4" />
+                    </span>
+                  ) : null}
+                  {col.map((o) => (
+                    <React.Fragment key={o.id}>
+                      {ativo && alvo?.antesDe === o.id && arrastando !== o.id ? <div className="h-1 rounded-full bg-amber-400" /> : null}
+                      <Cartao
+                        o={o}
+                        agora={agora}
+                        pessoa={o.responsavel_id ? nomes.get(o.responsavel_id) : undefined}
+                        base={`/e/${empresaId}/os`}
+                        arrastando={arrastando === o.id}
+                        aoArrastar={() => setArrastando(o.id)}
+                        aoSoltar={() => {
+                          setArrastando(null);
+                          setAlvo(null);
+                        }}
+                        aoIniciar={() => pedirMover(o, "execucao", null)}
+                        aoPronta={() => pedirMover(o, "pronta", null)}
+                        aoEntregar={() => pedirMover(o, "entregue", null)}
+                        aoPausar={() => {
+                          setMotivo("");
+                          setPausar(o);
+                        }}
+                        aoRetomar={async () => {
+                          const r = await retomarOs(empresaId, o.id);
+                          if (!r.ok) toast.error(r.mensagem ?? "Não foi possível retomar.");
+                        }}
+                        whatsapp={linkWhatsApp(o.cliente_telefone, montarMensagem(mensagemPronta, { cliente: o.cliente_nome, numero: o.numero, link: `${siteUrl}/acompanhar/${o.codigo_publico}`, loja }))}
+                      />
+                    </React.Fragment>
+                  ))}
+                  {ativo && !alvo?.antesDe && arrastando ? <div className="h-1 rounded-full bg-amber-400" /> : null}
+                  {todas.length > col.length ? <p className="px-2 text-center text-xs text-zinc-300">e mais {todas.length - col.length} nos últimos 7 dias</p> : null}
+                  {!col.length ? (
+                    <p className="my-auto px-4 text-center text-xs text-zinc-400">
+                      {etapa === "fila" ? "Nenhuma OS esperando." : etapa === "entregue" ? "As entregas dos últimos 7 dias aparecem aqui." : "Arraste uma OS para cá."}
+                    </p>
+                  ) : null}
+                </section>
+              );
+            })}
+          </div>
+
+          {/* Roletes e pés da esteira */}
+          <div className="esteira-roletes -mt-2 flex justify-between px-4" aria-hidden>
+            {Array.from({ length: 24 }, (_, i) => (
+              <span key={i} className="esteira-rolete" />
+            ))}
+          </div>
+          <div className="flex justify-between px-10" aria-hidden>
+            {Array.from({ length: 5 }, (_, i) => (
+              <span key={i} className="esteira-pe" />
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Nova OS */}
@@ -491,10 +558,20 @@ function Cartao({
             ? `entregue ${formatarEntrega(o.entregue_em)}`
             : "";
 
+  const carimbos = [
+    o.prioridade !== "normal" ? { texto: prio.rotulo, cor: o.prioridade === "urgente" ? "text-red-700" : "text-orange-700" } : null,
+    atraso && o.etapa !== "entregue" ? { texto: "Atrasada", cor: "text-red-700" } : null,
+    o.pausada ? { texto: "Pausada", cor: "text-amber-700" } : null,
+  ].filter((c): c is { texto: string; cor: string } => Boolean(c));
+  const botao = "h-8 border px-2.5 text-xs shadow-none";
+  const principal = cn(botao, "border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-700 hover:text-white");
+  const secundario = cn(botao, "border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-100 hover:text-zinc-900");
+
   return (
     <article
       data-cartao={o.id}
       data-testid="cartao-os"
+      data-entregue={o.etapa === "entregue" ? "true" : undefined}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = "move";
@@ -502,107 +579,106 @@ function Cartao({
         aoArrastar();
       }}
       onDragEnd={aoSoltar}
-      className={cn(
-        "group cursor-grab rounded-xl border bg-card p-3 shadow-sm transition-[box-shadow,opacity,transform] hover:shadow-md active:cursor-grabbing",
-        atraso ? "border-perigo/60" : "border-border",
-        arrastando && "opacity-40",
-        o.etapa === "entregue" && "opacity-75",
-      )}
+      style={{ viewTransitionName: `os-${o.id}` }}
+      className={cn("caixa-os group shrink-0 cursor-grab transition-[opacity,transform] hover:-translate-y-0.5 active:cursor-grabbing", arrastando && "opacity-40")}
     >
-      <Link href={`${base}/${o.id}`} draggable={false} className="block space-y-1.5 focus-visible:outline-none">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-muted-foreground">#{o.numero}</span>
-          {o.prioridade !== "normal" ? <Badge variante={prio.variante}>{prio.rotulo}</Badge> : null}
-          {atraso && o.etapa !== "entregue" ? (
-            <Badge variante="perigo">
-              <AlertTriangle /> Atrasada
-            </Badge>
-          ) : null}
-          {o.pausada ? (
-            <Badge variante="alerta">
-              <Pause /> Pausada
-            </Badge>
-          ) : null}
-        </div>
-        <p className="line-clamp-1 font-medium">{o.cliente_nome}</p>
-        <ul className="space-y-0.5 text-xs text-muted-foreground">
-          {resumo.map((r, i) => (
-            <li key={i} className="line-clamp-1">
-              {r}
-            </li>
-          ))}
-          {o.itens.length > 2 ? <li>+ {o.itens.length - 2} serviço(s)</li> : null}
-        </ul>
-        {o.pausada && o.pausa_motivo ? <p className="text-xs text-alerta">Motivo: {o.pausa_motivo}</p> : null}
-        {o.etapa === "execucao" ? (
-          <div className="pt-1" aria-label={`Tempo de execução: ${and.percentual}% do estimado`}>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className={cn("h-full rounded-full transition-[width]", and.situacao === "estourou" ? "bg-perigo" : and.situacao === "perto" ? "bg-alerta" : "bg-sucesso")}
-                style={{ width: `${Math.min(and.percentual, 100)}%` }}
-              />
+      <div className={cn("etiqueta-os", atraso && o.etapa !== "entregue" && "ring-2 ring-red-600/70")}>
+        <Link href={`${base}/${o.id}`} draggable={false} className="block space-y-1.5 rounded-t-[4px] p-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600">
+          <div className="flex items-start justify-between gap-2 border-b border-dashed border-zinc-300 pb-1.5">
+            <p className="font-mono leading-none">
+              <span className="block text-[9px] font-semibold uppercase tracking-widest text-[#5b6170]">Ordem de serviço</span>
+              <span className="text-lg font-bold text-[#1c2230]">#{o.numero}</span>
+            </p>
+            {carimbos.length ? (
+              <div className="flex flex-wrap justify-end gap-1 pt-0.5">
+                {carimbos.map((c) => (
+                  <span key={c.texto} className={cn("carimbo-os", c.cor)}>
+                    {c.texto}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <p className="line-clamp-1 font-semibold text-[#1c2230]">{o.cliente_nome}</p>
+          <ul className="space-y-0.5 text-xs text-[#5b6170]">
+            {resumo.map((r, i) => (
+              <li key={i} className="line-clamp-1">
+                {r}
+              </li>
+            ))}
+            {o.itens.length > 2 ? <li>+ {o.itens.length - 2} serviço(s)</li> : null}
+          </ul>
+          {o.pausada && o.pausa_motivo ? <p className="text-xs font-medium text-amber-800">Motivo: {o.pausa_motivo}</p> : null}
+          {o.etapa === "execucao" ? (
+            <div className="pt-1" aria-label={`Tempo de execução: ${and.percentual}% do estimado`}>
+              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200">
+                <div
+                  className={cn("h-full rounded-full transition-[width]", and.situacao === "estourou" ? "bg-red-600" : and.situacao === "perto" ? "bg-amber-500" : "bg-emerald-600")}
+                  style={{ width: `${Math.min(and.percentual, 100)}%` }}
+                />
+              </div>
             </div>
+          ) : null}
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-0.5 text-[11px] text-[#5b6170]">
+            <span className={cn("inline-flex items-center gap-1", o.etapa === "execucao" && and.situacao === "estourou" && "font-semibold text-red-700")}>
+              <Clock className="size-3" aria-hidden /> {relogio}
+            </span>
+            {pessoa ? (
+              <span className="inline-flex items-center gap-1">
+                <span className="size-2.5 rounded-full ring-1 ring-black/10" style={{ background: pessoa.cor }} aria-hidden /> {pessoa.nome}
+              </span>
+            ) : o.etapa !== "entregue" ? (
+              <span className="inline-flex items-center gap-1">
+                <User className="size-3" aria-hidden /> sem responsável
+              </span>
+            ) : null}
+          </div>
+          {entrega && (o.etapa === "fila" || o.etapa === "execucao") ? (
+            <p className={cn("text-[11px]", atraso ? "font-semibold text-red-700" : "text-[#5b6170]")}>
+              {o.prazo ? "Prazo" : "Previsão"}: {formatarEntrega(entrega)}
+            </p>
+          ) : null}
+        </Link>
+        {o.etapa !== "entregue" ? (
+          <div className="flex flex-wrap gap-1.5 border-t border-zinc-200 px-2.5 py-2">
+            {o.etapa === "fila" ? (
+              <Button tamanho="sm" variante="fantasma" className={principal} onClick={aoIniciar}>
+                <Play /> Iniciar
+              </Button>
+            ) : null}
+            {o.etapa === "execucao" ? (
+              <>
+                <Button tamanho="sm" variante="fantasma" className={principal} onClick={aoPronta}>
+                  <CheckCheck /> Pronta
+                </Button>
+                {o.pausada ? (
+                  <Button tamanho="sm" variante="fantasma" className={secundario} onClick={aoRetomar}>
+                    <Play /> Retomar
+                  </Button>
+                ) : (
+                  <Button tamanho="sm" variante="fantasma" className={secundario} onClick={aoPausar}>
+                    <Pause /> Pausar
+                  </Button>
+                )}
+              </>
+            ) : null}
+            {o.etapa === "pronta" ? (
+              <>
+                <Button tamanho="sm" variante="fantasma" className={principal} onClick={aoEntregar}>
+                  <CheckCheck /> Entregar
+                </Button>
+                {whatsapp ? (
+                  <Button tamanho="sm" variante="fantasma" className={secundario} asChild>
+                    <a href={whatsapp} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle /> Avisar
+                    </a>
+                  </Button>
+                ) : null}
+              </>
+            ) : null}
           </div>
         ) : null}
-        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-0.5 text-[11px] text-muted-foreground">
-          <span className={cn("inline-flex items-center gap-1", o.etapa === "execucao" && and.situacao === "estourou" && "font-medium text-perigo")}>
-            <Clock className="size-3" aria-hidden /> {relogio}
-          </span>
-          {pessoa ? (
-            <span className="inline-flex items-center gap-1">
-              <span className="size-2.5 rounded-full" style={{ background: pessoa.cor }} aria-hidden /> {pessoa.nome}
-            </span>
-          ) : o.etapa !== "entregue" ? (
-            <span className="inline-flex items-center gap-1">
-              <User className="size-3" aria-hidden /> sem responsável
-            </span>
-          ) : null}
-        </div>
-        {entrega && (o.etapa === "fila" || o.etapa === "execucao") ? (
-          <p className={cn("text-[11px]", atraso ? "font-medium text-perigo" : "text-muted-foreground")}>
-            {o.prazo ? "Prazo" : "Previsão"}: {formatarEntrega(entrega)}
-          </p>
-        ) : null}
-      </Link>
-      {o.etapa !== "entregue" ? (
-        <div className="mt-2 flex flex-wrap gap-1.5 border-t border-border pt-2">
-          {o.etapa === "fila" ? (
-            <Button tamanho="sm" variante="secundario" onClick={aoIniciar}>
-              <Play /> Iniciar
-            </Button>
-          ) : null}
-          {o.etapa === "execucao" ? (
-            <>
-              <Button tamanho="sm" variante="secundario" onClick={aoPronta}>
-                <CheckCheck /> Pronta
-              </Button>
-              {o.pausada ? (
-                <Button tamanho="sm" variante="contorno" onClick={aoRetomar}>
-                  <Play /> Retomar
-                </Button>
-              ) : (
-                <Button tamanho="sm" variante="contorno" onClick={aoPausar}>
-                  <Pause /> Pausar
-                </Button>
-              )}
-            </>
-          ) : null}
-          {o.etapa === "pronta" ? (
-            <>
-              <Button tamanho="sm" variante="secundario" onClick={aoEntregar}>
-                <CheckCheck /> Entregar
-              </Button>
-              {whatsapp ? (
-                <Button tamanho="sm" variante="contorno" asChild>
-                  <a href={whatsapp} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle /> Avisar
-                  </a>
-                </Button>
-              ) : null}
-            </>
-          ) : null}
-        </div>
-      ) : null}
+      </div>
     </article>
   );
 }
