@@ -11,10 +11,12 @@ export interface ConfigWhatsapp {
   phoneNumberId: string | null;
   modelo: string | null;
   idioma: string;
+  /** Token próprio (ex.: o número oficial de uma empresa cliente); sem ele, vale o do escritório (WHATSAPP_TOKEN). */
+  token?: string | null;
 }
 
 export function whatsappConectado(cfg: ConfigWhatsapp) {
-  return Boolean(envServidor.whatsapp() && cfg.phoneNumberId && cfg.modelo);
+  return Boolean((cfg.token || envServidor.whatsapp()) && cfg.phoneNumberId && cfg.modelo);
 }
 
 export function normalizarNumero(numero: string) {
@@ -28,7 +30,8 @@ export async function enviarModeloWhatsapp(
   para: string,
   parametros: string[],
 ): Promise<{ enviado: true; id: string | null } | { enviado: false; motivo: "nao_configurado" | "falhou"; erro?: string }> {
-  const credencial = envServidor.whatsapp();
+  const escritorio = envServidor.whatsapp();
+  const credencial = cfg.token ? { token: cfg.token, versaoApi: escritorio?.versaoApi ?? process.env.WHATSAPP_API_VERSION ?? "v21.0" } : escritorio;
   if (!credencial || !cfg.phoneNumberId || !cfg.modelo) return { enviado: false, motivo: "nao_configurado" };
   const url = `https://graph.facebook.com/${credencial.versaoApi}/${encodeURIComponent(cfg.phoneNumberId)}/messages`;
   try {

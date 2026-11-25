@@ -3,7 +3,7 @@ import Link from "next/link";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Alerta } from "@/components/ui/feedback";
-import { Esteira, type OsCartao } from "@/components/os/esteira";
+import { Esteira, type FilaSetor, type OsCartao } from "@/components/os/esteira";
 import type { PessoaOs, ServicoOs } from "@/components/os/form-os";
 import { mensagemErro } from "@/lib/acoes";
 import { envPublico } from "@/lib/env";
@@ -17,17 +17,17 @@ export default async function EsteiraOs({ params }: PageProps<"/e/[empresaId]/os
   const gerenciar = ctx.pode("os.gerenciar");
   const seteDias = new Date(new Date().getTime() - 7 * 86400_000).toISOString();
 
-  const [{ data: ativas, error }, { data: entregues }, { data: equipe }, { data: servicos }, { data: cfg }] = await Promise.all([
+  const [{ data: ativas, error }, { data: entregues }, { data: equipe }, { data: servicos }, { data: cfg }, { data: fila }] = await Promise.all([
     ctx.supabase
       .from("os_ordens")
-      .select("*, itens:os_itens(descricao, quantidade, unidade, posicao)")
+      .select("*, itens:os_itens(descricao, quantidade, unidade, posicao, servico:os_servicos(setor))")
       .eq("empresa_id", empresaId)
       .in("etapa", ["fila", "execucao", "pronta"])
       .order("ordem")
       .limit(500),
     ctx.supabase
       .from("os_ordens")
-      .select("*, itens:os_itens(descricao, quantidade, unidade, posicao)")
+      .select("*, itens:os_itens(descricao, quantidade, unidade, posicao, servico:os_servicos(setor))")
       .eq("empresa_id", empresaId)
       .eq("etapa", "entregue")
       .gte("entregue_em", seteDias)
@@ -36,13 +36,18 @@ export default async function EsteiraOs({ params }: PageProps<"/e/[empresaId]/os
     ctx.supabase.from("os_equipe").select("id, nome, cor, ativo").eq("empresa_id", empresaId).order("nome"),
     ctx.supabase.from("os_servicos").select("*").eq("empresa_id", empresaId).order("nome"),
     ctx.supabase.from("os_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.rpc("os_fila_setores", { p_empresa_id: empresaId }),
   ]);
   if (error) return <Alerta tom="perigo">Não foi possível carregar as ordens de serviço: {mensagemErro(error)}</Alerta>;
 
+  type ItemLido = { descricao: string; quantidade: number; unidade: string; posicao: number; servico: { setor: string | null } | null };
   const ordens = [...(ativas ?? []), ...(entregues ?? [])].map((o) => ({
     ...o,
-    itens: [...((o.itens as unknown as { descricao: string; quantidade: number; unidade: string; posicao: number }[]) ?? [])].sort((a, b) => a.posicao - b.posicao),
+    itens: [...((o.itens as unknown as ItemLido[]) ?? [])]
+      .sort((a, b) => a.posicao - b.posicao)
+      .map((i) => ({ descricao: i.descricao, quantidade: i.quantidade, unidade: i.unidade, setor: i.servico?.setor ?? null })),
   })) as unknown as OsCartao[];
+  const filaSetores: FilaSetor[] = (fila ?? []).map((f) => ({ setor: f.setor, maquinas: Number(f.maquinas) || 1, minutos: Number(f.minutos) || 0, ordens: Number(f.ordens) || 0 }));
   const listaServicos = (servicos ?? []) as ServicoOs[];
   const nomeLoja = cfg?.nome_exibicao ?? ctx.acesso.nome_fantasia ?? ctx.acesso.razao_social;
 
@@ -77,6 +82,9 @@ export default async function EsteiraOs({ params }: PageProps<"/e/[empresaId]/os
         siteUrl={envPublico.siteUrl()}
         podeGerenciar={gerenciar}
         executores={cfg?.executores_simultaneos ?? 1}
+        podeReceber={ctx.acesso.loja && ctx.pode("gestao.vender")}
+        whatsappAtivo={Boolean(cfg?.whatsapp_ativo)}
+        filaSetores={filaSetores}
       />
     </>
   );

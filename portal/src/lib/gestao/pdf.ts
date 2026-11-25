@@ -47,6 +47,7 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
   const { sessao: s, resumo: r, vendas, movimentos, produtos, hotel } = d.relatorio;
   const hotelDinheiro = Number(r.hotel_por_forma?.dinheiro?.valor ?? 0);
   const clinicaDinheiro = Number(r.clinica_por_forma?.dinheiro?.valor ?? 0);
+  const osDinheiro = Number(r.os_por_forma?.dinheiro?.valor ?? 0);
   const fechado = s.status === "fechado";
   const concluidas = vendas.filter((v) => v.status === "concluida");
   const media = concluidas.length ? dec(r.vendas_total).div(concluidas.length) : dec(0);
@@ -114,6 +115,7 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
     ["+ Vendas em dinheiro (já descontado o troco)", { text: R$(valorDaForma(r, "dinheiro")), alignment: "right" }],
     ...(hotelDinheiro ? [["+ Hotel em dinheiro", { text: R$(hotelDinheiro), alignment: "right" }] as TableCell[]] : []),
     ...(clinicaDinheiro ? [["+ Clínica em dinheiro (contas pagas neste caixa)", { text: R$(clinicaDinheiro), alignment: "right" }] as TableCell[]] : []),
+    ...(osDinheiro ? [["+ Ordens de serviço em dinheiro (sinal e restante)", { text: R$(osDinheiro), alignment: "right" }] as TableCell[]] : []),
     [`+ Suprimentos (${r.qtd_suprimentos})`, { text: R$(r.suprimentos), alignment: "right" }],
     [`− Sangrias (${r.qtd_sangrias})`, { text: R$(r.sangrias), alignment: "right" }],
     [{ text: "= Dinheiro que deve estar na gaveta", bold: true, fillColor: COR.bege }, { text: R$(r.dinheiro_esperado), alignment: "right", bold: true, fillColor: COR.bege }],

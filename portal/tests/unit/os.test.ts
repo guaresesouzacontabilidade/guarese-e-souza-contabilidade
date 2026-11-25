@@ -149,3 +149,38 @@ describe("relatório de desempenho", () => {
     expect(diaLocal("2026-11-02T02:00:00Z")).toBe("2026-11-01");
   });
 });
+
+describe("recebimentos, aviso automático e assinatura", () => {
+  it("quanto falta receber e a situação do pagamento", async () => {
+    const { faltaReceber, situacaoPagamento } = await import("@/lib/os/rotulos");
+    expect(faltaReceber({ valor_total: "108.00", valor_recebido: "50.00", valor_a_receber: "0" })).toBe(58);
+    expect(faltaReceber({ valor_total: 30, valor_recebido: 0, valor_a_receber: 30 })).toBe(0);
+    expect(faltaReceber({ valor_total: 10, valor_recebido: 12, valor_a_receber: 0 })).toBe(0);
+    expect(situacaoPagamento({ valor_total: 0, valor_recebido: 0, valor_a_receber: 0 })).toBe("sem_valor");
+    expect(situacaoPagamento({ valor_total: 100, valor_recebido: 0, valor_a_receber: 0 })).toBe("aberto");
+    expect(situacaoPagamento({ valor_total: 100, valor_recebido: 40, valor_a_receber: 0 })).toBe("parcial");
+    expect(situacaoPagamento({ valor_total: 100, valor_recebido: 70, valor_a_receber: 30 })).toBe("a_receber");
+    expect(situacaoPagamento({ valor_total: 100, valor_recebido: 100, valor_a_receber: 0 })).toBe("pago");
+  });
+
+  it("o aviso de pronta leva só o primeiro nome, o número, a loja e o link", async () => {
+    const { parametrosAvisoOs } = await import("@/lib/os/rotulos");
+    expect(parametrosAvisoOs({ cliente: "  Carlos Marceneiro da Silva ", numero: 37, loja: "Madeireira\nReflorestar", link: "https://portal/acompanhar/abc" })).toEqual([
+      "Carlos",
+      "37",
+      "Madeireira Reflorestar",
+      "https://portal/acompanhar/abc",
+    ]);
+  });
+
+  it("só aceita a assinatura como imagem PNG de tamanho razoável", async () => {
+    const { assinaturaValida } = await import("@/lib/os/rotulos");
+    const png = `data:image/png;base64,${"iVBORw0KGgo".padEnd(400, "A")}`;
+    expect(assinaturaValida(png)).toBe(true);
+    expect(assinaturaValida(null)).toBe(false);
+    expect(assinaturaValida("data:image/jpeg;base64,AAAA")).toBe(false);
+    expect(assinaturaValida("data:image/png;base64,curta")).toBe(false);
+    expect(assinaturaValida(`data:image/png;base64,${"A".repeat(500_000)}`)).toBe(false);
+    expect(assinaturaValida("data:image/png;base64,<script>alert(1)</script>".padEnd(400, "A"))).toBe(false);
+  });
+});

@@ -329,25 +329,60 @@
   "texto": "falta de material, esperando o cliente, máquina parada — informe o motivo. O tempo parado não conta como execução."
  },
  {
+  "id": "ordens-de-servico-esteira-de-servicos-setores-e-maquinas",
+  "publico": "cliente",
+  "secao": "Ordens de serviço (esteira de serviços)",
+  "titulo": "Ordens de serviço (esteira de serviços) › Setores e máquinas",
+  "texto": "em Serviços e equipe → Setores e máquinas, diga quantas máquinas de cada setor trabalham ao mesmo tempo (ex.: 1 seccionadora, 2 coladeiras). O setor escrito no serviço vira setor sozinho. A previsão de entrega espera a fila de cada máquina que a OS usa (uma OS só de fita de borda não espera a fila da seccionadora). Na esteira, a linha fila por máquina mostra quanto trabalho está na frente de cada uma; clique nela (ou use o filtro Todas as máquinas) para ver só as OS daquela máquina."
+ },
+ {
   "id": "ordens-de-servico-esteira-de-servicos-pronta",
   "publico": "cliente",
   "secao": "Ordens de serviço (esteira de serviços)",
   "titulo": "Ordens de serviço (esteira de serviços) › Pronta",
-  "texto": "o botão Avisar abre o WhatsApp da loja com a mensagem pronta (com o link de acompanhamento). Nada é enviado sozinho."
+  "texto": "com o aviso automático ligado, o cliente recebe a mensagem sozinho pelo WhatsApp oficial da loja (1 minuto depois, para dar tempo de desfazer um clique errado); a caixa mostra Cliente avisado. Sem o aviso automático, o botão Avisar abre o WhatsApp da loja com a mensagem pronta (com o link de acompanhamento)."
+ },
+ {
+  "id": "ordens-de-servico-esteira-de-servicos-aviso-automatico-pelo-",
+  "publico": "cliente",
+  "secao": "Ordens de serviço (esteira de serviços)",
+  "titulo": "Ordens de serviço (esteira de serviços) › Aviso automático pelo WhatsApp",
+  "texto": "(Serviços e equipe → WhatsApp automático e entrega, só para quem gerencia): usa o número oficial da loja no WhatsApp Business (Cloud API da Meta). Siga o passo a passo da tela: criar o modelo de mensagem (categoria Utilidade, com 4 variáveis: primeiro nome do cliente, número da OS, loja e link), copiar o Phone Number ID, o nome do modelo e o token e marcar Ligar o aviso automático. Enviar teste manda a mensagem para um celular seu. Fica desconectado até configurar — nada é enviado. Em cada OS dá para desmarcar Avisar o cliente pelo WhatsApp."
+ },
+ {
+  "id": "ordens-de-servico-esteira-de-servicos-receber-sinal-e-restan",
+  "publico": "cliente",
+  "secao": "Ordens de serviço (esteira de serviços)",
+  "titulo": "Ordens de serviço (esteira de serviços) › Receber (sinal e restante)",
+  "texto": "quem opera o caixa da Loja recebe pela OS — no cartão (Receber), na página da OS ou ao entregar. Escolha a forma (dinheiro, PIX, débito, crédito, transferência) e o valor: o dinheiro entra no caixa aberto por você (conta na gaveta e no fechamento do caixa) e o recebimento vai para o Financeiro. A receber deixa o valor combinado em Contas a receber, com vencimento. Na abertura da OS, marque Receber um sinal (entrada) agora. O cartão mostra Falta R$ ..., A receber ou Pago. Estornar desfaz (quem recebeu, com o caixa aberto, ou o gerente). OS com recebimento não é cancelada sem estornar, e o total não fica menor que o recebido."
  },
  {
   "id": "ordens-de-servico-esteira-de-servicos-entregar",
   "publico": "cliente",
   "secao": "Ordens de serviço (esteira de serviços)",
   "titulo": "Ordens de serviço (esteira de serviços) › Entregar",
-  "texto": "informe quem retirou (opcional). A OS entregue não muda mais (só quem gerencia reabre)."
+  "texto": "o portal mostra o que falta receber (dá para Receber agora), o nome e o documento de quem retirou e, se quiser, a assinatura na tela (com o dedo, no celular, ou o mouse). Em Regras da entrega, a loja pode exigir a assinatura e só entregar com a OS paga (ou deixada a receber). A OS entregue não muda mais (só quem gerencia reabre)."
+ },
+ {
+  "id": "ordens-de-servico-esteira-de-servicos-fotos",
+  "publico": "cliente",
+  "secao": "Ordens de serviço (esteira de serviços)",
+  "titulo": "Ordens de serviço (esteira de serviços) › Fotos",
+  "texto": "na página da OS e na bancada, Tirar foto (câmera de trás do celular) ou Escolher — material recebido, durante o serviço, serviço pronto ou retirada. Até 20 por OS; ficam guardadas só para a empresa e servem de prova se houver reclamação."
+ },
+ {
+  "id": "ordens-de-servico-esteira-de-servicos-bancada-qr-code",
+  "publico": "cliente",
+  "secao": "Ordens de serviço (esteira de serviços)",
+  "titulo": "Ordens de serviço (esteira de serviços) › Bancada (QR Code)",
+  "texto": "a via da loja impressa e a Etiqueta (10 × 7 cm, para colar no material) têm um QR Code que abre a OS no celular da oficina, com botões grandes: Iniciar (pergunta quem vai fazer), Pausar (com o motivo), Retomar, Pronta, Entregar ao cliente e Tirar foto. Precisa estar com o portal aberto no celular."
  },
  {
   "id": "ordens-de-servico-esteira-de-servicos-detalhe-da-os",
   "publico": "cliente",
   "secao": "Ordens de serviço (esteira de serviços)",
   "titulo": "Ordens de serviço (esteira de serviços) › Detalhe da OS",
-  "texto": "(clique no cartão): serviços com o tempo e o valor, os tempos (fila, execução, pausas, esperando retirada), o histórico (quem mudou e quando), editar, trocar o responsável, Imprimir (via da loja com a assinatura de retirada e via do cliente com o QR Code), copiar o link do cliente e cancelar (com motivo, só quem gerencia)."
+  "texto": "(clique no cartão): serviços com o tempo e o valor, os tempos (fila, execução, pausas, esperando retirada), o histórico (quem mudou e quando), editar, trocar o responsável, Imprimir (via da loja com o QR Code da bancada, o que já foi pago e, depois da entrega, quem retirou e a assinatura; via do cliente com o QR Code do acompanhamento), Etiqueta, Bancada, Pagamento (recebimentos e estornos), Fotos, copiar o link do cliente e cancelar (com motivo, só quem gerencia)."
  },
  {
   "id": "ordens-de-servico-esteira-de-servicos-acompanhamento-pelo-cl",
@@ -361,7 +396,7 @@
   "publico": "cliente",
   "secao": "Ordens de serviço (esteira de serviços)",
   "titulo": "Ordens de serviço (esteira de serviços) › Relatório",
-  "texto": "(só quem gerencia): no período, OS abertas, concluídas e entregues, % entregue no prazo, real × estimado, o tempo médio de cada etapa, OS por dia, cada serviço (o portal compara as OS entre si para descobrir quanto cada serviço leva de verdade e, com 3 OS ou mais e diferença acima de 20%, sugere ajustar a estimativa com um clique) e a equipe (concluídas, horas, média, no prazo). Planilha (CSV) baixa a lista das OS concluídas."
+  "texto": "(só quem gerencia): no período, OS abertas, concluídas e entregues, % entregue no prazo, real × estimado, o tempo médio de cada etapa, OS por dia, cada serviço (o portal compara as OS entre si para descobrir quanto cada serviço leva de verdade e, com 3 OS ou mais e diferença acima de 20%, sugere ajustar a estimativa com um clique) e a equipe (concluídas, horas, média, no prazo). Pagamentos mostra o valor das OS, o recebido, o a receber, o que falta e as entregues sem receber tudo. Planilha (CSV) baixa a lista das OS concluídas."
  },
  {
   "id": "ordens-de-servico-esteira-de-servicos-quem-faz-o-que",

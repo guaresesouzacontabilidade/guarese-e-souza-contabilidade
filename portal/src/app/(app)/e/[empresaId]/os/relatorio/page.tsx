@@ -11,7 +11,7 @@ import { parametro } from "@/lib/busca";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarDataHora } from "@/lib/formatos";
 import { montarRelatorio, type ItemRelatorio, type OrdemRelatorio } from "@/lib/os/relatorio";
-import { entregaPrevista, formatarMinutos } from "@/lib/os/rotulos";
+import { entregaPrevista, faltaReceber, formatarMinutos } from "@/lib/os/rotulos";
 
 export const metadata: Metadata = { title: "Relatório das ordens de serviço" };
 
@@ -46,8 +46,17 @@ export default async function RelatorioOs({ params, searchParams }: PageProps<"/
   }
   const r = montarRelatorio({ ordens: (ordens ?? []) as OrdemRelatorio[], itens, servicos: servicos ?? [], equipe: equipe ?? [] }, inicio, fim);
   const nomes = new Map((equipe ?? []).map((e) => [e.id, e.nome]));
+  // Pagamentos das OS do período (sem as canceladas)
+  const validas = (ordens ?? []).filter((o) => o.etapa !== "cancelada");
+  const pg = {
+    total: validas.reduce((s, o) => s + Number(o.valor_total), 0),
+    recebido: validas.reduce((s, o) => s + Number(o.valor_recebido), 0),
+    aReceber: validas.reduce((s, o) => s + Number(o.valor_a_receber), 0),
+    falta: validas.reduce((s, o) => s + faltaReceber(o), 0),
+  };
+  const entreguesEmAberto = validas.filter((o) => o.etapa === "entregue" && faltaReceber(o) > 0);
   const csv: (string | number)[][] = [
-    ["OS", "Cliente", "Responsável", "Aberta em", "Iniciada em", "Pronta em", "Entregue em", "Estimado (min)", "Execução (min)", "Pausas (min)", "No prazo", "Valor (R$)"],
+    ["OS", "Cliente", "Responsável", "Aberta em", "Iniciada em", "Pronta em", "Entregue em", "Estimado (min)", "Execução (min)", "Pausas (min)", "No prazo", "Valor (R$)", "Recebido (R$)", "A receber (R$)", "Falta (R$)"],
     ...r.concluidasLista.map((o) => {
       const limite = entregaPrevista(o);
       return [
@@ -63,6 +72,9 @@ export default async function RelatorioOs({ params, searchParams }: PageProps<"/
         String(Number(o.minutos_pausa)).replace(".", ","),
         limite ? (new Date(o.pronta_em!).getTime() <= new Date(limite).getTime() ? "sim" : "não") : "",
         String(Number(o.valor_total)).replace(".", ","),
+        String(Number((o as unknown as { valor_recebido: number }).valor_recebido ?? 0)).replace(".", ","),
+        String(Number((o as unknown as { valor_a_receber: number }).valor_a_receber ?? 0)).replace(".", ","),
+        String(faltaReceber(o as unknown as { valor_total: number; valor_recebido: number; valor_a_receber: number })).replace(".", ","),
       ];
     }),
   ];
@@ -132,6 +144,45 @@ export default async function RelatorioOs({ params, searchParams }: PageProps<"/
             </dl>
           </CardContent>
         </Card>
+
+        {pg.total > 0 ? (
+          <Card data-testid="os-pagamentos">
+            <CardHeader>
+              <CardTitle>Pagamentos</CardTitle>
+              <CardDescription>Das OS do período (sem as canceladas). O recebido entra no caixa da Loja; o “a receber” está em Contas a receber.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                {[
+                  ["Valor das OS", pg.total],
+                  ["Recebido", pg.recebido],
+                  ["A receber (combinado)", pg.aReceber],
+                  ["Falta receber", pg.falta],
+                ].map(([rotulo, v]) => (
+                  <div key={rotulo as string} className="rounded-xl bg-muted/50 p-3">
+                    <dt className="text-xs text-muted-foreground">{rotulo}</dt>
+                    <dd className="text-lg font-semibold">{formatarMoeda(v as number)}</dd>
+                  </div>
+                ))}
+              </dl>
+              {entreguesEmAberto.length ? (
+                <div>
+                  <p className="mb-1 text-sm font-medium text-alerta">Entregues sem receber tudo</p>
+                  <ul className="space-y-1 text-sm">
+                    {entreguesEmAberto.slice(0, 30).map((o) => (
+                      <li key={o.id}>
+                        <a href={`/e/${empresaId}/os/${o.id}`} className="text-primary underline-offset-2 hover:underline">
+                          OS nº {o.numero} — {o.cliente_nome}
+                        </a>{" "}
+                        · falta {formatarMoeda(faltaReceber(o))}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        ) : null}
 
         {r.abertas || r.concluidas ? (
           <div className="grid gap-4 lg:grid-cols-2">

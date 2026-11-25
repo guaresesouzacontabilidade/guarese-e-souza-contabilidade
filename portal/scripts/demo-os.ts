@@ -161,6 +161,8 @@ export async function semearOs(
           pronta_em: pronta.toISOString(),
           entregue_em: entregue.toISOString(),
           retirado_por: "Cliente (fictício)",
+          // Histórico já pago (menos duas, para o relatório mostrar o que ficou em aberto)
+          valor_recebido: numero % 11 === 4 ? 0 : lista.reduce((s, i) => s + i.quantidade * i.valor_unitario, 0),
           criado_por: idBalcao,
         });
         lista.forEach((i, n) => itens.push({ ...i, empresa_id: empresaId, ordem_id: id, posicao: n + 1 }));
@@ -205,6 +207,67 @@ export async function semearOs(
     await admin.from("os_ordens").update({ minutos_execucao: 58, iniciada_em: mais(agora, -120).toISOString(), pronta_em: mais(agora, -45).toISOString(), aberta_em: mais(agora, -180).toISOString() }).eq("id", c);
     await admin.from("os_ordens").update({ minutos_execucao: 21, iniciada_em: mais(agora, -70).toISOString(), pronta_em: mais(agora, -30).toISOString(), aberta_em: mais(agora, -150).toISOString() }).eq("id", e);
     void d;
+
+  } finally {
+    await dono.auth.signOut();
+    await balcao.auth.signOut();
+  }
+  return true;
+}
+
+/**
+ * Melhorias das OS na madeireira de demonstração (roda também numa demonstração
+ * que já tinha OS): máquinas de cada setor, histórico pago e alguns
+ * recebimentos de hoje pelo caixa do balcão. Só na primeira vez.
+ */
+export async function semearOsMelhorias(admin: SupabaseClient, conexao: { url: string; publica: string }, opcoes: { dominio: string }): Promise<boolean> {
+  const { data: empresa } = await admin.from("empresas").select("id").eq("razao_social", "MADEIREIRA REFLORESTAR EXEMPLO LTDA (DEMONSTRAÇÃO)").maybeSingle();
+  if (!empresa) return false;
+  const empresaId = empresa.id as string;
+  const { count: ordens } = await admin.from("os_ordens").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  const { count: pagos } = await admin.from("os_pagamentos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  if (!ordens || pagos) return false;
+  const { data: balcaoPerfil } = await admin.from("perfis").select("id").eq("email", `balcao@${opcoes.dominio}`).maybeSingle();
+  const idBalcao = (balcaoPerfil?.id as string | undefined) ?? null;
+  const dono = await sessao(admin, conexao.url, conexao.publica, `madeireira@${opcoes.dominio}`);
+  const balcao = await sessao(admin, conexao.url, conexao.publica, `balcao@${opcoes.dominio}`);
+  try {
+    // Máquinas de cada setor (a previsão espera a fila de cada uma)
+    const { data: setores } = await admin.from("os_setores").select("id, nome").eq("empresa_id", empresaId);
+    for (const [nome, maquinas] of [["Seccionadora", 1], ["Coladeira de borda", 2], ["Furadeira", 1]] as const) {
+      const st = (setores ?? []).find((x) => x.nome === nome);
+      if (st) ok(`setor ${nome}`, await dono.rpc("os_setor_salvar", { p_empresa_id: empresaId, p_id: st.id, p_dados: { nome, maquinas: String(maquinas) } }));
+    }
+    // Histórico já entregue: pago (menos algumas, para o relatório mostrar o que ficou em aberto)
+    const { data: antigas } = await admin.from("os_ordens").select("id, numero, valor_total").eq("empresa_id", empresaId).eq("etapa", "entregue").eq("valor_recebido", 0);
+    for (const o of antigas ?? []) {
+      if (Number(o.numero) % 11 === 4) continue;
+      await admin.from("os_ordens").update({ valor_recebido: o.valor_total }).eq("id", o.id);
+    }
+    // Recebimentos de hoje pelo caixa do balcão (Loja ligada na demonstração)
+    const { data: gestao } = await admin.from("gestao_config").select("ativa").eq("empresa_id", empresaId).maybeSingle();
+    if (gestao?.ativa && idBalcao) {
+      const { data: aberto } = await admin.from("caixa_sessoes").select("id").eq("empresa_id", empresaId).eq("operador_id", idBalcao).eq("status", "aberto").maybeSingle();
+      if (!aberto) ok("abrir o caixa do balcão", await balcao.rpc("gestao_caixa_abrir", { p_empresa_id: empresaId, p_caixa_nome: "Balcão", p_valor_abertura: 100 }));
+      const { data: doDia } = await admin
+        .from("os_ordens")
+        .select("id, etapa, pausada, prioridade, valor_total")
+        .eq("empresa_id", empresaId)
+        .in("etapa", ["fila", "execucao", "pronta"])
+        .order("numero");
+      const lista = doDia ?? [];
+      const pagar = async (id: string | undefined, forma: string, valor: number, vencimento = "") => {
+        if (!id || valor <= 0) return;
+        ok("recebimento da OS", await balcao.rpc("os_pagamento_registrar", { p_ordem_id: id, p_dados: { forma, valor: valor.toFixed(2), vencimento } }));
+      };
+      const urgente = lista.find((o) => o.etapa === "fila" && o.prioridade === "urgente");
+      const fazendo = lista.find((o) => o.etapa === "execucao" && !o.pausada);
+      const prontas = lista.filter((o) => o.etapa === "pronta");
+      await pagar(urgente?.id, "dinheiro", Math.min(10, Number(urgente?.valor_total ?? 0)));
+      await pagar(fazendo?.id, "pix", Math.min(50, Number(fazendo?.valor_total ?? 0)));
+      await pagar(prontas[0]?.id, "pix", Math.min(30, Number(prontas[0]?.valor_total ?? 0)));
+      await pagar(prontas[1]?.id, "a_receber", Number(prontas[1]?.valor_total ?? 0), somarDias(hoje(), 10));
+    }
   } finally {
     await dono.auth.signOut();
     await balcao.auth.signOut();

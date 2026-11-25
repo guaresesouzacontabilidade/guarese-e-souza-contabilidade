@@ -5,30 +5,36 @@ import { flushSync } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCheck, ChevronsRight, Clock, Cog, Expand, MessageCircle, Pause, Play, Plus, Search, Shrink, User } from "lucide-react";
+import { CheckCheck, ChevronsRight, Clock, Cog, Expand, MessageCircle, MessageCircleMore, Pause, Play, Plus, Search, Shrink, User, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Campo, Checkbox, Input, Select } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { atribuirOs, moverOs, pausarOs, retomarOs } from "@/lib/os/acoes";
+import { formatarMoeda } from "@/lib/dinheiro";
 import {
   andamento,
   atrasada,
   ETAPA,
   ETAPAS_ESTEIRA,
   entregaPrevista,
+  faltaReceber,
   formatarEntrega,
   formatarMinutos,
   linkWhatsApp,
   montarMensagem,
   PRIORIDADE,
+  situacaoPagamento,
   tempoNaEtapa,
   type TempoOs,
+  type ValoresOs,
 } from "@/lib/os/rotulos";
+import { DialogoEntregar } from "./entregar-os";
 import { FormOs, type PessoaOs, type ServicoOs } from "./form-os";
+import { DialogoReceber } from "./receber-os";
 
-export interface OsCartao extends TempoOs {
+export interface OsCartao extends TempoOs, ValoresOs {
   id: string;
   numero: number;
   cliente_nome: string;
@@ -38,8 +44,18 @@ export interface OsCartao extends TempoOs {
   ordem: number;
   pausa_motivo: string | null;
   codigo_publico: string;
-  itens: { descricao: string; quantidade: number | string; unidade: string }[];
+  aviso_whatsapp: string | null;
+  itens: { descricao: string; quantidade: number | string; unidade: string; setor?: string | null }[];
 }
+
+export interface FilaSetor {
+  setor: string;
+  maquinas: number;
+  minutos: number;
+  ordens: number;
+}
+
+const chaveSetor = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
 
 type Etapa = (typeof ETAPAS_ESTEIRA)[number];
 const MOTIVOS_PAUSA = ["Falta de material", "Aguardando o cliente", "Máquina parada", "Intervalo"];
@@ -100,6 +116,9 @@ export function Esteira({
   siteUrl,
   podeGerenciar,
   executores,
+  podeReceber = false,
+  whatsappAtivo = false,
+  filaSetores = [],
 }: {
   empresaId: string;
   ordens: OsCartao[];
@@ -110,6 +129,11 @@ export function Esteira({
   siteUrl: string;
   podeGerenciar: boolean;
   executores: number;
+  /** Opera o caixa da Loja (recebe sinal e restante pela OS) */
+  podeReceber?: boolean;
+  whatsappAtivo?: boolean;
+  /** Trabalho na frente de cada setor ou máquina */
+  filaSetores?: FilaSetor[];
 }) {
   const router = useRouter();
   const [lista, setLista] = React.useState(ordens);
@@ -122,6 +146,8 @@ export function Esteira({
   const [agora, setAgora] = React.useState(() => Date.now());
   const [busca, setBusca] = React.useState("");
   const [pessoa, setPessoa] = React.useState("");
+  const [setor, setSetor] = React.useState("");
+  const [receber, setReceber] = React.useState<string | null>(null);
   const [soAtrasadas, setSoAtrasadas] = React.useState(false);
   const [arrastando, setArrastando] = React.useState<string | null>(null);
   const [alvo, setAlvo] = React.useState<{ etapa: Etapa; antesDe: string | null } | null>(null);
@@ -129,11 +155,10 @@ export function Esteira({
   const [pausar, setPausar] = React.useState<OsCartao | null>(null);
   const [motivo, setMotivo] = React.useState("");
   const [entregar, setEntregar] = React.useState<OsCartao | null>(null);
-  const [retirado, setRetirado] = React.useState("");
   const [quem, setQuem] = React.useState<{ o: OsCartao; ordem: number | null } | null>(null);
   const [telaCheia, setTelaCheia] = React.useState(false);
   const raiz = React.useRef<HTMLDivElement>(null);
-  const ocupado = Boolean(arrastando || nova || pausar || entregar || quem);
+  const ocupado = Boolean(arrastando || nova || pausar || entregar || quem || receber);
 
   // Relógio dos cartões e atualização automática (várias telas, ex.: TV da oficina)
   React.useEffect(() => {
@@ -152,10 +177,16 @@ export function Esteira({
   }, []);
 
   const nomes = React.useMemo(() => new Map(equipe.map((p) => [p.id, p])), [equipe]);
+  const setores = React.useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of servicos) if (s.setor?.trim()) m.set(chaveSetor(s.setor), s.setor.trim());
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [servicos]);
   const termo = busca.trim().toLowerCase();
   const visivel = (o: OsCartao) =>
     (!termo || o.cliente_nome.toLowerCase().includes(termo) || String(o.numero) === termo.replace("#", "")) &&
     (!pessoa || (pessoa === "sem" ? !o.responsavel_id : o.responsavel_id === pessoa)) &&
+    (!setor || o.itens.some((i) => chaveSetor(i.setor) === setor)) &&
     (!soAtrasadas || atrasada(o, agora));
 
   const ativos = lista.filter((o) => o.etapa === "fila" || o.etapa === "execucao");
@@ -186,7 +217,6 @@ export function Esteira({
   function pedirMover(o: OsCartao, etapa: Etapa, ordem: number | null) {
     if (etapa === o.etapa) return mover(o, etapa, ordem);
     if (etapa === "entregue") {
-      setRetirado("");
       setEntregar(o);
       return;
     }
@@ -251,6 +281,16 @@ export function Esteira({
             </option>
           ))}
         </Select>
+        {setores.length ? (
+          <Select value={setor} onChange={(e) => setSetor(e.target.value)} aria-label="Filtrar por setor ou máquina" className="w-auto">
+            <option value="">Todas as máquinas</option>
+            {setores.map(([k, nome]) => (
+              <option key={k} value={k}>
+                {nome}
+              </option>
+            ))}
+          </Select>
+        ) : null}
         <label className="flex items-center gap-2 text-sm">
           <Checkbox checked={soAtrasadas} onChange={(e) => setSoAtrasadas(e.target.checked)} /> Só atrasadas
         </label>
@@ -277,6 +317,28 @@ export function Esteira({
         </span>
         <span className="ml-auto hidden text-xs text-muted-foreground sm:inline">Arraste as caixas de uma estação para outra ou use os botões.</span>
       </div>
+      {filaSetores.some((f) => f.setor) ? (
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" data-testid="fila-setores" aria-label="Fila por setor ou máquina">
+          {filaSetores.map((f) => (
+            <button
+              key={f.setor || "geral"}
+              type="button"
+              onClick={() => setSetor((atual) => (atual === chaveSetor(f.setor) || !f.setor ? "" : chaveSetor(f.setor)))}
+              className={cn(
+                "shrink-0 rounded-full border px-3 py-1 text-xs transition-colors",
+                setor && setor === chaveSetor(f.setor) ? "border-primary bg-primary/10 text-primary" : "border-border bg-card hover:bg-muted",
+              )}
+              title={`${f.ordens} OS na frente`}
+            >
+              <span className="font-semibold">{f.setor || "Sem setor"}</span> · {formatarMinutos(f.minutos / Math.max(f.maquinas, 1))} de fila
+              <span className="text-muted-foreground">
+                {" "}
+                ({f.maquinas} {f.maquinas === 1 ? "máquina" : "máquinas"})
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <div className="-mx-4 snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:overflow-visible lg:px-0">
         <div className="w-max lg:w-full">
@@ -355,6 +417,7 @@ export function Esteira({
                         aoIniciar={() => pedirMover(o, "execucao", null)}
                         aoPronta={() => pedirMover(o, "pronta", null)}
                         aoEntregar={() => pedirMover(o, "entregue", null)}
+                        aoReceber={podeReceber ? () => setReceber(o.id) : undefined}
                         aoPausar={() => {
                           setMotivo("");
                           setPausar(o);
@@ -396,7 +459,17 @@ export function Esteira({
       {/* Nova OS */}
       <Dialog open={nova} onOpenChange={setNova}>
         <DialogContent titulo="Nova ordem de serviço" descricao="Escolha os serviços: o tempo e o valor somam sozinhos, e a previsão de entrega considera a fila." largura="xl">
-          <FormOs empresaId={empresaId} servicos={servicos} equipe={equipe} aoSalvar={() => setNova(false)} />
+          <FormOs
+            empresaId={empresaId}
+            servicos={servicos}
+            equipe={equipe}
+            whatsappAtivo={whatsappAtivo}
+            podeReceber={podeReceber}
+            aoSalvar={(id, opcoes) => {
+              setNova(false);
+              if (opcoes?.receberSinal) setReceber(id);
+            }}
+          />
         </DialogContent>
       </Dialog>
 
@@ -434,30 +507,21 @@ export function Esteira({
         </DialogContent>
       </Dialog>
 
-      {/* Entregar */}
-      <Dialog open={Boolean(entregar)} onOpenChange={(v) => !v && setEntregar(null)}>
-        <DialogContent titulo={`Entregar a OS nº ${entregar?.numero ?? ""}`} descricao={entregar ? `Cliente: ${entregar.cliente_nome}` : undefined} largura="sm">
-          <form
-            className="space-y-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!entregar) return;
-              const o = entregar;
-              setEntregar(null);
-              void mover(o, "entregue", null, retirado);
-            }}
-          >
-            <Campo rotulo="Quem retirou?" htmlFor="os-retirado" ajuda="Opcional: o nome de quem buscou o serviço.">
-              <Input id="os-retirado" value={retirado} onChange={(e) => setRetirado(e.target.value)} maxLength={120} />
-            </Campo>
-            <div className="flex justify-end">
-              <Button type="submit">
-                <CheckCheck /> Confirmar entrega
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Entregar (com o que falta receber, quem retirou e a assinatura) */}
+      {entregar ? (
+        <DialogoEntregar
+          empresaId={empresaId}
+          osId={entregar.id}
+          aoFechar={() => setEntregar(null)}
+          aoEntregar={() => {
+            const o = entregar;
+            setEntregar(null);
+            comDeslize(() => setLista((ls) => ls.map((x) => (x.id === o.id ? aplicar(x, "entregue", 0) : x))));
+            router.refresh();
+          }}
+        />
+      ) : null}
+      {receber ? <DialogoReceber empresaId={empresaId} osId={receber} aoFechar={() => setReceber(null)} /> : null}
 
       {/* Quem vai fazer */}
       <Dialog open={Boolean(quem)} onOpenChange={(v) => !v && setQuem(null)}>
@@ -525,6 +589,7 @@ function Cartao({
   aoEntregar,
   aoPausar,
   aoRetomar,
+  aoReceber,
   whatsapp,
 }: {
   o: OsCartao;
@@ -539,6 +604,7 @@ function Cartao({
   aoEntregar: () => void;
   aoPausar: () => void;
   aoRetomar: () => void;
+  aoReceber?: () => void;
   whatsapp: string | null;
 }) {
   const atraso = atrasada(o, agora);
@@ -546,6 +612,8 @@ function Cartao({
   const and = andamento(o, agora);
   const minutos = tempoNaEtapa(o, agora);
   const entrega = entregaPrevista(o);
+  const pagamento = situacaoPagamento(o);
+  const falta = faltaReceber(o);
   const resumo = o.itens.slice(0, 2).map((i) => `${String(i.quantidade).replace(".", ",")} ${i.unidade} · ${i.descricao}`);
   const relogio =
     o.etapa === "fila"
@@ -638,6 +706,34 @@ function Cartao({
               {o.prazo ? "Prazo" : "Previsão"}: {formatarEntrega(entrega)}
             </p>
           ) : null}
+          {pagamento !== "sem_valor" || o.aviso_whatsapp === "enviado" ? (
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px]" data-testid="cartao-pagamento">
+              {pagamento === "pago" ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
+                  <Wallet className="size-3" aria-hidden /> Pago
+                </span>
+              ) : pagamento === "a_receber" ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-sky-700">
+                  <Wallet className="size-3" aria-hidden /> A receber {formatarMoeda(Number(o.valor_a_receber))}
+                </span>
+              ) : pagamento === "parcial" ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-amber-700">
+                  <Wallet className="size-3" aria-hidden /> Falta {formatarMoeda(falta)}
+                </span>
+              ) : pagamento === "aberto" ? (
+                <span className="inline-flex items-center gap-1 text-[#5b6170]">
+                  <Wallet className="size-3" aria-hidden /> {formatarMoeda(falta)} a pagar
+                </span>
+              ) : (
+                <span />
+              )}
+              {o.aviso_whatsapp === "enviado" ? (
+                <span className="inline-flex items-center gap-1 text-emerald-700">
+                  <MessageCircleMore className="size-3" aria-hidden /> Cliente avisado
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </Link>
         {o.etapa !== "entregue" ? (
           <div className="flex flex-wrap gap-1.5 border-t border-zinc-200 px-2.5 py-2">
@@ -667,7 +763,7 @@ function Cartao({
                 <Button tamanho="sm" variante="fantasma" className={principal} onClick={aoEntregar}>
                   <CheckCheck /> Entregar
                 </Button>
-                {whatsapp ? (
+                {whatsapp && o.aviso_whatsapp !== "enviado" ? (
                   <Button tamanho="sm" variante="fantasma" className={secundario} asChild>
                     <a href={whatsapp} target="_blank" rel="noopener noreferrer">
                       <MessageCircle /> Avisar
@@ -675,6 +771,11 @@ function Cartao({
                   </Button>
                 ) : null}
               </>
+            ) : null}
+            {aoReceber && falta > 0 ? (
+              <Button tamanho="sm" variante="fantasma" className={secundario} onClick={aoReceber}>
+                <Wallet /> Receber
+              </Button>
             ) : null}
           </div>
         ) : null}

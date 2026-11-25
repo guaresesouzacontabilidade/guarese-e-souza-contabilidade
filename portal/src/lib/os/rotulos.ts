@@ -143,3 +143,72 @@ export function minutosDoItem(servico: { minutos_fixos: number | string; minutos
   if (!servico) return Math.max(minutosAvulso, 0);
   return Math.round((n(servico.minutos_fixos) + n(servico.minutos_por_unidade) * quantidade) * 100) / 100;
 }
+
+// -----------------------------------------------------------------------------
+// Recebimentos, aviso automático e assinatura
+// -----------------------------------------------------------------------------
+export const FORMAS_PAGAMENTO_OS = [
+  { valor: "dinheiro", rotulo: "Dinheiro" },
+  { valor: "pix", rotulo: "PIX" },
+  { valor: "cartao_debito", rotulo: "Débito" },
+  { valor: "cartao_credito", rotulo: "Crédito" },
+  { valor: "transferencia", rotulo: "Transferência" },
+  { valor: "a_receber", rotulo: "A receber" },
+  { valor: "outro", rotulo: "Outra" },
+] as const;
+
+export const ROTULO_FORMA_OS: Record<string, string> = Object.fromEntries(FORMAS_PAGAMENTO_OS.map((f) => [f.valor, f.rotulo]));
+
+export interface ValoresOs {
+  valor_total: number | string;
+  valor_recebido: number | string;
+  valor_a_receber: number | string;
+}
+
+/** Quanto falta receber (o "a receber" já combinado com o cliente não conta como falta). */
+export function faltaReceber(o: ValoresOs): number {
+  return Math.max(Math.round((n(o.valor_total) - n(o.valor_recebido) - n(o.valor_a_receber)) * 100) / 100, 0);
+}
+
+/** Situação do pagamento para o cartão da esteira. */
+export function situacaoPagamento(o: ValoresOs): "sem_valor" | "pago" | "a_receber" | "parcial" | "aberto" {
+  if (n(o.valor_total) <= 0) return "sem_valor";
+  const falta = faltaReceber(o);
+  if (falta <= 0) return n(o.valor_a_receber) > 0 ? "a_receber" : "pago";
+  return n(o.valor_recebido) + n(o.valor_a_receber) > 0 ? "parcial" : "aberto";
+}
+
+export const AVISO_WHATSAPP: Record<string, { rotulo: string; tom: "info" | "sucesso" | "alerta" | "perigo" | "neutro" }> = {
+  pendente: { rotulo: "Aviso pelo WhatsApp na fila", tom: "info" },
+  enviado: { rotulo: "Cliente avisado pelo WhatsApp", tom: "sucesso" },
+  falhou: { rotulo: "O aviso pelo WhatsApp falhou", tom: "perigo" },
+  nao_configurado: { rotulo: "WhatsApp da loja desconectado: avise pelo botão", tom: "alerta" },
+  dispensado: { rotulo: "Aviso pelo WhatsApp dispensado", tom: "neutro" },
+};
+
+/**
+ * Parâmetros do modelo aprovado na Meta para "OS pronta":
+ * {{1}} primeiro nome do cliente, {{2}} número da OS, {{3}} loja, {{4}} link de acompanhamento.
+ */
+export function parametrosAvisoOs(v: { cliente: string; numero: number | string; loja: string; link: string }): string[] {
+  const limpo = (t: string) => t.replace(/[\r\n\t]+/g, " ").replace(/ {4,}/g, "   ").trim().slice(0, 300);
+  return [limpo(v.cliente.trim().split(/\s+/)[0] || v.cliente), String(v.numero), limpo(v.loja), v.link];
+}
+
+export const MODELO_AVISO_SUGERIDO =
+  "Olá, {{1}}! Sua ordem de serviço nº {{2}} na {{3}} está pronta para retirada. Acompanhe pelo link: {{4}}";
+
+export const MOMENTOS_FOTO = [
+  { valor: "entrada", rotulo: "Material recebido" },
+  { valor: "execucao", rotulo: "Durante o serviço" },
+  { valor: "pronta", rotulo: "Serviço pronto" },
+  { valor: "retirada", rotulo: "Retirada" },
+  { valor: "outro", rotulo: "Outra" },
+] as const;
+
+/** Assinatura desenhada na tela: PNG em data URL (até ~300 KB). */
+export function assinaturaValida(dataUrl: string | null | undefined): boolean {
+  if (!dataUrl || !dataUrl.startsWith("data:image/png;base64,")) return false;
+  const b64 = dataUrl.slice("data:image/png;base64,".length);
+  return /^[A-Za-z0-9+/]+={0,2}$/.test(b64) && b64.length > 200 && b64.length <= 400_000;
+}

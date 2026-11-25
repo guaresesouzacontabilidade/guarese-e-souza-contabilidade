@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { CalendarClock, Loader2, Plus, Trash2 } from "lucide-react";
 import { Alerta } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
-import { Campo, Input, Select, Textarea } from "@/components/ui/form";
+import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { previsaoOs, salvarOs, type DadosOs } from "@/lib/os/acoes";
 import { formatarEntrega, formatarMinutos, minutosDoItem, PRIORIDADE } from "@/lib/os/rotulos";
 import { formatarMoeda } from "@/lib/dinheiro";
@@ -50,6 +50,7 @@ export interface OsInicial {
   prioridade: string;
   responsavel_id: string | null;
   prazo: string | null;
+  avisar_whatsapp?: boolean;
   itens: { servico_id: string | null; descricao: string; quantidade: number | string; unidade: string; minutos_estimados: number | string; valor_unitario: number | string }[];
 }
 
@@ -69,12 +70,18 @@ export function FormOs({
   equipe,
   inicial,
   aoSalvar,
+  whatsappAtivo = false,
+  podeReceber = false,
 }: {
   empresaId: string;
   servicos: ServicoOs[];
   equipe: PessoaOs[];
   inicial?: OsInicial | null;
-  aoSalvar?: (id: string) => void;
+  aoSalvar?: (id: string, opcoes?: { receberSinal: boolean }) => void;
+  /** A loja ligou o aviso automático pelo WhatsApp */
+  whatsappAtivo?: boolean;
+  /** Quem abre a OS opera o caixa da Loja (pode receber um sinal logo depois) */
+  podeReceber?: boolean;
 }) {
   const router = useRouter();
   const ativos = servicos.filter((s) => s.ativo || inicial?.itens.some((i) => i.servico_id === s.id));
@@ -103,6 +110,8 @@ export function FormOs({
   const [prazo, setPrazo] = React.useState(paraCampo(inicial?.prazo ?? null));
   const [descricao, setDescricao] = React.useState(inicial?.descricao ?? "");
   const [observacoes, setObservacoes] = React.useState(inicial?.observacoes ?? "");
+  const [avisar, setAvisar] = React.useState(inicial?.avisar_whatsapp ?? true);
+  const [receberSinal, setReceberSinal] = React.useState(false);
   const [previsao, setPrevisao] = React.useState<string | null>(null);
   const [calculando, setCalculando] = React.useState(false);
   const [erros, setErros] = React.useState<Record<string, string[] | undefined>>({});
@@ -120,16 +129,18 @@ export function FormOs({
   const totalMin = calc.reduce((s, c) => s + c.minutos, 0);
   const totalValor = calc.reduce((s, c) => s + c.valor, 0);
 
-  // Previsão ao vivo (só na abertura)
+  // Previsão ao vivo (só na abertura): a fila de cada setor ou máquina que os serviços usam
+  const chavePrevisao = JSON.stringify(linhas.map((l) => [l.servico_id, numero(l.quantidade), l.servico_id ? 0 : numero(l.minutos)]));
   React.useEffect(() => {
     if (inicial) return;
     const t = window.setTimeout(async () => {
       setCalculando(true);
-      setPrevisao(await previsaoOs(empresaId, totalMin, prioridade));
+      const itens = (JSON.parse(chavePrevisao) as [string, number, number][]).map(([servico_id, quantidade, minutos]) => ({ servico_id: servico_id || null, quantidade, minutos }));
+      setPrevisao(await previsaoOs(empresaId, itens, prioridade));
       setCalculando(false);
     }, 500);
     return () => window.clearTimeout(t);
-  }, [empresaId, totalMin, prioridade, inicial]);
+  }, [empresaId, chavePrevisao, prioridade, inicial]);
 
   const mudar = (chave: number, campo: Partial<Linha>) => setLinhas((ls) => ls.map((l) => (l.chave === chave ? { ...l, ...campo } : l)));
 
@@ -146,6 +157,7 @@ export function FormOs({
       prioridade,
       responsavel_id: responsavel || null,
       prazo,
+      avisar_whatsapp: avisar,
       itens: linhas.map((l) => ({
         servico_id: l.servico_id || null,
         descricao: l.descricao,
@@ -160,7 +172,7 @@ export function FormOs({
       if (r.ok && r.dados) {
         toast.success(r.mensagem ?? "OS salva.");
         router.refresh();
-        aoSalvar?.(r.dados.id);
+        aoSalvar?.(r.dados.id, { receberSinal: !inicial && podeReceber && receberSinal && totalValor > 0 });
       } else {
         setErros(r.erros ?? {});
         setErroGeral(r.mensagem ?? "Não foi possível salvar a OS.");
@@ -314,6 +326,28 @@ export function FormOs({
             <Textarea id="os-obs" rows={2} maxLength={2000} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
           </Campo>
         </div>
+        {whatsappAtivo || (!inicial && podeReceber) ? (
+          <div className="space-y-2 rounded-lg border border-border px-3 py-2 text-sm">
+            {whatsappAtivo ? (
+              <label className="flex items-start gap-2">
+                <Checkbox checked={avisar} onChange={(e) => setAvisar(e.target.checked)} className="mt-0.5" />
+                <span>
+                  Avisar o cliente pelo WhatsApp quando ficar pronta
+                  {!cliente.telefone.replace(/\D/g, "") ? <span className="block text-xs text-muted-foreground">Informe o telefone do cliente para o aviso sair.</span> : null}
+                </span>
+              </label>
+            ) : null}
+            {!inicial && podeReceber ? (
+              <label className="flex items-start gap-2">
+                <Checkbox checked={receberSinal} onChange={(e) => setReceberSinal(e.target.checked)} className="mt-0.5" />
+                <span>
+                  Receber um sinal (entrada) agora
+                  <span className="block text-xs text-muted-foreground">Depois de abrir a OS, abre o recebimento pelo seu caixa.</span>
+                </span>
+              </label>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       <div className="flex justify-end">

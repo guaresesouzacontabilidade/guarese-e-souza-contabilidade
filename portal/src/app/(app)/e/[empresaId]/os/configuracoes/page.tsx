@@ -4,6 +4,9 @@ import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Alerta } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EquipeOs, FormConfigOs, ServicosOs, type ConfigOs } from "@/components/os/configuracoes";
+import { FormExtrasOs, SetoresOs, type ConfigExtrasOs, type SetorOs } from "@/components/os/config-extras";
+import { envServidor } from "@/lib/env-servidor";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
 import type { PessoaOs, ServicoOs } from "@/components/os/form-os";
 
 export const metadata: Metadata = { title: "Serviços e equipe (OS)" };
@@ -12,10 +15,13 @@ export default async function ConfiguracoesOs({ params }: PageProps<"/e/[empresa
   const { empresaId } = await params;
   const ctx = await obterContextoEmpresa(empresaId);
   if (!ctx.pode("os.gerenciar")) return <Alerta tom="alerta">Só quem gerencia as ordens de serviço cadastra os serviços e a equipe.</Alerta>;
-  const [{ data: servicos }, { data: equipe }, { data: cfg }] = await Promise.all([
+  const [{ data: servicos }, { data: equipe }, { data: cfg }, { data: setores }, { data: segredo }] = await Promise.all([
     ctx.supabase.from("os_servicos").select("*").eq("empresa_id", empresaId).order("ativo", { ascending: false }).order("nome"),
     ctx.supabase.from("os_equipe").select("id, nome, cor, ativo").eq("empresa_id", empresaId).order("ativo", { ascending: false }).order("nome"),
     ctx.supabase.from("os_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("os_setores").select("id, nome, maquinas, ativo").eq("empresa_id", empresaId).order("ativo", { ascending: false }).order("nome"),
+    // Só a existência do token (o valor nunca sai do servidor)
+    criarClienteAdmin().from("os_whatsapp_segredo").select("empresa_id").eq("empresa_id", empresaId).maybeSingle(),
   ]);
 
   return (
@@ -37,6 +43,18 @@ export default async function ConfiguracoesOs({ params }: PageProps<"/e/[empresa
         </Card>
         <Card>
           <CardHeader>
+            <CardTitle>Setores e máquinas</CardTitle>
+            <CardDescription>
+              Quantas máquinas de cada setor trabalham ao mesmo tempo. A previsão de entrega espera a fila de cada máquina que a OS usa (uma OS só de fita de borda não espera a fila da
+              seccionadora).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SetoresOs empresaId={empresaId} setores={(setores ?? []) as SetorOs[]} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
             <CardTitle>Equipe</CardTitle>
             <CardDescription>Quem executa os serviços. A cor aparece no cartão da esteira.</CardDescription>
           </CardHeader>
@@ -50,6 +68,20 @@ export default async function ConfiguracoesOs({ params }: PageProps<"/e/[empresa
           </CardHeader>
           <CardContent>
             <FormConfigOs empresaId={empresaId} cfg={(cfg as ConfigOs | null) ?? null} nomePadrao={ctx.acesso.nome_fantasia ?? ctx.acesso.razao_social} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>WhatsApp automático e entrega</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FormExtrasOs
+              empresaId={empresaId}
+              cfg={(cfg as ConfigExtrasOs | null) ?? null}
+              temToken={Boolean(segredo)}
+              tokenEscritorio={Boolean(envServidor.whatsapp())}
+              loja={ctx.acesso.loja}
+            />
           </CardContent>
         </Card>
       </div>

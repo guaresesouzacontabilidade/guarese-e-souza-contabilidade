@@ -3,13 +3,15 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Ban, CheckCheck, Copy, MessageCircle, Pause, Pencil, Play, Printer, RotateCcw } from "lucide-react";
+import { Ban, CheckCheck, Copy, MessageCircle, Pause, Pencil, Play, Printer, RotateCcw, Smartphone, Tag, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Confirmacao, Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Campo, Input, Select, Textarea } from "@/components/ui/form";
 import { atribuirOs, cancelarOs, moverOs, pausarOs, retomarOs } from "@/lib/os/acoes";
 import { ETAPA } from "@/lib/os/rotulos";
+import { DialogoEntregar } from "./entregar-os";
 import { FormOs, type OsInicial, type PessoaOs, type ServicoOs } from "./form-os";
+import { DialogoReceber } from "./receber-os";
 
 /** Ações da página da OS: editar, mover, pausar, avisar, imprimir e cancelar. */
 export function AcoesOs({
@@ -23,6 +25,9 @@ export function AcoesOs({
   whatsapp,
   linkAcompanhar,
   podeGerenciar,
+  podeReceber = false,
+  falta = 0,
+  whatsappAtivo = false,
 }: {
   empresaId: string;
   os: OsInicial & { numero: number };
@@ -34,13 +39,18 @@ export function AcoesOs({
   whatsapp: string | null;
   linkAcompanhar: string;
   podeGerenciar: boolean;
+  /** Opera o caixa da Loja (recebe pela OS) */
+  podeReceber?: boolean;
+  /** Quanto falta receber */
+  falta?: number;
+  whatsappAtivo?: boolean;
 }) {
   const router = useRouter();
   const [editar, setEditar] = React.useState(false);
   const [pausar, setPausar] = React.useState(false);
   const [motivo, setMotivo] = React.useState("");
   const [entregar, setEntregar] = React.useState(false);
-  const [retirado, setRetirado] = React.useState("");
+  const [receber, setReceber] = React.useState(false);
   const [pendente, iniciar] = React.useTransition();
   const fechada = etapa === "entregue" || etapa === "cancelada";
 
@@ -53,7 +63,7 @@ export function AcoesOs({
       } else toast.error(r.mensagem ?? "Não foi possível concluir.");
     });
 
-  const mover = (para: string, rotulo: string, retiradoPor?: string) => rodar(() => moverOs(empresaId, os.id, para, null, retiradoPor), `OS movida para “${rotulo}”.`);
+  const mover = (para: string, rotulo: string) => rodar(() => moverOs(empresaId, os.id, para, null), `OS movida para “${rotulo}”.`);
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -93,6 +103,11 @@ export function AcoesOs({
           <RotateCcw /> Reabrir
         </Button>
       ) : null}
+      {podeReceber && falta > 0 && etapa !== "cancelada" ? (
+        <Button variante={etapa === "pronta" ? "contorno" : "secundario"} onClick={() => setReceber(true)} disabled={pendente}>
+          <Wallet /> Receber
+        </Button>
+      ) : null}
       {whatsapp ? (
         <Button variante="contorno" asChild>
           <a href={whatsapp} target="_blank" rel="noopener noreferrer">
@@ -105,6 +120,18 @@ export function AcoesOs({
           <Printer /> Imprimir
         </a>
       </Button>
+      <Button variante="contorno" asChild>
+        <a href={`/impressao/os/${os.id}?etiqueta=1`} target="_blank" rel="noopener noreferrer" title="Etiqueta para colar no material, com o QR Code da bancada">
+          <Tag /> Etiqueta
+        </a>
+      </Button>
+      {!fechada ? (
+        <Button variante="contorno" asChild>
+          <a href={`/e/${empresaId}/os/${os.id}/bancada`} title="Tela da bancada (celular): botões grandes para iniciar, pausar, fotografar e marcar pronta">
+            <Smartphone /> Bancada
+          </a>
+        </Button>
+      ) : null}
       <Button
         variante="contorno"
         onClick={async () => {
@@ -143,7 +170,7 @@ export function AcoesOs({
               </Button>
             </DialogTrigger>
             <DialogContent titulo={`Editar a OS nº ${os.numero}`} largura="xl">
-              <FormOs empresaId={empresaId} servicos={servicos} equipe={equipe} inicial={os} aoSalvar={() => setEditar(false)} />
+              <FormOs empresaId={empresaId} servicos={servicos} equipe={equipe} inicial={os} aoSalvar={() => setEditar(false)} whatsappAtivo={whatsappAtivo} />
             </DialogContent>
           </Dialog>
         </>
@@ -201,27 +228,18 @@ export function AcoesOs({
           </form>
         </DialogContent>
       </Dialog>
-      <Dialog open={entregar} onOpenChange={setEntregar}>
-        <DialogContent titulo={`Entregar a OS nº ${os.numero}`} largura="sm">
-          <form
-            className="space-y-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setEntregar(false);
-              mover("entregue", ETAPA.entregue.rotulo, retirado);
-            }}
-          >
-            <Campo rotulo="Quem retirou?" htmlFor="os-retirado-detalhe" ajuda="Opcional.">
-              <Input id="os-retirado-detalhe" value={retirado} onChange={(e) => setRetirado(e.target.value)} maxLength={120} />
-            </Campo>
-            <div className="flex justify-end">
-              <Button type="submit">
-                <CheckCheck /> Confirmar entrega
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {entregar ? (
+        <DialogoEntregar
+          empresaId={empresaId}
+          osId={os.id}
+          aoFechar={() => setEntregar(false)}
+          aoEntregar={() => {
+            setEntregar(false);
+            router.refresh();
+          }}
+        />
+      ) : null}
+      {receber ? <DialogoReceber empresaId={empresaId} osId={os.id} aoFechar={() => setReceber(false)} /> : null}
     </div>
   );
 }

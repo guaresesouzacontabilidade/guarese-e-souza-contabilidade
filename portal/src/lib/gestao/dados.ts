@@ -29,6 +29,10 @@ export interface ResumoCaixa {
   clinica_quantidade?: number;
   clinica_total?: number;
   clinica_por_forma?: Record<string, { valor: number; quantidade: number }>;
+  /** Recebimentos das ordens de serviço neste caixa (sinal e restante) */
+  os_quantidade?: number;
+  os_total?: number;
+  os_por_forma?: Record<string, { valor: number; quantidade: number }>;
 }
 
 /** Recebimento do hotel feito com este caixa aberto, com os comprovantes anexados. */

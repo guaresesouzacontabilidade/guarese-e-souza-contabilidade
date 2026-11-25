@@ -12,6 +12,7 @@ import { FORMAS_PAGAMENTO, formatarQuantidade, hora, un } from "@/lib/gestao/rot
 import { FORMAS_COM_COMPROVANTE, totalCartao, valorDaForma, type RelatorioCaixa } from "@/lib/gestao/dados";
 import { FORMAS_PAGAMENTO_HOTEL, type FormaPagamentoHotel } from "@/lib/hotel/rotulos";
 import { FORMAS_PAGAMENTO_CLINICA as ROTULO_FORMA_CLINICA } from "@/lib/veterinaria/rotulos";
+import { ROTULO_FORMA_OS } from "@/lib/os/rotulos";
 import { ComprovantesDoPagamento } from "@/components/hotel/comprovantes";
 import { FecharCaixa, MovimentoCaixa, type ContaOpcao } from "./formularios-caixa";
 
@@ -30,6 +31,7 @@ export function PainelCaixa({
   const { sessao: s, resumo: r, vendas, movimentos, produtos, hotel } = relatorio;
   const hotelDinheiro = Number(r.hotel_por_forma?.dinheiro?.valor ?? 0);
   const clinicaDinheiro = Number(r.clinica_por_forma?.dinheiro?.valor ?? 0);
+  const osDinheiro = Number(r.os_por_forma?.dinheiro?.valor ?? 0);
   const hotelValidos = hotel.filter((h) => !h.estornado);
   const semComprovante = hotelValidos.filter((h) => !h.recibo_numero && FORMAS_COM_COMPROVANTE.has(h.forma) && !h.comprovantes.length).length;
   const aberto = s.status === "aberto";
@@ -215,6 +217,23 @@ export function PainelCaixa({
         </div>
 
         <div className="space-y-4">
+          {Number(r.os_quantidade ?? 0) > 0 ? (
+            <Card data-testid="caixa-os">
+              <CardHeader>
+                <CardTitle>Recebimentos das ordens de serviço</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-1.5 text-sm">
+                  {Object.entries(r.os_por_forma ?? {}).map(([forma, v]) => (
+                    <Linha key={forma} rotulo={`${ROTULO_FORMA_OS[forma] ?? forma} (${v.quantidade})`} valor={formatarMoeda(v.valor)} />
+                  ))}
+                  <div className="border-t border-border pt-1.5">
+                    <Linha rotulo="Total das OS" valor={formatarMoeda(r.os_total ?? 0)} forte />
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
+          ) : null}
           {Number(r.clinica_quantidade ?? 0) > 0 ? (
             <Card>
               <CardHeader>
@@ -242,6 +261,7 @@ export function PainelCaixa({
                 <Linha rotulo="+ Vendas em dinheiro" valor={formatarMoeda(valorDaForma(r, "dinheiro"))} />
                 {hotelDinheiro ? <Linha rotulo="+ Hotel em dinheiro" valor={formatarMoeda(hotelDinheiro)} /> : null}
                 {clinicaDinheiro ? <Linha rotulo="+ Clínica em dinheiro" valor={formatarMoeda(clinicaDinheiro)} /> : null}
+                {osDinheiro ? <Linha rotulo="+ Ordens de serviço em dinheiro" valor={formatarMoeda(osDinheiro)} /> : null}
                 <Linha rotulo={`+ Suprimentos (${r.qtd_suprimentos})`} valor={formatarMoeda(r.suprimentos)} />
                 <Linha rotulo={`− Sangrias (${r.qtd_sangrias})`} valor={formatarMoeda(r.sangrias)} />
                 <div className="border-t border-border pt-1.5">

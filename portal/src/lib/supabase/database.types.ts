@@ -5039,13 +5039,13 @@ isOneToOne: false
                   ]
                 },"os_config": {
                   Row: {
-                    "atualizado_por": string | null,"created_at": string,"dias_semana": (number)[],"empresa_id": string,"executores_simultaneos": number,"hora_fim": string,"hora_inicio": string,"mensagem_pronta": string | null,"nome_exibicao": string | null,"proximo_numero": number,"rodape_impressao": string | null,"telefone": string | null,"updated_at": string
+                    "atualizado_por": string | null,"created_at": string,"dias_semana": (number)[],"empresa_id": string,"executores_simultaneos": number,"exigir_assinatura": boolean,"exigir_pagamento_entrega": boolean,"hora_fim": string,"hora_inicio": string,"mensagem_pronta": string | null,"nome_exibicao": string | null,"proximo_numero": number,"rodape_impressao": string | null,"telefone": string | null,"updated_at": string,"whatsapp_ativo": boolean,"whatsapp_idioma": string,"whatsapp_modelo": string | null,"whatsapp_phone_number_id": string | null
                   }
                   Insert: {
-                    "atualizado_por"?: string | null,"created_at"?: string,"dias_semana"?: (number)[],"empresa_id": string,"executores_simultaneos"?: number,"hora_fim"?: string,"hora_inicio"?: string,"mensagem_pronta"?: string | null,"nome_exibicao"?: string | null,"proximo_numero"?: number,"rodape_impressao"?: string | null,"telefone"?: string | null,"updated_at"?: string
+                    "atualizado_por"?: string | null,"created_at"?: string,"dias_semana"?: (number)[],"empresa_id": string,"executores_simultaneos"?: number,"exigir_assinatura"?: boolean,"exigir_pagamento_entrega"?: boolean,"hora_fim"?: string,"hora_inicio"?: string,"mensagem_pronta"?: string | null,"nome_exibicao"?: string | null,"proximo_numero"?: number,"rodape_impressao"?: string | null,"telefone"?: string | null,"updated_at"?: string,"whatsapp_ativo"?: boolean,"whatsapp_idioma"?: string,"whatsapp_modelo"?: string | null,"whatsapp_phone_number_id"?: string | null
                   }
                   Update: {
-                    "atualizado_por"?: string | null,"created_at"?: string,"dias_semana"?: (number)[],"empresa_id"?: string,"executores_simultaneos"?: number,"hora_fim"?: string,"hora_inicio"?: string,"mensagem_pronta"?: string | null,"nome_exibicao"?: string | null,"proximo_numero"?: number,"rodape_impressao"?: string | null,"telefone"?: string | null,"updated_at"?: string
+                    "atualizado_por"?: string | null,"created_at"?: string,"dias_semana"?: (number)[],"empresa_id"?: string,"executores_simultaneos"?: number,"exigir_assinatura"?: boolean,"exigir_pagamento_entrega"?: boolean,"hora_fim"?: string,"hora_inicio"?: string,"mensagem_pronta"?: string | null,"nome_exibicao"?: string | null,"proximo_numero"?: number,"rodape_impressao"?: string | null,"telefone"?: string | null,"updated_at"?: string,"whatsapp_ativo"?: boolean,"whatsapp_idioma"?: string,"whatsapp_modelo"?: string | null,"whatsapp_phone_number_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -5112,6 +5112,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"os_fotos": {
+                  Row: {
+                    "caminho": string,"confirmado_em": string | null,"created_at": string,"empresa_id": string,"enviado_por": string | null,"id": string,"legenda": string | null,"mime": string,"momento": string,"ordem_id": string,"tamanho": number
+                  }
+                  Insert: {
+                    "caminho": string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"legenda"?: string | null,"mime": string,"momento"?: string,"ordem_id": string,"tamanho": number
+                  }
+                  Update: {
+                    "caminho"?: string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"legenda"?: string | null,"mime"?: string,"momento"?: string,"ordem_id"?: string,"tamanho"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_fotos_empresa_id_ordem_id_fkey"
+      columns: ["empresa_id","ordem_id"]
+isOneToOne: false
+      referencedRelation: "os_ordens"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_fotos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"os_itens": {
                   Row: {
                     "descricao": string,"empresa_id": string,"id": string,"minutos_estimados": number,"ordem_id": string,"posicao": number,"quantidade": number,"servico_id": string | null,"unidade": string,"valor_unitario": number
@@ -5145,13 +5170,13 @@ isOneToOne: false
                   ]
                 },"os_ordens": {
                   Row: {
-                    "aberta_em": string,"cancelada_em": string | null,"cancelada_motivo": string | null,"cliente_documento": string | null,"cliente_nome": string,"cliente_telefone": string | null,"codigo_publico": string,"created_at": string,"criado_por": string | null,"descricao": string | null,"empresa_id": string,"entregue_em": string | null,"entregue_por": string | null,"etapa": string,"execucao_desde": string | null,"id": string,"iniciada_em": string | null,"minutos_estimados": number,"minutos_execucao": number,"minutos_pausa": number,"numero": number,"observacoes": string | null,"ordem": number,"pausa_motivo": string | null,"pausada": boolean,"pausada_em": string | null,"prazo": string | null,"previsao": string | null,"prioridade": string,"pronta_em": string | null,"responsavel_id": string | null,"retirado_por": string | null,"updated_at": string,"valor_total": number
+                    "aberta_em": string,"assinatura_caminho": string | null,"avisar_whatsapp": boolean,"aviso_whatsapp": string | null,"aviso_whatsapp_em": string | null,"aviso_whatsapp_erro": string | null,"cancelada_em": string | null,"cancelada_motivo": string | null,"cliente_documento": string | null,"cliente_nome": string,"cliente_telefone": string | null,"codigo_publico": string,"created_at": string,"criado_por": string | null,"descricao": string | null,"empresa_id": string,"entregue_em": string | null,"entregue_por": string | null,"etapa": string,"execucao_desde": string | null,"id": string,"iniciada_em": string | null,"minutos_estimados": number,"minutos_execucao": number,"minutos_pausa": number,"numero": number,"observacoes": string | null,"ordem": number,"pausa_motivo": string | null,"pausada": boolean,"pausada_em": string | null,"prazo": string | null,"previsao": string | null,"prioridade": string,"pronta_em": string | null,"responsavel_id": string | null,"retirado_documento": string | null,"retirado_por": string | null,"updated_at": string,"valor_a_receber": number,"valor_recebido": number,"valor_total": number
                   }
                   Insert: {
-                    "aberta_em"?: string,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"cliente_documento"?: string | null,"cliente_nome": string,"cliente_telefone"?: string | null,"codigo_publico": string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id": string,"entregue_em"?: string | null,"entregue_por"?: string | null,"etapa"?: string,"execucao_desde"?: string | null,"id"?: string,"iniciada_em"?: string | null,"minutos_estimados"?: number,"minutos_execucao"?: number,"minutos_pausa"?: number,"numero": number,"observacoes"?: string | null,"ordem"?: number,"pausa_motivo"?: string | null,"pausada"?: boolean,"pausada_em"?: string | null,"prazo"?: string | null,"previsao"?: string | null,"prioridade"?: string,"pronta_em"?: string | null,"responsavel_id"?: string | null,"retirado_por"?: string | null,"updated_at"?: string,"valor_total"?: number
+                    "aberta_em"?: string,"assinatura_caminho"?: string | null,"avisar_whatsapp"?: boolean,"aviso_whatsapp"?: string | null,"aviso_whatsapp_em"?: string | null,"aviso_whatsapp_erro"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"cliente_documento"?: string | null,"cliente_nome": string,"cliente_telefone"?: string | null,"codigo_publico": string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id": string,"entregue_em"?: string | null,"entregue_por"?: string | null,"etapa"?: string,"execucao_desde"?: string | null,"id"?: string,"iniciada_em"?: string | null,"minutos_estimados"?: number,"minutos_execucao"?: number,"minutos_pausa"?: number,"numero": number,"observacoes"?: string | null,"ordem"?: number,"pausa_motivo"?: string | null,"pausada"?: boolean,"pausada_em"?: string | null,"prazo"?: string | null,"previsao"?: string | null,"prioridade"?: string,"pronta_em"?: string | null,"responsavel_id"?: string | null,"retirado_documento"?: string | null,"retirado_por"?: string | null,"updated_at"?: string,"valor_a_receber"?: number,"valor_recebido"?: number,"valor_total"?: number
                   }
                   Update: {
-                    "aberta_em"?: string,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"cliente_documento"?: string | null,"cliente_nome"?: string,"cliente_telefone"?: string | null,"codigo_publico"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id"?: string,"entregue_em"?: string | null,"entregue_por"?: string | null,"etapa"?: string,"execucao_desde"?: string | null,"id"?: string,"iniciada_em"?: string | null,"minutos_estimados"?: number,"minutos_execucao"?: number,"minutos_pausa"?: number,"numero"?: number,"observacoes"?: string | null,"ordem"?: number,"pausa_motivo"?: string | null,"pausada"?: boolean,"pausada_em"?: string | null,"prazo"?: string | null,"previsao"?: string | null,"prioridade"?: string,"pronta_em"?: string | null,"responsavel_id"?: string | null,"retirado_por"?: string | null,"updated_at"?: string,"valor_total"?: number
+                    "aberta_em"?: string,"assinatura_caminho"?: string | null,"avisar_whatsapp"?: boolean,"aviso_whatsapp"?: string | null,"aviso_whatsapp_em"?: string | null,"aviso_whatsapp_erro"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"cliente_documento"?: string | null,"cliente_nome"?: string,"cliente_telefone"?: string | null,"codigo_publico"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id"?: string,"entregue_em"?: string | null,"entregue_por"?: string | null,"etapa"?: string,"execucao_desde"?: string | null,"id"?: string,"iniciada_em"?: string | null,"minutos_estimados"?: number,"minutos_execucao"?: number,"minutos_pausa"?: number,"numero"?: number,"observacoes"?: string | null,"ordem"?: number,"pausa_motivo"?: string | null,"pausada"?: boolean,"pausada_em"?: string | null,"prazo"?: string | null,"previsao"?: string | null,"prioridade"?: string,"pronta_em"?: string | null,"responsavel_id"?: string | null,"retirado_documento"?: string | null,"retirado_por"?: string | null,"updated_at"?: string,"valor_a_receber"?: number,"valor_recebido"?: number,"valor_total"?: number
                   }
                   Relationships: [
                     {
@@ -5180,6 +5205,49 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"os_pagamentos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"cancelado_por": string | null,"created_at": string,"empresa_id": string,"forma": string,"id": string,"lancamento_id": string | null,"observacao": string | null,"ordem_id": string,"registrado_por": string | null,"sessao_id": string | null,"sinal": boolean,"valor": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"cancelado_por"?: string | null,"created_at"?: string,"empresa_id": string,"forma": string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"ordem_id": string,"registrado_por"?: string | null,"sessao_id"?: string | null,"sinal"?: boolean,"valor": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"cancelado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"forma"?: string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"ordem_id"?: string,"registrado_por"?: string | null,"sessao_id"?: string | null,"sinal"?: boolean,"valor"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_pagamentos_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_pagamentos_empresa_id_ordem_id_fkey"
+      columns: ["empresa_id","ordem_id"]
+isOneToOne: false
+      referencedRelation: "os_ordens"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_pagamentos_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_pagamentos_lancamento_id_fkey"
+      columns: ["lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_pagamentos_registrado_por_fkey"
+      columns: ["registrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"os_servicos": {
                   Row: {
                     "ativo": boolean,"created_at": string,"empresa_id": string,"id": string,"minutos_fixos": number,"minutos_por_unidade": number,"nome": string,"setor": string | null,"unidade": string,"updated_at": string,"valor_unitario": number
@@ -5195,6 +5263,50 @@ isOneToOne: false
       foreignKeyName: "os_servicos_empresa_id_fkey"
       columns: ["empresa_id"]
 isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_setores": {
+                  Row: {
+                    "ativo": boolean,"created_at": string,"empresa_id": string,"id": string,"maquinas": number,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"maquinas"?: number,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"maquinas"?: number,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_setores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_whatsapp_segredo": {
+                  Row: {
+                    "atualizado_por": string | null,"empresa_id": string,"token_cifrado": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"empresa_id": string,"token_cifrado": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"empresa_id"?: string,"token_cifrado"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_whatsapp_segredo_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_whatsapp_segredo_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
       referencedRelation: "empresas"
       referencedColumns: ["id"]
     }
@@ -7732,23 +7844,55 @@ isOneToOne: false
 "os_atribuir":
 { Args: { "p_id": string,"p_responsavel_id": string }; Returns: undefined
                            },
+"os_aviso_resultado":
+{ Args: { "p_erro": string,"p_ordem_id": string,"p_situacao": string }; Returns: undefined
+                           },
 "os_cancelar":
 { Args: { "p_id": string,"p_motivo": string }; Returns: undefined
                            },
 "os_configurar":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
                            },
+"os_configurar_extras":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"os_entregar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: undefined
+                           },
 "os_equipe_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
                            },
+"os_fila_setores":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "maquinas": number,"minutos": number,"ordens": number,"setor": string
+            }[]
+                           },
+"os_foto_confirmar":
+{ Args: { "p_foto_id": string }; Returns: undefined
+                           },
+"os_foto_excluir":
+{ Args: { "p_foto_id": string }; Returns: string
+                           },
+"os_foto_iniciar":
+{ Args: { "p_dados": Json,"p_ordem_id": string }; Returns: Json
+                           },
 "os_mover":
 { Args: { "p_etapa": string,"p_id": string,"p_posicao"?: number,"p_retirado_por"?: string }; Returns: undefined
+                           },
+"os_pagamento_estornar":
+{ Args: { "p_motivo": string,"p_pagamento_id": string }; Returns: undefined
+                           },
+"os_pagamento_registrar":
+{ Args: { "p_dados": Json,"p_ordem_id": string }; Returns: string
                            },
 "os_pausar":
 { Args: { "p_id": string,"p_motivo": string }; Returns: undefined
                            },
 "os_previsao":
 { Args: { "p_empresa_id": string,"p_minutos": number,"p_prioridade": string }; Returns: string
+                           },
+"os_previsao_itens":
+{ Args: { "p_empresa_id": string,"p_itens": Json,"p_prioridade": string }; Returns: string
                            },
 "os_retomar":
 { Args: { "p_id": string }; Returns: undefined
@@ -7757,6 +7901,9 @@ isOneToOne: false
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
                            },
 "os_servico_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"os_setor_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
                            },
 "preparar_lote_xml":

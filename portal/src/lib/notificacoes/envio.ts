@@ -108,6 +108,12 @@ export async function executarEnvio(admin: ClienteAdmin, job: Job) {
   const site = envPublico.siteUrl();
   let resultado: Awaited<ReturnType<typeof enviarEmail>>;
 
+  // Aviso de OS pronta ao cliente da loja (número oficial da própria loja)
+  if (envio.tipo === "os_pronta") {
+    const { executarAvisoOs } = await import("@/lib/os/aviso");
+    return executarAvisoOs(admin, envio, site);
+  }
+
   if (envio.tipo === "cobranca") {
     // Cobrança de honorários do escritório (robô de cobrança)
     const { prepararEnvioCobranca } = await import("@/lib/honorarios/envio");

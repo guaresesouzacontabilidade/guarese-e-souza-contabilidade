@@ -34,7 +34,7 @@ import { semearTransportadoraCompleta } from "./demo-transportadora";
 import { semearHotel } from "./demo-hotel";
 import { semearVeterinaria } from "./demo-veterinaria";
 import { semearFisioterapia } from "./demo-fisioterapia";
-import { semearOs } from "./demo-os";
+import { semearOs, semearOsMelhorias } from "./demo-os";
 import { semearEstudos } from "./demo-estudos";
 import { semearEscalas } from "./demo-escalas";
 import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
@@ -339,6 +339,9 @@ async function main() {
   }
   if (await semearOs(admin, { url, publica }, { dominio: DOMINIO })) {
     console.log("  Madeireira: ordens de serviço ligadas (serviços com tempo, equipe, 3 semanas de histórico e a esteira de hoje)");
+  }
+  if (await semearOsMelhorias(admin, { url, publica }, { dominio: DOMINIO })) {
+    console.log("  Madeireira: máquinas por setor, histórico pago e sinais/pagamentos de hoje pelo caixa do balcão");
   }
   if (await semearEstudos(admin)) {
     console.log("  Robô tributário: configuração e receita fictícias da clínica (o robô encontra a oportunidade do Fator R ao rodar)");
