@@ -3,14 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, BookOpen, Bot, LifeBuoy, Loader2, MessageCircle, Send, X } from "lucide-react";
+import { ArrowRight, BookOpen, Bot, LifeBuoy, Loader2, MessageCircle, Send, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { infoSuporte, perguntarSuporte, type RespostaSuporte } from "@/lib/suporte/acoes";
+import { avaliarSuporte, infoSuporte, perguntarSuporte, type RespostaSuporte } from "@/lib/suporte/acoes";
 import { sugestoesDaTela } from "@/lib/suporte/busca";
 
-type Mensagem = { id: number; de: "pessoa"; texto: string } | { id: number; de: "suporte"; pergunta: string; r: RespostaSuporte } | { id: number; de: "erro"; texto: string };
+type Mensagem =
+  | { id: number; de: "pessoa"; texto: string }
+  | { id: number; de: "suporte"; pergunta: string; r: RespostaSuporte; avaliacao?: boolean }
+  | { id: number; de: "erro"; texto: string };
 
 const CHAVE = "suporte-conversa";
 
@@ -75,6 +78,13 @@ export function BotaoSuporte({ equipe, empresaId, podeSolicitar, comBarraInferio
         setMensagens((m) => [...m, { id: seq.current++, de: "erro", texto: "Sem conexão com o portal agora. Tente de novo em instantes." }]);
       }
     });
+  }
+
+  function avaliar(id: number, util: boolean) {
+    const m = mensagens.find((x) => x.id === id);
+    if (!m || m.de !== "suporte" || !m.r.registro) return;
+    setMensagens((ms) => ms.map((x) => (x.id === id && x.de === "suporte" ? { ...x, avaliacao: util } : x)));
+    void avaliarSuporte(m.r.registro, util, m.pergunta).catch(() => undefined);
   }
 
   const linkSolicitacao = (pergunta: string) =>
@@ -190,10 +200,28 @@ export function BotaoSuporte({ equipe, empresaId, podeSolicitar, comBarraInferio
                       ))}
                     </div>
                   ) : null}
-                  {m.r.falarComEscritorio && empresaId && podeSolicitar ? (
+                  {(m.r.falarComEscritorio || m.avaliacao === false) && empresaId && podeSolicitar ? (
                     <Link href={linkSolicitacao(m.pergunta)} onClick={() => setAberto(false)} className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline">
                       <MessageCircle className="size-3.5" /> Mandar esta dúvida ao escritório
                     </Link>
+                  ) : null}
+                  {m.r.guardada ? <p className="text-[11px] text-muted-foreground">Guardamos esta dúvida (sem números de documentos ou telefones) para o escritório completar o guia.</p> : null}
+                  {m.r.registro ? (
+                    m.avaliacao === undefined ? (
+                      <div className="flex items-center gap-1.5 border-t border-border/60 pt-1.5 text-xs text-muted-foreground" data-testid="avaliar-suporte">
+                        Isso ajudou?
+                        <Button tamanho="sm" variante="fantasma" className="h-7 px-2" onClick={() => avaliar(m.id, true)} aria-label="Sim, ajudou">
+                          <ThumbsUp /> Sim
+                        </Button>
+                        <Button tamanho="sm" variante="fantasma" className="h-7 px-2" onClick={() => avaliar(m.id, false)} aria-label="Não ajudou" title="A dúvida vai, sem números, para o escritório melhorar o guia">
+                          <ThumbsDown /> Não
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="border-t border-border/60 pt-1.5 text-xs text-muted-foreground" data-testid="avaliado-suporte">
+                        {m.avaliacao ? "Obrigado! Que bom que ajudou." : "Obrigado! A dúvida foi para o escritório melhorar o guia (sem números)."}
+                      </p>
+                    )
                   ) : null}
                 </div>
               ),

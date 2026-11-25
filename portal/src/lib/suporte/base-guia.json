@@ -63,6 +63,20 @@
   "texto": "No canto superior direito (iniciais do nome) → Minha conta:"
  },
  {
+  "id": "suporte-24h-botao-ajuda-isso-ajudou",
+  "publico": "todos",
+  "secao": "Suporte 24h (botão Ajuda)",
+  "titulo": "Suporte 24h (botão Ajuda) › Isso ajudou?",
+  "texto": "embaixo de cada resposta, toque em Sim ou Não. No Não, a dúvida vai para o escritório (sem números de documentos ou telefones) para melhorar o guia, e aparece o atalho Mandar esta dúvida ao escritório."
+ },
+ {
+  "id": "suporte-24h-botao-ajuda-para-o-escritorio-duvidas-do-suporte",
+  "publico": "todos",
+  "secao": "Suporte 24h (botão Ajuda)",
+  "titulo": "Suporte 24h (botão Ajuda) › Para o escritório — Dúvidas do suporte",
+  "texto": "(menu Atendimento → Dúvidas do suporte): nos últimos 7, 30 ou 90 dias, quantas perguntas foram feitas, quanto o guia respondeu, quanto ajudou, as telas com mais perguntas e as partes do guia mais usadas. A lista Dúvidas para completar o guia mostra as perguntas sem resposta ou marcadas \"não ajudou\" (com os números mascarados); depois de completar o guia, clique em Tratada. O texto some em 180 dias."
+ },
+ {
   "id": "suporte-24h-botao-ajuda",
   "publico": "todos",
   "secao": "Suporte 24h (botão Ajuda)",

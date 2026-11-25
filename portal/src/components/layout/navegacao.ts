@@ -1,5 +1,6 @@
 import {
   Activity,
+  LifeBuoy,
   LayoutDashboard,
   LayoutGrid,
   PackageCheck,
@@ -121,6 +122,7 @@ export function gruposEscritorio(admin: boolean, honorarios = false): GrupoMenu[
         { rotulo: "Pendências", href: "/escritorio/pendencias", icone: ListChecks },
         { rotulo: "Solicitações", href: "/escritorio/solicitacoes", icone: ClipboardList },
         { rotulo: "Mensagens", href: "/escritorio/mensagens", icone: MessagesSquare },
+        { rotulo: "Dúvidas do suporte", href: "/escritorio/suporte", icone: LifeBuoy },
       ],
     },
     {

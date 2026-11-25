@@ -41,6 +41,8 @@ async function executar(req: Request) {
   const honorarios = await admin.rpc("rotina_honorarios");
   // Clínica de fisioterapia: confirmações pelo WhatsApp dos atendimentos de hoje (saem no horário da clínica)
   const fisio = await admin.rpc("rotina_fisio_confirmacoes");
+  // Suporte 24h: apaga as perguntas registradas há mais de 180 dias
+  const suporte = await admin.rpc("rotina_suporte_limpeza");
   const resultado = {
     ...(data as Record<string, unknown>),
     obrigacoes: operacional.data,
@@ -51,6 +53,7 @@ async function executar(req: Request) {
     estudos_tributarios: estudos.error ? { erro: estudos.error.message } : estudos.data,
     honorarios: honorarios.error ? { erro: honorarios.error.message } : honorarios.data,
     fisio_confirmacoes: fisio.error ? { erro: fisio.error.message } : fisio.data,
+    suporte_limpeza: suporte.error ? { erro: suporte.error.message } : suporte.data,
   };
   await registrarRotina(admin, "diaria", { ok: true, resultado });
   const fila = await processarFila({ limite: 50, tempoMaximoMs: 30_000 });

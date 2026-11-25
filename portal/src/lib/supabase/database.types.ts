@@ -5816,6 +5816,37 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"suporte_perguntas": {
+                  Row: {
+                    "achou": boolean,"atalhos": number,"avaliada_em": string | null,"created_at": string,"empresa_id": string | null,"equipe": boolean,"id": number,"modo": string,"pergunta": string | null,"tela": string | null,"tratada_em": string | null,"tratada_por": string | null,"trechos": (string)[],"user_id": string | null,"util": boolean | null
+                  }
+                  Insert: {
+                    "achou": boolean,"atalhos"?: number,"avaliada_em"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"equipe"?: boolean,"id"?: never,"modo": string,"pergunta"?: string | null,"tela"?: string | null,"tratada_em"?: string | null,"tratada_por"?: string | null,"trechos"?: (string)[],"user_id"?: string | null,"util"?: boolean | null
+                  }
+                  Update: {
+                    "achou"?: boolean,"atalhos"?: number,"avaliada_em"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"equipe"?: boolean,"id"?: never,"modo"?: string,"pergunta"?: string | null,"tela"?: string | null,"tratada_em"?: string | null,"tratada_por"?: string | null,"trechos"?: (string)[],"user_id"?: string | null,"util"?: boolean | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "suporte_perguntas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "suporte_perguntas_tratada_por_fkey"
+      columns: ["tratada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "suporte_perguntas_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"tarefa_historico": {
                   Row: {
                     "acao": string,"comentario": string | null,"detalhes": Json | null,"empresa_id": string,"id": number,"ocorrido_em": string,"status_anterior": string | null,"status_novo": string | null,"tarefa_id": string,"usuario_id": string | null
@@ -8119,6 +8150,9 @@ isOneToOne: false
 "rotina_operacional":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"rotina_suporte_limpeza":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "rotina_vencimentos":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -8208,6 +8242,9 @@ isOneToOne: false
 "substituir_documento":
 { Args: { "p_documento_id": string,"p_mime": string,"p_motivo": string,"p_nome_arquivo": string,"p_sha256": string,"p_tamanho": number }; Returns: Json
                            },
+"suporte_avaliar":
+{ Args: { "p_id": number,"p_pergunta"?: string,"p_util": boolean }; Returns: undefined
+                           },
 "suporte_ia_concluir":
 { Args: { "p_erro": string,"p_ok": boolean,"p_tokens_entrada": number,"p_tokens_saida": number,"p_uso_id": number }; Returns: undefined
                            },
@@ -8215,6 +8252,12 @@ isOneToOne: false
 { Args: { "p_empresa_id": string }; Returns: {
               "modelo": string,"uso_id": number
             }[]
+                           },
+"suporte_registrar":
+{ Args: { "p_dados": Json }; Returns: number
+                           },
+"suporte_tratar":
+{ Args: { "p_id": number,"p_tratada": boolean }; Returns: undefined
                            },
 "validar_atualizacao_normativa":
 { Args: { "p_id": string,"p_observacao"?: string }; Returns: undefined

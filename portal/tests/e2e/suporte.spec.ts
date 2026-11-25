@@ -41,6 +41,8 @@ test.skip(!servico, "Precisa do Supabase local (.env.local).");
 
 test("cliente pergunta ao suporte, vai direto para a tela e manda a dúvida ao escritório", async ({ page }) => {
   test.setTimeout(180_000);
+  // Só letras (números entrariam na busca do guia)
+  const marca = `zq${Date.now().toString(36).replace(/\d/g, (d) => "abcdefghij"[Number(d)])}`;
   await servico!.from("escritorio_ia").update({ suporte_ativo: false }).eq("id", 1);
   const { data: emp } = await servico!.from("empresas").select("id").eq("razao_social", "MADEIREIRA REFLORESTAR EXEMPLO LTDA (DEMONSTRAÇÃO)").single();
   await entrar(page, `madeireira@${DOMINIO}`);
@@ -59,6 +61,9 @@ test("cliente pergunta ao suporte, vai direto para a tela e manda a dúvida ao e
   await expect(resposta).toContainText("Encontrei isto no guia do portal");
   await expect(resposta).toContainText("Pausar");
   await expect(resposta.getByRole("link", { name: /Ir para: Esteira de serviços/ })).toBeVisible();
+  // "Isso ajudou?"
+  await resposta.getByRole("button", { name: "Sim, ajudou" }).click();
+  await expect(resposta.getByTestId("avaliado-suporte")).toContainText("Que bom que ajudou");
 
   // Pergunta do dia a dia ("boleto") leva à agenda de pagamentos
   await painel.getByLabel("Sua dúvida").fill("onde pago os boletos?");
@@ -72,11 +77,28 @@ test("cliente pergunta ao suporte, vai direto para a tela e manda a dúvida ao e
   // Sem resposta no guia: mandar a dúvida ao escritório (solicitação já escrita)
   await page.getByTestId("botao-suporte").click();
   await expect(painel.getByTestId("resposta-suporte")).toHaveCount(2); // a conversa continua na aba
-  await painel.getByLabel("Sua dúvida").fill("xyzw qwerty asdfgh");
+  await painel.getByLabel("Sua dúvida").fill(`xyzw qwerty asdfgh ${marca} 88877766655`);
   await painel.getByRole("button", { name: "Enviar dúvida" }).click();
   const sem = painel.getByTestId("resposta-suporte").last();
   await expect(sem).toContainText("Não encontrei isso no guia");
+  await expect(sem).toContainText("Guardamos esta dúvida");
   await sem.getByRole("link", { name: "Mandar esta dúvida ao escritório" }).click();
   await page.waitForURL(/\/solicitacoes\/nova/);
-  await expect(page.locator("#sol-titulo")).toHaveValue("xyzw qwerty asdfgh");
+  await expect(page.locator("#sol-titulo")).toHaveValue(`xyzw qwerty asdfgh ${marca} 88877766655`);
+
+  // O escritório vê a dúvida sem resposta (com o CPF mascarado) e marca como tratada
+  const { data: reg } = await servico!.from("suporte_perguntas").select("pergunta, achou, util").like("pergunta", `%${marca}%`).single();
+  expect(reg!.pergunta).toBe(`xyzw qwerty asdfgh ${marca} •••`);
+  const { count: uteis } = await servico!.from("suporte_perguntas").select("id", { count: "exact", head: true }).eq("util", true);
+  expect(uteis).toBeGreaterThan(0);
+  await page.context().clearCookies();
+  await entrar(page, `contador@${DOMINIO}`);
+  await page.goto("/escritorio/suporte");
+  await expect(page.getByTestId("suporte-indicadores")).toContainText("Perguntas");
+  const duvida = page.getByTestId("duvida-suporte").filter({ hasText: marca });
+  await expect(duvida).toContainText(`${marca} •••`);
+  await expect(duvida).toContainText("Sem resposta no guia");
+  await duvida.getByRole("button", { name: "Tratada" }).click();
+  await expect(page.getByTestId("duvida-suporte").filter({ hasText: marca })).toHaveCount(0);
+  await servico!.from("suporte_perguntas").delete().like("pergunta", `%${marca}%`);
 });
