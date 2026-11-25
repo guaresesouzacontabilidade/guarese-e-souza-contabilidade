@@ -1,5 +1,5 @@
 /*
- * Portal Guarese's ON — avisos no aparelho (Web Push).
+ * Catarinense Tech — avisos no aparelho (Web Push).
  * Este service worker só exibe as notificações enviadas pelo servidor do
  * portal e abre a página correspondente ao toque. Não guarda páginas nem
  * dados em cache.
@@ -18,7 +18,7 @@ self.addEventListener("push", (evento) => {
   } catch {
     dados = { corpo: evento.data ? evento.data.text() : "" };
   }
-  const titulo = typeof dados.titulo === "string" && dados.titulo ? dados.titulo : "Portal Guarese's ON";
+  const titulo = typeof dados.titulo === "string" && dados.titulo ? dados.titulo : "Catarinense Tech";
   evento.waitUntil(
     self.registration.showNotification(titulo, {
       body: typeof dados.corpo === "string" ? dados.corpo : "",
