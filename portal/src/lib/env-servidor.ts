@@ -19,7 +19,7 @@ export const envServidor = {
       seguro: process.env.SMTP_SECURE === "true",
       usuario: process.env.SMTP_USER || undefined,
       senha: process.env.SMTP_PASS || undefined,
-      remetente: process.env.SMTP_FROM ?? "Portal Guarese's ON <nao-responda@localhost>",
+      remetente: process.env.SMTP_FROM ?? "Catarinense Tech <nao-responda@localhost>",
     };
   },
   /** Notificações no aparelho (Web Push). Sem as chaves VAPID, fica desconectado. */

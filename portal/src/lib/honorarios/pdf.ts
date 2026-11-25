@@ -1,7 +1,7 @@
 import "server-only";
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import { carregarPdfMake } from "@/lib/relatorios/pdf";
-import { logoVerticalSvg } from "@/lib/marca/logo";
+import { LOGO_ESCRITORIO_PNG } from "@/lib/marca/logo-png";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarData, formatarDocumento, formatarTelefone } from "@/lib/formatos";
 import { numeroCobranca } from "./comum";
@@ -37,11 +37,12 @@ export interface CobrancaPdf {
   };
 }
 
-const ESCURO = "#3b3330";
-const AREIA = "#b6a696";
+const ESCURO = "#07461f"; // verde da Catarinense
+const AREIA = "#8e1018"; // vermelho da Catarinense (faixas)
+const LINHA_TABELA = "#c9d4cc";
 const TEXTO = "#2b2522";
 const CINZA = "#6f6862";
-const FUNDO = "#f4efe9";
+const FUNDO = "#eef4ef";
 
 export function nomeArquivoCobranca(c: Pick<CobrancaPdf, "ano" | "numero" | "pagador">) {
   const nome = c.pagador.nome
@@ -61,7 +62,7 @@ export async function gerarPdfCobranca(c: CobrancaPdf): Promise<Buffer> {
 
   const cabecalho: Content = {
     columns: [
-      { svg: logoVerticalSvg(ESCURO), width: 70 },
+      { image: LOGO_ESCRITORIO_PNG, fit: [96, 57] },
       {
         width: "*",
         margin: [14, 4, 0, 0],
@@ -117,7 +118,7 @@ export async function gerarPdfCobranca(c: CobrancaPdf): Promise<Buffer> {
     layout: {
       hLineWidth: (i: number, node: { table: { body: unknown[] } }) => (i === 0 || i === 1 || i === node.table.body.length - 1 || i === node.table.body.length ? 0.8 : 0.3),
       vLineWidth: () => 0,
-      hLineColor: () => AREIA,
+      hLineColor: () => LINHA_TABELA,
       paddingTop: () => 6,
       paddingBottom: () => 6,
     },
@@ -184,7 +185,7 @@ export async function gerarPdfCobranca(c: CobrancaPdf): Promise<Buffer> {
             [{ text: "Referente a", bold: true, fillColor: FUNDO }, { text: c.descricao }],
           ],
         },
-        layout: { hLineColor: () => AREIA, vLineColor: () => AREIA, hLineWidth: () => 0.5, vLineWidth: () => 0.5, paddingTop: () => 6, paddingBottom: () => 6 },
+        layout: { hLineColor: () => LINHA_TABELA, vLineColor: () => LINHA_TABELA, hLineWidth: () => 0.5, vLineWidth: () => 0.5, paddingTop: () => 6, paddingBottom: () => 6 },
       },
       itens,
       blocoPix,

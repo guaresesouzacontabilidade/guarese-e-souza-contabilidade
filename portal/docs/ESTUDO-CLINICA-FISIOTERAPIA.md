@@ -1,6 +1,6 @@
 # Estudo: o que um sistema de clínica de fisioterapia precisa
 
-Resumo do levantamento feito para a gestão da clínica de fisioterapia no Portal Guarese's ON, com o que já está pronto (✅) e o que fica para uma próxima etapa (⏳).
+Resumo do levantamento feito para a gestão da clínica de fisioterapia no Catarinense Tech, com o que já está pronto (✅) e o que fica para uma próxima etapa (⏳).
 
 ## 1. Agenda
 - ✅ Agenda por fisioterapeuta (cor de cada um), por dia e semana, com sala ou box.

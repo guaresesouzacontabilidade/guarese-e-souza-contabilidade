@@ -14,7 +14,7 @@ export function FormularioAceite() {
       {estado.mensagem && !estado.ok ? <Alerta tom="perigo">{estado.mensagem}</Alerta> : null}
       <label className="flex items-start gap-3 text-sm">
         <Checkbox name="concordo" className="mt-0.5" required />
-        <span>Li e concordo com os Termos de uso e com a Política de privacidade do Portal Guarese&apos;s ON.</span>
+        <span>Li e concordo com os Termos de uso e com a Política de privacidade do Catarinense Tech.</span>
       </label>
       <Button type="submit" className="w-full" disabled={pendente}>
         {pendente ? "Registrando..." : "Concordar e continuar"}

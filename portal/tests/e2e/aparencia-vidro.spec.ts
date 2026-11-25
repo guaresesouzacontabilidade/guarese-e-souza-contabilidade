@@ -1,10 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 
 /**
- * Aparência "Vidro líquido": é a padrão (quem nunca escolheu entra nela, já
- * na tela de entrada), vale para o portal inteiro, põe a paisagem no fundo e
- * deixa os painéis translúcidos; outra aparência escolhida no menu fica
- * guardada no aparelho; a paisagem abre sem login.
+ * Aparência "Vidro líquido": opção do menu (o padrão é a Catarinense), vale
+ * para o portal inteiro, põe a paisagem no fundo e deixa os painéis
+ * translúcidos; a aparência escolhida no menu fica guardada no aparelho; a
+ * paisagem abre sem login.
  */
 const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
 const DOMINIO = "demo.guareses.test";
@@ -24,19 +24,19 @@ async function entrar(page: Page, email: string) {
   }
 }
 
-test("vidro líquido: padrão, fundo de paisagem, painéis translúcidos e escolha guardada", async ({ page, request }) => {
+test("vidro líquido: fundo de paisagem, painéis translúcidos e escolha guardada", async ({ page, request }) => {
   test.setTimeout(120_000);
   // A paisagem é um arquivo público (também aparece antes do login)
   const fundo = await request.get("/marca/fundo-vidro.svg");
   expect(fundo.status()).toBe(200);
   expect(fundo.headers()["content-type"]).toContain("image/svg+xml");
 
-  // Padrão: quem nunca escolheu uma aparência já entra no vidro líquido (inclusive na tela de entrada)
+  // Quem nunca escolheu entra na Catarinense (inclusive na tela de entrada)
   await page.goto("/login");
-  await expect(page.locator("html")).toHaveClass(/\bvidro\b/);
+  await expect(page.locator("html")).toHaveClass(/\bcatarinense\b/);
   await entrar(page, `contador@${DOMINIO}`);
   await page.goto("/escritorio");
-  await expect(page.locator("html")).toHaveClass(/\bvidro\b/);
+  await expect(page.locator("html")).toHaveClass(/\bcatarinense\b/);
   // Escolher outra e voltar pelo menu
   await page.getByRole("button", { name: /Aparência do portal/ }).click();
   await page.getByRole("menuitem", { name: "Bronze" }).click();

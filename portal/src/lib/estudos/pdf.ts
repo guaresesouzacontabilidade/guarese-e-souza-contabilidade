@@ -102,7 +102,7 @@ export async function gerarPdfEstudo(
     // Estudo feito pelo escritório para o cliente: leva a marca do escritório
     marca: "escritorio",
     notaFinal:
-      `Estimativa feita pelo escritório com os dados registrados no Portal Guarese's ON até ${formatarData(e.atualizado_em.slice(0, 10))}. ` +
+      `Estimativa feita pelo escritório com os dados registrados no Catarinense Tech até ${formatarData(e.atualizado_em.slice(0, 10))}. ` +
       "Os valores podem mudar com novos dados e com mudanças na legislação. Nenhuma alteração deve ser feita sem a orientação do escritório.",
   });
   const nome = nomeArquivo(["estudo-tributario", NOME_TIPO[e.tipo]?.split(" (")[0], empresa.nome_fantasia || empresa.razao_social, new Date().toISOString().slice(0, 10)], "pdf");

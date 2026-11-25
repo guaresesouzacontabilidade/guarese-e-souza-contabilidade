@@ -217,7 +217,7 @@ export async function removerLogo(): Promise<ResultadoAcao> {
 export async function testarEmail(): Promise<ResultadoAcao> {
   const s = await exigirAdmin();
   if (!emailConfigurado()) return falha("O envio de e-mail ainda não está configurado (servidor SMTP). Veja como ativar no guia de configuração.");
-  const r = await enviarEmail(s.perfil.email, "Teste de envio — Portal Guarese's ON", {
+  const r = await enviarEmail(s.perfil.email, "Teste de envio — Catarinense Tech", {
     titulo: "Envio de e-mail funcionando",
     paragrafos: ["Este é um e-mail de teste enviado pelas configurações do portal.", "Se você recebeu esta mensagem, convites e lembretes por e-mail serão entregues normalmente."],
   });

@@ -1,5 +1,5 @@
 /**
- * Publica o Portal Guarese's ON no Supabase (banco, login e arquivos — região
+ * Publica o Catarinense Tech no Supabase (banco, login e arquivos — região
  * São Paulo) e na Vercel (o site — região São Paulo).
  *
  * Dois ambientes, sempre em projetos SEPARADOS (dados fictícios nunca convivem
@@ -47,7 +47,7 @@ const PRODUCAO = process.argv.includes("--producao");
 const NOME = argumento("nome", PRODUCAO ? "portal-guareses-on-producao" : "portal-guareses-on");
 const NOME_SUPABASE = argumento("nome-supabase", PRODUCAO ? "portal-guareses-on-producao" : "portal-guareses-on-demo");
 const ADMIN_EMAIL = argumento("admin-email", "onguaresescontato@gmail.com").trim().toLowerCase();
-const ADMIN_NOME = argumento("admin-nome", "Administrador Guarese's ON");
+const ADMIN_NOME = argumento("admin-nome", "Administrador do escritório");
 // Domínio próprio (ex.: portal.guaresesoncontabilidade.com.br). O DNS precisa apontar para a Vercel.
 const DOMINIO = argumento("dominio", "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
 
@@ -202,8 +202,8 @@ function configuracaoEmail() {
     seguro: (process.env.SMTP_SECURE ?? String(porta === 465)) === "true",
     usuario,
     senha,
-    nome: "Guarese's ON",
-    remetente: process.env.SMTP_FROM?.trim() || `Guarese's ON <${usuario}>`,
+    nome: "Catarinense Tech",
+    remetente: process.env.SMTP_FROM?.trim() || `Catarinense Tech <${usuario}>`,
   };
 }
 
@@ -279,15 +279,15 @@ async function configurarLogin(ref: string, site: string) {
     await sb(`/projects/${ref}/config/auth`, {
       method: "PATCH",
       body: JSON.stringify({
-        mailer_subjects_invite: "Convite para o Portal Guarese's ON",
+        mailer_subjects_invite: "Convite para o Catarinense Tech",
         mailer_templates_invite_content: modelo("convite.html"),
-        mailer_subjects_recovery: "Redefinição de senha — Portal Guarese's ON",
+        mailer_subjects_recovery: "Redefinição de senha — Catarinense Tech",
         mailer_templates_recovery_content: modelo("recuperacao.html"),
-        mailer_subjects_magic_link: "Seu link de acesso — Portal Guarese's ON",
+        mailer_subjects_magic_link: "Seu link de acesso — Catarinense Tech",
         mailer_templates_magic_link_content: modelo("link_acesso.html"),
-        mailer_subjects_email_change: "Confirme seu novo e-mail — Portal Guarese's ON",
+        mailer_subjects_email_change: "Confirme seu novo e-mail — Catarinense Tech",
         mailer_templates_email_change_content: modelo("alteracao_email.html"),
-        mailer_subjects_confirmation: "Confirme seu e-mail — Portal Guarese's ON",
+        mailer_subjects_confirmation: "Confirme seu e-mail — Catarinense Tech",
         mailer_templates_confirmation_content: modelo("confirmacao.html"),
       }),
     });

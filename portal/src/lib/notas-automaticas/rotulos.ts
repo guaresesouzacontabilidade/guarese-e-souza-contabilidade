@@ -1,6 +1,6 @@
 /** Textos da autorização registrada com o certificado (guardados junto com o cadastro). */
 export const AUTORIZACAO_CLIENTE =
-  "Autorizo o escritório GUARESE'S ON CONTABILIDADE a usar o certificado digital A1 da minha empresa, pelo Portal Guarese's ON, " +
+  "Autorizo o escritório de contabilidade a usar o certificado digital A1 da minha empresa, pelo Catarinense Tech, " +
   "para consultar e baixar as notas fiscais eletrônicas (NF-e e NFS-e) de interesse da empresa nos serviços oficiais da SEFAZ e do " +
   "Ambiente Nacional da NFS-e e, se eu ativar, registrar a ciência da emissão das NF-e recebidas. Posso revogar a qualquer momento.";
 

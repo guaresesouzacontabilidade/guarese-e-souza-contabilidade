@@ -1,6 +1,6 @@
 import "server-only";
 import { join, resolve } from "node:path";
-import { logoHorizontalSvg } from "@/lib/marca/logo";
+import { LOGO_ESCRITORIO_PNG } from "@/lib/marca/logo-png";
 import type { Content, ContentTable, TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarCnpj, formatarData, formatarDataHora } from "@/lib/formatos";
@@ -92,7 +92,7 @@ export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buf
   const doEscritorio = cab.marca === "escritorio";
   const marca: Content = cab.logo
     ? { image: cab.logo.dados, fit: [140, 40] }
-    : { svg: logoHorizontalSvg(COR.marrom), width: 132 };
+    : { image: LOGO_ESCRITORIO_PNG, fit: [90, 53] };
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
     pageMargins: [40, 84, 40, 56],

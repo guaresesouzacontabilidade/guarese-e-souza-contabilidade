@@ -118,13 +118,13 @@ export async function pdfFicticio(titulo: string, empresa: string, linhas: [stri
       },
       layout: "lightHorizontalLines",
     },
-    { text: "Arquivo gerado automaticamente para demonstrar o Portal Guarese's ON. Não tem validade fiscal nem contábil.", fontSize: 8, color: "#777777", margin: [0, 18, 0, 0] },
+    { text: "Arquivo gerado automaticamente para demonstrar o Catarinense Tech. Não tem validade fiscal nem contábil.", fontSize: 8, color: "#777777", margin: [0, 18, 0, 0] },
   ];
   return pm
     .createPdf({
       pageSize: "A4",
       pageMargins: [48, 48, 48, 48],
-      info: { title: `${titulo} (FICTÍCIO)`, creator: "Portal Guarese's ON — demonstração" },
+      info: { title: `${titulo} (FICTÍCIO)`, creator: "Catarinense Tech — demonstração" },
       watermark: { text: "FICTÍCIO", opacity: 0.06, bold: true, fontSize: 90 },
       content: corpo,
       defaultStyle: { fontSize: 10 },

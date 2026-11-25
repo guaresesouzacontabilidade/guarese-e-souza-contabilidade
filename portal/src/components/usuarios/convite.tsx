@@ -14,7 +14,7 @@ import { convidarUsuario, type DadosConvite } from "@/lib/usuarios/acoes";
 import { SeletorPermissoes } from "./seletor-permissoes";
 
 export function LinkCompartilhavel({ link, nome }: { link: string; nome?: string }) {
-  const texto = `Olá${nome ? `, ${nome.split(" ")[0]}` : ""}! Este é o seu link de acesso ao Portal Guarese's ON (uso único, vale por 1 hora): ${link}`;
+  const texto = `Olá${nome ? `, ${nome.split(" ")[0]}` : ""}! Este é o seu link de acesso ao Catarinense Tech (uso único, vale por 1 hora): ${link}`;
   return (
     <div className="space-y-2 rounded-lg border border-border bg-muted p-3">
       <p className="text-xs text-muted-foreground">Link de acesso (uso único, vale por 1 hora). Compartilhe somente com o convidado:</p>

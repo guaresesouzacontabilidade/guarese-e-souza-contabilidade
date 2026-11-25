@@ -38,7 +38,7 @@ export { assinatura, textoLeiaute, textoXml, type ChavesAssinatura };
 
 export const NS_NFSE = "http://www.sped.fazenda.gov.br/nfse";
 export const VERSAO_LEIAUTE = "1.01";
-export const VERSAO_APLICATIVO = "PortalGuaresesON-1.0";
+export const VERSAO_APLICATIVO = "CatarinenseTech-1.0";
 
 export type AmbienteNfse = "producao" | "homologacao";
 

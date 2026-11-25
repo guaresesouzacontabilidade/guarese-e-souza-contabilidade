@@ -67,7 +67,7 @@ export function requisitar(
         timeout: opcoes.tempoLimiteMs ?? 30_000,
         headers: {
           "Accept-Encoding": "gzip",
-          "User-Agent": "PortalGuaresesON/1.0",
+          "User-Agent": "CatarinenseTech/1.0",
           ...(corpo ? { "Content-Length": String(corpo.length) } : {}),
           ...opcoes.cabecalhos,
         },

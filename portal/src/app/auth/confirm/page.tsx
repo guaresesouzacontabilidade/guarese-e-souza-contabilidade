@@ -8,7 +8,7 @@ import { confirmarLink } from "./acoes";
 export const metadata: Metadata = { title: "Confirmar acesso" };
 
 const TITULOS: Record<string, { titulo: string; texto: string; botao: string }> = {
-  invite: { titulo: "Ativar acesso", texto: "Você foi convidado para o Portal Guarese's ON. Continue para definir sua senha.", botao: "Continuar e definir senha" },
+  invite: { titulo: "Ativar acesso", texto: "Você foi convidado para o Catarinense Tech. Continue para definir sua senha.", botao: "Continuar e definir senha" },
   recovery: { titulo: "Redefinir senha", texto: "Continue para criar uma nova senha de acesso.", botao: "Continuar" },
   email_change: { titulo: "Confirmar novo e-mail", texto: "Confirme a alteração do e-mail do seu acesso.", botao: "Confirmar" },
 };
@@ -25,7 +25,7 @@ export default async function PaginaConfirmar({ searchParams }: PageProps<"/auth
     <div className="flex min-h-dvh items-center justify-center bg-muted/60 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="items-center text-center">
-          <Logo versao="vertical" className="mb-2 h-20" />
+          <Logo versao="vertical" tamanho="sm" className="mb-2" />
           <CardTitle className="text-lg">{info.titulo}</CardTitle>
           <CardDescription>{info.texto}</CardDescription>
         </CardHeader>

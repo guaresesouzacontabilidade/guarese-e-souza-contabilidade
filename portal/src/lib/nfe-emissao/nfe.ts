@@ -22,7 +22,7 @@ import { dec, fmt, fmtVariavel, somar, type Dec } from "./decimal";
 
 export const NS_NFE = "http://www.portalfiscal.inf.br/nfe";
 export const VERSAO_NFE = "4.00";
-export const VERSAO_APLICATIVO = "PortalGuaresesON-1.0";
+export const VERSAO_APLICATIVO = "CatarinenseTech-1.0";
 export const NOME_HOMOLOGACAO = "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL";
 
 /** Texto livre já limpo para o leiaute (Latin-1, sem espaços duplos) e escapado. */

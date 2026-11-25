@@ -22,7 +22,7 @@ import { atributos, decodificar, textoVisivel } from "@/lib/dare-to/html";
  * a página inteira), para conferir e para ajustar o robô se o site mudar.
  */
 export const BASE_SIDAGO = "https://sidago.agrodefesa.go.gov.br/";
-const AGENTE = "Mozilla/5.0 (compatible; PortalGuaresesON/1.0; modo-conferencia)";
+const AGENTE = "Mozilla/5.0 (compatible; CatarinenseTech/1.0; modo-conferencia)";
 /** Links que nunca são abertos (podem mudar algo no SIDAGO só por abrir). */
 const PERIGOSO = /excluir|exclus|cancel|apagar|remover|deletar|estorn|desativ|inativ|gravar|salvar|confirmar|finalizar|assinar|logout|sair|baixar|imprimir|\.pdf/i;
 const GTA = /gta|guia\s+de\s+tr[aâ]nsito/i;

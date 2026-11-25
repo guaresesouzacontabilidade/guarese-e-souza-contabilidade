@@ -1,4 +1,4 @@
-# Como publicar o Portal Guarese's ON
+# Como publicar o Catarinense Tech
 
 Este guia explica, em linguagem simples, como colocar o portal no ar. Quase tudo é feito por um script automático; a pessoa do escritório só precisa **criar as contas, entrar nelas e gerar duas chaves de acesso**.
 

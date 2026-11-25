@@ -1,6 +1,6 @@
 import "server-only";
 import type { Content, TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
-import { logoHorizontalSvg } from "@/lib/marca/logo";
+import { LOGO_ESCRITORIO_PNG } from "@/lib/marca/logo-png";
 import { COR, carregarPdfMake } from "@/lib/relatorios/pdf";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarCnpj, formatarCompetencia, formatarCpf, formatarDataHora, nomeMes } from "@/lib/formatos";
@@ -51,7 +51,7 @@ export async function gerarPdfDeclaracao(d: DeclaracaoPdf): Promise<Buffer> {
   const periodo = `${formatarCompetencia(d.periodo.inicio, true)} a ${formatarCompetencia(d.periodo.fim, true)}`;
   const qtd = d.meses.length;
 
-  const logoEsc: Content = d.logoEscritorio ? { image: d.logoEscritorio.dados, fit: [160, 48] } : { svg: logoHorizontalSvg(COR.marrom), width: 150 };
+  const logoEsc: Content = d.logoEscritorio ? { image: d.logoEscritorio.dados, fit: [160, 48] } : { image: LOGO_ESCRITORIO_PNG, fit: [110, 65] };
   const logoCli: Content = d.logoCliente ? { image: d.logoCliente.dados, fit: [130, 48], alignment: "right" } : { text: "" };
 
   // Até 12 meses, uma coluna; mais que isso, duas colunas lado a lado (tudo numa folha)
@@ -99,7 +99,7 @@ export async function gerarPdfDeclaracao(d: DeclaracaoPdf): Promise<Buffer> {
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
     pageMargins: [56, 40, 56, 64],
-    info: { title: `Declaração de faturamento — ${d.empresa.razao}`, author: d.escritorio.nome, creator: "Portal Guarese's ON" },
+    info: { title: `Declaração de faturamento — ${d.empresa.razao}`, author: d.escritorio.nome, creator: "Catarinense Tech" },
     watermark: d.situacao === "cancelada" ? { text: "CANCELADA", opacity: 0.12, bold: true, fontSize: 90, color: COR.vermelho } : undefined,
     footer: (pagina: number, total: number) => ({
       margin: [56, 18, 56, 0],

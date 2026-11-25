@@ -137,7 +137,7 @@ export function instalarSobreposicao() {
       montar();
       const t = document.createElement("div");
       t.className = "titulo";
-      t.innerHTML = `<div class="marca">Portal Guarese's ON</div><h1></h1><p></p>${numero ? '<div class="num"></div>' : ""}<div class="rodape">Demonstração com dados fictícios</div>`;
+      t.innerHTML = `<div class="marca">Catarinense Tech</div><h1></h1><p></p>${numero ? '<div class="num"></div>' : ""}<div class="rodape">Demonstração com dados fictícios</div>`;
       t.querySelector("h1").textContent = titulo;
       t.querySelector("p").textContent = subtitulo ?? "";
       if (numero) t.querySelector(".num").textContent = numero;

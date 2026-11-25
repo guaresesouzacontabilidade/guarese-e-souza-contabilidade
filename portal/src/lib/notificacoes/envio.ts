@@ -135,8 +135,8 @@ export async function executarEnvio(admin: ClienteAdmin, job: Job) {
     }
     // Lembrete de vacina ou retorno ao tutor da clínica: sai com o nome e os contatos da clínica, sem botão do portal
     const remetente = envio.tipo === "lembrete_veterinario" ? await remetenteClinica(admin, envio.empresa_id) : undefined;
-    resultado = await enviarEmail(envio.destinatario, envio.assunto ?? "Portal Guarese's ON", {
-      titulo: envio.assunto ?? "Portal Guarese's ON",
+    resultado = await enviarEmail(envio.destinatario, envio.assunto ?? "Catarinense Tech", {
+      titulo: envio.assunto ?? "Catarinense Tech",
       paragrafos: [envio.conteudo ?? ""],
       botao: remetente ? undefined : link ? { texto: "Abrir no portal", url: `${site}${link}` } : { texto: "Acessar o portal", url: `${site}/painel` },
       aviso: remetente ? "Você recebe este lembrete porque autorizou a clínica a avisar por e-mail. Para não receber mais, fale com a clínica." : undefined,

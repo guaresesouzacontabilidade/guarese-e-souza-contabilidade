@@ -6,7 +6,7 @@ describe("imagens das logos", () => {
   it("lê largura e altura de um PNG (a logo do escritório para as planilhas)", () => {
     const bytes = new Uint8Array(Buffer.from(LOGO_ESCRITORIO_PNG.split(",")[1], "base64"));
     expect(tipoImagem(bytes)).toBe("image/png");
-    expect(dimensoesImagem(bytes)).toEqual({ largura: 640, altura: 143 });
+    expect(dimensoesImagem(bytes)).toEqual({ largura: 1400, altura: 824 });
   });
 
   it("lê largura e altura de um JPEG pelo quadro SOF", () => {

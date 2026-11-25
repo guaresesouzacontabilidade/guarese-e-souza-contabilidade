@@ -1,6 +1,8 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { envServidor } from "@/lib/env-servidor";
+import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
+import { formatarCep, formatarCnpj } from "@/lib/formatos";
 import { modeloEmail, type DadosModeloEmail } from "./modelo";
 
 export type ResultadoEnvio =
@@ -21,6 +23,24 @@ function obterTransporte() {
     });
   }
   return { transporte, remetente: cfg.remetente };
+}
+
+/** Rodapé dos e-mails com os dados do escritório (Configurações do escritório). */
+async function dadosEscritorio(): Promise<DadosModeloEmail["escritorio"]> {
+  try {
+    const e = await obterEscritorioPublico();
+    const endereco = [
+      [e.logradouro, e.numero ? `nº ${e.numero}` : null].filter(Boolean).join(", "),
+      e.bairro,
+      [e.cidade, e.uf].filter(Boolean).join(" – "),
+      e.cep ? `CEP ${formatarCep(e.cep)}` : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+    return { nome: e.nome_fantasia, razao: e.razao_social, cnpj: e.cnpj ? formatarCnpj(e.cnpj) : "", endereco };
+  } catch {
+    return undefined;
+  }
 }
 
 export function emailConfigurado() {
@@ -48,7 +68,7 @@ export async function enviarEmail(
 ): Promise<ResultadoEnvio> {
   const t = obterTransporte();
   if (!t) return { enviado: false, motivo: "nao_configurado" };
-  const { html, texto } = modeloEmail(conteudo);
+  const { html, texto } = modeloEmail(conteudo.remetente || conteudo.escritorio ? conteudo : { ...conteudo, escritorio: await dadosEscritorio() });
   try {
     const info = await t.transporte.sendMail({
       from: t.remetente,

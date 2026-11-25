@@ -16,7 +16,7 @@ import { dec, type ValorEntrada } from "@/lib/dinheiro";
  * o robô para com a mensagem e nada é anexado: o caminho manual continua.
  */
 export const BASE_DAR_MT = "https://www.sefaz.mt.gov.br/arrecadacao/darlivre";
-const AGENTE = "Mozilla/5.0 (compatible; PortalGuaresesON/1.0)";
+const AGENTE = "Mozilla/5.0 (compatible; CatarinenseTech/1.0)";
 
 export interface PedidoDarMt {
   /** Inscrição estadual (só dígitos, 9). */

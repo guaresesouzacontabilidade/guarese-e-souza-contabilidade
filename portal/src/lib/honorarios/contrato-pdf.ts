@@ -1,7 +1,7 @@
 import "server-only";
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import { carregarPdfMake } from "@/lib/relatorios/pdf";
-import { logoVerticalSvg } from "@/lib/marca/logo";
+import { LOGO_ESCRITORIO_PNG } from "@/lib/marca/logo-png";
 import { formatarDocumento } from "@/lib/formatos";
 import { rotuloClausula, type Clausula } from "./contrato";
 
@@ -30,8 +30,9 @@ export interface ContratoPdf {
   registro?: RegistroAssinaturas;
 }
 
-const ESCURO = "#3b3330";
-const AREIA = "#b6a696";
+const ESCURO = "#07461f"; // verde da Catarinense
+const AREIA = "#8e1018"; // vermelho da Catarinense (faixas)
+const LINHA_TABELA = "#c9d4cc";
 const TEXTO = "#2b2522";
 const CINZA = "#6f6862";
 
@@ -65,11 +66,11 @@ export async function gerarPdfContrato(c: ContratoPdf): Promise<Buffer> {
           table: {
             widths: [110, "*"],
             body: [
-              [{ text: "CONTRATADA", bold: true, colSpan: 2, fillColor: "#f4efe9" }, {}],
+              [{ text: "CONTRATADA", bold: true, colSpan: 2, fillColor: "#eef4ef" }, {}],
               c.registro.escritorio
                 ? ["Assinatura", `Digital, com certificado ICP-Brasil de ${c.registro.escritorio.titular} (${formatarDocumento(c.registro.escritorio.documento)}), em ${c.registro.escritorio.data}. Confira em validar.iti.gov.br.`]
                 : ["Assinatura", "Emissão pelo escritório, sem certificado digital cadastrado no portal."],
-              [{ text: "CONTRATANTE", bold: true, colSpan: 2, fillColor: "#f4efe9" }, {}],
+              [{ text: "CONTRATANTE", bold: true, colSpan: 2, fillColor: "#eef4ef" }, {}],
               ["Nome", c.registro.cliente.nome],
               ["CPF", formatarDocumento(c.registro.cliente.cpf)],
               ["E-mail do portal", c.registro.cliente.email ?? "—"],
@@ -79,7 +80,7 @@ export async function gerarPdfContrato(c: ContratoPdf): Promise<Buffer> {
               ["Navegador", c.registro.cliente.navegador ?? "—"],
             ],
           },
-          layout: { hLineColor: () => AREIA, vLineColor: () => AREIA, hLineWidth: () => 0.5, vLineWidth: () => 0.5, paddingTop: () => 5, paddingBottom: () => 5 },
+          layout: { hLineColor: () => LINHA_TABELA, vLineColor: () => LINHA_TABELA, hLineWidth: () => 0.5, vLineWidth: () => 0.5, paddingTop: () => 5, paddingBottom: () => 5 },
           fontSize: 9.5,
         },
         {
@@ -107,7 +108,7 @@ export async function gerarPdfContrato(c: ContratoPdf): Promise<Buffer> {
     content: [
       {
         columns: [
-          { svg: logoVerticalSvg(ESCURO), width: 60 },
+          { image: LOGO_ESCRITORIO_PNG, fit: [84, 50] },
           {
             width: "*",
             margin: [12, 4, 0, 0],

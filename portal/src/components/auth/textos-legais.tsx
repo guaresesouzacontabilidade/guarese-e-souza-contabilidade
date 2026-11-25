@@ -1,11 +1,28 @@
-/** Textos da política de privacidade e dos termos de uso (LGPD). */
+import "server-only";
+import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
+import { formatarCep, formatarCnpj } from "@/lib/formatos";
+import { NOME_SISTEMA } from "@/lib/marca/sistema";
 
-export function PoliticaPrivacidade() {
+/**
+ * Textos da política de privacidade e dos termos de uso (LGPD). O controlador
+ * dos dados é o escritório: nome, CNPJ e contato vêm de Configurações do
+ * escritório, para acompanhar qualquer mudança cadastral.
+ */
+export async function PoliticaPrivacidade() {
+  const e = await obterEscritorioPublico();
+  const endereco = [
+    [e.logradouro, e.numero ? `nº ${e.numero}` : null].filter(Boolean).join(", "),
+    e.bairro,
+    [e.cidade, e.uf].filter(Boolean).join(" – "),
+    e.cep ? `CEP ${formatarCep(e.cep)}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
   return (
     <div className="space-y-4 text-sm leading-relaxed text-foreground/90 [&_h3]:mt-6 [&_h3]:text-base [&_h3]:font-semibold [&_li]:ml-5 [&_li]:list-disc">
       <p>
-        Esta política explica como a <strong>GUARESE&apos;S ON SOLUCOES EMPRESARIAIS LTDA</strong> (CNPJ 62.935.399/0001-50),
-        nome fantasia GUARESE&apos;S ON CONTABILIDADE, trata dados pessoais no Portal Guarese&apos;s ON, em conformidade com a Lei
+        Esta política explica como a <strong>{e.razao_social}</strong>
+        {e.cnpj ? ` (CNPJ ${formatarCnpj(e.cnpj)})` : ""}, nome fantasia {e.nome_fantasia}, trata dados pessoais no {NOME_SISTEMA}, em conformidade com a Lei
         Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).
       </p>
       <h3>1. Quais dados tratamos</h3>
@@ -54,11 +71,13 @@ export function PoliticaPrivacidade() {
       <p>
         Você pode solicitar confirmação de tratamento, acesso, correção, anonimização, portabilidade, eliminação de dados
         desnecessários e informações sobre compartilhamento, além de revogar consentimentos, pela página “Minha conta → Privacidade”
-        do portal ou pelo e-mail onguaresescontato@gmail.com. Alguns dados precisam ser mantidos para cumprimento de
+        do portal{e.email ? ` ou pelo e-mail ${e.email}` : ""}. Alguns dados precisam ser mantidos para cumprimento de
         obrigações legais.
       </p>
       <h3>7. Encarregado e contato</h3>
-      <p>Contato do encarregado pelo tratamento de dados: onguaresescontato@gmail.com — Praça do Centenário, nº 713, Centro, Porto Nacional – TO, CEP 77.500-000.</p>
+      <p>
+        Contato do encarregado pelo tratamento de dados: {[e.email, endereco].filter(Boolean).join(" — ") || "pela central de mensagens do portal"}.
+      </p>
     </div>
   );
 }
@@ -66,7 +85,7 @@ export function PoliticaPrivacidade() {
 export function TermosUso() {
   return (
     <div className="space-y-4 text-sm leading-relaxed text-foreground/90 [&_h3]:mt-6 [&_h3]:text-base [&_h3]:font-semibold [&_li]:ml-5 [&_li]:list-disc">
-      <p>Ao utilizar o Portal Guarese&apos;s ON, você concorda com as condições abaixo.</p>
+      <p>Ao utilizar o {NOME_SISTEMA}, você concorda com as condições abaixo.</p>
       <h3>1. Acesso</h3>
       <ul>
         <li>O acesso é pessoal e intransferível. Não compartilhe sua senha nem o código de verificação em duas etapas.</li>

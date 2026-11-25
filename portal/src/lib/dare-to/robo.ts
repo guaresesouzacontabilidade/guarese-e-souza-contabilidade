@@ -26,7 +26,7 @@ export const URL_DARE_AVULSO = `${BASE_DARE_TO}/hnetccwkda`;
 export const RECEITA_COMPLEMENTACAO_TO = "105";
 /** "Nome Documento": OUTROS A ESPECIFICAR (o padrão do formulário). */
 const DOCUMENTO_OUTROS = "5";
-const AGENTE = "Mozilla/5.0 (compatible; PortalGuaresesON/1.0)";
+const AGENTE = "Mozilla/5.0 (compatible; CatarinenseTech/1.0)";
 
 export type EtapaErro = "conexao" | "contribuinte" | "formulario" | "emissao" | "pdf";
 export class ErroDareTo extends Error {

@@ -7,7 +7,7 @@ import { PresencaPortal } from "./presenca";
 
 export function Provedores({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
-    <ThemeProvider attribute="class" themes={["light", "dark", "bronze", "grafite", "vidro"]} defaultTheme="vidro" enableSystem disableTransitionOnChange nonce={nonce}>
+    <ThemeProvider attribute="class" themes={["catarinense", "light", "dark", "bronze", "grafite", "vidro"]} defaultTheme="catarinense" enableSystem disableTransitionOnChange nonce={nonce}>
       {children}
       {/* Antes da presença: no celular, o clique no arquivo é tratado aqui e a aba não sai do portal */}
       <BaixarNoCelular />

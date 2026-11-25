@@ -3,6 +3,7 @@ import { ShieldCheck, FileUp, ListChecks, LineChart } from "lucide-react";
 import { Logo } from "@/components/marca/logo";
 import { IlustracaoEntrada } from "@/components/marca/ilustracao-entrada";
 import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
+import { BORDAO_SISTEMA } from "@/lib/marca/sistema";
 import { FormularioLogin } from "./formulario-login";
 
 export const metadata: Metadata = { title: "Entrar" };
@@ -26,9 +27,9 @@ export default async function PaginaLogin({ searchParams }: PageProps<"/login">)
     <div className="grid w-full max-w-6xl overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--sombra-card)] md:grid-cols-[1.15fr_1fr]">
       <section className="relative isolate flex flex-col justify-between gap-8 overflow-hidden p-6 [background:var(--fundo-heroi)] sm:p-10">
         <div className="space-y-6">
-          <Logo logoUrl={esc.logoUrl} tom="gradiente" versao={esc.logoUrl ? "vertical" : "horizontal"} className={esc.logoUrl ? "h-14" : "h-12"} />
+          <Logo logoUrl={esc.logoUrl} tamanho="lg" className={esc.logoUrl ? "h-14" : undefined} />
           <div className="space-y-3">
-            <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">{esc.nome_sistema}</h1>
+            <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">{BORDAO_SISTEMA}</h1>
             <p className="text-sm text-muted-foreground">{esc.descricao_sistema}</p>
           </div>
           <p className="text-base leading-relaxed text-foreground">{esc.mensagem_login}</p>

@@ -183,7 +183,7 @@ function aplicarCabecalhos(resposta: NextResponse, csp: string | null) {
 export const config = {
   matcher: [
     {
-      source: "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|marca/|manifest.webmanifest|sw.js|robots.txt).*)",
+      source: "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|marca/|manifest.webmanifest|sw.js|robots.txt).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

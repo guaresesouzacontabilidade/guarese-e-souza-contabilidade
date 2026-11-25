@@ -48,10 +48,10 @@ async function gerarLinkAcesso(email: string, nome?: string) {
 
 async function enviarConviteEmail(email: string, nome: string, link: string, empresaNome: string | null, convidante: string) {
   if (!emailConfigurado()) return { status: "email_nao_configurado" as const, erro: null };
-  const r = await enviarEmail(email, "Convite para o Portal Guarese's ON", {
+  const r = await enviarEmail(email, "Convite para o Catarinense Tech", {
     titulo: `Olá, ${nome.split(" ")[0]}!`,
     paragrafos: [
-      `${convidante} convidou você para acessar o Portal Guarese's ON${empresaNome ? ` da empresa ${empresaNome}` : ""}.`,
+      `${convidante} convidou você para acessar o Catarinense Tech${empresaNome ? ` da empresa ${empresaNome}` : ""}.`,
       "No portal você envia documentos, acompanha as pendências do mês e consulta os relatórios da sua empresa.",
       "Clique no botão abaixo para definir sua senha e ativar o acesso.",
     ],
@@ -150,9 +150,9 @@ export async function convidarUsuario(_anterior: ResultadoAcao, fd: FormData): P
     envioStatus = r.status;
     envioErro = r.erro;
   } else if (existente && emailConfigurado()) {
-    await enviarEmail(d.email, "Novo acesso liberado — Portal Guarese's ON", {
+    await enviarEmail(d.email, "Novo acesso liberado — Catarinense Tech", {
       titulo: "Novo acesso liberado",
-      paragrafos: [`Você recebeu acesso à empresa ${empresaNome} no Portal Guarese's ON. Use o seletor de empresas no topo do portal.`],
+      paragrafos: [`Você recebeu acesso à empresa ${empresaNome} no Catarinense Tech. Use o seletor de empresas no topo do portal.`],
       botao: { texto: "Abrir o portal", url: `${envPublico.siteUrl()}/painel` },
     });
   }

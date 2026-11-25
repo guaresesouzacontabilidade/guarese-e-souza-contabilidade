@@ -35,7 +35,7 @@ export function CadastrarMfa({ proximo }: { proximo: string }) {
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: "totp",
         friendlyName: `Autenticador ${new Date().toLocaleDateString("pt-BR")}`,
-        issuer: "Portal Guarese's ON",
+        issuer: "Catarinense Tech",
       });
       if (cancelado) return;
       if (error || !data) setErro("Não foi possível iniciar o cadastro da verificação em duas etapas.");

@@ -41,10 +41,10 @@ const PADRAO: EscritorioPublico = {
   whatsapp: null,
   site: null,
   instagram: null,
-  nome_sistema: "Portal Guarese's ON",
+  nome_sistema: "Catarinense Tech",
   descricao_sistema: "Documentos, contabilidade e gestão financeira em um só lugar.",
   mensagem_login:
-    "Bem-vindo ao seu Portal Guarese's ON. Envie seus documentos, acompanhe suas pendências e entenda a saúde financeira da sua empresa.",
+    "Bem-vindo ao Catarinense Tech. Envie seus documentos, acompanhe suas pendências e entenda a saúde financeira da sua empresa.",
   logo_path: null,
   logo_atualizado_em: null,
 };

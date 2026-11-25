@@ -53,7 +53,7 @@ Outras configurações:
 
 Sem SMTP, o portal **não finge** que enviou: convites mostram um link para copiar (e enviar por WhatsApp, por exemplo), avisos aparecem só no sino do portal e o histórico registra “não configurado”.
 
-**Jeito mais simples (Gmail do escritório, produção):** crie a senha de app do Gmail (abaixo) e guarde-a na variável `SMTP_PASS` nas configurações do ambiente do Claude Code (nunca no chat). Ao publicar a produção, o script cadastra sozinho o envio na Vercel (`smtp.gmail.com`, porta 465, remetente “Guarese's ON <onguaresescontato@gmail.com>”) e no login do Supabase (convites e “Esqueci minha senha”). Para outro Gmail, informe também `SMTP_USER`. A demonstração nunca envia e-mails reais.
+**Jeito mais simples (Gmail do escritório, produção):** crie a senha de app do Gmail (abaixo) e guarde-a na variável `SMTP_PASS` nas configurações do ambiente do Claude Code (nunca no chat). Ao publicar a produção, o script cadastra sozinho o envio na Vercel (`smtp.gmail.com`, porta 465, remetente “Catarinense Tech <e-mail do escritório>”) e no login do Supabase (convites e “Esqueci minha senha”). Para outro Gmail, informe também `SMTP_USER`. A demonstração nunca envia e-mails reais.
 
 Para ativar manualmente, cadastre na Vercel:
 
@@ -63,7 +63,7 @@ SMTP_PORT=587            (ou 465)
 SMTP_SECURE=false        (true quando a porta for 465)
 SMTP_USER=usuário
 SMTP_PASS=senha do SMTP  (marque como “Sensitive”)
-SMTP_FROM="Portal Guarese's ON <nao-responda@seudominio.com.br>"
+SMTP_FROM="Catarinense Tech <nao-responda@seudominio.com.br>"
 ```
 
 Opções comuns:
@@ -94,7 +94,7 @@ Além dos lembretes de pendências, o cliente pode receber no WhatsApp um aviso 
 
 1. Criar e aprovar na Meta um segundo modelo (categoria “Utilidade”), em português, com **3 variáveis**:
 
-   > Olá! Há novidades no Portal Guarese's ON para {{1}}: {{2}}. Acesse: {{3}}
+   > Olá! Há novidades no Catarinense Tech para {{1}}: {{2}}. Acesse: {{3}}
 
    `{{1}}` recebe o nome da empresa, `{{2}}` o resumo do aviso (ex.: “Novo documento disponível: Guia DAS 09/2026”) e `{{3}}` o link do portal.
 2. Em **Configurações → Lembretes → Avisos ao cliente por WhatsApp**, informar o **nome do modelo de aviso aprovado** e marcar a opção de avisar por WhatsApp.
@@ -161,9 +161,11 @@ No Supabase Pro, o script também encerra a sessão depois de 8 horas sem uso.
 
 ## 10. Logomarca
 
-A logomarca oficial (ON com a seta, “Guarese’s” e “CONTABILIDADE”) foi vetorizada a partir da arte enviada pelo escritório (`docs/marca/logo-original.jpg`) e está em três versões em `public/marca/`: vertical, horizontal (menu e tela de entrada) e símbolo (ícone do navegador, em `src/app/icon.svg`, e centro da ilustração da tela de entrada). Nos relatórios em PDF ela vem de `src/lib/marca/logo.ts`. No portal ela é pintada com o degradê violeta → ciano do visual.
+O sistema se chama **Catarinense Tech** (bordão: *Sua empresa conectada ao futuro.*), um produto separado do escritório. O nome e o bordão ficam em `src/lib/marca/sistema.ts`. A marca usa o símbolo da Catarinense (arte original em `docs/marca/catarinense-original.png`): `public/marca/simbolo.png` (fundo transparente), com o nome “CATARINENSE” na letra Cinzel e “TECH” embaixo, desenhados pelo componente `src/components/marca/logo.tsx` (as cores do nome seguem o tema). Os ícones de instalação e da aba ficam em `public/marca/icone-*.png`, `public/marca/selo-96.png` (notificações), `src/app/icon.png` e `src/app/apple-icon.png`.
 
-**Visual do portal (Luz, Aurora, Bronze, Grafite e Vidro líquido).** As cores ficam todas em `src/app/globals.css`: o tema claro (“Luz”) em `:root`, o escuro (“Aurora”) em `.dark`, o “Bronze” (escuro, dourado e cobre) em `.bronze`, o “Grafite” (claro, nas cores da logo oficial: grafite `#39312b` sobre branco) em `.grafite` e o “Vidro líquido” (o padrão) em `.vidro`, com o degradê dos botões principais (`--gradiente`), o fundo com brilhos (`--fundo-app`), as cores dos gráficos (`--grafico-1` a `--grafico-6`) e as de alerta. Os títulos usam a fonte Space Grotesk e o texto, Inter (as duas instaladas pelo `npm`, sem chamar serviços externos). Cada tela entra com uma animação curta (`cascata` no `app-shell`); quem desliga as animações no aparelho vê tudo parado. Cada pessoa escolhe Luz, Aurora, Bronze, Grafite, Vidro líquido ou “igual ao sistema” no ícone de aparência do topo (a escolha fica guardada no navegador). Os e-mails e os PDFs continuam com as cores antigas da marca.
+A logo do **escritório** (Catarinense Contabilidade e Gestão) é a padrão dos documentos do escritório (honorários, contrato, recibo, declaração, estudo tributário e relatório do auditor), em `src/lib/marca/logo-png.ts`. Se o escritório enviar outra logo em Configurações, ela passa a valer nesses documentos e no portal. Os dados do escritório (razão social, CNPJ, endereço e contatos) que aparecem nos rodapés, nos e-mails e na política de privacidade vêm de **Configurações do escritório**.
+
+**Visual do portal (Catarinense, Luz, Aurora, Bronze, Grafite e Vidro líquido).** As cores ficam todas em `src/app/globals.css`: o “Catarinense” (o padrão, verde `#07461f` e vermelho `#8e1018` do símbolo) em `.catarinense`, o tema claro (“Luz”) em `:root`, o escuro (“Aurora”) em `.dark`, o “Bronze” (escuro, dourado e cobre) em `.bronze`, o “Grafite” (claro, grafite `#39312b` sobre branco) em `.grafite` e o “Vidro líquido” em `.vidro`, com o degradê dos botões principais (`--gradiente`), o fundo com brilhos (`--fundo-app`), as cores dos gráficos (`--grafico-1` a `--grafico-6`) e as de alerta. Os títulos usam a fonte Space Grotesk e o texto, Inter (as duas instaladas pelo `npm`, sem chamar serviços externos). Cada tela entra com uma animação curta (`cascata` no `app-shell`); quem desliga as animações no aparelho vê tudo parado. Cada pessoa escolhe Luz, Aurora, Bronze, Grafite, Vidro líquido ou “igual ao sistema” no ícone de aparência do topo (a escolha fica guardada no navegador). Os e-mails e os PDFs continuam com as cores antigas da marca.
 
 ## 11. Obrigações e prazos (camada operacional)
 

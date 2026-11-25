@@ -18,6 +18,7 @@ import {
   Moon,
   MoreHorizontal,
   Pencil,
+  Flag,
   Search,
   Sun,
   UserCircle,
@@ -37,6 +38,7 @@ import { listarNotificacoes, marcarNotificacoesLidas, type NotificacaoResumo } f
 import { criarClienteNavegador } from "@/lib/supabase/client";
 import { ConviteAvisos } from "@/components/notificacoes/avisos";
 import { avisosAtivosParaUsuario, renovarAvisos } from "@/components/notificacoes/aparelho";
+import { BORDAO_SISTEMA, NOME_SISTEMA } from "@/lib/marca/sistema";
 
 interface Props {
   usuario: { id: string; nome: string; email: string; tipo: "admin" | "equipe" | "cliente"; honorarios?: boolean };
@@ -282,7 +284,7 @@ function MenuLateral({
               <Logo logoUrl={logoUrl} className="h-9" />
             </span>
           ) : (
-            <Logo tom="gradiente" className="h-10" />
+            <Logo tamanho="sm" />
           )}
         </Link>
       </div>
@@ -307,9 +309,9 @@ function MenuLateral({
         ) : null}
       </nav>
       <div className="border-t border-sidebar-borda px-4 py-3 text-[11px] leading-snug text-sidebar-muted">
-        Portal Guarese&apos;s ON
+        {NOME_SISTEMA}
         <br />
-        Documentos, contabilidade e gestão financeira em um só lugar.
+        {BORDAO_SISTEMA}
       </div>
     </>
   );
@@ -570,8 +572,10 @@ function AlternarTema() {
   return (
     <Menu>
       <MenuGatilho asChild>
-        <Button variante="fantasma" tamanho="icone" aria-label="Aparência do portal (clara, escura, bronze, grafite ou vidro líquido)">
-          {montado && theme === "dark" ? (
+        <Button variante="fantasma" tamanho="icone" aria-label="Aparência do portal (catarinense, clara, escura, bronze, grafite ou vidro líquido)">
+          {montado && theme === "catarinense" ? (
+            <Flag className="size-5" />
+          ) : montado && theme === "dark" ? (
             <Moon className="size-5" />
           ) : montado && theme === "light" ? (
             <Sun className="size-5" />
@@ -588,6 +592,9 @@ function AlternarTema() {
       </MenuGatilho>
       <MenuConteudo>
         <MenuRotulo>Aparência</MenuRotulo>
+        <MenuItem onSelect={() => setTheme("catarinense")}>
+          <Flag /> Catarinense (verde e vermelho)
+        </MenuItem>
         <MenuItem onSelect={() => setTheme("light")}>
           <Sun /> Clara (Luz)
         </MenuItem>
@@ -598,7 +605,7 @@ function AlternarTema() {
           <Gem /> Bronze
         </MenuItem>
         <MenuItem onSelect={() => setTheme("grafite")}>
-          <Pencil /> Grafite (cores da logo)
+          <Pencil /> Grafite
         </MenuItem>
         <MenuItem onSelect={() => setTheme("vidro")}>
           <GlassWater /> Vidro líquido

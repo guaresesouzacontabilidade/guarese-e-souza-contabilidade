@@ -175,7 +175,7 @@ export function FormLogo({ logoUrl }: { logoUrl: string | null }) {
               onError={() => setPrevia(null)}
             />
           ) : (
-            <Logo versao="vertical" className="h-16" />
+            <Logo versao="vertical" tamanho="sm" />
           )}
         </div>
         {logoUrl && !previa ? (
@@ -314,7 +314,7 @@ export function FormLembretes({
               rotulo="Nome do modelo de aviso aprovado"
               htmlFor="es-waviso"
               erro={estado.erros?.whatsapp_template_aviso}
-              ajuda="Modelo da categoria Utilidade com 3 variáveis. Sugestão de texto: “Olá! Há novidades no Portal Guarese's ON para {{1}}: {{2}}. Acesse: {{3}}”."
+              ajuda="Modelo da categoria Utilidade com 3 variáveis. Sugestão de texto: “Olá! Há novidades no Catarinense Tech para {{1}}: {{2}}. Acesse: {{3}}”."
             >
               <Input id="es-waviso" name="whatsapp_template_aviso" defaultValue={esc.whatsapp_template_aviso ?? ""} className="max-w-sm" />
             </Campo>

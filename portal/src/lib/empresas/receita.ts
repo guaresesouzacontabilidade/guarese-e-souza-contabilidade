@@ -195,7 +195,7 @@ export async function consultarCnpjReceita(cnpjInformado: string, opcoes: { fetc
   for (const fonte of FONTES_CNPJ) {
     try {
       const resp = await buscar(fonte.url(cnpj), {
-        headers: { Accept: "application/json", "User-Agent": "PortalGuaresesON/1.0" },
+        headers: { Accept: "application/json", "User-Agent": "CatarinenseTech/1.0" },
         signal: AbortSignal.timeout(opcoes.tempoLimiteMs ?? 12_000),
         cache: "no-store",
       });

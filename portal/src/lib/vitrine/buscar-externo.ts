@@ -50,7 +50,7 @@ export async function buscarExterno(endereco: string, opcoes: { maxBytes: number
     const controle = new AbortController();
     const t = setTimeout(() => controle.abort(), opcoes.tempoMs ?? 15_000);
     try {
-      const r = await fetch(url, { redirect: "manual", signal: controle.signal, headers: { "user-agent": "PortalGuaresesON/1.0 (importacao de catalogo)", accept: "*/*" } });
+      const r = await fetch(url, { redirect: "manual", signal: controle.signal, headers: { "user-agent": "CatarinenseTech/1.0 (importacao de catalogo)", accept: "*/*" } });
       if (r.status >= 300 && r.status < 400) {
         const destino = r.headers.get("location");
         if (!destino) throw new ErroBusca("Redirecionamento sem destino.");

@@ -1,7 +1,7 @@
 import "server-only";
 import type { Column, Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import { carregarPdfMake } from "@/lib/relatorios/pdf";
-import { logoVerticalSvg, simboloSvg } from "@/lib/marca/logo";
+import { LOGO_ESCRITORIO_PNG, SIMBOLO_MARCA_DAGUA_PNG } from "@/lib/marca/logo-png";
 import { valorPorExtenso } from "@/lib/declaracoes/extenso";
 import { dataPorExtenso } from "@/lib/declaracoes/pdf";
 import { formatarMoeda } from "@/lib/dinheiro";
@@ -11,9 +11,9 @@ import { FORMAS_PAGAMENTO, numeroRecibo } from "./comum";
 export { FORMAS_PAGAMENTO, numeroRecibo };
 
 /**
- * PDF do recibo de honorários com o timbre do escritório, no modelo usado
- * pelo escritório: faixas escura e bege no alto e no pé da página, logo à
- * esquerda e contador com o CRC à direita, a marca "ON" clarinha ao fundo,
+ * PDF do recibo de honorários com o timbre do escritório: faixas verde e
+ * vermelha (as cores da Catarinense) no alto e no pé da página, logo à
+ * esquerda e contador com o CRC à direita, o símbolo clarinho ao fundo,
  * dados do escritório, número e valor, quadro recebedor/pagador/referência,
  * texto com o valor por extenso, local e data, assinatura e rodapé.
  */
@@ -55,12 +55,12 @@ export interface ReciboPdf {
   assinatura?: { titular: string; documento: string; data: Date } | null;
 }
 
-const ESCURO = "#3b3330";
-const AREIA = "#b6a696";
+const ESCURO = "#07461f"; // verde da Catarinense
+const AREIA = "#8e1018"; // vermelho da Catarinense (faixas)
 const TEXTO = "#2b2522";
 const CINZA = "#6f6862";
-const FUNDO_ROTULO = "#efe9e3";
-const LINHA = "#cfc8c1";
+const FUNDO_ROTULO = "#eef4ef";
+const LINHA = "#c9d4cc";
 
 /** "2026-11-01" → "novembro/2026" ou "novembro de 2026". */
 function competenciaTexto(comp: string, longo: boolean) {
@@ -119,7 +119,7 @@ export async function gerarPdfRecibo(r: ReciboPdf): Promise<Buffer> {
     ],
     margin: [0, 14, 0, 0],
   };
-  const logo: Content = r.logo ? { image: r.logo.dados, fit: [120, 62] } : { svg: logoVerticalSvg(ESCURO), width: 96 };
+  const logo: Content = r.logo ? { image: r.logo.dados, fit: [120, 62] } : { image: LOGO_ESCRITORIO_PNG, fit: [120, 70] };
 
   const celulaRotulo = (t: string) => ({ text: t, bold: true, fillColor: FUNDO_ROTULO, margin: [6, 7, 6, 7] as [number, number, number, number] });
   const celulaValor = (titulo: string, sub: string | null) => ({
@@ -175,7 +175,7 @@ export async function gerarPdfRecibo(r: ReciboPdf): Promise<Buffer> {
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
     pageMargins: [margem, 36, margem, 70],
-    info: { title: `Recibo nº ${numeroRecibo(r)} — ${r.pagador.nome}`, author: e.nome_fantasia ?? e.razao_social, creator: "Portal Guarese's ON" },
+    info: { title: `Recibo nº ${numeroRecibo(r)} — ${r.pagador.nome}`, author: e.nome_fantasia ?? e.razao_social, creator: "Catarinense Tech" },
     watermark: cancelado ? { text: "CANCELADO", opacity: 0.16, bold: true, fontSize: 96, color: "#b91c1c" } : undefined,
     background: () => [
       // Faixas do alto: escura e bege, separadas na diagonal
@@ -184,7 +184,7 @@ export async function gerarPdfRecibo(r: ReciboPdf): Promise<Buffer> {
           { type: "polyline", closePath: true, points: [{ x: 461, y: 0 }, { x: largura, y: 0 }, { x: largura, y: 14 }, { x: 449, y: 14 }], color: AREIA },
         ], absolutePosition: { x: 0, y: 0 } },
       // Marca "ON" clarinha ao fundo
-      { svg: simboloSvg("#f4f1ee"), width: 380, absolutePosition: { x: 175, y: 320 } },
+      { image: SIMBOLO_MARCA_DAGUA_PNG, width: 340, absolutePosition: { x: 195, y: 300 } },
       // Faixas do pé
       { canvas: [
           { type: "polyline", closePath: true, points: [{ x: 0, y: altura - 14 }, { x: 150, y: altura - 14 }, { x: 138, y: altura }, { x: 0, y: altura }], color: AREIA },

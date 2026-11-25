@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 
 /**
- * Ilustração da tela de entrada: o símbolo do escritório no centro de órbitas,
+ * Ilustração da tela de entrada: o símbolo do sistema no centro de órbitas,
  * com cartões flutuando sobre o que o portal faz. As órbitas cabem inteiras na
  * área do desenho e ficam paradas (girar a elipse larga a fazia sair da área e
  * ser cortada): as bolinhas é que percorrem a órbita maior e o anel tracejado,
@@ -52,8 +52,8 @@ export function IlustracaoEntrada({ className }: { className?: string }) {
           </animateMotion>
         </circle>
       </svg>
-      <div className="absolute left-1/2 top-1/2 flex size-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-3xl [background-image:var(--gradiente-selo)] shadow-[var(--brilho)] lg:size-24 lg:rounded-[28px]">
-        <Logo versao="simbolo" tom="branco" className="h-8 lg:h-9" />
+      <div className="absolute left-1/2 top-1/2 flex size-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-3xl bg-white shadow-[var(--brilho)] ring-1 ring-black/5 lg:size-24 lg:rounded-[28px]">
+        <Logo versao="simbolo" className="h-12 lg:h-14" />
       </div>
       {CARTOES.map((c) => {
         const Icone = c.icone;

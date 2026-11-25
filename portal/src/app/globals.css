@@ -1,17 +1,19 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/space-grotesk";
+/* Letra do nome "CATARINENSE" na logomarca */
+@import "@fontsource/cinzel/700.css";
 
 /* Temas escuros controlados pela classe .dark, .bronze ou .vidro (next-themes) */
 @custom-variant dark (&:where(.dark, .dark *, .bronze, .bronze *, .vidro, .vidro *));
 
 /* =============================================================================
-   Identidade visual — Portal Guarese's ON
-   Cinco temas: "Luz" (claro) e "Aurora" (escuro), com violeta e ciano como
+   Identidade visual — Catarinense Tech
+   Seis temas: "Catarinense" (claro, o padrão), no verde e no vermelho do
+   símbolo; "Luz" (claro) e "Aurora" (escuro), com violeta e ciano como
    cores de destaque; "Bronze" (escuro), com dourado e cobre; "Grafite"
-   (claro), nas cores da logo oficial (grafite #39312b sobre branco); e
-   "Vidro líquido" (escuro, o padrão), com painéis translúcidos sobre uma
-   paisagem ao entardecer. Degradê nos botões principais, no menu ativo e nos
+   (claro), grafite sobre branco; e "Vidro líquido" (escuro), com painéis
+   translúcidos sobre uma paisagem ao entardecer. Degradê nos botões principais, no menu ativo e nos
    gráficos, títulos em Space Grotesk e verde/âmbar/vermelho para
    indicadores. Contraste de texto de pelo menos 4,5:1 em todos os temas.
    ============================================================================= */
@@ -80,10 +82,84 @@
   --grafico-6: #64748b;
 
   --radius: 0.75rem;
+  /* Nome "CATARINENSE" e "TECH" na logomarca */
+  --marca-nome: #07461f;
+  --marca-acento: #8e1018;
+  color-scheme: light;
+}
+
+/* -----------------------------------------------------------------------------
+   Catarinense (o padrão): o verde e o vermelho do símbolo sobre um fundo claro
+   levemente esverdeado. Verde nos botões e no menu ativo, vermelho como
+   destaque. Contraste de texto de pelo menos 4,5:1.
+   ----------------------------------------------------------------------------- */
+.catarinense {
+  --background: #f5f7f4;
+  --fundo-app:
+    radial-gradient(1100px 520px at 100% -10%, rgba(142, 16, 24, 0.06), transparent 60%),
+    radial-gradient(900px 480px at 0% -5%, rgba(10, 107, 50, 0.08), transparent 55%), #f5f7f4;
+  --fundo-heroi:
+    radial-gradient(640px 420px at 25% 35%, rgba(10, 107, 50, 0.16), transparent 65%),
+    radial-gradient(560px 360px at 90% 90%, rgba(142, 16, 24, 0.11), transparent 60%), #eef3ee;
+  --foreground: #1b231e;
+  --card: #ffffff;
+  --card-foreground: #1b231e;
+  --muted: #eef2ee;
+  --muted-foreground: #4f5b53;
+  --bege: #edf3ee;
+  --bege-forte: #dde9e0;
+  --border: #e0e7e1;
+  --input: #c9d4cc;
+  --primary: #07461f;
+  --primary-hover: #053516;
+  --primary-foreground: #ffffff;
+  --secondary: #e6f0e9;
+  --secondary-hover: #d8e8dd;
+  --secondary-foreground: #07461f;
+  --ring: #0a6b32;
+  --titulo: #0c2416;
+
+  --gradiente: linear-gradient(135deg, #0a6b32 0%, #07461f 100%);
+  --gradiente-texto: #ffffff;
+  --gradiente-marca: linear-gradient(135deg, #07461f 0%, #8e1018 100%);
+  --gradiente-selo: linear-gradient(135deg, #0a6b32 0%, #07461f 100%);
+  --brilho: 0 10px 24px -12px rgba(7, 70, 31, 0.5);
+  --sombra-card: 0 1px 2px rgba(12, 36, 22, 0.05), 0 12px 32px -20px rgba(12, 36, 22, 0.24);
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2b23;
+  --sidebar-muted: #56635a;
+  --sidebar-ativo: #e6f0e9;
+  --sidebar-ativo-fundo: linear-gradient(90deg, rgba(10, 107, 50, 0.13), rgba(142, 16, 24, 0.05));
+  --sidebar-ativo-borda: rgba(10, 107, 50, 0.32);
+  --sidebar-ativo-texto: #07461f;
+  --sidebar-borda: #e0e7e1;
+
+  --sucesso: #15803d;
+  --sucesso-bg: #e7f7ec;
+  --sucesso-fg: #14532d;
+  --alerta: #b45309;
+  --alerta-bg: #fef3dc;
+  --alerta-fg: #78350f;
+  --perigo: #b3121c;
+  --perigo-bg: #fde9ea;
+  --perigo-fg: #7f1d1d;
+  --info: #0e7490;
+  --info-bg: #e0f6fa;
+  --info-fg: #164e63;
+
+  --grafico-1: #0a6b32;
+  --grafico-2: #c2860a;
+  --grafico-3: #16a34a;
+  --grafico-4: #e11d48;
+  --grafico-5: #0e7490;
+  --grafico-6: #64748b;
   color-scheme: light;
 }
 
 .dark {
+  --marca-nome: #ffffff;
+  --marca-acento: #ff9d9d;
   --background: #070a12;
   --fundo-app:
     radial-gradient(1100px 560px at 100% -12%, rgba(124, 92, 255, 0.22), transparent 60%),
@@ -149,6 +225,8 @@
 
 /* Bronze: as cores da marca (marrom, dourado e cobre) modernizadas, com verde-água */
 .bronze {
+  --marca-nome: #ffffff;
+  --marca-acento: #ff9d9d;
   --background: #0e0b09;
   --fundo-app:
     radial-gradient(1100px 540px at 100% -12%, rgba(224, 169, 109, 0.2), transparent 60%),
@@ -285,6 +363,8 @@
    fundo. Quem pede menos transparência no aparelho vê painéis sólidos.
    ----------------------------------------------------------------------------- */
 .vidro {
+  --marca-nome: #ffffff;
+  --marca-acento: #ff9d9d;
   --background: #0b0d18;
   --fundo-app: #0b0d18;
   --fundo-heroi:
@@ -394,6 +474,7 @@
   --color-info-fg: var(--info-fg);
   --font-sans: "Inter Variable", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
   --font-titulo: "Space Grotesk Variable", "Inter Variable", "Segoe UI", system-ui, sans-serif;
+  --font-marca: "Cinzel", Georgia, "Times New Roman", serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

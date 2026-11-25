@@ -25,9 +25,9 @@ export async function solicitarRecuperacao(_anterior: ResultadoAcao, formData: F
       const { data, error } = await admin.auth.admin.generateLink({ type: "recovery", email });
       if (!error && data?.properties?.hashed_token) {
         const url = `${site}/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=recovery&next=/redefinir-senha`;
-        await enviarEmail(email, "Redefinição de senha — Portal Guarese's ON", {
+        await enviarEmail(email, "Redefinição de senha — Catarinense Tech", {
           titulo: "Redefinição de senha",
-          paragrafos: ["Recebemos um pedido para redefinir a senha do seu acesso ao Portal Guarese's ON."],
+          paragrafos: ["Recebemos um pedido para redefinir a senha do seu acesso ao Catarinense Tech."],
           botao: { texto: "Criar nova senha", url },
           aviso: "Se você não pediu a redefinição, ignore esta mensagem: sua senha continua a mesma. O link só pode ser usado uma vez.",
         });

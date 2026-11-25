@@ -246,23 +246,23 @@ otp_expiry = 3600
 # sender_name = "Admin"
 
 [auth.email.template.invite]
-subject = "Convite para o Portal Guarese's ON"
+subject = "Convite para o Catarinense Tech"
 content_path = "./supabase/templates/convite.html"
 
 [auth.email.template.recovery]
-subject = "Redefinição de senha — Portal Guarese's ON"
+subject = "Redefinição de senha — Catarinense Tech"
 content_path = "./supabase/templates/recuperacao.html"
 
 [auth.email.template.magic_link]
-subject = "Seu link de acesso — Portal Guarese's ON"
+subject = "Seu link de acesso — Catarinense Tech"
 content_path = "./supabase/templates/link_acesso.html"
 
 [auth.email.template.email_change]
-subject = "Confirme seu novo e-mail — Portal Guarese's ON"
+subject = "Confirme seu novo e-mail — Catarinense Tech"
 content_path = "./supabase/templates/alteracao_email.html"
 
 [auth.email.template.confirmation]
-subject = "Confirme seu e-mail — Portal Guarese's ON"
+subject = "Confirme seu e-mail — Catarinense Tech"
 content_path = "./supabase/templates/confirmacao.html"
 
 # Uncomment to customize notification email template

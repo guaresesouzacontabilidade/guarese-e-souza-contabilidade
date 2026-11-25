@@ -200,7 +200,7 @@ async function fundoCelular(browser, caminho, titulo) {
   </style></head><body style="margin:0;width:1280px;height:720px;overflow:hidden;font-family:'Inter V',system-ui,sans-serif;
     background:radial-gradient(800px 500px at 15% 15%,rgba(139,92,246,.45),transparent 62%),radial-gradient(800px 560px at 90% 95%,rgba(34,211,238,.32),transparent 60%),#070a12;color:#fff">
     <div style="position:absolute;left:90px;top:0;bottom:0;width:560px;display:flex;flex-direction:column;justify-content:center;gap:18px">
-      <div style="font-size:14px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#c4b5fd">Portal Guarese's ON</div>
+      <div style="font-size:14px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#c4b5fd">Catarinense Tech</div>
       <div style="font-family:'Space Grotesk V',sans-serif;font-size:56px;line-height:1.05;font-weight:700;letter-spacing:-.02em">${titulo}</div>
       <div style="font-size:21px;line-height:1.5;color:rgba(255,255,255,.8)">O portal funciona no navegador do celular, sem instalar nada. Dá para fotografar o documento e enviar na hora.</div>
       <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:8px">Demonstração com dados fictícios</div>

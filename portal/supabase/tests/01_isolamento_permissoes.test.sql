@@ -169,7 +169,7 @@ reset role;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 set local role anon;
 select throws_ok($$select * from public.empresas$$, '42501', null, 'visitante anônimo não acessa tabelas');
-select ok((public.escritorio_publico() ->> 'nome_sistema') = 'Portal Guarese''s ON', 'tela de login obtém os dados públicos do escritório');
+select ok((public.escritorio_publico() ->> 'nome_sistema') = 'Catarinense Tech', 'tela de login obtém os dados públicos do escritório');
 reset role;
 
 select * from finish();

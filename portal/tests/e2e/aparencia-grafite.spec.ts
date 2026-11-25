@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 
 /**
- * Aparência "Grafite": as cores da logo oficial (grafite #39312b sobre
- * branco). É uma opção do menu Aparência (o padrão continua o Vidro líquido),
+ * Aparência "Grafite": grafite #39312b sobre branco. É uma opção do menu
+ * Aparência (o padrão é a Catarinense),
  * é clara (sem a paisagem nem os painéis de vidro) e fica guardada no aparelho.
  */
 const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
@@ -23,20 +23,20 @@ async function entrar(page: Page, email: string) {
   }
 }
 
-test("grafite: cores da logo, tema claro, escolha guardada e o vidro continua o padrão", async ({ page }) => {
+test("grafite: tema claro, escolha guardada e a Catarinense continua o padrão", async ({ page }) => {
   test.setTimeout(120_000);
-  // Quem nunca escolheu continua no vidro líquido
+  // Quem nunca escolheu entra na Catarinense
   await page.goto("/login");
-  await expect(page.locator("html")).toHaveClass(/\bvidro\b/);
+  await expect(page.locator("html")).toHaveClass(/\bcatarinense\b/);
   await entrar(page, `contador@${DOMINIO}`);
   await page.goto("/escritorio");
 
   await page.getByRole("button", { name: /Aparência do portal/ }).click();
-  await page.getByRole("menuitem", { name: "Grafite (cores da logo)" }).click();
+  await page.getByRole("menuitem", { name: "Grafite" }).click();
   await expect(page.locator("html")).toHaveClass(/\bgrafite\b/);
   await expect(page.locator("html")).not.toHaveClass(/\bvidro\b|\bdark\b/);
 
-  // Cores da logo: botão principal grafite com texto branco, fundo claro, sem a paisagem
+  // Botão principal grafite com texto branco, fundo claro, sem a paisagem
   const cores = await page.evaluate(() => {
     const r = getComputedStyle(document.documentElement);
     return {
