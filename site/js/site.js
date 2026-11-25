@@ -1,4 +1,4 @@
-/* Site ON Guarese's Contabilidade: menu, tema, entrada dos blocos ao rolar,
+/* Site Catarinense Contabilidade & Gestão: menu, tema, entrada dos blocos ao rolar,
    números, depoimentos e formulário de contato. Sem bibliotecas. */
 (function () {
   "use strict";
@@ -101,19 +101,26 @@
     });
   }
 
-  /* Topo: as serras do fundo ondulam devagar (canvas leve, 30 quadros por segundo).
-     Só com movimento liberado no aparelho; para quando o topo sai da tela. */
+  /* Topo: as ondas do fundo (verde e vermelho claros, como as faixas do símbolo)
+     ondulam devagar (canvas leve, 30 quadros por segundo). As cores vêm do CSS
+     (variáveis --onda1-alto... em .heroi) e mudam com o modo escuro. Só com
+     movimento liberado no aparelho; para quando o topo sai da tela. */
   var heroi = document.querySelector(".heroi");
   var tela = document.getElementById("heroi-ondas");
   var ctx = tela && tela.getContext ? tela.getContext("2d") : null;
   if (heroi && ctx && !poucoMovimento) {
-    // Cada camada: distância da base até o pé, amplitude, cores (alto e pé) e ondas [repetições no período, peso, fase, velocidade]
+    // Cada camada: distância da base até o pé, amplitude, cores (lidas do CSS: alto e pé) e ondas [repetições no período, peso, fase, velocidade]
     var camadas = [
-      { base: 324, amp: 63, cores: ["#8a817a", "#5e5650"], ondas: [[2, 0.55, 0.3, 0.07], [5, 0.3, 1.7, -0.11], [11, 0.15, 0.4, 0.16]] },
-      { base: 279, amp: 77, cores: ["#5e5650", "#433c37"], ondas: [[1, 0.5, 1.9, -0.09], [4, 0.35, 0.6, 0.14], [9, 0.15, 2.5, -0.2]] },
-      { base: 230, amp: 86, cores: ["#433c37", "#2b2622"], ondas: [[2, 0.55, 3.1, 0.12], [3, 0.3, 0.9, -0.17], [7, 0.15, 1.3, 0.24]] },
-      { base: 167, amp: 99, cores: ["#24201c", "#100e0c"], ondas: [[1, 0.5, 4.4, -0.15], [3, 0.35, 2.2, 0.21], [6, 0.15, 0.2, -0.3]] },
+      { base: 324, amp: 52, n: 1, ondas: [[2, 0.55, 0.3, 0.07], [5, 0.3, 1.7, -0.11], [11, 0.15, 0.4, 0.16]] },
+      { base: 270, amp: 60, n: 2, ondas: [[1, 0.5, 1.9, -0.09], [4, 0.35, 0.6, 0.14], [9, 0.15, 2.5, -0.2]] },
+      { base: 210, amp: 64, n: 3, ondas: [[2, 0.55, 3.1, 0.12], [3, 0.3, 0.9, -0.17], [7, 0.15, 1.3, 0.24]] },
+      { base: 140, amp: 58, n: 4, ondas: [[1, 0.5, 4.4, -0.15], [3, 0.35, 2.2, 0.21], [6, 0.15, 0.2, -0.3]] },
     ];
+    var corLago = { claro: "rgba(255, 255, 255, 0.6)", sombra: "rgba(10, 107, 50, 0.06)" };
+    var lerCor = function (estilo, nome, padrao) {
+      var v = estilo.getPropertyValue(nome).trim();
+      return v || padrao;
+    };
     var larg = 0;
     var alt = 0;
     var periodo = 1600;
@@ -131,10 +138,13 @@
       tela.height = Math.round(alt * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       periodo = Math.max(1100, Math.min(1760, larg * 1.1));
+      var estilo = getComputedStyle(heroi);
+      corLago.claro = lerCor(estilo, "--lago-claro", corLago.claro);
+      corLago.sombra = lerCor(estilo, "--lago-sombra", corLago.sombra);
       camadas.forEach(function (c) {
         c.grad = ctx.createLinearGradient(0, alt - c.base - c.amp, 0, alt);
-        c.grad.addColorStop(0, c.cores[0]);
-        c.grad.addColorStop(1, c.cores[1]);
+        c.grad.addColorStop(0, lerCor(estilo, "--onda" + c.n + "-alto", "#e4efe7"));
+        c.grad.addColorStop(1, lerCor(estilo, "--onda" + c.n + "-pe", "#ffffff"));
       });
     };
     var desenhar = function () {
@@ -160,18 +170,18 @@
       // Lago no pé, com um reflexo claro que brilha devagar
       var lagoAlt = 146;
       var lago = ctx.createLinearGradient(0, alt - lagoAlt, 0, alt);
-      lago.addColorStop(0, "rgba(233, 227, 221, 0)");
-      lago.addColorStop(0.12, "rgba(233, 227, 221, 0.42)");
-      lago.addColorStop(0.45, "rgba(57, 49, 43, 0.28)");
-      lago.addColorStop(1, "rgba(14, 12, 11, 0)");
+      lago.addColorStop(0, "rgba(255, 255, 255, 0)");
+      lago.addColorStop(0.12, corLago.claro);
+      lago.addColorStop(0.45, corLago.sombra);
+      lago.addColorStop(1, "rgba(255, 255, 255, 0)");
       ctx.fillStyle = lago;
       ctx.fillRect(0, alt - lagoAlt, larg, lagoAlt);
       ctx.save();
       ctx.translate(larg * 0.68, alt - 85);
       ctx.scale(1, 0.05);
       var reflexo = ctx.createRadialGradient(0, 0, 0, 0, 0, 230);
-      reflexo.addColorStop(0, "rgba(244, 240, 235, " + (0.3 + 0.08 * Math.sin(tempo * 0.6)) + ")");
-      reflexo.addColorStop(1, "rgba(244, 240, 235, 0)");
+      reflexo.addColorStop(0, "rgba(255, 255, 255, " + (0.3 + 0.08 * Math.sin(tempo * 0.6)) + ")");
+      reflexo.addColorStop(1, "rgba(255, 255, 255, 0)");
       ctx.fillStyle = reflexo;
       ctx.fillRect(-230, -230, 460, 460);
       ctx.restore();
@@ -218,6 +228,13 @@
         desenhar();
       });
     }, { passive: true });
+    // Trocou o modo claro/escuro: as ondas pegam as cores novas
+    if ("MutationObserver" in window) {
+      new MutationObserver(function () {
+        medirTela();
+        desenhar();
+      }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    }
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entradas) {
         if (entradas[0].isIntersecting) iniciar();
@@ -415,7 +432,7 @@
     };
     var montarAlternativas = function () {
       var texto =
-        "Olá! Vim pelo site da ON Guarese's.\n" +
+        "Olá! Vim pelo site da Catarinense Contabilidade.\n" +
         "Nome: " + valor("nome") + "\n" +
         (valor("empresa") ? "Empresa: " + valor("empresa") + "\n" : "") +
         "Assunto: " + valor("assunto") + "\n\n" + valor("mensagem");

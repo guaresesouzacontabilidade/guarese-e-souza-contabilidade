@@ -1,13 +1,16 @@
-# Site institucional — ON Guarese's Contabilidade
+# Site institucional — Catarinense Contabilidade & Gestão
 
 Site estático feito com **Vite** (HTML, CSS e JavaScript, sem bibliotecas):
 o Vite junta e minifica o CSS e o JavaScript, com o nome versionado, e gera a
-pasta `dist`, que é o que vai para o ar. Direção visual editorial: a paisagem
-só no topo, fundo liso, linhas finas e seções numeradas; o vidro aparece só
-no topo ao rolar, na ficha do escritório e no formulário.
-Cores da logo oficial: grafite (#39312b) e branco. A versão clara é a padrão
-(grafite sobre branco, como a logo); a escura é opcional pelo botão do topo.
-No topo da página a paisagem é em tons de grafite e a logo aparece em branco.
+pasta `dist`, que é o que vai para o ar. Direção visual editorial e clara: céu claro
+com ondas suaves de verde e vermelho só no topo, fundo liso, linhas finas e
+seções numeradas; o vidro aparece só no topo ao rolar, na ficha do escritório
+e no formulário. Cores do símbolo da Catarinense: verde (#07461f), vermelho
+(#8e1018) e branco. A versão clara é a padrão; a escura é opcional pelo botão
+do topo. A logo (símbolo + CATARINENSE + "Contabilidade e Gestão") fica em
+`public/img/logo-horizontal.png` (letras claras no modo escuro:
+`logo-horizontal-claro.png`); a arte original está em
+`../portal/docs/marca/catarinense-original.png`.
 Posicionamento (do site antigo do escritório): médicos e clínicas, produtores
 rurais e empresas em geral. Publicado na Vercel, que roda `npm ci` e
 `npm run build` e publica a pasta `dist` (configurado no `vercel.json`).
@@ -32,12 +35,12 @@ Vercel) ficam como estão. O certificado (https) é renovado pela Vercel.
 | O quê | Onde |
 | --- | --- |
 | Textos e seções | `index.html` (cada seção tem um comentário com o nome) |
-| Cores e fontes | começo de `css/site.css`: `:root` (versão clara, padrão) e `html.escuro` (versão escura). Principais: `--fundo`, `--texto`, `--botao-fundo`, `--marca` (cor da logo). Paisagem do topo: `public/img/fundo-grafite.svg`. |
-| Ondas do topo (serras em movimento) | `js/site.js`, bloco "Topo: as serras do fundo ondulam": em cada camada, `base` e `amp` são a altura e o tamanho das ondas, e o 4º número de cada onda é a velocidade (0 para parar). O céu fica em `public/img/fundo-grafite-ceu.svg`; com pouco movimento no aparelho (ou sem JavaScript) aparece a paisagem parada `public/img/fundo-grafite.svg`. |
+| Cores e fontes | começo de `css/site.css`: `:root` (versão clara, padrão) e `html.escuro` (versão escura). Principais: `--fundo`, `--texto`, `--botao-fundo`, `--marca` (traço do verde ao vermelho). Topo parado: `public/img/fundo-catarinense.svg`; cores das ondas em movimento: variáveis `--onda1-alto` a `--onda4-pe` em `.heroi`. |
+| Ondas do topo (em movimento) | `js/site.js`, bloco "Topo: as ondas do fundo": em cada camada, `base` e `amp` são a altura e o tamanho das ondas, e o 4º número de cada onda é a velocidade (0 para parar); as cores vêm do CSS (`--onda1-alto`...). O céu fica em `public/img/fundo-catarinense-ceu.svg`; com pouco movimento no aparelho (ou sem JavaScript) aparece o topo parado `public/img/fundo-catarinense.svg`. |
 | Números (clientes, anos, empresas abertas) | `index.html`, bloco `id="numeros"` (na seção Quem somos): preencha `data-alvo` com os valores **reais**. Sem os três valores, a faixa fica escondida. |
 | Depoimentos | `index.html`, seção `id="depoimentos"`: copie o modelo comentado. Só depoimentos reais e autorizados por escrito. Sem nenhum, a seção fica escondida. |
 | Fotos e mini-bios da equipe | seção `id="quem-somos"` (hoje com as iniciais) |
-| Telas do portal | Vídeo no notebook: `public/video/portal-demonstracao.webm` e `.mp4` (gravados no portal da demonstração, aparência Grafite, com dados fictícios; a resposta digitada nas Mensagens não é enviada). A imagem `public/img/portal-computador.webp` é o primeiro quadro do vídeo e aparece antes de ele tocar, sem JavaScript ou com pouco movimento no aparelho. No celular do desenho fica `public/img/portal-celular.webp`. O vídeo só baixa quando a seção aparece na tela e tem botão de pausar. |
+| Telas do portal | Vídeo no notebook: `public/video/portal-demonstracao.webm` e `.mp4` (gravados no portal da demonstração, aparência Catarinense (vidro claro), com dados fictícios; a resposta digitada nas Mensagens não é enviada). A imagem `public/img/portal-computador.webp` é o primeiro quadro do vídeo e aparece antes de ele tocar, sem JavaScript ou com pouco movimento no aparelho. No celular do desenho fica `public/img/portal-celular.webp`. O vídeo só baixa quando a seção aparece na tela e tem botão de pausar. |
 
 ## Formulário de contato
 

@@ -1,8 +1,8 @@
 {
-  "name": "site-on-guareses",
+  "name": "site-catarinense",
   "private": true,
   "version": "1.0.0",
-  "description": "Site institucional da ON Guarese's Contabilidade (Vite, HTML, CSS e JavaScript sem bibliotecas).",
+  "description": "Site institucional da Catarinense Contabilidade & Gestão (Vite, HTML, CSS e JavaScript sem bibliotecas).",
   "type": "module",
   "scripts": {
     "dev": "vite",

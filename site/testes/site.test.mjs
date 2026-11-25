@@ -37,7 +37,7 @@ test("build do Vite: CSS e JS versionados, arquivos fixos no lugar e o script do
     assert.ok(csp.includes(`'${hash}'`), `${pagina}: hash do script do tema na CSP`);
   }
   assert.match(fs.readFileSync(path.join(RAIZ, "index.html"), "utf8"), /<script type="module" crossorigin src="\/assets\/[^"]+\.js"><\/script>/);
-  for (const fixo of ["img/logo-horizontal.svg", "img/fundo-grafite.svg", "img/fundo-grafite-ceu.svg", "img/favicon.svg", "img/compartilhar.jpg", "video/portal-demonstracao.mp4", "video/portal-demonstracao.webm", "fontes/inter.woff2", "site.webmanifest", "robots.txt", "sitemap.xml"]) {
+  for (const fixo of ["img/logo-horizontal.png", "img/logo-horizontal-claro.png", "img/fundo-catarinense.svg", "img/fundo-catarinense-ceu.svg", "img/favicon.png", "favicon.ico", "apple-touch-icon.png", "img/compartilhar.jpg", "video/portal-demonstracao.mp4", "video/portal-demonstracao.webm", "fontes/inter.woff2", "site.webmanifest", "robots.txt", "sitemap.xml"]) {
     assert.ok(fs.existsSync(path.join(RAIZ, fixo)), `${fixo} no build`);
   }
   assert.equal(cfg.framework, "vite");
@@ -65,7 +65,12 @@ test("página inicial: seções do briefing, SEO, segurança e nada inventado à
   const csp = r.headers()["content-security-policy"];
   assert.match(csp, /script-src 'self' 'sha256-/);
   assert.match(csp, /connect-src 'self' https:\/\/portal\.onguaresescontabilidade\.com\.br/);
-  assert.equal(await pagina.title(), "ON Guarese's Contabilidade | Contabilidade em Porto Nacional (TO)");
+  assert.equal(await pagina.title(), "Catarinense Contabilidade & Gestão | Contabilidade em Porto Nacional (TO)");
+  // Marca nova: nome e dados do CNPJ da Catarinense; nada da marca antiga
+  const textoPagina = await pagina.locator("body").innerText();
+  assert.match(textoPagina, /CATARINENSE CONTABILIDADE & GESTAO LTDA · CNPJ 62\.935\.399\/0001-50/);
+  assert.doesNotMatch(textoPagina, /ON Guarese|GUARESE'S/);
+  assert.match(await pagina.evaluate(() => getComputedStyle(document.querySelector(".topo .logo")).backgroundImage), /logo-horizontal\.png/);
   assert.ok(await pagina.locator('meta[property="og:image"]').getAttribute("content"));
   // Primeira tela: o que, para quem e o próximo passo
   assert.equal((await pagina.locator("h1").textContent()).replace(/\s+/g, " "), "Tudo o que a sua empresa precisa, em um só lugar.");
@@ -102,20 +107,21 @@ test("celular: menu abre e fecha; tema escuro fica guardado", async () => {
   // O botão do portal no menu tem texto legível (cor do botão, não a dos links)
   const cores = await pagina.locator("#menu .menu-portal").evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]);
   assert.notEqual(cores[0], cores[1]);
-  assert.equal(cores[0], "rgb(57, 49, 43)"); // --botao-texto (grafite da logo) sobre o botão branco
+  assert.equal(cores[0], "rgb(255, 255, 255)"); // --botao-texto (branco) sobre o botão verde da Catarinense
   await pagina.locator("#menu a", { hasText: "Serviços" }).click();
   assert.equal(await botao.getAttribute("aria-expanded"), "false");
-  // Padrão: versão clara (como a logo); o botão troca para a escura e a escolha fica guardada
+  // Padrão: versão clara; o botão troca para a escura (logo com letras claras) e a escolha fica guardada
   assert.doesNotMatch((await pagina.locator("html").getAttribute("class")) || "", /escuro/);
   await pagina.locator("#alternar-tema").click();
   assert.match(await pagina.locator("html").getAttribute("class"), /escuro/);
   await pagina.reload({ waitUntil: "networkidle" });
   assert.match(await pagina.locator("html").getAttribute("class"), /escuro/);
+  assert.match(await pagina.evaluate(() => getComputedStyle(document.querySelector(".topo .logo")).backgroundImage), /logo-horizontal-claro\.png/);
   assert.deepEqual(erros, []);
   await ctx.close();
 });
 
-test("topo: as serras ondulam; com pouco movimento no aparelho, a paisagem fica parada", async () => {
+test("topo: as ondas verde e vermelha se movem; com pouco movimento no aparelho, o topo fica parado", async () => {
   const { ctx, pagina, erros } = await abrir();
   await pagina.goto(base + "/", { waitUntil: "networkidle" });
   await pagina.waitForFunction(() => document.querySelector(".heroi").classList.contains("ondas-ativas"));
@@ -123,7 +129,7 @@ test("topo: as serras ondulam; com pouco movimento no aparelho, a paisagem fica 
   const antes = await quadro();
   await pagina.waitForTimeout(800);
   assert.notEqual(await quadro(), antes, "as ondas mudam com o tempo");
-  assert.match(await pagina.evaluate(() => getComputedStyle(document.querySelector(".heroi")).backgroundImage), /fundo-grafite-ceu\.svg/);
+  assert.match(await pagina.evaluate(() => getComputedStyle(document.querySelector(".heroi")).backgroundImage), /fundo-catarinense-ceu\.svg/);
   assert.equal(await pagina.evaluate(() => getComputedStyle(document.getElementById("heroi-ondas")).opacity), "1");
   assert.deepEqual(erros, []);
   await ctx.close();
@@ -132,7 +138,7 @@ test("topo: as serras ondulam; com pouco movimento no aparelho, a paisagem fica 
   await parado.pagina.goto(base + "/", { waitUntil: "networkidle" });
   await parado.pagina.waitForTimeout(600);
   assert.equal(await parado.pagina.evaluate(() => document.querySelector(".heroi").classList.contains("ondas-ativas")), false);
-  assert.match(await parado.pagina.evaluate(() => getComputedStyle(document.querySelector(".heroi")).backgroundImage), /fundo-grafite\.svg/);
+  assert.match(await parado.pagina.evaluate(() => getComputedStyle(document.querySelector(".heroi")).backgroundImage), /fundo-catarinense\.svg/);
   assert.equal(await parado.pagina.evaluate(() => getComputedStyle(document.getElementById("heroi-ondas")).opacity), "0");
   assert.deepEqual(parado.erros, []);
   await parado.ctx.close();

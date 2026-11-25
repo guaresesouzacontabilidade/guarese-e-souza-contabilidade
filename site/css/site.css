@@ -1,5 +1,5 @@
 /* =============================================================================
-   Site ON Guarese's Contabilidade — estilos (sem bibliotecas).
+   Site Catarinense Contabilidade & Gestão — estilos (sem bibliotecas).
    Fontes próprias: Inter e Space Grotesk (licença OFL, em /fontes).
    ============================================================================= */
 @font-face {
@@ -36,34 +36,36 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Direção: editorial e sóbria, nas cores da logo oficial: grafite (#39312b) e
-   branco. A versão clara é a padrão (como a logo, grafite sobre branco); a
-   versão escura é opcional. A paisagem em tons de grafite fica só no topo, com
-   a logo em branco; o resto é fundo liso, linhas finas e seções numeradas. O
-   vidro aparece em poucos lugares: o topo ao rolar, a ficha do escritório e o
-   formulário. A seta que sobe na logo é a seta dos botões.
+   Direção: editorial, clara e leve, nas cores do símbolo da Catarinense: verde
+   (#07461f), vermelho (#8e1018) e branco. A versão clara é a padrão; a escura
+   é opcional. No topo, um céu claro com ondas suaves de verde e vermelho (como
+   as faixas do símbolo); o resto é fundo liso, linhas finas e seções
+   numeradas. O vidro aparece em poucos lugares: o topo ao rolar, a ficha do
+   escritório e o formulário. Os detalhes (traços dos rótulos) vão do verde ao
+   vermelho, como o símbolo.
    ----------------------------------------------------------------------------- */
 :root {
-  /* Cores da logo oficial: grafite #39312b sobre branco (versão padrão) */
-  --grafite: #39312b;
+  /* Cores do símbolo: verde e vermelho sobre branco (versão padrão) */
+  --verde: #07461f;
+  --vermelho: #8e1018;
   --fundo: #ffffff;
-  --fundo-alt: #f5f3f1;
-  --vidro: rgba(255, 255, 255, 0.86);
-  --linha: rgba(57, 49, 43, 0.13);
-  --linha-forte: rgba(57, 49, 43, 0.3);
-  --texto: #39312b;
-  --texto-2: #655c55;
-  --titulo: #29231f;
-  --destaque: #39312b;
-  --destaque-forte: #1e1a17;
-  --botao-fundo: #39312b;
+  --fundo-alt: #f3f7f4;
+  --vidro: rgba(255, 255, 255, 0.82);
+  --linha: rgba(12, 36, 22, 0.12);
+  --linha-forte: rgba(12, 36, 22, 0.28);
+  --texto: #1d2a22;
+  --texto-2: #4f5d54;
+  --titulo: #0c2416;
+  --destaque: #07461f;
+  --destaque-forte: #053516;
+  --botao-fundo: #07461f;
   --botao-texto: #ffffff;
-  --botao-hover: #29231f;
+  --botao-hover: #053516;
   --erro: #b42318;
   --sucesso: #15803d;
-  --sombra: 0 24px 48px -30px rgba(57, 49, 43, 0.32);
-  /* A logo é pintada com esta cor (sólida, como a original) */
-  --marca: linear-gradient(#39312b, #39312b);
+  --sombra: 0 24px 48px -30px rgba(12, 36, 22, 0.3);
+  /* Traços de destaque: do verde ao vermelho, como o símbolo */
+  --marca: linear-gradient(90deg, #07461f, #8e1018);
   /* Forma e espaço */
   --raio: 14px;
   --raio-p: 10px;
@@ -81,23 +83,23 @@
   color-scheme: light;
 }
 html.escuro {
-  --fundo: #171412;
-  --fundo-alt: #1f1b18;
-  --vidro: rgba(31, 27, 24, 0.74);
+  --fundo: #0d1611;
+  --fundo-alt: #121e17;
+  --vidro: rgba(17, 30, 22, 0.78);
   --linha: rgba(255, 255, 255, 0.1);
   --linha-forte: rgba(255, 255, 255, 0.24);
-  --texto: #ece7e2;
-  --texto-2: #b8afa7;
+  --texto: #e3ece6;
+  --texto-2: #a9b8ae;
   --titulo: #ffffff;
-  --destaque: #ffffff;
-  --destaque-forte: #e9e4de;
-  --botao-fundo: #f2eee9;
-  --botao-texto: #39312b;
+  --destaque: #8fd6a8;
+  --destaque-forte: #b5e6c6;
+  --botao-fundo: #e9f4ed;
+  --botao-texto: #07461f;
   --botao-hover: #ffffff;
   --erro: #ff9b8f;
   --sucesso: #86efac;
   --sombra: 0 24px 48px -32px rgba(0, 0, 0, 0.6);
-  --marca: linear-gradient(#f2eee9, #f2eee9);
+  --marca: linear-gradient(90deg, #5fbf84, #ff8f8f);
   color-scheme: dark;
 }
 
@@ -187,14 +189,15 @@ p {
   backdrop-filter: blur(18px) saturate(150%);
 }
 
-/* Logo oficial (vetor) numa cor só: grafite no fundo claro, branca no escuro */
+/* Logo da Catarinense (símbolo + nome), colorida; com letras claras no modo escuro */
 .logo {
   display: inline-block;
-  height: 2.25rem;
-  aspect-ratio: 4.4757;
-  background: var(--marca);
-  -webkit-mask: url("/img/logo-horizontal.svg") center / contain no-repeat;
-  mask: url("/img/logo-horizontal.svg") center / contain no-repeat;
+  height: 2.9rem;
+  aspect-ratio: 4.7875;
+  background: url("/img/logo-horizontal.png") left center / contain no-repeat;
+}
+html.escuro .logo {
+  background-image: url("/img/logo-horizontal-claro.png");
 }
 
 /* Botões e links */
@@ -296,20 +299,6 @@ html.escuro .icone-lua {
   transition: background-color 0.25s ease, border-color 0.25s ease;
   border-bottom: 1px solid transparent;
 }
-.topo:not(.rolado) {
-  --texto: #f1ece7;
-  --texto-2: #ddd6cf;
-  --titulo: #ffffff;
-  --destaque: #ffffff;
-  --destaque-forte: #ffffff;
-  --linha: rgba(255, 255, 255, 0.16);
-  --linha-forte: rgba(255, 255, 255, 0.36);
-  --botao-fundo: #ffffff;
-  --botao-texto: #39312b;
-  --botao-hover: #ebe6e1;
-  --marca: linear-gradient(#ffffff, #ffffff);
-  --vidro: rgba(23, 20, 17, 0.95);
-}
 .topo.rolado {
   background-color: var(--vidro);
   border-bottom-color: var(--linha);
@@ -365,21 +354,20 @@ html.escuro .icone-lua {
   display: none;
 }
 
-/* Topo da página: a paisagem em grafite (nos dois modos), com o texto e a ficha */
+/* Topo da página: céu claro com ondas suaves de verde e vermelho (no escuro, verde bem escuro) */
 .heroi {
-  --texto: #f1ece7;
-  --texto-2: #ddd6cf;
-  --titulo: #ffffff;
-  --destaque: #ffffff;
-  --destaque-forte: #ffffff;
-  --linha: rgba(255, 255, 255, 0.16);
-  --linha-forte: rgba(255, 255, 255, 0.36);
-  --botao-fundo: #ffffff;
-  --botao-texto: #39312b;
-  --botao-hover: #ebe6e1;
-  --marca: linear-gradient(#ffffff, #ffffff);
-  --vidro: rgba(23, 20, 17, 0.62);
-  --sombra: 0 24px 48px -32px rgba(0, 0, 0, 0.6);
+  /* Cores das ondas (js/site.js lê daqui): alto e pé de cada camada, de trás para frente */
+  --onda1-alto: #e4efe7;
+  --onda1-pe: #d6e8dc;
+  --onda2-alto: #d3e6d9;
+  --onda2-pe: #c3dcca;
+  --onda3-alto: #f1e2e2;
+  --onda3-pe: #e9d2d2;
+  --onda4-alto: #f6faf7;
+  --onda4-pe: #ffffff;
+  --lago-claro: rgba(255, 255, 255, 0.6);
+  --lago-sombra: rgba(10, 107, 50, 0.06);
+  --vidro: rgba(255, 255, 255, 0.7);
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -388,11 +376,30 @@ html.escuro .icone-lua {
   display: flex;
   align-items: center;
   padding: 7.5rem 0 4.5rem;
-  /* Paisagem parada (sem JavaScript ou com pouco movimento); com as ondas ativas fica só o céu */
-  background: url("/img/fundo-grafite.svg") center 62% / cover no-repeat, #141210;
+  /* Topo parado (sem JavaScript ou com pouco movimento); com as ondas ativas fica só o céu */
+  background: url("/img/fundo-catarinense.svg") center bottom / cover no-repeat, #f4f8f5;
+}
+html.escuro .heroi {
+  --onda1-alto: #1b3326;
+  --onda1-pe: #142a1e;
+  --onda2-alto: #163023;
+  --onda2-pe: #10251a;
+  --onda3-alto: #2c1719;
+  --onda3-pe: #1f1113;
+  --onda4-alto: #101c15;
+  --onda4-pe: #0d1611;
+  --lago-claro: rgba(255, 255, 255, 0.05);
+  --lago-sombra: rgba(0, 0, 0, 0.25);
+  --vidro: rgba(17, 30, 22, 0.66);
+  background: radial-gradient(900px 500px at 15% 0%, rgba(10, 107, 50, 0.32), transparent 60%),
+    radial-gradient(700px 420px at 90% 20%, rgba(142, 16, 24, 0.18), transparent 60%), #0d1611;
 }
 .heroi.ondas-ativas {
-  background-image: url("/img/fundo-grafite-ceu.svg");
+  background-image: url("/img/fundo-catarinense-ceu.svg");
+}
+html.escuro .heroi.ondas-ativas {
+  background-image: radial-gradient(900px 500px at 15% 0%, rgba(10, 107, 50, 0.32), transparent 60%),
+    radial-gradient(700px 420px at 90% 20%, rgba(142, 16, 24, 0.18), transparent 60%);
 }
 /* Serras em movimento: canvas no pé do topo, que aparece aos poucos */
 .heroi-ondas {
@@ -409,13 +416,17 @@ html.escuro .icone-lua {
 .heroi-ondas.visivel {
   opacity: 1;
 }
-/* Véu escuro por cima da paisagem e das ondas: garante a leitura do texto */
+/* Véu leve por cima do céu e das ondas: garante a leitura do texto e emenda com a página */
 .heroi::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(180deg, rgba(15, 13, 11, 0.5) 0%, rgba(15, 13, 11, 0.26) 38%, rgba(15, 13, 11, 0.58) 74%, #141210 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.12) 40%, rgba(255, 255, 255, 0.35) 78%, var(--fundo) 100%);
+  pointer-events: none;
+}
+html.escuro .heroi::after {
+  background: linear-gradient(180deg, rgba(13, 22, 17, 0.4) 0%, rgba(13, 22, 17, 0.1) 40%, rgba(13, 22, 17, 0.5) 78%, var(--fundo) 100%);
   pointer-events: none;
 }
 .heroi-grade {
@@ -607,7 +618,7 @@ html.escuro .icone-lua {
   position: relative;
   padding: 2.2% 2.2% 2.6%;
   border-radius: 12px 12px 4px 4px;
-  background: #211d1a;
+  background: #1b211e;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 .notebook-tela img,
@@ -618,7 +629,7 @@ html.escuro .icone-lua {
   aspect-ratio: 16 / 10;
   object-fit: cover;
   border-radius: 4px;
-  background: #f6f5f3;
+  background: #f3f7f4;
 }
 /* Botão de pausar/tocar a demonstração, no canto esquerdo da tela do notebook (o celular cobre o direito) */
 .video-controle {
@@ -632,7 +643,7 @@ html.escuro .icone-lua {
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(30, 26, 23, 0.74);
+  background: rgba(16, 28, 21, 0.74);
   color: #ffffff;
   cursor: pointer;
   opacity: 0.82;
@@ -666,7 +677,7 @@ html.escuro .icone-lua {
   height: 0.8rem;
   margin: 0 -5%;
   border-radius: 0 0 12px 12px;
-  background: #3a3430;
+  background: #2f3632;
 }
 .celular {
   position: absolute;
@@ -675,7 +686,7 @@ html.escuro .icone-lua {
   width: 25%;
   padding: 2%;
   border-radius: 22px;
-  background: #141210;
+  background: #121815;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 24px 40px -24px rgba(0, 0, 0, 0.7);
 }
@@ -972,11 +983,11 @@ html.escuro .campo textarea {
 }
 .campo select option {
   background: #ffffff;
-  color: #39312b;
+  color: #1d2a22;
 }
 html.escuro .campo select option {
-  background: #1f1b18;
-  color: #ece7e2;
+  background: #13201a;
+  color: #e3ece6;
 }
 .campo input:focus,
 .campo select:focus,
@@ -1248,7 +1259,7 @@ html.escuro .campo select option {
     width: min(100% - 2rem, var(--largura));
   }
   .logo {
-    height: 1.95rem;
+    height: 2.3rem;
   }
   .topo-barra {
     min-height: 4rem;
@@ -1355,7 +1366,7 @@ html.escuro .campo select option {
     --vidro: #ffffff;
   }
   html.escuro {
-    --vidro: #1f1b18;
+    --vidro: #13201a;
   }
   .vidro,
   .topo.rolado,

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <!-- Topo parado (sem JavaScript ou com pouco movimento): céu claro e ondas
+       suaves de verde e vermelho, como as faixas do símbolo da Catarinense. -->
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#edf5ef"/>
+    </linearGradient>
+    <radialGradient id="verde" cx="0.12" cy="0.1" r="0.6">
+      <stop offset="0" stop-color="#0a6b32" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#0a6b32" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="menta" cx="0.8" cy="0.18" r="0.5">
+      <stop offset="0" stop-color="#7fcf9c" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#7fcf9c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="o1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4efe7"/><stop offset="1" stop-color="#d6e8dc"/></linearGradient>
+    <linearGradient id="o2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3e6d9"/><stop offset="1" stop-color="#c3dcca"/></linearGradient>
+    <linearGradient id="o3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1e2e2"/><stop offset="1" stop-color="#e9d2d2"/></linearGradient>
+    <linearGradient id="o4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6faf7"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#ceu)"/>
+  <rect width="1600" height="900" fill="url(#verde)"/>
+  <rect width="1600" height="900" fill="url(#menta)"/>
+  <path d="M0 560 C 220 500, 420 470, 640 505 C 860 540, 1080 470, 1300 455 C 1440 445, 1530 470, 1600 480 L 1600 900 L 0 900 Z" fill="url(#o1)"/>
+  <path d="M0 640 C 260 580, 480 600, 720 615 C 960 630, 1160 560, 1380 560 C 1480 560, 1550 575, 1600 585 L 1600 900 L 0 900 Z" fill="url(#o2)"/>
+  <path d="M0 720 C 240 680, 520 700, 780 690 C 1040 680, 1250 640, 1600 660 L 1600 900 L 0 900 Z" fill="url(#o3)"/>
+  <path d="M0 790 C 300 760, 600 780, 900 770 C 1200 760, 1400 745, 1600 755 L 1600 900 L 0 900 Z" fill="url(#o4)"/>
+</svg>
