@@ -2254,13 +2254,13 @@ isOneToOne: false
                   ]
                 },"fisio_agenda": {
                   Row: {
-                    "confirmado_em": string | null,"created_at": string,"criado_por": string | null,"duracao_min": number,"empresa_id": string,"id": string,"inicio": string,"motivo": string | null,"nome_avulso": string | null,"observacoes": string | null,"paciente_id": string | null,"pacote_id": string | null,"profissional_id": string | null,"sala": string | null,"serie_id": string | null,"status": string,"telefone_avulso": string | null,"tipo": string,"updated_at": string
+                    "confirmacao_codigo": string | null,"confirmacao_destino": string | null,"confirmacao_enviada_em": string | null,"confirmacao_envio": string | null,"confirmacao_erro": string | null,"confirmacao_respondida_em": string | null,"confirmacao_resposta": string | null,"confirmado_em": string | null,"created_at": string,"criado_por": string | null,"duracao_min": number,"empresa_id": string,"id": string,"inicio": string,"motivo": string | null,"nome_avulso": string | null,"observacoes": string | null,"paciente_id": string | null,"pacote_id": string | null,"profissional_id": string | null,"sala": string | null,"serie_id": string | null,"status": string,"telefone_avulso": string | null,"tipo": string,"updated_at": string
                   }
                   Insert: {
-                    "confirmado_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id": string,"id"?: string,"inicio": string,"motivo"?: string | null,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"pacote_id"?: string | null,"profissional_id"?: string | null,"sala"?: string | null,"serie_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"updated_at"?: string
+                    "confirmacao_codigo"?: string | null,"confirmacao_destino"?: string | null,"confirmacao_enviada_em"?: string | null,"confirmacao_envio"?: string | null,"confirmacao_erro"?: string | null,"confirmacao_respondida_em"?: string | null,"confirmacao_resposta"?: string | null,"confirmado_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id": string,"id"?: string,"inicio": string,"motivo"?: string | null,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"pacote_id"?: string | null,"profissional_id"?: string | null,"sala"?: string | null,"serie_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "confirmado_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id"?: string,"id"?: string,"inicio"?: string,"motivo"?: string | null,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"pacote_id"?: string | null,"profissional_id"?: string | null,"sala"?: string | null,"serie_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"updated_at"?: string
+                    "confirmacao_codigo"?: string | null,"confirmacao_destino"?: string | null,"confirmacao_enviada_em"?: string | null,"confirmacao_envio"?: string | null,"confirmacao_erro"?: string | null,"confirmacao_respondida_em"?: string | null,"confirmacao_resposta"?: string | null,"confirmado_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id"?: string,"id"?: string,"inicio"?: string,"motivo"?: string | null,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"pacote_id"?: string | null,"profissional_id"?: string | null,"sala"?: string | null,"serie_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -2346,13 +2346,13 @@ isOneToOne: false
                   ]
                 },"fisio_config": {
                   Row: {
-                    "atualizado_por": string | null,"cidade_documentos": string | null,"created_at": string,"duracao_padrao_min": number,"email": string | null,"empresa_id": string,"endereco": string | null,"falta_desconta_sessao": boolean,"horario_fim": string,"horario_inicio": string,"mensagem_confirmacao": string | null,"nome_clinica": string | null,"proximo_numero_documento": number,"proximo_numero_registro": number,"registro_crefito": string | null,"telefone": string | null,"updated_at": string,"valor_sessao": number
+                    "atualizado_por": string | null,"cidade_documentos": string | null,"created_at": string,"duracao_padrao_min": number,"email": string | null,"empresa_id": string,"endereco": string | null,"falta_desconta_sessao": boolean,"horario_fim": string,"horario_inicio": string,"mensagem_confirmacao": string | null,"nome_clinica": string | null,"proximo_numero_documento": number,"proximo_numero_registro": number,"registro_crefito": string | null,"telefone": string | null,"updated_at": string,"valor_sessao": number,"whatsapp_ativo": boolean,"whatsapp_hora_envio": string,"whatsapp_idioma": string,"whatsapp_modelo": string | null,"whatsapp_modo_teste": boolean,"whatsapp_numero_teste": string | null,"whatsapp_phone_number_id": string | null
                   }
                   Insert: {
-                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"falta_desconta_sessao"?: boolean,"horario_fim"?: string,"horario_inicio"?: string,"mensagem_confirmacao"?: string | null,"nome_clinica"?: string | null,"proximo_numero_documento"?: number,"proximo_numero_registro"?: number,"registro_crefito"?: string | null,"telefone"?: string | null,"updated_at"?: string,"valor_sessao"?: number
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"falta_desconta_sessao"?: boolean,"horario_fim"?: string,"horario_inicio"?: string,"mensagem_confirmacao"?: string | null,"nome_clinica"?: string | null,"proximo_numero_documento"?: number,"proximo_numero_registro"?: number,"registro_crefito"?: string | null,"telefone"?: string | null,"updated_at"?: string,"valor_sessao"?: number,"whatsapp_ativo"?: boolean,"whatsapp_hora_envio"?: string,"whatsapp_idioma"?: string,"whatsapp_modelo"?: string | null,"whatsapp_modo_teste"?: boolean,"whatsapp_numero_teste"?: string | null,"whatsapp_phone_number_id"?: string | null
                   }
                   Update: {
-                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"falta_desconta_sessao"?: boolean,"horario_fim"?: string,"horario_inicio"?: string,"mensagem_confirmacao"?: string | null,"nome_clinica"?: string | null,"proximo_numero_documento"?: number,"proximo_numero_registro"?: number,"registro_crefito"?: string | null,"telefone"?: string | null,"updated_at"?: string,"valor_sessao"?: number
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"falta_desconta_sessao"?: boolean,"horario_fim"?: string,"horario_inicio"?: string,"mensagem_confirmacao"?: string | null,"nome_clinica"?: string | null,"proximo_numero_documento"?: number,"proximo_numero_registro"?: number,"registro_crefito"?: string | null,"telefone"?: string | null,"updated_at"?: string,"valor_sessao"?: number,"whatsapp_ativo"?: boolean,"whatsapp_hora_envio"?: string,"whatsapp_idioma"?: string,"whatsapp_modelo"?: string | null,"whatsapp_modo_teste"?: boolean,"whatsapp_numero_teste"?: string | null,"whatsapp_phone_number_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -2582,6 +2582,31 @@ isOneToOne: false
       columns: ["registrado_por"]
 isOneToOne: false
       referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_whatsapp_segredo": {
+                  Row: {
+                    "atualizado_por": string | null,"empresa_id": string,"token_cifrado": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"empresa_id": string,"token_cifrado": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"empresa_id"?: string,"token_cifrado"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_whatsapp_segredo_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_whatsapp_segredo_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
       referencedColumns: ["id"]
     }
                   ]
@@ -7239,6 +7264,21 @@ isOneToOne: false
 "fisio_configurar":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
                            },
+"fisio_configurar_whatsapp":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"fisio_confirmacao_enviar":
+{ Args: { "p_agenda_id": string }; Returns: string
+                           },
+"fisio_confirmacao_responder":
+{ Args: { "p_codigo": string,"p_motivo"?: string,"p_resposta": string }; Returns: string
+                           },
+"fisio_confirmacao_resultado":
+{ Args: { "p_agenda_id": string,"p_erro": string,"p_situacao": string }; Returns: undefined
+                           },
+"fisio_confirmacao_ver":
+{ Args: { "p_codigo": string }; Returns: Json
+                           },
 "fisio_documento_cancelar":
 { Args: { "p_documento_id": string,"p_motivo": string }; Returns: undefined
                            },
@@ -8062,6 +8102,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_estudos":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_fisio_confirmacoes":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_honorarios":

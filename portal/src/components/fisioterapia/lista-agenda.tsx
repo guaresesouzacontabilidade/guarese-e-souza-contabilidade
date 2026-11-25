@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { horaLocal, diaLocal } from "@/lib/veterinaria/rotulos";
 import { formatarTelefone } from "@/lib/formatos";
-import { STATUS_AGENDA, TIPOS_AGENDA } from "@/lib/fisioterapia/rotulos";
+import { CONFIRMACAO_ENVIO, STATUS_AGENDA, TIPOS_AGENDA } from "@/lib/fisioterapia/rotulos";
 import { AcoesAgendamento, DialogoAgendamento } from "./agenda";
 
 type Linha = {
@@ -18,6 +18,10 @@ type Linha = {
   serie_id: string | null;
   profissional_id: string | null;
   motivo: string | null;
+  confirmacao_envio?: string | null;
+  confirmacao_destino?: string | null;
+  confirmacao_resposta?: string | null;
+  confirmacao_erro?: string | null;
   paciente: { id: string; nome: string; telefone: string | null; convenio: string | null } | null;
   profissional: { nome: string; cor: string } | null;
   whatsapp: string | null;
@@ -32,6 +36,7 @@ export function ListaAgenda({
   profissionais,
   pacientes,
   duracaoPadrao,
+  confirmacao = { ativa: false, teste: false },
 }: {
   empresaId: string;
   linhas: Linha[];
@@ -39,6 +44,8 @@ export function ListaAgenda({
   profissionais: { id: string; nome: string }[];
   pacientes: { id: string; nome: string }[];
   duracaoPadrao: number;
+  /** Confirmação automática pelo WhatsApp da clínica (e se está no modo teste) */
+  confirmacao?: { ativa: boolean; teste: boolean };
 }) {
   const base = `/e/${empresaId}/fisioterapia`;
   return (
@@ -71,9 +78,25 @@ export function ListaAgenda({
                 </p>
                 {a.observacoes ? <p className="text-xs text-muted-foreground">Obs.: {a.observacoes}</p> : null}
                 {encerrado && a.motivo ? <p className="text-xs text-muted-foreground">Motivo: {a.motivo}</p> : null}
-                <Badge variante={st?.tom ?? "neutro"} className="mt-1">
-                  {st?.rotulo ?? a.status}
-                </Badge>
+                <div className="mt-1 flex flex-wrap items-center gap-1">
+                  <Badge variante={st?.tom ?? "neutro"}>{st?.rotulo ?? a.status}</Badge>
+                  {a.confirmacao_resposta === "confirmou" ? (
+                    <Badge variante="sucesso" data-testid="confirmou-whatsapp">
+                      Confirmou pelo link
+                    </Badge>
+                  ) : a.confirmacao_resposta === "desmarcou" ? (
+                    <Badge variante="perigo">Desmarcou pelo link</Badge>
+                  ) : a.confirmacao_envio && a.confirmacao_envio !== "dispensado" ? (
+                    <span
+                      className={`text-[11px] ${CONFIRMACAO_ENVIO[a.confirmacao_envio]?.tom === "perigo" ? "text-perigo" : CONFIRMACAO_ENVIO[a.confirmacao_envio]?.tom === "alerta" ? "text-alerta" : "text-muted-foreground"}`}
+                      title={a.confirmacao_erro ?? undefined}
+                      data-testid="situacao-confirmacao"
+                    >
+                      {CONFIRMACAO_ENVIO[a.confirmacao_envio]?.rotulo ?? a.confirmacao_envio}
+                      {a.confirmacao_destino === "teste" ? " (número de teste)" : ""}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </div>
             <div className="flex flex-wrap items-start gap-1 sm:pl-[4.5rem] [&>div]:justify-start">
@@ -108,6 +131,8 @@ export function ListaAgenda({
                 temSerie={Boolean(a.serie_id)}
                 whatsapp={a.whatsapp}
                 registro={a.registro}
+                enviarConfirmacao={confirmacao.ativa && a.status === "agendado" && a.confirmacao_envio !== "pendente" && !a.confirmacao_resposta}
+                confirmacaoTeste={confirmacao.teste}
               />
             </div>
           </li>

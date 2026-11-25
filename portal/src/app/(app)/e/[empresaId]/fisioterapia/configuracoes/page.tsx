@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { FisioIndisponivel } from "@/components/fisioterapia/comuns";
 import { DialogoProfissional, FormConfigFisio } from "@/components/fisioterapia/configuracoes";
+import { FormWhatsappFisio } from "@/components/fisioterapia/whatsapp";
+import { envServidor } from "@/lib/env-servidor";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { obterContextoFisio } from "@/lib/fisioterapia/contexto";
 import { crefitoTexto } from "@/lib/fisioterapia/rotulos";
 
@@ -13,10 +16,12 @@ export default async function PaginaConfigFisio({ params }: PageProps<"/e/[empre
   const { empresaId } = await params;
   const ctx = await obterContextoFisio(empresaId);
   if (!ctx.gerente) return <FisioIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.clinicaAtiva} />;
-  const [{ data: cfg }, { data: profissionais }, { data: membros }] = await Promise.all([
+  const [{ data: cfg }, { data: profissionais }, { data: membros }, { data: segredo }] = await Promise.all([
     ctx.supabase.from("fisio_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("fisio_profissionais").select("*, perfil:perfis(nome)").eq("empresa_id", empresaId).order("nome"),
     ctx.supabase.from("empresa_membros").select("user_id, perfil:perfis!empresa_membros_user_id_fkey(nome)").eq("empresa_id", empresaId).eq("ativo", true).neq("papel", "equipe"),
+    // Só a existência do token do WhatsApp (o valor nunca sai do servidor)
+    criarClienteAdmin().from("fisio_whatsapp_segredo").select("empresa_id").eq("empresa_id", empresaId).maybeSingle(),
   ]);
   const usuarios = (membros ?? []).map((m) => ({ id: m.user_id, nome: (m.perfil as unknown as { nome: string } | null)?.nome ?? "Usuário" }));
 
@@ -63,6 +68,17 @@ export default async function PaginaConfigFisio({ params }: PageProps<"/e/[empre
             {cfg ? <FormConfigFisio empresaId={empresaId} cfg={{ ...cfg, valor_sessao: Number(cfg.valor_sessao) }} /> : <p className="text-sm text-muted-foreground">Configuração criada ao ligar a gestão.</p>}
           </CardContent>
         </Card>
+        {cfg ? (
+          <Card className="xl:col-span-2">
+            <CardHeader>
+              <CardTitle>Confirmação pelo WhatsApp da clínica</CardTitle>
+              <CardDescription>O paciente recebe no dia do atendimento o link para confirmar ou desmarcar.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormWhatsappFisio empresaId={empresaId} cfg={cfg} temToken={Boolean(segredo)} tokenEscritorio={Boolean(envServidor.whatsapp())} />
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </>
   );

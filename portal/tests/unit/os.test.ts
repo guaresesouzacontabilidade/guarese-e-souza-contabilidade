@@ -184,3 +184,16 @@ describe("recebimentos, aviso automático e assinatura", () => {
     expect(assinaturaValida("data:image/png;base64,<script>alert(1)</script>".padEnd(400, "A"))).toBe(false);
   });
 });
+
+describe("confirmação da fisioterapia pelo WhatsApp", () => {
+  it("o modelo leva só o primeiro nome, o horário, a clínica e o link", async () => {
+    const { parametrosConfirmacaoFisio } = await import("@/lib/fisioterapia/rotulos");
+    expect(parametrosConfirmacaoFisio({ paciente: "Ana Paula Souza", hora: "14:00", clinica: "Clínica\nMovimento", link: "https://portal/confirmar/abc" })).toEqual([
+      "Ana",
+      "14:00",
+      "Clínica Movimento",
+      "https://portal/confirmar/abc",
+    ]);
+    expect(parametrosConfirmacaoFisio({ paciente: "  ", hora: "08:30", clinica: "X", link: "l" })[0]).toBe("paciente");
+  });
+});

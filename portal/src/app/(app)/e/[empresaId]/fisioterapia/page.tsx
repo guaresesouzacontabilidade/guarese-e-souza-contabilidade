@@ -70,6 +70,7 @@ export default async function PaginaPainelFisio({ params }: PageProps<"/e/[empre
                 profissionais={opcoes.profissionais}
                 pacientes={opcoes.pacientes}
                 duracaoPadrao={agenda.duracaoPadrao}
+                confirmacao={agenda.confirmacao}
               />
             ) : (
               <EstadoVazio icone={Activity} titulo="Nenhum horário hoje" />

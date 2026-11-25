@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { CalendarPlus, Check, ClipboardPlus, FileText, MessageCircle, Pencil, UserCheck, UserX, X } from "lucide-react";
+import { CalendarPlus, Check, ClipboardPlus, FileText, MessageCircle, Pencil, Send, UserCheck, UserX, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { abrirAvaliacao, abrirEvolucao, cancelarAgendamento, mudarStatusAgenda, salvarAgendamento } from "@/lib/fisioterapia/acoes";
 import { DIAS_SEMANA, TIPOS_AGENDA } from "@/lib/fisioterapia/rotulos";
+import { enviarConfirmacaoFisio } from "@/lib/fisioterapia/whatsapp-acoes";
 import { DialogoMotivo } from "./comuns";
 
 export interface AgendamentoForm {
@@ -169,6 +170,8 @@ export function AcoesAgendamento({
   temSerie,
   whatsapp,
   registro,
+  enviarConfirmacao = false,
+  confirmacaoTeste = false,
 }: {
   empresaId: string;
   agendaId: string;
@@ -181,6 +184,9 @@ export function AcoesAgendamento({
   whatsapp: string | null;
   /** Avaliação ou evolução já aberta para este horário. */
   registro: { tipo: "avaliacao" | "evolucao"; id: string } | null;
+  /** Mostra "Enviar confirmação" (WhatsApp automático da clínica ligado) */
+  enviarConfirmacao?: boolean;
+  confirmacaoTeste?: boolean;
 }) {
   const router = useRouter();
   const base = `/e/${empresaId}/fisioterapia`;
@@ -198,7 +204,16 @@ export function AcoesAgendamento({
   const avaliacao = tipo === "avaliacao" || tipo === "reavaliacao";
   return (
     <div className="flex flex-wrap justify-end gap-1">
-      {status === "agendado" && whatsapp ? (
+      {enviarConfirmacao ? (
+        <BotaoAcao
+          variante="fantasma"
+          tamanho="sm"
+          acao={() => enviarConfirmacaoFisio(empresaId, agendaId)}
+          title={confirmacaoTeste ? "Modo teste: vai para o número de teste da clínica" : "Manda agora o link de confirmação pelo WhatsApp da clínica"}
+        >
+          <Send /> Enviar confirmação{confirmacaoTeste ? " (teste)" : ""}
+        </BotaoAcao>
+      ) : status === "agendado" && whatsapp ? (
         <Button asChild variante="fantasma" tamanho="sm">
           <a href={whatsapp} target="_blank" rel="noopener noreferrer">
             <MessageCircle /> WhatsApp

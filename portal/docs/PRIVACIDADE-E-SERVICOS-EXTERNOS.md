@@ -281,3 +281,11 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **O que fica guardado**: só a contagem das perguntas respondidas pela IA (quem, quando, modelo e tokens), para o limite diário e o custo. O texto da conversa **não** é guardado no banco: fica só na aba do navegador e some ao fechá-la.
 - **Falar com o escritório**: quando o guia não resolve, o botão abre uma **Solicitação** já com a dúvida escrita, que a pessoa confere e envia.
 
+## 26. Clínica de fisioterapia — confirmação do atendimento pelo WhatsApp
+
+- **Serviço externo**: WhatsApp Business Platform (Cloud API da **Meta**, operadora), pelo **número oficial da própria clínica**. Fica **desconectado** até a clínica informar o número (Phone Number ID), o modelo aprovado e o token; o token fica **cifrado no servidor** (AES-256-GCM) e nunca volta para o navegador.
+- **O que vai para a Meta**: o celular do paciente, o **primeiro nome**, o **horário** do atendimento, o nome da clínica e o **link de confirmação**. **Nada do prontuário** (avaliação, evolução, diagnóstico, CID, documentos) nem CPF, endereço ou convênio.
+- **Quem recebe**: só pacientes que **autorizaram o WhatsApp** no cadastro (ou o telefone informado por quem vem pela primeira vez). No **modo teste** (ligado de início), as mensagens vão **só para o número de teste da clínica**, nunca para os pacientes.
+- **Link de confirmação**: código aleatório de 16 caracteres por horário; a página, sem login, mostra só o primeiro nome, o dia e a hora e os contatos da clínica, e não é indexada por buscadores. Vale até a hora do atendimento. A resposta (confirmou/desmarcou, com o motivo opcional) fica na agenda e no histórico (auditoria).
+- **Base legal**: execução do serviço contratado pelo paciente (lembrete e confirmação do próprio atendimento), com a autorização do canal registrada no cadastro e desativável a qualquer momento (desmarcar "aceita WhatsApp").
+

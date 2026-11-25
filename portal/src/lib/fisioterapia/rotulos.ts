@@ -135,3 +135,26 @@ export function linkWhatsapp(telefone: string | null | undefined, texto: string)
 export function crefitoTexto(p: { crefito: string; crefito_regiao: number } | null | undefined) {
   return p ? `CREFITO-${p.crefito_regiao} nº ${p.crefito}` : "";
 }
+
+// -----------------------------------------------------------------------------
+// Confirmação do atendimento pelo WhatsApp da clínica (Cloud API da Meta)
+// -----------------------------------------------------------------------------
+export const CONFIRMACAO_ENVIO: Record<string, { rotulo: string; tom: "info" | "sucesso" | "alerta" | "perigo" | "neutro" }> = {
+  pendente: { rotulo: "Confirmação na fila do WhatsApp", tom: "info" },
+  enviado: { rotulo: "Confirmação enviada pelo WhatsApp", tom: "info" },
+  falhou: { rotulo: "A confirmação pelo WhatsApp falhou", tom: "perigo" },
+  nao_configurado: { rotulo: "WhatsApp da clínica desconectado", tom: "alerta" },
+  dispensado: { rotulo: "Sem confirmação pelo WhatsApp", tom: "neutro" },
+};
+
+/**
+ * Parâmetros do modelo aprovado na Meta para a confirmação:
+ * {{1}} primeiro nome do paciente, {{2}} horário (ex.: 14:00), {{3}} clínica, {{4}} link de confirmação.
+ */
+export function parametrosConfirmacaoFisio(v: { paciente: string; hora: string; clinica: string; link: string }): string[] {
+  const limpo = (t: string) => t.replace(/[\r\n\t]+/g, " ").replace(/ {4,}/g, "   ").trim().slice(0, 300);
+  return [limpo(v.paciente).split(/\s+/)[0] || "paciente", v.hora, limpo(v.clinica), v.link];
+}
+
+export const MODELO_CONFIRMACAO_SUGERIDO =
+  "Olá, {{1}}! Lembrete do seu atendimento hoje às {{2}} na {{3}}. Confirme sua presença (ou avise se não puder vir) pelo link: {{4}}";

@@ -108,6 +108,11 @@ export async function executarEnvio(admin: ClienteAdmin, job: Job) {
   const site = envPublico.siteUrl();
   let resultado: Awaited<ReturnType<typeof enviarEmail>>;
 
+  // Confirmação do atendimento ao paciente da clínica de fisioterapia (número oficial da clínica)
+  if (envio.tipo === "fisio_confirmacao") {
+    const { executarConfirmacaoFisio } = await import("@/lib/fisioterapia/confirmacao-whatsapp");
+    return executarConfirmacaoFisio(admin, envio, site);
+  }
   // Aviso de OS pronta ao cliente da loja (número oficial da própria loja)
   if (envio.tipo === "os_pronta") {
     const { executarAvisoOs } = await import("@/lib/os/aviso");

@@ -15,7 +15,8 @@ export const maxDuration = 60;
  * de cada mês, reanalisa as notas no auditor fiscal (a faixa do Simples muda);
  * apaga os lotes de XML vencidos (ficam 7 dias); nos honorários do
  * escritório, gera as cobranças do mês no dia escolhido e agenda os
- * lembretes da régua de cobrança (só em dia útil, às 9h).
+ * lembretes da régua de cobrança (só em dia útil, às 9h); na clínica de
+ * fisioterapia, programa as confirmações pelo WhatsApp dos atendimentos do dia.
  */
 async function executar(req: Request) {
   if (!cronAutorizado(req)) return new NextResponse("Não autorizado.", { status: 401 });
@@ -38,6 +39,8 @@ async function executar(req: Request) {
   const estudos = await admin.rpc("rotina_estudos");
   // Honorários do escritório: cobranças do mês no dia escolhido e lembretes da régua (dias úteis)
   const honorarios = await admin.rpc("rotina_honorarios");
+  // Clínica de fisioterapia: confirmações pelo WhatsApp dos atendimentos de hoje (saem no horário da clínica)
+  const fisio = await admin.rpc("rotina_fisio_confirmacoes");
   const resultado = {
     ...(data as Record<string, unknown>),
     obrigacoes: operacional.data,
@@ -47,6 +50,7 @@ async function executar(req: Request) {
     lotes_xml: lotes.error ? { erro: lotes.error.message } : lotes.data,
     estudos_tributarios: estudos.error ? { erro: estudos.error.message } : estudos.data,
     honorarios: honorarios.error ? { erro: honorarios.error.message } : honorarios.data,
+    fisio_confirmacoes: fisio.error ? { erro: fisio.error.message } : fisio.data,
   };
   await registrarRotina(admin, "diaria", { ok: true, resultado });
   const fila = await processarFila({ limite: 50, tempoMaximoMs: 30_000 });

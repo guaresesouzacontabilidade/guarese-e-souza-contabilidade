@@ -780,11 +780,18 @@
   "id": "clinica-de-fisioterapia-agenda-pacientes-prontuario-pacotes--4",
   "publico": "cliente",
   "secao": "Clínica de fisioterapia: agenda, pacientes, prontuário, pacotes e recebimentos (quem aderiu à gestão da clínica)",
-  "titulo": "Clínica de fisioterapia: agenda, pacientes, prontuário, pacotes e recebimentos (quem aderiu à gestão da clínica) › Ainda não faz",
-  "texto": "(ficam para uma próxima etapa, se a clínica precisar): faturamento de convênio no padrão TISS (guias em XML para a operadora), envio automático de lembretes, assinatura digital ICP-Brasil nos registros e o Receita Saúde (recibo do fisioterapeuta pessoa física, feito no aplicativo da Receita Federal)."
+  "titulo": "Clínica de fisioterapia: agenda, pacientes, prontuário, pacotes e recebimentos (quem aderiu à gestão da clínica) › Confirmação pelo WhatsApp da clínica",
+  "texto": "(Configurações da clínica → Confirmação pelo WhatsApp da clínica, responsável): no dia do atendimento, no horário do envio escolhido (ex.: 07:00), o paciente recebe pelo WhatsApp oficial da clínica (Cloud API da Meta) um link para Confirmar presença ou Não vou poder ir (com o motivo, se quiser). Horário marcado depois disso, no mesmo dia, recebe na hora. A agenda mostra a situação (na fila, enviada, falhou) e a resposta (Confirmou pelo link / Desmarcou pelo link); quem desmarca libera o horário e a recepção é avisada no sino. Só recebem os pacientes que autorizaram o WhatsApp no cadastro (ou o telefone de quem vem pela primeira vez). Remarcou para outro dia: a confirmação sai de novo no novo dia. Na agenda, Enviar confirmação manda na hora. - Testar com outro número antes: a configuração começa no Modo teste — todas as confirmações vão só para o número de teste (um celular da clínica), nunca para os pacientes. Dá para usar o número de teste gratuito da Meta como remetente e cadastrar lá o celular que recebe (até 5). Enviar mensagem de teste manda o modelo com dados de exemplo. Deu certo? Troque o Phone Number ID e o token pelos do número oficial da clínica e desmarque o modo teste. Siga o passo a passo da tela (modelo da categoria Utilidade, com 4 variáveis: primeiro nome, horário, clínica e link). - Fica desconectada até a clínica informar o número, o modelo aprovado e o token — nada é enviado. Sem ela, o botão WhatsApp da agenda continua abrindo o WhatsApp com a mensagem pronta."
  },
  {
   "id": "clinica-de-fisioterapia-agenda-pacientes-prontuario-pacotes--5",
+  "publico": "cliente",
+  "secao": "Clínica de fisioterapia: agenda, pacientes, prontuário, pacotes e recebimentos (quem aderiu à gestão da clínica)",
+  "titulo": "Clínica de fisioterapia: agenda, pacientes, prontuário, pacotes e recebimentos (quem aderiu à gestão da clínica) › Ainda não faz",
+  "texto": "(ficam para uma próxima etapa, se a clínica precisar): faturamento de convênio no padrão TISS (guias em XML para a operadora), assinatura digital ICP-Brasil nos registros e o Receita Saúde (recibo do fisioterapeuta pessoa física, feito no aplicativo da Receita Federal)."
+ },
+ {
+  "id": "clinica-de-fisioterapia-agenda-pacientes-prontuario-pacotes--6",
   "publico": "cliente",
   "secao": "Clínica de fisioterapia: agenda, pacientes, prontuário, pacotes e recebimentos (quem aderiu à gestão da clínica)",
   "titulo": "Clínica de fisioterapia: agenda, pacientes, prontuário, pacotes e recebimentos (quem aderiu à gestão da clínica)",

@@ -18,6 +18,10 @@ export interface LinhaAgenda {
   profissional_id: string | null;
   pacote_id: string | null;
   motivo: string | null;
+  confirmacao_envio: string | null;
+  confirmacao_destino: string | null;
+  confirmacao_resposta: string | null;
+  confirmacao_erro: string | null;
   paciente: { id: string; nome: string; telefone: string | null; aceita_whatsapp: boolean; convenio: string | null } | null;
   profissional: { nome: string; cor: string } | null;
 }
@@ -27,7 +31,7 @@ export async function carregarAgenda(ctx: ContextoFisio, empresaId: string, de: 
   let q = ctx.supabase
     .from("fisio_agenda")
     .select(
-      "id, inicio, duracao_min, tipo, status, sala, observacoes, nome_avulso, telefone_avulso, serie_id, profissional_id, pacote_id, motivo, paciente:fisio_pacientes(id, nome, telefone, aceita_whatsapp, convenio), profissional:fisio_profissionais(nome, cor)",
+      "id, inicio, duracao_min, tipo, status, sala, observacoes, nome_avulso, telefone_avulso, serie_id, profissional_id, pacote_id, motivo, confirmacao_envio, confirmacao_destino, confirmacao_resposta, confirmacao_erro, paciente:fisio_pacientes(id, nome, telefone, aceita_whatsapp, convenio), profissional:fisio_profissionais(nome, cor)",
     )
     .eq("empresa_id", empresaId)
     .gte("inicio", limitesDoDia(de).inicio)
@@ -36,7 +40,7 @@ export async function carregarAgenda(ctx: ContextoFisio, empresaId: string, de: 
   if (profissionalId) q = q.eq("profissional_id", profissionalId);
   const [{ data }, { data: cfg }, { data: empresa }] = await Promise.all([
     q,
-    ctx.supabase.from("fisio_config").select("mensagem_confirmacao, nome_clinica, duracao_padrao_min").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("fisio_config").select("mensagem_confirmacao, nome_clinica, duracao_padrao_min, whatsapp_ativo, whatsapp_modo_teste").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("empresas").select("razao_social, nome_fantasia").eq("id", empresaId).maybeSingle(),
   ]);
   const linhas = (data ?? []) as unknown as LinhaAgenda[];
@@ -55,6 +59,8 @@ export async function carregarAgenda(ctx: ContextoFisio, empresaId: string, de: 
   const modelo = cfg?.mensagem_confirmacao ?? "Olá, {paciente}! Confirmando a sua sessão em {data} às {hora}.";
   return {
     duracaoPadrao: cfg?.duracao_padrao_min ?? 50,
+    /** Confirmação automática pelo WhatsApp da clínica ligada (e se está no modo teste) */
+    confirmacao: { ativa: Boolean(cfg?.whatsapp_ativo), teste: Boolean(cfg?.whatsapp_modo_teste) },
     linhas: linhas.map((l) => {
       const telefone = l.paciente ? (l.paciente.aceita_whatsapp ? l.paciente.telefone : null) : l.telefone_avulso;
       const texto = mensagemConfirmacao(modelo, {

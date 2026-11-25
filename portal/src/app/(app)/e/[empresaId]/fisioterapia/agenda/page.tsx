@@ -100,6 +100,7 @@ export default async function PaginaAgendaFisio({ params, searchParams }: PagePr
               profissionais={opcoes.profissionais}
               pacientes={opcoes.pacientes}
               duracaoPadrao={agendaSemana.duracaoPadrao}
+              confirmacao={agendaSemana.confirmacao}
             />
           </CardContent>
         </Card>
