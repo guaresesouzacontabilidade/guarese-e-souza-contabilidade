@@ -57,7 +57,7 @@ export default async function OrcamentoDoCliente({ params }: PageProps<"/orcamen
   if (!o) notFound();
 
   return (
-    <Card className="w-full max-w-2xl">
+    <Card className="w-full max-w-2xl print:max-w-none print:border-0 print:bg-white print:shadow-none print:backdrop-blur-none">
       <CardHeader className="space-y-1 text-center">
         {o.demonstracao ? <p className="mx-auto w-fit rounded border border-border px-2 text-xs font-bold">DEMONSTRAÇÃO — DADOS FICTÍCIOS</p> : null}
         <p className="text-xs uppercase tracking-wider text-muted-foreground">{o.loja}</p>
@@ -118,7 +118,7 @@ export default async function OrcamentoDoCliente({ params }: PageProps<"/orcamen
         {o.observacao ? <p className="text-sm">Obs.: {o.observacao}</p> : null}
         {o.mensagem ? <p className="whitespace-pre-line text-center text-sm text-muted-foreground">{o.mensagem}</p> : null}
 
-        <div className="space-y-1 rounded-xl bg-muted/50 p-3 text-center text-xs text-muted-foreground">
+        <div className="space-y-1 rounded-xl bg-muted/50 p-3 text-center text-xs text-muted-foreground print:bg-transparent">
           <p className="font-medium text-foreground">{o.loja}</p>
           {o.razao_social !== o.loja ? <p>{o.razao_social}</p> : null}
           {o.cnpj ? <p>CNPJ {formatarDocumento(o.cnpj)}</p> : null}
