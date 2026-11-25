@@ -348,7 +348,7 @@ export async function gerarDanfe(xml: string, opcoes: { cancelada?: boolean; log
     pageOrientation: "portrait",
     pageMargins: [14, 14, 14, 22],
     defaultStyle: { font: "Helvetica", fontSize: 7, lineHeight: 1.05 },
-    info: { title: `DANFE ${nNF} - ${chave}`, author: "Portal Guarese's ON" },
+    info: { title: `DANFE ${nNF} - ${chave}`, author: val(emit, "xNome") ?? "" },
     background: (_p, tamanho) =>
       (marca
         ? {

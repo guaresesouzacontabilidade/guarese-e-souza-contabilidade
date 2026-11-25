@@ -1,7 +1,6 @@
 import "server-only";
 import type { Content, TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
-import { logoHorizontalSvg } from "@/lib/marca/logo";
-import { COR, carregarPdfMake } from "@/lib/relatorios/pdf";
+import { COR, cabecalhoDaEmpresa, carregarPdfMake } from "@/lib/relatorios/pdf";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarData, formatarDataHora, formatarDocumento } from "@/lib/formatos";
 import { FORMAS_PAGAMENTO, ORDEM_FORMAS, formatarQuantidade, hora, un } from "./rotulos";
@@ -17,10 +16,8 @@ import { FORMAS_PAGAMENTO_HOTEL, type FormaPagamentoHotel } from "@/lib/hotel/ro
 export interface DadosPdfCaixa {
   relatorio: RelatorioCaixa;
   empresa: { nome: string; razao: string; documento: string };
-  /** Logo da empresa cliente (cadastro da empresa). */
+  /** Logo da empresa (cadastro da empresa). O relatório é da empresa: não leva a marca do escritório. */
   logo: { dados: string } | null;
-  /** Logo enviada pelo escritório (sem ela, a logomarca oficial). */
-  logoEscritorio: { dados: string } | null;
   geradoEm: string;
 }
 
@@ -157,21 +154,8 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
   });
 
   const conteudo: Content[] = [
-    {
-      // Logo do escritório à esquerda; a da empresa à direita, com a razão social e o CNPJ
-      columns: [
-        { width: "*", stack: [d.logoEscritorio ? { image: d.logoEscritorio.dados, fit: [140, 40] } : { svg: logoHorizontalSvg(COR.marrom), width: 132 }] },
-        {
-          width: "auto",
-          alignment: "right",
-          stack: [
-            ...(d.logo ? [{ image: d.logo.dados, fit: [130, 34], alignment: "right", margin: [0, 0, 0, 2] } as Content] : []),
-            { text: d.empresa.razao, bold: true, fontSize: d.logo ? 8 : 9, color: COR.marrom },
-            { text: formatarDocumento(d.empresa.documento), fontSize: 8, color: COR.cinza },
-          ],
-        },
-      ],
-    },
+    // Só a marca da empresa: logo (ou o nome) à esquerda, razão social e CNPJ à direita
+    cabecalhoDaEmpresa({ nome: d.empresa.razao, documento: formatarDocumento(d.empresa.documento) }, d.logo),
     { canvas: [{ type: "rect", x: 0, y: 0, w: 515, h: 2.5, color: COR.marrom }], margin: [0, 8, 0, 8] },
     { text: `Relatório do caixa — ${formatarData(s.data)}`, fontSize: 16, bold: true, color: COR.marrom },
     {
@@ -337,12 +321,12 @@ export async function gerarPdfRelatorioCaixa(d: DadosPdfCaixa): Promise<Buffer> 
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
     pageMargins: [40, 36, 40, 46],
-    info: { title: `Relatório do caixa ${formatarData(s.data)} — ${d.empresa.nome}`, author: d.empresa.razao, creator: "Portal Guarese's ON" },
+    info: { title: `Relatório do caixa ${formatarData(s.data)} — ${d.empresa.nome}`, author: d.empresa.razao, creator: d.empresa.razao },
     watermark: fechado ? undefined : { text: "PARCIAL", opacity: 0.05, bold: true, fontSize: 90 },
     footer: (pagina: number, total: number) => ({
       margin: [40, 12, 40, 0],
       columns: [
-        { text: `Gerado em ${formatarDataHora(d.geradoEm)} pelo Portal Guarese's ON · os valores entram automaticamente no Financeiro e na contabilidade`, fontSize: 6.5, color: COR.cinza, margin: [0, 3, 0, 0] },
+        { text: `${d.empresa.razao} — CNPJ/CPF ${formatarDocumento(d.empresa.documento)} · gerado em ${formatarDataHora(d.geradoEm)}`, fontSize: 6.5, color: COR.cinza, margin: [0, 3, 0, 0] },
         { text: `Página ${pagina} de ${total}`, alignment: "right", fontSize: 7, color: COR.cinza, width: 60, margin: [0, 3, 0, 0] },
       ],
     }),

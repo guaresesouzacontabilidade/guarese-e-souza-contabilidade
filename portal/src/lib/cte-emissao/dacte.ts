@@ -276,7 +276,7 @@ export async function gerarDacte(xml: string, opcoes: { cancelado?: boolean; log
     pageOrientation: "portrait",
     pageMargins: [14, 14, 14, 22],
     defaultStyle: { font: "Helvetica", fontSize: 7, lineHeight: 1.05 },
-    info: { title: `DACTE ${nCT} - ${chave}`, author: "Portal Guarese's ON" },
+    info: { title: `DACTE ${nCT} - ${chave}`, author: val(emit, "xNome") ?? "" },
     background: (_p, tamanho) =>
       (marca
         ? {

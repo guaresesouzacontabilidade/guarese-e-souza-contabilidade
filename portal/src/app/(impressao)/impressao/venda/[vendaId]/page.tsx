@@ -148,8 +148,6 @@ export default async function Comprovante({ params, searchParams }: PageProps<"/
             <p className="whitespace-pre-line text-center">{cfg.mensagem_comprovante}</p>
           </>
         ) : null}
-        {linha}
-        <p className="text-center text-[0.85em]">Portal Guarese&apos;s ON</p>
       </main>
     </>
   );

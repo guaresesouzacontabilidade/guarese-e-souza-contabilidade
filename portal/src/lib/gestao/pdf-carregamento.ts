@@ -1,6 +1,5 @@
 import "server-only";
 import type { Content, TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
-import { logoHorizontalSvg } from "@/lib/marca/logo";
 import { COR, carregarPdfMake } from "@/lib/relatorios/pdf";
 import { formatarData, formatarDataHora, formatarDocumento } from "@/lib/formatos";
 import { formatarQuantidade } from "./rotulos";
@@ -55,7 +54,6 @@ export interface DadosPdfOrdem {
   mensagem: string | null;
   demonstracao: boolean;
   logo: { dados: string } | null;
-  logoEscritorio: { dados: string } | null;
   geradoEm: string;
 }
 
@@ -116,32 +114,18 @@ export async function gerarPdfOrdem(d: DadosPdfOrdem): Promise<Buffer> {
 
   const conteudo: Content[] = [
     {
-      // Logo do escritório à esquerda; a da empresa à direita, com a razão social e o CNPJ
+      // Documento da empresa: só a marca dela (logo à esquerda; razão social, CNPJ e IE à direita)
       columns: [
         {
           width: "*",
-          stack: [d.logoEscritorio ? { image: d.logoEscritorio.dados, fit: [140, 40] } : { svg: logoHorizontalSvg(COR.marrom), width: 132 }],
+          stack: [d.logo ? { image: d.logo.dados, fit: [150, 40] } : { text: d.vendedor.razao, bold: true, fontSize: 12, color: COR.marrom, margin: [0, 6, 0, 0] }],
         },
         {
           width: "auto",
           alignment: "right",
+          margin: [0, d.logo ? 6 : 8, 0, 0],
           stack: [
-            ...(d.logo
-              ? [
-                  {
-                    image: d.logo.dados,
-                    fit: [130, 34],
-                    alignment: "right",
-                    margin: [0, 0, 0, 2],
-                  } as Content,
-                ]
-              : []),
-            {
-              text: d.vendedor.razao,
-              bold: true,
-              fontSize: d.logo ? 8 : 9,
-              color: COR.marrom,
-            },
+            ...(d.logo ? [{ text: d.vendedor.razao, bold: true, fontSize: 8.5, color: COR.marrom } as Content] : []),
             {
               text: `${formatarDocumento(d.vendedor.documento)}${d.vendedor.inscricao ? ` · IE ${d.vendedor.inscricao}` : ""}`,
               fontSize: 8,
@@ -319,7 +303,7 @@ export async function gerarPdfOrdem(d: DadosPdfOrdem): Promise<Buffer> {
     info: {
       title: `Ordem de carregamento nº ${o.numero} — ${d.vendedor.razao}`,
       author: d.vendedor.razao,
-      creator: "Portal Guarese's ON",
+      creator: d.vendedor.razao,
     },
     watermark: cancelada
       ? {
@@ -332,7 +316,7 @@ export async function gerarPdfOrdem(d: DadosPdfOrdem): Promise<Buffer> {
       : undefined,
     footer: () => ({
       margin: [40, 10, 40, 0],
-      text: `Gerada em ${formatarDataHora(d.geradoEm)} pelo Portal Guarese's ON`,
+      text: `${d.vendedor.razao} — CNPJ/CPF ${formatarDocumento(d.vendedor.documento)} · gerada em ${formatarDataHora(d.geradoEm)}`,
       fontSize: 6.5,
       color: COR.cinza,
     }),

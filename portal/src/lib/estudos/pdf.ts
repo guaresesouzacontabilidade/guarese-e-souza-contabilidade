@@ -99,6 +99,8 @@ export async function gerarPdfEstudo(
     titulo: "Estudo de planejamento tributário",
     subtitulo: NOME_TIPO[e.tipo] ?? e.tipo,
     situacao: "revisado",
+    // Estudo feito pelo escritório para o cliente: leva a marca do escritório
+    marca: "escritorio",
     notaFinal:
       `Estimativa feita pelo escritório com os dados registrados no Portal Guarese's ON até ${formatarData(e.atualizado_em.slice(0, 10))}. ` +
       "Os valores podem mudar com novos dados e com mudanças na legislação. Nenhuma alteração deve ser feita sem a orientação do escritório.",

@@ -22,6 +22,12 @@ export interface InfoPlanilha {
   geradoEm: string;
   /** Logos do topo: a do escritório (sem ela, a logomarca oficial) e a do cliente. */
   logos?: { escritorio: ImagemEmbutida | null; cliente: ImagemEmbutida | null };
+  /**
+   * De quem é a planilha. "empresa" (padrão): feita na empresa do cliente — só a
+   * logo dela, sem a do escritório. "escritorio": planilha do escritório — a logo
+   * do escritório à esquerda e a do cliente à direita.
+   */
+  marca?: "empresa" | "escritorio";
 }
 
 /** Coloca a imagem no tamanho máximo da caixa, sem distorcer. */
@@ -37,11 +43,16 @@ function encaixar(dados: string, caixa: { largura: number; altura: number }) {
   };
 }
 
-/** Linha 1 da planilha: logo do escritório à esquerda e a do cliente à direita. */
+/** Linha 1 da planilha: a logo da empresa (planilha da empresa) ou a do escritório e a do cliente (planilha do escritório). */
 function logosNoTopo(ws: ExcelJS.Worksheet, info: InfoPlanilha, colunas: number) {
-  ws.getRow(1).height = 36;
-  const imagens: { dados: string; coluna: number }[] = [{ dados: info.logos?.escritorio?.dados ?? LOGO_ESCRITORIO_PNG, coluna: 0 }];
-  if (info.logos?.cliente) imagens.push({ dados: info.logos.cliente.dados, coluna: Math.max(1, colunas - 1) });
+  const imagens: { dados: string; coluna: number }[] = [];
+  if (info.marca === "escritorio") {
+    imagens.push({ dados: info.logos?.escritorio?.dados ?? LOGO_ESCRITORIO_PNG, coluna: 0 });
+    if (info.logos?.cliente) imagens.push({ dados: info.logos.cliente.dados, coluna: Math.max(1, colunas - 1) });
+  } else if (info.logos?.cliente) {
+    imagens.push({ dados: info.logos.cliente.dados, coluna: 0 });
+  }
+  ws.getRow(1).height = imagens.length ? 36 : 6;
   for (const img of imagens) {
     const e = encaixar(img.dados, { largura: 170, altura: 42 });
     if (!e) continue;
@@ -50,9 +61,10 @@ function logosNoTopo(ws: ExcelJS.Worksheet, info: InfoPlanilha, colunas: number)
   }
 }
 
-export function novaPasta() {
+/** Nova planilha; o autor é quem fez o documento (a empresa ou o escritório). */
+export function novaPasta(autor?: string) {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Portal Guarese's ON";
+  if (autor) wb.creator = autor;
   wb.created = new Date();
   return wb;
 }

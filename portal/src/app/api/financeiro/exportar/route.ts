@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
 
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Portal Guarese's ON";
+  wb.creator = acesso.nome_fantasia ?? acesso.razao_social;
   const ws = wb.addWorksheet("Lançamentos", { views: [{ state: "frozen", ySplit: 1 }] });
   ws.addRow(cabecalho);
   ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };

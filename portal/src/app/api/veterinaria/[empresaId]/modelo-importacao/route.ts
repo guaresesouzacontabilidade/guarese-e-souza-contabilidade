@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ empr
   const campos = [...CAMPOS_TUTOR.filter((c) => c.chave !== "tutor_codigo"), ...CAMPOS_ANIMAL];
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Portal Guarese's ON";
+  wb.creator = acesso.nome_fantasia ?? acesso.razao_social;
   const ws = wb.addWorksheet("Tutores e animais", { views: [{ state: "frozen", ySplit: 1 }] });
   ws.addRow(campos.map((c) => c.titulo));
   ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };

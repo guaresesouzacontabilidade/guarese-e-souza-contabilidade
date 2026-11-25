@@ -151,12 +151,12 @@ const nomeEmpresa = (l: Lote) => l.empresa?.nome_fantasia || l.empresa?.razao_so
 
 async function planilha(lote: Lote, itens: Awaited<ReturnType<typeof todosOsItens>>, geradoEm: string): Promise<Uint8Array> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Portal Guarese's ON";
+  wb.creator = nomeEmpresa(lote);
   wb.created = new Date();
   const ws = wb.addWorksheet("Notas");
   ws.addRow([`XML das notas — ${formatarCompetencia(lote.competencia)}`]).font = { bold: true, size: 14, color: { argb: "FF4A2C1D" } };
   ws.addRow([`${lote.empresa?.razao_social ?? nomeEmpresa(lote)}${lote.empresa?.documento ? ` — ${formatarDocumento(lote.empresa.documento)}` : ""}`]);
-  ws.addRow([`Gerado em ${geradoEm} (horário de Brasília) pelo Portal Guarese's ON`]).font = { size: 9, italic: true };
+  ws.addRow([`Gerado em ${geradoEm} (horário de Brasília)`]).font = { size: 9, italic: true };
   ws.addRow([]);
   const colunas = ["Tipo", "Número", "Série", "Chave de acesso", "Emissão", "CNPJ/CPF do emitente", "Emitente", "CNPJ/CPF do destinatário", "Destinatário", "Valor", "Situação", "Arquivo no ZIP", "Parte"];
   const titulo = ws.addRow(colunas);
@@ -199,7 +199,7 @@ function leiaMe(
     : TIPOS_LOTE.filter((t) => lote.tipos.includes(t))
         .map((t) => ROTULO_TIPO_LOTE[t])
         .join(", ");
-  l.push("XML das notas fiscais - Portal Guarese's ON", "");
+  l.push(`XML das notas fiscais - ${nomeEmpresa(lote)}`, "");
   l.push(`Empresa: ${lote.empresa?.razao_social ?? nomeEmpresa(lote)}${lote.empresa?.documento ? ` (${formatarDocumento(lote.empresa.documento)})` : ""}`);
   l.push(`Mês de emissão: ${formatarCompetencia(lote.competencia)}`);
   l.push(`Tipos: ${tipos}`);

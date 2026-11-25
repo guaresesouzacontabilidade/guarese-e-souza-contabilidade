@@ -13,7 +13,6 @@ import { GraficoComposicao } from "@/components/relatorios/graficos";
 import { GraficoCascata, GraficoConsumo, GraficoRanking } from "@/components/frota/graficos";
 import { DialogoVeiculo, ExcluirLancamento, NovaDespesa, NovaViagem } from "@/components/frota/lancamentos";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
-import { obterEscritorioPublico } from "@/lib/auth/escritorio-publico";
 import { hojeISO } from "@/lib/competencia";
 import { formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import { formatarData, nomeMes } from "@/lib/formatos";
@@ -115,7 +114,6 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
     for (const [k, v] of Object.entries(atual)) if (v) q.set(k, v);
     return `${base}?${q.toString()}`;
   };
-  const escritorio = await obterEscritorioPublico();
   const opcoes = dados.todos.filter((v) => v.ativo).map((v) => ({ id: v.id, placa: v.placa, descricao: v.descricao }));
   const t = frota.total;
   const foco = sel ?? null;
@@ -220,7 +218,7 @@ export default async function PaginaFrota({ params, searchParams }: PageProps<"/
           {/* A frase do mês */}
           <Card className="overflow-hidden">
             <CardContent className="space-y-3 pt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Análise gerencial · {escritorio.nome_fantasia}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Análise gerencial</p>
               {sel ? (
                 <Link href={link({ veiculo: null })} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
                   <ArrowLeft className="size-4" /> Voltar para a frota completa

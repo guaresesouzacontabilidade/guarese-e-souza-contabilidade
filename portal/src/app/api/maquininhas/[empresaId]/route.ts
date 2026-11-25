@@ -40,7 +40,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/maquininhas/
 
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Portal Guarese's ON";
+  wb.creator = acesso.nome_fantasia ?? acesso.razao_social;
   const cabecalho = [
     "Data da venda", "Adquirente", "Bandeira", "Tipo de venda", "Parcelas", "Valor da venda", "Taxa cobrada (R$)", "Taxa cobrada (%)",
     "Taxa do contrato (%)", "Tarifa do contrato (R$)", "Taxa pelo contrato (R$)", "Diferença (R$)", "Conferência", "NSU", "Autorização",

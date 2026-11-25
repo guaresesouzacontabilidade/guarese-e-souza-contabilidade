@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Portal Guarese's ON";
+  wb.creator = empresa.nome_fantasia ?? empresa.razao_social;
   const ws = wb.addWorksheet("Produtos", { views: [{ state: "frozen", ySplit: 1 }] });
   ws.addRow(CAMPOS_PLANILHA.map((c) => c.titulo));
   ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };

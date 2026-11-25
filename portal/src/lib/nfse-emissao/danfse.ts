@@ -291,7 +291,7 @@ export async function gerarDanfse(xml: string, opcoes: { cancelada?: boolean; mu
     pageOrientation: "portrait",
     pageMargins: [12, 12, 12, 12],
     defaultStyle: { font: "Helvetica", fontSize: 7, lineHeight: 1.05 },
-    info: { title: `DANFSe ${nfse.numero ?? ""} - ${nfse.chave}`, author: "Portal Guarese's ON" },
+    info: { title: `DANFSe ${nfse.numero ?? ""} - ${nfse.chave}`, author: val(prest, "xNome") ?? val(emit, "xNome") ?? "" },
     background: (_p, tamanho) =>
       [
         { canvas: [{ type: "rect", x: 10, y: 10, w: tamanho.width - 20, h: tamanho.height - 20, lineWidth: 1 }] },

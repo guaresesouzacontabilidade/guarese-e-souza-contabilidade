@@ -119,6 +119,8 @@ test("dono: venda pelas peças com troco, comprovante, estoque, Financeiro e rel
   await page.goto(`/impressao/venda/${vendaDinheiro}`);
   await expect(page.getByText("NÃO É DOCUMENTO FISCAL")).toBeVisible();
   await expect(page.getByText("R$ 21,00")).toBeVisible();
+  // Documento da loja: só a marca da empresa, sem o nome do portal do escritório
+  await expect(page.locator("main")).not.toContainText("Guarese");
 
   // Caixa do dia e relatório em PDF
   await page.goto(`/e/${empresaId}/loja/caixa`);
@@ -128,6 +130,7 @@ test("dono: venda pelas peças com troco, comprovante, estoque, Financeiro e rel
   expect(pdf.status()).toBe(200);
   expect(pdf.headers()["content-type"]).toBe("application/pdf");
   expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  expect((await pdf.body()).toString("latin1")).not.toMatch(/Guarese/i);
 
   // Logo da empresa (usada nos relatórios impressos e no comprovante)
   const logo = await page.request.get(`/api/empresas/${empresaId}/logo`);

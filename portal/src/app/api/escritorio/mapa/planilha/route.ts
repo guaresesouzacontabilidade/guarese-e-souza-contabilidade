@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
         situacao: `${empresas.length} empresa(s)`,
         geradoEm: formatarDataHora(new Date().toISOString()),
         logos: await logosDaEmpresa(s.supabase, null),
+        marca: "escritorio",
       },
       colunas,
       [34, 20, 18, 20, 18, 22, 22, 22, 22, 22, 22, 14, 26],

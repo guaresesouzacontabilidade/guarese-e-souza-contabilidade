@@ -58,7 +58,7 @@ test("o dono vê o resultado líquido, abre um veículo e o km digitado errado �
   await expect(page.getByRole("heading", { name: "Rentabilidade da frota" })).toBeVisible();
   await expect(page.getByText(/a frota realizou \d+ viagens, percorreu [\d.]+ km, faturou R\$ [\d.,]+ e apresentou resultado líquido/)).toBeVisible();
   await expect(page.getByText("Ranking de resultado por veículo")).toBeVisible();
-  await expect(page.getByText(/Análise gerencial ·/)).toBeVisible();
+  await expect(page.getByText("Análise gerencial", { exact: true })).toBeVisible();
 
   // Abre o caminhão do Volvo
   await page.getByRole("link", { name: /RTA-4B21/ }).first().click();

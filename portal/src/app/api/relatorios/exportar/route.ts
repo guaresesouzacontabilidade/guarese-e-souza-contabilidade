@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
       });
       arquivo = await gerarPdf(cab, blocos);
     } else {
-      const wb = novaPasta();
+      const wb = novaPasta(acesso.razao_social);
       const info = {
         titulo,
         empresa: acesso.razao_social,

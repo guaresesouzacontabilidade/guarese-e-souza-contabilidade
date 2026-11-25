@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sessaoApi } from "@/lib/auth/sessao";
-import { logosDaEmpresa } from "@/lib/marca/logos-relatorio";
+import { logoDoCliente } from "@/lib/marca/logos-relatorio";
 import { gerarPdfOrdem, type OrdemPdf } from "@/lib/gestao/pdf-carregamento";
 import { nomeArquivo } from "@/lib/relatorios/cabecalho";
 
@@ -28,7 +28,6 @@ export async function GET(req: NextRequest, { params }: RouteContext<"/api/loja/
     s.supabase.from("nfe_emitentes").select("inscricao_estadual").eq("empresa_id", o.empresa_id).eq("ativo", true).limit(2),
   ]);
   if (!empresa) return new NextResponse("Ordem não encontrada.", { status: 404 });
-  const logos = await logosDaEmpresa(s.supabase, empresa.logo_path);
   // Inscrição de quem vende: a da ordem ou, se a empresa só tem uma, essa
   const inscricao =
     (o.emitente as { inscricao_estadual: string } | null)?.inscricao_estadual ?? (emitentes?.length === 1 ? emitentes[0].inscricao_estadual : null);
@@ -48,8 +47,7 @@ export async function GET(req: NextRequest, { params }: RouteContext<"/api/loja/
     nota: nota && !["cancelada", "descartada"].includes(nota.situacao) ? { numero: nota.numero, serie: nota.serie } : null,
     mensagem: cfg?.mensagem_comprovante ?? null,
     demonstracao: empresa.demonstracao,
-    logo: logos.cliente,
-    logoEscritorio: logos.escritorio,
+    logo: await logoDoCliente(s.supabase, empresa.logo_path),
     geradoEm: new Date().toISOString(),
   });
   const nome = nomeArquivo(["ordem-carregamento", String(o.numero), empresa.nome_fantasia ?? empresa.razao_social], "pdf");

@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
 
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Portal Guarese's ON";
+  if (empresas.length === 1) wb.creator = empresas[0].nome_fantasia ?? empresas[0].razao_social;
   const titulo = (ws: import("exceljs").Worksheet, colunas: number) => {
     ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4A2C1D" } };

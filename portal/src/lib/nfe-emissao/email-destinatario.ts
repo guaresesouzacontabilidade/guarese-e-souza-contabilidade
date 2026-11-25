@@ -2,13 +2,14 @@ import "server-only";
 import type { ClienteAdmin } from "@/lib/supabase/admin";
 import { enviarEmail } from "@/lib/email/enviar";
 import { formatarMoeda } from "@/lib/dinheiro";
+import { formatarTelefone } from "@/lib/formatos";
 import { logoDoCliente } from "@/lib/marca/logos-relatorio";
 import { gerarDanfe } from "./danfe";
 
 /**
  * Manda ao comprador (e-mail do cadastro do cliente) o DANFE em PDF e o XML
- * da NF-e autorizada em produção, pelo e-mail do escritório, quando a
- * configuração da empresa pede. Sem e-mail configurado no portal, nada é
+ * da NF-e autorizada em produção, quando a configuração da empresa pede. O
+ * e-mail leva só o nome e os contatos da empresa emitente. Sem e-mail configurado no portal, nada é
  * enviado (e não se finge o envio).
  */
 export async function enviarParaDestinatario(admin: ClienteAdmin, emissaoId: string): Promise<boolean> {
@@ -18,7 +19,7 @@ export async function enviarParaDestinatario(admin: ClienteAdmin, emissaoId: str
   if (!cfg?.enviar_email_destinatario) return false;
   const email = ((e.dados as Record<string, unknown>)?.destinatario as { email?: string | null } | undefined)?.email;
   if (!email) return false;
-  const { data: emp } = await admin.from("empresas").select("razao_social, nome_fantasia, logo_path").eq("id", e.empresa_id).maybeSingle();
+  const { data: emp } = await admin.from("empresas").select("razao_social, nome_fantasia, logo_path, telefone, email").eq("id", e.empresa_id).maybeSingle();
   const emitente = emp?.nome_fantasia?.trim() || emp?.razao_social || "Emitente";
   const logo = await logoDoCliente(admin, emp?.logo_path);
   const pdf = await gerarDanfe(e.xml_autorizado, { logo: logo?.dados ?? null });
@@ -33,7 +34,8 @@ export async function enviarParaDestinatario(admin: ClienteAdmin, emissaoId: str
         `Segue a nota fiscal eletrônica nº ${e.numero} (série ${e.serie}), no valor de ${formatarMoeda(Number(e.valor_total))}, emitida por ${emitente}. O PDF (DANFE) e o arquivo XML estão anexados.`,
         `Chave de acesso: ${e.chave}. Você pode conferir a nota no Portal Nacional da NF-e (www.nfe.fazenda.gov.br).`,
       ],
-      aviso: "Mensagem automática enviada pelo Portal Guarese's ON a pedido do emitente da nota.",
+      aviso: `Mensagem automática enviada a pedido de ${emitente}.`,
+      remetente: { nome: emitente, contatos: [emp?.telefone ? formatarTelefone(emp.telefone) : null, emp?.email].filter((c): c is string => !!c) },
     },
     [
       { nome: `${nome}.pdf`, conteudo: pdf, tipo: "application/pdf" },

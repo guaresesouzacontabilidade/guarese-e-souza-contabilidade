@@ -19,8 +19,15 @@ export const COR = { marrom: "#4a2c1d", bege: "#f1e8dc", begeForte: "#e6d6c2", c
 export interface Cabecalho {
   titulo: string;
   subtitulo: string;
-  empresa: { nome: string; documento: string };
+  empresa: { nome: string; documento: string; endereco?: string | null; contato?: string | null };
   escritorio: { nome: string; razao: string; cnpj: string; email: string | null; endereco: string };
+  /**
+   * De quem é o documento. "empresa" (padrão): feito na empresa do cliente
+   * (relatórios, comprovantes) — só a logo e os dados da própria empresa, sem a
+   * marca do escritório. "escritorio": documento do escritório para o cliente
+   * (estudo tributário, relatório do auditor) — as duas logos.
+   */
+  marca?: "empresa" | "escritorio";
   logo?: { dados: string } | null; // data URL (png/jpeg) da logo enviada pelo escritório
   logoCliente?: { dados: string } | null; // logo da empresa cliente (cadastro da empresa)
   /** "documento": comprovante emitido pela própria empresa (recibo, ficha), sem a marca de relatório gerencial. */
@@ -60,38 +67,66 @@ interface PdfMake {
   createPdf(doc: TDocumentDefinitions): { getBuffer(): Promise<Buffer> };
 }
 
+/** Cabeçalho do PDF com a marca da própria empresa: logo (ou o nome) à esquerda, nome e CNPJ à direita. */
+export function cabecalhoDaEmpresa(empresa: { nome: string; documento: string }, logo: { dados: string } | null | undefined): Content {
+  return {
+    columns: [
+      { width: "*", stack: [logo ? { image: logo.dados, fit: [150, 40] } : { text: empresa.nome, bold: true, fontSize: 12, color: COR.marrom, margin: [0, 6, 0, 0] }] },
+      {
+        width: "auto",
+        alignment: "right",
+        margin: [0, logo ? 6 : 8, 0, 0],
+        stack: [...(logo ? [{ text: empresa.nome, bold: true, fontSize: 8.5, color: COR.marrom } as Content] : []), { text: empresa.documento, fontSize: 8, color: COR.cinza }],
+      },
+    ],
+  };
+}
+
+/** Rodapé com os dados da própria empresa (nome, CNPJ, endereço e contato). */
+export function rodapeDaEmpresa(empresa: { nome: string; documento: string; endereco?: string | null; contato?: string | null }): string {
+  return [empresa.nome, empresa.documento ? `CNPJ/CPF ${empresa.documento}` : null, empresa.endereco, empresa.contato].filter(Boolean).join(" — ");
+}
+
 export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buffer> {
   const pm = await carregarPdfMake();
+  const doEscritorio = cab.marca === "escritorio";
   const marca: Content = cab.logo
     ? { image: cab.logo.dados, fit: [140, 40] }
     : { svg: logoHorizontalSvg(COR.marrom), width: 132 };
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
     pageMargins: [40, 84, 40, 56],
-    info: { title: `${cab.titulo} — ${cab.empresa.nome}`, author: cab.escritorio.nome, creator: "Portal Guarese's ON" },
+    info: doEscritorio
+      ? { title: `${cab.titulo} — ${cab.empresa.nome}`, author: cab.escritorio.nome, creator: cab.escritorio.nome }
+      : { title: `${cab.titulo} — ${cab.empresa.nome}`, author: cab.empresa.nome, creator: cab.empresa.nome },
     watermark: cab.situacao === "revisado" || cab.situacao === "documento" ? undefined : { text: cab.situacao === "rascunho" ? "RASCUNHO" : "PRELIMINAR", opacity: 0.06, bold: true, fontSize: 80 },
-    // Logo do escritório à esquerda; à direita, a logo do cliente (quando cadastrada) com o nome e o CNPJ
-    header: () => ({
-      margin: [40, 20, 40, 0],
-      columns: [
-        { width: "*", stack: [marca] },
-        {
-          width: "auto",
-          alignment: "right",
-          margin: [0, cab.logoCliente ? 0 : 6, 0, 0],
-          stack: [
-            ...(cab.logoCliente ? [{ image: cab.logoCliente.dados, fit: [120, 30], alignment: "right", margin: [0, 0, 0, 2] } as Content] : []),
-            { text: cab.empresa.nome, bold: true, fontSize: cab.logoCliente ? 7.5 : 9, color: COR.marrom },
-            { text: cab.empresa.documento, fontSize: cab.logoCliente ? 7 : 8, color: COR.cinza },
-          ],
-        },
-      ],
-    }),
+    // Documento da empresa: só a marca dela. Documento do escritório: logo do escritório à esquerda e a do cliente à direita.
+    header: () =>
+      doEscritorio
+        ? {
+            margin: [40, 20, 40, 0],
+            columns: [
+              { width: "*", stack: [marca] },
+              {
+                width: "auto",
+                alignment: "right",
+                margin: [0, cab.logoCliente ? 0 : 6, 0, 0],
+                stack: [
+                  ...(cab.logoCliente ? [{ image: cab.logoCliente.dados, fit: [120, 30], alignment: "right", margin: [0, 0, 0, 2] } as Content] : []),
+                  { text: cab.empresa.nome, bold: true, fontSize: cab.logoCliente ? 7.5 : 9, color: COR.marrom },
+                  { text: cab.empresa.documento, fontSize: cab.logoCliente ? 7 : 8, color: COR.cinza },
+                ],
+              },
+            ],
+          }
+        : { margin: [40, 20, 40, 0], stack: [cabecalhoDaEmpresa(cab.empresa, cab.logoCliente)] },
     footer: (pagina: number, total: number) => ({
       margin: [40, 12, 40, 0],
       columns: [
         {
-          text: `${cab.escritorio.razao} — CNPJ ${formatarCnpj(cab.escritorio.cnpj)} — ${cab.escritorio.endereco}${cab.escritorio.email ? ` — ${cab.escritorio.email}` : ""}`,
+          text: doEscritorio
+            ? `${cab.escritorio.razao} — CNPJ ${formatarCnpj(cab.escritorio.cnpj)} — ${cab.escritorio.endereco}${cab.escritorio.email ? ` — ${cab.escritorio.email}` : ""}`
+            : rodapeDaEmpresa(cab.empresa),
           fontSize: 6.5,
           color: COR.cinza,
         },
@@ -127,7 +162,7 @@ export async function gerarPdf(cab: Cabecalho, conteudo: Content[]): Promise<Buf
             {
               text:
                 cab.notaFinal ??
-                "Relatório gerencial elaborado com base nas informações e documentos enviados pela empresa e registrados no Portal Guarese's ON. Não substitui as demonstrações contábeis oficiais.",
+                "Relatório gerencial elaborado com base nas informações e documentos registrados pela empresa. Não substitui as demonstrações contábeis oficiais.",
               style: "nota",
               margin: [0, 18, 0, 0],
             } as Content,

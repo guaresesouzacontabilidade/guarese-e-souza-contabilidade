@@ -36,7 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ empr
   } else return new NextResponse("Informe o dia ou o mês.", { status: 400 });
   try {
     const [linhas, logos] = await Promise.all([extrasDoPeriodo(s.supabase, empresaId, de, ate), logosDaEmpresa(s.supabase, acesso.logo_path)]);
-    const wb = novaPasta();
+    const wb = novaPasta(acesso.razao_social);
     planilhaExtras(
       wb,
       {

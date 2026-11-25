@@ -304,6 +304,8 @@ export async function gerarRelatorioCorrecoes(
       titulo: TITULO_RELATORIO_CORRECOES,
       subtitulo: `Auditor fiscal — ${dados.periodo}`,
       situacao: "documento",
+      // Relatório do escritório para o cliente (com o recado do escritório): leva a marca do escritório
+      marca: "escritorio",
     });
     return { arquivo: await gerarPdf(cab, blocosRelatorioCorrecoes(dados, recado)), nome, tipo: "application/pdf", dados };
   }
@@ -317,6 +319,7 @@ export async function gerarRelatorioCorrecoes(
       situacao: "Achados do auditor fiscal do portal",
       geradoEm: formatarDataHora(new Date().toISOString()),
       logos: await logosDaEmpresa(supabase, empresa.logo_path),
+      marca: "escritorio",
     },
     dados,
   );
