@@ -593,7 +593,7 @@ function AlternarTema() {
       <MenuConteudo>
         <MenuRotulo>Aparência</MenuRotulo>
         <MenuItem onSelect={() => setTheme("catarinense")}>
-          <Flag /> Catarinense (verde e vermelho)
+          <Flag /> Catarinense (vidro claro)
         </MenuItem>
         <MenuItem onSelect={() => setTheme("light")}>
           <Sun /> Clara (Luz)

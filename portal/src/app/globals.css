@@ -9,8 +9,8 @@
 
 /* =============================================================================
    Identidade visual — Catarinense Tech
-   Seis temas: "Catarinense" (claro, o padrão), no verde e no vermelho do
-   símbolo; "Luz" (claro) e "Aurora" (escuro), com violeta e ciano como
+   Seis temas: "Catarinense" (o padrão), vidro líquido claro no verde e no
+   vermelho do símbolo; "Luz" (claro) e "Aurora" (escuro), com violeta e ciano como
    cores de destaque; "Bronze" (escuro), com dourado e cobre; "Grafite"
    (claro), grafite sobre branco; e "Vidro líquido" (escuro), com painéis
    translúcidos sobre uma paisagem ao entardecer. Degradê nos botões principais, no menu ativo e nos
@@ -89,63 +89,67 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Catarinense (o padrão): o verde e o vermelho do símbolo sobre um fundo claro
-   levemente esverdeado. Verde nos botões e no menu ativo, vermelho como
-   destaque. Contraste de texto de pelo menos 4,5:1.
+   Catarinense (o padrão): vidro líquido claro nas cores do símbolo. Painéis
+   brancos translúcidos que desfocam um fundo claro com luzes e faixas suaves
+   de verde e vermelho (public/marca/fundo-catarinense.svg), borda de luz no
+   alto, menu lateral flutuante e topo em cápsula. Verde nos botões e no menu
+   ativo, vermelho como destaque. Texto escuro sobre branco: contraste de pelo
+   menos 4,5:1 em qualquer parte do fundo. Quem pede menos transparência no
+   aparelho vê painéis brancos sólidos.
    ----------------------------------------------------------------------------- */
 .catarinense {
-  --background: #f5f7f4;
-  --fundo-app:
-    radial-gradient(1100px 520px at 100% -10%, rgba(142, 16, 24, 0.06), transparent 60%),
-    radial-gradient(900px 480px at 0% -5%, rgba(10, 107, 50, 0.08), transparent 55%), #f5f7f4;
+  --background: #f4f8f5;
+  --fundo-app: #f4f8f5;
   --fundo-heroi:
-    radial-gradient(640px 420px at 25% 35%, rgba(10, 107, 50, 0.16), transparent 65%),
-    radial-gradient(560px 360px at 90% 90%, rgba(142, 16, 24, 0.11), transparent 60%), #eef3ee;
-  --foreground: #1b231e;
-  --card: #ffffff;
-  --card-foreground: #1b231e;
-  --muted: #eef2ee;
-  --muted-foreground: #4f5b53;
-  --bege: #edf3ee;
-  --bege-forte: #dde9e0;
-  --border: #e0e7e1;
-  --input: #c9d4cc;
+    radial-gradient(640px 420px at 20% 25%, rgba(10, 107, 50, 0.12), transparent 65%),
+    radial-gradient(560px 360px at 90% 95%, rgba(179, 18, 28, 0.08), transparent 60%), rgba(255, 255, 255, 0.35);
+  --foreground: #16201a;
+  --card: rgba(255, 255, 255, 0.62);
+  --card-foreground: #16201a;
+  --muted: rgba(12, 36, 22, 0.05);
+  --muted-foreground: #46524a;
+  --bege: rgba(12, 36, 22, 0.05);
+  --bege-forte: rgba(12, 36, 22, 0.09);
+  --border: rgba(12, 36, 22, 0.11);
+  --input: rgba(12, 36, 22, 0.2);
   --primary: #07461f;
   --primary-hover: #053516;
   --primary-foreground: #ffffff;
-  --secondary: #e6f0e9;
-  --secondary-hover: #d8e8dd;
+  --secondary: rgba(10, 107, 50, 0.08);
+  --secondary-hover: rgba(10, 107, 50, 0.14);
   --secondary-foreground: #07461f;
   --ring: #0a6b32;
   --titulo: #0c2416;
 
-  --gradiente: linear-gradient(135deg, #0a6b32 0%, #07461f 100%);
+  --gradiente: linear-gradient(135deg, #0d7a3a 0%, #07461f 100%);
   --gradiente-texto: #ffffff;
   --gradiente-marca: linear-gradient(135deg, #07461f 0%, #8e1018 100%);
-  --gradiente-selo: linear-gradient(135deg, #0a6b32 0%, #07461f 100%);
-  --brilho: 0 10px 24px -12px rgba(7, 70, 31, 0.5);
-  --sombra-card: 0 1px 2px rgba(12, 36, 22, 0.05), 0 12px 32px -20px rgba(12, 36, 22, 0.24);
+  --gradiente-selo: linear-gradient(135deg, #0d7a3a 0%, #07461f 100%);
+  --brilho: 0 10px 26px -12px rgba(7, 70, 31, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --sombra-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 0 0 1px rgba(255, 255, 255, 0.55), 0 1px 2px rgba(12, 36, 22, 0.04),
+    0 18px 40px -24px rgba(12, 36, 22, 0.3);
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1f2b23;
-  --sidebar-muted: #56635a;
-  --sidebar-ativo: #e6f0e9;
-  --sidebar-ativo-fundo: linear-gradient(90deg, rgba(10, 107, 50, 0.13), rgba(142, 16, 24, 0.05));
-  --sidebar-ativo-borda: rgba(10, 107, 50, 0.32);
+  --sidebar: rgba(255, 255, 255, 0.58);
+  --sidebar-foreground: #1b261f;
+  --sidebar-muted: #4f5c53;
+  --sidebar-ativo: rgba(10, 107, 50, 0.1);
+  --sidebar-ativo-fundo: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(232, 243, 236, 0.85));
+  --sidebar-ativo-borda: rgba(10, 107, 50, 0.3);
   --sidebar-ativo-texto: #07461f;
-  --sidebar-borda: #e0e7e1;
+  --sidebar-borda: rgba(12, 36, 22, 0.09);
 
   --sucesso: #15803d;
-  --sucesso-bg: #e7f7ec;
+  --sucesso-bg: #e9f6ee;
   --sucesso-fg: #14532d;
   --alerta: #b45309;
-  --alerta-bg: #fef3dc;
+  --alerta-bg: #fdf4df;
   --alerta-fg: #78350f;
   --perigo: #b3121c;
-  --perigo-bg: #fde9ea;
+  --perigo-bg: #fdeeee;
   --perigo-fg: #7f1d1d;
   --info: #0e7490;
-  --info-bg: #e0f6fa;
+  --info-bg: #e6f4f7;
   --info-fg: #164e63;
 
   --grafico-1: #0a6b32;
@@ -154,6 +158,12 @@
   --grafico-4: #e11d48;
   --grafico-5: #0e7490;
   --grafico-6: #64748b;
+
+  /* Vidro: desfoque, reflexo de luz no alto e janelas por cima da tela */
+  --vidro-desfoque: 22px;
+  --vidro-reflexo: linear-gradient(160deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.2) 34%, rgba(255, 255, 255, 0) 62%);
+  --vidro-flutuante: rgba(255, 255, 255, 0.9);
+  --radius: 1rem;
   color-scheme: light;
 }
 
@@ -624,10 +634,10 @@
    Vidro líquido: superfícies
    ----------------------------------------------------------------------------- */
 /* A paisagem fica parada atrás de tudo (sem "background-attachment: fixed", que falha no iPhone) */
-.vidro body {
+:is(.vidro, .catarinense) body {
   background: var(--background);
 }
-.vidro body::before {
+:is(.vidro, .catarinense) body::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -639,20 +649,26 @@
     url("/marca/fundo-vidro.svg") center / cover no-repeat,
     #0b0d18;
 }
+/* Catarinense: fundo claro com as luzes e as faixas suaves do símbolo (sem véu escuro) */
+.catarinense body::before {
+  background:
+    url("/marca/fundo-catarinense.svg") center / cover no-repeat,
+    #f4f8f5;
+}
 /* Painéis, cartões, menus e diálogos viram vidro: desfocam o fundo e ganham o reflexo no alto */
-.vidro :is(.bg-card, .bg-sidebar, .vidro-painel) {
+:is(.vidro, .catarinense) :is(.bg-card, .bg-sidebar, .vidro-painel) {
   -webkit-backdrop-filter: blur(var(--vidro-desfoque)) saturate(170%);
   backdrop-filter: blur(var(--vidro-desfoque)) saturate(170%);
   background-image: var(--vidro-reflexo);
 }
 /* Dentro de um painel de vidro não precisa desfocar de novo (fica mais leve) */
-.vidro :is(.bg-card, .bg-sidebar, .vidro-painel) .bg-card {
+:is(.vidro, .catarinense) :is(.bg-card, .bg-sidebar, .vidro-painel) .bg-card {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   background-image: none;
 }
 /* Janelas por cima da tela (menus, diálogos, avisos): vidro mais encorpado, para ler sem esforço */
-.vidro :is([role="menu"], [role="dialog"], [role="alertdialog"], [role="listbox"]) {
+:is(.vidro, .catarinense) :is([role="menu"], [role="dialog"], [role="alertdialog"], [role="listbox"]) {
   background-color: var(--vidro-flutuante);
 }
 .vidro option {
@@ -661,7 +677,7 @@
 }
 /* Menu lateral flutuante e topo em cápsula */
 @media (min-width: 1024px) {
-  .vidro .casca-menu {
+  :is(.vidro, .catarinense) .casca-menu {
     top: 0.75rem;
     bottom: 0.75rem;
     left: 0.75rem;
@@ -672,7 +688,7 @@
     box-shadow: var(--sombra-card);
   }
 }
-.vidro .casca-topo {
+:is(.vidro, .catarinense) .casca-topo {
   top: 0.75rem;
   margin: 0.75rem 0.75rem 0;
   border: 1px solid var(--border);
@@ -683,7 +699,7 @@
   -webkit-backdrop-filter: blur(var(--vidro-desfoque)) saturate(170%);
   backdrop-filter: blur(var(--vidro-desfoque)) saturate(170%);
 }
-.vidro .casca-rodape {
+:is(.vidro, .catarinense) .casca-rodape {
   left: 0.75rem;
   right: 0.75rem;
   bottom: calc(0.75rem + env(safe-area-inset-bottom));
@@ -693,12 +709,19 @@
   box-shadow: var(--sombra-card);
 }
 @media (max-width: 640px) {
-  .vidro {
+  :is(.vidro, .catarinense) {
     --vidro-desfoque: 14px;
   }
 }
 /* Menos transparência pedida no aparelho: painéis sólidos, sem desfoque */
 @media (prefers-reduced-transparency: reduce) {
+  .catarinense {
+    --card: #ffffff;
+    --sidebar: #ffffff;
+    --vidro-flutuante: #ffffff;
+    --muted: #eef2ee;
+    --secondary: #e6f0e9;
+  }
   .vidro {
     --card: #171a2b;
     --sidebar: #131524;
@@ -706,7 +729,7 @@
     --muted: #20243a;
     --secondary: #20243a;
   }
-  .vidro :is(.bg-card, .bg-sidebar, .vidro-painel, .casca-topo) {
+  :is(.vidro, .catarinense) :is(.bg-card, .bg-sidebar, .vidro-painel, .casca-topo) {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
@@ -870,7 +893,7 @@
   body {
     background: #ffffff;
   }
-  .vidro body::before {
+  :is(.vidro, .catarinense) body::before {
     display: none;
   }
 }

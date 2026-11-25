@@ -41,9 +41,9 @@ No celular, os botões de baixar do portal (PDF e XML das notas, documentos, rel
 
 ### Aparência do portal
 
-No topo, ao lado do sino, o botão de **Aparência** troca as cores do portal (a escolha fica guardada no aparelho): **Catarinense (verde e vermelho)** (a aparência padrão, nas cores do símbolo), **Clara (Luz)**, **Escura (Aurora)**, **Bronze**, **Grafite** (clara, grafite sobre branco), **Vidro líquido** ou **Igual ao sistema** (segue o modo claro/escuro do computador ou celular). Quem já tinha escolhido outra aparência continua com a sua.
+No topo, ao lado do sino, o botão de **Aparência** troca as cores do portal (a escolha fica guardada no aparelho): **Catarinense (vidro claro)** (a aparência padrão: vidro líquido claro, com painéis brancos translúcidos sobre um fundo com o verde e o vermelho do símbolo), **Clara (Luz)**, **Escura (Aurora)**, **Bronze**, **Grafite** (clara, grafite sobre branco), **Vidro líquido** ou **Igual ao sistema** (segue o modo claro/escuro do computador ou celular). Quem já tinha escolhido outra aparência continua com a sua.
 
-No **Vidro líquido**, os painéis ficam translúcidos sobre uma paisagem ao entardecer, com o menu lateral flutuando e o topo em cápsula. Os textos foram conferidos para continuarem fáceis de ler em qualquer parte do fundo. Se o aparelho estiver configurado para **reduzir a transparência** (acessibilidade), os painéis aparecem sólidos. Na impressão, o fundo não sai.
+Na **Catarinense (vidro claro)**, os painéis brancos ficam translúcidos sobre um fundo claro com as faixas verde e vermelha do símbolo; no **Vidro líquido** (escuro), sobre uma paisagem ao entardecer. Nos dois, com o menu lateral flutuando e o topo em cápsula. Os textos foram conferidos para continuarem fáceis de ler em qualquer parte do fundo. Se o aparelho estiver configurado para **reduzir a transparência** (acessibilidade), os painéis aparecem sólidos. Na impressão, o fundo não sai.
 
 ---
 

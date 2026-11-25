@@ -2,7 +2,8 @@ import { test, expect, type Page } from "@playwright/test";
 
 /**
  * Marca do sistema: Catarinense Tech, com o símbolo da Catarinense, o bordão
- * "Sua empresa conectada ao futuro." e o tema verde e vermelho como padrão.
+ * "Sua empresa conectada ao futuro." e o tema Catarinense (vidro líquido claro,
+ * verde e vermelho) como padrão.
  * Ícones de instalação e da aba abrem sem login; o nome antigo do sistema não aparece.
  */
 const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
@@ -39,7 +40,7 @@ test("ícones e instalação com o nome Catarinense Tech, sem login", async ({ r
   }
 });
 
-test("tela de entrada e portal com a marca, o bordão e o tema verde e vermelho", async ({ page }) => {
+test("tela de entrada e portal com a marca, o bordão e o vidro líquido claro", async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto("/login");
   await expect(page).toHaveTitle(/Catarinense Tech/);
@@ -59,12 +60,22 @@ test("tela de entrada e portal com a marca, o bordão e o tema verde e vermelho"
     return { primaria: r.getPropertyValue("--primary").trim(), nome: r.getPropertyValue("--marca-nome").trim(), esquema: r.colorScheme };
   });
   expect(cores).toMatchObject({ primaria: "#07461f", nome: "#07461f", esquema: "light" });
+  // Vidro líquido claro: fundo com as faixas do símbolo e painéis brancos translúcidos que desfocam o fundo
+  expect(await page.evaluate(() => getComputedStyle(document.body, "::before").backgroundImage)).toContain("fundo-catarinense.svg");
+  const cartao = page.locator("main .bg-card").first();
+  await expect(cartao).toBeVisible();
+  const vidro = await cartao.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { fundo: s.backgroundColor, desfoque: s.backdropFilter || (s as unknown as { webkitBackdropFilter?: string }).webkitBackdropFilter || "" };
+  });
+  expect(vidro.fundo).toMatch(/rgba\(255, 255, 255, 0\.6/);
+  expect(vidro.desfoque).toContain("blur");
   // A letra do nome na logo carregou (Cinzel)
   expect(await page.evaluate(() => document.fonts.check('700 16px "Cinzel"'))).toBe(true);
 
   // A Catarinense também está no menu Aparência
   await page.getByRole("button", { name: /Aparência do portal/ }).click();
-  await expect(page.getByRole("menuitem", { name: "Catarinense (verde e vermelho)" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Catarinense (vidro claro)" })).toBeVisible();
   await page.keyboard.press("Escape");
 });
 
