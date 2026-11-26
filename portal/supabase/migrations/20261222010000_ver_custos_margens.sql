@@ -136,13 +136,13 @@ end;
 $$;
 
 -- Ver custos e margens implica gerenciar a loja (que já implica vender).
+-- (Ancorado no código, não no comentário: em produção as funções foram gravadas sem comentários.)
 select pg_temp.trocar_no_corpo('app.tg_validar_membro()',
-$a$  -- Gerenciar a loja implica poder vender.$a$,
-$a$  -- Ver custos e margens implica gerenciar a loja.
-  if 'gestao.custos' = any(new.permissoes) and not ('gestao.gerenciar' = any(new.permissoes)) then
+$a$  if 'gestao.gerenciar' = any(new.permissoes) and not ('gestao.vender' = any(new.permissoes)) then$a$,
+$a$  if 'gestao.custos' = any(new.permissoes) and not ('gestao.gerenciar' = any(new.permissoes)) then
     new.permissoes := array_append(new.permissoes, 'gestao.gerenciar');
   end if;
-  -- Gerenciar a loja implica poder vender.$a$);
+  if 'gestao.gerenciar' = any(new.permissoes) and not ('gestao.vender' = any(new.permissoes)) then$a$);
 
 -- Acessos existentes: só o escritório e o titular passam a ver custos e margens
 -- (colaboradores, mesmo os que gerenciam a loja, só se o titular marcar).
