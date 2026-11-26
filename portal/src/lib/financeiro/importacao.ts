@@ -162,6 +162,8 @@ export interface MapeamentoLancamentos {
   valor_pago: number | null;
   /** Situação ("Em aberto", "Pago", "Cancelado"): pagas sem data e canceladas ficam de fora. */
   situacao?: number | null;
+  /** Só contas com vencimento a partir desta data (AAAA-MM-DD); as anteriores ficam de fora. */
+  apartir?: string | null;
 }
 
 export interface LinhaLancamentoImportada {
@@ -184,7 +186,7 @@ export interface LinhaLancamentoImportada {
   categoria_sugerida?: string | null;
 }
 
-const ROTULOS_LANC: Record<keyof Omit<MapeamentoLancamentos, "linhaCabecalho" | "tipoFixo">, RegExp> = {
+const ROTULOS_LANC: Record<keyof Omit<MapeamentoLancamentos, "linhaCabecalho" | "tipoFixo" | "apartir">, RegExp> = {
   tipo: /^(tipo|natureza|receita\/despesa|pagar\/receber|d\/c)$/i,
   descricao: /descri|hist[oó]rico|referente/i,
   data_competencia: /compet[eê]ncia|emiss[aã]o|data\s*(do\s*)?documento/i,
@@ -297,6 +299,10 @@ export function aplicarMapeamentoLancamentos(linhas: string[][], m: MapeamentoLa
     }
     if (!comp) {
       invalidas.push({ linha: numero, motivo: "Data de competência/vencimento ausente ou inválida.", conteudo: l.join(" | ").slice(0, 200) });
+      continue;
+    }
+    if (m.apartir && (venc ?? comp) < m.apartir) {
+      ignoradas.push({ linha: numero, motivo: `Vencimento antes de ${m.apartir.split("-").reverse().join("/")}: não importada.`, conteudo: l.join(" | ").slice(0, 200) });
       continue;
     }
     const pagoTxt = pegar(l, m.valor_pago);

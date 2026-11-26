@@ -10,6 +10,8 @@ import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AssistenteImportacao } from "@/components/financeiro/assistente-importacao";
 import { DesfazerImportacao } from "@/components/financeiro/desfazer-importacao";
+import { ConfigPagarDesde } from "@/components/financeiro/config-pagar-desde";
+import { hojeISO } from "@/lib/competencia";
 import {
   analisarArquivo,
   lerDocumentoParaImportacao,
@@ -77,7 +79,7 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
           ofx={analise.tipo === "ofx" ? { conta: analise.conta, banco: analise.banco, cartao: analise.cartao, inicio: analise.inicio, fim: analise.fim } : null}
           amostra={analise.tipo === "planilha" ? analise.linhas.slice(0, 30) : []}
           mapeamento={analise.tipo === "planilha" ? analise.mapeamento : null}
-          mapeamentoLanc={analise.tipo === "planilha" ? { ...sugerirMapeamentoLancamentos(analise.linhas), tipoFixo: analise.pdf?.tipo ?? null } : null}
+          mapeamentoLanc={analise.tipo === "planilha" ? { ...sugerirMapeamentoLancamentos(analise.linhas), tipoFixo: analise.pdf?.tipo ?? null, apartir: hojeISO() } : null}
           previaInicial={previa}
           pdf={analise.tipo === "planilha" ? (analise.pdf ?? null) : null}
         />
@@ -91,7 +93,7 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
     );
   }
 
-  const [{ data: planilhas }, { data: pdfs }, { data: importacoes }] = await Promise.all([
+  const [{ data: planilhas }, { data: pdfs }, { data: importacoes }, { data: configFin }] = await Promise.all([
     ctx.supabase
       .from("documentos")
       .select("id, nome_original, competencia, categoria_codigo, enviado_em, extensao")
@@ -123,6 +125,7 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
       .eq("empresa_id", empresaId)
       .order("created_at", { ascending: false })
       .limit(50),
+    ctx.supabase.from("financeiro_config").select("pagar_desde").eq("empresa_id", empresaId).maybeSingle(),
   ]);
   const docs = [...(planilhas ?? []), ...(pdfs ?? [])].sort((a, b) => (b.enviado_em ?? "").localeCompare(a.enviado_em ?? ""));
   const importados = new Set((importacoes ?? []).filter((i) => i.status === "concluida").map((i) => i.documento_id));
@@ -147,6 +150,17 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
           </>
         }
       />
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Início do contas a pagar no portal</CardTitle>
+          <CardDescription>
+            Contas a pagar com vencimento antes desta data não são criadas das notas fiscais de compra nem entram pela importação (ex.: as que já foram pagas no sistema antigo). As notas continuam guardadas para a contabilidade e o lançamento manual continua livre.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ConfigPagarDesde empresaId={empresaId} valor={configFin?.pagar_desde ?? null} podeEditar={ctx.pode("financeiro.editar")} />
+        </CardContent>
+      </Card>
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>1. Escolha o arquivo</CardTitle>

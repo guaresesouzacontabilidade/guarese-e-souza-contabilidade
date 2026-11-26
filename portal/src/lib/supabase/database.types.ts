@@ -2247,6 +2247,31 @@ isOneToOne: false
       referencedColumns: ["ibge"]
     }
                   ]
+                },"financeiro_config": {
+                  Row: {
+                    "atualizado_por": string | null,"empresa_id": string,"pagar_desde": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"empresa_id": string,"pagar_desde"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"empresa_id"?: string,"pagar_desde"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "financeiro_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "financeiro_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"fisio_adendos": {
                   Row: {
                     "avaliacao_id": string | null,"created_at": string,"criado_por": string | null,"empresa_id": string,"evolucao_id": string | null,"id": string,"profissional_id": string,"texto": string
@@ -7373,6 +7398,9 @@ isOneToOne: false
                            },
 "fechar_competencia":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_observacao"?: string }; Returns: undefined
+                           },
+"financeiro_definir_pagar_desde":
+{ Args: { "p_data": string,"p_empresa_id": string }; Returns: undefined
                            },
 "fisio_adendo_registrar":
 { Args: { "p_id": string,"p_texto": string,"p_tipo": string }; Returns: string

@@ -133,7 +133,44 @@ function validarMapeamentoLanc(m: unknown): MapeamentoLancamentos | null {
     data_pagamento: col(x.data_pagamento),
     valor_pago: col(x.valor_pago),
     situacao: col(x.situacao),
+    apartir: typeof x.apartir === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.apartir) ? x.apartir : null,
   };
+}
+
+/**
+ * Contas a pagar com vencimento antes do início do contas a pagar no portal
+ * (configurado por empresa) ficam de fora — o banco também não as cria.
+ */
+async function foraDoInicio(ctx: ContextoEmpresa, empresaId: string, validas: LinhaLancamentoImportada[]) {
+  const { data } = await ctx.supabase.from("financeiro_config").select("pagar_desde").eq("empresa_id", empresaId).maybeSingle();
+  const desde = data?.pagar_desde ?? null;
+  if (!desde) return { validas, fora: [] as { linha: number; motivo: string }[] };
+  const fora: { linha: number; motivo: string }[] = [];
+  const ficam = validas.filter((v) => {
+    if (v.tipo === "pagar" && v.data_vencimento < desde) {
+      fora.push({ linha: v.linha, motivo: `Antes do início do contas a pagar no portal (${desde.split("-").reverse().join("/")}): não importada.` });
+      return false;
+    }
+    return true;
+  });
+  return { validas: ficam, fora };
+}
+
+/** Data de início do contas a pagar no portal (vazio = sem limite). */
+export async function definirPagarDesde(empresaId: string, data: string): Promise<ResultadoAcao> {
+  try {
+    if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+    const ctx = await obterContextoEmpresa(empresaId);
+    if (!ctx.pode("financeiro.editar")) return falha("É preciso permissão para editar o financeiro.");
+    const d = data.trim();
+    if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) return falha("Informe uma data válida.");
+    const { error } = await ctx.supabase.rpc("financeiro_definir_pagar_desde", { p_empresa_id: empresaId, p_data: (d || null) as unknown as string });
+    if (error) return falha(mensagemErro(error));
+    revalidatePath(`/e/${empresaId}/financeiro`, "layout");
+    return sucesso(d ? `Contas a pagar no portal a partir de ${d.split("-").reverse().join("/")}.` : "Sem data de início: todas as contas a pagar entram.");
+  } catch (e) {
+    return falha(mensagemErro(e));
+  }
 }
 
 /**
@@ -200,7 +237,10 @@ export async function previaLancamentos(
     if (analise.tipo !== "planilha") return falha("Para importar contas a pagar/receber, use uma planilha (CSV ou XLSX) ou o PDF do relatório de contas.");
     const m = validarMapeamentoLanc(mapeamento);
     if (!m) return falha("Mapeamento inválido.");
-    const { validas, invalidas, ignoradas } = aplicarMapeamentoLancamentos(analise.linhas, m);
+    const lido = aplicarMapeamentoLancamentos(analise.linhas, m);
+    const { validas, fora } = await foraDoInicio(ctx, empresaId, lido.validas);
+    const { invalidas } = lido;
+    const ignoradas = [...lido.ignoradas, ...fora].sort((a, b) => a.linha - b.linha);
     const { linhas, semCategoria, sugeridas } = await comContasSugeridas(ctx, empresaId, validas);
     return sucesso(undefined, {
       total: linhas.length,
@@ -237,8 +277,10 @@ export async function confirmarImportacaoLancamentos(
     }
     const m = validarMapeamentoLanc(mapeamento);
     if (!m) return falha("Mapeamento inválido.");
-    const { validas: lidas, invalidas } = aplicarMapeamentoLancamentos(analise.linhas, m);
-    if (!lidas.length) return falha("Nenhuma linha válida para importar.");
+    const lido = aplicarMapeamentoLancamentos(analise.linhas, m);
+    const { invalidas } = lido;
+    const { validas: lidas } = await foraDoInicio(ctx, empresaId, lido.validas);
+    if (!lidas.length) return falha("Nenhuma conta para importar (veja as que ficaram de fora na prévia).");
     const { linhas: validas } = await comContasSugeridas(ctx, empresaId, lidas);
     const conta = contaPagamentosId && UUID.test(contaPagamentosId) ? contaPagamentosId : null;
     const chave = createHash("sha256").update(`lanc|${arq.sha256 ?? arq.id}|${JSON.stringify(m)}|${conta ?? ""}`).digest("hex");

@@ -223,7 +223,25 @@ export function AssistenteImportacao(p: Props) {
                 ))}
               </Select>
             </Campo>
-          ) : p.pdf ? null : (
+          ) : (
+            <div className="flex flex-wrap items-end gap-2">
+              <Campo rotulo="Só contas com vencimento a partir de" htmlFor="importar-apartir" ajuda="As anteriores ficam de fora (ex.: já pagas no sistema antigo).">
+                <input
+                  id="importar-apartir"
+                  type="date"
+                  value={ml?.apartir ?? ""}
+                  onChange={(e) => ml && setMl({ ...ml, apartir: e.target.value || null })}
+                  className="h-10 w-48 rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring"
+                />
+              </Campo>
+              {ml?.apartir ? (
+                <Button type="button" variante="fantasma" tamanho="sm" className="mb-6" onClick={() => setMl({ ...ml, apartir: null })}>
+                  Importar todas as datas
+                </Button>
+              ) : null}
+            </div>
+          )}
+          {modo === "extrato" || p.pdf ? null : (
             <Campo rotulo="Conta dos pagamentos já realizados (opcional)" ajuda="Linhas com data de pagamento só viram baixas se você informar a conta e a categoria for reconhecida.">
               <Select value={contaPagamentos} onChange={(e) => setContaPagamentos(e.target.value)} className="sm:w-96">
                 <option value="">Não registrar pagamentos</option>
@@ -440,7 +458,7 @@ export function AssistenteImportacao(p: Props) {
                 <div className="rounded-lg bg-muted p-3">
                   <p className="text-xs text-muted-foreground">Fora da importação</p>
                   <p className="font-semibold numero">{previaL.invalidas.length + previaL.ignoradas.length}</p>
-                  <p className="text-xs text-muted-foreground">pagas, canceladas ou inválidas</p>
+                  <p className="text-xs text-muted-foreground">antes da data, pagas, canceladas ou inválidas</p>
                 </div>
               </div>
               {previaL.semCategoria || previaL.sugeridas ? (
@@ -449,7 +467,7 @@ export function AssistenteImportacao(p: Props) {
                 </p>
               ) : null}
               {previaL.ignoradas.length ? (
-                <Alerta tom="info" titulo={`${previaL.ignoradas.length} conta(s) já paga(s) ou cancelada(s) ficam de fora`}>
+                <Alerta tom="info" titulo={`${previaL.ignoradas.length} conta(s) ficam de fora (antes da data, já pagas ou canceladas)`}>
                   <ul className="mt-1 max-h-40 list-disc space-y-0.5 overflow-auto pl-5 text-xs">
                     {previaL.ignoradas.slice(0, 30).map((i) => (
                       <li key={i.linha}>

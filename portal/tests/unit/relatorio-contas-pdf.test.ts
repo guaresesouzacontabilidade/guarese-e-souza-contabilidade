@@ -56,6 +56,16 @@ describe("relatório de contas a pagar em PDF", () => {
     expect(ignoradas.map((i) => i.motivo)).toEqual(["Já paga (Pago): não importada.", "Cancelada: não importada."]);
   });
 
+  it("só as contas com vencimento a partir da data escolhida", async () => {
+    const r = await lerRelatorioContasPdf(new Uint8Array(await relatorioContasFicticio()));
+    const m = { ...sugerirMapeamentoLancamentos(r.linhas), tipoFixo: r.tipo, apartir: "2027-03-01" };
+    const { validas, ignoradas } = aplicarMapeamentoLancamentos(r.linhas, m);
+    expect(validas.every((v) => v.data_vencimento >= "2027-03-01")).toBe(true);
+    expect(ignoradas.length).toBeGreaterThan(0);
+    expect(ignoradas.every((i) => i.motivo === "Vencimento antes de 01/03/2027: não importada.")).toBe(true);
+    expect(validas.length + ignoradas.length).toBe(contasFicticias().length);
+  });
+
   it("relatório de contas a receber vem como a receber", async () => {
     const r = await lerRelatorioContasPdf(new Uint8Array(await relatorioContasFicticio({ tipo: "receber" })));
     expect(r.tipo).toBe("receber");

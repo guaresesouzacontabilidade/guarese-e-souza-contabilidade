@@ -62,6 +62,13 @@ test("cliente importa o relatório de contas a pagar em PDF com as datas e os va
     await page.reload();
   }
 
+  // Data de início do contas a pagar: salva e tira (a demonstração fica como estava)
+  await page.getByLabel("Contas a pagar no portal a partir de").fill("2026-11-26");
+  await page.getByRole("button", { name: "Salvar data" }).click();
+  await expect(page.getByText("Contas a pagar no portal a partir de 26/11/2026.")).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Tirar a data" }).click();
+  await expect(page.getByText("Sem data de início: todas as contas a pagar entram.")).toBeVisible({ timeout: 30_000 });
+
   // Envia o PDF (conteúdo único: o portal recusa arquivo idêntico já enviado)
   await page.getByRole("link", { name: "Enviar relatório de contas" }).click();
   await page.waitForURL(/\/enviar\?categoria=relatorio_contas/);
@@ -85,6 +92,12 @@ test("cliente importa o relatório de contas a pagar em PDF com as datas e os va
   await expect(pinus).toContainText("25/02/2027");
   await expect(pinus).toContainText("R$ 8.450,00");
   await expect(page.getByRole("row", { name: /FRETE TORAS TESTE/ })).toContainText("TRANSPORTADORA FICTICIA LTDA");
+  // Só a partir de uma data: as anteriores ficam de fora; "todas as datas" volta tudo
+  await page.getByLabel("Só contas com vencimento a partir de").fill("2027-03-01");
+  await expect(page.getByRole("button", { name: "Importar 14 lançamento(s)" })).toBeEnabled({ timeout: 60_000 });
+  await expect(page.getByText(/12 conta\(s\) ficam de fora/)).toBeVisible();
+  await page.getByRole("button", { name: "Importar todas as datas" }).click();
+  await expect(page.getByRole("button", { name: "Importar 26 lançamento(s)" })).toBeEnabled({ timeout: 60_000 });
 
   await page.getByRole("button", { name: "Importar 26 lançamento(s)" }).click();
   await expect(page.getByText("Importação concluída")).toBeVisible({ timeout: 60_000 });
