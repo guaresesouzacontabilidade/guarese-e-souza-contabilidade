@@ -139,7 +139,7 @@ export function FormProduto({ empresaId, produto, grupos, aoSalvar }: { empresaI
             </Campo>
           ) : null}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Campo rotulo={`Custo de compra (por ${un(unidade)})`} htmlFor={`custo-${idp}`} ajuda="Atualiza sozinho na entrada por nota.">
+            <Campo rotulo={`Custo de compra (por ${un(unidade)})`} htmlFor={`custo-${idp}`} ajuda="Atualiza sozinho na entrada por nota. Sem entrada com custo, vale como custo médio.">
               <CampoValor id={`custo-${idp}`} name="preco_custo" valorInicial={produto?.preco_custo} aoMudar={setCusto} />
             </Campo>
             <Campo rotulo="Margem que quero ganhar (%)" htmlFor={`margem-${idp}`} erro={estado.erros?.margem_desejada} ajuda="Opcional. Sobre o custo. Vazio: usa a do grupo ou a padrão.">

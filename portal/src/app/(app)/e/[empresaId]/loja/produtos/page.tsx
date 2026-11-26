@@ -15,6 +15,7 @@ import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { carregarMargens, carregarProdutosLoja, estoqueBaixo } from "@/lib/gestao/dados";
 import { formatarQuantidade, secaoPeca, un } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
+import { custoUnitario } from "@/lib/gestao/analise-estoque";
 import { custoReferencia, margemAlvo, margemReal } from "@/lib/gestao/precos";
 
 export const metadata: Metadata = { title: "Produtos e estoque" };
@@ -51,7 +52,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
   const ativos = todos.filter((p) => p.ativo);
   const valorEstoque = ativos
     .filter((p) => p.controla_estoque && dec(p.estoque_atual).gt(0))
-    .reduce((s, p) => s.plus(dec(p.estoque_atual).times(dec(p.custo_medio ?? p.preco_custo ?? 0))), dec(0));
+    .reduce((s, p) => s.plus(dec(p.estoque_atual).times(custoUnitario(p))), dec(0));
   const baixos = ativos.filter(estoqueBaixo).length;
   const zerados = ativos.filter((p) => p.controla_estoque && dec(p.estoque_atual).lte(0)).length;
   const base = `/e/${empresaId}/loja/produtos`;
@@ -154,7 +155,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
               <TBody>
                 {lista.map((p) => {
                   const baixo = estoqueBaixo(p);
-                  const custo = dec(p.custo_medio ?? p.preco_custo ?? 0);
+                  const custo = custoUnitario(p);
                   const margem = margemDe(p);
                   return (
                     <Tr key={p.id}>

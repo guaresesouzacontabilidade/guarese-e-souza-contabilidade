@@ -11,6 +11,7 @@ import { carregarMargens, carregarProdutosLoja, estoqueBaixo } from "@/lib/gesta
 import { custoReferencia, margemAlvo, margemReal } from "@/lib/gestao/precos";
 import { TIPOS_MOVIMENTO, formatarQuantidade, secaoPeca, un } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
+import { custoUnitario } from "@/lib/gestao/analise-estoque";
 import { formatarDataHora } from "@/lib/formatos";
 
 export const metadata: Metadata = { title: "Produto" };
@@ -55,7 +56,7 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
       : { data: null },
   ]);
   const vendido30 = (vendidos ?? []).reduce((s, i) => ({ q: s.q.plus(dec(i.quantidade)), v: s.v.plus(dec(i.total)) }), { q: dec(0), v: dec(0) });
-  const custo = dec(p.custo_medio ?? p.preco_custo ?? 0);
+  const custo = custoUnitario(p);
   // Margem sobre o custo (custo 100, preço 130 = 30%), pelo custo da última compra
   const custoRef = custoReferencia({ ultimo_custo_entrada: margens?.situacao.get(p.id)?.ultimo_custo_entrada, preco_custo: p.preco_custo, custo_medio: p.custo_medio });
   const margem = margens ? margemReal(p.valor_unitario, custoRef) : null;
