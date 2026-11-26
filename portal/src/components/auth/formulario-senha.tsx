@@ -8,10 +8,11 @@ import { Alerta } from "@/components/ui/feedback";
 import { estadoInicial } from "@/lib/acoes";
 import { definirSenha } from "./acoes-senha";
 
-export function FormularioSenha({ textoBotao = "Salvar senha" }: { textoBotao?: string }) {
+export function FormularioSenha({ textoBotao = "Salvar senha", origem }: { textoBotao?: string; origem?: "/redefinir-senha" | "/definir-senha" }) {
   const [estado, acao, pendente] = useActionState(definirSenha, estadoInicial);
   return (
     <form action={acao} className="space-y-4" noValidate>
+      {origem ? <input type="hidden" name="origem" value={origem} /> : null}
       {estado.mensagem && !estado.ok ? <Alerta tom="perigo">{estado.mensagem}</Alerta> : null}
       <Campo
         rotulo="Nova senha"

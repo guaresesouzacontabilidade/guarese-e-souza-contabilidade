@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { exigirSessao } from "@/lib/auth/sessao";
 import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
+import { recusaSenha } from "@/lib/auth/erros-senha";
 import { envPublico } from "@/lib/env";
 import { dadosRequisicao } from "@/lib/requisicao";
 import { booleano } from "@/lib/validacao";
@@ -67,12 +68,15 @@ export async function alterarSenha(_anterior: ResultadoAcao, fd: FormData): Prom
     await verificador.auth.signOut({ scope: "local" });
     const { error } = await s.supabase.auth.updateUser({ password: d.data.senha });
     if (error) {
-      if (error.code === "weak_password") return falha("Senha fraca ou já exposta em vazamentos conhecidos. Escolha outra.");
+      const recusa = recusaSenha(error as { code?: string; message?: string; reasons?: string[] });
+      if (recusa.tipo === "mfa") return falha("Por segurança, saia e entre novamente com o código do aplicativo antes de trocar a senha.");
       if (error.code === "same_password") return falha("A nova senha deve ser diferente da atual.");
-      if (error.code === "reauthentication_needed") return falha("Por segurança, saia e entre novamente antes de trocar a senha.");
       if (error.code === "session_not_found") return falha("Sua sessão expirou. Entre novamente para trocar a senha.");
-      console.error("alterarSenha", error.code, error.status);
-      return falha("Não foi possível trocar a senha. Tente novamente.");
+      if (recusa.mensagem.startsWith("Não foi possível")) {
+        console.error("alterarSenha", error.code, error.status);
+        return falha("Não foi possível trocar a senha. Tente novamente.");
+      }
+      return falha(recusa.mensagem);
     }
     const { ip, userAgent } = await dadosRequisicao();
     await s.supabase.rpc("registrar_evento", {
