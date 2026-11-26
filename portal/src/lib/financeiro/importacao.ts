@@ -7,8 +7,11 @@ import { ehOfx, lerOfx } from "@/lib/extratos/ofx";
 import { aplicarMapeamento, lerArquivoPlanilha, sugerirMapeamento, type Mapeamento } from "@/lib/extratos/planilha";
 import { lerData } from "@/lib/extratos/comum";
 import { lerValorBR } from "@/lib/dinheiro";
+import { ehPdf, lerRelatorioContasPdf, type RelatorioContasPdf } from "./relatorio-contas-pdf";
 
-export const EXTENSOES_IMPORTAVEIS = ["ofx", "csv", "xlsx", "txt"];
+export const EXTENSOES_IMPORTAVEIS = ["ofx", "csv", "xlsx", "txt", "pdf"];
+/** Categoria de documento dos relatórios de contas a pagar/receber (PDF, Excel ou CSV). */
+export const CATEGORIA_RELATORIO_CONTAS = "relatorio_contas";
 
 export interface ArquivoImportacao {
   id: string;
@@ -26,7 +29,7 @@ export async function lerDocumentoParaImportacao(ctx: ContextoEmpresa, empresaId
     .eq("empresa_id", empresaId)
     .maybeSingle();
   if (!doc || doc.excluido_em) throw new Error("Documento não encontrado.");
-  if (!EXTENSOES_IMPORTAVEIS.includes(doc.extensao ?? "")) throw new Error("Para importar, o arquivo precisa ser OFX, CSV ou XLSX.");
+  if (!EXTENSOES_IMPORTAVEIS.includes(doc.extensao ?? "")) throw new Error("Para importar, o arquivo precisa ser OFX, CSV, XLSX ou o PDF do relatório de contas.");
   if (doc.verificacao_status === "bloqueado") throw new Error("Este arquivo foi bloqueado pela verificação de segurança.");
   if (!doc.storage_path) throw new Error("Arquivo indisponível.");
   const { data, error } = await ctx.supabase.storage.from("documentos").download(doc.storage_path);
@@ -55,7 +58,10 @@ export type Analise =
       saldo: { valor: string; data: string | null } | null;
       avisos: string[];
     }
-  | { tipo: "planilha"; linhas: string[][]; mapeamento: Mapeamento };
+  | { tipo: "planilha"; linhas: string[][]; mapeamento: Mapeamento; pdf?: InfoRelatorioPdf };
+
+/** O que veio do relatório em PDF: o tipo pelo título e a conferência com o resumo. */
+export type InfoRelatorioPdf = Pick<RelatorioContasPdf, "tipo" | "resumo" | "conferencia">;
 
 export async function analisarArquivo(arq: ArquivoImportacao): Promise<Analise> {
   const ext = arq.nome.toLowerCase().split(".").pop() ?? "";
@@ -74,6 +80,10 @@ export async function analisarArquivo(arq: ArquivoImportacao): Promise<Analise> 
       saldo: o.saldo,
       avisos: o.avisos,
     };
+  }
+  if (ext === "pdf" || ehPdf(arq.bytes)) {
+    const r = await lerRelatorioContasPdf(arq.bytes);
+    return { tipo: "planilha", linhas: r.linhas, mapeamento: sugerirMapeamento(r.linhas), pdf: { tipo: r.tipo, resumo: r.resumo, conferencia: r.conferencia } };
   }
   const linhas = await lerArquivoPlanilha(arq.bytes, arq.nome);
   return { tipo: "planilha", linhas, mapeamento: sugerirMapeamento(linhas) };
@@ -150,6 +160,8 @@ export interface MapeamentoLancamentos {
   numero_documento: number | null;
   data_pagamento: number | null;
   valor_pago: number | null;
+  /** Situação ("Em aberto", "Pago", "Cancelado"): pagas sem data e canceladas ficam de fora. */
+  situacao?: number | null;
 }
 
 export interface LinhaLancamentoImportada {
@@ -166,6 +178,10 @@ export interface LinhaLancamentoImportada {
   data_pagamento: string | null;
   valor_pago: string | null;
   ocorrencia: number;
+  /** Conta sugerida pelo histórico da empresa (fica "sugerida" para revisar). */
+  categoria_sugerida_id?: string | null;
+  /** Para mostrar na prévia: "código — nome" da conta sugerida. */
+  categoria_sugerida?: string | null;
 }
 
 const ROTULOS_LANC: Record<keyof Omit<MapeamentoLancamentos, "linhaCabecalho" | "tipoFixo">, RegExp> = {
@@ -175,11 +191,12 @@ const ROTULOS_LANC: Record<keyof Omit<MapeamentoLancamentos, "linhaCabecalho" | 
   data_vencimento: /venc/i,
   valor: /^valor(\s*(total|original|documento|bruto))?$/i,
   categoria: /categoria|plano|conta\s*cont/i,
-  contraparte_nome: /cliente|fornecedor|favorecido|pagador|nome|raz[aã]o/i,
+  contraparte_nome: /cliente|fornecedor|favorecido|pagador|nome|raz[aã]o|destinad|benefici[aá]rio/i,
   contraparte_documento: /cpf|cnpj|documento\s*(do\s*)?(cliente|fornecedor)/i,
   numero_documento: /n[º°o]?\.?\s*(do\s*)?(doc|nota|nf|t[ií]tulo|boleto)|^nota|^nf$/i,
   data_pagamento: /pagamento|pago\s*em|baixa|quita/i,
   valor_pago: /valor\s*pago|pago$|recebido/i,
+  situacao: /^(situa[cç][aã]o|status)$/i,
 };
 
 export function sugerirMapeamentoLancamentos(linhas: string[][]): MapeamentoLancamentos {
@@ -212,8 +229,10 @@ export function sugerirMapeamentoLancamentos(linhas: string[][]): MapeamentoLanc
     numero_documento: null,
     data_pagamento: null,
     valor_pago: null,
+    situacao: null,
   };
   // Ordem importa: campos mais específicos primeiro
+  m.situacao = achar(ROTULOS_LANC.situacao);
   m.valor_pago = achar(ROTULOS_LANC.valor_pago);
   m.data_vencimento = achar(ROTULOS_LANC.data_vencimento);
   m.data_pagamento = achar(ROTULOS_LANC.data_pagamento);
@@ -239,14 +258,29 @@ function lerTipo(texto: string, valor: string | null): "receber" | "pagar" | nul
   return null;
 }
 
+const SITUACAO_PAGA = /^(pag[oa]|quitad|liquidad|baixad|confirmad|recebid|realizad)/i;
+const SITUACAO_CANCELADA = /^(cancelad|estornad|exclu[ií]d)/i;
+
 export function aplicarMapeamentoLancamentos(linhas: string[][], m: MapeamentoLancamentos) {
   const validas: LinhaLancamentoImportada[] = [];
   const invalidas: LinhaInvalida[] = [];
+  /** Linhas deixadas de fora de propósito (já pagas sem data de pagamento ou canceladas). */
+  const ignoradas: LinhaInvalida[] = [];
   const pegar = (l: string[], i: number | null) => (i === null || i < 0 ? "" : (l[i] ?? "").trim());
   for (let i = m.linhaCabecalho + 1; i < linhas.length; i++) {
     const l = linhas[i];
     if (!l || l.every((c) => !c)) continue;
     const numero = i + 1;
+    const situacao = pegar(l, m.situacao ?? null);
+    if (situacao && SITUACAO_CANCELADA.test(situacao)) {
+      ignoradas.push({ linha: numero, motivo: "Cancelada: não importada.", conteudo: l.join(" | ").slice(0, 200) });
+      continue;
+    }
+    if (situacao && SITUACAO_PAGA.test(situacao) && !lerData(pegar(l, m.data_pagamento))) {
+      const recebida = /recebid/i.test(situacao) || (m.tipoFixo ?? lerTipo(pegar(l, m.tipo), pegar(l, m.valor))) === "receber";
+      ignoradas.push({ linha: numero, motivo: `${recebida ? "Já recebida" : "Já paga"} (${situacao}): não importada.`, conteudo: l.join(" | ").slice(0, 200) });
+      continue;
+    }
     const valorTxt = pegar(l, m.valor);
     const valor = lerValorBR(valorTxt);
     const tipo = m.tipoFixo ?? lerTipo(pegar(l, m.tipo), valorTxt);
@@ -290,5 +324,5 @@ export function aplicarMapeamentoLancamentos(linhas: string[][], m: MapeamentoLa
     cont.set(k, n);
     v.ocorrencia = n;
   }
-  return { validas, invalidas };
+  return { validas, invalidas, ignoradas };
 }

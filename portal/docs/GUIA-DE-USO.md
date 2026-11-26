@@ -336,6 +336,15 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
 - **Operações**: transferências entre contas, cartão de crédito, maquininhas, empréstimos e estoque — registros com regras próprias para não distorcer o resultado.
 - **Recorrências**: despesas e receitas que se repetem (aluguel, mensalidades).
 - **Importar extratos**: extratos do banco (OFX ou planilha); as movimentações seguem para a conciliação.
+- **Importar contas a pagar/receber** (Financeiro → Importar extratos e planilhas): traz de uma vez as contas do sistema antigo, com as datas de vencimento e os valores.
+  - Serve a **planilha** (Excel ou CSV) ou o **relatório em PDF** de contas a pagar ou a receber que o sistema da empresa imprime (a tabela com descrição, vencimento, situação e valor).
+  - Envie o arquivo em **Enviar relatório de contas** (tipo “Relatórios de contas a pagar e a receber”) e clique em **Importar** na lista.
+  - No PDF, o portal lê a tabela e **confere** a soma das contas e a quantidade com o resumo do relatório (ex.: “66 cobranças”, total R$ 214.285,76). Se não bater, **nada é importado** e o aviso explica; nesse caso, envie a planilha.
+  - O tipo vem do título (“contas a pagar” vira contas a pagar). As parcelas mantêm o número na descrição (ex.: “PINUS (2/6)”). Como o relatório não traz a data da compra, cada parcela entra no mês do vencimento.
+  - Contas **já pagas** (sem data de pagamento) e **canceladas** ficam de fora e aparecem numa lista.
+  - O portal **sugere a conta** pelo histórico da própria empresa (lançamentos parecidos já confirmados). As contas importadas entram como **sugeridas**: confira e confirme em **Lançamentos → Somente sugeridos** (dá para marcar várias e confirmar de uma vez).
+  - Importar de novo o mesmo arquivo, ou o relatório do mês seguinte com as mesmas parcelas, **não duplica**: só as contas novas entram. **Desfazer importação** (na lista das importações) remove o que ela criou.
+  - Tudo é lido no servidor do portal; o arquivo não vai para serviço de fora. Relatórios de outros sistemas, com outro leiaute, podem precisar de ajuste — a planilha funciona com qualquer sistema.
 - **Notas fiscais**: notas lidas dos XML enviados. Lançamentos criados a partir de XML ou de leitura automática chegam como **sugeridos** e precisam ser confirmados.
 - **Cadastros**: plano de contas gerencial (categorias), clientes e fornecedores, centros de custo e projetos.
   - **Plano de contas**: **Nova conta** e **Novo grupo** (o código vem sugerido), editar (lápis) e **excluir** (lixeira). Cada conta mostra em que linha do DRE aparece.

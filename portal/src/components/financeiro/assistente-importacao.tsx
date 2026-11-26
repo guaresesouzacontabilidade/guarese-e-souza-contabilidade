@@ -14,7 +14,7 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { formatarData } from "@/lib/formatos";
 import { formatarMoeda } from "@/lib/dinheiro";
 import type { Mapeamento } from "@/lib/extratos/planilha";
-import type { MapeamentoLancamentos, PreviaExtrato, LinhaLancamentoImportada } from "@/lib/financeiro/importacao";
+import type { InfoRelatorioPdf, MapeamentoLancamentos, PreviaExtrato, LinhaLancamentoImportada } from "@/lib/financeiro/importacao";
 import { confirmarImportacaoExtrato, confirmarImportacaoLancamentos, previaExtrato, previaLancamentos } from "@/lib/financeiro/acoes-importacao";
 
 interface Props {
@@ -28,7 +28,21 @@ interface Props {
   mapeamento: Mapeamento | null;
   mapeamentoLanc: MapeamentoLancamentos | null;
   previaInicial: PreviaExtrato | null;
+  /** Relatório de contas em PDF: tipo pelo título e conferência com o resumo. */
+  pdf?: InfoRelatorioPdf | null;
 }
+
+type PreviaLanc = {
+  total: number;
+  invalidas: { linha: number; motivo: string; conteudo?: string }[];
+  ignoradas: { linha: number; motivo: string; conteudo?: string }[];
+  amostra: LinhaLancamentoImportada[];
+  receber: number;
+  pagar: number;
+  semCategoria: number;
+  sugeridas: number;
+  soma: string;
+};
 
 const letra = (i: number) => (i < 26 ? String.fromCharCode(65 + i) : `${String.fromCharCode(64 + Math.floor(i / 26))}${String.fromCharCode(65 + (i % 26))}`);
 
@@ -50,13 +64,14 @@ function SeletorColuna({ rotulo, valor, colunas, aoMudar, obrigatorio }: { rotul
 
 export function AssistenteImportacao(p: Props) {
   const router = useRouter();
-  const [modo, setModo] = useState<"extrato" | "lancamentos">("extrato");
+  const [modo, setModo] = useState<"extrato" | "lancamentos">(p.pdf ? "lancamentos" : "extrato");
+  const pdfNaoConfere = Boolean(p.pdf && p.pdf.conferencia.confere === false);
   const [conta, setConta] = useState(p.contaSugerida ?? "");
   const [contaPagamentos, setContaPagamentos] = useState("");
   const [m, setM] = useState<Mapeamento | null>(p.mapeamento);
   const [ml, setMl] = useState<MapeamentoLancamentos | null>(p.mapeamentoLanc);
   const [previa, setPrevia] = useState<PreviaExtrato | null>(p.previaInicial);
-  const [previaL, setPreviaL] = useState<{ total: number; invalidas: { linha: number; motivo: string; conteudo?: string }[]; amostra: LinhaLancamentoImportada[]; receber: number; pagar: number; semCategoria: number } | null>(null);
+  const [previaL, setPreviaL] = useState<PreviaLanc | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, iniciarPrevia] = useTransition();
   const [importando, iniciarImportacao] = useTransition();
@@ -109,7 +124,7 @@ export function AssistenteImportacao(p: Props) {
       } else {
         const r = await confirmarImportacaoLancamentos(p.empresaId, p.documento.id, ml, contaPagamentos || null);
         if (r.ok && r.dados) {
-          setResultado(`${r.mensagem} ${r.dados.duplicadas ? `${r.dados.duplicadas} linha(s) já importada(s) antes foram ignoradas.` : ""}`);
+          setResultado(`${r.mensagem} ${r.dados.duplicadas && r.dados.novas ? `${r.dados.duplicadas} linha(s) já importada(s) antes foram ignoradas.` : ""}`);
           router.refresh();
         } else toast.error(r.mensagem ?? "Falha na importação.");
       }
@@ -141,7 +156,7 @@ export function AssistenteImportacao(p: Props) {
   }
 
   const contasExtrato = p.contas.filter((c) => c.tipo !== "adquirente" || true);
-  const pronto = modo === "extrato" ? Boolean(conta && previa && previa.novas > 0) : Boolean(previaL && previaL.total > 0);
+  const pronto = modo === "extrato" ? Boolean(conta && previa && previa.novas > 0) : Boolean(previaL && previaL.total > 0 && !pdfNaoConfere);
 
   return (
     <div className="space-y-5">
@@ -153,11 +168,40 @@ export function AssistenteImportacao(p: Props) {
           <CardDescription>
             {p.tipoArquivo === "ofx"
               ? `Extrato OFX${p.ofx?.cartao ? " de cartão" : ""} · conta ${p.ofx?.conta ?? "não informada"} · ${formatarData(p.ofx?.inicio)} a ${formatarData(p.ofx?.fim)}`
-              : "Planilha: confira as colunas abaixo antes de importar."}
+              : p.pdf
+                ? `Relatório de contas${p.pdf.tipo === "pagar" ? " a pagar" : p.pdf.tipo === "receber" ? " a receber" : ""} em PDF: o portal leu a tabela do relatório. Confira a prévia antes de importar.`
+                : "Planilha: confira as colunas abaixo antes de importar."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {p.tipoArquivo === "planilha" ? (
+          {p.pdf ? (
+            p.pdf.conferencia.confere === false ? (
+              <Alerta tom="perigo" titulo="A leitura do PDF não conferiu com o resumo do relatório — nada será importado">
+                {p.pdf.conferencia.problemas.join(" ")} Envie o relatório em Excel/CSV ou fale com o escritório.
+              </Alerta>
+            ) : (
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+                <span>
+                  <span className="text-muted-foreground">Contas lidas: </span>
+                  <strong className="numero">{p.pdf.conferencia.quantidade}</strong>
+                  {p.pdf.resumo.quantidade !== null ? <span className="text-muted-foreground"> de {p.pdf.resumo.quantidade} no relatório</span> : null}
+                </span>
+                <span>
+                  <span className="text-muted-foreground">Soma: </span>
+                  <strong className="numero">{formatarMoeda(p.pdf.conferencia.soma)}</strong>
+                  {p.pdf.resumo.total !== null ? <span className="text-muted-foreground"> · total do relatório {formatarMoeda(p.pdf.resumo.total)}</span> : null}
+                </span>
+                {p.pdf.conferencia.confere ? (
+                  <span className="flex items-center gap-1 font-medium text-sucesso">
+                    <CheckCircle2 className="size-4" /> Confere com o resumo do relatório
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">O relatório não traz resumo para conferir: confira a soma.</span>
+                )}
+              </div>
+            )
+          ) : null}
+          {p.tipoArquivo === "planilha" && !p.pdf ? (
             <div className="flex flex-wrap gap-4 text-sm">
               <label className="inline-flex items-center gap-2">
                 <input type="radio" checked={modo === "extrato"} onChange={() => setModo("extrato")} className="accent-[var(--primary)]" /> Extrato bancário (movimentações da conta)
@@ -179,7 +223,7 @@ export function AssistenteImportacao(p: Props) {
                 ))}
               </Select>
             </Campo>
-          ) : (
+          ) : p.pdf ? null : (
             <Campo rotulo="Conta dos pagamentos já realizados (opcional)" ajuda="Linhas com data de pagamento só viram baixas se você informar a conta e a categoria for reconhecida.">
               <Select value={contaPagamentos} onChange={(e) => setContaPagamentos(e.target.value)} className="sm:w-96">
                 <option value="">Não registrar pagamentos</option>
@@ -193,7 +237,9 @@ export function AssistenteImportacao(p: Props) {
           )}
 
           {p.tipoArquivo === "planilha" ? (
-            <div className="space-y-3">
+            <details className="space-y-3" open={!p.pdf}>
+              <summary className={p.pdf ? "cursor-pointer text-sm text-primary" : "hidden"}>Ver a tabela lida e ajustar as colunas</summary>
+              <div className="space-y-3 pt-3">
               <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="min-w-full text-xs">
                   <thead className="bg-muted/70">
@@ -276,9 +322,11 @@ export function AssistenteImportacao(p: Props) {
                   <SeletorColuna rotulo="Nº do documento" valor={ml.numero_documento} colunas={colunas} aoMudar={(v) => setMl({ ...ml, numero_documento: v })} />
                   <SeletorColuna rotulo="Data do pagamento" valor={ml.data_pagamento} colunas={colunas} aoMudar={(v) => setMl({ ...ml, data_pagamento: v })} />
                   <SeletorColuna rotulo="Valor pago" valor={ml.valor_pago} colunas={colunas} aoMudar={(v) => setMl({ ...ml, valor_pago: v })} />
+                  <SeletorColuna rotulo="Situação (pagas e canceladas ficam de fora)" valor={ml.situacao ?? null} colunas={colunas} aoMudar={(v) => setMl({ ...ml, situacao: v })} />
                 </div>
               ) : null}
-            </div>
+              </div>
+            </details>
           ) : null}
         </CardContent>
       </Card>
@@ -369,10 +417,11 @@ export function AssistenteImportacao(p: Props) {
 
           {modo === "lancamentos" && previaL ? (
             <>
-              <div className="grid grid-cols-2 gap-3 text-sm lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 text-sm lg:grid-cols-5">
                 <div className="rounded-lg bg-muted p-3">
-                  <p className="text-xs text-muted-foreground">Linhas válidas</p>
+                  <p className="text-xs text-muted-foreground">Para importar</p>
                   <p className="font-semibold numero">{previaL.total}</p>
+                  <p className="text-xs text-muted-foreground numero">{formatarMoeda(previaL.soma)}</p>
                 </div>
                 <div className="rounded-lg bg-muted p-3">
                   <p className="text-xs text-muted-foreground">A receber / a pagar</p>
@@ -380,19 +429,35 @@ export function AssistenteImportacao(p: Props) {
                     {previaL.receber} / {previaL.pagar}
                   </p>
                 </div>
+                <div className="rounded-lg bg-info-bg p-3 text-info-fg">
+                  <p className="text-xs">Com conta sugerida pelo histórico</p>
+                  <p className="font-semibold numero">{previaL.sugeridas}</p>
+                </div>
                 <div className="rounded-lg bg-alerta-bg p-3 text-alerta-fg">
-                  <p className="text-xs">Sem categoria reconhecida</p>
+                  <p className="text-xs">Sem conta (a classificar)</p>
                   <p className="font-semibold numero">{previaL.semCategoria}</p>
                 </div>
                 <div className="rounded-lg bg-muted p-3">
-                  <p className="text-xs text-muted-foreground">Inválidas</p>
-                  <p className="font-semibold numero">{previaL.invalidas.length}</p>
+                  <p className="text-xs text-muted-foreground">Fora da importação</p>
+                  <p className="font-semibold numero">{previaL.invalidas.length + previaL.ignoradas.length}</p>
+                  <p className="text-xs text-muted-foreground">pagas, canceladas ou inválidas</p>
                 </div>
               </div>
-              {previaL.semCategoria ? (
+              {previaL.semCategoria || previaL.sugeridas ? (
                 <p className="flex gap-1.5 text-sm text-alerta-fg">
-                  <AlertTriangle className="size-4 shrink-0" /> Linhas sem categoria reconhecida entram como “sugeridas” e só valem nos relatórios depois de revisadas.
+                  <AlertTriangle className="size-4 shrink-0" /> As contas sugeridas pelo histórico e as sem conta entram como “sugeridas”: só valem nos relatórios depois que você confere e confirma em Lançamentos.
                 </p>
+              ) : null}
+              {previaL.ignoradas.length ? (
+                <Alerta tom="info" titulo={`${previaL.ignoradas.length} conta(s) já paga(s) ou cancelada(s) ficam de fora`}>
+                  <ul className="mt-1 max-h-40 list-disc space-y-0.5 overflow-auto pl-5 text-xs">
+                    {previaL.ignoradas.slice(0, 30).map((i) => (
+                      <li key={i.linha}>
+                        Linha {i.linha}: {i.motivo} {i.conteudo ? <span className="text-muted-foreground">({i.conteudo.replace(/\s*\|\s*/g, " · ").replace(/^(· )+/, "").slice(0, 90)})</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </Alerta>
               ) : null}
               {previaL.invalidas.length ? (
                 <Alerta tom="alerta" titulo="Linhas que não serão importadas">
@@ -405,30 +470,43 @@ export function AssistenteImportacao(p: Props) {
                   </ul>
                 </Alerta>
               ) : null}
-              <Table>
-                <THead>
-                  <tr>
-                    <Th>Tipo</Th>
-                    <Th>Descrição</Th>
-                    <Th>Competência</Th>
-                    <Th>Vencimento</Th>
-                    <Th className="text-right">Valor</Th>
-                    <Th>Categoria</Th>
-                  </tr>
-                </THead>
-                <TBody>
-                  {previaL.amostra.slice(0, 50).map((l) => (
-                    <Tr key={l.linha}>
-                      <Td className="text-sm">{l.tipo === "receber" ? "Receber" : "Pagar"}</Td>
-                      <Td className="max-w-[20rem] truncate text-sm">{l.descricao}</Td>
-                      <Td className="text-sm">{formatarData(l.data_competencia)}</Td>
-                      <Td className="text-sm">{formatarData(l.data_vencimento)}</Td>
-                      <Td className="text-right numero">{formatarMoeda(l.valor)}</Td>
-                      <Td className="text-sm">{l.categoria_codigo ?? "—"}</Td>
-                    </Tr>
-                  ))}
-                </TBody>
-              </Table>
+              <div className="max-h-[36rem] overflow-y-auto rounded-xl">
+                <Table>
+                  <THead>
+                    <tr>
+                      <Th>Tipo</Th>
+                      <Th>Descrição</Th>
+                      <Th>Vencimento</Th>
+                      <Th className="text-right">Valor</Th>
+                      <Th>Fornecedor/cliente</Th>
+                      <Th>Conta</Th>
+                    </tr>
+                  </THead>
+                  <TBody>
+                    {previaL.amostra.map((l) => (
+                      <Tr key={l.linha}>
+                        <Td className="text-sm">{l.tipo === "receber" ? "Receber" : "Pagar"}</Td>
+                        <Td className="max-w-[22rem] truncate text-sm">{l.descricao}</Td>
+                        <Td className="whitespace-nowrap text-sm">{formatarData(l.data_vencimento)}</Td>
+                        <Td className="whitespace-nowrap text-right numero">{formatarMoeda(l.valor)}</Td>
+                        <Td className="max-w-[12rem] truncate text-sm">{l.contraparte_nome ?? "—"}</Td>
+                        <Td className="text-sm">
+                          {l.categoria_codigo ? (
+                            l.categoria_codigo
+                          ) : l.categoria_sugerida ? (
+                            <span className="flex flex-wrap items-center gap-1">
+                              <span className="max-w-[14rem] truncate">{l.categoria_sugerida}</span> <Badge variante="info">sugerida</Badge>
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">a classificar</span>
+                          )}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </TBody>
+                </Table>
+              </div>
+              {previaL.total > previaL.amostra.length ? <p className="text-xs text-muted-foreground">Mostrando {previaL.amostra.length} de {previaL.total}.</p> : null}
             </>
           ) : null}
 

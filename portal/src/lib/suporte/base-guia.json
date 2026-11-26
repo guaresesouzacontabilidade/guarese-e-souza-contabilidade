@@ -966,6 +966,13 @@
   "texto": "extratos do banco (OFX ou planilha); as movimentações seguem para a conciliação."
  },
  {
+  "id": "financeiro-quando-liberado-importar-contas-a-pagar-receber",
+  "publico": "cliente",
+  "secao": "Financeiro (quando liberado)",
+  "titulo": "Financeiro (quando liberado) › Importar contas a pagar/receber",
+  "texto": "(Financeiro → Importar extratos e planilhas): traz de uma vez as contas do sistema antigo, com as datas de vencimento e os valores. - Serve a planilha (Excel ou CSV) ou o relatório em PDF de contas a pagar ou a receber que o sistema da empresa imprime (a tabela com descrição, vencimento, situação e valor). - Envie o arquivo em Enviar relatório de contas (tipo “Relatórios de contas a pagar e a receber”) e clique em Importar na lista. - No PDF, o portal lê a tabela e confere a soma das contas e a quantidade com o resumo do relatório (ex.: “66 cobranças”, total R$ 214.285,76). Se não bater, nada é importado e o aviso explica; nesse caso, envie a planilha. - O tipo vem do título (“contas a pagar” vira contas a pagar). As parcelas mantêm o número na descrição (ex.: “PINUS (2/6)”). Como o relatório não traz a data da compra, cada parcela entra no mês do vencimento. - Contas já pagas (sem data de pagamento) e canceladas ficam de fora e aparecem numa lista. - O portal sugere a conta pelo histórico da própria empresa (lançamentos parecidos já confirmados). As contas importadas entram como sugeridas: confira e confirme em Lançamentos → Somente sugeridos (dá para marcar várias e confirmar de uma vez). - Importar de novo o mesmo arquivo, ou o relatório do mês seguinte com as mesmas parcelas, não duplica: só as contas novas entram. Desfazer importação (na lista das importações) remove o que ela criou. - Tudo é lido no servidor do portal; o arquivo não vai para serviço de fora. Relatórios de outros sistemas, com outro leiaute, podem precisar de ajuste — a planilha funciona com qualquer sistema."
+ },
+ {
   "id": "financeiro-quando-liberado-notas-fiscais",
   "publico": "cliente",
   "secao": "Financeiro (quando liberado)",

@@ -10,7 +10,15 @@ import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { AssistenteImportacao } from "@/components/financeiro/assistente-importacao";
 import { DesfazerImportacao } from "@/components/financeiro/desfazer-importacao";
-import { analisarArquivo, lerDocumentoParaImportacao, prepararExtrato, sugerirMapeamentoLancamentos, EXTENSOES_IMPORTAVEIS, type PreviaExtrato } from "@/lib/financeiro/importacao";
+import {
+  analisarArquivo,
+  lerDocumentoParaImportacao,
+  prepararExtrato,
+  sugerirMapeamentoLancamentos,
+  CATEGORIA_RELATORIO_CONTAS,
+  EXTENSOES_IMPORTAVEIS,
+  type PreviaExtrato,
+} from "@/lib/financeiro/importacao";
 import { formatarCompetencia, formatarData, formatarDataHora } from "@/lib/formatos";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { parametro } from "@/lib/busca";
@@ -69,8 +77,9 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
           ofx={analise.tipo === "ofx" ? { conta: analise.conta, banco: analise.banco, cartao: analise.cartao, inicio: analise.inicio, fim: analise.fim } : null}
           amostra={analise.tipo === "planilha" ? analise.linhas.slice(0, 30) : []}
           mapeamento={analise.tipo === "planilha" ? analise.mapeamento : null}
-          mapeamentoLanc={analise.tipo === "planilha" ? sugerirMapeamentoLancamentos(analise.linhas) : null}
+          mapeamentoLanc={analise.tipo === "planilha" ? { ...sugerirMapeamentoLancamentos(analise.linhas), tipoFixo: analise.pdf?.tipo ?? null } : null}
           previaInicial={previa}
+          pdf={analise.tipo === "planilha" ? (analise.pdf ?? null) : null}
         />
       );
     }
@@ -82,17 +91,32 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
     );
   }
 
-  const [{ data: docs }, { data: importacoes }] = await Promise.all([
+  const [{ data: planilhas }, { data: pdfs }, { data: importacoes }] = await Promise.all([
     ctx.supabase
       .from("documentos")
       .select("id, nome_original, competencia, categoria_codigo, enviado_em, extensao")
       .eq("empresa_id", empresaId)
       .eq("upload_status", "concluido")
       .is("excluido_em", null)
-      .in("extensao", EXTENSOES_IMPORTAVEIS)
+      .in(
+        "extensao",
+        EXTENSOES_IMPORTAVEIS.filter((e) => e !== "pdf"),
+      )
       .neq("verificacao_status", "bloqueado")
       .order("enviado_em", { ascending: false })
       .limit(40),
+    // PDF: só os relatórios de contas (pelo tipo de documento ou pelo nome do arquivo)
+    ctx.supabase
+      .from("documentos")
+      .select("id, nome_original, competencia, categoria_codigo, enviado_em, extensao")
+      .eq("empresa_id", empresaId)
+      .eq("upload_status", "concluido")
+      .is("excluido_em", null)
+      .eq("extensao", "pdf")
+      .neq("verificacao_status", "bloqueado")
+      .or(`categoria_codigo.eq.${CATEGORIA_RELATORIO_CONTAS},nome_original.ilike.%pagar%,nome_original.ilike.%receber%,nome_original.ilike.%contas%`)
+      .order("enviado_em", { ascending: false })
+      .limit(20),
     ctx.supabase
       .from("importacoes")
       .select("id, tipo, arquivo_nome, documento_id, status, total_linhas, total_novas, total_duplicadas, total_invalidas, total_periodo_fechado, periodo_inicio, periodo_fim, soma_creditos, soma_debitos, created_at, motivo_desfazer, conta:contas_financeiras(nome)")
@@ -100,25 +124,35 @@ export default async function Importar({ params, searchParams }: PageProps<"/e/[
       .order("created_at", { ascending: false })
       .limit(50),
   ]);
+  const docs = [...(planilhas ?? []), ...(pdfs ?? [])].sort((a, b) => (b.enviado_em ?? "").localeCompare(a.enviado_em ?? ""));
   const importados = new Set((importacoes ?? []).filter((i) => i.status === "concluida").map((i) => i.documento_id));
 
   return (
     <>
       <CabecalhoPagina
         titulo="Importar extratos e planilhas"
-        descricao="OFX dos bancos, extratos em CSV/XLSX e planilhas de contas a pagar/receber. Importar não cria receitas nem despesas: as movimentações seguem para a conciliação."
+        descricao="OFX dos bancos, extratos em CSV/XLSX e contas a pagar/receber em planilha ou no relatório em PDF do sistema da empresa. Extratos seguem para a conciliação; contas a pagar/receber viram lançamentos."
         acoes={
-          <Button asChild variante="contorno">
-            <Link href={`/e/${empresaId}/enviar`}>
-              <FileUp /> Enviar novo arquivo
-            </Link>
-          </Button>
+          <>
+            <Button asChild variante="contorno">
+              <Link href={`/e/${empresaId}/enviar?categoria=${CATEGORIA_RELATORIO_CONTAS}`}>
+                <FileUp /> Enviar relatório de contas
+              </Link>
+            </Button>
+            <Button asChild variante="contorno">
+              <Link href={`/e/${empresaId}/enviar`}>
+                <FileUp /> Enviar novo arquivo
+              </Link>
+            </Button>
+          </>
         }
       />
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>1. Escolha o arquivo</CardTitle>
-          <CardDescription>Arquivos OFX, CSV ou XLSX já enviados ao portal. Para um arquivo novo, envie primeiro em “Enviar documentos”.</CardDescription>
+          <CardDescription>
+            Arquivos OFX, CSV, XLSX e relatórios de contas a pagar/receber em PDF já enviados ao portal. Para um arquivo novo, envie primeiro em “Enviar documentos” (o relatório de contas no tipo “Relatórios de contas a pagar e a receber”).
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {docs?.length ? (
