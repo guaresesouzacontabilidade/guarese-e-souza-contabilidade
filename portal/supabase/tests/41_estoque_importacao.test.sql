@@ -28,9 +28,11 @@ select is(public.gestao_importar_produtos(current_setting('testes.empresa_a')::u
                        'preco_venda', 25, 'preco_custo', 14, 'estoque', 40, 'estoque_minimo', 10),
     jsonb_build_object('linha', 3, 'codigo', 'P-200', 'preco_venda', 0.95, 'estoque', 300)
   )), '{"novos": 1, "estoque": 2, "atualizados": 1}'::jsonb, 'planilha: 1 novo, 1 atualizado e o estoque dos dois');
+reset role; -- custo só se lê direto como administrador do banco
 select is((select (estoque_atual, custo_medio, estoque_minimo, unidade)::text from public.nfe_produtos
             where empresa_id = current_setting('testes.empresa_a')::uuid and codigo = 'P-100'),
   '(40.0000,14.000000,10.0000,KG)', 'produto novo com o saldo e o custo da planilha');
+set local role authenticated;
 select is((select (descricao, valor_unitario::numeric(10,2), grupo, estoque_atual)::text from public.nfe_produtos where id = current_setting('testes.p200')::uuid),
   '("Parafuso sextavado 1/4",0.95,Fixação,300.0000)', 'existente: só o preço e o estoque mudam');
 select set_config('testes.qtd', (select count(*)::text from public.nfe_produtos where empresa_id = current_setting('testes.empresa_a')::uuid), true);

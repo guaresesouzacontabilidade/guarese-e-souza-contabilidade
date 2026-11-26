@@ -13,7 +13,7 @@ const UUID = /^[0-9a-f-]{36}$/i;
 
 /**
  * Posição do estoque e lista de compras (PDF) ou tudo em Excel. Mostra custos:
- * só quem gerencia a loja da empresa (o banco confere de novo nas funções).
+ * só quem tem "Ver custos e margens" na empresa (o banco confere de novo nas funções).
  */
 export async function GET(req: NextRequest) {
   const s = await sessaoApi();
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const empresaId = q.get("empresa") ?? "";
   if (!UUID.test(empresaId)) return new NextResponse("Empresa inválida.", { status: 400 });
   const empresa = (await obterEmpresasDoUsuario()).find((e) => e.id === empresaId);
-  if (!empresa || !empresa.loja || empresa.gestao_modalidade === "notas" || !empresa.permissoes.has("gestao.gerenciar")) {
+  if (!empresa || !empresa.loja || empresa.gestao_modalidade === "notas" || !empresa.permissoes.has("gestao.gerenciar") || !empresa.permissoes.has("gestao.custos")) {
     return new NextResponse("Acesso negado.", { status: 403 });
   }
   const tipo = q.get("tipo") === "compras" ? "compras" : q.get("tipo") === "completo" ? "completo" : "posicao";

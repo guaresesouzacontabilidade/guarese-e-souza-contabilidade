@@ -244,7 +244,7 @@ export interface ItemEntradaNota {
 
 export async function darEntradaNota(empresaId: string, documentoFiscalId: string, itens: ItemEntradaNota[]): Promise<ResultadoAcao> {
   if (!UUID.test(empresaId) || !UUID.test(documentoFiscalId)) return falha("Nota inválida.");
-  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const ctx = await exigirPermissao(empresaId, "gestao.custos");
   if (!Array.isArray(itens) || itens.length > 990) return falha("Itens inválidos.");
   const lista = [];
   for (const i of itens) {

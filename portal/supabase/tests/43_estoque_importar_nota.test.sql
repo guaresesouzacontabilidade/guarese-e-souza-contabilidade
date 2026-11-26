@@ -62,13 +62,17 @@ select is((current_setting('testes.r1')::jsonb - 'produtos' - 'documento_fiscal_
 select is((select string_agg(p ->> 'modo', ',') from jsonb_array_elements(current_setting('testes.r1')::jsonb -> 'produtos') p),
   'gtin,descricao,novo,novo', 'prego pelo código de barras, martelo pela descrição, serrote novo');
 select is((select estoque_atual::text from public.nfe_produtos where id = current_setting('testes.prego')::uuid), '10.0000', 'prego: 10 kg no estoque');
+reset role; -- custo só se lê direto como administrador do banco
 select is((select (estoque_atual, preco_custo)::text from public.nfe_produtos where id = current_setting('testes.martelo')::uuid), '(4.0000,30.0000)',
   'martelo: 4 unidades com o custo da nota');
+set local role authenticated;
 select is((select count(*)::int from public.nfe_produtos where empresa_id = current_setting('testes.empresa_a')::uuid and descricao = 'SERROTE 22 POL'), 1,
   'item repetido na nota: um produto só');
+reset role; -- custo só se lê direto como administrador do banco
 select is((select (estoque_atual, preco_custo, valor_unitario::numeric(10,2), ncm, unidade)::text from public.nfe_produtos
             where empresa_id = current_setting('testes.empresa_a')::uuid and descricao = 'SERROTE 22 POL'),
   '(3.0000,65.0000,97.50,82021000,UN)', 'serrote: 3 no estoque, custo líquido do desconto e preço = custo + 50%');
+set local role authenticated;
 select is((select margem_entrada::text from public.gestao_config where empresa_id = current_setting('testes.empresa_a')::uuid), '50.00', 'margem lembrada');
 select is((select string_agg(codigo_fornecedor, ',' order by codigo_fornecedor) from public.estoque_vinculos
             where empresa_id = current_setting('testes.empresa_a')::uuid and fornecedor_documento = '33444555000181'),

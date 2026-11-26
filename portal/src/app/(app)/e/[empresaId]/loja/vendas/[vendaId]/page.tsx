@@ -38,7 +38,7 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
   const { data: v } = await ctx.supabase
     .from("vendas")
     .select(
-      "*, vendedor:perfis!vendas_vendedor_id_fkey(nome), cancelador:perfis!vendas_cancelada_por_fkey(nome), sessao:caixa_sessoes(id, caixa_nome, status), nfe:nfe_emissoes(id, numero, serie, situacao), venda_itens(*), venda_pagamentos(*)",
+      "*, vendedor:perfis!vendas_vendedor_id_fkey(nome), cancelador:perfis!vendas_cancelada_por_fkey(nome), sessao:caixa_sessoes(id, caixa_nome, status), nfe:nfe_emissoes(id, numero, serie, situacao), venda_itens(id, ordem, produto_id, codigo, descricao, unidade, pecas, comprimento_m, quantidade, preco_tabela, preco_unitario, desconto, total, variacao), venda_pagamentos(*)",
     )
     .eq("id", vendaId)
     .eq("empresa_id", empresaId)

@@ -35,7 +35,9 @@ select public.gestao_estoque_lancar(current_setting('testes.empresa_a')::uuid, j
 -- 1. Margens
 select lives_ok(format($$select public.gestao_produto_margem(%L, %L, 35)$$, current_setting('testes.empresa_a'), current_setting('testes.tabua')),
   'gerente define a margem do produto');
+reset role; -- custo só se lê direto como administrador do banco
 select is((select margem_desejada from public.nfe_produtos where id = current_setting('testes.tabua')::uuid), 35.00::numeric, 'margem do produto guardada');
+set local role authenticated;
 select lives_ok(format($$select public.gestao_grupo_margem(%L, ' Eucalipto ', 40)$$, current_setting('testes.empresa_a')), 'gerente define a margem do grupo');
 select is((select margem_desejada from public.gestao_grupos_margem where empresa_id = current_setting('testes.empresa_a')::uuid and grupo = 'Eucalipto'),
   40.00::numeric, 'margem do grupo guardada (sem espaços)');

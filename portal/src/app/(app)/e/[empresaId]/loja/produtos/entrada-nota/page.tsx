@@ -37,6 +37,20 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
   const sp = await searchParams;
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.gerente) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
+  if (!ctx.custos) {
+    // A nota de compra traz o custo de cada item: só para quem vê custos e margens
+    return (
+      <>
+        <CabecalhoPagina titulo="Entrada de mercadorias" voltar={{ href: `/e/${empresaId}/loja/produtos`, rotulo: "Produtos e estoque" }} />
+        <NavegacaoLoja empresaId={empresaId} configurar />
+        <EstadoVazio
+          icone={FileInput}
+          titulo="A entrada por nota mostra o custo das mercadorias"
+          descricao="Peça ao responsável pela loja a permissão “Ver custos e margens”. Para lançar uma entrada sem custo, use “Ajustar estoque” em Produtos e estoque."
+        />
+      </>
+    );
+  }
   const base = `/e/${empresaId}/loja/produtos/entrada-nota`;
   const notaId = typeof sp.nota === "string" && UUID.test(sp.nota) ? sp.nota : null;
 
@@ -48,7 +62,7 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
         .select("numero_item, codigo, descricao, ncm, gtin, unidade, quantidade, valor_unitario, valor_total, valor_desconto")
         .eq("documento_fiscal_id", notaId)
         .order("numero_item"),
-      carregarProdutosLoja(ctx.supabase, empresaId, { ativos: true }),
+      carregarProdutosLoja(ctx.supabase, empresaId, { ativos: true, custos: true }),
       ctx.supabase.from("estoque_movimentos").select("id", { count: "exact", head: true }).eq("documento_fiscal_id", notaId),
     ]);
     if (!nota || nota.operacao !== "entrada") notFound();
@@ -113,7 +127,9 @@ export default async function PaginaEntradaNota({ params, searchParams }: PagePr
       .eq("empresa_id", empresaId)
       .order("created_at", { ascending: false })
       .limit(50),
-    ctx.supabase.from("nfe_produtos").select("valor_unitario, preco_custo").eq("empresa_id", empresaId).eq("ativo", true).gt("preco_custo", 0).limit(2000),
+    carregarProdutosLoja(ctx.supabase, empresaId, { ativos: true, custos: true }).then((ps) => ({
+      data: ps.map((p) => ({ valor_unitario: p.valor_unitario == null ? null : Number(p.valor_unitario), preco_custo: p.preco_custo == null ? null : Number(p.preco_custo) })),
+    })),
   ]);
   const automatica = cfg?.entrada_automatica === true;
   const chavesPdf = new Set((pelosPdfs ?? []).map((n) => n.chave));

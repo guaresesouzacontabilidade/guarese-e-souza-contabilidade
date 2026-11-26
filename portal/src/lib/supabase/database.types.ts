@@ -7549,6 +7549,9 @@ isOneToOne: false
               "custo_na_alteracao": number,"preco_alterado_em": string,"produto_id": string,"ultima_entrada_em": string,"ultimo_custo_entrada": number
             }[]
                            },
+"gestao_produto_custos":
+{ Args: { "p_empresa_id": string,"p_produto_id": string }; Returns: Json
+                           },
 "gestao_produto_excluir":
 { Args: { "p_empresa_id": string,"p_produto_id": string }; Returns: string
                            },
@@ -7560,6 +7563,9 @@ isOneToOne: false
                            },
 "gestao_produto_tara":
 { Args: { "p_empresa_id": string,"p_produto_id": string,"p_tara_kg": number }; Returns: undefined
+                           },
+"gestao_produtos_custos":
+{ Args: { "p_empresa_id": string }; Returns: Json
                            },
 "gestao_venda_cancelar":
 { Args: { "p_motivo": string,"p_venda_id": string }; Returns: undefined

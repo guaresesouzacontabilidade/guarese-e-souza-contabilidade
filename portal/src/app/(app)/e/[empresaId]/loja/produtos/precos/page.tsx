@@ -22,18 +22,26 @@ export default async function PaginaPrecos({ params, searchParams }: PageProps<"
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
   const cabecalho = <CabecalhoPagina titulo="Preços de venda" descricao="Confira o custo, a margem e ajuste os preços depois de cada entrada de mercadorias." voltar={{ href: `/e/${empresaId}/loja/produtos`, rotulo: "Produtos e estoque" }} />;
-  if (!ctx.gerente) {
+  if (!ctx.custos) {
     return (
       <>
         {cabecalho}
-        <NavegacaoLoja empresaId={empresaId} configurar={ctx.equipe} />
-        <EstadoVazio icone={Tags} titulo="Só quem gerencia a loja vê custos e muda preços" descricao="Peça ao responsável pela loja para liberar a permissão de gerenciar." />
+        <NavegacaoLoja empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
+        <EstadoVazio
+          icone={Tags}
+          titulo="A tabela de preços mostra custos e margens"
+          descricao={
+            ctx.gerente
+              ? "Você pode mudar o preço de venda no cadastro de cada produto. Para ver o custo e a margem, peça ao responsável pela loja a permissão “Ver custos e margens”."
+              : "Peça ao responsável pela loja a permissão “Ver custos e margens”."
+          }
+        />
       </>
     );
   }
 
   const [produtos, { situacao: porProduto, grupos, padrao }, { data: historico }] = await Promise.all([
-    carregarProdutosLoja(ctx.supabase, empresaId, { ativos: true }),
+    carregarProdutosLoja(ctx.supabase, empresaId, { ativos: true, custos: true }),
     carregarMargens(ctx.supabase, empresaId),
     ctx.supabase
       .from("produto_precos_historico")
@@ -83,7 +91,7 @@ export default async function PaginaPrecos({ params, searchParams }: PageProps<"
     <>
       {cabecalho}
       <NavegacaoLoja empresaId={empresaId} configurar />
-      <AbasEstoque empresaId={empresaId} ativa="precos" gerente />
+      <AbasEstoque empresaId={empresaId} ativa="precos" custos />
       <details className="group mb-4 rounded-2xl border border-border bg-card" open={!padrao && !listaGrupos.some((g) => g.margem)}>
         <summary className="flex cursor-pointer list-none items-center gap-2 p-4 text-sm">
           <Percent className="size-4 shrink-0 text-primary" />

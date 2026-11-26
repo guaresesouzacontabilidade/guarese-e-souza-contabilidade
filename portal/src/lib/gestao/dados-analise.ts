@@ -25,7 +25,7 @@ export async function carregarAnaliseEstoque(supabase: Cliente, empresaId: strin
   const hoje = diasAtras(0);
   const inicio = diasAtras(dias - 1);
   const [produtos, { data: vendas, error }, { data: situacao }] = await Promise.all([
-    carregarProdutosLoja(supabase, empresaId, { ativos: true }),
+    carregarProdutosLoja(supabase, empresaId, { ativos: true, custos: true }),
     supabase.rpc("gestao_vendas_por_produto", { p_empresa_id: empresaId, p_inicio: inicio, p_fim: hoje }),
     supabase.rpc("gestao_precos_situacao", { p_empresa_id: empresaId }),
   ]);

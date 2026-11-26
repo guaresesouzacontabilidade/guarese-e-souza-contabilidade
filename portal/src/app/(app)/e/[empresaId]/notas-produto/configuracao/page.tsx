@@ -44,7 +44,7 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
     ctx.supabase.from("empresas").select("tipo_pessoa, regime_tributario, uf").eq("id", empresaId).maybeSingle(),
     ctx.supabase.from("certificados_digitais").select("valido_ate").eq("empresa_id", empresaId).is("revogado_em", null).maybeSingle(),
     ctx.supabase.from("nfe_emitentes").select("*, municipio:municipios(nome, uf)").eq("empresa_id", empresaId).order("serie"),
-    ctx.supabase.from("nfe_produtos").select("*").eq("empresa_id", empresaId).order("descricao"),
+    ctx.supabase.from("nfe_produtos").select("id, codigo, descricao, ncm, cest, gtin, unidade, peso_kg, valor_unitario, origem, ativo, operacao_id").eq("empresa_id", empresaId).order("descricao"),
     ctx.supabase.from("nfe_operacoes").select("*").eq("empresa_id", empresaId).order("nome"),
     ctx.supabase.from("nfe_cclass_trib").select("cclass_trib, cst, nome, p_red_ibs, p_red_cbs").order("cclass_trib"),
   ]);

@@ -23,14 +23,14 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
   if (!UUID.test(produtoId)) notFound();
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
-  const todos = await carregarProdutosLoja(ctx.supabase, empresaId);
+  const todos = await carregarProdutosLoja(ctx.supabase, empresaId, { custos: ctx.custos });
   const p = todos.find((x) => x.id === produtoId);
   if (!p) notFound();
   const grupos = [...new Set(todos.map((x) => x.grupo).filter((g): g is string => Boolean(g)))].sort();
-  const [{ data: movimentos }, { data: vendidos }, margens, { data: historico }] = await Promise.all([
+  const [{ data: movimentos }, { data: vendidos }, margens, { data: historico }, { data: custosFicha }] = await Promise.all([
     ctx.supabase
       .from("estoque_movimentos")
-      .select("id, tipo, quantidade, custo_unitario, saldo_apos, observacao, created_at, venda_id, autor:perfis!estoque_movimentos_criado_por_fkey(nome)")
+      .select("id, tipo, quantidade, saldo_apos, observacao, created_at, venda_id, autor:perfis!estoque_movimentos_criado_por_fkey(nome)")
       .eq("empresa_id", empresaId)
       .eq("produto_id", produtoId)
       .order("created_at", { ascending: false })
@@ -44,17 +44,22 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
       .eq("venda.status", "concluida")
       .gte("venda.data", diasAtras(30))
       .limit(5000),
-    ctx.gerente ? carregarMargens(ctx.supabase, empresaId) : null,
+    ctx.custos ? carregarMargens(ctx.supabase, empresaId) : null,
     ctx.gerente
       ? ctx.supabase
           .from("produto_precos_historico")
-          .select("id, preco_anterior, preco_novo, custo_referencia, origem, created_at, autor:perfis!produto_precos_historico_criado_por_fkey(nome)")
+          .select("id, preco_anterior, preco_novo, origem, created_at, autor:perfis!produto_precos_historico_criado_por_fkey(nome)")
           .eq("empresa_id", empresaId)
           .eq("produto_id", produtoId)
           .order("id", { ascending: false })
           .limit(100)
       : { data: null },
+    // Custo dos movimentos e do histórico: só pela função que confere "Ver custos e margens"
+    ctx.custos ? ctx.supabase.rpc("gestao_produto_custos", { p_empresa_id: empresaId, p_produto_id: produtoId }) : { data: null },
   ]);
+  const custosDe = (custosFicha ?? {}) as { movimentos?: Record<string, number | null>; historico?: Record<string, number | null> };
+  const custoMovimento = (id: string | number) => custosDe.movimentos?.[String(id)] ?? null;
+  const custoHistorico = (id: string | number) => custosDe.historico?.[String(id)] ?? null;
   const vendido30 = (vendidos ?? []).reduce((s, i) => ({ q: s.q.plus(dec(i.quantidade)), v: s.v.plus(dec(i.total)) }), { q: dec(0), v: dec(0) });
   const custo = custoUnitario(p);
   // Margem sobre o custo (custo 100, preço 130 = 30%), pelo custo da última compra
@@ -72,8 +77,8 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
         acoes={
           ctx.gerente ? (
             <>
-              <LancarEstoque empresaId={empresaId} produtos={[p]} produtoId={p.id} />
-              <DialogoProduto empresaId={empresaId} produto={p} grupos={grupos} />
+              <LancarEstoque empresaId={empresaId} produtos={[p]} produtoId={p.id} custos={ctx.custos} />
+              <DialogoProduto empresaId={empresaId} produto={p} grupos={grupos} custos={ctx.custos} />
               <ExcluirProduto empresaId={empresaId} produto={p} />
             </>
           ) : null
@@ -93,7 +98,7 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
           detalhe={margem !== null ? `margem ${pct(margem)} sobre o custo${alvo ? ` · meta ${pct(alvo.valor)}` : ""}` : undefined}
           tom={margem !== null && alvo && margem < alvo.valor - 0.05 ? "alerta" : "neutro"}
         />
-        {ctx.gerente ? (
+        {ctx.custos ? (
           <Indicador rotulo="Custo médio" valor={custo.gt(0) ? formatarMoeda(custo) : "—"} detalhe={custo.gt(0) && p.controla_estoque ? `estoque vale ${formatarMoeda(dec(p.estoque_atual).times(custo))}` : undefined} tom="info" />
         ) : (
           <Indicador rotulo="Grupo" valor={p.grupo ?? "—"} tom="info" />
@@ -112,7 +117,7 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
                   <Th>Quando</Th>
                   <Th>Movimento</Th>
                   <Th className="text-right">Quantidade</Th>
-                  {ctx.gerente ? <Th className="text-right">Custo</Th> : null}
+                  {ctx.custos ? <Th className="text-right">Custo</Th> : null}
                   <Th className="text-right">Saldo</Th>
                 </tr>
               </THead>
@@ -132,7 +137,7 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
                         {q.gt(0) ? "+" : ""}
                         {formatarQuantidade(q)}
                       </Td>
-                      {ctx.gerente ? <Td className="text-right numero">{m.custo_unitario != null ? formatarMoeda(m.custo_unitario) : "—"}</Td> : null}
+                      {ctx.custos ? <Td className="text-right numero">{custoMovimento(m.id) != null ? formatarMoeda(custoMovimento(m.id)!) : "—"}</Td> : null}
                       <Td className="text-right numero font-medium">{formatarQuantidade(m.saldo_apos)}</Td>
                     </Tr>
                   );
@@ -156,7 +161,7 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
                   <Th>Quando</Th>
                   <Th className="text-right">De</Th>
                   <Th className="text-right">Para</Th>
-                  <Th className="text-right">Custo na época</Th>
+                  {ctx.custos ? <Th className="text-right">Custo na época</Th> : null}
                   <Th>Quem</Th>
                 </tr>
               </THead>
@@ -166,7 +171,7 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
                     <Td className="numero text-muted-foreground">{formatarDataHora(h.created_at)}</Td>
                     <Td className="text-right numero">{h.preco_anterior != null ? formatarMoeda(h.preco_anterior) : "cadastro"}</Td>
                     <Td className="text-right numero font-medium">{formatarMoeda(h.preco_novo)}</Td>
-                    <Td className="text-right numero">{h.custo_referencia != null ? formatarMoeda(h.custo_referencia) : "—"}</Td>
+                    {ctx.custos ? <Td className="text-right numero">{custoHistorico(h.id) != null ? formatarMoeda(custoHistorico(h.id)!) : "—"}</Td> : null}
                     <Td className="text-sm">
                       {(h.autor as { nome?: string } | null)?.nome ?? "—"}
                       <span className="block text-xs text-muted-foreground">{h.origem === "tabela_precos" ? "pela tabela de preços" : "pelo cadastro"}</span>

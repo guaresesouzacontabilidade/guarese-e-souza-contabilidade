@@ -66,7 +66,7 @@ export async function salvarPrecos(empresaId: string, itens: PrecoParaSalvar[]):
 
 export async function definirMargemPadrao(empresaId: string, margem: string): Promise<ResultadoAcao> {
   try {
-    const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+    const ctx = await exigirPermissao(empresaId, "gestao.custos");
     const m = lerMargem(margem);
     if (m === undefined) return falha("Margem inválida. Use um número entre 0 e 1000.");
     const { error } = await ctx.supabase.rpc("gestao_margem_padrao", { p_empresa_id: empresaId, p_margem: m as number });
@@ -80,7 +80,7 @@ export async function definirMargemPadrao(empresaId: string, margem: string): Pr
 
 export async function definirMargemGrupo(empresaId: string, grupo: string, margem: string): Promise<ResultadoAcao> {
   try {
-    const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+    const ctx = await exigirPermissao(empresaId, "gestao.custos");
     const m = lerMargem(margem);
     if (m === undefined) return falha("Margem inválida. Use um número entre 0 e 1000.");
     const { error } = await ctx.supabase.rpc("gestao_grupo_margem", { p_empresa_id: empresaId, p_grupo: grupo, p_margem: m as number });
@@ -95,7 +95,7 @@ export async function definirMargemGrupo(empresaId: string, grupo: string, marge
 /** Margem do produto (usada no cadastro, depois de salvar o produto). */
 export async function definirMargemProduto(empresaId: string, produtoId: string, margem: string): Promise<ResultadoAcao> {
   try {
-    const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+    const ctx = await exigirPermissao(empresaId, "gestao.custos");
     const m = lerMargem(margem);
     if (m === undefined) return falha("Margem inválida. Use um número entre 0 e 1000.");
     const { error } = await ctx.supabase.rpc("gestao_produto_margem", { p_empresa_id: empresaId, p_produto_id: produtoId, p_margem: m as number });

@@ -28,8 +28,11 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
 
-  const [todos, margens] = await Promise.all([carregarProdutosLoja(ctx.supabase, empresaId), ctx.gerente ? carregarMargens(ctx.supabase, empresaId) : null]);
-  // Margem real (sobre o custo da última compra) e meta: só para quem gerencia a loja
+  const [todos, margens] = await Promise.all([
+    carregarProdutosLoja(ctx.supabase, empresaId, { custos: ctx.custos }),
+    ctx.custos ? carregarMargens(ctx.supabase, empresaId) : null,
+  ]);
+  // Margem real (sobre o custo da última compra) e meta: só para quem vê custos e margens
   const margemDe = (p: (typeof todos)[number]) => {
     if (!margens) return null;
     const s = margens.situacao.get(p.id);
@@ -65,12 +68,14 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
         acoes={
           ctx.gerente ? (
             <>
-              <LancarEstoque empresaId={empresaId} produtos={ativos} />
-              <Button asChild variante="contorno">
-                <Link href={`${base}/entrada-nota`}>
-                  <FileInput /> Entrada de mercadorias
-                </Link>
-              </Button>
+              <LancarEstoque empresaId={empresaId} produtos={ativos} custos={ctx.custos} />
+              {ctx.custos ? (
+                <Button asChild variante="contorno">
+                  <Link href={`${base}/entrada-nota`}>
+                    <FileInput /> Entrada de mercadorias
+                  </Link>
+                </Button>
+              ) : null}
               <Button asChild variante="contorno">
                 <Link href={`${base}/inventario`}>
                   <ClipboardCheck /> Inventário
@@ -81,14 +86,14 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
                   <FileSpreadsheet /> Importar planilha
                 </Link>
               </Button>
-              <DialogoProduto empresaId={empresaId} grupos={grupos} />
+              <DialogoProduto empresaId={empresaId} grupos={grupos} custos={ctx.custos} />
             </>
           ) : null
         }
       />
       <NavegacaoLoja empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
-      <AbasEstoque empresaId={empresaId} ativa="produtos" gerente={ctx.gerente} />
-      {ctx.gerente && sp.conferir ? (
+      <AbasEstoque empresaId={empresaId} ativa="produtos" custos={ctx.custos} />
+      {ctx.custos && sp.conferir ? (
         <Alerta
           tom="sucesso"
           titulo="Entrada lançada no estoque"
@@ -106,7 +111,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
       ) : null}
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador rotulo="Produtos ativos" valor={ativos.length} icone={Boxes} />
-        {ctx.gerente ? (
+        {ctx.custos ? (
           <Indicador rotulo="Valor do estoque (custo)" valor={formatarMoeda(valorEstoque)} detalhe="pelo custo médio" icone={Warehouse} tom="info" />
         ) : (
           <Indicador rotulo="Grupos" valor={grupos.length} icone={Warehouse} tom="info" />
@@ -129,7 +134,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
             <Select name="filtro" defaultValue={filtro} className="w-full sm:w-52" aria-label="Situação">
               <option value="">Ativos</option>
               <option value="baixo">Estoque baixo ou zerado</option>
-              {ctx.gerente ? <option value="margem">Margem abaixo da meta</option> : null}
+              {ctx.custos ? <option value="margem">Margem abaixo da meta</option> : null}
               <option value="inativos">Inativos</option>
             </Select>
             <Button type="submit" variante="secundario">
@@ -142,9 +147,9 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
                 <tr>
                   <Th>Produto</Th>
                   <Th className="text-right">Preço de venda</Th>
-                  {ctx.gerente ? <Th className="text-right">Margem</Th> : null}
+                  {ctx.custos ? <Th className="text-right">Margem</Th> : null}
                   <Th className="text-right">Estoque</Th>
-                  {ctx.gerente ? (
+                  {ctx.custos ? (
                     <>
                       <Th className="text-right">Custo médio</Th>
                       <Th className="text-right">Valor em estoque</Th>
@@ -200,7 +205,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
                           <span className="text-xs text-muted-foreground">não controla</span>
                         )}
                       </Td>
-                      {ctx.gerente ? (
+                      {ctx.custos ? (
                         <>
                           <Td className="text-right numero">{custo.gt(0) ? formatarMoeda(custo) : "—"}</Td>
                           <Td className="text-right numero">{p.controla_estoque && dec(p.estoque_atual).gt(0) && custo.gt(0) ? formatarMoeda(dec(p.estoque_atual).times(custo)) : "—"}</Td>

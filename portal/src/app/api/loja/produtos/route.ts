@@ -2,13 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { obterEmpresasDoUsuario, sessaoApi } from "@/lib/auth/sessao";
 import { buscarTudo } from "@/lib/supabase/paginar";
 import { CAMPOS_PLANILHA } from "@/lib/gestao/planilha-produtos";
+import { carregarCustosProdutos } from "@/lib/gestao/dados";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
 /**
  * Planilha de produtos da loja: o modelo em branco (?tipo=modelo) ou os
  * produtos atuais (?tipo=atuais) no mesmo formato, para mudar preços e
- * estoque em lote e enviar de volta. Só para quem gerencia a loja da empresa.
+ * estoque em lote e enviar de volta. Só para quem gerencia a loja da empresa;
+ * a coluna de custo só vem preenchida para quem tem "Ver custos e margens".
  */
 export async function GET(req: NextRequest) {
   const s = await sessaoApi();
@@ -33,23 +35,27 @@ export async function GET(req: NextRequest) {
   for (const i of [1, 3, 10, 11]) ws.getColumn(i).numFmt = "@";
 
   if (atuais) {
-    const produtos = await buscarTudo((de, ate) =>
-      s.supabase
-        .from("nfe_produtos")
-        .select("codigo, descricao, ncm, unidade, valor_unitario, preco_custo, estoque_atual, estoque_minimo, grupo, gtin, cest, controla_estoque")
-        .eq("empresa_id", empresaId)
-        .eq("ativo", true)
-        .order("descricao")
-        .range(de, ate),
-    );
+    const [produtos, custos] = await Promise.all([
+      buscarTudo((de, ate) =>
+        s.supabase
+          .from("nfe_produtos")
+          .select("id, codigo, descricao, ncm, unidade, valor_unitario, estoque_atual, estoque_minimo, grupo, gtin, cest, controla_estoque")
+          .eq("empresa_id", empresaId)
+          .eq("ativo", true)
+          .order("descricao")
+          .range(de, ate),
+      ),
+      empresa.permissoes.has("gestao.custos") ? carregarCustosProdutos(s.supabase, empresaId) : null,
+    ]);
     for (const p of produtos) {
+      const custo = custos?.get(p.id)?.preco_custo ?? null;
       ws.addRow([
         p.codigo,
         p.descricao,
         p.ncm,
         p.unidade,
         p.valor_unitario == null ? null : Number(p.valor_unitario),
-        p.preco_custo == null ? null : Number(p.preco_custo),
+        custo == null ? null : Number(custo),
         p.controla_estoque ? Number(p.estoque_atual) : null,
         p.estoque_minimo == null ? null : Number(p.estoque_minimo),
         p.grupo,

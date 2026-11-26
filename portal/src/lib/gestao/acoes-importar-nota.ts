@@ -56,7 +56,7 @@ function documentoLimpo(d: string | null | undefined) {
  */
 export async function importarNotaEstoque(empresaId: string, fd: FormData): Promise<ResultadoAcao<ResultadoImportacao>> {
   if (!UUID.test(empresaId)) return falha("Empresa inválida.");
-  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const ctx = await exigirPermissao(empresaId, "gestao.custos");
   if (!ctx.acesso.loja) return falha("A gestão da loja não está ligada para esta empresa. Fale com o escritório.");
   const arquivo = fd.get("arquivo");
   if (!(arquivo instanceof File) || arquivo.size === 0) return falha("Escolha o arquivo da nota (XML ou PDF).");

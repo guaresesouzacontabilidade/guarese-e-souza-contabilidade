@@ -17,6 +17,8 @@ export async function obterContextoLoja(empresaId: string) {
     veterinaria: ctx.acesso.gestao_modalidade === "veterinaria",
     vende: ativa && !notas && ctx.pode("gestao.vender"),
     gerente: ativa && ctx.pode("gestao.gerenciar"),
+    /** Vê custo de compra, custo médio, margem e valor do estoque (o banco só entrega o custo com esta permissão). */
+    custos: ativa && ctx.pode("gestao.gerenciar") && ctx.pode("gestao.custos"),
     /** Faz ordens de carregamento (modalidade notas, com a permissão de emitir NF-e). */
     carrega: ativa && notas && ctx.pode("nfe.emitir"),
   };

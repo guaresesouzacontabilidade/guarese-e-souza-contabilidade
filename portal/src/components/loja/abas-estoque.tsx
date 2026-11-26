@@ -1,8 +1,8 @@
 import { AbasLink } from "@/components/ui/abas";
 
-/** Abas de Produtos e estoque. Preços e análise mostram custos: só quem gerencia a loja. */
-export function AbasEstoque({ empresaId, ativa, gerente }: { empresaId: string; ativa: "produtos" | "precos" | "analise"; gerente: boolean }) {
-  if (!gerente) return null;
+/** Abas de Produtos e estoque. Preços e análise mostram custos: só quem tem "Ver custos e margens". */
+export function AbasEstoque({ empresaId, ativa, custos }: { empresaId: string; ativa: "produtos" | "precos" | "analise"; custos: boolean }) {
+  if (!custos) return null;
   const base = `/e/${empresaId}/loja/produtos`;
   return (
     <AbasLink

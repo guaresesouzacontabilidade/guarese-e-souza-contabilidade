@@ -19,7 +19,7 @@ export default async function Comprovante({ params, searchParams }: PageProps<"/
   if (!s) notFound();
   const { data: v } = await s.supabase
     .from("vendas")
-    .select("*, vendedor:perfis!vendas_vendedor_id_fkey(nome), venda_itens(*), venda_pagamentos(*)")
+    .select("*, vendedor:perfis!vendas_vendedor_id_fkey(nome), venda_itens(id, ordem, produto_id, codigo, descricao, unidade, pecas, comprimento_m, quantidade, preco_tabela, preco_unitario, desconto, total, variacao), venda_pagamentos(*)")
     .eq("id", vendaId)
     .maybeSingle();
   if (!v) notFound();

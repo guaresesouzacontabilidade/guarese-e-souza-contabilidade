@@ -45,7 +45,20 @@ export interface ProdutoLoja {
 const num = (v: string | null | undefined, casas = 4) => (v == null || v === "" ? "" : formatarQuantidade(v, casas));
 
 /** Cadastro e edição do produto (com as medidas da peça para madeira). */
-export function FormProduto({ empresaId, produto, grupos, aoSalvar }: { empresaId: string; produto?: ProdutoLoja; grupos: string[]; aoSalvar?: () => void }) {
+export function FormProduto({
+  empresaId,
+  produto,
+  grupos,
+  custos = false,
+  aoSalvar,
+}: {
+  empresaId: string;
+  produto?: ProdutoLoja;
+  grupos: string[];
+  /** Mostra o custo de compra e a margem (permissão "Ver custos e margens"); sem ela, o custo guardado fica como está. */
+  custos?: boolean;
+  aoSalvar?: () => void;
+}) {
   const [unidade, setUnidade] = React.useState(produto?.unidade ?? "UN");
   const [esp, setEsp] = React.useState(num(produto?.espessura_cm, 2));
   const [larg, setLarg] = React.useState(num(produto?.largura_cm, 2));
@@ -139,12 +152,16 @@ export function FormProduto({ empresaId, produto, grupos, aoSalvar }: { empresaI
             </Campo>
           ) : null}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Campo rotulo={`Custo de compra (por ${un(unidade)})`} htmlFor={`custo-${idp}`} ajuda="Atualiza sozinho na entrada por nota. Sem entrada com custo, vale como custo médio.">
-              <CampoValor id={`custo-${idp}`} name="preco_custo" valorInicial={produto?.preco_custo} aoMudar={setCusto} />
-            </Campo>
-            <Campo rotulo="Margem que quero ganhar (%)" htmlFor={`margem-${idp}`} erro={estado.erros?.margem_desejada} ajuda="Opcional. Sobre o custo. Vazio: usa a do grupo ou a padrão.">
-              <Input id={`margem-${idp}`} name="margem_desejada" value={margem} onChange={(e) => setMargem(e.target.value.replace(/[^\d.,]/g, ""))} inputMode="decimal" placeholder="Ex.: 30" />
-            </Campo>
+            {custos ? (
+              <>
+                <Campo rotulo={`Custo de compra (por ${un(unidade)})`} htmlFor={`custo-${idp}`} ajuda="Atualiza sozinho na entrada por nota. Sem entrada com custo, vale como custo médio.">
+                  <CampoValor id={`custo-${idp}`} name="preco_custo" valorInicial={produto?.preco_custo} aoMudar={setCusto} />
+                </Campo>
+                <Campo rotulo="Margem que quero ganhar (%)" htmlFor={`margem-${idp}`} erro={estado.erros?.margem_desejada} ajuda="Opcional. Sobre o custo. Vazio: usa a do grupo ou a padrão.">
+                  <Input id={`margem-${idp}`} name="margem_desejada" value={margem} onChange={(e) => setMargem(e.target.value.replace(/[^\d.,]/g, ""))} inputMode="decimal" placeholder="Ex.: 30" />
+                </Campo>
+              </>
+            ) : null}
             <Campo rotulo={`Preço de venda (por ${un(unidade)})`} htmlFor={`preco-${idp}`} obrigatorio erro={estado.erros?.valor_unitario}>
               <CampoValor key={chavePreco} id={`preco-${idp}`} name="valor_unitario" valorInicial={precoInicial} aoMudar={setPreco} />
               {sugerido ? (
@@ -202,7 +219,7 @@ export function FormProduto({ empresaId, produto, grupos, aoSalvar }: { empresaI
   );
 }
 
-export function DialogoProduto({ empresaId, produto, grupos }: { empresaId: string; produto?: ProdutoLoja; grupos: string[] }) {
+export function DialogoProduto({ empresaId, produto, grupos, custos = false }: { empresaId: string; produto?: ProdutoLoja; grupos: string[]; custos?: boolean }) {
   const [aberto, setAberto] = React.useState(false);
   return (
     <Dialog open={aberto} onOpenChange={setAberto}>
@@ -218,7 +235,7 @@ export function DialogoProduto({ empresaId, produto, grupos }: { empresaId: stri
         )}
       </DialogTrigger>
       <DialogContent titulo={produto ? "Editar produto" : "Novo produto"} largura="lg">
-        <FormProduto empresaId={empresaId} produto={produto} grupos={grupos} aoSalvar={() => setAberto(false)} />
+        <FormProduto empresaId={empresaId} produto={produto} grupos={grupos} custos={custos} aoSalvar={() => setAberto(false)} />
       </DialogContent>
     </Dialog>
   );
@@ -246,7 +263,18 @@ export function ExcluirProduto({ empresaId, produto }: { empresaId: string; prod
 }
 
 /** Entrada ou saída manual do estoque (com a conta da cubagem pelas peças). */
-export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: string; produtos: ProdutoLoja[]; produtoId?: string }) {
+export function LancarEstoque({
+  empresaId,
+  produtos,
+  produtoId,
+  custos = false,
+}: {
+  empresaId: string;
+  produtos: ProdutoLoja[];
+  produtoId?: string;
+  /** Pede o custo na entrada e oferece conferir os preços (permissão "Ver custos e margens"). */
+  custos?: boolean;
+}) {
   const router = useRouter();
   const [aberto, setAberto] = React.useState(false);
   // Na página do produto, o mais comum é corrigir o saldo; na lista, lançar uma entrada
@@ -278,7 +306,7 @@ export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: s
           aoSucesso={() => {
             setAberto(false);
             // Entrada com custo: oferece conferir o preço de venda
-            if (tipo === "entrada_manual") {
+            if (tipo === "entrada_manual" && custos) {
               toast.message("Quer conferir o preço de venda?", {
                 description: "Se o custo mudou, veja se o preço ainda dá a margem que você quer.",
                 action: { label: "Conferir preços", onClick: () => router.push(`/e/${empresaId}/loja/produtos/precos?filtro=entrada`) },
@@ -340,7 +368,7 @@ export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: s
                 >
                   <Input id="qtd-mov" name="quantidade" value={qtd} onChange={(e) => setQtd(e.target.value)} inputMode="decimal" />
                 </Campo>
-                {tipo === "entrada_manual" ? (
+                {tipo === "entrada_manual" && custos ? (
                   <Campo rotulo="Custo unitário (opcional)" htmlFor="custo-mov" ajuda="Entra no custo médio.">
                     <CampoValor id="custo-mov" name="custo_unitario" />
                   </Campo>

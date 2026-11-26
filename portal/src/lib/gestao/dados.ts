@@ -295,19 +295,25 @@ export function totalCartao(r: ResumoCaixa) {
 }
 
 
-/** Produtos da loja (cadastro único com a NF-e), com os números em texto para o navegador. */
-export async function carregarProdutosLoja(supabase: Cliente, empresaId: string, opcoes: { ativos?: boolean } = {}) {
+/**
+ * Produtos da loja (cadastro único com a NF-e), com os números em texto para o
+ * navegador. O custo de compra, o custo médio e a margem desejada só vêm com
+ * `custos: true` (pela função do banco que confere a permissão "Ver custos e
+ * margens"); sem isso ficam vazios.
+ */
+export async function carregarProdutosLoja(supabase: Cliente, empresaId: string, opcoes: { ativos?: boolean; custos?: boolean } = {}) {
   let q = supabase
     .from("nfe_produtos")
-    .select("id, codigo, descricao, ncm, cest, gtin, unidade, grupo, valor_unitario, preco_custo, controla_estoque, estoque_atual, estoque_minimo, custo_medio, ativo, espessura_cm, largura_cm, comprimento_m, tara_kg, margem_desejada")
+    .select("id, codigo, descricao, ncm, cest, gtin, unidade, grupo, valor_unitario, controla_estoque, estoque_atual, estoque_minimo, ativo, espessura_cm, largura_cm, comprimento_m, tara_kg")
     .eq("empresa_id", empresaId)
     .order("descricao")
     .limit(5000);
   if (opcoes.ativos) q = q.eq("ativo", true);
-  const { data } = await q;
+  const [{ data }, custos] = await Promise.all([q, opcoes.custos ? carregarCustosProdutos(supabase, empresaId) : null]);
   const t = (v: unknown) => (v === null || v === undefined ? null : String(v));
-  return (data ?? []).map(
-    (p): ProdutoLoja => ({
+  return (data ?? []).map((p): ProdutoLoja => {
+    const c = custos?.get(p.id);
+    return {
       id: p.id,
       codigo: p.codigo,
       descricao: p.descricao,
@@ -317,19 +323,37 @@ export async function carregarProdutosLoja(supabase: Cliente, empresaId: string,
       unidade: p.unidade,
       grupo: p.grupo,
       valor_unitario: t(p.valor_unitario),
-      preco_custo: t(p.preco_custo),
+      preco_custo: c?.preco_custo ?? null,
       controla_estoque: p.controla_estoque,
       estoque_atual: String(p.estoque_atual ?? 0),
       estoque_minimo: t(p.estoque_minimo),
-      custo_medio: t(p.custo_medio),
+      custo_medio: c?.custo_medio ?? null,
       ativo: p.ativo,
       espessura_cm: t(p.espessura_cm),
       largura_cm: t(p.largura_cm),
       comprimento_m: t(p.comprimento_m),
       tara_kg: t(p.tara_kg),
-      margem_desejada: t(p.margem_desejada),
-    }),
-  );
+      margem_desejada: c?.margem_desejada ?? null,
+    };
+  });
+}
+
+export interface CustoProduto {
+  preco_custo: string | null;
+  custo_medio: string | null;
+  margem_desejada: string | null;
+}
+
+/** Custos de todos os produtos da empresa (o banco recusa sem a permissão "Ver custos e margens"). */
+export async function carregarCustosProdutos(supabase: Cliente, empresaId: string) {
+  const { data, error } = await supabase.rpc("gestao_produtos_custos", { p_empresa_id: empresaId });
+  if (error) throw new Error(error.message);
+  const t = (v: unknown) => (v === null || v === undefined ? null : String(v));
+  const mapa = new Map<string, CustoProduto>();
+  for (const [id, c] of Object.entries((data ?? {}) as Record<string, Record<string, unknown>>)) {
+    mapa.set(id, { preco_custo: t(c.preco_custo), custo_medio: t(c.custo_medio), margem_desejada: t(c.margem_desejada) });
+  }
+  return mapa;
 }
 
 export interface SituacaoPreco {
@@ -341,7 +365,7 @@ export interface SituacaoPreco {
 
 /**
  * Metas de margem (por grupo e a padrão) e, por produto, o custo da última
- * compra e quando o preço mudou. Só para quem gerencia a loja (o banco confere).
+ * compra e quando o preço mudou. Só para quem vê custos e margens (o banco confere).
  */
 export async function carregarMargens(supabase: Cliente, empresaId: string) {
   const [{ data: situacao }, { data: grupos }, { data: config }] = await Promise.all([

@@ -174,9 +174,9 @@ test("balconista: não vê custos, margens, preços de venda nem a análise", as
   await expect(page.getByRole("columnheader", { name: "Margem" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Preços de venda" })).toHaveCount(0);
   await page.goto(`${base}/precos`);
-  await expect(page.getByText("Só quem gerencia a loja vê custos e muda preços")).toBeVisible();
+  await expect(page.getByText("A tabela de preços mostra custos e margens")).toBeVisible();
   await page.goto(`${base}/analise`);
-  await expect(page.getByText("Só quem gerencia a loja vê a análise do estoque")).toBeVisible();
+  await expect(page.getByText("A análise do estoque mostra custos e o valor do estoque")).toBeVisible();
   const r = await page.request.get(`/api/loja/estoque/relatorio?empresa=${empresaId}&tipo=posicao&formato=pdf`);
   expect(r.status()).toBe(403);
 });

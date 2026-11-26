@@ -32,6 +32,7 @@ export const TODAS_PERMISSOES = [
   "nfe.configurar",
   "gestao.vender",
   "gestao.gerenciar",
+  "gestao.custos",
   "cte.emitir",
   "cte.configurar",
   "escalas.ver",
@@ -179,6 +180,11 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
         rotulo: "Gerenciar a loja",
         descricao: "Cadastrar produtos e preços, lançar estoque e inventário, cancelar vendas, dar descontos sem limite, ver os relatórios e as configurações da loja.",
       },
+      {
+        chave: "gestao.custos",
+        rotulo: "Ver custos e margens",
+        descricao: "Ver o custo de compra, o custo médio, a margem e o valor do estoque, a tabela de preços, a análise do estoque e dar entrada de mercadorias por nota. Sem ela, quem gerencia a loja não vê nenhum custo.",
+      },
     ],
   },
   {
@@ -216,7 +222,7 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
     "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir", "nfe.emitir",
-    "gestao.vender", "gestao.gerenciar", "cte.emitir", "escalas.ver", "escalas.gerenciar",
+    "gestao.vender", "gestao.gerenciar", "gestao.custos", "cte.emitir", "escalas.ver", "escalas.gerenciar",
     "os.operar", "os.gerenciar",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],

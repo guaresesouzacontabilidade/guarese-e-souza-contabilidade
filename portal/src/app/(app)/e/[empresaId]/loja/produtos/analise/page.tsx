@@ -38,12 +38,16 @@ export default async function PaginaAnalise({ params, searchParams }: PageProps<
       voltar={{ href: `/e/${empresaId}/loja/produtos`, rotulo: "Produtos e estoque" }}
     />
   );
-  if (!ctx.gerente) {
+  if (!ctx.custos) {
     return (
       <>
         {cabecalho}
-        <NavegacaoLoja empresaId={empresaId} configurar={ctx.equipe} />
-        <EstadoVazio icone={BarChart3} titulo="Só quem gerencia a loja vê a análise do estoque" descricao="Ela mostra custos e o valor do estoque. Peça ao responsável pela loja." />
+        <NavegacaoLoja empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
+        <EstadoVazio
+          icone={BarChart3}
+          titulo="A análise do estoque mostra custos e o valor do estoque"
+          descricao="Peça ao responsável pela loja a permissão “Ver custos e margens”."
+        />
       </>
     );
   }
@@ -74,7 +78,7 @@ export default async function PaginaAnalise({ params, searchParams }: PageProps<
     <>
       {cabecalho}
       <NavegacaoLoja empresaId={empresaId} configurar />
-      <AbasEstoque empresaId={empresaId} ativa="analise" gerente />
+      <AbasEstoque empresaId={empresaId} ativa="analise" custos />
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador rotulo="Valor do estoque (custo)" valor={formatarMoeda(totais.valor)} detalhe={totais.m3.gt(0) ? `${formatarQuantidade(totais.m3, 3)} m³ de madeira` : undefined} icone={Warehouse} tom="info" />
         <Indicador rotulo={`Comprar para ${alvo} dias`} valor={formatarMoeda(totalCompra)} detalhe={`${compras.length} produto(s), pelo custo`} icone={ShoppingCart} tom={compras.length ? "alerta" : "neutro"} href={url({ ver: "compras" })} />
