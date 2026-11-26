@@ -17,7 +17,9 @@ export async function NavegacaoLoja({ empresaId, configurar }: { empresaId: stri
     { rotulo: "Caixa", href: `${base}/caixa` },
     { rotulo: "Produtos e estoque", href: `${base}/produtos` },
     { rotulo: "Vendas e orçamentos", href: `${base}/vendas` },
+    { rotulo: "Clientes", href: `${base}/clientes` },
   ];
+  if (configurar) itens.push({ rotulo: "Fornecedores", href: `${base}/fornecedores` });
   if (await siteLiberado(empresaId)) itens.push({ rotulo: "Site da loja", href: `${base}/site` });
   if (configurar) itens.push({ rotulo: "Configurações", href: `${base}/configuracoes` });
   return <SubNavegacao itens={itens} />;

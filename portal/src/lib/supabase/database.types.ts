@@ -869,13 +869,13 @@ isOneToOne: false
                   ]
                 },"contrapartes": {
                   Row: {
-                    "ativo": boolean,"created_at": string,"documento": string | null,"email": string | null,"empresa_id": string,"id": string,"nome": string,"observacoes": string | null,"papeis": (string)[],"telefone": string | null,"tipo_pessoa": string | null,"updated_at": string
+                    "ativo": boolean,"bairro": string | null,"cep": string | null,"complemento": string | null,"contato": string | null,"created_at": string,"documento": string | null,"email": string | null,"empresa_id": string,"id": string,"inscricao_estadual": string | null,"logradouro": string | null,"municipio_ibge": string | null,"nome": string,"numero": string | null,"observacoes": string | null,"papeis": (string)[],"prazo_pagamento_dias": number | null,"telefone": string | null,"tipo_pessoa": string | null,"updated_at": string
                   }
                   Insert: {
-                    "ativo"?: boolean,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"observacoes"?: string | null,"papeis"?: (string)[],"telefone"?: string | null,"tipo_pessoa"?: string | null,"updated_at"?: string
+                    "ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"complemento"?: string | null,"contato"?: string | null,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id": string,"id"?: string,"inscricao_estadual"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome": string,"numero"?: string | null,"observacoes"?: string | null,"papeis"?: (string)[],"prazo_pagamento_dias"?: number | null,"telefone"?: string | null,"tipo_pessoa"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "ativo"?: boolean,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"observacoes"?: string | null,"papeis"?: (string)[],"telefone"?: string | null,"tipo_pessoa"?: string | null,"updated_at"?: string
+                    "ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"complemento"?: string | null,"contato"?: string | null,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id"?: string,"id"?: string,"inscricao_estadual"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome"?: string,"numero"?: string | null,"observacoes"?: string | null,"papeis"?: (string)[],"prazo_pagamento_dias"?: number | null,"telefone"?: string | null,"tipo_pessoa"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -884,6 +884,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "empresas"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "contrapartes_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
     }
                   ]
                 },"conversa_leituras": {
@@ -7765,6 +7771,15 @@ isOneToOne: false
 "gestao_configurar":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
                            },
+"gestao_contraparte_ativar":
+{ Args: { "p_ativo": boolean,"p_empresa_id": string,"p_id": string }; Returns: undefined
+                           },
+"gestao_contraparte_ficha":
+{ Args: { "p_empresa_id": string,"p_id": string,"p_papel": string }; Returns: Json
+                           },
+"gestao_contraparte_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
 "gestao_entrada_automatica_definir":
 { Args: { "p_empresa_id": string,"p_ligada": boolean }; Returns: undefined
                            },
@@ -7773,6 +7788,9 @@ isOneToOne: false
                            },
 "gestao_estoque_lancar":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"gestao_fornecedores_das_notas":
+{ Args: { "p_empresa_id": string }; Returns: number
                            },
 "gestao_grupo_margem":
 { Args: { "p_empresa_id": string,"p_grupo": string,"p_margem": number }; Returns: undefined

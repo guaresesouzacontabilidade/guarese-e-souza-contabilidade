@@ -507,141 +507,162 @@
   "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--2",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
+  "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Clientes",
+  "texto": "(menu Loja → Clientes): a lista de quem compra da loja, com busca por nome, CPF/CNPJ ou telefone. Novo cliente pede o nome e, se quiser, CPF/CNPJ, telefone/WhatsApp, e-mail, endereço (CEP, rua, número, bairro, estado e município) e inscrição estadual. Com CNPJ, o botão Buscar pelo CNPJ preenche o nome e o endereço com os dados públicos da Receita. Com CPF/CNPJ e endereço completo, a nota fiscal da venda já sai com os dados do cliente; o endereço digitado na nota também volta para o cadastro. A ficha do cliente mostra as compras e os orçamentos, o total comprado, a última compra e o que ele deve das vendas a prazo, com o botão WhatsApp (abre o seu WhatsApp na conversa dele). É o mesmo cadastro do Financeiro: não fica lista repetida."
+ },
+ {
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--3",
+  "publico": "cliente",
+  "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
+  "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Fornecedores",
+  "texto": "(menu Loja → Fornecedores, só para quem gerencia a loja): quem emite as notas de compra entra sozinho, pelo CNPJ, quando a nota chega. Trazer das notas de compra puxa de uma vez os emitentes das notas já recebidas. Complete o vendedor/contato e o prazo de pagamento. A ficha mostra as notas de compra, os produtos que vêm dele e as contas a pagar em aberto (os valores de compra só aparecem para quem tem Ver custos e margens)."
+ },
+ {
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--4",
+  "publico": "cliente",
+  "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
+  "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Quem pode",
+  "texto": "quem gerencia a loja cadastra, altera e desativa clientes e fornecedores. O balconista vê os clientes e cadastra cliente novo (aqui ou no caixa), mas não altera cadastros nem vê os fornecedores. Cadastro com venda, nota ou conta ligada não é apagado: fica inativo e some das listas de escolha, com o histórico guardado. Cada empresa só vê os próprios clientes e fornecedores."
+ },
+ {
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--5",
+  "publico": "cliente",
+  "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Sangria",
   "texto": "(retirar dinheiro da gaveta, ex.: depósito no banco) e Suprimento (colocar troco): em Caixa do dia. Escolhendo a conta de destino, o Financeiro registra a transferência sozinho."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--3",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--6",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Fechar o caixa",
   "texto": "conte o dinheiro da gaveta e informe o total. O portal compara com o que deveria ter (troco inicial + vendas em dinheiro + suprimentos − sangrias) e mostra sobra ou falta."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--4",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--7",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Relatório do dia (PDF)",
   "texto": "em Caixa do dia, com cada venda (o que foi vendido e a forma de pagamento), o resumo por dinheiro, PIX, cartão e a prazo, as sangrias e suprimentos, a conferência da gaveta e o total por produto. Com o caixa aberto, sai como \"parcial\"."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--5",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--8",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Produtos e estoque",
   "texto": "cadastro com NCM, unidade, preço de venda, custo, estoque mínimo e, para madeira, as medidas da peça. Ajustar estoque (corrigir para a quantidade certa — digite quanto tem de verdade e o portal lança a diferença, que fica no histórico do produto — ou lançar entrada e saída, como produção e perda), Entrada de mercadorias (importe o XML ou o PDF da nota de compra, ou dê entrada na nota que já chegou ao portal, com o custo da nota) e Inventário (digite o que foi contado; o portal ajusta a diferença). O custo médio é calculado sozinho."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--6",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--9",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Excluir produto",
   "texto": "(na página do produto, só o responsável pela loja): o produto que nunca foi vendido, comprado por nota nem saiu em nota fiscal (nem no hotel, na clínica ou em carregamento) é apagado, junto com o estoque lançado à mão ou pela planilha. O que já tem esse histórico é desativado: sai das listas, do caixa e das notas, e as vendas e notas antigas continuam guardadas; para trazer de volta, filtre Inativos, abra o produto e mude a Situação para Ativo."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--7",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--10",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Importar planilha",
   "texto": "(Produtos e estoque → Importar planilha): baixe o modelo em Excel (a aba “Como preencher” explica cada coluna) ou os seus produtos atuais, preencha e envie em .xlsx ou .csv. Antes de gravar, o portal mostra o que é produto novo, o que vai mudar (mesmo código de um produto já cadastrado: só as colunas preenchidas mudam) e as linhas com erro (ex.: NCM sem 8 números), que ficam de fora. Com a coluna Estoque e a caixa Acertar o estoque marcada, o saldo passa a ser o da planilha e o ajuste fica no histórico do produto. A importação é tudo ou nada: se o banco recusar uma linha, nada muda e a mensagem diz qual linha corrigir."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--8",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--11",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Importar a nota (XML ou PDF)",
   "texto": "(Produtos e estoque → Entrada de mercadorias → Importar nota de compra): escolha um ou mais arquivos da nota do fornecedor — o XML ou o PDF (DANFE) — e clique em Ler e lançar no estoque. O portal lê a nota e lança todos os itens de uma vez, com a quantidade e o custo (valor do item menos o desconto): cada item vai para o produto já ligado àquele código do fornecedor, ou para o produto com o mesmo código de barras, ou com o mesmo nome; o que ainda não existe vira produto novo (nome, NCM e unidade da nota) com o preço de venda = custo + a margem informada (o portal lembra a última margem; mude o preço depois no produto, se quiser). O resultado mostra, item por item, para qual produto foi e como foi ligado, e os itens ficam ligados ao fornecedor para as próximas notas. A mesma nota nunca entra duas vezes (nem pelo XML, nem pelo PDF, nem quando o XML de uma nota lançada pelo PDF chegar depois). Prefira o XML: ele também fica nos documentos da empresa para o escritório. O PDF é lido pela posição do texto no DANFE (chave de acesso, fornecedor, itens e totais) e só é lançado se a conta bater (quantidade × valor de cada item e a soma dos itens com o total dos produtos) e se o CNPJ da empresa aparecer na nota; PDF de foto ou digitalizado não tem texto para ler — nesses casos o portal avisa e pede o XML, sem gravar nada. Se faltar dado para cadastrar um produto novo (ex.: item sem NCM), nada é lançado e o botão Conferir item a item abre a conferência abaixo."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--9",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--12",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Entrada por nota, item a item",
   "texto": "para cada item da nota escolha o produto da loja ou + Criar produto novo com este item (nome, NCM e unidade já vêm da nota; informe o preço de venda). Se a nota vem em outra unidade — por exemplo, 1 caixa = 12 kg —, informe o fator: a quantidade e o custo por unidade da loja se ajustam sozinhos. Com Lembrar marcado, o portal guarda que aquele código daquele fornecedor é aquele produto, e a próxima nota já vem ligada (“Ligado na nota anterior”). Item com o mesmo código de barras de um produto também já vem sugerido."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--10",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--13",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Entrada automática",
   "texto": "(Entrada de mercadorias → Ligar a entrada automática; desligada até o dono ligar): quando chega uma nota de compra (XML enviado ou notas automáticas) e todos os itens já estão ligados, ela entra sozinha no estoque — quantidade × fator e custo da nota, sem o desconto — e o dono recebe um aviso no sininho. Nota com item novo fica esperando a conferência, também com aviso. Em Itens de fornecedor ligados dá para ver e apagar um vínculo errado."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--11",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--14",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Margem que quero ganhar",
   "texto": "(opcional): no cadastro do produto, campo Margem que quero ganhar (%). A margem é sobre o custo: custo de R$ 100,00 com 30% dá preço de R$ 130,00. Com o custo e a margem preenchidos, o portal mostra o preço sugerido — clique em usar para colocá-lo no preço (o preço só muda se você salvar). Produto sem margem própria usa a do grupo e, sem a do grupo, a margem padrão da empresa (as duas em Produtos e estoque → Preços de venda → Margem que quero ganhar). A lista de produtos mostra a coluna Margem (verde dentro da meta, vermelha abaixo) e o filtro Margem abaixo da meta."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--12",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--15",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Preços de venda",
   "texto": "(Produtos e estoque → aba Preços de venda; só quem tem Ver custos e margens): a tabela para conferir e mudar os preços depois de cada entrada de mercadorias. Mostra, por produto, o custo (o da última compra e o custo médio), o preço atual, a margem real, a meta (dá para mudar a de cada produto ali mesmo), o preço sugerido (custo × margem, com o botão usar) e o campo Novo preço. Os produtos que entraram por último vêm primeiro. Filtros: Da última entrada, Custo mudou e o preço não (a compra veio mais cara ou mais barata depois da última mudança de preço), Margem abaixo da meta, Sem custo, grupo e busca. Marque vários e use Usar o preço sugerido nos marcados. Nada muda até clicar em Salvar alterações, que grava tudo de uma vez (o portal avisa se você tentar sair sem salvar). Para madeira, aparece também o preço por m³ de cada peça, para comparar medidas diferentes. Cada mudança de preço fica no histórico — quem mudou, quando, o preço antigo e o novo, e o custo na época —, com as últimas mudanças no fim da página e o histórico completo na página de cada produto. Depois de uma entrada de mercadorias (nota, importação ou entrada manual), o portal oferece Conferir preços de venda."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--13",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--16",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Reposição e análise",
   "texto": "(Produtos e estoque → aba Reposição e análise; só quem tem Ver custos e margens): escolha o ritmo de venda (últimos 30, 60 ou 90 dias), comprar para quantos dias e parado há mais de quantos dias. - Sugestão de compra: quanto comprar de cada produto para ter estoque para os dias escolhidos no ritmo de venda, e nunca menos que o estoque mínimo, com quantos dias o estoque dura e o valor estimado pelo custo. O que acaba antes vem primeiro. - Parados: produtos com estoque que não vendem há 60, 90 ou 180 dias (ou nunca venderam e entraram há esse tempo), com o dinheiro empatado (estoque × custo médio). - Mais vendidos (curva ABC): pelo faturamento do período, com a quantidade, o lucro bruto e a classe — A são os poucos produtos que fazem cerca de 80% das vendas (não deixe faltar), B até 95% e C o resto. - Estoque por grupo: quantidade, m³ (madeira com as medidas da peça) e valor pelo custo de cada grupo. - Relatórios: Lista de compras (PDF) (com a coluna “Pedido” para anotar), Posição do estoque (PDF) (por grupo, com m³, custo, valor e preço de venda) e Tudo em Excel (posição, lista de compras, parados, curva ABC e por grupo, uma aba cada). Saem com a logo e os dados da própria empresa."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--14",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--17",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Aviso de estoque baixo",
   "texto": "quando uma venda (ou saída) deixa um produto abaixo do estoque mínimo, quem gerencia a loja recebe um aviso no sininho, no máximo uma vez por dia para cada produto (quem fez a venda não é avisado de novo, porque já viu na tela). O aviso abre a página do produto; a sugestão de compra está em Reposição e análise."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--15",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--18",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Rentabilidade da frota",
   "texto": "(Financeiro → Rentabilidade da frota; para transportadoras): a análise gerencial do resultado líquido de cada veículo no mês. Cadastre os veículos em Veículos com os custos fixos do mês (salário e encargos do motorista, parcela do financiamento, depreciação, seguro, rastreador/IPVA). Lance cada viagem (frete do CT-e, comissão do motorista, ICMS, quebra) e cada despesa (no abastecimento, os litros e o km do hodômetro). O portal confere o km na hora: não deixa o hodômetro voltar nem dar um salto que um caminhão não faz (ex.: 3.440.057 no lugar de 344.057), o erro que estraga média e custo por km. O relatório traz a síntese do período (faturamento, margem de contribuição, custos fixos, despesas administrativas e resultado líquido); a composição de cada R$ 100 de faturamento; o ranking de resultado por veículo com semáforo; os pontos de atenção (resultado negativo, média de consumo fora da faixa esperada, abastecimento sem km); e, selecionando o veículo, a formação do resultado, o demonstrativo de resultado do veículo, as viagens, os abastecimentos com a média de cada um e o gráfico do consumo. Informe as despesas administrativas do mês para ratear entre os veículos, proporcionalmente ao faturamento. Mês em andamento conta os custos fixos só até hoje. Baixar PDF gera o relatório com a logo e os dados da empresa (frota completa ou só o veículo selecionado). Quem vê: quem vê o financeiro; quem lança: quem edita o financeiro."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--16",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--19",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Venda por quilo e balança",
   "texto": "(restaurante por quilo, açougue, hortifrúti): cadastre o produto com a unidade Quilo (KG) e o preço do quilo. Se o prato ou a embalagem vai junto na balança, informe o peso do prato ou da embalagem (kg) no produto (ex.: 0,350) — ele é descontado no caixa. No caixa: - Balança ligada ao computador (USB ou serial; no Google Chrome ou no Microsoft Edge do computador): clique em Conectar balança e escolha a porta (só na primeira vez; depois ela conecta sozinha). Ao escolher o produto por quilo, o peso já vem da balança, o prato é descontado e o valor aparece na hora (\"− prato 0,350 kg = 0,452 kg cobrados\"). O botão da balança ao lado do peso lê de novo. Se o prato ainda estiver mexendo, o caixa avisa para esperar. Em Opções escolha como a balança envia o peso (protocolo Toledo/Filizola, o mais comum, ou contínuo) e a velocidade, e use Testar leitura. - Sem balança ligada: digite o peso mostrado na balança no campo Peso (em kg, ex.: 0,452). - Balança que imprime etiqueta (código de barras que começa com 2): em Loja → Configurações, diga se a etiqueta traz o preço total ou o peso e quantos dígitos tem o código do produto (o código do produto na balança deve ser igual ao código do produto no portal). No caixa, é só ler a etiqueta: o produto entra com o peso, e o total fica igual ao preço impresso. - O peso vai para a venda e para a nota com 3 casas (ex.: 0,452 kg)."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--17",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--20",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Cancelar uma venda",
   "texto": "só quem gerencia a loja, e enquanto o caixa da venda estiver aberto. O estoque volta e o recebimento é cancelado no Financeiro."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--18",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--21",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › NF-e na hora da venda",
   "texto": "marque Emitir NF-e ao concluir (fica embaixo do pagamento) e clique em Concluir venda e emitir NF-e — a nota sai sozinha com os itens, o frete, o desconto e o pagamento da venda, e o caixa mostra a situação até a SEFAZ responder (autorizada: botão Imprimir DANFE). O cliente precisa ter CPF/CNPJ e endereço; se faltar o endereço, use Completar endereço ali mesmo (fica guardado para as próximas notas). Se a nota não sair, a venda continua valendo e dá para emitir depois pela venda (Emitir NF-e desta venda, que abre a nota preenchida para conferir). Em Loja → Configurações, escolha a operação da nota e quem emite, e se a caixinha já vem marcada em toda venda. Precisa da emissão de NF-e ligada pelo escritório (certificado digital); sem ela, a caixinha aparece desativada com o motivo. A NFC-e (cupom fiscal) depende do credenciamento na SEFAZ-TO e do código CSC e fica desligada até lá."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--19",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--22",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Quem pode",
   "texto": "o responsável pela empresa vende, gerencia e vê os custos. Para um funcionário do balcão, dê só a permissão Vender no caixa (ele não cancela vendas, não muda preços além do desconto permitido, não mexe no estoque e não vê custos, margens, preços de venda nem a análise do estoque)."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--20",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--23",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Ver custos e margens",
   "texto": "(Configurações → Usuários e permissões → Editar permissões): separa quem cuida da loja de quem vê o custo. Quem tem Gerenciar a loja sem Ver custos e margens cadastra produtos, muda o preço de venda, ajusta o estoque, faz inventário e importa a planilha, mas não vê o custo de compra, o custo médio, a margem, o valor do estoque, a tabela de Preços de venda, a Reposição e análise nem a Entrada de mercadorias por nota (a nota traz o custo de cada item). Ao salvar um produto ou importar a planilha, o custo que já está no cadastro continua o mesmo (a coluna de custo da planilha é ignorada). O bloqueio vale no servidor e no banco, não só na tela. No começo, só o titular da empresa e o escritório têm essa permissão: marque nos colaboradores que podem ver. Os relatórios do Financeiro (DRE, lucro do mês) seguem a permissão Relatórios."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--21",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--24",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
-  "texto": "Serviço opcional do escritório. Quando ligado, o menu ganha Loja, Vender, Orçamento, Caixa do dia, Produtos e estoque e Vendas e orçamentos. Tudo o que é vendido aqui baixa o estoque e entra no Financeiro sozinho (à vista como recebido, a prazo como conta a receber), e o escritório recebe tudo pronto para a contabilidade. Abrir o caixa: em Vender, informe o nome do caixa (ex.: Caixa 1) e o troco inicial que está na gaveta. Vender: busque o produto pelo nome, código ou código de barras (Enter adiciona). Para madeira vendida em m³, digite as peças e o comprimento: o portal calcula os m³ pelas medidas da peça (ex.: 10 caibros 5 × 6 cm de 3 m = 0,09 m³). Ajuste preço e desconto se precisar. Cliente: busque no cadastro, digite só o nome ou cadastre na hora (botão ao lado). Sem cadastro, dá para colocar também o CPF/CNPJ e o telefone (opcionais; o portal confere os números). Venda a prazo exige o cliente. Pagamento: toque na forma (Dinheiro, PIX, Débito, Crédito, A prazo) — dá para dividir em mais de uma. Em dinheiro, digite quanto o cliente entregou e o portal mostra o troco. A prazo: escolha as parcelas e o 1º vencimento. Concluir venda: abre o comprovante para imprimir (bobina de 80 mm ou folha A4 — \"não é documento fiscal\"). Salvar orçamento guarda a proposta com validade; depois, em Vendas e orçamentos, use Vender este orçamento."
+  "texto": "Serviço opcional do escritório. Quando ligado, o menu ganha Loja, Vender, Orçamento, Caixa do dia, Produtos e estoque, Vendas e orçamentos, Clientes e Fornecedores. Tudo o que é vendido aqui baixa o estoque e entra no Financeiro sozinho (à vista como recebido, a prazo como conta a receber), e o escritório recebe tudo pronto para a contabilidade. Abrir o caixa: em Vender, informe o nome do caixa (ex.: Caixa 1) e o troco inicial que está na gaveta. Vender: busque o produto pelo nome, código ou código de barras (Enter adiciona). Para madeira vendida em m³, digite as peças e o comprimento: o portal calcula os m³ pelas medidas da peça (ex.: 10 caibros 5 × 6 cm de 3 m = 0,09 m³). Ajuste preço e desconto se precisar. Cliente: busque no cadastro, digite só o nome ou cadastre na hora (botão ao lado). Sem cadastro, dá para colocar também o CPF/CNPJ e o telefone (opcionais; o portal confere os números). Venda a prazo exige o cliente. Pagamento: toque na forma (Dinheiro, PIX, Débito, Crédito, A prazo) — dá para dividir em mais de uma. Em dinheiro, digite quanto o cliente entregou e o portal mostra o troco. A prazo: escolha as parcelas e o 1º vencimento. Concluir venda: abre o comprovante para imprimir (bobina de 80 mm ou folha A4 — \"não é documento fiscal\"). Salvar orçamento guarda a proposta com validade; depois, em Vendas e orçamentos, use Vender este orçamento."
  },
  {
   "id": "hotel-reservas-quartos-conta-do-hospede-e-restaurante-quem-a",

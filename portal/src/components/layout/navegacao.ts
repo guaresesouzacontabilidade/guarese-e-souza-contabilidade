@@ -37,6 +37,7 @@ import {
   Boxes,
   Banknote,
   Truck,
+  Contact,
   Route,
   Inbox,
   BedDouble,
@@ -275,6 +276,8 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     loja.push({ rotulo: "Caixa do dia", href: `${base}/loja/caixa`, icone: Banknote });
     loja.push({ rotulo: "Produtos e estoque", href: `${base}/loja/produtos`, icone: Boxes });
     loja.push({ rotulo: "Vendas e orçamentos", href: `${base}/loja/vendas`, icone: ReceiptText });
+    loja.push({ rotulo: "Clientes", href: `${base}/loja/clientes`, icone: Contact });
+    if (p.has("gestao.gerenciar")) loja.push({ rotulo: "Fornecedores", href: `${base}/loja/fornecedores`, icone: Truck });
   } else if (equipe && p.has("gestao.gerenciar")) {
     configuracoes.push({ rotulo: "Gestão da loja", href: `${base}/loja/configuracoes`, icone: Store });
   }
