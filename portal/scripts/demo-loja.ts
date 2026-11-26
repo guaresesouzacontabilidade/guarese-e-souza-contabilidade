@@ -211,6 +211,32 @@ function notaCompra(o: { emitente: { cnpj: string; nome: string }; dest: string;
  * caminho normal (Enviar documentos). Na fila, a da reflorestadora entra sozinha
  * no estoque; a das ferragens (caixa de prego e um item novo) espera a conferência.
  */
+/** Cadastros completos de cliente e fornecedor (endereço, contato e prazo fictícios), como o dono preenche em Clientes e Fornecedores. */
+async function semearCadastrosLoja(admin: SupabaseClient, empresaId: string) {
+  const palmas = "1721000";
+  await admin
+    .from("contrapartes")
+    .update({
+      logradouro: "Rodovia TO-050, km 12 (fictício)", numero: "S/N", bairro: "Zona rural", municipio_ibge: palmas, cep: "77000000",
+      observacoes: "Compra madeira para cerca e curral. Dados fictícios.",
+    })
+    .eq("empresa_id", empresaId)
+    .eq("documento", cpfValido("321654987"))
+    .is("logradouro", null);
+  const reflorestadora = {
+    telefone: "6332150000", contato: "Marcos, vendas (fictício)", prazo_pagamento_dias: 28, logradouro: "Avenida Teotônio Segurado (fictício)",
+    numero: "1000", bairro: "Plano Diretor Sul", municipio_ibge: palmas, cep: "77000000",
+  };
+  const { data: forn } = await admin.from("contrapartes").select("id, contato").eq("empresa_id", empresaId).eq("documento", "88999000000198").maybeSingle();
+  if (!forn) {
+    ok("fornecedor com contato e prazo", await admin.from("contrapartes").insert({
+      empresa_id: empresaId, nome: "REFLORESTADORA ARAGUAIA LTDA (FICTICIA)", documento: "88999000000198", tipo_pessoa: "PJ", papeis: ["fornecedor"], ...reflorestadora,
+    }));
+  } else if (!forn.contato) {
+    ok("fornecedor com contato e prazo", await admin.from("contrapartes").update(reflorestadora).eq("id", forn.id));
+  }
+}
+
 async function semearComprasLoja(admin: SupabaseClient, conexao: { url: string; publica: string }, empresaId: string, emailDono: string) {
   const { count } = await admin.from("documentos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).like("nome_original", `${MARCA_COMPRAS}%`);
   if (count) return false;
@@ -287,6 +313,7 @@ export async function semearLoja(
   if (existente) {
     await semearNfeLoja(admin, existente.id);
     await semearLogoLoja(admin, existente.id);
+    await semearCadastrosLoja(admin, existente.id);
     if (await semearComprasLoja(admin, conexao, existente.id, `madeireira@${opcoes.dominio}`)) {
       console.log("  Madeireira: entrada automática ligada e notas de compra fictícias enviadas (a leitura e a entrada no estoque rodam na fila)");
     }
@@ -392,32 +419,8 @@ export async function semearLoja(
   const construtora = await cliente("CONSTRUTORA HORIZONTE EXEMPLO LTDA (DEMO)", cnpjValido("556667770001"), "63988887777");
   const fazenda = await cliente("Fazenda Santa Luzia — José Exemplo (DEMO)", cpfValido("321654987"), "63977776666");
   const joao = await cliente("João Carpinteiro Exemplo (DEMO)", cpfValido("147258369"), "63966665555");
-  // Cadastros completos (endereço, contato e prazo fictícios), como o dono preenche em Clientes e Fornecedores
-  const madeireiraMun = "1721000"; // Palmas/TO
-  ok(
-    "endereço da fazenda",
-    await dono.rpc("gestao_contraparte_salvar", {
-      p_empresa_id: empresaId,
-      p_id: fazenda,
-      p_dados: {
-        papel: "cliente", nome: "Fazenda Santa Luzia — José Exemplo (DEMO)", documento: cpfValido("321654987"), telefone: "63977776666",
-        logradouro: "Rodovia TO-050, km 12 (fictício)", numero: "S/N", bairro: "Zona rural", municipio_ibge: madeireiraMun, cep: "77000000",
-        observacoes: "Compra madeira para cerca e curral. Dados fictícios.",
-      },
-    }),
-  );
-  ok(
-    "fornecedor com contato e prazo",
-    await dono.rpc("gestao_contraparte_salvar", {
-      p_empresa_id: empresaId,
-      p_id: null as never,
-      p_dados: {
-        papel: "fornecedor", nome: "REFLORESTADORA ARAGUAIA LTDA (FICTICIA)", documento: "88999000000198", telefone: "6332150000",
-        contato: "Marcos, vendas (fictício)", prazo_pagamento_dias: "28", logradouro: "Avenida Teotônio Segurado (fictício)", numero: "1000",
-        bairro: "Plano Diretor Sul", municipio_ibge: madeireiraMun, cep: "77000000",
-      },
-    }),
-  );
+  await semearCadastrosLoja(admin, empresaId);
+
 
   // Turno da manhã: balconista abre, vende, faz sangria e fecha (conferiu certinho)
   const manha = ok("abrir caixa da manhã", await balcao.rpc("gestao_caixa_abrir", { p_empresa_id: empresaId, p_caixa_nome: "Caixa 1", p_valor_abertura: 150 })) as string;
