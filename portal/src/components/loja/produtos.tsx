@@ -15,6 +15,7 @@ import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import { excluirProdutoLoja, lancarEstoque, registrarInventario, salvarProdutoLoja, darEntradaNota } from "@/lib/gestao/acoes";
 import { UNIDADES_LOJA, formatarQuantidade, modoMedida, quantidadePorPecas, un } from "@/lib/gestao/rotulos";
+import { precoSugerido } from "@/lib/gestao/precos";
 
 export interface ProdutoLoja {
   id: string;
@@ -37,6 +38,8 @@ export interface ProdutoLoja {
   comprimento_m: string | null;
   /** Peso do prato/embalagem descontado na pesagem (só produto por quilo). */
   tara_kg?: string | null;
+  /** Margem que quer ganhar (%) sobre o custo; vazio usa a do grupo ou a padrão. */
+  margem_desejada?: string | null;
 }
 
 const num = (v: string | null | undefined, casas = 4) => (v == null || v === "" ? "" : formatarQuantidade(v, casas));
@@ -48,6 +51,12 @@ export function FormProduto({ empresaId, produto, grupos, aoSalvar }: { empresaI
   const [larg, setLarg] = React.useState(num(produto?.largura_cm, 2));
   const [comp, setComp] = React.useState(num(produto?.comprimento_m, 3));
   const [preco, setPreco] = React.useState(produto?.valor_unitario ? formatarMoeda(produto.valor_unitario, { semSimbolo: true }) : "");
+  const [custo, setCusto] = React.useState(produto?.preco_custo ? formatarMoeda(produto.preco_custo, { semSimbolo: true }) : "");
+  const [margem, setMargem] = React.useState(produto?.margem_desejada ? formatarQuantidade(produto.margem_desejada, 2) : "");
+  // "Usar" o preço sugerido recria o campo de preço com o valor novo
+  const [precoInicial, setPrecoInicial] = React.useState<string | null>(produto?.valor_unitario ?? null);
+  const [chavePreco, setChavePreco] = React.useState(0);
+  const sugerido = precoSugerido(lerValorBR(custo)?.toString() ?? null, lerValorBR(margem)?.toString() ?? null);
   const medidas = unidade === "M3" || unidade === "M" || unidade === "ML";
   const idp = produto?.id ?? "novo";
 
@@ -130,12 +139,38 @@ export function FormProduto({ empresaId, produto, grupos, aoSalvar }: { empresaI
             </Campo>
           ) : null}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Campo rotulo={`Preço de venda (por ${un(unidade)})`} htmlFor={`preco-${idp}`} obrigatorio erro={estado.erros?.valor_unitario}>
-              <CampoValor id={`preco-${idp}`} name="valor_unitario" valorInicial={produto?.valor_unitario} aoMudar={setPreco} />
-            </Campo>
             <Campo rotulo={`Custo de compra (por ${un(unidade)})`} htmlFor={`custo-${idp}`} ajuda="Atualiza sozinho na entrada por nota.">
-              <CampoValor id={`custo-${idp}`} name="preco_custo" valorInicial={produto?.preco_custo} />
+              <CampoValor id={`custo-${idp}`} name="preco_custo" valorInicial={produto?.preco_custo} aoMudar={setCusto} />
             </Campo>
+            <Campo rotulo="Margem que quero ganhar (%)" htmlFor={`margem-${idp}`} erro={estado.erros?.margem_desejada} ajuda="Opcional. Sobre o custo. Vazio: usa a do grupo ou a padrão.">
+              <Input id={`margem-${idp}`} name="margem_desejada" value={margem} onChange={(e) => setMargem(e.target.value.replace(/[^\d.,]/g, ""))} inputMode="decimal" placeholder="Ex.: 30" />
+            </Campo>
+            <Campo rotulo={`Preço de venda (por ${un(unidade)})`} htmlFor={`preco-${idp}`} obrigatorio erro={estado.erros?.valor_unitario}>
+              <CampoValor key={chavePreco} id={`preco-${idp}`} name="valor_unitario" valorInicial={precoInicial} aoMudar={setPreco} />
+              {sugerido ? (
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Sugerido: {formatarMoeda(sugerido)}
+                  {lerValorBR(preco)?.toDecimalPlaces(2).eq(sugerido) ? (
+                    " ✓"
+                  ) : (
+                    <button
+                      type="button"
+                      className="ml-1 text-primary hover:underline"
+                      onClick={() => {
+                        const v = sugerido.toFixed(2);
+                        setPrecoInicial(v);
+                        setPreco(formatarMoeda(v, { semSimbolo: true }));
+                        setChavePreco((k) => k + 1);
+                      }}
+                    >
+                      usar
+                    </button>
+                  )}
+                </span>
+              ) : null}
+            </Campo>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
             <Campo rotulo="Estoque mínimo" htmlFor={`min-${idp}`} ajuda="Avisa quando ficar abaixo.">
               <Input id={`min-${idp}`} name="estoque_minimo" defaultValue={num(produto?.estoque_minimo)} inputMode="decimal" />
             </Campo>
@@ -212,6 +247,7 @@ export function ExcluirProduto({ empresaId, produto }: { empresaId: string; prod
 
 /** Entrada ou saída manual do estoque (com a conta da cubagem pelas peças). */
 export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: string; produtos: ProdutoLoja[]; produtoId?: string }) {
+  const router = useRouter();
   const [aberto, setAberto] = React.useState(false);
   // Na página do produto, o mais comum é corrigir o saldo; na lista, lançar uma entrada
   const [tipo, setTipo] = React.useState(produtoId ? "corrigir" : "entrada_manual");
@@ -237,7 +273,21 @@ export function LancarEstoque({ empresaId, produtos, produtoId }: { empresaId: s
         descricao="Corrija o saldo para a quantidade certa ou lance uma entrada ou saída. Para compras com nota, use “Entrada de mercadorias”: o custo vem certinho da nota."
         largura="lg"
       >
-        <FormularioAcao acao={lancarEstoque.bind(null, empresaId)} aoSucesso={() => setAberto(false)} className="space-y-4">
+        <FormularioAcao
+          acao={lancarEstoque.bind(null, empresaId)}
+          aoSucesso={() => {
+            setAberto(false);
+            // Entrada com custo: oferece conferir o preço de venda
+            if (tipo === "entrada_manual") {
+              toast.message("Quer conferir o preço de venda?", {
+                description: "Se o custo mudou, veja se o preço ainda dá a margem que você quer.",
+                action: { label: "Conferir preços", onClick: () => router.push(`/e/${empresaId}/loja/produtos/precos?filtro=entrada`) },
+                duration: 10000,
+              });
+            }
+          }}
+          className="space-y-4"
+        >
           {({ estado, pendente }) => (
             <>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -529,7 +579,7 @@ export function EntradaPorNota({
     setEnviando(false);
     if (r.ok) {
       toast.success(r.mensagem);
-      router.push(`/e/${empresaId}/loja/produtos`);
+      router.push(`/e/${empresaId}/loja/produtos?conferir=1`);
       router.refresh();
     } else toast.error(r.mensagem);
   }

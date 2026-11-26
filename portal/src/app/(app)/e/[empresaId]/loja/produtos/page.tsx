@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, Boxes, ClipboardCheck, FileInput, FileSpreadsheet, PackageX, Warehouse } from "lucide-react";
+import { AlertTriangle, Boxes, ClipboardCheck, FileInput, FileSpreadsheet, PackageX, Tags, Warehouse } from "lucide-react";
 import { CabecalhoPagina, Indicador, urlCom } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EstadoVazio } from "@/components/ui/feedback";
+import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Input, Select } from "@/components/ui/form";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { DialogoProduto, LancarEstoque } from "@/components/loja/produtos";
+import { AbasEstoque } from "@/components/loja/abas-estoque";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
-import { carregarProdutosLoja, estoqueBaixo } from "@/lib/gestao/dados";
+import { carregarMargens, carregarProdutosLoja, estoqueBaixo } from "@/lib/gestao/dados";
 import { formatarQuantidade, secaoPeca, un } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
+import { custoReferencia, margemAlvo, margemReal } from "@/lib/gestao/precos";
 
 export const metadata: Metadata = { title: "Produtos e estoque" };
+
+const pct = (n: number) => `${n.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
 
 export default async function PaginaProdutos({ params, searchParams }: PageProps<"/e/[empresaId]/loja/produtos">) {
   const { empresaId } = await params;
@@ -23,7 +27,16 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
 
-  const todos = await carregarProdutosLoja(ctx.supabase, empresaId);
+  const [todos, margens] = await Promise.all([carregarProdutosLoja(ctx.supabase, empresaId), ctx.gerente ? carregarMargens(ctx.supabase, empresaId) : null]);
+  // Margem real (sobre o custo da última compra) e meta: só para quem gerencia a loja
+  const margemDe = (p: (typeof todos)[number]) => {
+    if (!margens) return null;
+    const s = margens.situacao.get(p.id);
+    const custo = custoReferencia({ ultimo_custo_entrada: s?.ultimo_custo_entrada, preco_custo: p.preco_custo, custo_medio: p.custo_medio });
+    const real = margemReal(p.valor_unitario, custo);
+    const alvo = margemAlvo(p, margens.grupos, margens.padrao);
+    return { real, alvo, abaixo: alvo !== null && real !== null && real < alvo.valor - 0.05 };
+  };
   const grupos = [...new Set(todos.map((p) => p.grupo).filter((g): g is string => Boolean(g)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
   const q = typeof sp.q === "string" ? sp.q.trim().toLowerCase() : "";
   const grupo = typeof sp.grupo === "string" ? sp.grupo : "";
@@ -32,7 +45,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
     (p) =>
       (!q || `${p.descricao} ${p.codigo} ${p.gtin ?? ""}`.toLowerCase().includes(q)) &&
       (!grupo || p.grupo === grupo) &&
-      (filtro === "baixo" ? estoqueBaixo(p) : filtro === "inativos" ? !p.ativo : p.ativo),
+      (filtro === "baixo" ? estoqueBaixo(p) : filtro === "inativos" ? !p.ativo : filtro === "margem" ? p.ativo && Boolean(margemDe(p)?.abaixo) : p.ativo),
   );
 
   const ativos = todos.filter((p) => p.ativo);
@@ -73,9 +86,30 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
         }
       />
       <NavegacaoLoja empresaId={empresaId} configurar={ctx.gerente || ctx.equipe} />
+      <AbasEstoque empresaId={empresaId} ativa="produtos" gerente={ctx.gerente} />
+      {ctx.gerente && sp.conferir ? (
+        <Alerta
+          tom="sucesso"
+          titulo="Entrada lançada no estoque"
+          className="mb-4"
+          acao={
+            <Button asChild tamanho="sm">
+              <Link href={`${base}/precos?filtro=entrada`}>
+                <Tags /> Conferir preços de venda
+              </Link>
+            </Button>
+          }
+        >
+          Se o custo dos produtos mudou, confira se o preço de venda ainda dá a margem que você quer.
+        </Alerta>
+      ) : null}
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador rotulo="Produtos ativos" valor={ativos.length} icone={Boxes} />
-        <Indicador rotulo="Valor do estoque (custo)" valor={formatarMoeda(valorEstoque)} detalhe="pelo custo médio" icone={Warehouse} tom="info" />
+        {ctx.gerente ? (
+          <Indicador rotulo="Valor do estoque (custo)" valor={formatarMoeda(valorEstoque)} detalhe="pelo custo médio" icone={Warehouse} tom="info" />
+        ) : (
+          <Indicador rotulo="Grupos" valor={grupos.length} icone={Warehouse} tom="info" />
+        )}
         <Indicador rotulo="Abaixo do mínimo" valor={baixos} icone={AlertTriangle} tom={baixos ? "alerta" : "neutro"} href={urlCom(base, {}, { filtro: "baixo" })} />
         <Indicador rotulo="Sem estoque" valor={zerados} icone={PackageX} tom={zerados ? "perigo" : "neutro"} href={urlCom(base, {}, { filtro: "baixo" })} />
       </div>
@@ -94,6 +128,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
             <Select name="filtro" defaultValue={filtro} className="w-full sm:w-52" aria-label="Situação">
               <option value="">Ativos</option>
               <option value="baixo">Estoque baixo ou zerado</option>
+              {ctx.gerente ? <option value="margem">Margem abaixo da meta</option> : null}
               <option value="inativos">Inativos</option>
             </Select>
             <Button type="submit" variante="secundario">
@@ -106,15 +141,21 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
                 <tr>
                   <Th>Produto</Th>
                   <Th className="text-right">Preço de venda</Th>
+                  {ctx.gerente ? <Th className="text-right">Margem</Th> : null}
                   <Th className="text-right">Estoque</Th>
-                  <Th className="text-right">Custo médio</Th>
-                  <Th className="text-right">Valor em estoque</Th>
+                  {ctx.gerente ? (
+                    <>
+                      <Th className="text-right">Custo médio</Th>
+                      <Th className="text-right">Valor em estoque</Th>
+                    </>
+                  ) : null}
                 </tr>
               </THead>
               <TBody>
                 {lista.map((p) => {
                   const baixo = estoqueBaixo(p);
                   const custo = dec(p.custo_medio ?? p.preco_custo ?? 0);
+                  const margem = margemDe(p);
                   return (
                     <Tr key={p.id}>
                       <Td>
@@ -132,6 +173,16 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
                         {formatarMoeda(p.valor_unitario)}
                         <span className="block text-xs text-muted-foreground">por {un(p.unidade)}</span>
                       </Td>
+                      {margem ? (
+                        <Td className="text-right numero">
+                          {margem.real !== null ? (
+                            <span className={margem.abaixo ? "font-medium text-perigo" : margem.alvo ? "font-medium text-sucesso" : undefined}>{pct(margem.real)}</span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                          {margem.alvo ? <span className={`block text-xs ${margem.abaixo ? "text-perigo" : "text-muted-foreground"}`}>meta {pct(margem.alvo.valor)}</span> : null}
+                        </Td>
+                      ) : null}
                       <Td className="text-right numero">
                         {p.controla_estoque ? (
                           <>
@@ -148,8 +199,12 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
                           <span className="text-xs text-muted-foreground">não controla</span>
                         )}
                       </Td>
-                      <Td className="text-right numero">{custo.gt(0) ? formatarMoeda(custo) : "—"}</Td>
-                      <Td className="text-right numero">{p.controla_estoque && dec(p.estoque_atual).gt(0) && custo.gt(0) ? formatarMoeda(dec(p.estoque_atual).times(custo)) : "—"}</Td>
+                      {ctx.gerente ? (
+                        <>
+                          <Td className="text-right numero">{custo.gt(0) ? formatarMoeda(custo) : "—"}</Td>
+                          <Td className="text-right numero">{p.controla_estoque && dec(p.estoque_atual).gt(0) && custo.gt(0) ? formatarMoeda(dec(p.estoque_atual).times(custo)) : "—"}</Td>
+                        </>
+                      ) : null}
                     </Tr>
                   );
                 })}

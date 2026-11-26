@@ -2790,6 +2790,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"gestao_grupos_margem": {
+                  Row: {
+                    "atualizado_por": string | null,"empresa_id": string,"grupo": string,"margem_desejada": number,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"empresa_id": string,"grupo": string,"margem_desejada": number,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"empresa_id"?: string,"grupo"?: string,"margem_desejada"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gestao_grupos_margem_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_grupos_margem_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"gta_conferencias": {
                   Row: {
                     "created_at": string,"empresa_id": string,"feito_por": string | null,"id": string,"mapeamento": Json | null,"mensagem": string | null,"ok": boolean,"pedido_id": string
@@ -4609,13 +4634,13 @@ isOneToOne: false
                   ]
                 },"nfe_produtos": {
                   Row: {
-                    "ativo": boolean,"cest": string | null,"codigo": string,"comprimento_m": number | null,"controla_estoque": boolean,"created_at": string,"custo_medio": number,"descricao": string,"empresa_id": string,"espessura_cm": number | null,"estoque_atual": number,"estoque_minimo": number | null,"grupo": string | null,"gtin": string | null,"id": string,"largura_cm": number | null,"ncm": string,"operacao_id": string | null,"origem": number,"peso_kg": number | null,"preco_custo": number | null,"tara_kg": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
+                    "ativo": boolean,"cest": string | null,"codigo": string,"comprimento_m": number | null,"controla_estoque": boolean,"created_at": string,"custo_medio": number,"descricao": string,"empresa_id": string,"espessura_cm": number | null,"estoque_atual": number,"estoque_minimo": number | null,"grupo": string | null,"gtin": string | null,"id": string,"largura_cm": number | null,"margem_desejada": number | null,"ncm": string,"operacao_id": string | null,"origem": number,"peso_kg": number | null,"preco_custo": number | null,"tara_kg": number | null,"unidade": string,"updated_at": string,"valor_unitario": number | null
                   }
                   Insert: {
-                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao": string,"empresa_id": string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm": string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"tara_kg"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
+                    "ativo"?: boolean,"cest"?: string | null,"codigo": string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao": string,"empresa_id": string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"margem_desejada"?: number | null,"ncm": string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"tara_kg"?: number | null,"unidade": string,"updated_at"?: string,"valor_unitario"?: number | null
                   }
                   Update: {
-                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao"?: string,"empresa_id"?: string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"ncm"?: string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"tara_kg"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
+                    "ativo"?: boolean,"cest"?: string | null,"codigo"?: string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao"?: string,"empresa_id"?: string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"margem_desejada"?: number | null,"ncm"?: string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"tara_kg"?: number | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number | null
                   }
                   Relationships: [
                     {
@@ -5409,6 +5434,37 @@ isOneToOne: true
       columns: ["updated_by"]
 isOneToOne: false
       referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"produto_precos_historico": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"custo_referencia": number | null,"empresa_id": string,"id": number,"origem": string,"preco_anterior": number | null,"preco_novo": number,"produto_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"custo_referencia"?: number | null,"empresa_id": string,"id"?: never,"origem"?: string,"preco_anterior"?: number | null,"preco_novo": number,"produto_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"custo_referencia"?: number | null,"empresa_id"?: string,"id"?: never,"origem"?: string,"preco_anterior"?: number | null,"preco_novo"?: number,"produto_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "produto_precos_historico_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "produto_precos_historico_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "produto_precos_historico_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
       referencedColumns: ["id"]
     }
                   ]
@@ -7436,6 +7492,9 @@ isOneToOne: false
 "gestao_estoque_lancar":
 { Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
                            },
+"gestao_grupo_margem":
+{ Args: { "p_empresa_id": string,"p_grupo": string,"p_margem": number }; Returns: undefined
+                           },
 "gestao_importar_nota":
 { Args: { "p_documento_fiscal_id": string,"p_empresa_id": string,"p_margem": number,"p_pdf": Json }; Returns: Json
                            },
@@ -7445,14 +7504,28 @@ isOneToOne: false
 "gestao_inventario":
 { Args: { "p_empresa_id": string,"p_itens": Json,"p_observacao": string }; Returns: number
                            },
+"gestao_margem_padrao":
+{ Args: { "p_empresa_id": string,"p_margem": number }; Returns: undefined
+                           },
 "gestao_orcamento_publico":
 { Args: { "p_codigo": string }; Returns: Json
                            },
 "gestao_orcamento_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: Json
                            },
+"gestao_precos_salvar":
+{ Args: { "p_empresa_id": string,"p_itens": Json }; Returns: number
+                           },
+"gestao_precos_situacao":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "custo_na_alteracao": number,"preco_alterado_em": string,"produto_id": string,"ultima_entrada_em": string,"ultimo_custo_entrada": number
+            }[]
+                           },
 "gestao_produto_excluir":
 { Args: { "p_empresa_id": string,"p_produto_id": string }; Returns: string
+                           },
+"gestao_produto_margem":
+{ Args: { "p_empresa_id": string,"p_margem": number,"p_produto_id": string }; Returns: undefined
                            },
 "gestao_produto_salvar":
 { Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
@@ -7468,6 +7541,11 @@ isOneToOne: false
                            },
 "gestao_venda_vincular_nfe":
 { Args: { "p_nfe_id": string,"p_venda_id": string }; Returns: undefined
+                           },
+"gestao_vendas_por_produto":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
+              "custo": number,"faturamento": number,"produto_id": string,"quantidade": number,"ultima_venda": string,"vendas": number
+            }[]
                            },
 "gta_conferencia_registrar":
 { Args: { "p_mapeamento": Json,"p_mensagem": string,"p_ok": boolean,"p_pedido_id": string,"p_usuario": string }; Returns: string

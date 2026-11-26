@@ -141,6 +141,11 @@ export async function salvarProdutoLoja(empresaId: string, produtoId: string | n
   const taraTexto = unidade === "KG" ? texto(fd, "tara_kg") : "";
   const tara = taraTexto ? numero(taraTexto) : null;
   if (taraTexto && (!tara || Number(tara) < 0 || Number(tara) >= 10)) erros.tara_kg = ["Informe o peso em kg (ex.: 0,350)."];
+  // Margem que quer ganhar (opcional; o campo só vem do cadastro completo)
+  const temMargem = fd.has("margem_desejada");
+  const margemTexto = texto(fd, "margem_desejada").replace("%", "");
+  const margem = margemTexto ? numero(margemTexto) : null;
+  if (margemTexto && (!margem || Number(margem) < 0 || Number(margem) > 1000)) erros.margem_desejada = ["Informe a margem em % (ex.: 30), entre 0 e 1000."];
   if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
   const dados = {
     codigo: texto(fd, "codigo"),
@@ -169,6 +174,14 @@ export async function salvarProdutoLoja(empresaId: string, produtoId: string | n
     p_tara_kg: (tara ?? null) as unknown as number,
   });
   if (erroTara) return falha(`Produto salvo, mas o peso do prato não: ${mensagemErro(erroTara)}`, { tara_kg: [mensagemErro(erroTara)] });
+  if (temMargem) {
+    const { error: erroMargem } = await ctx.supabase.rpc("gestao_produto_margem", {
+      p_empresa_id: empresaId,
+      p_produto_id: data as string,
+      p_margem: (margem === null ? null : Number(margem)) as unknown as number,
+    });
+    if (erroMargem) return falha(`Produto salvo, mas a margem não: ${mensagemErro(erroMargem)}`, { margem_desejada: [mensagemErro(erroMargem)] });
+  }
   revalidarLoja(empresaId);
   return sucesso(produtoId ? "Produto atualizado." : "Produto cadastrado.", { id: data as string });
 }

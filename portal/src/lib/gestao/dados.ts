@@ -299,7 +299,7 @@ export function totalCartao(r: ResumoCaixa) {
 export async function carregarProdutosLoja(supabase: Cliente, empresaId: string, opcoes: { ativos?: boolean } = {}) {
   let q = supabase
     .from("nfe_produtos")
-    .select("id, codigo, descricao, ncm, cest, gtin, unidade, grupo, valor_unitario, preco_custo, controla_estoque, estoque_atual, estoque_minimo, custo_medio, ativo, espessura_cm, largura_cm, comprimento_m, tara_kg")
+    .select("id, codigo, descricao, ncm, cest, gtin, unidade, grupo, valor_unitario, preco_custo, controla_estoque, estoque_atual, estoque_minimo, custo_medio, ativo, espessura_cm, largura_cm, comprimento_m, tara_kg, margem_desejada")
     .eq("empresa_id", empresaId)
     .order("descricao")
     .limit(5000);
@@ -327,8 +327,39 @@ export async function carregarProdutosLoja(supabase: Cliente, empresaId: string,
       largura_cm: t(p.largura_cm),
       comprimento_m: t(p.comprimento_m),
       tara_kg: t(p.tara_kg),
+      margem_desejada: t(p.margem_desejada),
     }),
   );
+}
+
+export interface SituacaoPreco {
+  ultimo_custo_entrada: string | null;
+  ultima_entrada_em: string | null;
+  preco_alterado_em: string | null;
+  custo_na_alteracao: string | null;
+}
+
+/**
+ * Metas de margem (por grupo e a padrão) e, por produto, o custo da última
+ * compra e quando o preço mudou. Só para quem gerencia a loja (o banco confere).
+ */
+export async function carregarMargens(supabase: Cliente, empresaId: string) {
+  const [{ data: situacao }, { data: grupos }, { data: config }] = await Promise.all([
+    supabase.rpc("gestao_precos_situacao", { p_empresa_id: empresaId }),
+    supabase.from("gestao_grupos_margem").select("grupo, margem_desejada").eq("empresa_id", empresaId),
+    supabase.from("gestao_config").select("margem_entrada").eq("empresa_id", empresaId).maybeSingle(),
+  ]);
+  const t = (v: unknown) => (v === null || v === undefined ? null : String(v));
+  return {
+    situacao: new Map<string, SituacaoPreco>(
+      (situacao ?? []).map((s) => [
+        s.produto_id,
+        { ultimo_custo_entrada: t(s.ultimo_custo_entrada), ultima_entrada_em: s.ultima_entrada_em ?? null, preco_alterado_em: s.preco_alterado_em ?? null, custo_na_alteracao: t(s.custo_na_alteracao) },
+      ]),
+    ),
+    grupos: Object.fromEntries((grupos ?? []).map((g) => [g.grupo, String(g.margem_desejada)])) as Record<string, string>,
+    padrao: config?.margem_entrada != null ? String(config.margem_entrada) : null,
+  };
 }
 
 /** Estoque abaixo do mínimo (ou zerado/negativo). */

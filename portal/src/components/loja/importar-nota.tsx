@@ -113,6 +113,19 @@ export function ImportarNota({ empresaId, margemInicial }: { empresaId: string; 
         </p>
       </form>
 
+      {!enviando && envios.some((e) => e.situacao === "lancada") ? (
+        <Alerta
+          tom="sucesso"
+          titulo="Mercadorias lançadas no estoque"
+          acao={
+            <Button asChild tamanho="sm">
+              <Link href={`${base}/precos?filtro=entrada`}>Conferir preços de venda</Link>
+            </Button>
+          }
+        >
+          Se o custo dos produtos mudou, confira se o preço de venda ainda dá a margem que você quer.
+        </Alerta>
+      ) : null}
       {envios.length ? (
         <ul className="space-y-3" aria-live="polite">
           {envios.map((env, i) => (

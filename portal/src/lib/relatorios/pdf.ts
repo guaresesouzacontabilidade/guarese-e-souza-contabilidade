@@ -179,7 +179,7 @@ const moeda = (v: string | number | null | undefined, sinal = false): TableCell 
   return { text: d.isZero() ? "—" : formatarMoeda(d), alignment: "right", color: sinal && d.lessThan(0) ? COR.vermelho : undefined, noWrap: true };
 };
 
-function tabela(
+export function tabela(
   cabecalho: string[],
   linhas: TableCell[][],
   larguras: (string | number)[],
