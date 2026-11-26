@@ -11,7 +11,8 @@ import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { DialogoProduto, LancarEstoque } from "@/components/loja/produtos";
 import { AbasEstoque } from "@/components/loja/abas-estoque";
-import { obterContextoLoja } from "@/lib/gestao/contexto";
+import { BotaoConferencia } from "@/components/rh/tarefa";
+import { hojeLocal, obterContextoLoja } from "@/lib/gestao/contexto";
 import { carregarMargens, carregarProdutosLoja, estoqueBaixo } from "@/lib/gestao/dados";
 import { formatarQuantidade, secaoPeca, un } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
@@ -28,10 +29,22 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
   const ctx = await obterContextoLoja(empresaId);
   if (!ctx.vende) return <LojaIndisponivel empresaId={empresaId} equipe={ctx.equipe} ativa={ctx.lojaAtiva} notas={ctx.notas} />;
 
-  const [todos, margens] = await Promise.all([
+  const [todos, margens, conferencia] = await Promise.all([
     carregarProdutosLoja(ctx.supabase, empresaId, { custos: ctx.custos }),
     ctx.custos ? carregarMargens(ctx.supabase, empresaId) : null,
+    // Gestão de RH: conferência do estoque aberta para esta pessoa (o banco só mostra as dela, ou todas ao gestor)
+    !ctx.acesso.ferramentas_desligadas.includes("escalas") && (ctx.pode("rh.gerenciar") || ctx.pode("rh.tarefas"))
+      ? ctx.supabase
+          .from("rh_tarefas")
+          .select("id, modelo:rh_tarefa_modelos!inner(regra)")
+          .eq("empresa_id", empresaId)
+          .neq("status", "concluida")
+          .eq("modelo.regra", "conferencia_estoque")
+          .lte("periodo_inicio", hojeLocal())
+          .limit(1)
+      : Promise.resolve({ data: [] }),
   ]);
+  const temConferencia = (conferencia.data ?? []).length > 0;
   // Margem real (sobre o custo da última compra) e meta: só para quem vê custos e margens
   const margemDe = (p: (typeof todos)[number]) => {
     if (!margens) return null;
@@ -66,8 +79,11 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
         titulo="Produtos e estoque"
         descricao="Um cadastro só para vender no caixa e emitir a nota. Cada venda baixa o estoque sozinha."
         acoes={
-          ctx.gerente ? (
+          ctx.gerente || temConferencia ? (
             <>
+              {temConferencia ? <BotaoConferencia empresaId={empresaId} variante="contorno" /> : null}
+              {ctx.gerente ? (
+                <>
               <LancarEstoque empresaId={empresaId} produtos={ativos} custos={ctx.custos} />
               {ctx.custos ? (
                 <Button asChild variante="contorno">
@@ -87,6 +103,8 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
                 </Link>
               </Button>
               <DialogoProduto empresaId={empresaId} grupos={grupos} custos={ctx.custos} />
+                </>
+              ) : null}
             </>
           ) : null
         }

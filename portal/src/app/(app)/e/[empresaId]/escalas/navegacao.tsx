@@ -8,7 +8,7 @@ export function NavegacaoEscalas({ empresaId, gerenciar }: { empresaId: string; 
       className="mb-5"
       itens={[
         { rotulo: "Escalas", href: base, exato: true },
-        ...(gerenciar ? [{ rotulo: "Funcionários", href: `${base}/funcionarios` }] : []),
+        ...(gerenciar ? [{ rotulo: "Funcionários", href: `/e/${empresaId}/rh/funcionarios` }] : []),
         { rotulo: "Modelos de escala", href: `${base}/modelos` },
       ]}
     />

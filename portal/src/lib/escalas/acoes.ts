@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { exigirPermissao } from "@/lib/auth/sessao";
+import { exigirPermissao, obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { conferirEscala } from "./conferencia";
 import { feriadosNacionais } from "./feriados";
@@ -20,6 +20,7 @@ const texto = (fd: FormData, nome: string, max = 120) => String(fd.get(nome) ?? 
 
 function revalidar(empresaId: string) {
   revalidatePath(`/e/${empresaId}/escalas`, "layout");
+  revalidatePath(`/e/${empresaId}/rh`, "layout");
 }
 
 function mesAnterior(competencia: string) {
@@ -30,16 +31,41 @@ function mesAnterior(competencia: string) {
 
 // ----------------------------------------------------------------------------- funcionários da escala
 
+/** Quem monta escalas ou gerencia a equipe (Gestão de RH) cuida do cadastro dos funcionários. */
+async function exigirCadastro(empresaId: string) {
+  const ctx = await obterContextoEmpresa(empresaId);
+  if (!ctx.pode("escalas.gerenciar") && !ctx.pode("rh.gerenciar")) throw new Error("Você não tem permissão para cuidar do cadastro dos funcionários.");
+  return ctx;
+}
+
 export async function salvarFuncionario(empresaId: string, funcionarioId: string | null, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   if (!UUID.test(empresaId) || (funcionarioId && !UUID.test(funcionarioId))) return falha("Registro inválido.");
-  const ctx = await exigirPermissao(empresaId, "escalas.gerenciar");
+  let ctx;
+  try {
+    ctx = await exigirCadastro(empresaId);
+  } catch (e) {
+    return falha((e as Error).message);
+  }
   const erros: Record<string, string[]> = {};
   const nome = texto(fd, "nome");
   if (!nome || nome.length < 2) erros.nome = ["Informe o nome."];
   const jornada = Number(String(fd.get("jornada_semanal") ?? "44").replace(",", "."));
   if (!Number.isFinite(jornada) || jornada <= 0 || jornada > 44) erros.jornada_semanal = ["Entre 1 e 44 horas por semana."];
   const naoTrabalha = fd.getAll("nao_trabalha").map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+  // Gestão de RH: "Novo cargo" digitado no cadastro (usa o que já existe com o mesmo nome)
+  const cargoNovo = fd.get("cargo_id") === "novo" ? texto(fd, "cargo_novo", 80) : null;
+  if (fd.get("cargo_id") === "novo" && (!cargoNovo || cargoNovo.length < 2)) erros.cargo_novo = ["Digite o nome do novo cargo."];
   if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
+  let cargoId: string | null | undefined = fd.has("cargo_id") ? (UUID.test(String(fd.get("cargo_id"))) ? String(fd.get("cargo_id")) : null) : undefined;
+  if (cargoNovo) {
+    const { data: existentes } = await ctx.supabase.from("rh_cargos").select("id, nome").eq("empresa_id", empresaId);
+    cargoId = (existentes ?? []).find((c) => c.nome.trim().toLocaleLowerCase("pt-BR") === cargoNovo.toLocaleLowerCase("pt-BR"))?.id ?? null;
+    if (!cargoId) {
+      const { data: novo, error } = await ctx.supabase.rpc("rh_cargo_salvar", { p_empresa_id: empresaId, p_id: null as unknown as string, p_dados: { nome: cargoNovo } });
+      if (error || !novo) return falha(error ? mensagemErro(error) : "Não foi possível cadastrar o cargo.");
+      cargoId = novo;
+    }
+  }
   const dados = {
     empresa_id: empresaId,
     nome: nome!,
@@ -51,6 +77,9 @@ export async function salvarFuncionario(empresaId: string, funcionarioId: string
     menor_idade: fd.get("menor_idade") === "on",
     preferencias: texto(fd, "preferencias", 200),
     ativo: fd.get("ativo") !== "off",
+    // Gestão de RH: cargo do cadastro e acesso ao portal (só quando o formulário traz os campos)
+    ...(cargoId !== undefined ? { cargo_id: cargoId } : {}),
+    ...(fd.has("usuario_id") ? { usuario_id: UUID.test(String(fd.get("usuario_id"))) ? String(fd.get("usuario_id")) : null } : {}),
   };
   const r = funcionarioId
     ? await ctx.supabase.from("escala_funcionarios").update(dados).eq("id", funcionarioId).eq("empresa_id", empresaId)
@@ -62,7 +91,12 @@ export async function salvarFuncionario(empresaId: string, funcionarioId: string
 
 export async function excluirFuncionario(empresaId: string, funcionarioId: string): Promise<ResultadoAcao> {
   if (!UUID.test(empresaId) || !UUID.test(funcionarioId)) return falha("Registro inválido.");
-  const ctx = await exigirPermissao(empresaId, "escalas.gerenciar");
+  let ctx;
+  try {
+    ctx = await exigirCadastro(empresaId);
+  } catch (e) {
+    return falha((e as Error).message);
+  }
   const { error } = await ctx.supabase.from("escala_funcionarios").delete().eq("id", funcionarioId).eq("empresa_id", empresaId);
   if (error) return falha(mensagemErro(error));
   revalidar(empresaId);

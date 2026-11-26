@@ -37,6 +37,7 @@ import { semearFisioterapia } from "./demo-fisioterapia";
 import { semearOs, semearOsMelhorias } from "./demo-os";
 import { semearEstudos } from "./demo-estudos";
 import { semearEscalas } from "./demo-escalas";
+import { semearRh } from "./demo-rh";
 import { corrigirPisCofinsGraos, semearCteGraos, semearGraos, semearPainelGraos } from "./demo-graos";
 import { PERMISSOES_PADRAO } from "../src/lib/permissoes";
 
@@ -273,6 +274,9 @@ async function main() {
     })
   ) {
     console.log("  Madeireira fictícia com a gestão da loja: produtos, estoque, caixas, vendas (à vista e a prazo) e orçamento");
+  }
+  if (await semearRh(admin, { url, publica }, DOMINIO)) {
+    console.log("  Gestão de RH da madeireira: cargos, funcionários (o balconista com acesso) e as rotinas iniciais no quadro de tarefas");
   }
   if (
     await semearGraos(admin, comoAdmin, { url, publica }, {

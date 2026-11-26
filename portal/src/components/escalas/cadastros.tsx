@@ -9,6 +9,9 @@ import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { criarEscala, excluirFuncionario, importarColaboradores, salvarFuncionario } from "@/lib/escalas/acoes";
 import { DIAS_CURTOS, ORDEM_SEMANA } from "@/lib/escalas/tipos";
 
+/** Valor da opção "Novo cargo" no cadastro do funcionário. */
+const NOVO_CARGO = "novo";
+
 export interface FuncionarioTela {
   id: string;
   nome: string;
@@ -20,14 +23,38 @@ export interface FuncionarioTela {
   menor_idade: boolean;
   preferencias: string | null;
   ativo: boolean;
+  cargo_id?: string | null;
+  usuario_id?: string | null;
 }
 
-/** Cadastrar ou alterar um funcionário da escala. */
-export function DialogoFuncionario({ empresaId, funcionario }: { empresaId: string; funcionario?: FuncionarioTela }) {
+/**
+ * Cadastrar ou alterar um funcionário. Na Gestão de RH, o cargo vem da lista de
+ * cargos e dá para ligar o cadastro a um acesso do portal (a pessoa vê as
+ * próprias tarefas).
+ */
+export function DialogoFuncionario({
+  empresaId,
+  funcionario,
+  cargos,
+  acessos,
+}: {
+  empresaId: string;
+  funcionario?: FuncionarioTela;
+  cargos?: { id: string; nome: string }[];
+  acessos?: { id: string; nome: string; email: string }[];
+}) {
   const [aberto, setAberto] = React.useState(false);
   const f = funcionario;
+  // "Novo cargo": digita o nome ali mesmo (o cargo entra na lista de cargos ao salvar)
+  const [cargoNovo, setCargoNovo] = React.useState(false);
   return (
-    <Dialog open={aberto} onOpenChange={setAberto}>
+    <Dialog
+      open={aberto}
+      onOpenChange={(v) => {
+        setAberto(v);
+        if (!v) setCargoNovo(false);
+      }}
+    >
       <DialogTrigger asChild>
         {f ? (
           <Button variante="fantasma" tamanho="iconeSm" aria-label={`Editar ${f.nome}`}>
@@ -51,9 +78,48 @@ export function DialogoFuncionario({ empresaId, funcionario }: { empresaId: stri
                 <Campo rotulo="Nome" htmlFor="nome" obrigatorio erro={estado.erros?.nome}>
                   <Input id="nome" name="nome" defaultValue={f?.nome} maxLength={120} required />
                 </Campo>
-                <Campo rotulo="Cargo" htmlFor="cargo">
-                  <Input id="cargo" name="cargo" defaultValue={f?.cargo ?? ""} maxLength={80} placeholder="Ex.: Atendente" />
-                </Campo>
+                {cargos ? (
+                  <Campo rotulo="Cargo" htmlFor="cargo_id" erro={estado.erros?.cargo_novo}>
+                    <Select id="cargo_id" name="cargo_id" defaultValue={f?.cargo_id ?? ""} onChange={(e) => setCargoNovo(e.target.value === NOVO_CARGO)}>
+                      <option value="">{f?.cargo && !f.cargo_id ? `${f.cargo} (sem cargo cadastrado)` : "Sem cargo"}</option>
+                      {cargos.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nome}
+                        </option>
+                      ))}
+                      <option value={NOVO_CARGO}>Novo cargo (digitar o nome)</option>
+                    </Select>
+                    {f?.cargo && !f.cargo_id ? <input type="hidden" name="cargo" value={f.cargo} /> : null}
+                    {cargoNovo ? (
+                      <Input
+                        name="cargo_novo"
+                        aria-label="Nome do novo cargo"
+                        placeholder="Ex.: Atendente"
+                        maxLength={80}
+                        className="mt-2"
+                        autoFocus
+                        required
+                      />
+                    ) : null}
+                  </Campo>
+                ) : (
+                  <Campo rotulo="Cargo" htmlFor="cargo">
+                    <Input id="cargo" name="cargo" defaultValue={f?.cargo ?? ""} maxLength={80} placeholder="Ex.: Atendente" />
+                  </Campo>
+                )}
+                {acessos ? (
+                  <Campo rotulo="Acesso ao portal" htmlFor="usuario_id" ajuda="Com o acesso ligado, a pessoa vê e conclui as tarefas atribuídas a ela.">
+                    <Select id="usuario_id" name="usuario_id" defaultValue={f?.usuario_id ?? ""}>
+                      <option value="">Sem acesso ao portal</option>
+                      {acessos.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.nome}
+                          {a.email && a.email !== a.nome ? ` (${a.email})` : ""}
+                        </option>
+                      ))}
+                    </Select>
+                  </Campo>
+                ) : null}
                 <Campo rotulo="Setor" htmlFor="setor" ajuda="Opcional (ex.: balcão, cozinha).">
                   <Input id="setor" name="setor" defaultValue={f?.setor ?? ""} maxLength={60} />
                 </Campo>

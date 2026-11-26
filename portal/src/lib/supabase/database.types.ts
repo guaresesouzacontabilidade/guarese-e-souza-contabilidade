@@ -1706,16 +1706,22 @@ isOneToOne: false
                   ]
                 },"escala_funcionarios": {
                   Row: {
-                    "ativo": boolean,"cargo": string | null,"created_at": string,"criado_por": string | null,"domingo_quinzenal": boolean,"empresa_id": string,"id": string,"jornada_semanal": number,"menor_idade": boolean,"nao_trabalha": (number)[],"nome": string,"preferencias": string | null,"setor": string | null,"updated_at": string
+                    "ativo": boolean,"cargo": string | null,"cargo_id": string | null,"created_at": string,"criado_por": string | null,"domingo_quinzenal": boolean,"empresa_id": string,"id": string,"jornada_semanal": number,"menor_idade": boolean,"nao_trabalha": (number)[],"nome": string,"preferencias": string | null,"setor": string | null,"updated_at": string,"usuario_id": string | null
                   }
                   Insert: {
-                    "ativo"?: boolean,"cargo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"domingo_quinzenal"?: boolean,"empresa_id": string,"id"?: string,"jornada_semanal"?: number,"menor_idade"?: boolean,"nao_trabalha"?: (number)[],"nome": string,"preferencias"?: string | null,"setor"?: string | null,"updated_at"?: string
+                    "ativo"?: boolean,"cargo"?: string | null,"cargo_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"domingo_quinzenal"?: boolean,"empresa_id": string,"id"?: string,"jornada_semanal"?: number,"menor_idade"?: boolean,"nao_trabalha"?: (number)[],"nome": string,"preferencias"?: string | null,"setor"?: string | null,"updated_at"?: string,"usuario_id"?: string | null
                   }
                   Update: {
-                    "ativo"?: boolean,"cargo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"domingo_quinzenal"?: boolean,"empresa_id"?: string,"id"?: string,"jornada_semanal"?: number,"menor_idade"?: boolean,"nao_trabalha"?: (number)[],"nome"?: string,"preferencias"?: string | null,"setor"?: string | null,"updated_at"?: string
+                    "ativo"?: boolean,"cargo"?: string | null,"cargo_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"domingo_quinzenal"?: boolean,"empresa_id"?: string,"id"?: string,"jornada_semanal"?: number,"menor_idade"?: boolean,"nao_trabalha"?: (number)[],"nome"?: string,"preferencias"?: string | null,"setor"?: string | null,"updated_at"?: string,"usuario_id"?: string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "escala_funcionarios_cargo_fk"
+      columns: ["empresa_id","cargo_id"]
+isOneToOne: false
+      referencedRelation: "rh_cargos"
+      referencedColumns: ["empresa_id","id"]
+    },{
       foreignKeyName: "escala_funcionarios_criado_por_fkey"
       columns: ["criado_por"]
 isOneToOne: false
@@ -1726,6 +1732,12 @@ isOneToOne: false
       columns: ["empresa_id"]
 isOneToOne: false
       referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escala_funcionarios_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
       referencedColumns: ["id"]
     }
                   ]
@@ -1941,6 +1953,37 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "empresas"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"estoque_conferencias": {
+                  Row: {
+                    "conferido_em": string,"conferido_por": string,"empresa_id": string,"id": string,"observacao": string | null,"tarefa_id": string | null
+                  }
+                  Insert: {
+                    "conferido_em"?: string,"conferido_por"?: string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"tarefa_id"?: string | null
+                  }
+                  Update: {
+                    "conferido_em"?: string,"conferido_por"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"tarefa_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estoque_conferencias_conferido_por_fkey"
+      columns: ["conferido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_conferencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_conferencias_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
     }
                   ]
                 },"estoque_movimentos": {
@@ -5685,6 +5728,217 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"rh_cargos": {
+                  Row: {
+                    "ativo": boolean,"created_at": string,"criado_por": string | null,"descricao": string | null,"empresa_id": string,"id": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_cargos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_cargos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"rh_tarefa_dependencias": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"depende_de_id": string,"empresa_id": string,"tarefa_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"depende_de_id": string,"empresa_id": string,"tarefa_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"depende_de_id"?: string,"empresa_id"?: string,"tarefa_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_dependencias_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefa_dependencias_empresa_id_depende_de_id_fkey"
+      columns: ["empresa_id","depende_de_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_dependencias_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"rh_tarefa_eventos": {
+                  Row: {
+                    "detalhe": string | null,"em": string,"empresa_id": string,"id": number,"origem": string,"tarefa_id": string,"tipo": string,"usuario": string | null
+                  }
+                  Insert: {
+                    "detalhe"?: string | null,"em"?: string,"empresa_id": string,"id"?: never,"origem"?: string,"tarefa_id": string,"tipo": string,"usuario"?: string | null
+                  }
+                  Update: {
+                    "detalhe"?: string | null,"em"?: string,"empresa_id"?: string,"id"?: never,"origem"?: string,"tarefa_id"?: string,"tipo"?: string,"usuario"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_eventos_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_eventos_usuario_fkey"
+      columns: ["usuario"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"rh_tarefa_evidencias": {
+                  Row: {
+                    "caminho": string,"confirmado_em": string | null,"created_at": string,"empresa_id": string,"enviado_por": string | null,"id": string,"legenda": string | null,"mime": string,"tamanho": number,"tarefa_id": string
+                  }
+                  Insert: {
+                    "caminho": string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"legenda"?: string | null,"mime": string,"tamanho": number,"tarefa_id": string
+                  }
+                  Update: {
+                    "caminho"?: string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"legenda"?: string | null,"mime"?: string,"tamanho"?: number,"tarefa_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_evidencias_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_evidencias_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"rh_tarefa_modelos": {
+                  Row: {
+                    "ativo": boolean,"cargo_id": string | null,"chave_rotina": string | null,"created_at": string,"criado_por": string | null,"depende_de_id": string | null,"descricao": string | null,"dia_mes": number,"dia_semana": number,"dias_semana": (number)[],"empresa_id": string,"exige_area": boolean,"exige_foto": boolean,"exige_semana": boolean,"hora_limite": string,"id": string,"parametros": NonNullable<Json>,"periodicidade": string,"regra": string,"responsavel_id": string | null,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cargo_id"?: string | null,"chave_rotina"?: string | null,"created_at"?: string,"criado_por"?: string | null,"depende_de_id"?: string | null,"descricao"?: string | null,"dia_mes"?: number,"dia_semana"?: number,"dias_semana"?: (number)[],"empresa_id": string,"exige_area"?: boolean,"exige_foto"?: boolean,"exige_semana"?: boolean,"hora_limite"?: string,"id"?: string,"parametros"?: NonNullable<Json>,"periodicidade": string,"regra"?: string,"responsavel_id"?: string | null,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cargo_id"?: string | null,"chave_rotina"?: string | null,"created_at"?: string,"criado_por"?: string | null,"depende_de_id"?: string | null,"descricao"?: string | null,"dia_mes"?: number,"dia_semana"?: number,"dias_semana"?: (number)[],"empresa_id"?: string,"exige_area"?: boolean,"exige_foto"?: boolean,"exige_semana"?: boolean,"hora_limite"?: string,"id"?: string,"parametros"?: NonNullable<Json>,"periodicidade"?: string,"regra"?: string,"responsavel_id"?: string | null,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_modelos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefa_modelos_empresa_id_cargo_id_fkey"
+      columns: ["empresa_id","cargo_id"]
+isOneToOne: false
+      referencedRelation: "rh_cargos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_modelos_empresa_id_depende_de_id_fkey"
+      columns: ["empresa_id","depende_de_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefa_modelos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_modelos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefa_modelos_empresa_id_responsavel_id_fkey"
+      columns: ["empresa_id","responsavel_id"]
+isOneToOne: false
+      referencedRelation: "escala_funcionarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"rh_tarefa_vinculos": {
+                  Row: {
+                    "criado_em": string,"decidido_em": string | null,"decidido_por": string | null,"descricao": string,"detalhe": NonNullable<Json>,"empresa_id": string,"ia_explicacao": string | null,"ia_recomendado": boolean,"id": string,"origem": string,"registro_id": string | null,"situacao": string,"tarefa_id": string,"tipo": string
+                  }
+                  Insert: {
+                    "criado_em"?: string,"decidido_em"?: string | null,"decidido_por"?: string | null,"descricao": string,"detalhe"?: NonNullable<Json>,"empresa_id": string,"ia_explicacao"?: string | null,"ia_recomendado"?: boolean,"id"?: string,"origem"?: string,"registro_id"?: string | null,"situacao"?: string,"tarefa_id": string,"tipo": string
+                  }
+                  Update: {
+                    "criado_em"?: string,"decidido_em"?: string | null,"decidido_por"?: string | null,"descricao"?: string,"detalhe"?: NonNullable<Json>,"empresa_id"?: string,"ia_explicacao"?: string | null,"ia_recomendado"?: boolean,"id"?: string,"origem"?: string,"registro_id"?: string | null,"situacao"?: string,"tarefa_id"?: string,"tipo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_vinculos_decidido_por_fkey"
+      columns: ["decidido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefa_vinculos_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"rh_tarefas": {
+                  Row: {
+                    "area": string | null,"concluida_em": string | null,"concluida_por": string | null,"conclusao_pendente": boolean,"created_at": string,"empresa_id": string,"id": string,"iniciada_em": string | null,"modelo_id": string,"observacao": string | null,"ordem": number,"origem_conclusao": string | null,"periodicidade": string,"periodo_fim": string,"periodo_inicio": string,"prazo": string,"responsavel_id": string | null,"semana_referencia": string | null,"status": string,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "area"?: string | null,"concluida_em"?: string | null,"concluida_por"?: string | null,"conclusao_pendente"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"iniciada_em"?: string | null,"modelo_id": string,"observacao"?: string | null,"ordem"?: number,"origem_conclusao"?: string | null,"periodicidade": string,"periodo_fim": string,"periodo_inicio": string,"prazo": string,"responsavel_id"?: string | null,"semana_referencia"?: string | null,"status"?: string,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "area"?: string | null,"concluida_em"?: string | null,"concluida_por"?: string | null,"conclusao_pendente"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"iniciada_em"?: string | null,"modelo_id"?: string,"observacao"?: string | null,"ordem"?: number,"origem_conclusao"?: string | null,"periodicidade"?: string,"periodo_fim"?: string,"periodo_inicio"?: string,"prazo"?: string,"responsavel_id"?: string | null,"semana_referencia"?: string | null,"status"?: string,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefas_concluida_por_fkey"
+      columns: ["concluida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefas_empresa_id_modelo_id_fkey"
+      columns: ["empresa_id","modelo_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefa_modelos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefas_empresa_id_responsavel_id_fkey"
+      columns: ["empresa_id","responsavel_id"]
+isOneToOne: false
+      referencedRelation: "escala_funcionarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
                 },"rotinas_status": {
                   Row: {
                     "erro": string | null,"ok": boolean,"resultado": Json | null,"rotina": string,"ultima_execucao": string
@@ -8297,6 +8551,64 @@ isOneToOne: false
 "revogar_membro":
 { Args: { "p_membro_id": string,"p_motivo": string }; Returns: undefined
                            },
+"rh_cargo_excluir":
+{ Args: { "p_cargo_id": string }; Returns: undefined
+                           },
+"rh_cargo_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"rh_conciliacao_progresso":
+{ Args: { "p_empresa_id": string,"p_semanas": (string)[] }; Returns: {
+              "pendentes": number,"semana": string,"total": number
+            }[]
+                           },
+"rh_confirmar_conferencia_estoque":
+{ Args: { "p_empresa_id": string,"p_observacao": string }; Returns: Json
+                           },
+"rh_criar_rotinas_iniciais":
+{ Args: { "p_chaves": (string)[],"p_empresa_id": string }; Returns: number
+                           },
+"rh_evidencia_confirmar":
+{ Args: { "p_evidencia_id": string }; Returns: undefined
+                           },
+"rh_evidencia_excluir":
+{ Args: { "p_evidencia_id": string }; Returns: string
+                           },
+"rh_evidencia_iniciar":
+{ Args: { "p_dados": Json,"p_tarefa_id": string }; Returns: Json
+                           },
+"rh_ia_reservar":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "modelo": string,"uso_id": number
+            }[]
+                           },
+"rh_modelo_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"rh_reprocessar_caixa":
+{ Args: { "p_sessao_id": string }; Returns: number
+                           },
+"rh_tarefa_atribuir":
+{ Args: { "p_funcionario_id": string,"p_tarefa_id": string }; Returns: undefined
+                           },
+"rh_tarefa_concluir":
+{ Args: { "p_dados": Json,"p_tarefa_id": string }; Returns: undefined
+                           },
+"rh_tarefa_dependencia":
+{ Args: { "p_depende_de_id": string,"p_ligar": boolean,"p_tarefa_id": string }; Returns: undefined
+                           },
+"rh_tarefa_mover":
+{ Args: { "p_ordem": number,"p_status": string,"p_tarefa_id": string }; Returns: undefined
+                           },
+"rh_vinculo_confirmar":
+{ Args: { "p_vinculo_id": string }; Returns: undefined
+                           },
+"rh_vinculo_ia_registrar":
+{ Args: { "p_explicacao": string,"p_vinculo_id": string }; Returns: undefined
+                           },
+"rh_vinculo_recusar":
+{ Args: { "p_vinculo_id": string }; Returns: undefined
+                           },
 "rotina_auditor_fiscal":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -8319,6 +8631,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_operacional":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_rh_tarefas":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "rotina_suporte_limpeza":

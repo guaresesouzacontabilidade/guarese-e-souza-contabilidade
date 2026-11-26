@@ -14,6 +14,7 @@ import {
   FileBarChart,
   MessagesSquare,
   Users,
+  BriefcaseBusiness,
   Settings,
   Upload,
   Home,
@@ -86,6 +87,8 @@ export interface EmpresaMenu {
   logo?: string | null;
   /** Ferramentas desligadas pelo escritório (somem do menu). */
   desligadas?: string[];
+  /** O usuário está ligado a um cadastro de funcionário (vê "Minhas tarefas"). */
+  rhFuncionario?: boolean;
 }
 
 export interface GrupoMenu {
@@ -315,7 +318,12 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
       servicosOs.push({ rotulo: "Serviços e equipe", href: `${base}/os/configuracoes`, icone: Wrench });
     }
   }
+  // Gestão de RH: funcionários, cargos, escalas e o quadro de tarefas recorrentes
+  if (p.has("rh.gerenciar") || p.has("escalas.gerenciar")) equipeEmpresa.push({ rotulo: "Funcionários", href: `${base}/rh/funcionarios`, icone: Users });
+  if (p.has("rh.gerenciar")) equipeEmpresa.push({ rotulo: "Cargos", href: `${base}/rh/cargos`, icone: BriefcaseBusiness });
   if (p.has("escalas.gerenciar") || p.has("escalas.ver")) equipeEmpresa.push({ rotulo: "Escalas de trabalho", href: `${base}/escalas`, icone: ClipboardClock });
+  if (p.has("rh.gerenciar")) equipeEmpresa.push({ rotulo: "Tarefas da equipe", href: `${base}/rh/tarefas`, icone: SquareKanban });
+  else if (p.has("rh.tarefas") && empresa.rhFuncionario) equipeEmpresa.push({ rotulo: "Minhas tarefas", href: `${base}/rh/tarefas`, icone: ListChecks });
   if (p.has("mensagens.usar")) {
     falar.push({ rotulo: "Mensagens", href: `${base}/mensagens`, icone: MessagesSquare });
     falar.push({ rotulo: "Solicitações", href: `${base}/solicitacoes`, icone: ClipboardList });
@@ -335,7 +343,7 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     { id: "pagamentos", rotulo: "Pagamentos e prazos", icone: CalendarDays, itens: pagamentos },
     { id: "financeiro", rotulo: "Financeiro", icone: Wallet, itens: financeiro },
     { id: "impostos", rotulo: "Impostos e relatórios", icone: Calculator, itens: impostos },
-    { id: "equipe", rotulo: "Funcionários", icone: ClipboardClock, itens: equipeEmpresa },
+    { id: "equipe", rotulo: "Gestão de RH", icone: Users, itens: equipeEmpresa },
     { id: "falar", rotulo: "Falar com o escritório", icone: MessagesSquare, itens: falar },
     { id: "configuracoes", rotulo: "Configurações", icone: Settings, itens: configuracoes },
   ];

@@ -329,7 +329,7 @@ export async function semearLoja(
     "acesso do balconista",
     await admin
       .from("empresa_membros")
-      .upsert({ empresa_id: empresaId, user_id: idBalcao, papel: "cliente_colaborador", permissoes: ["empresa.ver", "gestao.vender", "mensagens.usar"], ativo: true }, { onConflict: "empresa_id,user_id" }),
+      .upsert({ empresa_id: empresaId, user_id: idBalcao, papel: "cliente_colaborador", permissoes: ["empresa.ver", "gestao.vender", "mensagens.usar", "rh.tarefas"], ativo: true }, { onConflict: "empresa_id,user_id" }),
   );
 
   // O escritório liga a gestão da loja (cria as contas do Financeiro)

@@ -56,7 +56,9 @@ test("empresário monta, confere e salva a escala; IA desconectada não envia na
   await page.getByRole("button", { name: "Cadastrar funcionário" }).click();
   const dialogo = page.getByRole("dialog");
   await dialogo.getByLabel("Nome").fill(nome);
-  await dialogo.getByLabel("Cargo").fill("Atendente");
+  // Cargo da lista da Gestão de RH; "Novo cargo" reaproveita o que já existe com o mesmo nome
+  await dialogo.getByLabel("Cargo").selectOption("novo");
+  await dialogo.getByLabel("Nome do novo cargo").fill("Atendente");
   await dialogo.getByRole("button", { name: "Cadastrar" }).click();
   await expect(page.getByRole("cell", { name: nome, exact: true })).toBeVisible({ timeout: 30_000 });
 

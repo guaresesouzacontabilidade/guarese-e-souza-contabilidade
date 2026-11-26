@@ -76,6 +76,7 @@ async function atalhosDaPessoa(caminho: string) {
         modalidade: e.gestao_modalidade,
         cte: e.cte,
         frota: e.frota,
+        rhFuncionario: e.rh_funcionario,
         logo: null,
         desligadas: e.ferramentas_desligadas,
       },

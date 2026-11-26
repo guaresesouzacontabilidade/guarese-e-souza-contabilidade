@@ -108,6 +108,8 @@ export interface EmpresaAcesso {
   ferramentas_desligadas: string[];
   papel: "admin" | "equipe" | "cliente_titular" | "cliente_colaborador";
   permissoes: Set<Permissao>;
+  /** O usuário está ligado a um cadastro de funcionário nesta empresa (vê "Minhas tarefas" na Gestão de RH). */
+  rh_funcionario: boolean;
 }
 
 /** Empresas acessíveis ao usuário, com o papel e as permissões em cada uma. */
@@ -116,7 +118,7 @@ export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> =
   if (!s?.perfil) return [];
   const campos =
     "id, razao_social, nome_fantasia, documento, tipo_pessoa, regime_tributario, ativa, demonstracao, logo_path, logo_atualizado_em, ferramentas_desligadas, gestao:gestao_config(ativa, modalidade), cte_config(emitente_id, rntrc), frota_veiculos(count)";
-  type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja" | "gestao_modalidade" | "cte" | "frota"> & {
+  type Linha = Omit<EmpresaAcesso, "papel" | "permissoes" | "loja" | "gestao_modalidade" | "cte" | "frota" | "rh_funcionario"> & {
     gestao: { ativa: boolean; modalidade: string } | null;
     cte_config: { emitente_id: string | null; rntrc: string | null } | null;
     frota_veiculos: { count: number }[] | null;
@@ -138,13 +140,19 @@ export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> =
       ...comLoja(e),
       papel: "admin" as const,
       permissoes: permissoesComFerramentas(new Set(TODAS_PERMISSOES), e.ferramentas_desligadas ?? []),
+      rh_funcionario: false,
     }));
   }
-  const { data } = await s.supabase
-    .from("empresa_membros")
-    .select(`papel, permissoes, empresa:empresas!inner(${campos})`)
-    .eq("user_id", s.usuarioId)
-    .eq("ativo", true);
+  const [{ data }, { data: cadastros }] = await Promise.all([
+    s.supabase
+      .from("empresa_membros")
+      .select(`papel, permissoes, empresa:empresas!inner(${campos})`)
+      .eq("user_id", s.usuarioId)
+      .eq("ativo", true),
+    // Cadastros de funcionário ligados a este acesso (o banco só mostra o próprio)
+    s.supabase.from("escala_funcionarios").select("empresa_id").eq("usuario_id", s.usuarioId).eq("ativo", true),
+  ]);
+  const comCadastro = new Set((cadastros ?? []).map((c) => c.empresa_id));
   return (data ?? [])
     .map((m) => {
       const e = comLoja(m.empresa as unknown as Linha);
@@ -153,6 +161,7 @@ export const obterEmpresasDoUsuario = cache(async (): Promise<EmpresaAcesso[]> =
         papel: m.papel as EmpresaAcesso["papel"],
         // As permissões das ferramentas desligadas pelo escritório não valem nesta empresa
         permissoes: permissoesComFerramentas(new Set(m.permissoes as Permissao[]), e.ferramentas_desligadas ?? []),
+        rh_funcionario: comCadastro.has(e.id),
       };
     })
     .sort((a, b) => (a.nome_fantasia ?? a.razao_social).localeCompare(b.nome_fantasia ?? b.razao_social, "pt-BR"));

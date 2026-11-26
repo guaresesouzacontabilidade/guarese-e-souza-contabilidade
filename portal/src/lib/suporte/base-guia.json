@@ -1071,11 +1071,95 @@
   "texto": "É sempre uma estimativa: os valores oficiais são os das guias publicadas pelo escritório em Meus documentos. Quando a guia já foi emitida, o valor dela aparece ao lado."
  },
  {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-funcion",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Funcionários",
+  "texto": "o mesmo cadastro das escalas. Agora dá para escolher o cargo da lista (ou Novo cargo, digitando o nome) e ligar a pessoa a um acesso ao portal: com o acesso ligado, ela entra e vê só as tarefas atribuídas a ela."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-cargos",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Cargos",
+  "texto": "nome, descrição (o que a pessoa faz) e as tarefas recorrentes de responsabilidade do cargo. As tarefas novas de um modelo vão para a pessoa daquele cargo."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-tarefas",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Tarefas da equipe",
+  "texto": "(quadro): três colunas — A fazer, Em andamento e Concluída. Cada cartão mostra o título, o responsável, o prazo e a etiqueta da frequência, com texto e cor diferentes: Diária, Semanal, Quinzenal e Mensal. Filtre por funcionário, cargo, frequência e situação. Arraste o cartão entre as colunas ou use Começar. Tarefa atrasada fica marcada em vermelho. Uma tarefa pode depender de outra (ex.: a conciliação depende do envio do extrato): enquanto a outra não termina, o cartão avisa."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-modelos",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Modelos de tarefa",
+  "texto": "(botão no quadro): o modelo é a regra (título, frequência, dias e horário limite, cargo ou pessoa, o que é exigido para concluir); cada período vira uma ocorrência própria no quadro. O portal cria a ocorrência de cada período uma vez só (mesmo que a rotina rode de novo) e, ao concluir, já deixa a próxima pronta, sem mexer na que foi concluída."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-rotinas",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Rotinas iniciais",
+  "texto": "o botão Criar rotinas iniciais cadastra cinco modelos prontos para ajustar — conferência de estoque, envio do extrato bancário, conciliação bancária semanal, organização do pátio e fechamento do caixa. Nada é criado sozinho na empresa."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-conclui",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Concluir à mão",
+  "texto": "quem é responsável abre a tarefa e clica em Concluir tarefa. O portal registra a data, a hora e quem concluiu. Quando o modelo pede, é preciso informar a área, a semana de referência e anexar a foto (Tirar foto abre a câmera do celular; também aceita PDF). Sem o que é exigido, a tarefa não conclui."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-conclus",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Conclusão automática",
+  "texto": "(pelos registros do próprio portal, sem nada a fazer no quadro): - Fechamento do caixa: conclui a tarefa do dia quando o caixa daquele dia é fechado na Loja (e nenhum outro caixa do dia ficou aberto). Fechar ou processar de novo não duplica nada. - Conciliação da semana: conclui quando todos os movimentos do extrato daquela semana estão conciliados no Financeiro. - Conferência de estoque: o botão Confirmar conferência (no quadro e em Loja → Produtos) registra quem conferiu e quando e conclui a tarefa do período. - Se a tarefa depende de outra ainda aberta, ela fica aguardando e conclui sozinha assim que a outra terminar."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-registr",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Registros duvidosos",
+  "texto": "quando um registro não bate certinho com uma tarefa (ex.: um caixa fechado num dia fora da rotina), o portal sugere a tarefa mais provável e o gestor decide em Sim, concluir com este registro ou Não é desta tarefa. Perguntar à IA pede uma indicação ao assistente (fica desconectado até o escritório ligar; vão só o tipo do registro, a data, a hora, o nome do caixa e os títulos e prazos das tarefas, sem nomes de pessoas nem valores). A IA nunca conclui sozinha."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-histori",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Histórico",
+  "texto": "cada tarefa guarda quem criou, atribuiu, moveu e concluiu, com data e hora, se foi manual ou automática, as fotos anexadas e o registro ligado (o caixa, a conciliação da semana ou o extrato), com link para abrir."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-quem-ve",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Quem vê o quê",
+  "texto": "quem tem Gerenciar a equipe e as tarefas (o empresário, por padrão) vê o quadro inteiro, cadastra e atribui. Quem tem Fazer as próprias tarefas vê só as tarefas dele (é preciso estar ligado a um cadastro de funcionário). A regra vale no servidor e no banco, não só na tela."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe-envio-d",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe › Envio do extrato",
+  "texto": "se o extrato foi enviado por fora do portal (e-mail, WhatsApp), quem enviou confirma a semana de referência ao concluir; o portal não consegue conferir sozinho o que saiu por fora."
+ },
+ {
+  "id": "gestao-de-rh-funcionarios-cargos-e-tarefas-da-equipe",
+  "publico": "cliente",
+  "secao": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "titulo": "Gestão de RH: funcionários, cargos e tarefas da equipe",
+  "texto": "Menu Gestão de RH, com quatro partes: Funcionários, Cargos, Escalas de trabalho e Tarefas da equipe (para quem faz as tarefas, Minhas tarefas). Os funcionários e as escalas que já estavam cadastrados continuam iguais; o endereço antigo do cadastro leva para cá."
+ },
+ {
   "id": "escalas-de-trabalho-com-assistente-de-ia-1-funcionarios",
   "publico": "cliente",
   "secao": "Escalas de trabalho (com assistente de IA)",
   "titulo": "Escalas de trabalho (com assistente de IA) › 1. Funcionários",
-  "texto": "cadastre cada pessoa com nome, cargo, jornada do contrato (44h, 36h, 30h...), os dias em que não trabalha (ex.: estuda no sábado), se tem domingo de folga a cada 15 dias (regra das empregadas mulheres, art. 386 da CLT) e se é menor de 18 anos. Salário e documentos não entram aqui. Se a empresa já usa os Cálculos, o botão Trazer do cadastro de colaboradores copia nome e cargo."
+  "texto": "(em Gestão de RH → Funcionários): cadastre cada pessoa com nome, cargo, jornada do contrato (44h, 36h, 30h...), os dias em que não trabalha (ex.: estuda no sábado), se tem domingo de folga a cada 15 dias (regra das empregadas mulheres, art. 386 da CLT) e se é menor de 18 anos. Salário e documentos não entram aqui. Se a empresa já usa os Cálculos, o botão Trazer do cadastro de colaboradores copia nome e cargo."
  },
  {
   "id": "escalas-de-trabalho-com-assistente-de-ia-2-nova-escala",
@@ -1131,7 +1215,7 @@
   "publico": "cliente",
   "secao": "Escalas de trabalho (com assistente de IA)",
   "titulo": "Escalas de trabalho (com assistente de IA)",
-  "texto": "Menu Funcionários → Escalas de trabalho. Serve para montar a escala de horários do mês, com os modelos usados no mercado, e conferir com a CLT antes de publicar para a equipe. A conferência segue a CLT e a Constituição; a convenção coletiva da categoria pode trazer regras próprias. Na dúvida, fale com o escritório."
+  "texto": "Menu Gestão de RH → Escalas de trabalho. Serve para montar a escala de horários do mês, com os modelos usados no mercado, e conferir com a CLT antes de publicar para a equipe. A conferência segue a CLT e a Constituição; a convenção coletiva da categoria pode trazer regras próprias. Na dúvida, fale com o escritório."
  },
  {
   "id": "economia-de-impostos-auditor-fiscal",

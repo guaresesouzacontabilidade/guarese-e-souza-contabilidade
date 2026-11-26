@@ -37,6 +37,8 @@ export const TODAS_PERMISSOES = [
   "cte.configurar",
   "escalas.ver",
   "escalas.gerenciar",
+  "rh.gerenciar",
+  "rh.tarefas",
   "os.operar",
   "os.gerenciar",
 ] as const;
@@ -188,6 +190,21 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
     ],
   },
   {
+    grupo: "Gestão de RH",
+    itens: [
+      {
+        chave: "rh.gerenciar",
+        rotulo: "Gerenciar a equipe e as tarefas",
+        descricao: "Cadastrar funcionários e cargos, criar as tarefas recorrentes, atribuir a cada funcionário e acompanhar o andamento de todos.",
+      },
+      {
+        chave: "rh.tarefas",
+        rotulo: "Fazer as próprias tarefas",
+        descricao: "Ver e concluir as tarefas atribuídas a ele no quadro (o cadastro do funcionário precisa estar ligado a este acesso).",
+      },
+    ],
+  },
+  {
     grupo: "Escalas de trabalho",
     itens: [
       { chave: "escalas.ver", rotulo: "Ver escalas", descricao: "Ver as escalas de horário publicadas (dá para liberar ao gerente da loja)." },
@@ -222,10 +239,10 @@ export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_c
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
     "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir", "nfe.emitir",
-    "gestao.vender", "gestao.gerenciar", "gestao.custos", "cte.emitir", "escalas.ver", "escalas.gerenciar",
+    "gestao.vender", "gestao.gerenciar", "gestao.custos", "cte.emitir", "escalas.ver", "escalas.gerenciar", "rh.gerenciar", "rh.tarefas",
     "os.operar", "os.gerenciar",
   ],
-  cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar"],
+  cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar", "rh.tarefas"],
 };
 
 export const ROTULO_PAPEL: Record<string, string> = {

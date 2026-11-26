@@ -44,9 +44,9 @@ export const FERRAMENTAS = [
   {
     chave: "escalas",
     grupo: "Equipe",
-    rotulo: "Escalas de trabalho (com assistente de IA)",
-    rotas: ["/escalas"],
-    permissoes: ["escalas.ver", "escalas.gerenciar"],
+    rotulo: "Gestão de RH (funcionários, cargos, escalas e tarefas)",
+    rotas: ["/escalas", "/rh"],
+    permissoes: ["escalas.ver", "escalas.gerenciar", "rh.gerenciar", "rh.tarefas"],
   },
   {
     chave: "os",

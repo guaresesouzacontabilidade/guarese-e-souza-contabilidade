@@ -16,7 +16,8 @@ export const maxDuration = 60;
  * apaga os lotes de XML vencidos (ficam 7 dias); nos honorários do
  * escritório, gera as cobranças do mês no dia escolhido e agenda os
  * lembretes da régua de cobrança (só em dia útil, às 9h); na clínica de
- * fisioterapia, programa as confirmações pelo WhatsApp dos atendimentos do dia.
+ * fisioterapia, programa as confirmações pelo WhatsApp dos atendimentos do dia;
+ * na Gestão de RH, gera a tarefa do período atual de cada rotina da equipe.
  */
 async function executar(req: Request) {
   if (!cronAutorizado(req)) return new NextResponse("Não autorizado.", { status: 401 });
@@ -43,6 +44,8 @@ async function executar(req: Request) {
   const fisio = await admin.rpc("rotina_fisio_confirmacoes");
   // Suporte 24h: apaga as perguntas registradas há mais de 180 dias
   const suporte = await admin.rpc("rotina_suporte_limpeza");
+  // Gestão de RH: a tarefa do período atual de cada rotina da equipe (não duplica)
+  const rh = await admin.rpc("rotina_rh_tarefas");
   const resultado = {
     ...(data as Record<string, unknown>),
     obrigacoes: operacional.data,
@@ -54,6 +57,7 @@ async function executar(req: Request) {
     honorarios: honorarios.error ? { erro: honorarios.error.message } : honorarios.data,
     fisio_confirmacoes: fisio.error ? { erro: fisio.error.message } : fisio.data,
     suporte_limpeza: suporte.error ? { erro: suporte.error.message } : suporte.data,
+    rh_tarefas: rh.error ? { erro: rh.error.message } : rh.data,
   };
   await registrarRotina(admin, "diaria", { ok: true, resultado });
   const fila = await processarFila({ limite: 50, tempoMaximoMs: 30_000 });
