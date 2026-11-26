@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(24);
+select plan(30);
 
 \ir 00_setup.sql.inc
 
@@ -99,6 +99,31 @@ select lives_ok(format($$select public.gestao_contraparte_ativar(%L, %L, false)$
   'quem gerencia desativa um cliente');
 reset role;
 select is((select ativo from public.contrapartes where id = current_setting('testes.cli2')::uuid), false, 'cliente fica inativo (não é apagado)');
+
+-- Importação de planilha: quem gerencia importa; existente só completa o vazio
+select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
+set local role authenticated;
+select is(public.gestao_importar_contrapartes(current_setting('testes.empresa_a')::uuid, 'cliente', jsonb_build_array(
+  jsonb_build_object('nome', 'Importado Novo', 'documento', '048.286.990-90', 'telefone', '63988880000', 'municipio_ibge', '1721000',
+                     'logradouro', 'Rua Importada', 'numero', '5', 'bairro', 'Centro'),
+  jsonb_build_object('nome', 'Maria Cliente', 'documento', '52998224725', 'telefone', '63900000000', 'observacoes', 'Veio da planilha'),
+  jsonb_build_object('nome', 'Sem Documento', 'documento', '123.456.789-00', 'email', 'nao-e-email'),
+  jsonb_build_object('nome', 'X'))),
+  '{"novos": 2, "ignorados": 1, "atualizados": 1}'::jsonb, 'importa novos, completa existentes e ignora linha sem nome');
+select is((select array[telefone, observacoes] from public.contrapartes where id = current_setting('testes.cli')::uuid),
+  array['63999990000', 'Veio da planilha'], 'cadastro existente: telefone mantido, observação vazia completada');
+select is((select array[documento, email] from public.contrapartes where empresa_id = current_setting('testes.empresa_a')::uuid and nome = 'Sem Documento'),
+  array[null, null]::text[], 'CPF e e-mail inválidos ficam em branco, o resto entra');
+select is((select logradouro from public.nfe_destinatarios where empresa_id = current_setting('testes.empresa_a')::uuid and documento = '04828699090'),
+  'Rua Importada', 'cliente importado com endereço completo vira destinatário da NF-e');
+select is((public.gestao_importar_contrapartes(current_setting('testes.empresa_a')::uuid, 'cliente', jsonb_build_array(
+  jsonb_build_object('nome', 'Sem Documento'))) ->> 'atualizados')::int, 1, 'importar de novo não duplica (mesmo nome sem documento)');
+reset role;
+select pg_temp.como('00000000-0000-0000-0000-0000000000c1');
+set local role authenticated;
+select throws_ok(format($$select public.gestao_importar_contrapartes(%L, 'cliente', '[{"nome": "Intruso"}]')$$,
+  current_setting('testes.empresa_a')), '42501', null, 'outra empresa não importa na empresa A');
+reset role;
 
 -- Outra empresa
 select pg_temp.como('00000000-0000-0000-0000-0000000000c1');

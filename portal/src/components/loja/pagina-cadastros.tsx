@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarClock, FileText, MessageCircle, Package, ReceiptText, ShoppingBag, Wallet } from "lucide-react";
+import { CalendarClock, FileText, FileUp, MessageCircle, Package, ReceiptText, ShoppingBag, Wallet } from "lucide-react";
 import { CabecalhoPagina, Indicador, Paginacao, urlCom } from "@/components/ui/pagina";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +82,13 @@ export async function ListaCadastrosLoja({
         acoes={
           <>
             {papel === "fornecedor" ? <BotaoTrazerFornecedores empresaId={empresaId} /> : null}
+            {ctx.gerente ? (
+              <Button asChild variante="contorno">
+                <Link href={`${base}/importar`}>
+                  <FileUp /> Importar planilha
+                </Link>
+              </Button>
+            ) : null}
             <DialogoCadastro empresaId={empresaId} papel={papel} />
           </>
         }

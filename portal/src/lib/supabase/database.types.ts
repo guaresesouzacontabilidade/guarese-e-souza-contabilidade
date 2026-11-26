@@ -7795,6 +7795,9 @@ isOneToOne: false
 "gestao_grupo_margem":
 { Args: { "p_empresa_id": string,"p_grupo": string,"p_margem": number }; Returns: undefined
                            },
+"gestao_importar_contrapartes":
+{ Args: { "p_empresa_id": string,"p_linhas": Json,"p_papel": string }; Returns: Json
+                           },
 "gestao_importar_nota":
 { Args: { "p_documento_fiscal_id": string,"p_empresa_id": string,"p_margem": number,"p_pdf": Json }; Returns: Json
                            },

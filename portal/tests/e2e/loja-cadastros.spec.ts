@@ -70,7 +70,12 @@ const CNPJ = cnpjValido(`77${sufixo}0001`.slice(0, 12));
 const CLIENTE = `Cliente E2E ${sufixo} (FICTÍCIO)`;
 const FORNECEDOR = `Fornecedor E2E ${sufixo} (FICTÍCIO)`;
 const BALCAO = `Cliente do balcão E2E ${sufixo}`;
+const CPF_IMP = cpfValido(`7${sufixo}34`.slice(0, 9));
+const IMPORTADO = `Importado E2E ${sufixo}`;
+const SEM_CPF = `Sem CPF E2E ${sufixo}`;
 let empresaId = "";
+let telefoneConstrutora: string | null | undefined;
+let observacaoConstrutora: string | null = null;
 
 test.beforeAll(async () => {
   const { data } = await servico!.from("empresas").select("id").eq("razao_social", MADEIREIRA).single();
@@ -80,7 +85,12 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   if (!empresaId) return;
   await servico!.from("nfe_destinatarios").delete().eq("empresa_id", empresaId).in("documento", [CPF, CNPJ]);
-  await servico!.from("contrapartes").delete().eq("empresa_id", empresaId).or(`documento.in.(${CPF},${CNPJ}),nome.eq.${BALCAO}`);
+  await servico!.from("nfe_destinatarios").delete().eq("empresa_id", empresaId).eq("documento", CPF_IMP);
+  await servico!.from("contrapartes").delete().eq("empresa_id", empresaId).or(`documento.in.(${CPF},${CNPJ},${CPF_IMP}),nome.eq.${BALCAO}`);
+  await servico!.from("contrapartes").delete().eq("empresa_id", empresaId).in("nome", [IMPORTADO, SEM_CPF]);
+  if (telefoneConstrutora !== undefined) {
+    await servico!.from("contrapartes").update({ observacoes: observacaoConstrutora }).eq("empresa_id", empresaId).eq("documento", "55666777000181");
+  }
 });
 
 test("dono: cadastra cliente com endereço e fornecedor com contato e prazo", async ({ page }) => {
@@ -149,6 +159,47 @@ test("dono: cadastra cliente com endereço e fornecedor com contato e prazo", as
   await expect(page.getByText(/fornecedor|Nenhum fornecedor novo/).first()).toBeVisible({ timeout: 30_000 });
 });
 
+test("dono: importa a planilha de clientes do GestãoClick (prévia, coluna corrigida e só completa o vazio)", async ({ page }) => {
+  test.setTimeout(240_000);
+  const { data: cons } = await servico!.from("contrapartes").select("telefone, observacoes").eq("empresa_id", empresaId).eq("documento", "55666777000181").single();
+  telefoneConstrutora = cons!.telefone;
+  observacaoConstrutora = cons!.observacoes;
+  const csv = [
+    "Código;Nome;Nome fantasia;CPF/CNPJ;Telefone;Celular;E-mail;Endereço;Bairro;Cidade;Estado;Anotação interna",
+    `1;${IMPORTADO};;${CPF_IMP};;(63) 98123-4567;importado@exemplo.test;Rua da Planilha, 77;Centro;Palmas;TO;Cliente antigo`,
+    `2;CONSTRUTORA HORIZONTE EXEMPLO LTDA (DEMO);Horizonte;55.666.777/0001-81;6330000000;;;;;;;Veio do GestãoClick`,
+    `3;${SEM_CPF};;123.456.789-00;3215-1111;;;;;Palmas;TO;`,
+    `4;${IMPORTADO};;${CPF_IMP};;;;;;;;`,
+  ].join("\n");
+  await entrar(page, `madeireira@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/loja/clientes`);
+  await page.getByRole("link", { name: "Importar planilha" }).click();
+  await expect(page.getByRole("heading", { name: "Importar clientes", level: 1 })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("link", { name: "Baixar modelo (Excel)" })).toHaveAttribute("href", /papel=cliente/);
+  await page.getByLabel("Planilha").setInputFiles({ name: "clientes-gestaoclick.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") });
+  await page.getByLabel("DDD padrão").fill("63");
+  await page.getByRole("button", { name: "Conferir planilha" }).click();
+  const totais = page.getByTestId("totais-importacao");
+  await expect(totais).toContainText("Novos", { timeout: 60_000 });
+  await expect(totais.getByText("2", { exact: true })).toHaveCount(1); // 2 novos
+  // "Anotação interna" não foi reconhecida: vira Observações
+  await page.getByLabel("O que é a coluna Anotação interna").selectOption("observacoes");
+  await expect(page.getByTestId("linha-previa").filter({ hasText: "CPF/CNPJ inválido" })).toHaveCount(1, { timeout: 30_000 });
+  await expect(page.getByTestId("linha-previa").filter({ hasText: "Mesmo CPF/CNPJ de uma linha acima" })).toHaveCount(1);
+  await expect(page.getByTestId("linha-previa").filter({ hasText: "Já cadastrado como" })).toHaveCount(1);
+  await page.getByRole("button", { name: "Importar 3 cadastros" }).click();
+  await expect(page.getByText(/Importação concluída: 2 cadastro\(s\) novo\(s\) e 1 completado\(s\)/)).toBeVisible({ timeout: 60_000 });
+
+  const { data: imp } = await servico!.from("contrapartes").select("telefone, email, logradouro, numero, municipio_ibge, observacoes, papeis").eq("empresa_id", empresaId).eq("documento", CPF_IMP).single();
+  expect(imp).toEqual({ telefone: "63981234567", email: "importado@exemplo.test", logradouro: "Rua da Planilha", numero: "77", municipio_ibge: "1721000", observacoes: "Cliente antigo", papeis: ["cliente"] });
+  const { data: sem } = await servico!.from("contrapartes").select("documento, telefone").eq("empresa_id", empresaId).eq("nome", SEM_CPF).single();
+  expect(sem).toEqual({ documento: null, telefone: "6332151111" });
+  const { data: cons2 } = await servico!.from("contrapartes").select("telefone").eq("empresa_id", empresaId).eq("documento", "55666777000181").single();
+  expect(cons2!.telefone).toBe(telefoneConstrutora); // o que já estava preenchido não muda
+  await page.getByRole("link", { name: "Ver clientes" }).click();
+  await expect(page.getByTestId("linha-cadastro").filter({ hasText: IMPORTADO })).toHaveCount(1, { timeout: 30_000 });
+});
+
 test("balconista: vê e cadastra clientes, sem fornecedores nem alterar cadastros", async ({ page }) => {
   test.setTimeout(240_000);
   await entrar(page, `balcao@${DOMINIO}`);
@@ -157,6 +208,7 @@ test("balconista: vê e cadastra clientes, sem fornecedores nem alterar cadastro
   await expect(page.getByTestId("linha-cadastro").filter({ hasText: CLIENTE })).toHaveCount(1);
   await expect(page.getByRole("button", { name: `Editar ${CLIENTE}` })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Fornecedores" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Importar planilha" })).toHaveCount(0);
   await page.getByRole("button", { name: "Novo cliente" }).click();
   await page.getByRole("dialog").getByLabel("Nome do cliente").fill(BALCAO);
   await page.getByRole("dialog").getByLabel("Telefone / WhatsApp").fill("63977771234");
