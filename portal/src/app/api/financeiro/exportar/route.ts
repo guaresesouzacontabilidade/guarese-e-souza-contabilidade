@@ -5,6 +5,7 @@ import { dec } from "@/lib/dinheiro";
 import { termoBusca } from "@/lib/busca";
 import { buscarTudo } from "@/lib/supabase/paginar";
 import { SITUACAO_LANCAMENTO } from "@/lib/rotulos";
+import { ordemLancamentos } from "@/lib/financeiro/ordem-lancamentos";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -36,6 +37,8 @@ export async function GET(req: NextRequest) {
   const categoria = UUID.test(sp.get("categoria") ?? "") ? sp.get("categoria") : null;
   const contraparte = UUID.test(sp.get("contraparte") ?? "") ? sp.get("contraparte") : null;
   const busca = termoBusca(sp.get("busca"));
+  // Mesma ordem da tela
+  const ordem = ordemLancamentos(sp.get("ordem"), situacao);
 
   const linhas = await buscarTudo((de, ate) => {
     let q = s.supabase
@@ -44,7 +47,8 @@ export async function GET(req: NextRequest) {
         "tipo, descricao, data_competencia, data_vencimento, valor_previsto, valor_baixado, valor_realizado, data_ultimo_pagamento, situacao, status_revisao, numero_documento, observacoes, categoria:categorias_financeiras(codigo, nome), contraparte:contrapartes(nome, documento), centro:centros_custo(nome), projeto:projetos(nome)",
       )
       .eq("empresa_id", empresaId)
-      .order(coluna)
+      .order(coluna, { ascending: ordem === "crescente" })
+      .order("id")
       .range(de, ate);
     if (tipo === "receber" || tipo === "pagar") q = q.eq("tipo", tipo);
     if (situacao === "atrasado") q = q.in("situacao", ["aberto", "parcial"]).lt("data_vencimento", hoje);

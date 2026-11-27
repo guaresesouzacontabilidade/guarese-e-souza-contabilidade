@@ -341,7 +341,7 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
   - O portal **sugere a conta** usada da última vez com o mesmo fornecedor ou com uma descrição parecida. A sugestão usa só o histórico da própria empresa (sem serviço externo); confira antes de salvar.
   - Dá para anexar o **comprovante** (foto ou PDF): ele fica em Documentos, ligado ao lançamento.
   - Depois de salvar, o formulário fica pronto para o próximo (mantém o tipo, a data e o banco). Num lançamento, **Lançar de novo** repete os dados com a data de hoje.
-- **Lançamentos**: contas a pagar e a receber, com vencimento, categoria e situação. Ao pagar ou receber, registre a baixa.
+- **Lançamentos**: contas a pagar e a receber, com vencimento, categoria e situação. Ao pagar ou receber, registre a baixa. A lista começa pela **data mais antiga** (o vencimento de hoje antes do de 2027); no filtro **Ordem**, escolha **Data mais nova primeiro** para inverter. As quitadas e canceladas começam pela mais nova. A planilha (Excel ou CSV) sai na mesma ordem da tela.
 - **Contas e saldos**: contas bancárias, caixa e cartões com os saldos.
 - **Operações**: transferências entre contas, cartão de crédito, maquininhas, empréstimos e estoque — registros com regras próprias para não distorcer o resultado.
 - **Recorrências**: despesas e receitas que se repetem (aluguel, mensalidades).

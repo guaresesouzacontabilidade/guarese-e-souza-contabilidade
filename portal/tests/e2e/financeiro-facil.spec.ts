@@ -88,7 +88,7 @@ test("plano de contas: grupo e conta com código sugerido; excluir movendo os la
   await expect(page.getByRole("button", { name: "Excluir Tarifas bancárias" })).toHaveCount(0);
 
   // O lançamento continua, agora na outra conta
-  await page.goto(`${empresa}/financeiro/lancamentos?q=${encodeURIComponent(`Confraternização E2E ${N}`)}`);
+  await page.goto(`${empresa}/financeiro/lancamentos?busca=${encodeURIComponent(`Confraternização E2E ${N}`)}`);
   await expect(page.getByText(`Confraternização E2E ${N}`).first()).toBeVisible();
 });
 

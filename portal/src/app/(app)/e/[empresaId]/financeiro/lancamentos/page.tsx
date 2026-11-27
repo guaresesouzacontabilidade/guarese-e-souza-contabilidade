@@ -11,6 +11,7 @@ import { hojeISO } from "@/lib/competencia";
 import { dec, formatarMoeda, somar } from "@/lib/dinheiro";
 import { parametro, termoBusca } from "@/lib/busca";
 import { buscarTudo } from "@/lib/supabase/paginar";
+import { ordemLancamentos } from "@/lib/financeiro/ordem-lancamentos";
 
 export const metadata: Metadata = { title: "Lançamentos" };
 const POR_PAGINA = 50;
@@ -33,6 +34,7 @@ export default async function PaginaLancamentos({ params, searchParams }: PagePr
   const busca = termoBusca(sp.busca);
   const pagina = Math.max(1, Number(parametro(sp, "pagina")) || 1);
   const colunaData = periodoPor === "competencia" ? "data_competencia" : "data_vencimento";
+  const ordem = ordemLancamentos(parametro(sp, "ordem", ["crescente", "decrescente"]), situacao);
 
   function filtrar<T extends { eq: (...a: never[]) => T }>(q: T): T {
     let r = q as unknown as ReturnType<typeof consulta>;
@@ -60,7 +62,7 @@ export default async function PaginaLancamentos({ params, searchParams }: PagePr
 
   const [{ data, count }, totais, { data: categorias }, { data: contrapartes }] = await Promise.all([
     filtrar(consulta())
-      .order(colunaData, { ascending: situacao === "atrasado" || situacao === "em_aberto" })
+      .order(colunaData, { ascending: ordem === "crescente" })
       .order("id")
       .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1),
     buscarTudo(
@@ -173,6 +175,10 @@ export default async function PaginaLancamentos({ params, searchParams }: PagePr
         <Select name="por" defaultValue={periodoPor} aria-label="Período por">
           <option value="vencimento">Período por vencimento</option>
           <option value="competencia">Período por competência</option>
+        </Select>
+        <Select name="ordem" defaultValue={ordem} aria-label="Ordem">
+          <option value="crescente">Data mais antiga primeiro (hoje antes de 2027)</option>
+          <option value="decrescente">Data mais nova primeiro</option>
         </Select>
         <Input type="date" name="inicio" defaultValue={inicio} aria-label="Data inicial" />
         <Input type="date" name="fim" defaultValue={fim} aria-label="Data final" />

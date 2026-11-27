@@ -977,7 +977,7 @@
   "publico": "cliente",
   "secao": "Financeiro (quando liberado)",
   "titulo": "Financeiro (quando liberado) › Lançamentos",
-  "texto": "contas a pagar e a receber, com vencimento, categoria e situação. Ao pagar ou receber, registre a baixa."
+  "texto": "contas a pagar e a receber, com vencimento, categoria e situação. Ao pagar ou receber, registre a baixa. A lista começa pela data mais antiga (o vencimento de hoje antes do de 2027); no filtro Ordem, escolha Data mais nova primeiro para inverter. As quitadas e canceladas começam pela mais nova. A planilha (Excel ou CSV) sai na mesma ordem da tela."
  },
  {
   "id": "financeiro-quando-liberado-contas-e-saldos",
