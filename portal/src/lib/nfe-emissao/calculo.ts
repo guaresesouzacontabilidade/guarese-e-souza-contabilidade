@@ -153,7 +153,24 @@ export function textoGta(g: GtaNfe): string {
   return `GTA nº ${g.numero}${g.serie ? `, série ${g.serie}` : ""} (${g.uf})`;
 }
 
+/** Consumidor do cupom fiscal (NFC-e): só a identificação, quando informada no caixa. */
+export interface ConsumidorNfce {
+  tipo: "cpf" | "cnpj";
+  documento: string;
+  nome?: string | null;
+  email?: string | null;
+}
+
+/** Forma de pagamento do cupom (tPag), com o valor recebido (o troco sai da soma). */
+export interface PagamentoNfce {
+  forma: string;
+  valor: string;
+  descricao?: string | null;
+}
+
 export interface EntradaNfe {
+  /** 55 NF-e (padrão) ou 65 cupom fiscal (NFC-e) */
+  modelo?: 55 | 65;
   ambiente: AmbienteNfe;
   emitidaEm: Date;
   saidaEm?: Date | null;
@@ -169,7 +186,9 @@ export interface EntradaNfe {
   presenca: 0 | 1 | 2 | 3 | 4 | 5 | 9;
   referencias?: string[];
   emitente: EmitenteNfe;
-  destinatario: DestinatarioNfe;
+  /** Obrigatório na NF-e; no cupom fica vazio (vale o consumidor) */
+  destinatario?: DestinatarioNfe | null;
+  consumidor?: ConsumidorNfce | null;
   itens: ItemEntrada[];
   /** Frete, seguro, outras despesas e desconto da nota (rateados pelos itens) */
   frete?: string | null;
@@ -192,6 +211,8 @@ export interface EntradaNfe {
     aPrazo: boolean;
     parcelas?: { vencimento: string; valor: string }[];
   };
+  /** Cupom: todas as formas de pagamento da venda (o dinheiro com o valor recebido) */
+  pagamentos?: PagamentoNfce[] | null;
   /** DIFAL para não contribuinte de outro estado: alíquota interna e FCP do destino */
   difal?: { metodo: "base_unica" | "base_dupla"; aliquotaInterna: number; fcp: number } | null;
   funrural?: { percentual: number; modo: "retido_adquirente" | "recolhido_produtor" } | null;
@@ -522,15 +543,19 @@ const MODALIDADES_FRETE = new Set([0, 1, 2, 3, 4, 9]);
 
 export function calcularNota(e: EntradaNfe): NotaCalculada {
   if (!e.itens.length) erro("Inclua ao menos um produto.");
-  if (e.itens.length > 990) erro("A NF-e aceita no máximo 990 itens.");
+  if (e.itens.length > 990) erro("A nota aceita no máximo 990 itens.");
   if (!MODALIDADES_FRETE.has(e.transporte.modalidade)) erro("Modalidade do frete inválida.");
+  const nfce = e.modelo === 65;
+  const dest = e.destinatario ?? null;
+  if (!nfce && !dest) erro("Escolha o cliente (comprador).");
   const ufEmit = e.emitente.endereco.uf.toUpperCase();
-  const ufDest = e.destinatario.endereco.uf.toUpperCase();
-  const exterior = e.destinatario.tipo === "estrangeiro" || ufDest === "EX";
+  // Cupom: venda presencial dentro do estado, a consumidor final
+  const ufDest = nfce || !dest ? ufEmit : dest.endereco.uf.toUpperCase();
+  const exterior = !nfce && (dest?.tipo === "estrangeiro" || ufDest === "EX");
   const idDest: 1 | 2 | 3 = exterior ? 3 : ufEmit === ufDest ? 1 : 2;
   const simples = e.emitente.crt === 1 || e.emitente.crt === 4;
   // Rejeição 696: operação com não contribuinte deve indicar consumidor final
-  const consumidorFinal = e.consumidorFinal || e.destinatario.indicadorIe === 9;
+  const consumidorFinal = nfce || e.consumidorFinal || dest?.indicadorIe === 9;
   const ano = Number(dataHoraUf(e.emitidaEm, ufEmit).slice(0, 4));
   const digitoCfop = idDest === 1 ? "5" : idDest === 2 ? "6" : "7";
 
@@ -564,7 +589,7 @@ export function calcularNota(e: EntradaNfe): NotaCalculada {
     const icms = calcularIcms(i.icms, base0, simples);
 
     let difal: DifalCalculado | null = null;
-    if (e.difal && idDest === 2 && consumidorFinal && e.destinatario.indicadorIe === 9) {
+    if (e.difal && idDest === 2 && consumidorFinal && dest?.indicadorIe === 9) {
       const inter = aliquotaInterestadual(ufEmit, ufDest, ORIGENS_IMPORTADAS.has(i.origem)) ?? 12;
       const pInter = dec(inter);
       const pDest = dec(e.difal.aliquotaInterna);

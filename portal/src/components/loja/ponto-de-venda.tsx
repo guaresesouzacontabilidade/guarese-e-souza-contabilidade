@@ -14,8 +14,20 @@ import { Badge } from "@/components/ui/badge";
 import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import { formatarDocumento, formatarTelefone, validarCnpj, validarCpf } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
-import { finalizarVenda, salvarClienteLoja, salvarOrcamento, situacaoNfeDaVenda, type ResultadoNfeVenda, type VendaEntrada } from "@/lib/gestao/acoes";
-import { FORMAS_PAGAMENTO, formatarQuantidade, modoMedida, quantidadePorPecas, secaoPeca, un, type FormaPagamento, type NfeNaVenda } from "@/lib/gestao/rotulos";
+import { finalizarVenda, salvarClienteLoja, salvarOrcamento, situacaoNotaDaVenda, type ResultadoNotaVenda, type SituacaoNotaVenda, type VendaEntrada } from "@/lib/gestao/acoes";
+import {
+  DOCUMENTO_FISCAL,
+  DOCUMENTOS_FISCAIS,
+  FORMAS_PAGAMENTO,
+  formatarQuantidade,
+  modoMedida,
+  quantidadePorPecas,
+  secaoPeca,
+  un,
+  type DocumentoFiscal,
+  type FormaPagamento,
+  type NotaNaVenda,
+} from "@/lib/gestao/rotulos";
 import { buscarProdutos } from "@/lib/gestao/busca-produtos";
 import { EM_ANDAMENTO, SITUACAO_NFE, type SituacaoNfe } from "@/lib/nfe-emissao/rotulos";
 import { FormDestinatario, type Destinatario } from "@/components/nfe/cadastros";
@@ -137,7 +149,7 @@ export function PontoDeVenda({
   clientes: clientesIniciais,
   permitirPrazo,
   orcamento,
-  nfe,
+  nota,
   etiqueta = null,
   vendedores = [],
   vendedorObrigatorio = false,
@@ -152,8 +164,8 @@ export function PontoDeVenda({
   clientes: ClientePdv[];
   permitirPrazo: boolean;
   orcamento: OrcamentoInicial | null;
-  /** NF-e na hora da venda (caixinha "Emitir NF-e"). */
-  nfe: NfeNaVenda;
+  /** Nota fiscal na hora da venda: cupom (NFC-e) ou NF-e, e a regra do escritório para o cartão. */
+  nota: NotaNaVenda;
   /** Etiqueta impressa pela balança (código de barras que começa com 2), quando a loja usa. */
   etiqueta?: ConfigEtiqueta | null;
   /** Vendedores da loja (comissão). Sem cadastro, o campo não aparece. */
@@ -187,9 +199,12 @@ export function PontoDeVenda({
   );
   const [pagamentos, setPagamentos] = React.useState<Pagamento[]>([]);
   const [enviando, setEnviando] = React.useState<"venda" | "orcamento" | null>(null);
-  const [concluida, setConcluida] = React.useState<{ id: string; numero: number; troco: number; total: number; nfe?: ResultadoNfeVenda } | null>(null);
-  const [emitirNfe, setEmitirNfe] = React.useState(nfe.disponivel && nfe.marcadaPadrao);
-  const [comEndereco, setComEndereco] = React.useState(() => new Set(nfe.documentosComEndereco));
+  const [concluida, setConcluida] = React.useState<{ id: string; numero: number; troco: number; total: number; nota?: ResultadoNotaVenda } | null>(null);
+  const algumaNota = nota.nfe.disponivel || nota.nfce.disponivel;
+  const documentoInicial = (): DocumentoFiscal => (nota[nota.documentoPadrao].disponivel ? nota.documentoPadrao : nota.nfce.disponivel ? "nfce" : "nfe");
+  const [emitirNota, setEmitirNota] = React.useState(nota.marcadaPadrao && algumaNota);
+  const [documento, setDocumento] = React.useState<DocumentoFiscal>(documentoInicial);
+  const [comEndereco, setComEndereco] = React.useState(() => new Set(nota.documentosComEndereco));
   const [enderecoNfe, setEnderecoNfe] = React.useState(false);
   const [novoCliente, setNovoCliente] = React.useState(false);
   const buscaRef = React.useRef<HTMLInputElement>(null);
@@ -338,15 +353,29 @@ export function PontoDeVenda({
   }
 
   const docCliente = cliente?.documento ?? null;
-  const pendenciaNfe = !emitirNfe
+  // Regra do escritório: pagamento no cartão (crédito/débito, conforme a loja) sai com nota
+  const notaObrigatoria = !soOrcamento && pagamentos.some((p) => nota.obrigatoriaFormas.includes(p.forma));
+  const comNota = emitirNota || notaObrigatoria;
+  // Se o documento escolhido não está disponível e o outro está, vale o outro
+  const outroDocumento: DocumentoFiscal = documento === "nfce" ? "nfe" : "nfce";
+  const doc: DocumentoFiscal = !nota[documento].disponivel && nota[outroDocumento].disponivel ? outroDocumento : documento;
+  const pendenciaNfe = !comNota
     ? null
-    : !cliente
-      ? "Para a NF-e, escolha ou cadastre o cliente (com CPF ou CNPJ)."
-      : !docCliente
-        ? "O cliente não tem CPF/CNPJ no cadastro. Cadastre-o de novo com o documento para a nota."
-        : !comEndereco.has(docCliente)
-          ? "Falta o endereço do cliente para a nota."
-          : null;
+    : !algumaNota
+      ? `Nesta loja a venda no cartão sai com nota fiscal, mas nenhuma nota está disponível agora (${nota.nfce.motivo ?? nota.nfe.motivo ?? "fale com o escritório"}). Receba de outra forma ou fale com o escritório.`
+      : !nota[doc].disponivel
+        ? nota[doc].motivo
+        : doc === "nfce"
+          ? ler(frete).gt(0)
+            ? "Venda com frete não sai em cupom fiscal: escolha NF-e."
+            : null
+          : !cliente
+            ? "Para a NF-e, escolha ou cadastre o cliente (com CPF ou CNPJ)."
+            : !docCliente
+              ? "O cliente não tem CPF/CNPJ no cadastro. Cadastre-o de novo com o documento para a nota."
+              : !comEndereco.has(docCliente)
+                ? "Falta o endereço do cliente para a nota."
+                : null;
 
   /** CPF/CNPJ e telefone de quem não tem cadastro (opcionais, mas certos quando informados). */
   function problemaClienteAvulso(): string | null {
@@ -363,11 +392,11 @@ export function PontoDeVenda({
     if (vendedorObrigatorio && vendedores.length && !vendedor) return toast.error("Escolha o vendedor.");
     const avulso = problemaClienteAvulso();
     if (avulso) return toast.error(avulso);
-    if (pendenciaNfe) return toast.error(`${pendenciaNfe} Ou desmarque "Emitir NF-e".`);
+    if (pendenciaNfe) return toast.error(notaObrigatoria ? pendenciaNfe : `${pendenciaNfe} Ou desmarque "Emitir nota fiscal".`);
     if (!pagamentos.length) return toast.error("Escolha a forma de pagamento.");
     if (!falta.isZero()) return toast.error(falta.gt(0) ? `Falta informar ${formatarMoeda(falta)} no pagamento.` : `Os pagamentos passam do total em ${formatarMoeda(falta.negated())}.`);
     setEnviando("venda");
-    const r = await finalizarVenda(empresaId, montarVenda(), { emitirNfe });
+    const r = await finalizarVenda(empresaId, montarVenda(), { documento: comNota ? doc : null });
     setEnviando(null);
     if (!r.ok || !r.dados) return toast.error(r.mensagem ?? "Não foi possível concluir a venda.");
     setConcluida(r.dados);
@@ -391,7 +420,8 @@ export function PontoDeVenda({
   function novaVenda() {
     setConcluida(null);
     setVendedor(vendedorPadrao);
-    setEmitirNfe(nfe.disponivel && nfe.marcadaPadrao);
+    setEmitirNota(nota.marcadaPadrao && algumaNota);
+    setDocumento(documentoInicial());
     setLinhas([]);
     setPagamentos([]);
     setCliente(null);
@@ -764,18 +794,53 @@ export function PontoDeVenda({
               </div>
             </details>
 
-            {nfe.configurada && !soOrcamento ? (
-              <div className="space-y-2 rounded-lg border border-border p-2.5 text-sm">
+            {nota.configurada && !soOrcamento ? (
+              <div className="space-y-2 rounded-lg border border-border p-2.5 text-sm" data-testid="caixa-nota">
                 <label className="flex items-center gap-2 font-medium">
-                  <Checkbox checked={emitirNfe} disabled={!nfe.disponivel} onChange={(e) => setEmitirNfe(e.target.checked)} aria-label="Emitir NF-e ao concluir a venda" />
-                  <FileCheck2 className="size-4 text-primary" /> Emitir NF-e ao concluir
-                  {nfe.ambiente === "homologacao" && nfe.disponivel ? <Badge variante="alerta">teste</Badge> : null}
+                  <Checkbox
+                    checked={comNota}
+                    disabled={notaObrigatoria || !algumaNota}
+                    onChange={(e) => setEmitirNota(e.target.checked)}
+                    aria-label="Emitir nota fiscal ao concluir a venda"
+                  />
+                  <FileCheck2 className="size-4 text-primary" /> Emitir nota fiscal ao concluir
+                  {comNota && nota[doc].disponivel && nota[doc].ambiente === "homologacao" ? <Badge variante="alerta">teste</Badge> : null}
                 </label>
-                {!nfe.disponivel ? <p className="text-xs text-muted-foreground">{nfe.motivo}</p> : null}
+                {notaObrigatoria ? (
+                  <p className="text-xs text-muted-foreground">Pagamento no cartão: nesta loja a venda sai com nota fiscal (regra do escritório).</p>
+                ) : null}
+                {comNota && algumaNota ? (
+                  <fieldset className="grid grid-cols-2 gap-2">
+                    <legend className="sr-only">Tipo de nota</legend>
+                    {DOCUMENTOS_FISCAIS.map((d) => (
+                      <label
+                        key={d}
+                        title={nota[d].disponivel ? DOCUMENTO_FISCAL[d].ajuda : (nota[d].motivo ?? undefined)}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-xs",
+                          doc === d ? "border-primary bg-primary/10 font-medium" : "border-border",
+                          !nota[d].disponivel && "cursor-not-allowed opacity-50",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="documento-fiscal"
+                          value={d}
+                          checked={doc === d}
+                          disabled={!nota[d].disponivel}
+                          onChange={() => setDocumento(d)}
+                          className="accent-primary"
+                        />
+                        {DOCUMENTO_FISCAL[d].longo}
+                      </label>
+                    ))}
+                  </fieldset>
+                ) : null}
+                {!algumaNota && !notaObrigatoria ? <p className="text-xs text-muted-foreground">{nota.nfce.motivo ?? nota.nfe.motivo}</p> : null}
                 {pendenciaNfe ? (
                   <div className="flex flex-wrap items-center gap-2 text-xs text-alerta-fg">
                     <span>{pendenciaNfe}</span>
-                    {docCliente && !comEndereco.has(docCliente) ? (
+                    {doc === "nfe" && docCliente && !comEndereco.has(docCliente) ? (
                       <Button variante="contorno" tamanho="sm" onClick={() => setEnderecoNfe(true)}>
                         <MapPin /> Completar endereço
                       </Button>
@@ -797,7 +862,7 @@ export function PontoDeVenda({
             ) : (
               <>
                 <Button className="h-12 w-full text-base" onClick={concluir} disabled={enviando !== null || !linhas.length}>
-                  {enviando === "venda" ? <Loader2 className="animate-spin" /> : <Receipt />} {emitirNfe ? "Concluir venda e emitir NF-e" : "Concluir venda"}
+                  {enviando === "venda" ? <Loader2 className="animate-spin" /> : <Receipt />} {comNota ? `Concluir venda e emitir ${doc === "nfce" ? "cupom" : "NF-e"}` : "Concluir venda"}
                 </Button>
                 <div className="flex gap-2">
                   <Button variante="contorno" className="flex-1" onClick={guardarOrcamento} disabled={enviando !== null || !linhas.length}>
@@ -848,7 +913,7 @@ export function PontoDeVenda({
                 <p className="font-titulo text-3xl font-bold numero">{formatarMoeda(concluida.total)}</p>
                 {Number(concluida.troco) > 0 ? <p className="mt-1 text-lg font-semibold text-primary">Troco: {formatarMoeda(concluida.troco)}</p> : null}
               </div>
-              {concluida.nfe ? <NfeDaVendaConcluida empresaId={empresaId} vendaId={concluida.id} nfe={concluida.nfe} /> : null}
+              {concluida.nota ? <NotaDaVendaConcluida empresaId={empresaId} vendaId={concluida.id} nota={concluida.nota} /> : null}
               <div className="flex flex-wrap justify-end gap-2">
                 <Button variante="contorno" asChild>
                   <Link href={`/impressao/venda/${concluida.id}`} target="_blank">
@@ -940,44 +1005,46 @@ function destinatarioInicial(c: ClientePdv, documento: string): Destinatario {
   };
 }
 
-/** Situação da NF-e enviada ao concluir a venda: acompanha até a SEFAZ responder. */
-function NfeDaVendaConcluida({ empresaId, vendaId, nfe }: { empresaId: string; vendaId: string; nfe: ResultadoNfeVenda }) {
-  const [estado, setEstado] = React.useState<{ situacao: string; numero: number; serie: number; motivo: string | null } | null>(null);
+/** Situação da nota (cupom ou NF-e) enviada ao concluir a venda: acompanha até a SEFAZ responder. */
+function NotaDaVendaConcluida({ empresaId, vendaId, nota }: { empresaId: string; vendaId: string; nota: ResultadoNotaVenda }) {
+  const [estado, setEstado] = React.useState<SituacaoNotaVenda | null>(null);
   React.useEffect(() => {
-    if (!nfe.ok || !nfe.id) return;
+    if (!nota.ok) return;
     let vivo = true;
     let tentativas = 0;
     const consultar = async () => {
-      const r = await situacaoNfeDaVenda(empresaId, nfe.id!);
+      const r = await situacaoNotaDaVenda(empresaId, vendaId);
       if (!vivo) return;
       if (r) setEstado(r);
       tentativas++;
-      if (tentativas < 40 && (!r || EM_ANDAMENTO.includes(r.situacao as SituacaoNfe))) window.setTimeout(consultar, 3000);
+      if (tentativas < 40 && (!r?.situacao || EM_ANDAMENTO.includes(r.situacao as SituacaoNfe))) window.setTimeout(consultar, 3000);
     };
     consultar();
     return () => {
       vivo = false;
     };
-  }, [empresaId, nfe.ok, nfe.id]);
+  }, [empresaId, vendaId, nota.ok]);
 
-  if (!nfe.ok || !nfe.id) {
+  const nome = DOCUMENTO_FISCAL[nota.documento].curto;
+  if (!nota.ok) {
     return (
-      <Alerta tom="alerta" titulo="A venda foi concluída, mas a NF-e não saiu">
-        {nfe.mensagem}{" "}
-        <Link href={`/e/${empresaId}/notas-produto/nova?venda=${vendaId}`} className="underline">
-          Emitir pela venda
+      <Alerta tom="alerta" titulo={`A venda foi concluída, mas ${nota.documento === "nfce" ? "o cupom fiscal" : "a NF-e"} não saiu`}>
+        {nota.mensagem}{" "}
+        <Link href={`/e/${empresaId}/loja/vendas/${vendaId}`} className="underline">
+          Abrir a venda para emitir de novo
         </Link>
       </Alerta>
     );
   }
-  const sit = estado ? SITUACAO_NFE[estado.situacao as SituacaoNfe] : null;
-  const andamento = !estado || EM_ANDAMENTO.includes(estado.situacao as SituacaoNfe);
+  const sit = estado?.situacao ? SITUACAO_NFE[estado.situacao as SituacaoNfe] : null;
+  const andamento = !estado?.situacao || EM_ANDAMENTO.includes(estado.situacao as SituacaoNfe);
   return (
-    <div className="space-y-2 rounded-xl border border-border p-3 text-sm">
+    <div className="space-y-2 rounded-xl border border-border p-3 text-sm" data-testid="nota-da-venda">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex items-center gap-2 font-medium">
           <FileCheck2 className="size-4 text-primary" />
-          NF-e{estado ? ` nº ${estado.numero}` : ""}
+          {nome}
+          {nota.numero ? ` nº ${nota.numero}` : ""}
         </span>
         {andamento ? (
           <Badge variante="info">
@@ -990,16 +1057,20 @@ function NfeDaVendaConcluida({ empresaId, vendaId, nfe }: { empresaId: string; v
       {estado && !andamento ? <p className="text-xs text-muted-foreground">{sit?.ajuda}</p> : null}
       {estado?.motivo && !andamento && estado.situacao !== "autorizada" ? <p className="text-xs text-perigo">{estado.motivo}</p> : null}
       <div className="flex flex-wrap gap-2">
-        {estado?.situacao === "autorizada" ? (
+        {estado?.situacao === "autorizada" && nota.documento === "nfce" ? (
           <Button asChild tamanho="sm">
-            <a href={`/api/nfe/${empresaId}/${nfe.id}`} target="_blank" rel="noopener">
+            <a href={`/impressao/cupom/${vendaId}`} target="_blank" rel="noopener">
+              <Receipt /> Imprimir cupom
+            </a>
+          </Button>
+        ) : null}
+        {estado?.situacao === "autorizada" && nota.documento === "nfe" && nota.id ? (
+          <Button asChild tamanho="sm">
+            <a href={`/api/nfe/${empresaId}/${nota.id}`} target="_blank" rel="noopener">
               <FileText /> Imprimir DANFE
             </a>
           </Button>
         ) : null}
-        <Button asChild variante="contorno" tamanho="sm">
-          <Link href={`/e/${empresaId}/notas-produto/${nfe.id}`}>Ver a nota</Link>
-        </Button>
       </div>
     </div>
   );

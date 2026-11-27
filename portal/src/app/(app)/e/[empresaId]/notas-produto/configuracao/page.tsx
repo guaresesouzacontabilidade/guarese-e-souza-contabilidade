@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { nfceNaUf } from "@/lib/nfe-emissao/nfce";
 import Link from "next/link";
 import { CheckCircle2, Circle } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
@@ -8,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import {
   EmitentesNfe,
   FormConfiguracaoNfe,
+  FormCupomFiscal,
   OperacoesNfe,
   ProdutosNfe,
   type PisCofinsPadrao,
@@ -68,7 +70,15 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
   const certificadoOk = certificadoValido(cert?.valido_ate);
   const listaEmitentes: EmitenteNfe[] = (emitentes ?? []).map((e) => {
     const m = e.municipio as { nome?: string; uf?: string } | null;
-    return { ...e, municipio: m?.nome ?? null, uf: m?.uf ?? null, proximo_numero_homologacao: Number(e.proximo_numero_homologacao), proximo_numero_producao: Number(e.proximo_numero_producao) };
+    return {
+      ...e,
+      municipio: m?.nome ?? null,
+      uf: m?.uf ?? null,
+      proximo_numero_homologacao: Number(e.proximo_numero_homologacao),
+      proximo_numero_producao: Number(e.proximo_numero_producao),
+      nfce_proximo_numero_homologacao: Number(e.nfce_proximo_numero_homologacao),
+      nfce_proximo_numero_producao: Number(e.nfce_proximo_numero_producao),
+    };
   });
   const listaOperacoes = (operacoes ?? []).map((o) => ({ ...o, contribuicoes: Array.isArray(o.contribuicoes) ? o.contribuicoes : [] })) as unknown as OperacaoNfe[];
   // PIS e Cofins das vendas: Lucro Real (não cumulativo) 1,65% e 7,6%; Lucro Presumido (cumulativo) 0,65% e 3%
@@ -137,15 +147,33 @@ export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresa
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
-        <Card>
-          <CardHeader>
-            <CardTitle>Emissão</CardTitle>
-            <CardDescription>Comece no ambiente de teste e passe para produção depois de conferir uma nota.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FormConfiguracaoNfe empresaId={empresaId} cfg={atual} pessoaFisica={pessoaFisica} />
-          </CardContent>
-        </Card>
+        <div className="space-y-4 [&>*]:min-w-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>Emissão</CardTitle>
+              <CardDescription>Comece no ambiente de teste e passe para produção depois de conferir uma nota.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormConfiguracaoNfe empresaId={empresaId} cfg={atual} pessoaFisica={pessoaFisica} />
+            </CardContent>
+          </Card>
+          <Card id="cupom-fiscal">
+            <CardHeader>
+              <CardTitle>Cupom fiscal (NFC-e)</CardTitle>
+              <CardDescription>Para a venda no balcão da loja. Fica desligado até o escritório ligar.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormCupomFiscal
+                empresaId={empresaId}
+                ativa={cfg?.nfce_ativa ?? false}
+                ambiente={cfg?.nfce_ambiente === "producao" ? "producao" : "homologacao"}
+                ufAtendida={nfceNaUf(emp?.uf ?? "")}
+                temSerie={listaEmitentes.some((e) => e.ativo && e.nfce_serie != null)}
+                temOperacao={listaOperacoes.some((o) => o.ativa && (o.modelos ?? []).includes("nfce"))}
+              />
+            </CardContent>
+          </Card>
+        </div>
         <div className="space-y-4 [&>*]:min-w-0">
           <Card>
             <CardHeader>

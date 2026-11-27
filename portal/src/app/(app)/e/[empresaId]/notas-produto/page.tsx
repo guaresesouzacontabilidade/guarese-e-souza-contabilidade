@@ -34,7 +34,7 @@ export default async function NotasProduto({ params, searchParams }: PageProps<"
     ctx.supabase.from("nfe_config").select("ativa, ambiente").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase
       .from("nfe_emissoes")
-      .select("id, created_at, autorizada_em, numero, serie, destinatario_nome, destinatario_documento, destinatario_uf, valor_total, situacao, ambiente, natureza")
+      .select("id, modelo, created_at, autorizada_em, numero, serie, destinatario_nome, destinatario_documento, destinatario_uf, valor_total, situacao, ambiente, natureza")
       .eq("empresa_id", empresaId)
       .gte("created_at", `${comp}T00:00:00-03:00`)
       .lte("created_at", `${fim}T23:59:59-03:00`)
@@ -157,7 +157,7 @@ export default async function NotasProduto({ params, searchParams }: PageProps<"
                       </Td>
                       <Td className="numero whitespace-nowrap">
                         {n.numero}
-                        <span className="block text-xs text-muted-foreground">série {n.serie}</span>
+                        <span className="block text-xs text-muted-foreground">{n.modelo === 65 ? `cupom · série ${n.serie}` : `série ${n.serie}`}</span>
                       </Td>
                       <Td>
                         {n.destinatario_nome}

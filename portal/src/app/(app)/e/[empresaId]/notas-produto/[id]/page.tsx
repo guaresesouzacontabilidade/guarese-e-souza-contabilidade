@@ -47,15 +47,18 @@ export default async function DetalheNfe({ params }: PageProps<"/e/[empresaId]/n
   const { data: n } = await ctx.supabase
     .from("nfe_emissoes")
     .select(
-      "id, situacao, ambiente, serie, numero, chave, protocolo, autorizada_em, emitida_em, created_at, valor_total, natureza, destinatario_nome, destinatario_documento, destinatario_uf, dados, totais, mensagens, tentativas, cancelada_em, descartada_em, email_destinatario_enviado_em",
+      "id, modelo, situacao, ambiente, serie, numero, chave, protocolo, autorizada_em, emitida_em, created_at, valor_total, natureza, destinatario_nome, destinatario_documento, destinatario_uf, dados, totais, mensagens, tentativas, cancelada_em, descartada_em, email_destinatario_enviado_em",
     )
     .eq("id", id)
     .eq("empresa_id", empresaId)
     .maybeSingle();
   if (!n) notFound();
-  const [{ data: eventos }, { data: guias }] = await Promise.all([
+  const cupom = n.modelo === 65;
+  const [{ data: eventos }, { data: guias }, { data: venda }] = await Promise.all([
     ctx.supabase.from("nfe_eventos").select("id, tipo, sequencia, texto, situacao, protocolo, registrado_em, mensagens, created_at").eq("emissao_id", id).order("created_at"),
     ctx.supabase.from("nfe_guias").select("id, tipo, descricao, uf, codigo_receita, valor, vencimento, situacao, documento_id, observacao").eq("emissao_id", id).order("created_at"),
+    // O cupom fiscal nasce de uma venda da loja: imprime e reenvia por ela
+    cupom ? ctx.supabase.from("vendas").select("id, numero").eq("empresa_id", empresaId).eq("nfe_emissao_id", id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const docs = (guias ?? []).map((g) => g.documento_id).filter((x): x is string => Boolean(x));
   const { data: pagas } = docs.length ? await ctx.supabase.from("guia_pagamentos").select("guia_documento_id").in("guia_documento_id", docs) : { data: [] };
@@ -75,18 +78,28 @@ export default async function DetalheNfe({ params }: PageProps<"/e/[empresaId]/n
   return (
     <>
       <CabecalhoPagina
-        titulo={`NF-e nº ${n.numero} (série ${n.serie})`}
+        titulo={`${cupom ? "Cupom fiscal (NFC-e)" : "NF-e"} nº ${n.numero} (série ${n.serie})`}
         descricao={`${formatarMoeda(n.valor_total)} — ${n.destinatario_nome}`}
         voltar={{ href: base, rotulo: "Notas de produto" }}
         acoes={
           <>
             {autorizada ? (
               <>
-                <Button asChild>
-                  <a href={`/api/nfe/${empresaId}/${n.id}?formato=pdf`} target="_blank" rel="noopener noreferrer">
-                    <Download /> DANFE (PDF)
-                  </a>
-                </Button>
+                {cupom ? (
+                  venda ? (
+                    <Button asChild>
+                      <a href={`/impressao/cupom/${venda.id}`} target="_blank" rel="noopener noreferrer">
+                        <Download /> Imprimir cupom
+                      </a>
+                    </Button>
+                  ) : null
+                ) : (
+                  <Button asChild>
+                    <a href={`/api/nfe/${empresaId}/${n.id}?formato=pdf`} target="_blank" rel="noopener noreferrer">
+                      <Download /> DANFE (PDF)
+                    </a>
+                  </Button>
+                )}
                 <Button asChild variante="contorno">
                   <a href={`/api/nfe/${empresaId}/${n.id}?formato=xml`}>
                     <FileCode2 /> XML
@@ -96,7 +109,7 @@ export default async function DetalheNfe({ params }: PageProps<"/e/[empresaId]/n
             ) : null}
             {emitir && n.situacao === "autorizada" ? (
               <>
-                <CartaCorrecaoNfe empresaId={empresaId} id={n.id} numero={Number(n.numero)} />
+                {cupom ? null : <CartaCorrecaoNfe empresaId={empresaId} id={n.id} numero={Number(n.numero)} />}
                 <CancelarNfe empresaId={empresaId} id={n.id} numero={Number(n.numero)} autorizadaEm={n.autorizada_em} />
               </>
             ) : null}
@@ -105,7 +118,12 @@ export default async function DetalheNfe({ params }: PageProps<"/e/[empresaId]/n
                 <RotateCcw /> Tentar de novo
               </BotaoAcao>
             ) : null}
-            {emitir && n.situacao === "rejeitada" ? (
+            {cupom && venda ? (
+              <Button asChild variante="contorno">
+                <Link href={`/e/${empresaId}/loja/vendas/${venda.id}`}>Abrir a venda nº {venda.numero}</Link>
+              </Button>
+            ) : null}
+            {emitir && n.situacao === "rejeitada" && !cupom ? (
               <>
                 <Button asChild>
                   <Link href={`${base}/nova?corrigir=${n.id}`}>
@@ -126,7 +144,7 @@ export default async function DetalheNfe({ params }: PageProps<"/e/[empresaId]/n
                 </BotaoAcao>
               </>
             ) : null}
-            {emitir && ["autorizada", "cancelada", "descartada"].includes(n.situacao) ? (
+            {emitir && !cupom && ["autorizada", "cancelada", "descartada"].includes(n.situacao) ? (
               <Button asChild variante="contorno">
                 <Link href={`${base}/nova?copiar=${n.id}`}>
                   <Copy /> Nova nota com estes dados

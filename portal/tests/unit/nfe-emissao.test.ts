@@ -136,7 +136,7 @@ describe("cálculo da NF-e", () => {
     const e: EntradaNfe = {
       ...vendaMilho,
       consumidorFinal: true,
-      destinatario: { ...vendaMilho.destinatario, tipo: "cpf", documento: "52998224725", indicadorIe: 9, inscricaoEstadual: null },
+      destinatario: { ...vendaMilho.destinatario!, tipo: "cpf", documento: "52998224725", indicadorIe: 9, inscricaoEstadual: null },
       itens: [{ ...vendaMilho.itens[0], quantidade: "1", valorUnitario: "1000" }],
       transporte: { modalidade: 9 },
       pagamento: { forma: "17", aPrazo: false },
@@ -160,7 +160,7 @@ describe("cálculo da NF-e", () => {
       ...vendaMilho,
       serie: 920,
       emitente: { ...vendaMilho.emitente, tipo: "cpf", documento: "52998224725", nome: "Produtor Fictício", crt: 3 },
-      destinatario: { ...vendaMilho.destinatario, endereco: { ...vendaMilho.destinatario.endereco, codigoMunicipio: "5103403", municipio: "Cuiabá", uf: "MT" } },
+      destinatario: { ...vendaMilho.destinatario!, endereco: { ...vendaMilho.destinatario!.endereco, codigoMunicipio: "5103403", municipio: "Cuiabá", uf: "MT" } },
       itens: [{ ...vendaMilho.itens[0], cfop: "5101", quantidade: "500", unidade: "SC", valorUnitario: "60", pesoKgUnidade: "60", icms: { cst: "51", aliquota: 17, diferimento: 100 }, pis: { cst: "08" }, cofins: { cst: "08" } }],
       transporte: { modalidade: 1 },
       pagamento: { forma: "90", aPrazo: false },
@@ -229,7 +229,7 @@ describe("XML da NF-e", () => {
       serie: 920,
       natureza: "VENDA DE GADO BOVINO",
       emitente: { ...vendaMilho.emitente, tipo: "cpf", documento: "52998224725", nome: "Produtor Fictício" },
-      destinatario: { ...vendaMilho.destinatario, endereco: { ...vendaMilho.destinatario.endereco, codigoMunicipio: "5103403", municipio: "Cuiabá", uf: "MT" } },
+      destinatario: { ...vendaMilho.destinatario!, endereco: { ...vendaMilho.destinatario!.endereco, codigoMunicipio: "5103403", municipio: "Cuiabá", uf: "MT" } },
       itens: [
         {
           ...vendaMilho.itens[0],
@@ -274,7 +274,7 @@ describe("XML da NF-e", () => {
         ...vendaMilho,
         serie: 920,
         emitente: { ...vendaMilho.emitente, tipo: "cpf", documento: "52998224725", nome: "Produtor Fictício" },
-        destinatario: { ...vendaMilho.destinatario, endereco: { ...vendaMilho.destinatario.endereco, codigoMunicipio: "5103403", municipio: "Cuiabá", uf: "MT" } },
+        destinatario: { ...vendaMilho.destinatario!, endereco: { ...vendaMilho.destinatario!.endereco, codigoMunicipio: "5103403", municipio: "Cuiabá", uf: "MT" } },
         itens: [{ ...vendaMilho.itens[0], cfop: "5101", icms: { cst: "51", aliquota: 17, diferimento: 100 }, pis: { cst: "08" }, cofins: { cst: "08" }, ibscbs: { cst: "410", classificacao: "410014", reducaoIbs: 0, reducaoCbs: 0 } }],
         transporte: { modalidade: 3, veiculo: { placa: "ABC-1234", uf: "MT", rntc: "12345678" } },
         pagamento: { forma: "90", aPrazo: false },
@@ -293,7 +293,7 @@ describe("XML da NF-e", () => {
       {
         ...vendaMilho,
         consumidorFinal: true,
-        destinatario: { ...vendaMilho.destinatario, tipo: "cpf", documento: "52998224725", indicadorIe: 9, inscricaoEstadual: null, email: null },
+        destinatario: { ...vendaMilho.destinatario!, tipo: "cpf", documento: "52998224725", indicadorIe: 9, inscricaoEstadual: null, email: null },
         transporte: { modalidade: 9 },
         pagamento: { forma: "99", descricao: "Depósito", aPrazo: false },
         difal: { metodo: "base_unica", aliquotaInterna: 19, fcp: 2 },

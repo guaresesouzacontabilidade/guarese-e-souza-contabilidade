@@ -8,11 +8,19 @@ import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loj
 import { PontoDeVenda } from "@/components/loja/ponto-de-venda";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { carregarPdv } from "@/lib/gestao/pdv-dados";
-import type { NfeNaVenda } from "@/lib/gestao/rotulos";
+import type { NotaNaVenda } from "@/lib/gestao/rotulos";
 
 export const metadata: Metadata = { title: "Orçamento" };
 
-const SEM_NFE: NfeNaVenda = { configurada: false, disponivel: false, motivo: null, ambiente: null, marcadaPadrao: false, emitenteId: null, operacaoId: null, documentosComEndereco: [] };
+const SEM_NOTA: NotaNaVenda = {
+  configurada: false,
+  nfe: { disponivel: false, motivo: null, ambiente: null },
+  nfce: { disponivel: false, motivo: null, ambiente: null },
+  obrigatoriaFormas: [],
+  documentoPadrao: "nfe",
+  marcadaPadrao: false,
+  documentosComEndereco: [],
+};
 
 /** Orçamento sem abrir o caixa (balcão, tablet): salva, imprime e manda pelo WhatsApp. */
 export default async function PaginaOrcamento({ params, searchParams }: PageProps<"/e/[empresaId]/loja/orcamento">) {
@@ -64,7 +72,7 @@ export default async function PaginaOrcamento({ params, searchParams }: PageProp
         clientes={dados.clientes}
         permitirPrazo={false}
         orcamento={orcamento}
-        nfe={SEM_NFE}
+        nota={SEM_NOTA}
         etiqueta={dados.etiqueta}
         vendedores={dados.vendedores}
         vendedorObrigatorio={dados.vendedorObrigatorio}

@@ -256,6 +256,13 @@ test("NF-e na hora da venda: completa o endereço do cliente, conclui e a nota s
   };
   await limpar();
   await servico!.from("nfe_destinatarios").delete().eq("empresa_id", empresaId).eq("documento", joao!.documento);
+  // Notas de testes anteriores (sem rede, nunca saíram): descartadas, para a trava de nota repetida não pegar uma nova rodada
+  await servico!
+    .from("nfe_emissoes")
+    .update({ situacao: "descartada" })
+    .eq("empresa_id", empresaId)
+    .eq("destinatario_documento", joao!.documento)
+    .in("situacao", ["na_fila", "falha"]);
   // Emissão ligada só neste teste, com um certificado FICTÍCIO (sem rede, nada é enviado à SEFAZ)
   await servico!.from("certificados_digitais").insert({
     empresa_id: empresaId,
@@ -271,9 +278,12 @@ test("NF-e na hora da venda: completa o endereço do cliente, conclui e a nota s
   try {
     await entrar(page, `madeireira@${DOMINIO}`);
     await caixaAberto(page, "Caixa 1");
-    const caixinha = page.getByLabel("Emitir NF-e ao concluir a venda");
+    const caixinha = page.getByLabel("Emitir nota fiscal ao concluir a venda");
     await expect(caixinha).toBeEnabled();
     await caixinha.check();
+    // Sem o cupom ligado nesta empresa, só a NF-e fica disponível
+    await expect(page.getByRole("radio", { name: "Cupom fiscal (NFC-e)" })).toBeDisabled();
+    await expect(page.getByRole("radio", { name: "Nota fiscal (NF-e)" })).toBeChecked();
     await adicionar(page, "mourão", /Mourão de eucalipto/);
     await page.locator('input[id^="q-"]').first().fill("2");
     await page.getByLabel("Buscar cliente").fill("João Carpinteiro");
@@ -299,7 +309,7 @@ test("NF-e na hora da venda: completa o endereço do cliente, conclui e a nota s
     await expect(concluida).toContainText("concluída", { timeout: 60_000 });
     await expect(concluida).toContainText("NF-e");
     const venda = (await concluida.getByRole("link", { name: "Ver a venda" }).getAttribute("href"))!.split("/").pop()!;
-    await expect(concluida.getByRole("link", { name: "Ver a nota" })).toBeVisible();
+    await expect(concluida.getByTestId("nota-da-venda")).toContainText("NF-e");
 
     // A nota ficou ligada à venda, no ambiente de teste da SEFAZ (homologação)
     const { data: v } = await servico!.from("vendas").select("nfe_emissao_id").eq("id", venda).single();

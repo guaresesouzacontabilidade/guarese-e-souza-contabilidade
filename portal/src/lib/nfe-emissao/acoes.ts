@@ -82,12 +82,30 @@ export async function salvarConfiguracao(empresaId: string, _anterior: Resultado
   return sucesso("Configuração da NF-e salva.");
 }
 
+/** Liga ou desliga o cupom fiscal (NFC-e) da empresa e escolhe o ambiente. Só o escritório. */
+export async function configurarCupomFiscal(empresaId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const ctx = await contexto(empresaId, "nfe.configurar");
+  if (!ctx) return falha("Somente a equipe do escritório liga o cupom fiscal.");
+  const ambiente = texto(fd, "nfce_ambiente");
+  if (ambiente !== "homologacao" && ambiente !== "producao") return falha("Escolha o ambiente.");
+  const { error } = await ctx.supabase.rpc("nfce_configurar", {
+    p_empresa_id: empresaId,
+    p_dados: { ativa: marcado(fd, "nfce_ativa"), ambiente } as never,
+  });
+  if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
+  return sucesso(marcado(fd, "nfce_ativa") ? "Cupom fiscal ligado." : "Cupom fiscal desligado.");
+}
+
 export async function salvarEmitente(empresaId: string, id: string | null, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   const ctx = await contexto(empresaId, "nfe.configurar");
   if (!ctx) return falha("Somente a equipe do escritório cadastra as inscrições.");
   const serie = texto(fd, "serie");
   if (!/^\d{1,3}$/.test(serie)) return falha("Informe a série (número).", { serie: ["Série inválida."] });
   if (!/^\d{7}$/.test(texto(fd, "municipio_ibge"))) return falha("Escolha o município.", { municipio_ibge: ["Escolha o município."] });
+  const nfceSerieTexto = texto(fd, "nfce_serie");
+  if (nfceSerieTexto && !/^\d{1,3}$/.test(nfceSerieTexto)) return falha("Série do cupom fiscal inválida.", { nfce_serie: ["Série inválida."] });
+  const nfceSerie = nfceSerieTexto ? Number(nfceSerieTexto) : null;
   const { error } = await ctx.supabase.rpc("nfe_emitente_salvar", {
     p_empresa_id: empresaId,
     p_id: id && UUID.test(id) ? id : (null as never),
@@ -105,6 +123,10 @@ export async function salvarEmitente(empresaId: string, id: string | null, _ante
       proximo_numero_homologacao: Number(texto(fd, "proximo_numero_homologacao") || 1),
       proximo_numero_producao: Number(texto(fd, "proximo_numero_producao") || 1),
       ativo: !marcado(fd, "inativo"),
+      // Cupom fiscal (NFC-e): série própria (vazia = esta inscrição não emite cupom) e numeração
+      nfce_serie: nfceSerie,
+      nfce_proximo_numero_homologacao: Number(texto(fd, "nfce_proximo_numero_homologacao") || 1),
+      nfce_proximo_numero_producao: Number(texto(fd, "nfce_proximo_numero_producao") || 1),
     } as never,
   });
   if (error) return falha(mensagemErro(error));
@@ -185,6 +207,12 @@ export async function salvarOperacao(empresaId: string, id: string | null, _ante
   };
   const ruim = numerosValidos(nums);
   if (ruim) return falha("Número inválido.", { [ruim]: ["Número inválido."] });
+  for (const [campo, nome] of [
+    ["pis_cst", "do PIS"],
+    ["cofins_cst", "da Cofins"],
+  ] as const) {
+    if (!/^\d{2}$/.test(texto(fd, campo))) return falha(`Escolha o CST ${nome}.`, { [campo]: [`Escolha o CST ${nome}.`] });
+  }
   let contribuicoes: z.infer<typeof esquemaContribuicao>[] = [];
   try {
     const bruto = JSON.parse(texto(fd, "contribuicoes") || "[]");
@@ -219,6 +247,8 @@ export async function salvarOperacao(empresaId: string, id: string | null, _ante
       frete_codigo_receita: texto(fd, "frete_codigo_receita"),
       incide_funrural: marcado(fd, "incide_funrural"),
       exige_gta: marcado(fd, "exige_gta"),
+      // Para qual nota a operação serve: Nota fiscal (NF-e) e/ou Cupom fiscal (NFC-e)
+      modelos: fd.getAll("modelos").map(String).filter((m) => m === "nfe" || m === "nfce"),
       contribuicoes,
       informacoes: texto(fd, "informacoes"),
       ativa: !marcado(fd, "inativa"),

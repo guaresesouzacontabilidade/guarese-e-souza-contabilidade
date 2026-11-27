@@ -5,7 +5,7 @@ import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Alerta } from "@/components/ui/feedback";
 import { salvarConfiguracaoLoja } from "@/lib/gestao/acoes";
-import { PERFIS_FISCAIS, formatarQuantidade } from "@/lib/gestao/rotulos";
+import { DOCUMENTO_FISCAL, FORMAS_COM_REGRA_DE_NOTA, FORMAS_PAGAMENTO, PERFIS_FISCAIS, formatarQuantidade } from "@/lib/gestao/rotulos";
 import { MODALIDADES_GESTAO } from "@/lib/gestao/carregamentos";
 
 export interface ConfigLoja {
@@ -23,14 +23,21 @@ export interface ConfigLoja {
   nfe_operacao_id: string | null;
   nfe_emitente_id: string | null;
   nfe_marcada_padrao: boolean;
+  nfce_operacao_id?: string | null;
+  documento_padrao?: "nfe" | "nfce";
+  /** Regra do escritório: formas de pagamento em que a venda sai com nota fiscal */
+  nota_obrigatoria_formas?: string[];
   balanca_etiqueta?: string | null;
   balanca_digitos_codigo?: number;
 }
 
 export interface OpcoesNfeLoja {
-  operacoes: { id: string; nome: string; cfop: string }[];
-  emitentes: { id: string; nome: string; inscricao: string; serie: number }[];
+  /** modelos: para quais notas a operação serve ("nfe" e/ou "nfce") */
+  operacoes: { id: string; nome: string; cfop: string; modelos: string[] }[];
+  emitentes: { id: string; nome: string; inscricao: string; serie: number; nfceSerie: number | null }[];
   ativa: boolean;
+  /** Cupom fiscal (NFC-e) ligado pelo escritório */
+  nfceAtiva: boolean;
 }
 
 export function FormConfigLoja({
@@ -211,56 +218,9 @@ export function FormConfigLoja({
             </>
           )}
 
-          {nfe ? (
-            <section className="space-y-4">
-              <h2 className="font-semibold">{notas ? "NF-e das ordens de carregamento" : "NF-e na hora da venda"}</h2>
-              <p className="text-sm text-muted-foreground">
-                {notas ? (
-                  "A nota da ordem sai com esta inscrição e esta operação quando a ordem não escolher outras."
-                ) : (
-                  <>
-                    No caixa, a caixinha <strong>Emitir NF-e</strong> envia a nota à SEFAZ assim que a venda é concluída, com os itens, o frete, o desconto e o pagamento da venda.
-                  </>
-                )}
-                {nfe.ativa
-                  ? ""
-                  : notas
-                    ? " A emissão de NF-e desta empresa ainda está desligada: as ordens funcionam, e a nota é liberada quando o escritório ligar (certificado digital e autorização)."
-                    : " A emissão de NF-e desta empresa ainda está desligada: a caixinha aparece desativada até o escritório ligar (certificado digital e autorização)."}
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Campo rotulo="Operação da nota (regras fiscais)" htmlFor="nfe_operacao_id" ajuda="Cadastrada pelo escritório em Emitir nota de produto.">
-                  <Select id="nfe_operacao_id" name="nfe_operacao_id" defaultValue={c?.nfe_operacao_id ?? ""}>
-                    <option value="">{nfe.operacoes.length === 1 ? `Automática (${nfe.operacoes[0].nome})` : "Escolha..."}</option>
-                    {nfe.operacoes.map((o) => (
-                      <option key={o.id} value={o.id}>
-                        {o.nome} — CFOP {o.cfop}
-                      </option>
-                    ))}
-                  </Select>
-                </Campo>
-                <Campo rotulo="Quem emite (inscrição e série)" htmlFor="nfe_emitente_id">
-                  <Select id="nfe_emitente_id" name="nfe_emitente_id" defaultValue={c?.nfe_emitente_id ?? ""}>
-                    <option value="">{nfe.emitentes.length === 1 ? `Automático (${nfe.emitentes[0].nome})` : "Escolha..."}</option>
-                    {nfe.emitentes.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.nome} — IE {e.inscricao} · série {e.serie}
-                      </option>
-                    ))}
-                  </Select>
-                </Campo>
-              </div>
-              {notas ? null : (
-                <label className="flex items-start gap-2 text-sm">
-                  <Checkbox name="nfe_marcada_padrao" defaultChecked={c?.nfe_marcada_padrao ?? false} className="mt-0.5" />
-                  <span>
-                    Deixar &quot;Emitir NF-e&quot; já marcado em toda venda
-                    <span className="block text-muted-foreground">Para quem emite nota em quase todas as vendas. Dá para desmarcar na hora, venda por venda.</span>
-                  </span>
-                </label>
-              )}
-            </section>
-          ) : null}
+          {nfe ? <SecaoNotaFiscal nfe={nfe} c={c} notas={notas} /> : null}
+
+          {!notas ? <SecaoRegraCartao c={c} equipe={equipe} temNota={Boolean(nfe && (nfe.ativa || nfe.nfceAtiva))} /> : null}
 
           <div className="flex justify-end">
             <BotaoEnviar pendente={pendente}>Salvar configurações</BotaoEnviar>
@@ -268,5 +228,106 @@ export function FormConfigLoja({
         </>
       )}
     </FormularioAcao>
+  );
+}
+
+function SecaoNotaFiscal({ nfe, c, notas }: { nfe: OpcoesNfeLoja; c: ConfigLoja | null; notas: boolean }) {
+  const opsNfe = nfe.operacoes.filter((o) => o.modelos.includes("nfe"));
+  const opsNfce = nfe.operacoes.filter((o) => o.modelos.includes("nfce"));
+  const automatica = (lista: { nome: string }[]) => (lista.length === 1 ? `Automática (${lista[0].nome})` : "Escolha...");
+  return (
+    <section className="space-y-4" data-testid="secao-nota-fiscal">
+      <h2 className="font-semibold">{notas ? "NF-e das ordens de carregamento" : "Nota fiscal na hora da venda"}</h2>
+      <p className="text-sm text-muted-foreground">
+        {notas ? (
+          "A nota da ordem sai com esta inscrição e esta operação quando a ordem não escolher outras."
+        ) : (
+          <>
+            No caixa, a caixa <strong>Emitir nota fiscal</strong> envia à SEFAZ o cupom fiscal (NFC-e) ou a NF-e assim que a venda é concluída, com os itens, o
+            desconto e os pagamentos da venda.
+          </>
+        )}
+        {nfe.ativa ? "" : notas ? " A emissão de NF-e desta empresa ainda está desligada: a nota é liberada quando o escritório ligar." : " A NF-e desta empresa ainda está desligada."}
+        {!notas && !nfe.nfceAtiva ? " O cupom fiscal (NFC-e) ainda não foi ligado pelo escritório." : ""}
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Campo rotulo="Operação da NF-e (regras fiscais)" htmlFor="nfe_operacao_id" ajuda="Só as operações marcadas para Nota fiscal (cadastradas pelo escritório).">
+          <Select id="nfe_operacao_id" name="nfe_operacao_id" defaultValue={c?.nfe_operacao_id ?? ""}>
+            <option value="">{automatica(opsNfe)}</option>
+            {opsNfe.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.nome} — CFOP {o.cfop}
+              </option>
+            ))}
+          </Select>
+        </Campo>
+        {notas ? null : (
+          <Campo rotulo="Operação do cupom fiscal (NFC-e)" htmlFor="nfce_operacao_id" ajuda="Só as operações marcadas para Cupom fiscal.">
+            <Select id="nfce_operacao_id" name="nfce_operacao_id" defaultValue={c?.nfce_operacao_id ?? ""}>
+              <option value="">{opsNfce.length ? automatica(opsNfce) : "Nenhuma operação de cupom cadastrada"}</option>
+              {opsNfce.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.nome} — CFOP {o.cfop}
+                </option>
+              ))}
+            </Select>
+          </Campo>
+        )}
+        <Campo rotulo="Quem emite (inscrição e série)" htmlFor="nfe_emitente_id">
+          <Select id="nfe_emitente_id" name="nfe_emitente_id" defaultValue={c?.nfe_emitente_id ?? ""}>
+            <option value="">{nfe.emitentes.length === 1 ? `Automático (${nfe.emitentes[0].nome})` : "Escolha..."}</option>
+            {nfe.emitentes.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nome} — IE {e.inscricao} · série {e.serie}
+                {e.nfceSerie != null ? ` · cupom série ${e.nfceSerie}` : ""}
+              </option>
+            ))}
+          </Select>
+        </Campo>
+        {notas ? null : (
+          <Campo rotulo="Nota que o caixa já deixa escolhida" htmlFor="documento_padrao">
+            <Select id="documento_padrao" name="documento_padrao" defaultValue={c?.documento_padrao ?? "nfe"}>
+              <option value="nfce">{DOCUMENTO_FISCAL.nfce.longo}</option>
+              <option value="nfe">{DOCUMENTO_FISCAL.nfe.longo}</option>
+            </Select>
+          </Campo>
+        )}
+      </div>
+      {notas ? null : (
+        <label className="flex items-start gap-2 text-sm">
+          <Checkbox name="nfe_marcada_padrao" defaultChecked={c?.nfe_marcada_padrao ?? false} className="mt-0.5" />
+          <span>
+            Deixar &quot;Emitir nota fiscal&quot; já marcado em toda venda
+            <span className="block text-muted-foreground">Para quem emite nota em quase todas as vendas. Dá para desmarcar na hora, venda por venda.</span>
+          </span>
+        </label>
+      )}
+    </section>
+  );
+}
+
+/** Regra do escritório: no cartão (crédito e/ou débito), a venda sai com nota. Só o escritório muda. */
+function SecaoRegraCartao({ c, equipe, temNota }: { c: ConfigLoja | null; equipe: boolean; temNota: boolean }) {
+  const atuais = c?.nota_obrigatoria_formas ?? [];
+  return (
+    <section className="space-y-3" data-testid="regra-cartao">
+      <h2 className="font-semibold">Nota fiscal no cartão</h2>
+      <p className="text-sm text-muted-foreground">
+        Com a regra ligada, a venda paga com a forma marcada só conclui com nota fiscal (cupom ou NF-e). Vale também quando o pagamento é dividido.
+        {equipe ? "" : " Só o escritório liga ou desliga esta regra."}
+      </p>
+      {equipe ? <input type="hidden" name="regra_cartao" value="1" /> : null}
+      <div className="flex flex-wrap gap-4">
+        {FORMAS_COM_REGRA_DE_NOTA.map((f) => (
+          <label key={f} className="flex items-center gap-2 text-sm">
+            <Checkbox name="nota_obrigatoria_formas" value={f} defaultChecked={atuais.includes(f)} disabled={!equipe} />
+            Exigir nota no {FORMAS_PAGAMENTO[f].toLowerCase()}
+          </label>
+        ))}
+      </div>
+      {equipe && !temNota ? (
+        <Alerta tom="alerta">Nenhuma nota está ligada nesta empresa: com a regra ligada, a venda no cartão fica impedida. Ligue o cupom fiscal ou a NF-e antes.</Alerta>
+      ) : null}
+    </section>
   );
 }

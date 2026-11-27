@@ -151,6 +151,40 @@ async function semearNfeLoja(admin: SupabaseClient, empresaId: string) {
 
 }
 
+/**
+ * Cupom fiscal (NFC-e) da madeireira: operação "Serve para: Cupom fiscal" e a
+ * série do cupom na inscrição, mas o cupom fica DESLIGADO (sem certificado
+ * digital, nada vai à SEFAZ). A regra do cartão também fica desligada. Só cria
+ * o que falta.
+ */
+async function semearCupomLoja(admin: SupabaseClient, empresaId: string) {
+  const nome = "Venda no balcão — cupom fiscal (DEMO)";
+  let { data: op } = await admin.from("nfe_operacoes").select("id").eq("empresa_id", empresaId).eq("nome", nome).maybeSingle();
+  if (!op) {
+    const r = await admin
+      .from("nfe_operacoes")
+      .insert({
+        empresa_id: empresaId,
+        nome,
+        natureza: "VENDA DE MERCADORIA",
+        destino: "interna",
+        cfop: "5102",
+        consumidor_final: true,
+        modelos: ["nfce"],
+        icms_cst: "102",
+        pis_cst: "49",
+        cofins_cst: "49",
+        informacoes: "Documento emitido por ME ou EPP optante pelo Simples Nacional. Operação de DEMONSTRAÇÃO, sem valor fiscal.",
+      })
+      .select("id")
+      .single();
+    ok("Cupom: operação", r);
+    op = r.data;
+  }
+  ok("Cupom: série na inscrição", await admin.from("nfe_emitentes").update({ nfce_serie: 1 }).eq("empresa_id", empresaId).is("nfce_serie", null));
+  if (op) ok("Cupom: operação da loja", await admin.from("gestao_config").update({ nfce_operacao_id: op.id }).eq("empresa_id", empresaId).is("nfce_operacao_id", null));
+}
+
 // ------------------------------------------------------------- notas de compra
 const MARCA_COMPRAS = "DEMO-ESTOQUE";
 const REFLORESTADORA = { cnpj: cnpjValido("889990000001"), nome: "REFLORESTADORA ARAGUAIA LTDA (FICTICIA)" };
@@ -350,6 +384,7 @@ export async function semearLoja(
   const { data: existente } = await admin.from("empresas").select("id").eq("documento", documento).maybeSingle();
   if (existente) {
     await semearNfeLoja(admin, existente.id);
+    await semearCupomLoja(admin, existente.id);
     await semearLogoLoja(admin, existente.id);
     await semearCadastrosLoja(admin, existente.id);
     await semearVendedoresLoja(admin, existente.id);
@@ -545,6 +580,7 @@ export async function semearLoja(
   );
 
   await semearNfeLoja(admin, empresaId);
+  await semearCupomLoja(admin, empresaId);
   await semearLogoLoja(admin, empresaId);
   await semearComprasLoja(admin, conexao, empresaId, `madeireira@${opcoes.dominio}`);
 

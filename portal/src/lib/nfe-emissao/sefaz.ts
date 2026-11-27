@@ -93,6 +93,23 @@ export const AUTORIZADORES: Record<string, { nome: string; producao: string; hom
 
 const PROPRIOS = new Set(["AM", "BA", "GO", "MG", "MS", "MT", "PE", "PR", "RS", "SP"]);
 
+/**
+ * Cupom fiscal (NFC-e, modelo 65): servidores próprios do cupom, com os mesmos
+ * serviços da NF-e 4.00. Por enquanto só para os estados atendidos pela SVRS
+ * no cupom que o portal já conferiu (TO); os demais ficam indisponíveis até
+ * serem conferidos, em vez de enviar para um endereço errado.
+ */
+export const AUTORIZADORES_NFCE: Record<string, { nome: string; producao: string; homologacao: string; caminhos: Caminhos }> = {
+  SVRS: { nome: "SEFAZ Virtual do RS (SVRS) — NFC-e", producao: "nfce.svrs.rs.gov.br", homologacao: "nfce-homologacao.svrs.rs.gov.br", caminhos: RS },
+};
+const NFCE_POR_UF: Record<string, string> = { TO: "SVRS" };
+
+export function autorizadorNfceDaUf(uf: string): string {
+  const a = NFCE_POR_UF[uf.toUpperCase()];
+  if (!a) throw new Error(`O cupom fiscal (NFC-e) ainda não está disponível no portal para ${uf.toUpperCase()}. Fale com o escritório.`);
+  return a;
+}
+
 export function autorizadorDaUf(uf: string): string {
   const u = uf.toUpperCase();
   if (!CODIGO_UF[u]) throw new Error(`UF inválida (${uf}).`);
@@ -100,14 +117,16 @@ export function autorizadorDaUf(uf: string): string {
   return u === "MA" ? "SVAN" : "SVRS";
 }
 
-export function urlServico(uf: string, ambiente: AmbienteNfe, servico: ServicoNfe): string {
-  const a = AUTORIZADORES[autorizadorDaUf(uf)];
+export function urlServico(uf: string, ambiente: AmbienteNfe, servico: ServicoNfe, modelo: 55 | 65 = 55): string {
+  const a = modelo === 65 ? AUTORIZADORES_NFCE[autorizadorNfceDaUf(uf)] : AUTORIZADORES[autorizadorDaUf(uf)];
   return `https://${a[ambiente]}${a.caminhos[servico]}`;
 }
 
 export interface ConexaoSefaz {
   uf: string;
   ambiente: AmbienteNfe;
+  /** 55 NF-e (padrão) ou 65 cupom fiscal (NFC-e): muda o servidor do autorizador */
+  modelo?: 55 | 65;
   credencial: Credencial;
   /** Só nos testes automáticos: servidor local no lugar do autorizador */
   base?: string;
@@ -179,7 +198,7 @@ export function trechos(xml: string, nome: string): string[] {
 }
 
 async function chamar(c: ConexaoSefaz, servico: ServicoNfe, corpo: string, tempoLimiteMs = 60_000): Promise<string> {
-  const url = c.base ? `${c.base}/${servico}` : urlServico(c.uf, c.ambiente, servico);
+  const url = c.base ? `${c.base}/${servico}` : urlServico(c.uf, c.ambiente, servico, c.modelo ?? 55);
   const r = await requisitar(url, {
     metodo: "POST",
     credencial: c.credencial,

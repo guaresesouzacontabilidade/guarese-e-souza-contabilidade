@@ -4,6 +4,7 @@ import { CODIGO_UF } from "@/lib/notas-automaticas/nfe";
 import { assinatura, textoLeiaute, textoXml, type ChavesAssinatura } from "@/lib/fiscal/xml-assinatura";
 import { calcularNota, dataHoraUf, type EntradaNfe, type GrupoIbsCalculado, type ItemCalculado, type NotaCalculada } from "./calculo";
 import { dec, fmt, fmtVariavel, somar, type Dec } from "./decimal";
+import { qrCodeNfce, urlConsultaNfce } from "./nfce";
 
 /**
  * NF-e modelo 55, leiaute 4.00 (pacote de esquemas PL_010f v1.04, de
@@ -45,7 +46,16 @@ export function sortearCodigoNumerico(numero: number): string {
 }
 
 /** Chave de acesso (44 dígitos) e o dígito verificador. */
-export function chaveDeAcesso(p: { uf: string; emitidaEm: Date; documento: string; serie: number; numero: number; tipoEmissao?: number; codigoNumerico: string }): string {
+export function chaveDeAcesso(p: {
+  uf: string;
+  emitidaEm: Date;
+  documento: string;
+  serie: number;
+  numero: number;
+  tipoEmissao?: number;
+  codigoNumerico: string;
+  modelo?: 55 | 65;
+}): string {
   const cuf = CODIGO_UF[p.uf.toUpperCase()];
   if (!cuf) throw new Error(`UF do emitente inválida (${p.uf}).`);
   const local = dataHoraUf(p.emitidaEm, p.uf);
@@ -53,18 +63,22 @@ export function chaveDeAcesso(p: { uf: string; emitidaEm: Date; documento: strin
   const doc = p.documento.toUpperCase().padStart(14, "0");
   if (!/^[0-9A-Z]{12}[0-9]{2}$/.test(doc)) throw new Error("CNPJ/CPF do emitente inválido.");
   if (!/^\d{8}$/.test(p.codigoNumerico)) throw new Error("Código numérico da nota inválido.");
-  const base = `${cuf}${aamm}${doc}55${String(p.serie).padStart(3, "0")}${String(p.numero).padStart(9, "0")}${p.tipoEmissao ?? 1}${p.codigoNumerico}`;
+  const base = `${cuf}${aamm}${doc}${p.modelo ?? 55}${String(p.serie).padStart(3, "0")}${String(p.numero).padStart(9, "0")}${p.tipoEmissao ?? 1}${p.codigoNumerico}`;
   return base + dvChave(base);
 }
 
 function validarSerie(e: EntradaNfe) {
+  const doc = e.modelo === 65 ? "o cupom fiscal (NFC-e)" : "NF-e";
   if (!Number.isInteger(e.numero) || e.numero < 1 || e.numero > 999_999_999) throw new Error("Número da nota inválido.");
   if (e.emitente.tipo === "cpf") {
-    if (e.serie < 920 || e.serie > 969) throw new Error("Produtor rural pessoa física emite NF-e nas séries 920 a 969.");
+    if (e.serie < 920 || e.serie > 969) throw new Error(`Produtor rural pessoa física emite ${doc} nas séries 920 a 969.`);
   } else if (e.serie < 0 || e.serie > 889) {
-    throw new Error("Série da NF-e inválida (0 a 889).");
+    throw new Error(`Série d${e.modelo === 65 ? "o cupom fiscal" : "a NF-e"} inválida (0 a 889).`);
   }
 }
+
+/** Texto obrigatório na descrição do primeiro item do cupom emitido em homologação (teste). */
+export const PRODUTO_HOMOLOGACAO_NFCE = "NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL";
 
 function endereco(tag: string, e: EntradaNfe["emitente"]["endereco"], emitente: boolean): string {
   const exterior = !emitente && (e.uf.toUpperCase() === "EX" || (e.codigoPais && e.codigoPais !== "1058"));
@@ -167,11 +181,12 @@ function itemXml(nota: NotaCalculada, i: ItemCalculado): string {
   const opc = (nome: string, v: Dec) => (v > 0n ? `<${nome}>${v2(v)}</${nome}>` : "");
   const qtd = fmtVariavel(i.quantidade, 4);
   const unit = fmtVariavel(i.valorUnitario, 10, 2);
+  const testeNfce = nota.entrada.modelo === 65 && nota.entrada.ambiente === "homologacao" && i.numero === 1;
   const prod =
     "<prod>" +
     tx("cProd", e.codigo, 60) +
     `<cEAN>${gtin}</cEAN>` +
-    tx("xProd", e.descricao, 120) +
+    tx("xProd", testeNfce ? PRODUTO_HOMOLOGACAO_NFCE : e.descricao, 120) +
     `<NCM>${e.ncm}</NCM>` +
     (e.cest && /^\d{7}$/.test(e.cest) ? `<CEST>${e.cest}</CEST>` : "") +
     (e.icms.beneficio ? tx("cBenef", e.icms.beneficio, 10) : "") +
@@ -228,6 +243,8 @@ function totalXml(n: NotaCalculada): string {
 }
 
 function transporteXml(n: NotaCalculada): string {
+  // Cupom: venda no balcão, sem transporte
+  if (n.entrada.modelo === 65) return "<transp><modFrete>9</modFrete></transp>";
   const tr = n.entrada.transporte;
   let x = `<transp><modFrete>${tr.modalidade}</modFrete>`;
   const t = tr.transportador;
@@ -282,7 +299,34 @@ function cobrancaXml(n: NotaCalculada, numero: number): string {
   return `<cobr><fat><nFat>${numero}</nFat><vOrig>${vNF}</vOrig><vDesc>0.00</vDesc><vLiq>${vNF}</vLiq></fat>${dups}</cobr>`;
 }
 
+/** Formas de pagamento que levam o grupo do cartão no cupom (maquininha não integrada ao caixa: tpIntegra 2). */
+const PAGAMENTO_CARTAO = new Set(["03", "04"]);
+
+/** Cupom: uma linha por forma de pagamento; o troco (dinheiro) é a sobra sobre o total. */
+function pagamentosNfceXml(n: NotaCalculada): string {
+  const pags = n.entrada.pagamentos ?? [];
+  if (!pags.length || pags.length > 100) throw new Error("Informe as formas de pagamento do cupom.");
+  const valores = pags.map((p) => {
+    if (!/^\d{2}$/.test(p.forma) || p.forma === "90") throw new Error("Forma de pagamento inválida no cupom.");
+    const v = dec(p.valor);
+    if (v <= 0n) throw new Error("Valor de pagamento inválido no cupom.");
+    return v;
+  });
+  const troco = somar(...valores) - n.totais.vNF;
+  if (troco < 0n) throw new Error("Os pagamentos não cobrem o total do cupom.");
+  if (troco > 0n && !pags.some((p) => p.forma === "01")) throw new Error("O valor pago passa do total do cupom: troco só existe com dinheiro.");
+  const det = pags
+    .map((p, i) => {
+      const desc = p.forma === "99" ? tx("xPag", p.descricao || "Outros", 60) : "";
+      const cartao = PAGAMENTO_CARTAO.has(p.forma) ? "<card><tpIntegra>2</tpIntegra></card>" : "";
+      return `<detPag><indPag>${p.forma === "05" ? 1 : 0}</indPag><tPag>${p.forma}</tPag>${desc}<vPag>${v2(valores[i])}</vPag>${cartao}</detPag>`;
+    })
+    .join("");
+  return `<pag>${det}${troco > 0n ? `<vTroco>${v2(troco)}</vTroco>` : ""}</pag>`;
+}
+
 function pagamentoXml(n: NotaCalculada): string {
+  if (n.entrada.modelo === 65) return pagamentosNfceXml(n);
   const p = n.entrada.pagamento;
   if (!/^\d{2}$/.test(p.forma)) throw new Error("Forma de pagamento inválida.");
   const semPagamento = p.forma === "90";
@@ -312,11 +356,33 @@ export interface NfeMontada {
   /** filhos do infNFe (sem o próprio elemento) */
   filhos: string;
   canonico: string;
+  /** Cupom (NFC-e): link do QR Code e endereço de consulta pela chave (infNFeSupl) */
+  qrCode?: string;
+  urlChave?: string;
+}
+
+/** Consumidor identificado no cupom: CPF/CNPJ e, se houver, o nome (em teste, o texto fixo). */
+function consumidorXml(e: EntradaNfe, homologacao: boolean): string {
+  const c = e.consumidor;
+  if (!c) return "";
+  const doc = c.tipo === "cnpj" ? c.documento.toUpperCase().replace(/[^0-9A-Z]/g, "") : digitos(c.documento);
+  if (c.tipo === "cnpj" && !/^[0-9A-Z]{12}\d{2}$/.test(doc)) throw new Error("CNPJ do consumidor inválido.");
+  if (c.tipo === "cpf" && !/^\d{11}$/.test(doc)) throw new Error("CPF do consumidor inválido.");
+  const nome = c.nome?.trim() ? (homologacao ? NOME_HOMOLOGACAO : c.nome) : null;
+  return (
+    "<dest>" +
+    (c.tipo === "cnpj" ? `<CNPJ>${doc}</CNPJ>` : `<CPF>${doc}</CPF>`) +
+    tx("xNome", nome, 60) +
+    "<indIEDest>9</indIEDest>" +
+    (c.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.email.trim()) ? tx("email", c.email.trim(), 60) : "") +
+    "</dest>"
+  );
 }
 
 /** Calcula a nota e monta o infNFe (sem assinatura). */
 export function montarNfe(e: EntradaNfe): NfeMontada {
   validarSerie(e);
+  const nfce = e.modelo === 65;
   const nota = calcularNota(e);
   const em = e.emitente;
   const uf = em.endereco.uf.toUpperCase();
@@ -324,27 +390,39 @@ export function montarNfe(e: EntradaNfe): NfeMontada {
   if (em.tipo === "cnpj" && !/^[0-9A-Z]{12}\d{2}$/.test(docEmit)) throw new Error("CNPJ do emitente inválido.");
   if (em.tipo === "cpf" && !/^\d{11}$/.test(docEmit)) throw new Error("CPF do emitente inválido.");
   const ieEmit = digitos(em.inscricaoEstadual);
-  if (!/^\d{2,14}$/.test(ieEmit)) throw new Error("Inscrição estadual do emitente inválida: a NF-e exige a IE de quem emite.");
-  const chave = chaveDeAcesso({ uf, emitidaEm: e.emitidaEm, documento: docEmit, serie: e.serie, numero: e.numero, codigoNumerico: e.codigoNumerico });
+  if (!/^\d{2,14}$/.test(ieEmit)) throw new Error("Inscrição estadual do emitente inválida: a nota exige a IE de quem emite.");
+  const chave = chaveDeAcesso({
+    uf,
+    emitidaEm: e.emitidaEm,
+    documento: docEmit,
+    serie: e.serie,
+    numero: e.numero,
+    codigoNumerico: e.codigoNumerico,
+    modelo: nfce ? 65 : 55,
+  });
   const id = `NFe${chave}`;
   const homologacao = e.ambiente === "homologacao";
+  if (nfce && (e.referencias ?? []).length) throw new Error("O cupom fiscal não referencia outras notas.");
+  if (nfce && e.finalidade !== 1) throw new Error("O cupom fiscal é só para venda (finalidade normal).");
 
   const refs = (e.referencias ?? []).map((r) => {
     if (!/^\d{44}$/.test(r)) throw new Error(`Chave de acesso referenciada inválida: ${r}`);
     return `<NFref><refNFe>${r}</refNFe></NFref>`;
   });
   if (e.finalidade === 4 && !refs.length) throw new Error("A nota de devolução precisa da chave da nota devolvida.");
-  const naoPresencial = [2, 3, 4, 9].includes(e.presenca);
+  // Cupom: sempre presencial, a consumidor final, impresso como DANFE NFC-e (tpImp 4) e sem data de saída
+  const presenca = nfce ? 1 : e.presenca;
+  const naoPresencial = [2, 3, 4, 9].includes(presenca);
   const ide =
     "<ide>" +
     `<cUF>${CODIGO_UF[uf]}</cUF><cNF>${e.codigoNumerico}</cNF>` +
     tx("natOp", e.natureza, 60) +
-    `<mod>55</mod><serie>${e.serie}</serie><nNF>${e.numero}</nNF>` +
+    `<mod>${nfce ? 65 : 55}</mod><serie>${e.serie}</serie><nNF>${e.numero}</nNF>` +
     `<dhEmi>${dataHoraUf(e.emitidaEm, uf)}</dhEmi>` +
-    (e.saidaEm ? `<dhSaiEnt>${dataHoraUf(e.saidaEm, uf)}</dhSaiEnt>` : "") +
+    (e.saidaEm && !nfce ? `<dhSaiEnt>${dataHoraUf(e.saidaEm, uf)}</dhSaiEnt>` : "") +
     `<tpNF>1</tpNF><idDest>${nota.idDest}</idDest><cMunFG>${em.endereco.codigoMunicipio}</cMunFG>` +
-    `<tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>${chave[43]}</cDV><tpAmb>${homologacao ? 2 : 1}</tpAmb>` +
-    `<finNFe>${e.finalidade}</finNFe><indFinal>${nota.consumidorFinal ? 1 : 0}</indFinal><indPres>${e.presenca}</indPres>` +
+    `<tpImp>${nfce ? 4 : 1}</tpImp><tpEmis>1</tpEmis><cDV>${chave[43]}</cDV><tpAmb>${homologacao ? 2 : 1}</tpAmb>` +
+    `<finNFe>${e.finalidade}</finNFe><indFinal>${nfce || nota.consumidorFinal ? 1 : 0}</indFinal><indPres>${presenca}</indPres>` +
     (naoPresencial ? "<indIntermed>0</indIntermed>" : "") +
     `<procEmi>0</procEmi><verProc>${VERSAO_APLICATIVO}</verProc>` +
     refs.join("") +
@@ -359,23 +437,29 @@ export function montarNfe(e: EntradaNfe): NfeMontada {
     `<IE>${ieEmit}</IE><CRT>${em.crt}</CRT>` +
     "</emit>";
 
-  const d = e.destinatario;
-  const docDest = d.tipo === "cnpj" ? (d.documento ?? "").toUpperCase() : digitos(d.documento);
-  if (d.tipo === "cnpj" && !/^[0-9A-Z]{12}\d{2}$/.test(docDest)) throw new Error("CNPJ do destinatário inválido.");
-  if (d.tipo === "cpf" && !/^\d{11}$/.test(docDest)) throw new Error("CPF do destinatário inválido.");
-  const ieDest = digitos(d.inscricaoEstadual);
-  if (d.indicadorIe === 1 && !/^\d{2,14}$/.test(ieDest)) throw new Error("Informe a inscrição estadual do destinatário (contribuinte do ICMS).");
-  if (d.tipo === "estrangeiro" && d.indicadorIe !== 9) throw new Error("Destinatário no exterior é não contribuinte (indicador 9).");
-  const idDoc = d.tipo === "cnpj" ? `<CNPJ>${docDest}</CNPJ>` : d.tipo === "cpf" ? `<CPF>${docDest}</CPF>` : `<idEstrangeiro>${textoXml(textoLeiaute(d.documento ?? "", 20))}</idEstrangeiro>`;
-  const dest =
-    "<dest>" +
-    idDoc +
-    tx("xNome", homologacao ? NOME_HOMOLOGACAO : d.nome, 60) +
-    endereco("enderDest", d.endereco, false) +
-    `<indIEDest>${d.indicadorIe}</indIEDest>` +
-    (d.indicadorIe === 1 ? `<IE>${ieDest}</IE>` : "") +
-    (d.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email.trim()) ? tx("email", d.email.trim(), 60) : "") +
-    "</dest>";
+  let dest: string;
+  if (nfce) {
+    dest = consumidorXml(e, homologacao);
+  } else {
+    const d = e.destinatario;
+    if (!d) throw new Error("Escolha o cliente (comprador).");
+    const docDest = d.tipo === "cnpj" ? (d.documento ?? "").toUpperCase() : digitos(d.documento);
+    if (d.tipo === "cnpj" && !/^[0-9A-Z]{12}\d{2}$/.test(docDest)) throw new Error("CNPJ do destinatário inválido.");
+    if (d.tipo === "cpf" && !/^\d{11}$/.test(docDest)) throw new Error("CPF do destinatário inválido.");
+    const ieDest = digitos(d.inscricaoEstadual);
+    if (d.indicadorIe === 1 && !/^\d{2,14}$/.test(ieDest)) throw new Error("Informe a inscrição estadual do destinatário (contribuinte do ICMS).");
+    if (d.tipo === "estrangeiro" && d.indicadorIe !== 9) throw new Error("Destinatário no exterior é não contribuinte (indicador 9).");
+    const idDoc = d.tipo === "cnpj" ? `<CNPJ>${docDest}</CNPJ>` : d.tipo === "cpf" ? `<CPF>${docDest}</CPF>` : `<idEstrangeiro>${textoXml(textoLeiaute(d.documento ?? "", 20))}</idEstrangeiro>`;
+    dest =
+      "<dest>" +
+      idDoc +
+      tx("xNome", homologacao ? NOME_HOMOLOGACAO : d.nome, 60) +
+      endereco("enderDest", d.endereco, false) +
+      `<indIEDest>${d.indicadorIe}</indIEDest>` +
+      (d.indicadorIe === 1 ? `<IE>${ieDest}</IE>` : "") +
+      (d.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email.trim()) ? tx("email", d.email.trim(), 60) : "") +
+      "</dest>";
+  }
 
   const autXml = (e.autorizadosXml ?? [])
     .map((x) => x.toUpperCase().replace(/[^0-9A-Z]/g, ""))
@@ -397,18 +481,24 @@ export function montarNfe(e: EntradaNfe): NfeMontada {
     nota.itens.map((i) => itemXml(nota, i)).join("") +
     totalXml(nota) +
     transporteXml(nota) +
-    cobrancaXml(nota, e.numero) +
+    (nfce ? "" : cobrancaXml(nota, e.numero)) +
     pagamentoXml(nota) +
     informacoesXml(nota) +
     respTec;
-  return { chave, id, nota, filhos, canonico: `<infNFe xmlns="${NS_NFE}" Id="${id}" versao="${VERSAO_NFE}">${filhos}</infNFe>` };
+  const montada: NfeMontada = { chave, id, nota, filhos, canonico: `<infNFe xmlns="${NS_NFE}" Id="${id}" versao="${VERSAO_NFE}">${filhos}</infNFe>` };
+  if (nfce) {
+    montada.qrCode = qrCodeNfce(chave, e.ambiente, uf);
+    montada.urlChave = urlConsultaNfce(uf, e.ambiente);
+  }
+  return montada;
 }
 
-/** NF-e assinada, pronta para o lote de autorização. */
+/** NF-e (ou cupom) assinada, pronta para o lote de autorização. O QR Code do cupom fica fora da assinatura (infNFeSupl). */
 export function nfeAssinada(e: EntradaNfe, chaves: ChavesAssinatura): NfeMontada & { xml: string } {
   const m = montarNfe(e);
+  const supl = m.qrCode ? `<infNFeSupl><qrCode>${textoXml(m.qrCode)}</qrCode><urlChave>${textoXml(m.urlChave!)}</urlChave></infNFeSupl>` : "";
   return {
     ...m,
-    xml: `<NFe xmlns="${NS_NFE}"><infNFe Id="${m.id}" versao="${VERSAO_NFE}">${m.filhos}</infNFe>${assinatura(m.canonico, m.id, chaves)}</NFe>`,
+    xml: `<NFe xmlns="${NS_NFE}"><infNFe Id="${m.id}" versao="${VERSAO_NFE}">${m.filhos}</infNFe>${supl}${assinatura(m.canonico, m.id, chaves)}</NFe>`,
   };
 }

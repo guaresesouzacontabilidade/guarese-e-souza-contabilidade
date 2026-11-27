@@ -146,7 +146,7 @@ async function concluirAutorizada(admin: ClienteAdmin, e: Emissao, emp: { docume
         empresaId: e.empresa_id,
         documentoEmpresa: emp.documento,
         xml: proc,
-        nome: `NFe-${e.numero}-${p.chave}.xml`,
+        nome: `${e.modelo === 65 ? "NFCe" : "NFe"}-${e.numero}-${p.chave}.xml`,
         origem: "emissao_nfe",
         categoriaPadrao: "nfe_saida_xml",
       });
@@ -202,13 +202,14 @@ export async function emitirNfe(admin: ClienteAdmin, job: Job, teste: OpcoesTest
       const m = nfeAssinada(entradaDaEmissao(e, emitidaEm), chaves);
       xml = m.xml;
       chave = m.chave;
-      await registrar(admin, id, { chave, emitida_em: emitidaEm.toISOString(), xml_assinado: xml, totais: resumoTotais(m.nota) as never });
+      await registrar(admin, id, { chave, emitida_em: emitidaEm.toISOString(), xml_assinado: xml, totais: resumoTotais(m.nota) as never, qrcode: m.qrCode ?? null });
     } catch (err) {
       return rejeitar(PORTAL, mensagem(err));
     }
   }
   const uf = (e.dados as unknown as EntradaNfe).emitente.endereco.uf;
-  const conexao: ConexaoSefaz = { uf, ambiente: e.ambiente as ConexaoSefaz["ambiente"], credencial: cred.credencial, base: teste.base, ca: teste.ca };
+  const modelo = e.modelo === 65 ? 65 : 55;
+  const conexao: ConexaoSefaz = { uf, ambiente: e.ambiente as ConexaoSefaz["ambiente"], modelo, credencial: cred.credencial, base: teste.base, ca: teste.ca };
   const atualizada: Emissao = { ...e, chave, xml_assinado: xml, emitida_em: emitidaEm.toISOString() };
 
   const tratarProtocolo = async (p: Protocolo) => {
@@ -311,7 +312,14 @@ export async function eventoNfe(admin: ClienteAdmin, job: Job, teste: OpcoesTest
 
   await registrarEvento({ situacao: "enviando", tentativas: ev.tentativas + 1 });
   try {
-    const conexao: ConexaoSefaz = { uf, ambiente: e.ambiente as ConexaoSefaz["ambiente"], credencial: cred.credencial, base: teste.base, ca: teste.ca };
+    const conexao: ConexaoSefaz = {
+      uf,
+      ambiente: e.ambiente as ConexaoSefaz["ambiente"],
+      modelo: e.modelo === 65 ? 65 : 55,
+      credencial: cred.credencial,
+      base: teste.base,
+      ca: teste.ca,
+    };
     const r = await enviarEvento(conexao, evento.xml, `${Date.now()}`.slice(-15));
     // 573: o mesmo evento já estava registrado (resposta anterior perdida)
     if (!EVENTO_ACEITO.has(r.cStat) && r.cStat !== "573") return recusar(r.cStat, r.xMotivo);
@@ -339,7 +347,7 @@ export async function eventoNfe(admin: ClienteAdmin, job: Job, teste: OpcoesTest
           empresaId: e.empresa_id,
           documentoEmpresa: emp?.documento ?? dados.emitente.documento,
           xml: proc,
-          nome: `${cancelamento ? "Cancelamento" : `CCe-${ev.sequencia}`}-NFe-${e.numero}-${e.chave}.xml`,
+          nome: `${cancelamento ? "Cancelamento" : `CCe-${ev.sequencia}`}-${e.modelo === 65 ? "NFCe" : "NFe"}-${e.numero}-${e.chave}.xml`,
           origem: "emissao_nfe",
           categoriaPadrao: "eventos_fiscais",
         });

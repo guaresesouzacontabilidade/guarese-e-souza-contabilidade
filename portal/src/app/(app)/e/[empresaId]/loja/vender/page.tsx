@@ -9,7 +9,7 @@ import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loj
 import { AbrirCaixa } from "@/components/loja/formularios-caixa";
 import { PontoDeVenda } from "@/components/loja/ponto-de-venda";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
-import { nfeNaVenda } from "@/lib/gestao/nfe-venda";
+import { notaNaVenda } from "@/lib/gestao/nfe-venda";
 import { carregarPdv } from "@/lib/gestao/pdv-dados";
 import { formatarDataHora } from "@/lib/formatos";
 
@@ -90,7 +90,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
     );
   }
 
-  const [dados, nfe] = await Promise.all([carregarPdv(ctx.supabase, empresaId, sp.orcamento), nfeNaVenda(ctx.supabase, empresaId, ctx.pode("nfe.emitir"))]);
+  const [dados, nfe] = await Promise.all([carregarPdv(ctx.supabase, empresaId, sp.orcamento), notaNaVenda(ctx.supabase, empresaId)]);
   const { orcamento } = dados;
 
   return (
@@ -132,7 +132,7 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
         clientes={dados.clientes}
         permitirPrazo={dados.permitirPrazo}
         orcamento={orcamento}
-        nfe={nfe}
+        nota={nfe}
         etiqueta={dados.etiqueta}
         vendedores={dados.vendedores}
         vendedorObrigatorio={dados.vendedorObrigatorio}

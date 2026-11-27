@@ -11,7 +11,15 @@ import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { SeletorMunicipio } from "@/components/obrigacoes/seletor-municipio";
 import { listarMunicipios } from "@/lib/obrigacoes/acoes";
-import { definirOperacaoProdutos, salvarConfiguracao, salvarEmitente, salvarOperacao, salvarProduto, testarConexao } from "@/lib/nfe-emissao/acoes";
+import {
+  configurarCupomFiscal,
+  definirOperacaoProdutos,
+  salvarConfiguracao,
+  salvarEmitente,
+  salvarOperacao,
+  salvarProduto,
+  testarConexao,
+} from "@/lib/nfe-emissao/acoes";
 import { CSOSN, CST_IBSCBS, CST_ICMS } from "@/lib/nfe-emissao/calculo";
 import {
   AMBIENTE_NFE,
@@ -57,6 +65,10 @@ export interface EmitenteNfe {
   proximo_numero_homologacao: number;
   proximo_numero_producao: number;
   ativo: boolean;
+  /** Cupom fiscal (NFC-e): série própria (vazia = não emite cupom) e numeração */
+  nfce_serie?: number | null;
+  nfce_proximo_numero_homologacao?: number;
+  nfce_proximo_numero_producao?: number;
 }
 
 export interface ProdutoNfe {
@@ -116,6 +128,8 @@ export interface OperacaoNfe {
   frete_codigo_receita: string | null;
   incide_funrural: boolean;
   exige_gta: boolean;
+  /** Para qual nota a operação serve: "nfe" (Nota fiscal) e/ou "nfce" (Cupom fiscal) */
+  modelos?: string[];
   contribuicoes: ContribuicaoNfe[];
   informacoes: string | null;
   ativa: boolean;
@@ -277,6 +291,61 @@ export function FormConfiguracaoNfe({ empresaId, cfg, pessoaFisica }: { empresaI
 }
 
 // -----------------------------------------------------------------------------
+// Cupom fiscal (NFC-e): ligar e ambiente (só o escritório)
+// -----------------------------------------------------------------------------
+
+export function FormCupomFiscal({
+  empresaId,
+  ativa,
+  ambiente,
+  ufAtendida,
+  temSerie,
+  temOperacao,
+}: {
+  empresaId: string;
+  ativa: boolean;
+  ambiente: "homologacao" | "producao";
+  /** O portal já emite o cupom no estado da empresa */
+  ufAtendida: boolean;
+  temSerie: boolean;
+  temOperacao: boolean;
+}) {
+  const [amb, setAmb] = React.useState(ambiente);
+  return (
+    <FormularioAcao acao={configurarCupomFiscal.bind(null, empresaId)} className="space-y-4" id="form-cupom-fiscal">
+      {({ pendente }) => (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Venda no balcão a consumidor final, impressa em impressora de cupom. A empresa precisa estar credenciada para a NFC-e na SEFAZ do estado. Usa o mesmo
+            certificado digital e a mesma autorização do cliente da NF-e. Com o QR Code versão 3, não é preciso cadastrar o código CSC.
+          </p>
+          {!ufAtendida ? <Alerta tom="alerta">Por enquanto o portal emite o cupom fiscal só para empresas do Tocantins.</Alerta> : null}
+          {!temSerie ? <Alerta tom="info">Informe a série do cupom em “Quem emite” antes de ligar.</Alerta> : null}
+          {!temOperacao ? <Alerta tom="info">Cadastre uma operação marcada para “Cupom fiscal (NFC-e)” em Operações.</Alerta> : null}
+          <label className="flex items-start gap-2 text-sm">
+            <Checkbox name="nfce_ativa" defaultChecked={ativa} className="mt-0.5" disabled={!ufAtendida && !ativa} />
+            <span>
+              <strong>Cupom fiscal ligado</strong>
+              <span className="block text-xs text-muted-foreground">Com o cupom ligado, o caixa da loja pode emitir o cupom ao concluir a venda.</span>
+            </span>
+          </label>
+          <Campo rotulo="Ambiente do cupom" htmlFor="nfce_ambiente" ajuda={AMBIENTE_NFE[amb].ajuda}>
+            <Select id="nfce_ambiente" name="nfce_ambiente" value={amb} onChange={(ev) => setAmb(ev.target.value as typeof amb)}>
+              <option value="homologacao">{AMBIENTE_NFE.homologacao.rotulo}</option>
+              <option value="producao">{AMBIENTE_NFE.producao.rotulo}</option>
+            </Select>
+          </Campo>
+          {amb === "producao" ? <Alerta tom="alerta">Em produção, o cupom tem valor fiscal. Emita antes ao menos um cupom de teste (homologação).</Alerta> : null}
+          <div className="flex justify-end">
+            <BotaoEnviar pendente={pendente}>Salvar cupom fiscal</BotaoEnviar>
+          </div>
+        </>
+      )}
+    </FormularioAcao>
+  );
+}
+
+// -----------------------------------------------------------------------------
 // Inscrições (quem emite)
 // -----------------------------------------------------------------------------
 
@@ -286,7 +355,7 @@ function FormEmitente({ empresaId, emitente, pessoaFisica, aoSalvar }: { empresa
     if (emitente?.uf) listarMunicipios(emitente.uf).then((lista) => setMunicipios((m) => ({ lista, chave: m.chave + 1 })));
   }, [emitente?.uf]);
   return (
-    <FormularioAcao acao={salvarEmitente.bind(null, empresaId, emitente?.id ?? null)} aoSucesso={aoSalvar} className="space-y-4">
+    <FormularioAcao acao={salvarEmitente.bind(null, empresaId, emitente?.id ?? null)} aoSucesso={aoSalvar} manterAoErrar className="space-y-4">
       {({ estado, pendente }) => {
         const e = estado.erros ?? {};
         return (
@@ -353,6 +422,23 @@ function FormEmitente({ empresaId, emitente, pessoaFisica, aoSalvar }: { empresa
                 <Input id="em-pp" name="proximo_numero_producao" inputMode="numeric" defaultValue={String(emitente?.proximo_numero_producao ?? 1)} />
               </Campo>
             </fieldset>
+            <fieldset className="grid gap-4 rounded-lg border border-border p-3 sm:grid-cols-3 sm:p-4 [&>*]:min-w-0">
+              <legend className="px-1 text-sm font-medium">Cupom fiscal (NFC-e)</legend>
+              <Campo
+                rotulo="Série do cupom"
+                htmlFor="em-nfce-serie"
+                erro={e.nfce_serie}
+                ajuda="Vazio = esta inscrição não emite cupom. A numeração do cupom é separada da NF-e."
+              >
+                <Input id="em-nfce-serie" name="nfce_serie" inputMode="numeric" maxLength={3} defaultValue={emitente?.nfce_serie != null ? String(emitente.nfce_serie) : ""} />
+              </Campo>
+              <Campo rotulo="Próximo cupom (teste)" htmlFor="em-nfce-ph">
+                <Input id="em-nfce-ph" name="nfce_proximo_numero_homologacao" inputMode="numeric" defaultValue={String(emitente?.nfce_proximo_numero_homologacao ?? 1)} />
+              </Campo>
+              <Campo rotulo="Próximo cupom (produção)" htmlFor="em-nfce-pp" ajuda="Se a série já foi usada em outro sistema, continue do número seguinte.">
+                <Input id="em-nfce-pp" name="nfce_proximo_numero_producao" inputMode="numeric" defaultValue={String(emitente?.nfce_proximo_numero_producao ?? 1)} />
+              </Campo>
+            </fieldset>
             {emitente ? (
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox name="inativo" defaultChecked={!emitente.ativo} /> Inativa (não aparece na emissão)
@@ -382,6 +468,7 @@ export function EmitentesNfe({ empresaId, emitentes, pessoaFisica }: { empresaId
                 </p>
                 <p className="text-muted-foreground">
                   IE {em.inscricao_estadual} — {em.municipio ?? em.municipio_ibge}/{em.uf} — série {em.serie}, próxima nº {em.proximo_numero_producao} (teste: {em.proximo_numero_homologacao})
+                  {em.nfce_serie != null ? ` — cupom série ${em.nfce_serie}, próximo nº ${em.nfce_proximo_numero_producao ?? 1}` : ""}
                 </p>
               </div>
               <Button variante="contorno" tamanho="sm" onClick={() => setEditando(em)}>
@@ -714,6 +801,8 @@ interface ModeloOperacao {
   incide_funrural?: boolean;
   /** Venda de animais vivos: a nota só sai com o número da GTA */
   exige_gta?: boolean;
+  /** Para qual nota serve (padrão: NF-e) */
+  modelos?: string[];
   /** Produtor pessoa física: PIS e Cofins sem incidência (CST 08) */
   pis_cst?: string;
   cofins_cst?: string;
@@ -798,6 +887,16 @@ const MODELOS_OPERACAO: ModeloOperacao[] = [
     destino: "interna",
     cfop: "5405",
     st: true,
+  },
+  {
+    rotulo: "Venda no balcão a consumidor final — cupom fiscal (NFC-e) (5102)",
+    nome: "Venda no balcão (cupom fiscal)",
+    natureza: "VENDA DE MERCADORIA",
+    destino: "interna",
+    cfop: "5102",
+    consumidor_final: true,
+    modelos: ["nfce"],
+    conferir: ["CSOSN/CST e PIS/Cofins das mercadorias vendidas no balcão", "Se a loja também emite NF-e para empresas, marque as duas opções em “Serve para”"],
   },
   {
     rotulo: "Venda a consumidor (não contribuinte) de outro estado, com DIFAL (6108)",
@@ -1000,7 +1099,7 @@ function CamposOperacao({
   }, [classes]);
 
   return (
-    <FormularioAcao acao={salvarOperacao.bind(null, empresaId, id)} aoSucesso={aoSalvar} className="space-y-5">
+    <FormularioAcao acao={salvarOperacao.bind(null, empresaId, id)} aoSucesso={aoSalvar} manterAoErrar className="space-y-5">
       {({ estado, pendente }) => {
         const e = estado.erros ?? {};
         return (
@@ -1050,6 +1149,21 @@ function CamposOperacao({
                 </span>
               </label>
             </div>
+
+            <fieldset className="space-y-2 rounded-lg border border-border p-3 sm:p-4" data-testid="op-modelos">
+              <legend className="px-1 text-sm font-medium">Serve para</legend>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox name="modelos" value="nfe" defaultChecked={(base.modelos ?? ["nfe"]).includes("nfe")} /> Nota fiscal (NF-e)
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox name="modelos" value="nfce" defaultChecked={(base.modelos ?? []).includes("nfce")} /> Cupom fiscal (NFC-e)
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O cupom fiscal é só para venda no balcão dentro do estado, a consumidor final (CFOP 5.xxx), sem GTA e sem ICMS de frete retido.
+              </p>
+            </fieldset>
 
             <fieldset className="space-y-4 rounded-lg border border-border p-3 sm:p-4">
               <legend className="px-1 text-sm font-medium">ICMS</legend>
@@ -1347,6 +1461,10 @@ export function OperacoesNfe({
                     {o.ibscbs_cclass_trib ? ` — IBS/CBS ${o.ibscbs_cclass_trib}` : ""}
                     {o.incide_funrural ? " — FUNRURAL" : ""}
                     {o.exige_gta ? " — exige GTA" : ""}
+                  </p>
+                  <p className="flex flex-wrap gap-1 pt-0.5">
+                    {(o.modelos ?? ["nfe"]).includes("nfe") ? <Badge variante="neutro">Nota fiscal</Badge> : null}
+                    {(o.modelos ?? []).includes("nfce") ? <Badge variante="info">Cupom fiscal</Badge> : null}
                   </p>
                   {guias.length ? <p className="text-xs text-muted-foreground">Guias por nota: {guias.join(", ")}</p> : null}
                 </div>

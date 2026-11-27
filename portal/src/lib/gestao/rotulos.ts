@@ -126,17 +126,34 @@ export function un(u: string | null | undefined) {
   return u === "M3" ? "m³" : u === "M2" ? "m²" : u === "M" || u === "ML" ? "m" : u === "MLT" ? "mL" : (u ?? "");
 }
 
-/** Situação da NF-e na hora da venda, para o caixa. */
-export interface NfeNaVenda {
-  /** A empresa tem a emissão de NF-e configurada (mesmo que desligada). */
-  configurada: boolean;
-  /** Dá para emitir agora (emissão ligada, operação e inscrição definidas). */
+/** Nota fiscal da venda: cupom fiscal (NFC-e) ou NF-e. */
+export type DocumentoFiscal = "nfce" | "nfe";
+export const DOCUMENTOS_FISCAIS: DocumentoFiscal[] = ["nfce", "nfe"];
+export const DOCUMENTO_FISCAL: Record<DocumentoFiscal, { curto: string; longo: string; ajuda: string }> = {
+  nfce: { curto: "Cupom fiscal", longo: "Cupom fiscal (NFC-e)", ajuda: "Venda no balcão a consumidor; CPF/CNPJ opcional." },
+  nfe: { curto: "NF-e", longo: "Nota fiscal (NF-e)", ajuda: "Precisa do cliente com CPF/CNPJ e endereço." },
+};
+
+/** Formas de pagamento em que o escritório pode exigir a nota fiscal. */
+export const FORMAS_COM_REGRA_DE_NOTA: FormaPagamento[] = ["cartao_credito", "cartao_debito"];
+
+export interface DocumentoDisponivel {
   disponivel: boolean;
+  /** Por que não dá para emitir agora (desligado, sem certificado, sem operação...). */
   motivo: string | null;
   ambiente: "homologacao" | "producao" | null;
+}
+
+/** Notas que o caixa consegue emitir agora e a regra do escritório para o cartão. */
+export interface NotaNaVenda {
+  /** A empresa tem alguma nota configurada (mesmo que desligada): mostra a caixa da nota no caixa. */
+  configurada: boolean;
+  nfe: DocumentoDisponivel;
+  nfce: DocumentoDisponivel;
+  /** Formas de pagamento em que a venda sai obrigatoriamente com nota (regra do escritório). */
+  obrigatoriaFormas: FormaPagamento[];
+  documentoPadrao: DocumentoFiscal;
   marcadaPadrao: boolean;
-  emitenteId: string | null;
-  operacaoId: string | null;
-  /** CPF/CNPJ dos clientes que já têm o endereço cadastrado para a nota. */
+  /** CPF/CNPJ dos clientes que já têm o endereço cadastrado para a NF-e. */
   documentosComEndereco: string[];
 }

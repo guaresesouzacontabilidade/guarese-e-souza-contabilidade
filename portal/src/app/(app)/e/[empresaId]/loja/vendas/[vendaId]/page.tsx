@@ -11,6 +11,8 @@ import { Table, TBody, TFoot, Td, Th, THead, Tr } from "@/components/ui/table";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { CancelarVenda } from "@/components/loja/acoes-venda";
 import { TrocarVendedor } from "@/components/loja/vendedores";
+import { NotaDaVenda } from "@/components/loja/nota-da-venda";
+import { notaNaVenda, situacaoNotaDaVendaCom } from "@/lib/gestao/nfe-venda";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { FORMAS_PAGAMENTO, formatarQuantidade, hora, parcelasDoPrazo, type FormaPagamento, un } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
@@ -39,14 +41,14 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
   const { data: v } = await ctx.supabase
     .from("vendas")
     .select(
-      "*, vendedor:perfis!vendas_vendedor_id_fkey(nome), cancelador:perfis!vendas_cancelada_por_fkey(nome), sessao:caixa_sessoes(id, caixa_nome, status), nfe:nfe_emissoes(id, numero, serie, situacao), venda_itens(id, ordem, produto_id, codigo, descricao, unidade, pecas, comprimento_m, quantidade, preco_tabela, preco_unitario, desconto, total, variacao), venda_pagamentos(*)",
+      "*, vendedor:perfis!vendas_vendedor_id_fkey(nome), cancelador:perfis!vendas_cancelada_por_fkey(nome), sessao:caixa_sessoes(id, caixa_nome, status), venda_itens(id, ordem, produto_id, codigo, descricao, unidade, pecas, comprimento_m, quantidade, preco_tabela, preco_unitario, desconto, total, variacao), venda_pagamentos(*)",
     )
     .eq("id", vendaId)
     .eq("empresa_id", empresaId)
     .maybeSingle();
   if (!v) notFound();
   const orcamento = v.tipo === "orcamento";
-  const [{ data: parcelas }, { data: origem }, { data: virou }, { data: listaVendedores }, { data: trocas }, { data: comissao }, { data: autorizadores }] = await Promise.all([
+  const [{ data: parcelas }, { data: origem }, { data: virou }, { data: listaVendedores }, { data: trocas }, { data: comissao }, { data: autorizadores }, nota, docs] = await Promise.all([
     ctx.pode("financeiro.ver") && !orcamento
       ? ctx.supabase
           .from("lancamentos")
@@ -63,12 +65,16 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
     // O banco só entrega a comissão a quem gerencia a loja ou ao próprio vendedor
     !orcamento ? ctx.supabase.from("venda_comissoes").select("percentual, valor, lancamento_id").eq("venda_id", vendaId).maybeSingle() : Promise.resolve({ data: null }),
     v.status === "aberto" || v.status === "concluida" ? ctx.supabase.rpc("loja_autorizadores_cancelamento", { p_empresa_id: empresaId }) : Promise.resolve({ data: [] }),
+    // A nota da venda (cupom ou NF-e) vem de uma função do banco: quem vende acompanha só a da própria venda
+    !orcamento ? situacaoNotaDaVendaCom(ctx.supabase, vendaId) : Promise.resolve(null),
+    !orcamento && v.status === "concluida" && v.documento_fiscal ? notaNaVenda(ctx.supabase, empresaId) : Promise.resolve(null),
   ]);
   const nomesVendedores = new Map((listaVendedores ?? []).map((x) => [x.id, x.nome]));
   const vendedorLoja = v.loja_vendedor_id ? (nomesVendedores.get(v.loja_vendedor_id) ?? "Vendedor") : null;
 
   const sessao = v.sessao as { id: string; caixa_nome: string; status: string } | null;
-  const nfe = v.nfe as { id: string; numero: number; serie: number; situacao: string } | null;
+  // Nota que ainda trava o cancelamento da venda (a caminho, autorizada ou sem resposta)
+  const notaPrende = Boolean(nota?.situacao && ["na_fila", "enviando", "aguardando", "autorizada", "cancelando", "falha"].includes(nota.situacao));
   const itens = [...(v.venda_itens ?? [])].sort((a, b) => a.ordem - b.ordem);
   const pagamentos = v.venda_pagamentos ?? [];
   const doSite = v.origem === "site";
@@ -82,9 +88,10 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
           ? { rotulo: "Em aberto", variante: "info" as const }
           : { rotulo: "Virou venda", variante: "neutro" as const };
   // Quem vende pede o cancelamento; quem pode cancelar autoriza com a senha
-  const podeCancelar = orcamento ? v.status === "aberto" : v.status === "concluida" && sessao?.status === "aberto" && !nfe;
-  const nfeAtiva = nfe && !["cancelada", "descartada", "rejeitada", "denegada", "falha"].includes(nfe.situacao);
-  const podeNfe = !orcamento && v.status === "concluida" && ctx.pode("nfe.emitir") && !nfeAtiva;
+  const podeCancelar = orcamento ? v.status === "aberto" : v.status === "concluida" && sessao?.status === "aberto" && !notaPrende;
+  const notaAtiva = Boolean(nota?.situacao && !["cancelada", "descartada", "rejeitada", "denegada", "falha"].includes(nota.situacao));
+  // NF-e completa pela tela de notas (cliente, transporte...) para a venda que não pediu nota no caixa
+  const podeNfe = !orcamento && v.status === "concluida" && ctx.pode("nfe.emitir") && !notaAtiva && !v.documento_fiscal;
   // Orçamento pelo WhatsApp do aparelho: a mensagem vai pronta com o link do orçamento (sem login)
   const linkOrcamento = orcamento && v.status === "aberto" && v.codigo_publico ? linkPublicoOrcamento(envPublico.siteUrl(), v.codigo_publico) : null;
   const whatsOrcamento = linkOrcamento
@@ -152,7 +159,7 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
             {!orcamento ? " Os produtos voltaram ao estoque e os recebimentos foram cancelados no Financeiro." : ""}
           </Alerta>
         ) : null}
-        {!orcamento && v.status === "concluida" && !podeCancelar && !nfe && ctx.gerente && sessao?.status !== "aberto" ? (
+        {!orcamento && v.status === "concluida" && !podeCancelar && !notaPrende && ctx.gerente && sessao?.status !== "aberto" ? (
           <Alerta tom="info">
             O caixa desta venda já foi fechado, então ela não pode mais ser cancelada aqui. Para devolução de mercadoria, fale com o escritório.
           </Alerta>
@@ -175,12 +182,19 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
             .
           </Alerta>
         ) : null}
-        {nfe ? (
-          <Alerta tom={nfeAtiva ? "sucesso" : "alerta"} titulo={`NF-e nº ${nfe.numero} (série ${nfe.serie})`}>
-            Situação: {nfe.situacao}.{" "}
-            <Link href={`/e/${empresaId}/notas-produto/${nfe.id}`} className="underline">
-              Ver a nota
-            </Link>
+        {!orcamento && (nota?.situacao || (v.status === "concluida" && v.documento_fiscal)) ? (
+          <NotaDaVenda
+            empresaId={empresaId}
+            vendaId={v.id}
+            pedida={v.status === "concluida" && (v.documento_fiscal === "nfe" || v.documento_fiscal === "nfce") ? v.documento_fiscal : null}
+            nota={nota}
+            disponiveis={{ nfe: Boolean(docs?.nfe.disponivel), nfce: Boolean(docs?.nfce.disponivel) }}
+            podeVerNotas={ctx.pode("nfe.emitir")}
+          />
+        ) : null}
+        {notaPrende && podeCancelarSeNaoFosseANota(v.status, sessao?.status) ? (
+          <Alerta tom="info">
+            Para cancelar esta venda, cancele antes a nota fiscal dela{ctx.pode("nfe.emitir") ? " (em Ver a nota)" : " (peça a quem emite as notas da empresa)"}.
           </Alerta>
         ) : null}
 
@@ -389,4 +403,9 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
       </div>
     </>
   );
+}
+
+/** A venda poderia ser cancelada aqui se não fosse a nota (caixa ainda aberto). */
+function podeCancelarSeNaoFosseANota(status: string, caixa: string | undefined) {
+  return status === "concluida" && caixa === "aberto";
 }

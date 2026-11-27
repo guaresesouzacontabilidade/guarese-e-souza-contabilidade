@@ -5,8 +5,8 @@ import { exigirPermissao } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { lerValorBR } from "@/lib/dinheiro";
 import type { Json } from "@/lib/supabase/database.types";
-import type { FormaPagamento } from "./rotulos";
-import { emitirNfeDaVenda, nfeNaVenda } from "./nfe-venda";
+import type { DocumentoFiscal, FormaPagamento } from "./rotulos";
+import { emitirNotaDaVendaCom, situacaoNotaDaVendaCom, type ResultadoNotaVenda, type SituacaoNotaVenda } from "./nfe-venda";
 import { MODALIDADES_GESTAO } from "./carregamentos";
 import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
@@ -58,6 +58,18 @@ export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAca
       dados[c] = v;
     }
     if (fd.has("validade_orcamento_dias")) dados.nfe_marcada_padrao = fd.get("nfe_marcada_padrao") === "on";
+  }
+  // Cupom fiscal: operação do cupom e a nota que o caixa já deixa escolhida
+  if (fd.has("nfce_operacao_id")) {
+    const v = texto(fd, "nfce_operacao_id");
+    if (v && !UUID.test(v)) return falha("Escolha inválida para o cupom fiscal.");
+    dados.nfce_operacao_id = v;
+  }
+  const docPadrao = texto(fd, "documento_padrao");
+  if (docPadrao === "nfe" || docPadrao === "nfce") dados.documento_padrao = docPadrao;
+  // Regra do escritório para o cartão (o banco também só aceita do escritório)
+  if (ctx.equipe && fd.has("regra_cartao")) {
+    dados.nota_obrigatoria_formas = fd.getAll("nota_obrigatoria_formas").map(String).filter((f) => f === "cartao_credito" || f === "cartao_debito");
   }
   if (ctx.equipe) {
     dados.ativa = fd.get("ativa") === "on";
@@ -417,17 +429,13 @@ function normalizarItens(itens: ItemVendaEntrada[]) {
   }));
 }
 
-export interface ResultadoNfeVenda {
-  ok: boolean;
-  id?: string;
-  mensagem: string;
-}
+export type { ResultadoNotaVenda, SituacaoNotaVenda };
 
 export async function finalizarVenda(
   empresaId: string,
   venda: VendaEntrada,
-  opcoes: { emitirNfe?: boolean } = {},
-): Promise<ResultadoAcao<{ id: string; numero: number; troco: number; total: number; nfe?: ResultadoNfeVenda }>> {
+  opcoes: { documento?: DocumentoFiscal | null } = {},
+): Promise<ResultadoAcao<{ id: string; numero: number; troco: number; total: number; nota?: ResultadoNotaVenda }>> {
   if (!UUID.test(empresaId) || !venda.sessao_id || !UUID.test(venda.sessao_id)) return falha("Abra o caixa antes de vender.");
   const ctx = await exigirPermissao(empresaId, "gestao.vender");
   if (venda.pagamentos?.some((p) => p.primeiro_vencimento && !DATA.test(p.primeiro_vencimento))) return falha("Vencimento inválido.");
@@ -452,20 +460,27 @@ export async function finalizarVenda(
     observacao: venda.observacao?.slice(0, 1000),
     entrega: venda.entrega?.slice(0, 300),
     loja_vendedor_id: venda.loja_vendedor_id && /^[0-9a-f-]{36}$/i.test(venda.loja_vendedor_id) ? venda.loja_vendedor_id : "",
+    // Nota fiscal pedida no caixa (o banco confere a regra do cartão e se o documento está disponível)
+    documento_fiscal: opcoes.documento === "nfe" || opcoes.documento === "nfce" ? opcoes.documento : null,
   };
   const { data, error } = await ctx.supabase.rpc("gestao_venda_finalizar", { p_empresa_id: empresaId, p_dados: dados as Json });
   if (error) return falha(mensagemErro(error));
   revalidarLoja(empresaId);
   const r = data as { id: string; numero: number; troco: number; total: number };
-  // NF-e na hora da venda: a venda já está gravada; se a nota não sair, a venda continua valendo
-  if (opcoes.emitirNfe) {
+  // Nota na hora da venda: a venda já está gravada; se a nota não sair, ela fica pendente na venda
+  const documento = dados.documento_fiscal;
+  if (documento) {
     try {
-      const nfe = await nfeNaVenda(ctx.supabase, empresaId, ctx.pode("nfe.emitir"));
-      const resultado = nfe.configurada ? await emitirNfeDaVenda(ctx.supabase, empresaId, r.id, nfe) : { ok: false, mensagem: "Seu acesso não inclui a emissão de NF-e desta empresa." };
-      return sucesso(`Venda nº ${r.numero} concluída.`, { ...r, nfe: resultado });
+      const nota = await emitirNotaDaVendaCom(ctx.supabase, r.id, documento);
+      atualizarTelasDaEmpresa(empresaId);
+      return sucesso(`Venda nº ${r.numero} concluída.`, { ...r, nota });
     } catch (e) {
-      console.error("Falha ao emitir a NF-e da venda", e);
-      return sucesso(`Venda nº ${r.numero} concluída.`, { ...r, nfe: { ok: false, mensagem: "A venda foi concluída, mas a NF-e não pôde ser enviada agora. Emita pela venda." } });
+      console.error("Falha ao emitir a nota da venda", e);
+      const nome = documento === "nfce" ? "o cupom fiscal" : "a NF-e";
+      return sucesso(`Venda nº ${r.numero} concluída.`, {
+        ...r,
+        nota: { ok: false, documento, mensagem: `A venda foi concluída, mas ${nome} não pôde ser enviado agora. Emita pela venda.` },
+      });
     }
   }
   return sucesso(`Venda nº ${r.numero} concluída.`, r);
@@ -495,16 +510,20 @@ export async function salvarOrcamento(empresaId: string, orcamentoId: string | n
   return sucesso(`Orçamento nº ${r.numero} salvo.`, r);
 }
 
-/** Situação da NF-e emitida na hora da venda (para o caixa acompanhar até a autorização). */
-export async function situacaoNfeDaVenda(
-  empresaId: string,
-  nfeId: string,
-): Promise<{ situacao: string; numero: number; serie: number; motivo: string | null } | null> {
-  if (!UUID.test(empresaId) || !UUID.test(nfeId)) return null;
+/** Situação da nota (cupom ou NF-e) da venda, para o caixa acompanhar até a autorização. */
+export async function situacaoNotaDaVenda(empresaId: string, vendaId: string): Promise<SituacaoNotaVenda | null> {
+  if (!UUID.test(empresaId) || !UUID.test(vendaId)) return null;
   const ctx = await exigirPermissao(empresaId, "gestao.vender");
-  const { data } = await ctx.supabase.from("nfe_emissoes").select("situacao, numero, serie, mensagens").eq("id", nfeId).eq("empresa_id", empresaId).maybeSingle();
-  if (!data) return null;
-  const msgs = (Array.isArray(data.mensagens) ? data.mensagens : []) as { codigo?: string; descricao?: string }[];
-  const ultima = msgs.at(-1);
-  return { situacao: data.situacao, numero: Number(data.numero), serie: data.serie, motivo: ultima?.descricao ? `${ultima.codigo ? `${ultima.codigo} — ` : ""}${ultima.descricao}` : null };
+  return situacaoNotaDaVendaCom(ctx.supabase, vendaId);
+}
+
+/** Emite (ou emite de novo, se recusada) a nota de uma venda concluída: cupom fiscal ou NF-e. */
+export async function emitirNotaDaVenda(empresaId: string, vendaId: string, documento: DocumentoFiscal): Promise<ResultadoAcao<ResultadoNotaVenda>> {
+  if (!UUID.test(empresaId) || !UUID.test(vendaId) || (documento !== "nfe" && documento !== "nfce")) return falha("Venda inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  const r = await emitirNotaDaVendaCom(ctx.supabase, vendaId, documento);
+  if (!r.ok) return falha(r.mensagem);
+  revalidarLoja(empresaId);
+  atualizarTelasDaEmpresa(empresaId);
+  return sucesso(r.mensagem, r);
 }

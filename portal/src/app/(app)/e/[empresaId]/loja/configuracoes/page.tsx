@@ -17,9 +17,9 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
   const [{ data: cfg }, { data: contas }, { data: nfeCfg }, { data: operacoes }, { data: emitentes }] = await Promise.all([
     ctx.supabase.from("gestao_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
     ctx.supabase.from("contas_financeiras").select("id, nome, tipo").eq("empresa_id", empresaId).eq("ativa", true).neq("tipo", "cartao_credito").order("nome"),
-    ctx.supabase.from("nfe_config").select("ativa").eq("empresa_id", empresaId).maybeSingle(),
-    ctx.supabase.from("nfe_operacoes").select("id, nome, cfop").eq("empresa_id", empresaId).eq("ativa", true).order("nome"),
-    ctx.supabase.from("nfe_emitentes").select("id, nome, inscricao_estadual, serie").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+    ctx.supabase.from("nfe_config").select("ativa, nfce_ativa").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("nfe_operacoes").select("id, nome, cfop, modelos").eq("empresa_id", empresaId).eq("ativa", true).order("nome"),
+    ctx.supabase.from("nfe_emitentes").select("id, nome, inscricao_estadual, serie, nfce_serie").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
   const liberacao = ctx.equipe && ctx.lojaAtiva && !ctx.notas ? await siteLiberado(empresaId) : null;
   return (
@@ -44,8 +44,9 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
                 nfeCfg && (operacoes?.length || emitentes?.length)
                   ? {
                       ativa: nfeCfg.ativa,
-                      operacoes: (operacoes ?? []).map((o) => ({ id: o.id, nome: o.nome, cfop: o.cfop })),
-                      emitentes: (emitentes ?? []).map((e) => ({ id: e.id, nome: e.nome, inscricao: e.inscricao_estadual, serie: e.serie })),
+                      nfceAtiva: nfeCfg.nfce_ativa,
+                      operacoes: (operacoes ?? []).map((o) => ({ id: o.id, nome: o.nome, cfop: o.cfop, modelos: o.modelos })),
+                      emitentes: (emitentes ?? []).map((e) => ({ id: e.id, nome: e.nome, inscricao: e.inscricao_estadual, serie: e.serie, nfceSerie: e.nfce_serie })),
                     }
                   : null
               }
@@ -67,6 +68,9 @@ export default async function PaginaConfigLoja({ params }: PageProps<"/e/[empres
                       nfe_operacao_id: cfg.nfe_operacao_id,
                       nfe_emitente_id: cfg.nfe_emitente_id,
                       nfe_marcada_padrao: cfg.nfe_marcada_padrao,
+                      nfce_operacao_id: cfg.nfce_operacao_id,
+                      documento_padrao: cfg.documento_padrao === "nfce" ? "nfce" : "nfe",
+                      nota_obrigatoria_formas: cfg.nota_obrigatoria_formas,
                       balanca_etiqueta: cfg.balanca_etiqueta,
                       balanca_digitos_codigo: cfg.balanca_digitos_codigo,
                     }
