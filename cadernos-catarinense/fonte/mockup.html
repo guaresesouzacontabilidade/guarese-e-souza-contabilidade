@@ -18,6 +18,8 @@ const coverSrc = q.get('cover');
 const spiral = q.get('spiral') || 'white';
 const elastic = q.get('elastic') || 'green';
 const back = q.get('back') || '#0a4a25';
+const bgMode = q.get('bg') || 'light';
+const corners = q.get('corners') || '';
 
 const W = 640, H = 908;           // A5 trim (148 x 210 mm) at 4.32 px/mm
 const NX = 205, NY = 168;          // notebook position in the scene
@@ -34,7 +36,9 @@ const bands = {
   wine:  ['#3a0408', '#7a0d16', '#a52430'],
   black: ['#050505', '#1e1e1f', '#4a4a4c'],
   gold:  ['#5f4413', '#b08a3e', '#e8cf8a'],
+  caramel: ['#3d2410', '#7a4f26', '#a8763f'],
 };
+if (bgMode === 'dark') S.style.background = 'radial-gradient(ellipse 65% 55% at 50% 42%,#55585b 0%,#2c2e30 55%,#141516 100%)';
 const m = metals[spiral], b = bands[elastic];
 
 function el(tag, style, parent = S) { const e = document.createElement(tag); e.className = 'abs'; Object.assign(e.style, style); parent.appendChild(e); return e; }
@@ -125,6 +129,23 @@ for (let i = 0; i < N; i++) {
   path(front, d, m.out, WIRE + 1.6);
   path(front, d, m.base, WIRE);
   path(front, d, m.hi, WIRE * 0.34, { transform: 'translate(-0.6 -1.1)', opacity: .9 });
+}
+// metal corner protectors (right side only: the spiral is on the left)
+if (corners) {
+  const cs = svgLayer(), C = 62;
+  const d2 = document.createElementNS(svgNS, 'defs');
+  d2.innerHTML = `<linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7d5a1e"/><stop offset=".3" stop-color="#f6e3a1"/><stop offset=".55" stop-color="#b8893a"/><stop offset=".8" stop-color="#ecd38b"/><stop offset="1" stop-color="#8f6a28"/></linearGradient>
+  <filter id="cs" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="1.5" dy="3" stdDeviation="2.2" flood-opacity=".55"/></filter>`;
+  cs.appendChild(d2);
+  const X = NX + W, Y0 = NY, Y1 = NY + H;
+  const mk = (d) => { const p = document.createElementNS(svgNS, 'path'); p.setAttribute('d', d); p.setAttribute('fill', 'url(#cg)');
+    p.setAttribute('stroke', 'rgba(70,45,5,.7)'); p.setAttribute('stroke-width', '.8'); p.setAttribute('filter', 'url(#cs)'); cs.appendChild(p); };
+  mk(`M${X - C} ${Y0 - 2} L${X - 12} ${Y0 - 2} Q${X + 2} ${Y0 - 2} ${X + 2} ${Y0 + 12} L${X + 2} ${Y0 + C} Z`);
+  mk(`M${X - C} ${Y1 + 2} L${X - 12} ${Y1 + 2} Q${X + 2} ${Y1 + 2} ${X + 2} ${Y1 - 12} L${X + 2} ${Y1 - C} Z`);
+  for (const [cx, cy] of [[X - 16, Y0 + 16], [X - 16, Y1 - 16]]) {
+    const c = document.createElementNS(svgNS, 'circle'); c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 3.2);
+    c.setAttribute('fill', '#f8e7b0'); c.setAttribute('stroke', 'rgba(70,45,5,.8)'); c.setAttribute('stroke-width', '.8'); cs.appendChild(c);
+  }
 }
 document.title = 'ready';
 </script></body></html>

@@ -4,7 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-const CONFIG = {
+const CONFIG = process.env.LUX ? {
+  'lx1-imperial': { spiral: 'gold', elastic: 'caramel', back: '#04261a', bg: 'dark' },
+  'lx2-noir':     { spiral: 'gold', elastic: 'green', back: '#0d0d0d', bg: 'dark', corners: 'gold' },
+  'lx3-bordeaux': { spiral: 'gold', elastic: 'green', back: '#3a050c', bg: 'dark' },
+  'lx4-couture':  { spiral: 'gold', elastic: 'green', back: '#06321b', bg: 'dark' },
+} : {
   '01-classico':       { spiral: 'white',  elastic: 'green', back: '#0a4a25' },
   '02-verde-premium':  { spiral: 'gold',   elastic: 'wine',  back: '#05351a' },
   '03-ondas-bandeira': { spiral: 'white',  elastic: 'green', back: '#7a0710' },
