@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDownLeft, ArrowUpRight, CheckCircle2, Loader2, Paperclip, UserPlus, X } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, CheckCircle2, Loader2, Paperclip, Repeat, UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Campo, Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -12,7 +12,8 @@ import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { CampoValor } from "@/components/ui/campo-valor";
 import { cn } from "@/lib/utils";
 import { TIPOS_CATEGORIA } from "@/lib/rotulos";
-import { formatarMoeda } from "@/lib/dinheiro";
+import { formatarMoeda, lerValorBR } from "@/lib/dinheiro";
+import { gerarParcelas, mudarValorParcela, somaParcelas, type Intervalo, type ParcelaEditavel } from "@/lib/financeiro/parcelas";
 import { salvarLancamento } from "@/lib/financeiro/acoes-lancamentos";
 import { salvarContraparte } from "@/lib/financeiro/acoes-cadastros";
 import { contasMaisUsadas, sugerirConta, type LancamentoHistorico } from "@/lib/financeiro/sugestao-conta";
@@ -147,6 +148,10 @@ function CorpoFormulario({
   const [data, setData] = useState(valores.data_vencimento);
   const [competencia, setCompetencia] = useState<string | null>(valores.data_competencia !== valores.data_vencimento ? valores.data_competencia : null);
   const [modo, setModo] = useState<"unico" | "parcelado" | "recorrente">("unico");
+  // Parcelas: geradas pelo total, quantidade, 1º vencimento e intervalo; editáveis uma a uma
+  const [qtdTexto, setQtdTexto] = useState("2");
+  const [intervalo, setIntervalo] = useState<Intervalo>("mensal");
+  const [editadas, setEditadas] = useState<ParcelaEditavel[] | null>(null);
   const [jaPago, setJaPago] = useState(!edicao);
   const contasPagamento = opcoes.contas.filter((c) => c.tipo !== "cartao_credito" && c.tipo !== "adquirente");
   const contaPadrao = (t: "pagar" | "receber") => {
@@ -178,6 +183,12 @@ function CorpoFormulario({
   );
   const categoriaFinal = categoriaEscolhida ? categoria : (sugestao?.categoriaId ?? "");
   const unico = modo === "unico";
+  const qtdParcelas = Math.min(360, Math.max(2, Number(qtdTexto) || 2));
+  const geradas = useMemo(() => gerarParcelas(valor, qtdParcelas, data, intervalo), [valor, qtdParcelas, data, intervalo]);
+  const parcelas = editadas ?? geradas;
+  const totalInformado = lerValorBR(valor);
+  const somaDasParcelas = somaParcelas(parcelas);
+  const parcelasBatem = totalInformado ? somaDasParcelas.eq(totalInformado) : false;
 
   const enviarComprovante = async (f: File) => {
     setArquivo({ nome: f.name, etapa: "enviando" });
@@ -275,7 +286,16 @@ function CorpoFormulario({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Campo rotulo={modo === "parcelado" ? "Valor total" : "Valor"} htmlFor="l-valor" obrigatorio erro={estado.erros?.valor}>
-                  <CampoValor id="l-valor" name="valor" valorInicial={valores.valor} aoMudar={setValor} className="h-12 text-lg font-semibold" />
+                  <CampoValor
+                    id="l-valor"
+                    name="valor"
+                    valorInicial={valores.valor}
+                    aoMudar={(v) => {
+                      setValor(v);
+                      setEditadas(null);
+                    }}
+                    className="h-12 text-lg font-semibold"
+                  />
                 </Campo>
                 <Campo
                   rotulo={modo === "parcelado" ? "Vencimento da 1ª parcela" : modo === "recorrente" ? "Primeiro vencimento" : jaPago && unico && !edicao ? "Data do pagamento" : "Data (vencimento)"}
@@ -283,7 +303,16 @@ function CorpoFormulario({
                   obrigatorio
                   erro={estado.erros?.data_vencimento ?? estado.erros?.data_pagamento}
                 >
-                  <Input id="l-data" type="date" value={data} onChange={(e) => setData(e.target.value)} className="h-12" />
+                  <Input
+                    id="l-data"
+                    type="date"
+                    value={data}
+                    onChange={(e) => {
+                      setData(e.target.value);
+                      setEditadas(null);
+                    }}
+                    className="h-12"
+                  />
                 </Campo>
                 <Campo rotulo="Descrição" htmlFor="l-desc" obrigatorio erro={estado.erros?.descricao} className="sm:col-span-2">
                   <Input
@@ -483,13 +512,84 @@ function CorpoFormulario({
                         ))}
                       </div>
                       {modo === "parcelado" ? (
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <Campo rotulo="Número de parcelas" htmlFor="l-parc" erro={estado.erros?.parcelas} ajuda="Os centavos de diferença ficam na última parcela.">
-                            <Input id="l-parc" name="parcelas" type="number" min={2} max={360} defaultValue={2} />
-                          </Campo>
-                          <label className="flex items-center gap-2 self-end pb-2 text-sm">
-                            <Checkbox name="competencia_por_parcela" /> Competência de cada parcela no mês do vencimento
-                          </label>
+                        <div className="space-y-3">
+                          <div className="grid gap-4 sm:grid-cols-3">
+                            <Campo rotulo="Número de parcelas" htmlFor="l-parc" erro={estado.erros?.parcelas}>
+                              <Input
+                                id="l-parc"
+                                name="parcelas"
+                                type="number"
+                                min={2}
+                                max={360}
+                                value={qtdTexto}
+                                onChange={(e) => {
+                                  setQtdTexto(e.target.value);
+                                  setEditadas(null);
+                                }}
+                              />
+                            </Campo>
+                            <Campo rotulo="De quanto em quanto tempo" htmlFor="l-intervalo">
+                              <Select
+                                id="l-intervalo"
+                                value={intervalo}
+                                onChange={(e) => {
+                                  setIntervalo(e.target.value as Intervalo);
+                                  setEditadas(null);
+                                }}
+                              >
+                                <option value="mensal">Todo mês</option>
+                                <option value="quinzenal">A cada 15 dias</option>
+                                <option value="semanal">Toda semana</option>
+                              </Select>
+                            </Campo>
+                            <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                              <Checkbox name="competencia_por_parcela" /> Competência de cada parcela no mês do vencimento
+                            </label>
+                          </div>
+                          <input type="hidden" name="parcelas_json" value={JSON.stringify(parcelas)} />
+                          {parcelas.length ? (
+                            <div className="rounded-xl border border-border">
+                              <div className="grid grid-cols-[2.5rem_1fr_1fr] gap-2 border-b border-border px-3 py-2 text-xs font-medium text-muted-foreground">
+                                <span>Nº</span>
+                                <span>Vencimento</span>
+                                <span>Valor</span>
+                              </div>
+                              <ul className="max-h-80 space-y-2 overflow-y-auto p-3" aria-label="Parcelas">
+                                {parcelas.map((p, i) => (
+                                  <li key={i} className="grid grid-cols-[2.5rem_1fr_1fr] items-center gap-2 text-sm">
+                                    <span className="text-muted-foreground">{i + 1}ª</span>
+                                    <Input
+                                      type="date"
+                                      aria-label={`Vencimento da parcela ${i + 1}`}
+                                      value={p.vencimento}
+                                      onChange={(e) => setEditadas(parcelas.map((x, j) => (j === i ? { ...x, vencimento: e.target.value } : x)))}
+                                    />
+                                    <Input
+                                      inputMode="decimal"
+                                      aria-label={`Valor da parcela ${i + 1}`}
+                                      value={p.valor}
+                                      onChange={(e) => setEditadas(mudarValorParcela(parcelas, i, e.target.value, valor))}
+                                      className="numero"
+                                    />
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">Informe o valor total e o vencimento da 1ª parcela para ver as parcelas.</p>
+                          )}
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                            <p data-testid="resumo-parcelas" className={parcelasBatem ? "text-muted-foreground" : "text-perigo"}>
+                              {parcelas.length} parcela(s) somando <strong className="numero">{formatarMoeda(somaDasParcelas)}</strong>
+                              {totalInformado && !parcelasBatem ? <> — diferente do valor total ({formatarMoeda(totalInformado)}). Ajuste os valores ou refaça as parcelas.</> : null}
+                              {parcelasBatem ? ". Mudou o valor de uma parcela? A última se ajusta para fechar o total." : null}
+                            </p>
+                            {editadas ? (
+                              <Button type="button" variante="contorno" tamanho="sm" onClick={() => setEditadas(null)}>
+                                <Repeat /> Refazer parcelas
+                              </Button>
+                            ) : null}
+                          </div>
                         </div>
                       ) : null}
                       {modo === "recorrente" ? (

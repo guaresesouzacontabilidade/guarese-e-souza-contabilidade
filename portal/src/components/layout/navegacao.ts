@@ -1,4 +1,8 @@
 import {
+  Settings2,
+  ChartLine,
+  ArrowDownToLine,
+  ArrowUpFromLine,
   Activity,
   LifeBuoy,
   LayoutDashboard,
@@ -67,6 +71,8 @@ export interface ItemMenu {
   href: string;
   icone: LucideIcon;
   exato?: boolean;
+  /** Outros endereços que também marcam este item (telas da mesma seção). */
+  tambem?: string[];
 }
 
 export interface EmpresaMenu {
@@ -298,14 +304,26 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
   if (!equipe && p.has("financeiro.ver")) pagamentos.push({ rotulo: "Honorários do escritório", href: `${base}/honorarios`, icone: HandCoins });
   // Contratos com o escritório: o sócio titular (que assina) e quem cuida do financeiro
   if (!equipe && (empresa.papel === "cliente_titular" || p.has("financeiro.ver"))) documentos.push({ rotulo: "Contratos com o escritório", href: `${base}/contratos`, icone: FileSignature });
-  if (p.has("financeiro.ver")) financeiro.push({ rotulo: "Contas e fluxo de caixa", href: `${base}/financeiro`, icone: Wallet });
+  // Financeiro: as 8 seções numa fileira só (cada tela da seção marca a sua aba)
+  if (p.has("financeiro.ver")) {
+    const f = `${base}/financeiro`;
+    financeiro.push(
+      { rotulo: "Visão geral", href: f, icone: Wallet, exato: true },
+      { rotulo: "Contas a pagar", href: `${f}/pagar`, icone: ArrowUpFromLine, tambem: [`${f}/notas`] },
+      { rotulo: "Contas a receber", href: `${f}/receber`, icone: ArrowDownToLine },
+      { rotulo: "Caixa e bancos", href: `${f}/caixa`, icone: Landmark, tambem: [`${f}/contas`, `${f}/operacoes`] },
+      { rotulo: "Conciliação", href: `${base}/conciliacao`, icone: GitCompareArrows, tambem: [`${f}/importar`] },
+      { rotulo: "Fluxo de caixa", href: `${f}/fluxo`, icone: ChartLine },
+      { rotulo: "Relatórios", href: `${f}/relatorios`, icone: FileBarChart },
+      { rotulo: "Configurações", href: `${f}/configuracoes`, icone: Settings2, tambem: [`${f}/cadastros`, `${f}/recorrencias`] },
+    );
+  }
+  if (p.has("maquininhas.ver")) financeiro.push({ rotulo: "Maquininhas", href: `${base}/maquininhas`, icone: CreditCard });
   // Rentabilidade da frota: transportadoras (CT-e, transporte ou caminhões cadastrados); a equipe vê em todas
   if (p.has("financeiro.ver") && (equipe || empresa.frota || empresa.cte || transporte)) {
     financeiro.push({ rotulo: "Rentabilidade da frota", href: `${base}/frota`, icone: Truck });
   }
-  if (p.has("maquininhas.ver")) financeiro.push({ rotulo: "Maquininhas", href: `${base}/maquininhas`, icone: CreditCard });
-  if (p.has("conciliacao.executar")) financeiro.push({ rotulo: "Conciliação", href: `${base}/conciliacao`, icone: GitCompareArrows });
-  if (p.has("fechamento.gerenciar")) financeiro.push({ rotulo: "Fechamento", href: `${base}/fechamento`, icone: CalendarCheck });
+  if (p.has("fechamento.gerenciar")) financeiro.push({ rotulo: "Fechamento do mês", href: `${base}/fechamento`, icone: CalendarCheck });
   if (p.has("calculos.ver")) impostos.push({ rotulo: "Cálculos e previsão", href: `${base}/calculos`, icone: Calculator });
   if (p.has("auditor.gerenciar")) impostos.push({ rotulo: "Auditor fiscal", href: `${base}/auditor-fiscal`, icone: ScanSearch });
   else if (p.has("auditor.ver")) impostos.push({ rotulo: "Economia de impostos", href: `${base}/auditor-fiscal`, icone: PiggyBank });
@@ -378,6 +396,8 @@ export function grupoAtivo(caminho: string, grupos: GrupoMenu[]): GrupoMenu | nu
 }
 
 export function itemAtivo(caminho: string, item: ItemMenu) {
+  const dentro = (href: string) => caminho === href || caminho.startsWith(href + "/");
+  if (item.tambem?.some(dentro)) return true;
   if (item.exato) return caminho === item.href;
-  return caminho === item.href || caminho.startsWith(item.href + "/");
+  return dentro(item.href);
 }

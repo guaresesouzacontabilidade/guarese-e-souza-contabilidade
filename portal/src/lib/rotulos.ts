@@ -78,10 +78,18 @@ export const TIPOS_CATEGORIA: Record<string, { rotulo: string; grupo: string; dr
 
 export const SITUACAO_LANCAMENTO: Record<string, { rotulo: string; tom: "neutro" | "info" | "sucesso" | "alerta" | "perigo" }> = {
   aberto: { rotulo: "Em aberto", tom: "info" },
-  parcial: { rotulo: "Parcial", tom: "alerta" },
-  quitado: { rotulo: "Quitado", tom: "sucesso" },
+  parcial: { rotulo: "Pago em parte", tom: "alerta" },
+  quitado: { rotulo: "Liquidado", tom: "sucesso" },
   cancelado: { rotulo: "Cancelado", tom: "neutro" },
-  atrasado: { rotulo: "Atrasado", tom: "perigo" },
+  renegociado: { rotulo: "Renegociado", tom: "neutro" },
+  atrasado: { rotulo: "Vencido", tom: "perigo" },
+};
+
+/** Aprovação de pagamento (quando a empresa exige, por faixa de valor). */
+export const APROVACAO_PAGAMENTO: Record<string, { rotulo: string; tom: "neutro" | "info" | "sucesso" | "alerta" | "perigo" }> = {
+  pendente: { rotulo: "Aguardando aprovação", tom: "alerta" },
+  aprovado: { rotulo: "Aprovado", tom: "sucesso" },
+  reprovado: { rotulo: "Reprovado", tom: "perigo" },
 };
 
 export const ORIGEM_LANCAMENTO: Record<string, string> = {
@@ -96,6 +104,12 @@ export const ORIGEM_LANCAMENTO: Record<string, string> = {
   ocr: "Leitura de documento",
   maquininha: "Maquininha",
   cartao: "Cartão de crédito",
+  venda: "Venda no caixa",
+  hotel: "Hotel",
+  veterinaria: "Clínica veterinária",
+  fisioterapia: "Fisioterapia",
+  os: "Ordem de serviço",
+  renegociacao: "Renegociação",
 };
 
 export const ETAPAS_FECHAMENTO: Record<string, string> = {

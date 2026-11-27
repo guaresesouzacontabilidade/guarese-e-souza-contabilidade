@@ -30,7 +30,7 @@ export function BotaoLancarCelular({ base }: { base: string }) {
     };
   }, [aberto]);
 
-  if (caminho?.startsWith(base)) return null;
+  if (caminho?.endsWith("/novo")) return null;
 
   return (
     <div ref={caixa} className="fixed left-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 flex flex-col items-start gap-2 lg:hidden print:hidden">
@@ -38,7 +38,7 @@ export function BotaoLancarCelular({ base }: { base: string }) {
         <div className="flex flex-col items-start gap-2" role="menu" aria-label="Lançar" style={{ backgroundColor: "transparent" }}>
           <Link
             role="menuitem"
-            href={`${base}?tipo=pagar`}
+            href={`${base}/pagar/novo`}
             onClick={() => setAberto(false)}
             className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-lg"
           >
@@ -46,7 +46,7 @@ export function BotaoLancarCelular({ base }: { base: string }) {
           </Link>
           <Link
             role="menuitem"
-            href={`${base}?tipo=receber`}
+            href={`${base}/receber/novo`}
             onClick={() => setAberto(false)}
             className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-lg"
           >

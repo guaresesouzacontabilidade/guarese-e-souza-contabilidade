@@ -241,6 +241,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "baixas_estornadas_conta_fk"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
       foreignKeyName: "baixas_estornadas_criado_por_fkey"
       columns: ["criado_por"]
 isOneToOne: false

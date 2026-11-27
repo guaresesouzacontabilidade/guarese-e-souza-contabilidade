@@ -6,6 +6,7 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { booleano, dataObrigatoria, dataOpcional, textoOpcional, uuidOpcional, valorMonetario } from "@/lib/validacao";
 import { formatarMoeda } from "@/lib/dinheiro";
+import { validarParcelas } from "@/lib/financeiro/parcelas";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -111,8 +112,38 @@ export async function salvarLancamento(empresaId: string, _anterior: ResultadoAc
       return sucesso("Lançamento atualizado.", { id: d.id });
     }
 
+    if (d.ja_pago && d.modo === "unico" && !ctx.pode("financeiro.baixar")) {
+      return falha(`Seu acesso não permite registrar ${d.tipo === "pagar" ? "pagamentos" : "recebimentos"}. Desmarque “já foi pago” para lançar em aberto.`);
+    }
     let idCriado: string | null = null;
-    if (d.modo === "parcelado") {
+    const parcelasJson = texto(fd, "parcelas_json");
+    let qtdParcelas = d.parcelas ?? 0;
+    if (d.modo === "parcelado" && parcelasJson) {
+      // Parcelas com datas e valores escolhidos na tela (a soma tem que bater com o total)
+      const conferidas = validarParcelas(parcelasJson, d.valor);
+      if (!conferidas.ok) return falha(conferidas.mensagem, { parcelas: [conferidas.mensagem] });
+      qtdParcelas = conferidas.parcelas.length;
+      const { data, error } = await ctx.supabase.rpc("financeiro_criar_parcelas", {
+        p_empresa_id: empresaId,
+        p_dados: {
+          tipo: d.tipo,
+          descricao: d.descricao,
+          categoria_id: d.categoria_id,
+          contraparte_id: base.contraparte_id ?? "",
+          centro_custo_id: base.centro_custo_id ?? "",
+          projeto_id: base.projeto_id ?? "",
+          conta_financeira_id: base.conta_financeira_id ?? "",
+          numero_documento: base.numero_documento ?? "",
+          observacoes: base.observacoes ?? "",
+          data_competencia: d.data_competencia,
+          competencia_por_parcela: d.competencia_por_parcela,
+        },
+        p_parcelas: conferidas.parcelas,
+      });
+      if (error) return falha(mensagemErro(error));
+      const { data: primeira } = await ctx.supabase.from("lancamentos").select("id").eq("parcelamento_id", data as string).eq("parcela_numero", 1).single();
+      idCriado = primeira?.id ?? null;
+    } else if (d.modo === "parcelado") {
       const { data, error } = await ctx.supabase.rpc("criar_parcelamento", {
         p_empresa_id: empresaId,
         p_tipo: d.tipo,
@@ -176,14 +207,14 @@ export async function salvarLancamento(empresaId: string, _anterior: ResultadoAc
       if (error) return falha(mensagemErro(error));
       idCriado = data.id;
       if (d.ja_pago) {
-        // O tipo (pagar/receber) é copiado do lançamento pelo banco.
-        const { error: eb } = await ctx.supabase.from("baixas").insert({
-          empresa_id: empresaId,
-          lancamento_id: data.id,
-          data_pagamento: d.data_pagamento!,
-          conta_financeira_id: d.conta_pagamento_id!,
-          valor_principal: Number(d.valor),
-        } as never);
+        // Baixa segura (confere permissão, aprovação e saldo no banco)
+        const { error: eb } = await ctx.supabase.rpc("financeiro_baixar", {
+          p_empresa_id: empresaId,
+          p_lancamento_id: data.id,
+          p_data: d.data_pagamento!,
+          p_conta_id: d.conta_pagamento_id!,
+          p_valor_principal: Number(d.valor),
+        });
         if (eb) return falha(`Lançamento criado, mas o pagamento não foi registrado: ${mensagemErro(eb)}`, undefined);
       }
     }
@@ -192,7 +223,7 @@ export async function salvarLancamento(empresaId: string, _anterior: ResultadoAc
       await ctx.supabase.from("lancamento_documentos").insert({ lancamento_id: idCriado, documento_id: d.documento_id, empresa_id: empresaId, tipo_vinculo: "comprovante" });
     }
     revalidar(empresaId);
-    const msg = d.modo === "parcelado" ? `${d.parcelas} parcelas criadas.` : d.modo === "recorrente" ? "Recorrência criada e lançamentos gerados." : "Lançamento criado.";
+    const msg = d.modo === "parcelado" ? `${qtdParcelas} parcelas criadas.` : d.modo === "recorrente" ? "Recorrência criada e lançamentos gerados." : "Lançamento criado.";
     return sucesso(msg, idCriado ? { id: idCriado } : undefined);
   } catch (e) {
     return falha(mensagemErro(e));

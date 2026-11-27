@@ -2,13 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { sessaoApi, obterEmpresasDoUsuario } from "@/lib/auth/sessao";
 import { hojeISO } from "@/lib/competencia";
 import { dec } from "@/lib/dinheiro";
-import { termoBusca } from "@/lib/busca";
 import { buscarTudo } from "@/lib/supabase/paginar";
 import { SITUACAO_LANCAMENTO } from "@/lib/rotulos";
-import { ordemLancamentos } from "@/lib/financeiro/ordem-lancamentos";
+import { aplicarFiltros, colunaData, lerFiltros } from "@/lib/financeiro/filtros-titulos";
 
 const UUID = /^[0-9a-f-]{36}$/i;
-const DATA = /^\d{4}-\d{2}-\d{2}$/;
 
 function csv(valor: unknown) {
   const t = valor === null || valor === undefined ? "" : String(valor);
@@ -27,46 +25,29 @@ export async function GET(req: NextRequest) {
   const acesso = (await obterEmpresasDoUsuario()).find((e) => e.id === empresaId);
   if (!acesso || !acesso.permissoes.has("financeiro.ver")) return new NextResponse("Acesso negado.", { status: 403 });
 
+  if (!acesso.permissoes.has("financeiro.exportar")) return new NextResponse("Seu acesso não inclui exportar o financeiro desta empresa.", { status: 403 });
+
   const hoje = hojeISO();
-  const tipo = sp.get("tipo");
-  const situacao = sp.get("situacao");
-  const revisao = sp.get("revisao");
-  const coluna = sp.get("por") === "competencia" ? "data_competencia" : "data_vencimento";
-  const inicio = DATA.test(sp.get("inicio") ?? "") ? sp.get("inicio")! : null;
-  const fim = DATA.test(sp.get("fim") ?? "") ? sp.get("fim")! : null;
-  const categoria = UUID.test(sp.get("categoria") ?? "") ? sp.get("categoria") : null;
-  const contraparte = UUID.test(sp.get("contraparte") ?? "") ? sp.get("contraparte") : null;
-  const busca = termoBusca(sp.get("busca"));
-  // Mesma ordem da tela
-  const ordem = ordemLancamentos(sp.get("ordem"), situacao);
+  // Os mesmos filtros da tela (situação, prazo, centro de custo, aprovação...)
+  const f = lerFiltros(Object.fromEntries(sp.entries()));
+  const coluna = colunaData(f);
 
   const linhas = await buscarTudo((de, ate) => {
-    let q = s.supabase
+    const q = s.supabase
       .from("lancamentos")
       .select(
-        "tipo, descricao, data_competencia, data_vencimento, valor_previsto, valor_baixado, valor_realizado, data_ultimo_pagamento, situacao, status_revisao, numero_documento, observacoes, categoria:categorias_financeiras(codigo, nome), contraparte:contrapartes(nome, documento), centro:centros_custo(nome), projeto:projetos(nome)",
+        "tipo, descricao, data_competencia, data_vencimento, valor_previsto, valor_baixado, valor_realizado, data_ultimo_pagamento, situacao, status_revisao, aprovacao_status, numero_documento, observacoes, categoria:categorias_financeiras(codigo, nome), contraparte:contrapartes(nome, documento), centro:centros_custo(nome), projeto:projetos(nome)",
       )
-      .eq("empresa_id", empresaId)
-      .order(coluna, { ascending: ordem === "crescente" })
+      .eq("empresa_id", empresaId);
+    return aplicarFiltros(q, f, hoje)
+      .order(coluna, { ascending: f.ordem === "crescente" })
       .order("id")
       .range(de, ate);
-    if (tipo === "receber" || tipo === "pagar") q = q.eq("tipo", tipo);
-    if (situacao === "atrasado") q = q.in("situacao", ["aberto", "parcial"]).lt("data_vencimento", hoje);
-    else if (situacao === "em_aberto") q = q.in("situacao", ["aberto", "parcial"]);
-    else if (situacao && ["aberto", "parcial", "quitado", "cancelado"].includes(situacao)) q = q.eq("situacao", situacao);
-    else q = q.neq("situacao", "cancelado");
-    if (revisao === "sugerido" || revisao === "confirmado") q = q.eq("status_revisao", revisao);
-    if (inicio) q = q.gte(coluna, inicio);
-    if (fim) q = q.lte(coluna, fim);
-    if (categoria) q = q.eq("categoria_id", categoria);
-    if (contraparte) q = q.eq("contraparte_id", contraparte);
-    if (busca) q = q.or(`descricao.ilike.%${busca}%,numero_documento.ilike.%${busca}%`);
-    return q;
   }, 50000);
 
   const cabecalho = [
-    "Tipo", "Descrição", "Categoria", "Cliente/Fornecedor", "CPF/CNPJ", "Competência", "Vencimento", "Valor", "Pago/recebido (principal)",
-    "Em aberto", "Movimentado (com juros/taxas)", "Último pagamento", "Situação", "Revisão", "Nº documento", "Centro de custo", "Projeto", "Observações",
+    "Tipo", "Descrição", "Categoria", "Cliente/Fornecedor", "CPF/CNPJ", "Competência", "Vencimento", "Valor original", "Pago/recebido (principal)",
+    "Saldo em aberto", "Movimentado (com juros/taxas)", "Último pagamento", "Situação", "Revisão", "Nº documento", "Centro de custo", "Projeto", "Observações",
   ];
   const dados = linhas.map((l) => {
     const cat = l.categoria as { codigo: string; nome: string } | null;
@@ -82,10 +63,10 @@ export async function GET(req: NextRequest) {
       l.data_vencimento,
       dec(l.valor_previsto).toNumber(),
       dec(l.valor_baixado).toNumber(),
-      dec(l.valor_previsto).minus(dec(l.valor_baixado)).toNumber(),
+      ["aberto", "parcial"].includes(l.situacao) ? dec(l.valor_previsto).minus(dec(l.valor_baixado)).toNumber() : 0,
       dec(l.valor_realizado).toNumber(),
       l.data_ultimo_pagamento ?? "",
-      atrasado ? "Vencido" : SITUACAO_LANCAMENTO[l.situacao]?.rotulo ?? l.situacao,
+      [SITUACAO_LANCAMENTO[l.situacao]?.rotulo ?? l.situacao, atrasado ? "vencido" : null, l.aprovacao_status === "pendente" ? "aguardando aprovação" : null].filter(Boolean).join(" · "),
       l.status_revisao === "sugerido" ? "Sugerido (não revisado)" : "Confirmado",
       l.numero_documento ?? "",
       (l.centro as { nome: string } | null)?.nome ?? "",

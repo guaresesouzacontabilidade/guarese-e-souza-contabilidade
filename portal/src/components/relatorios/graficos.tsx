@@ -193,3 +193,46 @@ export function GraficoSaldoMensal({ dados }: { dados: { mes: string; saldoFinal
     </Caixa>
   );
 }
+
+/**
+ * Entradas e saídas por dia com o saldo acumulado: os últimos 30 dias
+ * (realizado, cores cheias) e os próximos 30 (previsto, cores claras), com a
+ * linha de hoje.
+ */
+export function GraficoEntradasSaidas({ pontos, hoje }: { pontos: { data: string; entradas: number; saidas: number; saldo: number; previsto: boolean }[]; hoje: string }) {
+  const dados = pontos.map((p) => ({ ...p, saidasNeg: -p.saidas }));
+  const negativo = pontos.some((p) => p.saldo < 0);
+  return (
+    <Caixa
+      titulo="Entradas, saídas e saldo"
+      descricao="Últimos 30 dias pelo que aconteceu; próximos 30 pelo que vence (cores mais claras). Vencidos ficam de fora da previsão."
+      altura={280}
+    >
+      <ComposedChart data={dados} margin={{ top: 8, right: 8, left: 4, bottom: 0 }} stackOffset="sign">
+        <CartesianGrid stroke={CORES.grade} strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey="data" tickFormatter={(d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`} tick={{ fontSize: 11, fill: CORES.texto }} tickLine={false} axisLine={false} minTickGap={28} />
+        <YAxis tickFormatter={compacto} tick={{ fontSize: 11, fill: CORES.texto }} tickLine={false} axisLine={false} width={48} />
+        <Tooltip
+          labelFormatter={(d) => `${formatarData(String(d))}${String(d) > hoje ? " (previsto)" : ""}`}
+          formatter={(v, nome) => [formatarMoeda(Math.abs(Number(v))), nome === "entradas" ? "Entradas" : nome === "saidasNeg" ? "Saídas" : "Saldo"]}
+          contentStyle={ESTILO_DICA}
+          labelStyle={ESTILO_ROTULO_DICA}
+        />
+        <Legend formatter={(v) => (v === "entradas" ? "Entradas" : v === "saidasNeg" ? "Saídas" : "Saldo acumulado")} wrapperStyle={{ fontSize: 12 }} />
+        <ReferenceLine y={0} stroke={CORES.grade} />
+        <ReferenceLine x={hoje} stroke="var(--titulo)" strokeDasharray="4 4" label={{ value: "hoje", position: "insideTopRight", fontSize: 11, fill: CORES.texto }} />
+        <Bar dataKey="entradas" name="entradas" stackId="m" fill={CORES.receita} radius={[3, 3, 0, 0]}>
+          {dados.map((p) => (
+            <Cell key={`e-${p.data}`} fillOpacity={p.previsto ? 0.35 : 0.9} />
+          ))}
+        </Bar>
+        <Bar dataKey="saidasNeg" name="saidasNeg" stackId="m" fill={CORES.gasto} radius={[0, 0, 3, 3]}>
+          {dados.map((p) => (
+            <Cell key={`s-${p.data}`} fillOpacity={p.previsto ? 0.35 : 0.9} />
+          ))}
+        </Bar>
+        <Line type="monotone" dataKey="saldo" name="saldo" stroke={negativo ? "var(--perigo)" : CORES.saldo} strokeWidth={2.5} dot={false} />
+      </ComposedChart>
+    </Caixa>
+  );
+}

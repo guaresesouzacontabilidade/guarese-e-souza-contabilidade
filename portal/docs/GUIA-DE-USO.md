@@ -337,17 +337,50 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
 > A visualização de uma guia no portal não comprova o pagamento.
 
 ### Financeiro (quando liberado)
-- **Lançar despesa ou receita**: botões **Despesa** e **Receita** no Financeiro (no celular, o botão **+** fixo no canto da tela). Na frente ficam só valor, data, descrição, conta e **Já foi pago** (com o banco ou caixa); fornecedor, mês do DRE, centro de custo, projeto e **parcelado ou todo mês** ficam em **Mais detalhes**.
-  - Na **Conta**, digite parte do nome para buscar (ex.: "alu" para Aluguel). As **mais usadas** aparecem como atalhos.
-  - O portal **sugere a conta** usada da última vez com o mesmo fornecedor ou com uma descrição parecida. A sugestão usa só o histórico da própria empresa (sem serviço externo); confira antes de salvar.
-  - Dá para anexar o **comprovante** (foto ou PDF): ele fica em Documentos, ligado ao lançamento.
-  - Depois de salvar, o formulário fica pronto para o próximo (mantém o tipo, a data e o banco). Num lançamento, **Lançar de novo** repete os dados com a data de hoje.
-- **Lançamentos**: contas a pagar e a receber, com vencimento, categoria e situação. Ao pagar ou receber, registre a baixa. A lista começa pela **data mais antiga** (o vencimento de hoje antes do de 2027); no filtro **Ordem**, escolha **Data mais nova primeiro** para inverter. As quitadas e canceladas começam pela mais nova. A planilha (Excel ou CSV) sai na mesma ordem da tela.
-- **Contas e saldos**: contas bancárias, caixa e cartões com os saldos.
-- **Operações**: transferências entre contas, cartão de crédito, maquininhas, empréstimos e estoque — registros com regras próprias para não distorcer o resultado.
-- **Recorrências**: despesas e receitas que se repetem (aluguel, mensalidades).
-- **Importar extratos**: extratos do banco (OFX ou planilha); as movimentações seguem para a conciliação.
-- **Importar contas a pagar/receber** (Financeiro → Importar extratos e planilhas): traz de uma vez as contas do sistema antigo, com as datas de vencimento e os valores.
+O menu **Financeiro** tem oito telas: **Visão geral**, **Contas a pagar**, **Contas a receber**, **Caixa e bancos**, **Conciliação**, **Fluxo de caixa**, **Relatórios** e **Configurações**. Os endereços antigos (Lançamentos, Contas, Operações, Cadastros, Recorrências) abrem a tela nova certa.
+
+- **Visão geral** (o painel do dia):
+  - **Dinheiro disponível agora**, conta por conta, e o **saldo projetado** (fim de hoje, em 7 e em 30 dias). Se o saldo for ficar negativo, o portal avisa a data.
+  - **Hoje**: a receber hoje, a pagar hoje, recebido hoje e pago hoje (com o total do mês).
+  - **A receber** e **a pagar** por prazo: vencidos, próximos 7 dias, próximos 30 dias e futuro. Cada cartão abre a lista já filtrada.
+  - Gráfico de **entradas, saídas e saldo**: os últimos 30 dias pelo que aconteceu e os próximos 30 pelo que vence.
+  - **Urgentes** (vencidos e o que vence em 3 dias, com o botão Pagar, Receber ou Aprovar), **clientes em atraso** e o que **precisa de conferência** (extrato a conciliar, lançamentos sugeridos, sem categoria).
+  - Dá para ver uma conta só ou um centro de custo. Os números contam só o que já foi **conferido**. Compras no cartão de crédito ficam de fora, porque são pagas pela fatura.
+- **Contas a pagar** e **Contas a receber**:
+  - **Atalhos**: Em aberto, Vencidos, Vence hoje, Próximos 7 dias e Próximos 30 dias (os mesmos números da Visão geral); **A conferir** (o que veio de nota, extrato ou importação e ainda não foi confirmado); **Aguardando aprovação**; **Liquidados**.
+  - **Filtros**: busca, situação do pagamento (em aberto, pago em parte, liquidado, renegociado, cancelado), prazo (vencido, hoje, próximos dias, a vencer), fornecedor ou cliente, categoria, centro de custo, aprovação, período por vencimento ou por competência e ordem.
+  - **Totais do filtro**: valor original, já pago, saldo em aberto (avisa quanto ainda está "a conferir") e vencido. O **Excel** e o **CSV** saem com os mesmos filtros.
+  - **Vários de uma vez**: marque os títulos e use **Pagar** ou **Receber** (pelo saldo de cada um), **Vencimento**, **Categoria**, **Centro de custo**, **Renegociar**, **Aprovar**, **Reprovar** ou **Cancelar**. O portal mostra um resumo antes de confirmar.
+  - A lista começa pela **data mais antiga**. No filtro **Ordem**, escolha **Data mais nova primeiro** para inverter. As liquidadas e canceladas começam pela mais nova.
+- **Nova despesa** e **Nova receita** (botões nas listas e na Visão geral; no celular, o botão **+** fixo no canto da tela):
+  - Na frente ficam só o valor, a data, a descrição, a conta e **Já foi pago** (com o banco ou caixa). Fornecedor, mês do DRE, centro de custo, projeto e a repetição ficam em **Mais detalhes**.
+  - Na **Conta**, digite parte do nome para buscar (ex.: "alu" para Aluguel). As **mais usadas** aparecem como atalhos. O portal **sugere a conta** usada da última vez com o mesmo fornecedor ou com uma descrição parecida. A sugestão usa só o histórico da própria empresa, sem serviço externo; confira antes de salvar.
+  - **Parcelado**: informe o número de parcelas e de quanto em quanto tempo (todo mês, a cada 15 dias, toda semana). A tabela mostra cada parcela com a data e o valor, e os dois podem ser mudados. Ao mudar o valor de uma parcela, a última se ajusta para fechar o total. **Refazer parcelas** volta à divisão igual. A soma das parcelas tem que ser igual ao valor total.
+  - **Todo mês ou período**: vira uma recorrência (aluguel, mensalidade). Os lançamentos são gerados 3 meses à frente, continuamente.
+  - Dá para anexar o **comprovante** (foto ou PDF): ele fica em Documentos, ligado ao lançamento. Depois de salvar, o formulário fica pronto para o próximo. Num título, **Lançar de novo** repete os dados com a data de hoje.
+- **O título** (clique numa conta da lista):
+  - **Valor original**, **total pago** e **saldo em aberto** em destaque.
+  - **Registrar pagamento** ou **recebimento**: inteiro ou em parte, com juros, multa, desconto e taxas separados do principal. Um clique duplo não registra duas vezes.
+  - **Estornar** (o ícone ao lado do pagamento): pede o motivo, o título volta a ficar em aberto e o saldo da conta volta. Nada é apagado: o pagamento estornado fica no histórico, com quem estornou, quando e por quê.
+  - **De onde veio**: abre a nota, a venda, a ordem de serviço ou o documento que criou o título. Também mostra as outras parcelas, a aprovação, a renegociação e o **histórico** completo.
+  - **Alterar recorrência**: mude só esta ocorrência, esta e as próximas (inclusive as que ainda serão geradas), ou encerre a partir desta.
+  - O nome do cliente ou fornecedor abre o **histórico dele**: em aberto, vencido, pago e atraso médio, com os títulos.
+- **Aprovação de pagamentos** (**Configurações → Aprovação**):
+  - Crie faixas por valor: a partir de quanto o pagamento precisa de 1, 2 ou 3 aprovações (de pessoas diferentes). Sem faixa, nada pede aprovação.
+  - Enquanto aguarda, o pagamento não pode ser baixado. **Quem lançou não aprova o próprio pagamento**. Se o valor mudar depois de aprovado, pede aprovação de novo.
+  - Aprova quem tem a permissão **Aprovar pagamentos**. O que o banco já mostrou na conciliação entra mesmo assim.
+- **Renegociação**: marque os títulos em aberto e clique em **Renegociar**. Informe o novo total, as parcelas, o 1º vencimento, a **descrição do acordo** e o motivo.
+  - Os títulos originais ficam como **Renegociados**: continuam no histórico, mas não contam de novo nos totais. As parcelas do acordo passam a valer.
+  - Juros e encargos (ou o desconto) do acordo entram no resultado do mês.
+  - **Desfazer renegociação** volta os originais, desde que nenhuma parcela do acordo tenha sido paga (estorne antes, se for o caso).
+- **Caixa e bancos**: contas bancárias, caixa, cartões e maquininhas com os saldos, e as **operações**: transferência entre contas, pagamento de fatura do cartão, aplicação, resgate, repasse da maquininha, compra no cartão, venda na maquininha, empréstimo e estoque. Transferência não é receita nem despesa: não muda o total disponível nem as contas a pagar e a receber.
+- **Conciliação**: importar extratos do banco (OFX ou planilha) e conciliar as movimentações com os títulos.
+- **Fluxo de caixa**: entradas e saídas realizadas e previstas, por mês.
+- **Relatórios**: saúde financeira, resultado (DRE gerencial), fluxo de caixa e as planilhas de contas a pagar, a receber e inadimplência.
+- **Configurações**: plano de contas (categorias), clientes e fornecedores, centros de custo, projetos, recorrências e aprovação.
+- **Permissões do financeiro**: Visualizar, Lançar e editar, Baixar (pagar/receber), Estornar, Aprovar pagamentos, Exportar e Importar. Valem no servidor e no banco, não só na tela.
+- **Empresas e filiais**: cada CNPJ é uma empresa separada no portal, com o próprio financeiro, e quem tem acesso a uma não vê a outra. Unidades internas da mesma empresa (loja 1, loja 2, cozinha) ficam separadas por **centro de custo**.
+- **Importar contas a pagar/receber** (botão **Importar** em Contas a pagar ou a receber): traz de uma vez as contas do sistema antigo, com as datas de vencimento e os valores.
   - Serve a **planilha** (Excel ou CSV) ou o **relatório em PDF** de contas a pagar ou a receber que o sistema da empresa imprime (a tabela com descrição, vencimento, situação e valor).
   - Envie o arquivo em **Enviar relatório de contas** (tipo “Relatórios de contas a pagar e a receber”) e clique em **Importar** na lista.
   - No PDF, o portal lê a tabela e **confere** a soma das contas e a quantidade com o resumo do relatório (ex.: “66 cobranças”, total R$ 214.285,76). Se não bater, **nada é importado** e o aviso explica; nesse caso, envie a planilha.
@@ -355,12 +388,12 @@ Tudo o que a empresa enviou e o que o escritório publicou (guias de impostos, f
   - Contas **já pagas** (sem data de pagamento) e **canceladas** ficam de fora e aparecem numa lista.
   - **Só contas a partir de hoje**: a importação já vem com “Só contas com vencimento a partir de” preenchido com a data de hoje; as anteriores ficam de fora. Mude a data ou clique em **Importar todas as datas** se precisar.
   - **Início do contas a pagar no portal** (no topo de Importar extratos e planilhas): com a data definida, as contas a pagar com vencimento antes dela **não são criadas** das notas fiscais de compra (NF-e, NFS-e tomada, CT-e) nem entram pela importação — para quem começa a usar o portal e já pagou as contas antigas no sistema anterior. As notas continuam guardadas para a contabilidade e o lançamento manual continua livre. Para tirar, **Tirar a data**.
-  - O portal **sugere a conta** pelo histórico da própria empresa (lançamentos parecidos já confirmados). As contas importadas entram como **sugeridas**: confira e confirme em **Lançamentos → Somente sugeridos** (dá para marcar várias e confirmar de uma vez).
+  - O portal **sugere a conta** pelo histórico da própria empresa (lançamentos parecidos já confirmados). As contas importadas entram como **sugeridas**: confira e confirme no atalho **A conferir** de Contas a pagar ou a receber.
   - Importar de novo o mesmo arquivo, ou o relatório do mês seguinte com as mesmas parcelas, **não duplica**: só as contas novas entram. **Desfazer importação** (na lista das importações) remove o que ela criou.
   - Tudo é lido no servidor do portal; o arquivo não vai para serviço de fora. Relatórios de outros sistemas, com outro leiaute, podem precisar de ajuste — a planilha funciona com qualquer sistema.
 - **Notas fiscais**: notas lidas dos XML enviados. Lançamentos criados a partir de XML ou de leitura automática chegam como **sugeridos** e precisam ser confirmados.
-- **Cadastros**: plano de contas gerencial (categorias), clientes e fornecedores, centros de custo e projetos.
-  - **Plano de contas**: **Nova conta** e **Novo grupo** (o código vem sugerido), editar (lápis) e **excluir** (lixeira). Cada conta mostra em que linha do DRE aparece.
+- **Plano de contas** (em **Configurações**):
+  - **Nova conta** e **Novo grupo** (o código vem sugerido), editar (lápis) e **excluir** (lixeira). Cada conta mostra em que linha do DRE aparece.
   - Ao excluir uma conta com lançamentos, o portal mostra quantos são e pede a conta que vai recebê-los; move tudo e depois exclui. Ao excluir um grupo, as contas passam para o grupo escolhido.
   - Conta com lançamento em mês já fechado pelo escritório não pode ser excluída, só **desativada** (some dos novos lançamentos; o histórico continua). As contas usadas pelo sistema (juros, tarifas, taxas da maquininha) também não são excluídas.
   - Só quem pode editar o financeiro mexe no plano de contas, e toda exclusão fica no histórico.
@@ -485,7 +518,7 @@ O nome da empresa abre a **ficha operacional**: o **próximo passo** em destaque
 
 1. **Início do mês** — a rotina automática cria o checklist de cada empresa e os lançamentos recorrentes. Nada a fazer.
 2. **Acompanhar o recebimento** — **Documentos recebidos** mostra tudo o que chegou. Abra cada documento e use **Aprovar** ou **Pedir correção** (explicando o motivo). **Pendências** mostra o que falta em cada empresa; os lembretes saem sozinhos, e dá para usar **Enviar lembrete** quando precisar.
-3. **Financeiro** — os XML enviados pelos clientes viram notas e lançamentos **sugeridos**; confirme-os em **Financeiro → Lançamentos**. Importe os extratos em **Financeiro → Importar extratos**.
+3. **Financeiro** — os XML enviados pelos clientes viram notas e lançamentos **sugeridos**; confirme-os no atalho **A conferir** de **Contas a pagar** e **Contas a receber**. Importe os extratos em **Financeiro → Conciliação**.
 4. **Conciliação** — em **Conciliação**, use **Buscar sugestões** e confirme as que estiverem certas; concilie manualmente o resto (tarifas, transferências, pagamentos agrupados). Informe o **saldo do banco** no fim do mês para conferir a diferença.
 5. **Fechamento** — em **Fechamento**, clique em **Iniciar fechamento** e siga as etapas: coleta, conferência, conciliação, revisão e publicação. Cada etapa mostra verificações automáticas (ex.: “3 movimentações sem conciliar”). Pendências marcadas como impeditivas não deixam fechar. Ao final, **Fechar o mês**. Reabrir exige justificativa e permissão específica.
 6. **Relatórios** — em **Relatórios → Publicados**, crie o pacote do mês, revise os textos e publique. O cliente é avisado. Se publicar antes do fechamento, ele sai como **preliminar**; depois do fechamento, sai uma nova versão **revisada**.

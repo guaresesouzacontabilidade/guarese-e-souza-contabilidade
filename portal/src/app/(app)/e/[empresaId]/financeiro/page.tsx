@@ -1,285 +1,379 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, ArrowDownLeft, ArrowRight, ArrowUpRight, Info, Landmark, Minus, Plus, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, CalendarClock, ClipboardCheck, FileUp, Landmark, Minus, Plus, TrendingDown, TrendingUp, UserRound } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
-import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
-import { Badge } from "@/components/ui/badge";
+import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alerta, EstadoVazio } from "@/components/ui/feedback";
-import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { competenciaAtual, hojeISO, somarDias } from "@/lib/competencia";
+import { Alerta } from "@/components/ui/feedback";
+import { Select } from "@/components/ui/form";
+import { GraficoEntradasSaidas } from "@/components/relatorios/graficos";
+import { PendenciasPainel, type Urgente } from "@/components/financeiro/pendencias-painel";
 import { formatarData } from "@/lib/formatos";
-import { dec, formatarMoeda, somar } from "@/lib/dinheiro";
+import { formatarMoeda } from "@/lib/dinheiro";
 import { TIPOS_CONTA } from "@/lib/rotulos";
-import { buscarTudo } from "@/lib/supabase/paginar";
+import { parametro } from "@/lib/busca";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Financeiro" };
 
-interface SaldoConta {
-  conta_id: string;
-  nome: string;
-  tipo: string;
-  compoe_saldo_disponivel: boolean;
-  saldo_sistema: number | null;
-  saldo_extrato: number | null;
-  saldo_extrato_data: string | null;
-  ultimo_movimento_data: string | null;
-  movimentos_pendentes: number;
-  conciliado_ate: string | null;
+const UUID = /^[0-9a-f-]{36}$/i;
+
+type Faixa = { total: number; qtd: number };
+type Titulos = Record<"vencido" | "hoje" | "d7" | "d30" | "futuro" | "total", Faixa>;
+type Painel = {
+  hoje: string;
+  gerado_em: string;
+  saldo_disponivel: number;
+  saldo_selecionado: number;
+  contas: { id: string; nome: string; tipo: string; disponivel: boolean; saldo: number; extrato_data: string | null; extrato_saldo: number | null; pendentes: number }[];
+  titulos: { receber: Titulos; pagar: Titulos };
+  realizado: { recebido_hoje: number; pago_hoje: number; recebido_mes: number; pago_mes: number; qtd_hoje: number };
+  projecao: { hoje: number; d7: number | null; d30: number | null; primeiro_negativo: string | null; com_vencidos_d30: number };
+  serie: { data: string; entradas: number; saidas: number; saldo: number; previsto: boolean }[];
+  urgentes: Urgente[];
+  clientes_atraso: { contraparte_id: string | null; nome: string; total: number; qtd: number; mais_antigo: string }[];
+  pendencias: { sugeridos: number; aprovacoes: number; aprovacoes_total: number; conciliar: number; conciliar_total: number; sem_categoria: number };
+};
+
+/** Um número do painel que abre a lista já filtrada. */
+function Numero({
+  rotulo,
+  valor,
+  qtd,
+  href,
+  tom,
+  icone: Icone,
+  ajuda,
+  destaque,
+}: {
+  rotulo: string;
+  valor: number;
+  qtd?: number;
+  href: string;
+  tom?: "sucesso" | "perigo" | "alerta" | "info";
+  icone?: typeof TrendingUp;
+  ajuda?: string;
+  destaque?: boolean;
+}) {
+  const cor = tom === "sucesso" ? "text-sucesso" : tom === "perigo" ? "text-perigo" : tom === "alerta" ? "text-alerta-fg" : "";
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "group flex flex-col justify-between rounded-2xl border bg-card p-4 transition-colors hover:border-primary/50",
+        destaque && tom === "perigo" && valor > 0 ? "border-perigo/40 bg-perigo-bg" : "border-border",
+      )}
+    >
+      <span className="flex items-start justify-between gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {rotulo}
+        {Icone ? <Icone className={cn("size-4", cor || "text-muted-foreground")} aria-hidden /> : null}
+      </span>
+      <span className={cn("mt-1 text-xl font-bold numero", valor === 0 ? "text-muted-foreground" : cor)}>{formatarMoeda(valor)}</span>
+      <span className="mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>{qtd !== undefined ? `${qtd} título(s)` : ajuda}</span>
+        <ArrowRight className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+      </span>
+    </Link>
+  );
 }
 
-export default async function VisaoFinanceira({ params }: PageProps<"/e/[empresaId]/financeiro">) {
+/**
+ * Visão geral do financeiro: quanto dinheiro há agora, o que entra e sai hoje
+ * e nos próximos dias, o que venceu, se o saldo aguenta os compromissos e o
+ * que precisa de conferência. Cada número abre a lista já filtrada.
+ */
+export default async function VisaoFinanceira({ params, searchParams }: PageProps<"/e/[empresaId]/financeiro">) {
   const { empresaId } = await params;
+  const sp = await searchParams;
   const ctx = await obterContextoEmpresa(empresaId);
-  const hoje = hojeISO();
-  const em7 = somarDias(hoje, 7);
-  const em30 = somarDias(hoje, 30);
+  const conta = UUID.test(parametro(sp, "conta")) ? parametro(sp, "conta") : "";
+  const centro = UUID.test(parametro(sp, "centro")) ? parametro(sp, "centro") : "";
   const base = `/e/${empresaId}/financeiro`;
+  const pagar = `${base}/pagar`;
+  const receber = `${base}/receber`;
+  const filtroCentro = centro ? `&centro=${centro}` : "";
 
-  const [saldosR, abertos, sugeridos, projetadoR, qualidadeR] = await Promise.all([
-    ctx.supabase.rpc("saldos_contas", { p_empresa_id: empresaId, p_data: hoje }),
-    buscarTudo((de, ate) =>
-      ctx.supabase
-        .from("lancamentos")
-        .select("id, tipo, descricao, valor_previsto, valor_baixado, data_vencimento, contraparte:contrapartes(nome), conta:contas_financeiras(tipo)")
-        .eq("empresa_id", empresaId)
-        .eq("status_revisao", "confirmado")
-        .in("situacao", ["aberto", "parcial"])
-        .order("data_vencimento")
-        .range(de, ate),
-    ),
-    ctx.supabase.from("lancamentos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("status_revisao", "sugerido").neq("situacao", "cancelado"),
-    ctx.supabase.rpc("relatorio_fluxo_projetado", { p_empresa_id: empresaId, p_ate: em30 }),
-    ctx.supabase.rpc("qualidade_dados", { p_empresa_id: empresaId, p_inicio: competenciaAtual(), p_fim: hoje }),
+  const [painelR, { data: contasLista }, { data: centros }] = await Promise.all([
+    ctx.supabase.rpc("financeiro_painel", { p_empresa_id: empresaId, p_conta_id: conta || undefined, p_centro_custo_id: centro || undefined }),
+    ctx.supabase.from("contas_financeiras").select("id, nome").eq("empresa_id", empresaId).eq("ativa", true).order("nome"),
+    ctx.supabase.from("centros_custo").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
-
-  const saldos = (saldosR.data ?? []) as SaldoConta[];
-  const disponiveis = saldos.filter((s) => s.compoe_saldo_disponivel);
-  const semSaldo = disponiveis.filter((s) => s.saldo_sistema === null);
-  const saldoDisponivel = disponiveis.length && !semSaldo.length ? somar(disponiveis.map((s) => s.saldo_sistema)) : null;
-
-  // Lançamentos de cartão são pagos pela fatura (não entram como vencimento individual)
-  const lista = abertos.filter((l) => (l.conta as { tipo: string } | null)?.tipo !== "cartao_credito");
-  const aberto = (l: (typeof lista)[number]) => dec(l.valor_previsto).minus(dec(l.valor_baixado));
-  const soma = (tipo: string, filtro: (l: (typeof lista)[number]) => boolean) => somar(lista.filter((l) => l.tipo === tipo && filtro(l)).map(aberto));
-  const vencidoReceber = soma("receber", (l) => l.data_vencimento < hoje);
-  const vencidoPagar = soma("pagar", (l) => l.data_vencimento < hoje);
-  const receber7 = soma("receber", (l) => l.data_vencimento >= hoje && l.data_vencimento <= em7);
-  const pagar7 = soma("pagar", (l) => l.data_vencimento >= hoje && l.data_vencimento <= em7);
-
-  const projetado = (projetadoR.data ?? []) as { entrada: number; saida: number }[];
-  const entradas30 = somar(projetado.map((p) => p.entrada));
-  const saidas30 = somar(projetado.map((p) => p.saida));
-  const saldoProjetado = saldoDisponivel ? saldoDisponivel.plus(entradas30).minus(saidas30) : null;
-
-  const q = (qualidadeR.data ?? {}) as {
-    movimentos?: { total: number; pendentes: number };
-    contas_sem_extrato?: { id: string; nome: string }[];
-    contas_extrato_incompleto?: { id: string; nome: string; ultimo_movimento: string | null }[];
-  };
-  const proximos = lista.filter((l) => l.data_vencimento <= em30).slice(0, 12);
+  if (painelR.error || !painelR.data) return <Alerta tom="perigo">Não foi possível carregar o painel agora. Tente de novo em instantes.</Alerta>;
+  const p = painelR.data as unknown as Painel;
+  const r = p.titulos.receber;
+  const g = p.titulos.pagar;
+  const horario = new Date(p.gerado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+  const pend = p.pendencias;
+  const conferir = pend.sugeridos + pend.aprovacoes + pend.conciliar + pend.sem_categoria;
+  const contasDisponiveis = p.contas.filter((c) => c.disponivel || conta);
+  const negativo = p.projecao.primeiro_negativo;
 
   return (
     <>
       <CabecalhoPagina
         titulo="Financeiro"
-        descricao="Saldos, contas a pagar e a receber e previsão de caixa. Valores vêm dos lançamentos confirmados, baixas e transferências registrados no portal."
+        descricao={`Saldos em ${formatarData(p.hoje)} às ${horario}. Valores dos pagamentos, recebimentos e transferências registrados no portal.`}
         acoes={
-          ctx.pode("financeiro.editar") ? (
-            <>
-              <Button asChild variante="contorno" className="border-perigo/40">
-                <Link href={`${base}/lancamentos/novo?tipo=pagar`}>
-                  <Minus className="text-perigo" /> Despesa
+          <>
+            {ctx.pode("financeiro.editar") ? (
+              <>
+                <Button asChild variante="contorno" className="border-perigo/40">
+                  <Link href={`${pagar}/novo`}>
+                    <Minus className="text-perigo" /> Nova despesa
+                  </Link>
+                </Button>
+                <Button asChild variante="contorno" className="border-sucesso/40">
+                  <Link href={`${receber}/novo`}>
+                    <Plus className="text-sucesso" /> Nova receita
+                  </Link>
+                </Button>
+                <Button asChild variante="contorno">
+                  <Link href={`${base}/caixa#operacoes`}>
+                    <ArrowLeftRight /> Transferência
+                  </Link>
+                </Button>
+              </>
+            ) : null}
+            {ctx.pode("financeiro.importar") ? (
+              <Button asChild variante="contorno">
+                <Link href={`${base}/importar`}>
+                  <FileUp /> Importar extrato
                 </Link>
               </Button>
-              <Button asChild variante="contorno" className="border-sucesso/40">
-                <Link href={`${base}/lancamentos/novo?tipo=receber`}>
-                  <Plus className="text-sucesso" /> Receita
-                </Link>
-              </Button>
-            </>
-          ) : null
+            ) : null}
+          </>
         }
       />
 
-      {(sugeridos.count ?? 0) > 0 ? (
-        <Alerta
-          tom="info"
-          className="mb-4"
-          titulo={`${sugeridos.count} lançamento(s) sugerido(s) aguardando revisão`}
-          acao={
-            <Button asChild tamanho="sm" variante="secundario">
-              <Link href={`${base}/lancamentos?revisao=sugerido`}>
-                <Sparkles /> Revisar
-              </Link>
-            </Button>
-          }
-        >
-          Lançamentos criados a partir de XMLs ou importações sem categoria só entram nos relatórios depois de confirmados.
-        </Alerta>
-      ) : null}
-
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Indicador
-          rotulo="Saldo disponível hoje"
-          valor={saldoDisponivel ? formatarMoeda(saldoDisponivel) : "—"}
-          detalhe={
-            !disponiveis.length
-              ? "Cadastre as contas bancárias"
-              : semSaldo.length
-                ? `Sem saldo inicial em ${semSaldo.map((s) => s.nome).join(", ")}`
-                : "Contas bancárias e caixa (sem cartões e maquininhas)"
-          }
-          tom={saldoDisponivel ? (saldoDisponivel.lessThan(0) ? "perigo" : "neutro") : "neutro"}
-          icone={Landmark}
-          href={`${base}/contas`}
-        />
-        <Indicador
-          rotulo="A receber vencido"
-          valor={formatarMoeda(vencidoReceber)}
-          detalhe={`Próximos 7 dias: ${formatarMoeda(receber7)}`}
-          tom={vencidoReceber.greaterThan(0) ? "alerta" : "neutro"}
-          icone={ArrowDownLeft}
-          href={`${base}/lancamentos?tipo=receber&situacao=atrasado`}
-        />
-        <Indicador
-          rotulo="A pagar vencido"
-          valor={formatarMoeda(vencidoPagar)}
-          detalhe={`Próximos 7 dias: ${formatarMoeda(pagar7)}`}
-          tom={vencidoPagar.greaterThan(0) ? "perigo" : "neutro"}
-          icone={ArrowUpRight}
-          href={`${base}/lancamentos?tipo=pagar&situacao=atrasado`}
-        />
-        <Indicador
-          rotulo="Saldo projetado em 30 dias"
-          valor={saldoProjetado ? formatarMoeda(saldoProjetado) : "—"}
-          detalhe={`Entradas ${formatarMoeda(entradas30)} · saídas ${formatarMoeda(saidas30)}`}
-          tom={saldoProjetado?.lessThan(0) ? "perigo" : "neutro"}
-        />
-      </div>
-
-      {(q.contas_sem_extrato?.length ?? 0) > 0 || (q.contas_extrato_incompleto?.length ?? 0) > 0 || (q.movimentos?.pendentes ?? 0) > 0 ? (
-        <Alerta tom="alerta" className="mb-5" titulo="Dados possivelmente incompletos neste mês">
-          <ul className="list-disc pl-5">
-            {q.contas_sem_extrato?.length ? <li>Sem extrato importado: {q.contas_sem_extrato.map((c) => c.nome).join(", ")}.</li> : null}
-            {q.contas_extrato_incompleto?.map((c) => (
-              <li key={c.id}>
-                {c.nome}: última movimentação importada em {formatarData(c.ultimo_movimento)}.
-              </li>
+      <form className="mb-4 flex flex-wrap items-center gap-2" aria-label="Filtros do painel">
+        <Select name="conta" defaultValue={conta} aria-label="Conta" className="w-auto min-w-48">
+          <option value="">Todas as contas (saldo disponível)</option>
+          {(contasLista ?? []).map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.nome}
+            </option>
+          ))}
+        </Select>
+        {centros?.length ? (
+          <Select name="centro" defaultValue={centro} aria-label="Centro de custo" className="w-auto min-w-48">
+            <option value="">Todos os centros de custo</option>
+            {centros.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
             ))}
-            {q.movimentos?.pendentes ? <li>{q.movimentos.pendentes} movimentação(ões) bancária(s) ainda não conciliada(s).</li> : null}
-          </ul>
-          Os saldos do sistema refletem somente o que foi registrado no portal.
-        </Alerta>
-      ) : null}
+          </Select>
+        ) : null}
+        <Button type="submit" variante="secundario" tamanho="sm">
+          Aplicar
+        </Button>
+        {conta || centro ? (
+          <Button asChild variante="fantasma" tamanho="sm">
+            <Link href={base}>Limpar</Link>
+          </Button>
+        ) : null}
+      </form>
 
-      <div className="grid gap-5 2xl:grid-cols-2 [&>*]:min-w-0">
+      {/* Dinheiro agora e saldo projetado */}
+      <div className="mb-5 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <Card>
-          <CardHeader>
-            <CardTitle>Saldos por conta</CardTitle>
-            <CardDescription>Saldo do sistema comparado ao último saldo informado no extrato.</CardDescription>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide">
+              <Landmark className="size-4" /> {conta ? "Saldo da conta agora" : "Dinheiro disponível agora"}
+            </CardDescription>
+            <CardTitle className={cn("text-3xl numero", p.saldo_selecionado < 0 ? "text-perigo" : "")} data-testid="saldo-disponivel">
+              {formatarMoeda(p.saldo_selecionado)}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {saldos.length ? (
-              <Table>
-                <THead>
-                  <tr>
-                    <Th>Conta</Th>
-                    <Th className="text-right">Sistema</Th>
-                    <Th className="text-right">Extrato</Th>
-                    <Th className="text-right">Diferença</Th>
-                  </tr>
-                </THead>
-                <TBody>
-                  {saldos.map((s) => {
-                    const dif = s.saldo_extrato != null && s.saldo_sistema != null ? dec(s.saldo_sistema).minus(dec(s.saldo_extrato)) : null;
-                    return (
-                      <Tr key={s.conta_id}>
-                        <Td>
-                          <span className="block font-medium">{s.nome}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {TIPOS_CONTA[s.tipo] ?? s.tipo}
-                            {s.movimentos_pendentes ? ` · ${s.movimentos_pendentes} a conciliar` : ""}
-                          </span>
-                        </Td>
-                        <Td className="text-right numero">{s.saldo_sistema != null ? formatarMoeda(s.saldo_sistema) : "—"}</Td>
-                        <Td className="text-right numero">
-                          {s.saldo_extrato != null ? (
-                            <>
-                              {formatarMoeda(s.saldo_extrato)}
-                              <span className="block text-xs text-muted-foreground">{formatarData(s.saldo_extrato_data)}</span>
-                            </>
-                          ) : (
-                            "—"
-                          )}
-                        </Td>
-                        <Td className="text-right numero">
-                          {dif == null ? (
-                            "—"
-                          ) : dif.isZero() ? (
-                            <Badge variante="sucesso">OK</Badge>
-                          ) : (
-                            <span className="text-perigo">{formatarMoeda(dif)}</span>
-                          )}
-                        </Td>
-                      </Tr>
-                    );
-                  })}
-                </TBody>
-              </Table>
+            <ul className="divide-y divide-border text-sm" aria-label="Saldo por conta">
+              {contasDisponiveis.slice(0, 6).map((c) => (
+                <li key={c.id} className="flex items-center justify-between gap-2 py-1.5">
+                  <span className="min-w-0">
+                    <span className="block truncate">{c.nome}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {TIPOS_CONTA[c.tipo]}
+                      {c.pendentes ? ` · ${c.pendentes} a conciliar` : ""}
+                      {c.extrato_data ? ` · extrato até ${formatarData(c.extrato_data)}` : ""}
+                    </span>
+                  </span>
+                  <span className={cn("numero shrink-0 whitespace-nowrap font-medium", c.saldo < 0 ? "text-perigo" : "")}>{formatarMoeda(c.saldo)}</span>
+                </li>
+              ))}
+            </ul>
+            <Link href={`${base}/caixa`} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+              Caixa e bancos <ArrowRight className="size-4" />
+            </Link>
+          </CardContent>
+        </Card>
+        <Card className={negativo ? "border-perigo/40" : undefined}>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide">
+              <CalendarClock className="size-4" /> Saldo projetado
+            </CardDescription>
+            <CardTitle className={cn("text-3xl numero", (p.projecao.d30 ?? 0) < 0 ? "text-perigo" : "")} data-testid="saldo-projetado">
+              {formatarMoeda(p.projecao.d30 ?? p.projecao.hoje)}
+            </CardTitle>
+            <CardDescription>em 30 dias, pelo que vence (sem os vencidos)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Fim de hoje (com o que vence hoje)</span>
+              <span className="numero shrink-0 whitespace-nowrap font-medium">{formatarMoeda(p.projecao.hoje)}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Em 7 dias</span>
+              <span className={cn("numero shrink-0 whitespace-nowrap font-medium", (p.projecao.d7 ?? 0) < 0 ? "text-perigo" : "")}>{formatarMoeda(p.projecao.d7 ?? 0)}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Em 30 dias, se os vencidos forem pagos e recebidos</span>
+              <span className="numero shrink-0 whitespace-nowrap font-medium">{formatarMoeda(p.projecao.com_vencidos_d30)}</span>
+            </div>
+            {negativo ? (
+              <Alerta tom="perigo" titulo={`O saldo fica negativo em ${formatarData(negativo)}`}>
+                Antecipe recebimentos, renegocie pagamentos ou transfira de outra conta antes dessa data.
+              </Alerta>
             ) : (
-              <EstadoVazio icone={Landmark} titulo="Nenhuma conta cadastrada" descricao="Cadastre as contas bancárias, caixa, cartões e maquininhas com o saldo inicial." />
+              <p className="text-xs text-sucesso">O saldo projetado cobre os compromissos dos próximos 30 dias.</p>
             )}
-            <p className="mt-3 flex gap-1.5 text-xs text-muted-foreground">
-              <Info className="size-3.5 shrink-0" /> A comparação usa o saldo do extrato na data informada pelo banco; diferenças indicam movimentações não registradas
-              ou não conciliadas.
-            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Hoje */}
+      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Hoje</h2>
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Numero rotulo="A receber hoje" valor={r.hoje.total} qtd={r.hoje.qtd} href={`${receber}?prazo=hoje&revisao=confirmado${filtroCentro}`} tom="sucesso" icone={ArrowDownLeft} />
+        <Numero rotulo="A pagar hoje" valor={g.hoje.total} qtd={g.hoje.qtd} href={`${pagar}?prazo=hoje&revisao=confirmado${filtroCentro}`} tom="alerta" icone={ArrowUpRight} />
+        <Numero rotulo="Recebido hoje" valor={p.realizado.recebido_hoje} href={`${receber}?situacao=todos&por=vencimento`} ajuda={`no mês: ${formatarMoeda(p.realizado.recebido_mes)}`} tom="sucesso" icone={TrendingUp} />
+        <Numero rotulo="Pago hoje" valor={p.realizado.pago_hoje} href={`${pagar}?situacao=todos&por=vencimento`} ajuda={`no mês: ${formatarMoeda(p.realizado.pago_mes)}`} icone={TrendingDown} />
+      </div>
+
+      {/* Vencidos e próximos dias */}
+      <div className="mb-5 grid gap-4 lg:grid-cols-2">
+        <section aria-labelledby="t-receber">
+          <h2 id="t-receber" className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            A receber
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Numero rotulo="Recebimentos vencidos" valor={r.vencido.total} qtd={r.vencido.qtd} href={`${receber}?prazo=vencido&revisao=confirmado${filtroCentro}`} tom="perigo" icone={AlertTriangle} destaque />
+            <Numero rotulo="Próximos 7 dias" valor={r.d7.total} qtd={r.d7.qtd} href={`${receber}?prazo=proximos7&revisao=confirmado${filtroCentro}`} tom="sucesso" />
+            <Numero rotulo="Próximos 30 dias" valor={r.d30.total} qtd={r.d30.qtd} href={`${receber}?prazo=proximos30&revisao=confirmado${filtroCentro}`} tom="sucesso" />
+            <Numero rotulo="Futuro (tudo a vencer)" valor={r.futuro.total} qtd={r.futuro.qtd} href={`${receber}?prazo=a_vencer&revisao=confirmado${filtroCentro}`} />
+          </div>
+        </section>
+        <section aria-labelledby="t-pagar">
+          <h2 id="t-pagar" className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            A pagar
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Numero rotulo="Pagamentos vencidos" valor={g.vencido.total} qtd={g.vencido.qtd} href={`${pagar}?prazo=vencido&revisao=confirmado${filtroCentro}`} tom="perigo" icone={AlertTriangle} destaque />
+            <Numero rotulo="Próximos 7 dias" valor={g.d7.total} qtd={g.d7.qtd} href={`${pagar}?prazo=proximos7&revisao=confirmado${filtroCentro}`} tom="alerta" />
+            <Numero rotulo="Próximos 30 dias" valor={g.d30.total} qtd={g.d30.qtd} href={`${pagar}?prazo=proximos30&revisao=confirmado${filtroCentro}`} tom="alerta" />
+            <Numero rotulo="Futuro (tudo a vencer)" valor={g.futuro.total} qtd={g.futuro.qtd} href={`${pagar}?prazo=a_vencer&revisao=confirmado${filtroCentro}`} />
+          </div>
+        </section>
+      </div>
+
+      <div className="mb-5">
+        <GraficoEntradasSaidas pontos={p.serie} hoje={p.hoje} />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Pagamentos e recebimentos urgentes</CardTitle>
+            <CardDescription>Vencidos e o que vence nos próximos 3 dias. Pague, receba ou aprove daqui mesmo.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PendenciasPainel
+              empresaId={empresaId}
+              itens={p.urgentes}
+              hoje={p.hoje}
+              permissoes={{ baixar: ctx.pode("financeiro.baixar"), aprovar: ctx.pode("financeiro.aprovar") }}
+              contas={contasLista ?? []}
+            />
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Próximos 30 dias</CardTitle>
-            <CardDescription>Contas a pagar e a receber em aberto (inclui vencidas).</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {proximos.length ? (
-              <ul className="divide-y divide-border text-sm">
-                {proximos.map((l) => {
-                  const atrasado = l.data_vencimento < hoje;
-                  return (
-                    <li key={l.id} className="flex items-center justify-between gap-3 py-2">
-                      <span className="min-w-0">
-                        <Link href={`${base}/lancamentos/${l.id}`} className="block truncate font-medium hover:underline">
-                          {l.descricao}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardCheck className="size-5" /> Precisa de conferência
+              </CardTitle>
+              <CardDescription>{conferir ? "Resolva para os números ficarem completos." : "Nada pendente de conferência."}</CardDescription>
+            </CardHeader>
+            {conferir ? (
+              <CardContent>
+                <ul className="space-y-1.5 text-sm" data-testid="conferencia-painel">
+                  {pend.aprovacoes ? (
+                    <li>
+                      <Link className="flex justify-between gap-2 hover:underline" href={`${pagar}?aprovacao=pendente&situacao=em_aberto`}>
+                        <span>Pagamentos aguardando aprovação ({pend.aprovacoes})</span>
+                        <span className="numero">{formatarMoeda(pend.aprovacoes_total)}</span>
+                      </Link>
+                    </li>
+                  ) : null}
+                  {pend.conciliar ? (
+                    <li>
+                      <Link className="flex justify-between gap-2 hover:underline" href={`/e/${empresaId}/conciliacao`}>
+                        <span>Movimentos do banco a conciliar ({pend.conciliar})</span>
+                        <span className="numero">{formatarMoeda(pend.conciliar_total)}</span>
+                      </Link>
+                    </li>
+                  ) : null}
+                  {pend.sugeridos ? (
+                    <li>
+                      <Link className="hover:underline" href={`${pagar}?revisao=sugerido&situacao=todos`}>
+                        Lançamentos sugeridos a conferir ({pend.sugeridos})
+                      </Link>
+                    </li>
+                  ) : null}
+                  {pend.sem_categoria ? (
+                    <li>
+                      <Link className="hover:underline" href={`${pagar}?revisao=sugerido&situacao=todos`}>
+                        Sem categoria ({pend.sem_categoria})
+                      </Link>
+                    </li>
+                  ) : null}
+                </ul>
+              </CardContent>
+            ) : null}
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserRound className="size-5" /> Clientes em atraso
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {p.clientes_atraso.length ? (
+                <ul className="divide-y divide-border text-sm" data-testid="clientes-atraso">
+                  {p.clientes_atraso.map((c) => (
+                    <li key={c.contraparte_id ?? "sem"} className="flex items-center justify-between gap-2 py-1.5">
+                      {c.contraparte_id ? (
+                        <Link href={`${receber}/contraparte/${c.contraparte_id}`} className="min-w-0 truncate hover:underline">
+                          {c.nome}
                         </Link>
-                        <span className={atrasado ? "text-xs text-perigo" : "text-xs text-muted-foreground"}>
-                          {formatarData(l.data_vencimento)}
-                          {atrasado ? " · vencido" : ""}
-                          {(l.contraparte as { nome: string } | null)?.nome ? ` · ${(l.contraparte as { nome: string }).nome}` : ""}
-                        </span>
-                      </span>
-                      <span className={l.tipo === "receber" ? "shrink-0 font-medium text-sucesso numero" : "shrink-0 font-medium text-perigo numero"}>
-                        {l.tipo === "receber" ? "+" : "−"} {formatarMoeda(aberto(l))}
+                      ) : (
+                        <span className="min-w-0 truncate">{c.nome}</span>
+                      )}
+                      <span className="shrink-0 text-right">
+                        <span className="block numero font-medium text-perigo">{formatarMoeda(c.total)}</span>
+                        <span className="text-xs text-muted-foreground">desde {formatarData(c.mais_antigo)}</span>
                       </span>
                     </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">Nenhuma conta a pagar ou a receber nos próximos 30 dias.</p>
-            )}
-            <Link href={`${base}/lancamentos`} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-              Ver lançamentos <ArrowRight className="size-4" />
-            </Link>
-            {saldoProjetado?.lessThan(0) ? (
-              <p className="flex gap-1.5 text-sm text-perigo">
-                <AlertTriangle className="size-4 shrink-0" /> Pela previsão, o caixa fica negativo em até 30 dias. Revise prazos e recebimentos.
-              </p>
-            ) : null}
-          </CardContent>
-        </Card>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum cliente com recebimento vencido.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </>
   );

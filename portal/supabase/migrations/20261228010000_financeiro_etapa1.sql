@@ -230,6 +230,8 @@ create table public.baixas_estornadas (
   motivo_estorno text not null check (length(trim(motivo_estorno)) between 5 and 500),
   foreign key (empresa_id, lancamento_id) references public.lancamentos (empresa_id, id) on delete cascade
 );
+alter table public.baixas_estornadas add constraint baixas_estornadas_conta_fk foreign key (empresa_id, conta_financeira_id)
+  references public.contas_financeiras (empresa_id, id) on delete set null (conta_financeira_id);
 create index baixas_estornadas_lancamento_idx on public.baixas_estornadas (lancamento_id);
 create index baixas_estornadas_empresa_idx on public.baixas_estornadas (empresa_id, estornado_em desc);
 alter table public.baixas_estornadas enable row level security;
@@ -1084,11 +1086,12 @@ begin
     into v_contas, v_saldo, v_saldo_sel, v_ids
     from c;
 
-  -- Títulos em aberto por prazo (saldo em aberto)
+  -- Títulos em aberto por prazo (saldo em aberto). Compras lançadas no cartão de
+  -- crédito são pagas pela fatura (transferência): ficam fora.
   with t as (
     select l.tipo, l.data_vencimento as v, (l.valor_previsto - l.valor_baixado) as s
       from public.lancamentos l
-     where l.empresa_id = p_empresa_id and l.status_revisao = 'confirmado' and l.situacao in ('aberto', 'parcial')
+     where l.empresa_id = p_empresa_id and l.status_revisao = 'confirmado' and l.situacao in ('aberto', 'parcial') and not exists (select 1 from public.contas_financeiras cc where cc.id = l.conta_financeira_id and cc.tipo = 'cartao_credito')
        and (p_centro_custo_id is null or l.centro_custo_id = p_centro_custo_id)
   )
   select jsonb_object_agg(z.tp, z.obj) into v_titulos
@@ -1165,7 +1168,7 @@ begin
       from generate_series(v_hoje + 1, v_hoje + 30, interval '1 day') d
       left join public.lancamentos l
         on l.empresa_id = p_empresa_id and l.data_vencimento = d::date and l.status_revisao = 'confirmado'
-       and l.situacao in ('aberto', 'parcial') and (p_centro_custo_id is null or l.centro_custo_id = p_centro_custo_id)
+       and l.situacao in ('aberto', 'parcial') and not exists (select 1 from public.contas_financeiras cc where cc.id = l.conta_financeira_id and cc.tipo = 'cartao_credito') and (p_centro_custo_id is null or l.centro_custo_id = p_centro_custo_id)
      group by d
      order by d
   loop
@@ -1185,7 +1188,7 @@ begin
              l.situacao, l.aprovacao_status, cp.nome as contraparte, greatest(v_hoje - l.data_vencimento, 0) as dias_atraso
         from public.lancamentos l
         left join public.contrapartes cp on cp.id = l.contraparte_id
-       where l.empresa_id = p_empresa_id and l.status_revisao = 'confirmado' and l.situacao in ('aberto', 'parcial')
+       where l.empresa_id = p_empresa_id and l.status_revisao = 'confirmado' and l.situacao in ('aberto', 'parcial') and not exists (select 1 from public.contas_financeiras cc where cc.id = l.conta_financeira_id and cc.tipo = 'cartao_credito')
          and l.data_vencimento <= v_hoje + 3
          and (p_centro_custo_id is null or l.centro_custo_id = p_centro_custo_id)
        order by l.data_vencimento, l.tipo
@@ -1200,7 +1203,7 @@ begin
         from public.lancamentos l
         left join public.contrapartes cp on cp.id = l.contraparte_id
        where l.empresa_id = p_empresa_id and l.tipo = 'receber' and l.status_revisao = 'confirmado'
-         and l.situacao in ('aberto', 'parcial') and l.data_vencimento < v_hoje
+         and l.situacao in ('aberto', 'parcial') and not exists (select 1 from public.contas_financeiras cc where cc.id = l.conta_financeira_id and cc.tipo = 'cartao_credito') and l.data_vencimento < v_hoje
          and (p_centro_custo_id is null or l.centro_custo_id = p_centro_custo_id)
        group by l.contraparte_id, cp.nome
        order by sum(l.valor_previsto - l.valor_baixado) desc

@@ -418,5 +418,33 @@ export async function semearFinanceiro(admin: SupabaseClient, usuario: SupabaseC
       if (error) throw new Error(`Conciliação do saque: ${error.message}`);
     }
   }
+
+  // Exemplo de renegociação (fictício): o recebimento vencido mais antigo vira um acordo em 2 parcelas com 5% de encargos
+  const { data: vencido } = await admin
+    .from("lancamentos")
+    .select("id, descricao, valor_previsto, valor_baixado")
+    .eq("empresa_id", empresaId)
+    .eq("tipo", "receber")
+    .eq("status_revisao", "confirmado")
+    .eq("situacao", "aberto")
+    .lt("data_vencimento", new Date().toISOString().slice(0, 10))
+    .order("data_vencimento")
+    .limit(1)
+    .maybeSingle();
+  if (vencido) {
+    const saldo = Number(vencido.valor_previsto) - Number(vencido.valor_baixado);
+    const parcela = Math.round(saldo * 1.05 * 50) / 100;
+    const { error } = await usuario.rpc("financeiro_renegociar", {
+      p_empresa_id: empresaId,
+      p_lancamentos: [vencido.id],
+      p_parcelas: [
+        { vencimento: dia(1, 10), valor: parcela },
+        { vencimento: dia(2, 10), valor: parcela },
+      ],
+      p_motivo: "Cliente pediu mais prazo (exemplo da demonstração)",
+      p_descricao: `Acordo: ${vencido.descricao}`,
+    });
+    if (error) throw new Error(`Renegociação de exemplo: ${error.message}`);
+  }
   return true;
 }
