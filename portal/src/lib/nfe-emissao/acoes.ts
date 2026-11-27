@@ -13,6 +13,7 @@ import { calcularNota, type EntradaNfe } from "./calculo";
 import { resumoTotais } from "./emitir";
 import { fmt } from "./decimal";
 import { statusServico, AUTORIZADORES, autorizadorDaUf } from "./sefaz";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -77,6 +78,7 @@ export async function salvarConfiguracao(empresaId: string, _anterior: Resultado
     const m = mensagemErro(error);
     return falha(m, /autorizou o portal/.test(m) ? { autorizacao_texto: [m] } : undefined);
   }
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Configuração da NF-e salva.");
 }
 
@@ -106,6 +108,7 @@ export async function salvarEmitente(empresaId: string, id: string | null, _ante
     } as never,
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Inscrição salva.");
 }
 
@@ -135,6 +138,7 @@ export async function salvarProduto(empresaId: string, id: string | null, _anter
     } as never,
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Produto salvo.");
 }
 
@@ -152,6 +156,7 @@ export async function definirOperacaoProdutos(empresaId: string, operacaoId: str
   });
   if (error) return falha(mensagemErro(error));
   const n = Number(data ?? 0);
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(n === 0 ? "Os produtos já estavam com essa regra." : n === 1 ? "1 produto atualizado." : `${n} produtos atualizados.`);
 }
 
@@ -221,6 +226,7 @@ export async function salvarOperacao(empresaId: string, id: string | null, _ante
     } as never,
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Operação salva.");
 }
 
@@ -295,6 +301,7 @@ export async function salvarDestinatario(empresaId: string, id: string | null, _
     } as never,
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Cliente salvo.", { id: data as string });
 }
 
@@ -318,6 +325,7 @@ export async function salvarTransportador(empresaId: string, id: string | null, 
     } as never,
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Transportador salvo.", { id: data as string });
 }
 
@@ -449,6 +457,7 @@ export async function emitirNota(
     const { error: eVinculo } = await ctx.supabase.rpc("carregamento_vincular_nfe", { p_id: ordemId, p_nfe_id: r.id });
     if (eVinculo) return sucesso(`Nota nº ${r.numero} enviada à SEFAZ. Não foi possível ligá-la à ordem de carregamento: ${mensagemErro(eVinculo)}`, { id: r.id });
   }
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(`Nota nº ${r.numero} enviada à SEFAZ.`, { id: r.id });
 }
 
@@ -458,6 +467,7 @@ export async function tentarDeNovo(empresaId: string, id: string): Promise<Resul
   const { error } = await ctx.supabase.rpc("nfe_tentar_de_novo", { p_id: id });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["emitir_nfe"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Consultando a SEFAZ de novo.");
 }
 
@@ -466,6 +476,7 @@ export async function descartarNota(empresaId: string, id: string): Promise<Resu
   if (!ctx || !UUID.test(id)) return falha("Sem permissão.");
   const { error } = await ctx.supabase.rpc("nfe_descartar", { p_id: id });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Nota descartada. O número precisa ser inutilizado na SEFAZ.");
 }
 
@@ -477,6 +488,7 @@ export async function cancelarNota(empresaId: string, id: string, _anterior: Res
   const { error } = await ctx.supabase.rpc("nfe_cancelar", { p_id: id, p_justificativa: just });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["evento_nfe"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Pedido de cancelamento enviado à SEFAZ.");
 }
 
@@ -488,6 +500,7 @@ export async function cartaCorrecao(empresaId: string, id: string, _anterior: Re
   const { error } = await ctx.supabase.rpc("nfe_carta_correcao", { p_id: id, p_texto: correcao });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["evento_nfe"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Carta de correção enviada à SEFAZ.");
 }
 
@@ -500,6 +513,7 @@ export async function vincularGuia(empresaId: string, guiaId: string, documentoI
   if (!ctx || !UUID.test(guiaId) || !UUID.test(documentoId)) return falha("Somente a equipe do escritório anexa as guias.");
   const { error } = await ctx.supabase.rpc("nfe_guia_atualizar", { p_id: guiaId, p_situacao: "gerada", p_documento_id: documentoId, p_observacao: null as never });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Guia anexada: ela já aparece na agenda de pagamentos do cliente.");
 }
 
@@ -514,6 +528,7 @@ export async function dispensarGuia(empresaId: string, guiaId: string, _anterior
     p_observacao: texto(fd, "observacao") || (null as never),
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(situacao === "dispensada" ? "Guia marcada como não aplicável." : "Guia voltou para “a gerar”.");
 }
 

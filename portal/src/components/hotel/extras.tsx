@@ -23,6 +23,7 @@ import {
 } from "@/lib/hotel/acoes";
 import { FORMAS_PAGAMENTO_HOTEL, NATUREZAS_EXTRA, UNIDADES_EXTRA, quantidadeExtra, type NaturezaExtra, type UnidadeExtra } from "@/lib/hotel/rotulos";
 import { cn } from "@/lib/utils";
+import { useListaDoServidor } from "@/lib/use-lista-servidor";
 
 export interface ExtraForm {
   id: string;
@@ -158,7 +159,7 @@ export function LancarExtras({
   const comEmpresa = !reservaFixa;
   const [para, setPara] = React.useState<"hospede" | "empresa">(reservaFixa || hospedagens.length ? "hospede" : "empresa");
   const [reserva, setReserva] = React.useState(reservaFixa ?? "");
-  const [empresas, setEmpresas] = React.useState(empresasIniciais);
+  const [empresas, setEmpresas] = useListaDoServidor(empresasIniciais);
   const [empresa, setEmpresa] = React.useState("");
   const [solicitante, setSolicitante] = React.useState("");
   const [observacao, setObservacao] = React.useState("");

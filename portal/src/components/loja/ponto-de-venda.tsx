@@ -21,6 +21,7 @@ import { EM_ANDAMENTO, SITUACAO_NFE, type SituacaoNfe } from "@/lib/nfe-emissao/
 import { FormDestinatario, type Destinatario } from "@/components/nfe/cadastros";
 import { PainelBalanca, useBalanca } from "@/components/loja/balanca";
 import { MENSAGEM_LEITURA, lerEtiquetaBalanca, mesmoCodigo, pesoLiquido, pesoPeloValor, type ConfigEtiqueta } from "@/lib/gestao/balanca";
+import { useListaDoServidor } from "@/lib/use-lista-servidor";
 
 export interface ProdutoPdv {
   id: string;
@@ -147,7 +148,7 @@ export function PontoDeVenda({
 }) {
   const router = useRouter();
   const porId = React.useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
-  const [clientes, setClientes] = React.useState(clientesIniciais);
+  const [clientes, setClientes] = useListaDoServidor(clientesIniciais);
   const [busca, setBusca] = React.useState("");
   const [linhas, setLinhas] = React.useState<Linha[]>(() =>
     (orcamento?.itens ?? []).flatMap((i) => {

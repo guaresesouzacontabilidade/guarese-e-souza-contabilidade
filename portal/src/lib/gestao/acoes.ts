@@ -8,6 +8,7 @@ import type { Json } from "@/lib/supabase/database.types";
 import type { FormaPagamento } from "./rotulos";
 import { emitirNfeDaVenda, nfeNaVenda } from "./nfe-venda";
 import { MODALIDADES_GESTAO } from "./carregamentos";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -322,6 +323,7 @@ export async function salvarClienteLoja(empresaId: string, dados: { nome: string
   const ctx = await exigirPermissao(empresaId, "gestao.vender");
   const { data, error } = await ctx.supabase.rpc("gestao_cliente_salvar", { p_empresa_id: empresaId, p_dados: dados });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Cliente cadastrado.", { id: data as string, nome: dados.nome.trim() });
 }
 

@@ -6,6 +6,7 @@ import { lerValorBR } from "@/lib/dinheiro";
 import { processarFilaDepois } from "@/lib/jobs/disparo";
 import { normalizarBandeira } from "./leitura";
 import { CAMPOS_RELATORIO, MODALIDADES, TIPOS_ADQUIRENTE, type Modalidade, type TipoAdquirente } from "./rotulos";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -134,6 +135,7 @@ export async function salvarContrato(empresaId: string, contratoId: string | nul
     }
   }
   const n = await reconferir(ctx, empresaId);
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(contratoId ? `Contrato atualizado.${n ? " As vendas foram conferidas de novo." : ""}` : "Contrato cadastrado. Confira as taxas por bandeira, se houver diferença.");
 }
 
@@ -145,6 +147,7 @@ export async function excluirContrato(empresaId: string, contratoId: string): Pr
   if (error) return falha(mensagemErro(error));
   if (!count) return falha("Contrato não encontrado.");
   await reconferir(ctx, empresaId);
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Contrato excluído.");
 }
 
@@ -203,6 +206,7 @@ export async function salvarTaxa(
   if (error) return falha(mensagemErro(error));
   if (!count) return falha("Contrato não encontrado.");
   await reconferir(ctx, empresaId);
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(taxaId ? "Taxa atualizada. As vendas foram conferidas de novo." : "Taxa incluída. As vendas foram conferidas de novo.");
 }
 
@@ -214,6 +218,7 @@ export async function excluirTaxa(empresaId: string, taxaId: string): Promise<Re
   if (error) return falha(mensagemErro(error));
   if (!count) return falha("Taxa não encontrada.");
   await reconferir(ctx, empresaId);
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Taxa excluída.");
 }
 
@@ -267,6 +272,7 @@ export async function confirmarColunas(empresaId: string, importacaoId: string, 
   });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["importar_maquininha"], limite: 3 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Colunas confirmadas. As vendas estão sendo importadas e conferidas com o contrato.");
 }
 
@@ -291,6 +297,7 @@ export async function reimportarRelatorio(empresaId: string, importacaoId: strin
   });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["importar_maquininha"], limite: 3 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Importação reiniciada.");
 }
 
@@ -300,6 +307,7 @@ export async function excluirRelatorio(empresaId: string, importacaoId: string):
   if (!ctx) return falha("Seu acesso não permite excluir relatórios das maquininhas.");
   const { error } = await ctx.supabase.rpc("maquininha_excluir_importacao", { p_importacao_id: importacaoId });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Relatório e vendas excluídos da conferência. O arquivo continua em Documentos.");
 }
 

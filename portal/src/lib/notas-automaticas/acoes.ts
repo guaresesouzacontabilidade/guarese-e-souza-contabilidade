@@ -10,6 +10,7 @@ import { processarFilaDepois } from "@/lib/jobs/disparo";
 import { ErroCertificado, TAMANHO_MAXIMO_CERTIFICADO, lerCertificadoA1, mesmaEmpresa } from "./certificado";
 import { cifrar } from "./cripto";
 import { AUTORIZACAO_CLIENTE, AUTORIZACAO_ESCRITORIO } from "./rotulos";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -96,6 +97,7 @@ export async function cadastrarCertificado(empresaId: string, _anterior: Resulta
   });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["notas_automaticas", "processar_documento"] });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Certificado cadastrado. A primeira busca começa em instantes.");
 }
 
@@ -105,6 +107,7 @@ export async function removerCertificado(empresaId: string, _anterior: Resultado
   const motivo = String(fd.get("motivo") ?? "").trim().slice(0, 500);
   const { error } = await ctx.supabase.rpc("revogar_certificado", { p_empresa_id: empresaId, p_motivo: motivo || (null as unknown as string) });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Certificado removido. A busca automática foi desligada e o certificado guardado foi apagado.");
 }
 

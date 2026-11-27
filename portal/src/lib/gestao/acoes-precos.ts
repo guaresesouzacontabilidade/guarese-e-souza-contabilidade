@@ -5,6 +5,7 @@ import { exigirPermissao } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { lerValorBR } from "@/lib/dinheiro";
 import type { Json } from "@/lib/supabase/database.types";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 /**
  * Preços de venda e margens da loja. Só quem gerencia a loja; o banco
@@ -100,6 +101,7 @@ export async function definirMargemProduto(empresaId: string, produtoId: string,
     if (m === undefined) return falha("Margem inválida. Use um número entre 0 e 1000.");
     const { error } = await ctx.supabase.rpc("gestao_produto_margem", { p_empresa_id: empresaId, p_produto_id: produtoId, p_margem: m as number });
     if (error) return falha(mensagemErro(error));
+    atualizarTelasDaEmpresa(empresaId);
     return sucesso();
   } catch (e) {
     return falha(mensagemErro(e));

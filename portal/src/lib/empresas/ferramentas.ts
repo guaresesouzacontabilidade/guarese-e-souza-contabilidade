@@ -24,9 +24,9 @@ export const FERRAMENTAS = [
   {
     chave: "financeiro",
     grupo: "Financeiro",
-    rotulo: "Contas e fluxo de caixa",
+    rotulo: "Financeiro (contas a pagar e a receber, caixa e bancos, fluxo de caixa)",
     rotas: ["/financeiro"],
-    permissoes: ["financeiro.ver", "financeiro.editar", "financeiro.importar"],
+    permissoes: ["financeiro.ver", "financeiro.editar", "financeiro.importar", "financeiro.baixar", "financeiro.estornar", "financeiro.aprovar", "financeiro.exportar"],
   },
   { chave: "maquininhas", grupo: "Financeiro", rotulo: "Maquininhas", rotas: ["/maquininhas"], permissoes: ["maquininhas.ver", "maquininhas.gerenciar"] },
   { chave: "conciliacao", grupo: "Financeiro", rotulo: "Conciliação bancária", rotas: ["/conciliacao"], permissoes: ["conciliacao.executar"] },

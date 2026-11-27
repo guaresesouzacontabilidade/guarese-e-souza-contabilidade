@@ -6,6 +6,7 @@ import { competenciaAtual, lerCompetencia } from "@/lib/competencia";
 import { formatarCompetencia } from "@/lib/formatos";
 import { processarFilaDepois } from "@/lib/jobs/disparo";
 import { tiposValidos } from "./rotulos";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -31,6 +32,7 @@ export async function pedirLoteXml(empresaId: string, _anterior: ResultadoAcao, 
   const { error } = await ctx.supabase.rpc("solicitar_lote_xml", { p_empresa_id: empresaId, p_competencia: competencia, p_tipos: tipos });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["gerar_lote_xml"], limite: 3 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(`Gerando os XML de ${formatarCompetencia(competencia)}. O arquivo aparece na lista abaixo e você recebe um aviso quando ficar pronto.`);
 }
 

@@ -9,6 +9,7 @@ import { ErroConsultaCnpj, consultarCnpjReceita } from "@/lib/empresas/receita";
 import { VARIANTE_PADRAO, type AmbienteNfse, type VarianteLeiaute } from "./dps";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { itensCorrelacao, type OpcaoReforma } from "./reforma";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -207,6 +208,7 @@ export async function pedirNota(empresaId: string, _anterior: ResultadoAcao, fd:
     });
     extra = erroTomador ? ` O tomador não foi salvo: ${mensagemErro(erroTomador)}` : " Tomador salvo para as próximas notas.";
   }
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(`Nota enviada ao Emissor Nacional.${extra}`, { id: (data as { id: string }).id });
 }
 
@@ -232,6 +234,7 @@ export async function salvarTomador(empresaId: string, _anterior: ResultadoAcao,
     p_dados: { tipo: t.tipo, documento: t.documento, nome: t.nome, email: t.email || null, telefone: t.telefone || null, endereco: t.endereco } as never,
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Tomador salvo.", { id: data as string });
 }
 
@@ -241,6 +244,7 @@ export async function excluirTomador(empresaId: string, id: string): Promise<Res
   if (!ctx || !UUID.test(id)) return falha("Sem permissão para emitir notas desta empresa.");
   const { error } = await ctx.supabase.rpc("nfse_tomador_excluir", { p_empresa_id: empresaId, p_id: id });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Tomador excluído.");
 }
 
@@ -250,6 +254,7 @@ export async function tentarDeNovo(empresaId: string, id: string): Promise<Resul
   const { error } = await ctx.supabase.rpc("nfse_tentar_de_novo", { p_id: id });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["emitir_nfse"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Nota enviada de novo ao Emissor Nacional.");
 }
 
@@ -263,6 +268,7 @@ export async function cancelarNota(empresaId: string, id: string, _anterior: Res
   const { error } = await ctx.supabase.rpc("nfse_cancelar", { p_id: id, p_motivo: motivo, p_justificativa: justificativa });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["cancelar_nfse"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Pedido de cancelamento enviado ao Emissor Nacional.");
 }
 
@@ -339,6 +345,7 @@ export async function salvarConfiguracao(empresaId: string, _anterior: Resultado
     }
     return falha(msg);
   }
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Configuração da emissão salva.");
 }
 
@@ -378,5 +385,6 @@ export async function salvarServico(empresaId: string, _anterior: ResultadoAcao,
     } as never,
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(UUID.test(id) ? "Serviço atualizado." : "Serviço cadastrado.");
 }

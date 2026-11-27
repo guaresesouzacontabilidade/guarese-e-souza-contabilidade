@@ -273,7 +273,8 @@ const esquemaBaixa = z.object({
 
 export async function registrarBaixa(empresaId: string, lancamentoId: string, _anterior: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   try {
-    const ctx = await contextoEdicao(empresaId);
+    const ctx = await obterContextoEmpresa(empresaId);
+    if (!ctx.pode("financeiro.baixar")) return falha("Você não tem permissão para registrar pagamentos e recebimentos nesta empresa.");
     const dados = esquemaBaixa.safeParse({
       data_pagamento: texto(fd, "data_pagamento"),
       conta_financeira_id: texto(fd, "conta_financeira_id"),
@@ -287,19 +288,22 @@ export async function registrarBaixa(empresaId: string, lancamentoId: string, _a
     });
     if (!dados.success) return falhaValidacao(dados.error);
     const b = dados.data;
-    const { error } = await ctx.supabase.from("baixas").insert({
-      empresa_id: empresaId,
-      lancamento_id: lancamentoId,
-      data_pagamento: b.data_pagamento,
-      conta_financeira_id: b.conta_financeira_id,
-      valor_principal: Number(b.valor_principal),
-      juros: Number(b.juros ?? 0),
-      multa: Number(b.multa ?? 0),
-      desconto: Number(b.desconto ?? 0),
-      taxas: Number(b.taxas ?? 0),
-      forma_pagamento: b.forma_pagamento ?? null,
-      observacao: b.observacao ?? null,
-    } as never);
+    // Chave do formulário: o mesmo envio repetido (clique duplo) não paga duas vezes
+    const chave = UUID.test(texto(fd, "chave")) ? texto(fd, "chave") : undefined;
+    const { error } = await ctx.supabase.rpc("financeiro_baixar", {
+      p_empresa_id: empresaId,
+      p_lancamento_id: lancamentoId,
+      p_data: b.data_pagamento,
+      p_conta_id: b.conta_financeira_id,
+      p_valor_principal: Number(b.valor_principal),
+      p_juros: Number(b.juros ?? 0),
+      p_multa: Number(b.multa ?? 0),
+      p_desconto: Number(b.desconto ?? 0),
+      p_taxas: Number(b.taxas ?? 0),
+      p_forma: b.forma_pagamento ?? undefined,
+      p_observacao: b.observacao ?? undefined,
+      p_chave: chave,
+    });
     if (error) return falha(mensagemErro(error));
     revalidar(empresaId);
     return sucesso(`Pagamento registrado: principal de ${formatarMoeda(b.valor_principal)}.`);
@@ -308,16 +312,15 @@ export async function registrarBaixa(empresaId: string, lancamentoId: string, _a
   }
 }
 
-export async function estornarBaixa(empresaId: string, baixaId: string): Promise<ResultadoAcao> {
+export async function estornarBaixa(empresaId: string, baixaId: string, motivo: string): Promise<ResultadoAcao> {
   try {
-    const ctx = await contextoEdicao(empresaId);
-    const { data: b } = await ctx.supabase.from("baixas").select("conciliacao_id").eq("id", baixaId).eq("empresa_id", empresaId).maybeSingle();
-    if (!b) return falha("Pagamento não encontrado.");
-    if (b.conciliacao_id) return falha("Este pagamento foi criado por uma conciliação bancária. Desfaça a conciliação para estorná-lo.");
-    const { error } = await ctx.supabase.from("baixas").delete().eq("id", baixaId).eq("empresa_id", empresaId);
+    const ctx = await obterContextoEmpresa(empresaId);
+    if (!ctx.pode("financeiro.estornar")) return falha("Você não tem permissão para estornar pagamentos nesta empresa.");
+    if (!UUID.test(baixaId)) return falha("Pagamento não encontrado.");
+    const { error } = await ctx.supabase.rpc("financeiro_estornar_baixa", { p_empresa_id: empresaId, p_baixa_id: baixaId, p_motivo: motivo });
     if (error) return falha(mensagemErro(error));
     revalidar(empresaId);
-    return sucesso("Pagamento/recebimento estornado. O lançamento voltou a ficar em aberto.");
+    return sucesso("Pagamento/recebimento estornado. O título voltou a ficar em aberto e o estorno ficou no histórico.");
   } catch (e) {
     return falha(mensagemErro(e));
   }

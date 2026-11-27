@@ -156,8 +156,11 @@ select is((select count(*)::int from public.baixas b join public.lancamentos l o
           'uma baixa por movimentação');
 select throws_ok($$select public.conciliar_manual(current_setting('testes.empresa_a')::uuid, array[current_setting('testes.mov_pix')::uuid], array[]::uuid[])$$,
                  null, null, 'movimentação já conciliada não entra em outra conciliação');
-select throws_ok($$delete from public.baixas where conciliacao_id is not null$$, null, null,
-                 'baixa criada pela conciliação só é removida desfazendo a conciliação');
+-- Apagar direto não remove (não há permissão de exclusão de baixas: só pelo servidor)
+select set_config('testes.n_conciliadas', (select count(*) from public.baixas where conciliacao_id is not null)::text, true);
+delete from public.baixas where conciliacao_id is not null;
+select is((select count(*)::int from public.baixas where conciliacao_id is not null), current_setting('testes.n_conciliadas')::int,
+          'baixa criada pela conciliação só é removida desfazendo a conciliação');
 
 -- Conferência de saldos (sistema x extrato)
 select is((select diferenca from public.conferencia_saldos(current_setting('testes.empresa_a')::uuid, '2026-09-01', '2026-09-30')), 0.00::numeric,

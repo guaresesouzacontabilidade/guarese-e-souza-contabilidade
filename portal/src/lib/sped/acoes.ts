@@ -2,6 +2,7 @@
 
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -28,5 +29,6 @@ export async function excluirSped(empresaId: string, arquivoId: string): Promise
   if (!ctx) return falha("Seu acesso não permite esta ação.");
   const { error } = await ctx.supabase.rpc("sped_excluir_arquivo", { p_arquivo_id: arquivoId });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Arquivo tirado da conferência. O documento continua em Documentos.");
 }

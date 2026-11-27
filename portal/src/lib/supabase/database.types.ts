@@ -188,13 +188,13 @@ isOneToOne: false
                   ]
                 },"baixas": {
                   Row: {
-                    "conciliacao_id": string | null,"conta_financeira_id": string,"created_at": string,"criado_por": string | null,"data_pagamento": string,"desconto": number,"empresa_id": string,"forma_pagamento": string | null,"id": string,"juros": number,"lancamento_id": string,"multa": number,"observacao": string | null,"origem": string,"taxas": number,"tipo": string,"valor_principal": number,"valor_total": number | null
+                    "chave_idempotencia": string | null,"conciliacao_id": string | null,"conta_financeira_id": string,"created_at": string,"criado_por": string | null,"data_pagamento": string,"desconto": number,"empresa_id": string,"forma_pagamento": string | null,"id": string,"juros": number,"lancamento_id": string,"multa": number,"observacao": string | null,"origem": string,"taxas": number,"tipo": string,"valor_principal": number,"valor_total": number | null
                   }
                   Insert: {
-                    "conciliacao_id"?: string | null,"conta_financeira_id": string,"created_at"?: string,"criado_por"?: string | null,"data_pagamento": string,"desconto"?: number,"empresa_id": string,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"lancamento_id": string,"multa"?: number,"observacao"?: string | null,"origem"?: string,"taxas"?: number,"tipo": string,"valor_principal": number,"valor_total"?: never
+                    "chave_idempotencia"?: string | null,"conciliacao_id"?: string | null,"conta_financeira_id": string,"created_at"?: string,"criado_por"?: string | null,"data_pagamento": string,"desconto"?: number,"empresa_id": string,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"lancamento_id": string,"multa"?: number,"observacao"?: string | null,"origem"?: string,"taxas"?: number,"tipo": string,"valor_principal": number,"valor_total"?: never
                   }
                   Update: {
-                    "conciliacao_id"?: string | null,"conta_financeira_id"?: string,"created_at"?: string,"criado_por"?: string | null,"data_pagamento"?: string,"desconto"?: number,"empresa_id"?: string,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"lancamento_id"?: string,"multa"?: number,"observacao"?: string | null,"origem"?: string,"taxas"?: number,"tipo"?: string,"valor_principal"?: number,"valor_total"?: never
+                    "chave_idempotencia"?: string | null,"conciliacao_id"?: string | null,"conta_financeira_id"?: string,"created_at"?: string,"criado_por"?: string | null,"data_pagamento"?: string,"desconto"?: number,"empresa_id"?: string,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"lancamento_id"?: string,"multa"?: number,"observacao"?: string | null,"origem"?: string,"taxas"?: number,"tipo"?: string,"valor_principal"?: number,"valor_total"?: never
                   }
                   Relationships: [
                     {
@@ -227,6 +227,43 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "lancamentos"
       referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"baixas_estornadas": {
+                  Row: {
+                    "conta_financeira_id": string | null,"criado_em": string,"criado_por": string | null,"data_pagamento": string,"desconto": number,"empresa_id": string,"estornado_em": string,"estornado_por": string | null,"forma_pagamento": string | null,"id": string,"juros": number,"lancamento_id": string,"motivo_estorno": string,"multa": number,"observacao": string | null,"origem": string,"taxas": number,"tipo": string,"valor_principal": number,"valor_total": number
+                  }
+                  Insert: {
+                    "conta_financeira_id"?: string | null,"criado_em": string,"criado_por"?: string | null,"data_pagamento": string,"desconto"?: number,"empresa_id": string,"estornado_em"?: string,"estornado_por"?: string | null,"forma_pagamento"?: string | null,"id": string,"juros"?: number,"lancamento_id": string,"motivo_estorno": string,"multa"?: number,"observacao"?: string | null,"origem": string,"taxas"?: number,"tipo": string,"valor_principal": number,"valor_total": number
+                  }
+                  Update: {
+                    "conta_financeira_id"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_pagamento"?: string,"desconto"?: number,"empresa_id"?: string,"estornado_em"?: string,"estornado_por"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"lancamento_id"?: string,"motivo_estorno"?: string,"multa"?: number,"observacao"?: string | null,"origem"?: string,"taxas"?: number,"tipo"?: string,"valor_principal"?: number,"valor_total"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "baixas_estornadas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "baixas_estornadas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "baixas_estornadas_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "baixas_estornadas_estornado_por_fkey"
+      columns: ["estornado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
     }
                   ]
                 },"caixa_movimentos": {
@@ -2296,6 +2333,31 @@ isOneToOne: false
       referencedColumns: ["ibge"]
     }
                   ]
+                },"financeiro_aprovacao_faixas": {
+                  Row: {
+                    "aprovacoes": number,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"valor_minimo": number
+                  }
+                  Insert: {
+                    "aprovacoes"?: number,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"valor_minimo": number
+                  }
+                  Update: {
+                    "aprovacoes"?: number,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"valor_minimo"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "financeiro_aprovacao_faixas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "financeiro_aprovacao_faixas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"financeiro_config": {
                   Row: {
                     "atualizado_por": string | null,"empresa_id": string,"pagar_desde": string | null,"updated_at": string
@@ -3937,6 +3999,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"lancamento_aprovacoes": {
+                  Row: {
+                    "created_at": string,"decidido_por": string | null,"decisao": string,"empresa_id": string,"id": string,"justificativa": string | null,"lancamento_id": string,"valor": number
+                  }
+                  Insert: {
+                    "created_at"?: string,"decidido_por"?: string | null,"decisao": string,"empresa_id": string,"id"?: string,"justificativa"?: string | null,"lancamento_id": string,"valor": number
+                  }
+                  Update: {
+                    "created_at"?: string,"decidido_por"?: string | null,"decisao"?: string,"empresa_id"?: string,"id"?: string,"justificativa"?: string | null,"lancamento_id"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lancamento_aprovacoes_decidido_por_fkey"
+      columns: ["decidido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lancamento_aprovacoes_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
                 },"lancamento_documentos": {
                   Row: {
                     "documento_id": string,"empresa_id": string,"lancamento_id": string,"tipo_vinculo": string,"vinculado_em": string,"vinculado_por": string | null
@@ -3970,13 +4057,13 @@ isOneToOne: false
                   ]
                 },"lancamentos": {
                   Row: {
-                    "cancelado_em": string | null,"cancelado_por": string | null,"categoria_id": string | null,"centro_custo_id": string | null,"chave_importacao": string | null,"confirmado_em": string | null,"confirmado_por": string | null,"conta_financeira_id": string | null,"contraparte_id": string | null,"created_at": string,"criado_por": string | null,"data_competencia": string,"data_ultimo_pagamento": string | null,"data_vencimento": string,"descricao": string,"documento_fiscal_id": string | null,"empresa_id": string,"id": string,"importacao_id": string | null,"motivo_cancelamento": string | null,"numero_documento": string | null,"observacoes": string | null,"origem": string,"origem_referencia": string | null,"parcela_numero": number | null,"parcela_total": number | null,"parcelamento_id": string | null,"projeto_id": string | null,"recorrencia_id": string | null,"situacao": string,"status_revisao": string,"tipo": string,"updated_at": string,"valor_baixado": number,"valor_previsto": number,"valor_realizado": number
+                    "aprovacao_status": string,"aprovacoes_necessarias": number,"cancelado_em": string | null,"cancelado_por": string | null,"categoria_id": string | null,"centro_custo_id": string | null,"chave_importacao": string | null,"confirmado_em": string | null,"confirmado_por": string | null,"conta_financeira_id": string | null,"contraparte_id": string | null,"created_at": string,"criado_por": string | null,"data_competencia": string,"data_ultimo_pagamento": string | null,"data_vencimento": string,"descricao": string,"documento_fiscal_id": string | null,"empresa_id": string,"fora_do_resultado": boolean,"id": string,"importacao_id": string | null,"motivo_cancelamento": string | null,"numero_documento": string | null,"observacoes": string | null,"origem": string,"origem_referencia": string | null,"parcela_numero": number | null,"parcela_total": number | null,"parcelamento_id": string | null,"projeto_id": string | null,"recorrencia_data_original": string | null,"recorrencia_id": string | null,"renegociacao_id": string | null,"renegociado_em_id": string | null,"situacao": string,"status_revisao": string,"tipo": string,"updated_at": string,"valor_baixado": number,"valor_previsto": number,"valor_realizado": number
                   }
                   Insert: {
-                    "cancelado_em"?: string | null,"cancelado_por"?: string | null,"categoria_id"?: string | null,"centro_custo_id"?: string | null,"chave_importacao"?: string | null,"confirmado_em"?: string | null,"confirmado_por"?: string | null,"conta_financeira_id"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_competencia": string,"data_ultimo_pagamento"?: string | null,"data_vencimento": string,"descricao": string,"documento_fiscal_id"?: string | null,"empresa_id": string,"id"?: string,"importacao_id"?: string | null,"motivo_cancelamento"?: string | null,"numero_documento"?: string | null,"observacoes"?: string | null,"origem"?: string,"origem_referencia"?: string | null,"parcela_numero"?: number | null,"parcela_total"?: number | null,"parcelamento_id"?: string | null,"projeto_id"?: string | null,"recorrencia_id"?: string | null,"situacao"?: string,"status_revisao"?: string,"tipo": string,"updated_at"?: string,"valor_baixado"?: number,"valor_previsto": number,"valor_realizado"?: number
+                    "aprovacao_status"?: string,"aprovacoes_necessarias"?: number,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"categoria_id"?: string | null,"centro_custo_id"?: string | null,"chave_importacao"?: string | null,"confirmado_em"?: string | null,"confirmado_por"?: string | null,"conta_financeira_id"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_competencia": string,"data_ultimo_pagamento"?: string | null,"data_vencimento": string,"descricao": string,"documento_fiscal_id"?: string | null,"empresa_id": string,"fora_do_resultado"?: boolean,"id"?: string,"importacao_id"?: string | null,"motivo_cancelamento"?: string | null,"numero_documento"?: string | null,"observacoes"?: string | null,"origem"?: string,"origem_referencia"?: string | null,"parcela_numero"?: number | null,"parcela_total"?: number | null,"parcelamento_id"?: string | null,"projeto_id"?: string | null,"recorrencia_data_original"?: string | null,"recorrencia_id"?: string | null,"renegociacao_id"?: string | null,"renegociado_em_id"?: string | null,"situacao"?: string,"status_revisao"?: string,"tipo": string,"updated_at"?: string,"valor_baixado"?: number,"valor_previsto": number,"valor_realizado"?: number
                   }
                   Update: {
-                    "cancelado_em"?: string | null,"cancelado_por"?: string | null,"categoria_id"?: string | null,"centro_custo_id"?: string | null,"chave_importacao"?: string | null,"confirmado_em"?: string | null,"confirmado_por"?: string | null,"conta_financeira_id"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_competencia"?: string,"data_ultimo_pagamento"?: string | null,"data_vencimento"?: string,"descricao"?: string,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"id"?: string,"importacao_id"?: string | null,"motivo_cancelamento"?: string | null,"numero_documento"?: string | null,"observacoes"?: string | null,"origem"?: string,"origem_referencia"?: string | null,"parcela_numero"?: number | null,"parcela_total"?: number | null,"parcelamento_id"?: string | null,"projeto_id"?: string | null,"recorrencia_id"?: string | null,"situacao"?: string,"status_revisao"?: string,"tipo"?: string,"updated_at"?: string,"valor_baixado"?: number,"valor_previsto"?: number,"valor_realizado"?: number
+                    "aprovacao_status"?: string,"aprovacoes_necessarias"?: number,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"categoria_id"?: string | null,"centro_custo_id"?: string | null,"chave_importacao"?: string | null,"confirmado_em"?: string | null,"confirmado_por"?: string | null,"conta_financeira_id"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_competencia"?: string,"data_ultimo_pagamento"?: string | null,"data_vencimento"?: string,"descricao"?: string,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"fora_do_resultado"?: boolean,"id"?: string,"importacao_id"?: string | null,"motivo_cancelamento"?: string | null,"numero_documento"?: string | null,"observacoes"?: string | null,"origem"?: string,"origem_referencia"?: string | null,"parcela_numero"?: number | null,"parcela_total"?: number | null,"parcelamento_id"?: string | null,"projeto_id"?: string | null,"recorrencia_data_original"?: string | null,"recorrencia_id"?: string | null,"renegociacao_id"?: string | null,"renegociado_em_id"?: string | null,"situacao"?: string,"status_revisao"?: string,"tipo"?: string,"updated_at"?: string,"valor_baixado"?: number,"valor_previsto"?: number,"valor_realizado"?: number
                   }
                   Relationships: [
                     {
@@ -4050,6 +4137,18 @@ isOneToOne: false
       columns: ["empresa_id","importacao_id"]
 isOneToOne: false
       referencedRelation: "importacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_renegociacao_fk"
+      columns: ["empresa_id","renegociacao_id"]
+isOneToOne: false
+      referencedRelation: "renegociacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_renegociado_em_fk"
+      columns: ["empresa_id","renegociado_em_id"]
+isOneToOne: false
+      referencedRelation: "renegociacoes"
       referencedColumns: ["empresa_id","id"]
     }
                   ]
@@ -5731,6 +5830,43 @@ isOneToOne: false
       columns: ["substituido_por"]
 isOneToOne: false
       referencedRelation: "relatorios_publicados"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"renegociacoes": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"desfeita_em": string | null,"desfeita_por": string | null,"dre_ajuste_id": string | null,"empresa_id": string,"encargos": number | null,"id": string,"motivo": string,"motivo_desfazer": string | null,"numero": number,"tipo": string,"valor_novo": number,"valor_renegociado": number
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"desfeita_em"?: string | null,"desfeita_por"?: string | null,"dre_ajuste_id"?: string | null,"empresa_id": string,"encargos"?: never,"id"?: string,"motivo": string,"motivo_desfazer"?: string | null,"numero": number,"tipo": string,"valor_novo": number,"valor_renegociado": number
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"desfeita_em"?: string | null,"desfeita_por"?: string | null,"dre_ajuste_id"?: string | null,"empresa_id"?: string,"encargos"?: never,"id"?: string,"motivo"?: string,"motivo_desfazer"?: string | null,"numero"?: number,"tipo"?: string,"valor_novo"?: number,"valor_renegociado"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "renegociacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "renegociacoes_desfeita_por_fkey"
+      columns: ["desfeita_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "renegociacoes_dre_ajuste_id_fkey"
+      columns: ["dre_ajuste_id"]
+isOneToOne: false
+      referencedRelation: "dre_ajustes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "renegociacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
       referencedColumns: ["id"]
     }
                   ]
@@ -7659,8 +7795,44 @@ isOneToOne: false
 "fechar_competencia":
 { Args: { "p_competencia": string,"p_empresa_id": string,"p_observacao"?: string }; Returns: undefined
                            },
+"financeiro_aprovacao_salvar":
+{ Args: { "p_empresa_id": string,"p_faixas": Json }; Returns: number
+                           },
+"financeiro_aprovar":
+{ Args: { "p_decisao": string,"p_empresa_id": string,"p_ids": (string)[],"p_justificativa"?: string }; Returns: number
+                           },
+"financeiro_baixar":
+{ Args: { "p_chave"?: string,"p_conta_id": string,"p_data": string,"p_desconto"?: number,"p_empresa_id": string,"p_forma"?: string,"p_juros"?: number,"p_lancamento_id": string,"p_multa"?: number,"p_observacao"?: string,"p_taxas"?: number,"p_valor_principal": number }; Returns: string
+                           },
+"financeiro_baixar_lote":
+{ Args: { "p_chave"?: string,"p_conta_id": string,"p_data": string,"p_empresa_id": string,"p_forma"?: string,"p_ids": (string)[] }; Returns: Json
+                           },
+"financeiro_criar_parcelas":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_parcelas": Json }; Returns: string
+                           },
 "financeiro_definir_pagar_desde":
 { Args: { "p_data": string,"p_empresa_id": string }; Returns: undefined
+                           },
+"financeiro_desfazer_renegociacao":
+{ Args: { "p_empresa_id": string,"p_motivo": string,"p_renegociacao_id": string }; Returns: undefined
+                           },
+"financeiro_estornar_baixa":
+{ Args: { "p_baixa_id": string,"p_empresa_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"financeiro_historico_contraparte":
+{ Args: { "p_contraparte_id": string,"p_empresa_id": string }; Returns: Json
+                           },
+"financeiro_lote_alterar":
+{ Args: { "p_acao": string,"p_empresa_id": string,"p_ids": (string)[],"p_valor"?: string }; Returns: number
+                           },
+"financeiro_painel":
+{ Args: { "p_centro_custo_id"?: string,"p_conta_id"?: string,"p_empresa_id": string }; Returns: Json
+                           },
+"financeiro_recorrencia_alterar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_escopo": string,"p_lancamento_id": string }; Returns: number
+                           },
+"financeiro_renegociar":
+{ Args: { "p_descricao"?: string,"p_empresa_id": string,"p_lancamentos": (string)[],"p_motivo": string,"p_parcelas": Json }; Returns: string
                            },
 "fisio_adendo_registrar":
 { Args: { "p_id": string,"p_texto": string,"p_tipo": string }; Returns: string

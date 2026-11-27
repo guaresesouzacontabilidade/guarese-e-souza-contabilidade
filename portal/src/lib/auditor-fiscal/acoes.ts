@@ -4,6 +4,7 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { processarFilaDepois } from "@/lib/jobs/disparo";
 import { competenciaAtual } from "@/lib/competencia";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ACOES = ["confirmar", "descartar", "publicar", "retirar", "resolver", "reabrir"] as const;
@@ -29,6 +30,7 @@ export async function analisarAgora(empresaId: string): Promise<ResultadoAcao> {
   const { error } = await ctx.supabase.rpc("auditor_analisar", { p_empresa_id: empresaId });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["auditor_fiscal"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Análise iniciada. Os achados aparecem aqui em instantes.");
 }
 
@@ -54,6 +56,7 @@ export async function revisarAchado(
   });
   if (error) return falha(mensagemErro(error));
   if (acao === "publicar") processarFilaDepois({ tipos: ["enviar_envio"], limite: 10 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(MENSAGEM[acao as AcaoRevisao]);
 }
 
@@ -65,6 +68,7 @@ export async function pedirAjudaAchado(empresaId: string, achadoId: string): Pro
   const { data, error } = await ctx.supabase.rpc("auditor_pedir_ajuda", { p_id: achadoId });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["enviar_envio"], limite: 10 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Pedido enviado ao escritório. Acompanhe em Solicitações.", { solicitacao: data });
 }
 

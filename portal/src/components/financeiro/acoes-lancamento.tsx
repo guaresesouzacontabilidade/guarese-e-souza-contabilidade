@@ -57,6 +57,8 @@ export function RegistrarBaixa({
 }) {
   const [aberta, setAberta] = useState(false);
   const [v, setV] = useState({ principal: aberto, juros: "", multa: "", desconto: "", taxas: "" });
+  // Uma chave por abertura do formulário: clique duplo não registra dois pagamentos
+  const [chave, setChave] = useState(() => crypto.randomUUID());
   const total = useMemo(() => {
     const n = (s: string) => lerValorBR(s) ?? dec(0);
     const base = n(v.principal).plus(n(v.juros)).plus(n(v.multa)).minus(n(v.desconto));
@@ -75,9 +77,17 @@ export function RegistrarBaixa({
         descricao={`Em aberto: ${formatarMoeda(aberto)}. Pagamentos parciais são permitidos; juros, multa, desconto e taxas ficam separados do principal.`}
         largura="lg"
       >
-        <FormularioAcao acao={registrarBaixa.bind(null, empresaId, lancamentoId)} aoSucesso={() => setAberta(false)} className="space-y-4">
+        <FormularioAcao
+          acao={registrarBaixa.bind(null, empresaId, lancamentoId)}
+          aoSucesso={() => {
+            setAberta(false);
+            setChave(crypto.randomUUID());
+          }}
+          className="space-y-4"
+        >
           {({ estado, pendente }) => (
             <>
+              <input type="hidden" name="chave" value={chave} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Campo rotulo="Data" htmlFor="b-data" obrigatorio erro={estado.erros?.data_pagamento}>
                   <Input id="b-data" name="data_pagamento" type="date" defaultValue={hoje} />
@@ -142,6 +152,7 @@ export function RegistrarBaixa({
 
 export function BotaoEstornar({ empresaId, baixaId }: { empresaId: string; baixaId: string }) {
   const { executar } = useExecutar();
+  const [motivo, setMotivo] = useState("");
   return (
     <Confirmacao
       gatilho={
@@ -150,11 +161,19 @@ export function BotaoEstornar({ empresaId, baixaId }: { empresaId: string; baixa
         </Button>
       }
       titulo="Estornar este pagamento/recebimento?"
-      descricao="O valor deixa de constar como pago e o lançamento volta a ficar em aberto. A operação fica registrada na auditoria."
+      descricao="O valor deixa de constar como pago e o título volta a ficar em aberto. O pagamento estornado continua no histórico, com o motivo."
       textoConfirmar="Estornar"
       variante="perigo"
-      aoConfirmar={() => executar(() => estornarBaixa(empresaId, baixaId)).then(() => undefined)}
-    />
+      aoConfirmar={async () => {
+        if (motivo.trim().length < 5) {
+          toast.error("Explique o motivo do estorno (ao menos 5 letras).");
+          return false;
+        }
+        await executar(() => estornarBaixa(empresaId, baixaId, motivo));
+      }}
+    >
+      <Textarea aria-label="Motivo do estorno" placeholder="Ex.: pagamento lançado em duplicidade" value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={2} />
+    </Confirmacao>
   );
 }
 

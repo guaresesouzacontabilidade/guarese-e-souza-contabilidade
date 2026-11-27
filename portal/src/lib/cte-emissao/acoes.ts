@@ -12,6 +12,7 @@ import { calcularCte, type EntradaCte } from "./calculo";
 import { CAMPOS_CCE_CTE } from "./rotulos";
 import { lerNfeParaCte, type ParticipanteDaNfe } from "./nfe-origem";
 import { AUTORIZADORES_CTE, autorizadorCteDaUf, statusServicoCte } from "./sefaz";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -67,6 +68,7 @@ export async function salvarConfiguracaoCte(empresaId: string, _anterior: Result
     const m = mensagemErro(error);
     return falha(m, /autorizou o portal/.test(m) ? { autorizacao_texto: [m] } : /RNTRC/.test(m) ? { rntrc: [m] } : undefined);
   }
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Configuração do CT-e salva.");
 }
 
@@ -102,6 +104,7 @@ export async function salvarOperacaoCte(empresaId: string, id: string | null, _a
     } as never,
   });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Operação do frete salva.");
 }
 
@@ -395,6 +398,7 @@ export async function emitirConhecimento(empresaId: string, pedido: PedidoCte, c
   }
   processarFilaDepois({ tipos: ["emitir_cte"], limite: 5 });
   const r = data as { id: string; numero: number };
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso(`CT-e nº ${r.numero} enviado à SEFAZ.`, { id: r.id });
 }
 
@@ -404,6 +408,7 @@ export async function tentarDeNovoCte(empresaId: string, id: string): Promise<Re
   const { error } = await ctx.supabase.rpc("cte_tentar_de_novo", { p_id: id });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["emitir_cte"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Consultando a SEFAZ de novo.");
 }
 
@@ -412,6 +417,7 @@ export async function descartarCte(empresaId: string, id: string): Promise<Resul
   if (!ctx || !UUID.test(id)) return falha("Sem permissão.");
   const { error } = await ctx.supabase.rpc("cte_descartar", { p_id: id });
   if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("CT-e descartado. O número precisa ser inutilizado na SEFAZ.");
 }
 
@@ -423,6 +429,7 @@ export async function cancelarCte(empresaId: string, id: string, _anterior: Resu
   const { error } = await ctx.supabase.rpc("cte_cancelar", { p_id: id, p_justificativa: just });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["evento_cte"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Pedido de cancelamento enviado à SEFAZ.");
 }
 
@@ -440,5 +447,6 @@ export async function cartaCorrecaoCte(empresaId: string, id: string, correcoes:
   const { error } = await ctx.supabase.rpc("cte_carta_correcao", { p_id: id, p_correcoes: p.data as never });
   if (error) return falha(mensagemErro(error));
   processarFilaDepois({ tipos: ["evento_cte"], limite: 5 });
+  atualizarTelasDaEmpresa(empresaId);
   return sucesso("Carta de correção enviada à SEFAZ.");
 }

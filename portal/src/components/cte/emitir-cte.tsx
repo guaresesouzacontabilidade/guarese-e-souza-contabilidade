@@ -16,6 +16,7 @@ import { emitirConhecimento, preencherPelaNfe, previaCte, usarPropriaEmpresa, ty
 import { CST_ICMS_CTE, DESTINO_CTE, TOMADOR_CTE } from "@/lib/cte-emissao/rotulos";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarDocumento } from "@/lib/formatos";
+import { useListaDoServidor } from "@/lib/use-lista-servidor";
 
 export interface OpcaoOperacaoCte {
   id: string;
@@ -63,7 +64,7 @@ export function EmitirCte({
 }) {
   const router = useRouter();
   const seq = React.useRef(10_000);
-  const [participantes, setParticipantes] = React.useState(participantesIniciais);
+  const [participantes, setParticipantes] = useListaDoServidor(participantesIniciais);
   const [operacaoId, setOperacaoId] = React.useState(inicial?.operacao_id || (operacoes.length === 1 ? operacoes[0].id : ""));
   const [tomador, setTomador] = React.useState<PedidoCte["tomador"] | "">(inicial?.tomador ?? "");
   const [tomadorId, setTomadorId] = React.useState(inicial?.tomador_id ?? "");
