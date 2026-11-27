@@ -237,6 +237,19 @@ async function semearCadastrosLoja(admin: SupabaseClient, empresaId: string) {
   }
 }
 
+/** Vendedores fictícios com comissão (para escolher no orçamento e no caixa). Só cria se a loja ainda não tem nenhum. */
+async function semearVendedoresLoja(admin: SupabaseClient, empresaId: string) {
+  const { count } = await admin.from("loja_vendedores").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  if (count) return;
+  ok(
+    "vendedores fictícios",
+    await admin.from("loja_vendedores").insert([
+      { empresa_id: empresaId, nome: "Ana Souza (fictícia)", comissao_percentual: 3 },
+      { empresa_id: empresaId, nome: "Bruno Lima (fictício)", comissao_percentual: 2 },
+    ]),
+  );
+}
+
 /** Vigota comprada em peça e vendida em metro (1 peça = 3 m), com estoque inicial — dados fictícios. */
 async function semearConversaoLoja(admin: SupabaseClient, conexao: { url: string; publica: string }, empresaId: string, emailDono: string) {
   const { data: existe } = await admin.from("nfe_produtos").select("id").eq("empresa_id", empresaId).eq("codigo", "VIG-88").maybeSingle();
@@ -339,6 +352,7 @@ export async function semearLoja(
     await semearNfeLoja(admin, existente.id);
     await semearLogoLoja(admin, existente.id);
     await semearCadastrosLoja(admin, existente.id);
+    await semearVendedoresLoja(admin, existente.id);
     await semearConversaoLoja(admin, conexao, existente.id, `madeireira@${opcoes.dominio}`);
     if (await semearComprasLoja(admin, conexao, existente.id, `madeireira@${opcoes.dominio}`)) {
       console.log("  Madeireira: entrada automática ligada e notas de compra fictícias enviadas (a leitura e a entrada no estoque rodam na fila)");
@@ -446,6 +460,7 @@ export async function semearLoja(
   const fazenda = await cliente("Fazenda Santa Luzia — José Exemplo (DEMO)", cpfValido("321654987"), "63977776666");
   const joao = await cliente("João Carpinteiro Exemplo (DEMO)", cpfValido("147258369"), "63966665555");
   await semearCadastrosLoja(admin, empresaId);
+  await semearVendedoresLoja(admin, empresaId);
   await semearConversaoLoja(admin, conexao, empresaId, `madeireira@${opcoes.dominio}`);
 
 

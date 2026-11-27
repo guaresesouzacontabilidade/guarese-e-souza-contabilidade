@@ -122,10 +122,12 @@ select throws_like(format($$select public.gestao_venda_finalizar(%L, jsonb_build
     current_setting('testes.empresa_a'), current_setting('testes.caixa2'), current_setting('testes.ripa')),
   '%limite do operador%', 'desconto de 14% passa do limite de 5% do operador');
 select throws_like(format($$select public.gestao_venda_cancelar(%L, 'Cliente desistiu')$$, current_setting('testes.venda1')),
-  '%gestao.gerenciar%', 'operador não cancela venda');
+  '%senha de quem pode autorizar%', 'sem a senha de quem autoriza, o operador não cancela a venda');
 reset role;
 
--- 7. Gerente cancela: estoque volta, lançamentos cancelados, dinheiro sai do esperado
+-- 7. Gerente cancela (com a autorização conferida pela senha): estoque volta, lançamentos cancelados, dinheiro sai do esperado
+insert into public.venda_cancelamento_autorizacoes (empresa_id, venda_id, autorizado_por, solicitado_por)
+values (current_setting('testes.empresa_a')::uuid, current_setting('testes.venda1')::uuid, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000b1');
 select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
 set local role authenticated;
 select public.gestao_venda_cancelar(current_setting('testes.venda1')::uuid, 'Cliente desistiu da compra');

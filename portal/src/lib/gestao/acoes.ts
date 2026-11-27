@@ -402,6 +402,8 @@ export interface VendaEntrada {
   observacao?: string;
   entrega?: string;
   validade?: string;
+  /** Vendedor da comissão (cadastro da loja); vazio = o do orçamento ou o ligado a quem está logado. */
+  loja_vendedor_id?: string | null;
 }
 
 function normalizarItens(itens: ItemVendaEntrada[]) {
@@ -449,6 +451,7 @@ export async function finalizarVenda(
     })),
     observacao: venda.observacao?.slice(0, 1000),
     entrega: venda.entrega?.slice(0, 300),
+    loja_vendedor_id: venda.loja_vendedor_id && /^[0-9a-f-]{36}$/i.test(venda.loja_vendedor_id) ? venda.loja_vendedor_id : "",
   };
   const { data, error } = await ctx.supabase.rpc("gestao_venda_finalizar", { p_empresa_id: empresaId, p_dados: dados as Json });
   if (error) return falha(mensagemErro(error));
@@ -482,6 +485,7 @@ export async function salvarOrcamento(empresaId: string, orcamentoId: string | n
     frete: venda.frete ? numero(venda.frete) : null,
     observacao: venda.observacao?.slice(0, 1000),
     entrega: venda.entrega?.slice(0, 300),
+    loja_vendedor_id: venda.loja_vendedor_id && /^[0-9a-f-]{36}$/i.test(venda.loja_vendedor_id) ? venda.loja_vendedor_id : "",
     validade: venda.validade || null,
   };
   const { data, error } = await ctx.supabase.rpc("gestao_orcamento_salvar", { p_empresa_id: empresaId, p_id: (orcamentoId ?? null) as unknown as string, p_dados: dados as Json });
@@ -489,15 +493,6 @@ export async function salvarOrcamento(empresaId: string, orcamentoId: string | n
   revalidarLoja(empresaId);
   const r = data as { id: string; numero: number };
   return sucesso(`Orçamento nº ${r.numero} salvo.`, r);
-}
-
-export async function cancelarVenda(empresaId: string, vendaId: string, motivo: string): Promise<ResultadoAcao> {
-  if (!UUID.test(empresaId) || !UUID.test(vendaId)) return falha("Venda inválida.");
-  const ctx = await exigirPermissao(empresaId, "gestao.vender");
-  const { error } = await ctx.supabase.rpc("gestao_venda_cancelar", { p_venda_id: vendaId, p_motivo: motivo.trim() });
-  if (error) return falha(mensagemErro(error));
-  revalidarLoja(empresaId);
-  return sucesso("Cancelado.");
 }
 
 /** Situação da NF-e emitida na hora da venda (para o caixa acompanhar até a autorização). */

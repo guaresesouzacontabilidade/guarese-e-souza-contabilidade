@@ -66,6 +66,8 @@ export default async function PaginaOrcamento({ params, searchParams }: PageProp
         orcamento={orcamento}
         nfe={SEM_NFE}
         etiqueta={dados.etiqueta}
+        vendedores={dados.vendedores}
+        vendedorObrigatorio={dados.vendedorObrigatorio}
       />
     </>
   );

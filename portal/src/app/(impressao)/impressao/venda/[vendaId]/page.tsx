@@ -23,9 +23,10 @@ export default async function Comprovante({ params, searchParams }: PageProps<"/
     .eq("id", vendaId)
     .maybeSingle();
   if (!v) notFound();
-  const [{ data: e }, { data: cfg }] = await Promise.all([
+  const [{ data: e }, { data: cfg }, { data: listaVendedores }] = await Promise.all([
     s.supabase.from("empresas").select("razao_social, nome_fantasia, documento, logradouro, numero, bairro, cidade, uf, cep, telefone, logo_path, logo_atualizado_em, demonstracao").eq("id", v.empresa_id).maybeSingle(),
     s.supabase.from("gestao_config").select("mensagem_comprovante").eq("empresa_id", v.empresa_id).maybeSingle(),
+    v.loja_vendedor_id ? s.supabase.rpc("loja_vendedores_lista", { p_empresa_id: v.empresa_id }) : Promise.resolve({ data: null }),
   ]);
   if (!e) notFound();
   const a4 = sp.formato === "a4";
@@ -71,7 +72,12 @@ export default async function Comprovante({ params, searchParams }: PageProps<"/
         <p className="text-center text-[0.9em]">NÃO É DOCUMENTO FISCAL</p>
         <p className="mt-1">
           {formatarData(v.data)} {hora(v.created_at)}
-          {(v.vendedor as { nome?: string } | null)?.nome ? ` · Vendedor: ${(v.vendedor as { nome?: string }).nome}` : ""}
+          {(() => {
+            // O vendedor da comissão (cadastro da loja); sem ele, quem registrou
+            const daLoja = v.loja_vendedor_id ? (listaVendedores ?? []).find((x) => x.id === v.loja_vendedor_id)?.nome : null;
+            const quem = daLoja ?? (v.vendedor as { nome?: string } | null)?.nome;
+            return quem ? ` · Vendedor: ${quem}` : "";
+          })()}
         </p>
         <p>Cliente: {v.cliente_nome ?? "Consumidor"}</p>
         {v.cliente_documento ? <p>CPF/CNPJ: {formatarDocumento(v.cliente_documento)}</p> : null}

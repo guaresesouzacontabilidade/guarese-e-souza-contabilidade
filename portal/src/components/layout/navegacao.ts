@@ -41,6 +41,7 @@ import {
   Boxes,
   Banknote,
   Truck,
+  UserRound,
   Contact,
   Route,
   Inbox,
@@ -284,6 +285,8 @@ export function gruposEmpresa(empresa: EmpresaMenu, equipe: boolean): GrupoMenu[
     loja.push({ rotulo: "Vendas e orçamentos", href: `${base}/loja/vendas`, icone: ReceiptText });
     loja.push({ rotulo: "Clientes", href: `${base}/loja/clientes`, icone: Contact });
     if (p.has("gestao.gerenciar")) loja.push({ rotulo: "Fornecedores", href: `${base}/loja/fornecedores`, icone: Truck });
+    if (p.has("gestao.gerenciar")) loja.push({ rotulo: "Vendedores", href: `${base}/loja/vendedores`, icone: UserRound });
+    loja.push({ rotulo: p.has("gestao.gerenciar") ? "Comissões" : "Minhas comissões", href: `${base}/loja/comissoes`, icone: HandCoins });
   } else if (equipe && p.has("gestao.gerenciar")) {
     configuracoes.push({ rotulo: "Gestão da loja", href: `${base}/loja/configuracoes`, icone: Store });
   }

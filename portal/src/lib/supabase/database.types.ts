@@ -2873,13 +2873,13 @@ isOneToOne: false
                   ]
                 },"gestao_config": {
                   Row: {
-                    "ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"balanca_digitos_codigo": number,"balanca_etiqueta": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"empresa_id": string,"entrada_automatica": boolean,"margem_entrada": number | null,"mensagem_comprovante": string | null,"modalidade": string,"nfe_emitente_id": string | null,"nfe_marcada_padrao": boolean,"nfe_operacao_id": string | null,"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_ordem": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number
+                    "ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"balanca_digitos_codigo": number,"balanca_etiqueta": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"empresa_id": string,"entrada_automatica": boolean,"margem_entrada": number | null,"mensagem_comprovante": string | null,"modalidade": string,"nfe_emitente_id": string | null,"nfe_marcada_padrao": boolean,"nfe_operacao_id": string | null,"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_ordem": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number,"vendedor_obrigatorio": boolean
                   }
                   Insert: {
-                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"balanca_digitos_codigo"?: number,"balanca_etiqueta"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id": string,"entrada_automatica"?: boolean,"margem_entrada"?: number | null,"mensagem_comprovante"?: string | null,"modalidade"?: string,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_ordem"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"balanca_digitos_codigo"?: number,"balanca_etiqueta"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id": string,"entrada_automatica"?: boolean,"margem_entrada"?: number | null,"mensagem_comprovante"?: string | null,"modalidade"?: string,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_ordem"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number,"vendedor_obrigatorio"?: boolean
                   }
                   Update: {
-                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"balanca_digitos_codigo"?: number,"balanca_etiqueta"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id"?: string,"entrada_automatica"?: boolean,"margem_entrada"?: number | null,"mensagem_comprovante"?: string | null,"modalidade"?: string,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_ordem"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"balanca_digitos_codigo"?: number,"balanca_etiqueta"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"empresa_id"?: string,"entrada_automatica"?: boolean,"margem_entrada"?: number | null,"mensagem_comprovante"?: string | null,"modalidade"?: string,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_ordem"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number,"vendedor_obrigatorio"?: boolean
                   }
                   Relationships: [
                     {
@@ -4317,6 +4317,37 @@ isOneToOne: false
       columns: ["empresa_id"]
 isOneToOne: true
       referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"loja_vendedores": {
+                  Row: {
+                    "ativo": boolean,"comissao_percentual": number,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"nome": string,"updated_at": string,"usuario_id": string | null
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"comissao_percentual"?: number,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string,"usuario_id"?: string | null
+                  }
+                  Update: {
+                    "ativo"?: boolean,"comissao_percentual"?: number,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_vendedores_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_vendedores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_vendedores_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
       referencedColumns: ["id"]
     }
                   ]
@@ -6553,6 +6584,68 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"venda_cancelamento_autorizacoes": {
+                  Row: {
+                    "autorizado_por": string,"criada_em": string,"empresa_id": string,"expira_em": string,"id": string,"solicitado_por": string,"usada_em": string | null,"venda_id": string
+                  }
+                  Insert: {
+                    "autorizado_por": string,"criada_em"?: string,"empresa_id": string,"expira_em"?: string,"id"?: string,"solicitado_por": string,"usada_em"?: string | null,"venda_id": string
+                  }
+                  Update: {
+                    "autorizado_por"?: string,"criada_em"?: string,"empresa_id"?: string,"expira_em"?: string,"id"?: string,"solicitado_por"?: string,"usada_em"?: string | null,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_cancelamento_autorizacoes_autorizado_por_fkey"
+      columns: ["autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "venda_cancelamento_autorizacoes_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_cancelamento_autorizacoes_solicitado_por_fkey"
+      columns: ["solicitado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venda_comissoes": {
+                  Row: {
+                    "base": number,"created_at": string,"empresa_id": string,"lancamento_id": string | null,"loja_vendedor_id": string,"percentual": number,"valor": number | null,"venda_id": string
+                  }
+                  Insert: {
+                    "base": number,"created_at"?: string,"empresa_id": string,"lancamento_id"?: string | null,"loja_vendedor_id": string,"percentual": number,"valor"?: never,"venda_id": string
+                  }
+                  Update: {
+                    "base"?: number,"created_at"?: string,"empresa_id"?: string,"lancamento_id"?: string | null,"loja_vendedor_id"?: string,"percentual"?: number,"valor"?: never,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_comissoes_empresa_id_loja_vendedor_id_fkey"
+      columns: ["empresa_id","loja_vendedor_id"]
+isOneToOne: false
+      referencedRelation: "loja_vendedores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_comissoes_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_comissoes_lancamento_id_fkey"
+      columns: ["lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"venda_itens": {
                   Row: {
                     "codigo": string,"comprimento_m": number | null,"custo_unitario": number | null,"desconto": number,"descricao": string,"empresa_id": string,"id": string,"ordem": number,"pecas": number | null,"preco_tabela": number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"variacao": string | null,"venda_id": string
@@ -6597,20 +6690,63 @@ isOneToOne: false
       referencedColumns: ["empresa_id","id"]
     }
                   ]
-                },"vendas": {
+                },"venda_vendedor_trocas": {
                   Row: {
-                    "cancelada_em": string | null,"cancelada_por": string | null,"cliente_documento": string | null,"cliente_id": string | null,"cliente_nome": string | null,"cliente_telefone": string | null,"codigo_publico": string | null,"created_at": string,"data": string,"desconto": number,"empresa_id": string,"entrega": string | null,"frete": number,"id": string,"motivo_cancelamento": string | null,"nfe_emissao_id": string | null,"numero": number,"observacao": string | null,"orcamento_id": string | null,"origem": string,"sessao_id": string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco": number,"updated_at": string,"validade": string | null,"vendedor_id": string | null
+                    "created_at": string,"de_vendedor_id": string | null,"empresa_id": string,"id": string,"motivo": string,"para_vendedor_id": string,"trocado_por": string | null,"venda_id": string
                   }
                   Insert: {
-                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"codigo_publico"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id": string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                    "created_at"?: string,"de_vendedor_id"?: string | null,"empresa_id": string,"id"?: string,"motivo": string,"para_vendedor_id": string,"trocado_por"?: string | null,"venda_id": string
                   }
                   Update: {
-                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"codigo_publico"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id"?: string,"entrega"?: string | null,"frete"?: number,"id"?: string,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status"?: string,"subtotal"?: number,"tipo"?: string,"total"?: number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                    "created_at"?: string,"de_vendedor_id"?: string | null,"empresa_id"?: string,"id"?: string,"motivo"?: string,"para_vendedor_id"?: string,"trocado_por"?: string | null,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_vendedor_trocas_empresa_id_de_vendedor_id_fkey"
+      columns: ["empresa_id","de_vendedor_id"]
+isOneToOne: false
+      referencedRelation: "loja_vendedores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_vendedor_trocas_empresa_id_para_vendedor_id_fkey"
+      columns: ["empresa_id","para_vendedor_id"]
+isOneToOne: false
+      referencedRelation: "loja_vendedores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_vendedor_trocas_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_vendedor_trocas_trocado_por_fkey"
+      columns: ["trocado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vendas": {
+                  Row: {
+                    "cancelada_em": string | null,"cancelada_por": string | null,"cancelamento_autorizado_por": string | null,"cliente_documento": string | null,"cliente_id": string | null,"cliente_nome": string | null,"cliente_telefone": string | null,"codigo_publico": string | null,"created_at": string,"data": string,"desconto": number,"empresa_id": string,"entrega": string | null,"frete": number,"id": string,"loja_vendedor_id": string | null,"motivo_cancelamento": string | null,"nfe_emissao_id": string | null,"numero": number,"observacao": string | null,"orcamento_id": string | null,"origem": string,"sessao_id": string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco": number,"updated_at": string,"validade": string | null,"vendedor_id": string | null
+                  }
+                  Insert: {
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cancelamento_autorizado_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"codigo_publico"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id": string,"entrega"?: string | null,"frete"?: number,"id"?: string,"loja_vendedor_id"?: string | null,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                  }
+                  Update: {
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cancelamento_autorizado_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"codigo_publico"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"empresa_id"?: string,"entrega"?: string | null,"frete"?: number,"id"?: string,"loja_vendedor_id"?: string | null,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status"?: string,"subtotal"?: number,"tipo"?: string,"total"?: number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
                   }
                   Relationships: [
                     {
       foreignKeyName: "vendas_cancelada_por_fkey"
       columns: ["cancelada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_cancelamento_autorizado_por_fkey"
+      columns: ["cancelamento_autorizado_por"]
 isOneToOne: false
       referencedRelation: "perfis"
       referencedColumns: ["id"]
@@ -6631,6 +6767,12 @@ isOneToOne: false
       columns: ["empresa_id","sessao_id"]
 isOneToOne: false
       referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vendas_loja_vendedor_fk"
+      columns: ["empresa_id","loja_vendedor_id"]
+isOneToOne: false
+      referencedRelation: "loja_vendedores"
       referencedColumns: ["empresa_id","id"]
     },{
       foreignKeyName: "vendas_nfe_emissao_id_fkey"
@@ -8312,6 +8454,14 @@ isOneToOne: false
 "limite_zerar":
 { Args: { "p_chave": string }; Returns: undefined
                            },
+"loja_autorizadores_cancelamento":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "id": string,"nome": string
+            }[]
+                           },
+"loja_comissoes_lancar":
+{ Args: { "p_categoria_id": string,"p_empresa_id": string,"p_fim": string,"p_inicio": string,"p_vencimento": string }; Returns: Json
+                           },
 "loja_site_banner_excluir":
 { Args: { "p_empresa_id": string,"p_id": string }; Returns: (string)[]
                            },
@@ -8356,6 +8506,17 @@ isOneToOne: false
                            },
 "loja_site_vitrine_produto":
 { Args: { "p_chave_hash": string,"p_produto_id": string,"p_slug": string }; Returns: Json
+                           },
+"loja_venda_trocar_vendedor":
+{ Args: { "p_motivo": string,"p_venda_id": string,"p_vendedor_id": string }; Returns: undefined
+                           },
+"loja_vendedor_obrigatorio_definir":
+{ Args: { "p_empresa_id": string,"p_obrigatorio": boolean }; Returns: undefined
+                           },
+"loja_vendedores_lista":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "ativo": boolean,"id": string,"meu": boolean,"nome": string
+            }[]
                            },
 "maquininha_carteira":
 { Args: { "p_fim": string,"p_inicio": string }; Returns: Json

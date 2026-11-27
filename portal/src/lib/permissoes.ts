@@ -37,6 +37,7 @@ export const TODAS_PERMISSOES = [
   "gestao.vender",
   "gestao.gerenciar",
   "gestao.custos",
+  "gestao.cancelar",
   "cte.emitir",
   "cte.configurar",
   "escalas.ver",
@@ -188,12 +189,17 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
       {
         chave: "gestao.gerenciar",
         rotulo: "Gerenciar a loja",
-        descricao: "Cadastrar produtos e preços, lançar estoque e inventário, cancelar vendas, dar descontos sem limite, ver os relatórios e as configurações da loja.",
+        descricao: "Cadastrar produtos e preços, lançar estoque e inventário, cadastrar vendedores e comissões, dar descontos sem limite, ver os relatórios e as configurações da loja.",
       },
       {
         chave: "gestao.custos",
         rotulo: "Ver custos e margens",
         descricao: "Ver o custo de compra, o custo médio, a margem e o valor do estoque, a tabela de preços, a análise do estoque e dar entrada de mercadorias por nota. Sem ela, quem gerencia a loja não vê nenhum custo.",
+      },
+      {
+        chave: "gestao.cancelar",
+        rotulo: "Cancelar vendas e orçamentos",
+        descricao: "Autorizar, com o próprio nome e a senha do portal, o cancelamento de vendas e orçamentos pedido no caixa. Sem essa autorização, ninguém cancela.",
       },
     ],
   },
@@ -241,14 +247,14 @@ export const GRUPOS_PERMISSOES: { grupo: string; itens: { chave: Permissao; rotu
 ];
 
 export const PERMISSOES_PADRAO: Record<"equipe" | "cliente_titular" | "cliente_colaborador", Permissao[]> = {
-  equipe: TODAS_PERMISSOES.filter((p) => p !== "fechamento.reabrir"),
+  equipe: TODAS_PERMISSOES.filter((p) => p !== "fechamento.reabrir" && p !== "gestao.cancelar"),
   cliente_titular: [
     "empresa.ver", "usuarios.gerenciar", "documentos.ver", "documentos.enviar", "documentos.baixar",
     "financeiro.ver", "financeiro.editar", "financeiro.importar", "financeiro.baixar", "financeiro.estornar", "financeiro.aprovar", "financeiro.exportar",
     "relatorios.ver", "mensagens.usar",
     "calculos.ver", "colaboradores.gerenciar", "certificado.gerenciar", "auditor.ver",
     "maquininhas.ver", "maquininhas.gerenciar", "nfse.emitir", "nfe.emitir",
-    "gestao.vender", "gestao.gerenciar", "gestao.custos", "cte.emitir", "escalas.ver", "escalas.gerenciar", "rh.gerenciar", "rh.tarefas",
+    "gestao.vender", "gestao.gerenciar", "gestao.custos", "gestao.cancelar", "cte.emitir", "escalas.ver", "escalas.gerenciar", "rh.gerenciar", "rh.tarefas",
     "os.operar", "os.gerenciar",
   ],
   cliente_colaborador: ["empresa.ver", "documentos.ver", "documentos.enviar", "mensagens.usar", "rh.tarefas"],

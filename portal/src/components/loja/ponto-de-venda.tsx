@@ -83,6 +83,15 @@ export interface OrcamentoInicial {
   frete: string;
   observacao: string | null;
   entrega: string | null;
+  /** Vendedor do orçamento (vai para a venda). */
+  vendedorId?: string | null;
+}
+
+export interface VendedorPdv {
+  id: string;
+  nome: string;
+  /** Ligado a quem está logado: já vem escolhido. */
+  meu: boolean;
 }
 
 const ICONES: Record<FormaPagamento, React.ComponentType<{ className?: string }>> = {
@@ -130,6 +139,8 @@ export function PontoDeVenda({
   orcamento,
   nfe,
   etiqueta = null,
+  vendedores = [],
+  vendedorObrigatorio = false,
 }: {
   /** "orcamento": só monta e salva o orçamento (sem caixa, sem pagamento). */
   modo?: "venda" | "orcamento";
@@ -145,6 +156,9 @@ export function PontoDeVenda({
   nfe: NfeNaVenda;
   /** Etiqueta impressa pela balança (código de barras que começa com 2), quando a loja usa. */
   etiqueta?: ConfigEtiqueta | null;
+  /** Vendedores da loja (comissão). Sem cadastro, o campo não aparece. */
+  vendedores?: VendedorPdv[];
+  vendedorObrigatorio?: boolean;
 }) {
   const router = useRouter();
   const porId = React.useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
@@ -167,6 +181,10 @@ export function PontoDeVenda({
   const [frete, setFrete] = React.useState(orcamento && Number(orcamento.frete) ? BR(orcamento.frete) : "");
   const [observacao, setObservacao] = React.useState(orcamento?.observacao ?? "");
   const [entrega, setEntrega] = React.useState(orcamento?.entrega ?? "");
+  const vendedorPadrao = vendedores.find((v) => v.meu)?.id ?? "";
+  const [vendedor, setVendedor] = React.useState(() =>
+    orcamento?.vendedorId && vendedores.some((v) => v.id === orcamento.vendedorId) ? orcamento.vendedorId : vendedorPadrao,
+  );
   const [pagamentos, setPagamentos] = React.useState<Pagamento[]>([]);
   const [enviando, setEnviando] = React.useState<"venda" | "orcamento" | null>(null);
   const [concluida, setConcluida] = React.useState<{ id: string; numero: number; troco: number; total: number; nfe?: ResultadoNfeVenda } | null>(null);
@@ -315,6 +333,7 @@ export function PontoDeVenda({
       })),
       observacao: observacao || undefined,
       entrega: entrega || undefined,
+      loja_vendedor_id: vendedor || null,
     };
   }
 
@@ -341,6 +360,7 @@ export function PontoDeVenda({
 
   async function concluir() {
     if (!linhas.length) return toast.error("Adicione pelo menos um produto.");
+    if (vendedorObrigatorio && vendedores.length && !vendedor) return toast.error("Escolha o vendedor.");
     const avulso = problemaClienteAvulso();
     if (avulso) return toast.error(avulso);
     if (pendenciaNfe) return toast.error(`${pendenciaNfe} Ou desmarque "Emitir NF-e".`);
@@ -356,6 +376,7 @@ export function PontoDeVenda({
 
   async function guardarOrcamento() {
     if (!linhas.length) return toast.error("Adicione pelo menos um produto.");
+    if (vendedorObrigatorio && vendedores.length && !vendedor) return toast.error("Escolha o vendedor.");
     const avulso = problemaClienteAvulso();
     if (avulso) return toast.error(avulso);
     setEnviando("orcamento");
@@ -369,6 +390,7 @@ export function PontoDeVenda({
 
   function novaVenda() {
     setConcluida(null);
+    setVendedor(vendedorPadrao);
     setEmitirNfe(nfe.disponivel && nfe.marcadaPadrao);
     setLinhas([]);
     setPagamentos([]);
@@ -715,6 +737,23 @@ export function PontoDeVenda({
                 {falta.gt(0) ? `Falta ${formatarMoeda(falta)}` : falta.lt(0) ? `Passou ${formatarMoeda(falta.negated())}` : "Pagamento completo"}
                 {troco.gt(0) ? <span className="block text-base text-primary">Troco: {formatarMoeda(troco)}</span> : null}
               </p>
+            ) : null}
+
+            {vendedores.length ? (
+              <label className="block text-sm">
+                <span className="mb-1 flex items-center gap-1.5 font-medium">
+                  <UserRound className="size-4 text-primary" /> Vendedor{vendedorObrigatorio ? <span className="text-perigo">*</span> : null}
+                </span>
+                <Select aria-label="Vendedor" value={vendedor} onChange={(e) => setVendedor(e.target.value)} className={cn(vendedorObrigatorio && !vendedor ? "border-alerta" : "")}>
+                  <option value="">{vendedorObrigatorio ? "Escolha o vendedor…" : "Sem vendedor"}</option>
+                  {vendedores.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.nome}
+                      {v.meu ? " (você)" : ""}
+                    </option>
+                  ))}
+                </Select>
+              </label>
             ) : null}
 
             <details className="text-sm" open={soOrcamento || undefined}>

@@ -134,6 +134,8 @@ export default async function PaginaVender({ params, searchParams }: PageProps<"
         orcamento={orcamento}
         nfe={nfe}
         etiqueta={dados.etiqueta}
+        vendedores={dados.vendedores}
+        vendedorObrigatorio={dados.vendedorObrigatorio}
       />
     </>
   );

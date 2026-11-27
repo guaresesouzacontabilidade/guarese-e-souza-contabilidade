@@ -192,9 +192,14 @@ test("balconista: abre o próprio caixa, vende no PIX, faz sangria e fecha; não
   await expect(page.getByRole("dialog")).toContainText("R$ 84,00");
   await page.getByRole("dialog").getByRole("button", { name: "Nova venda" }).click();
 
-  // A venda do dono não pode ser cancelada pelo balconista
+  // O balconista pede o cancelamento, mas sem a senha de quem autoriza não cancela
   await page.goto(`/e/${empresaId}/loja/vendas/${vendaDinheiro}`);
-  await expect(page.getByRole("button", { name: "Cancelar venda" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Cancelar venda" }).click();
+  await page.getByLabel("Motivo").fill("Teste sem autorização (E2E)");
+  await page.getByLabel("Senha").fill("senha-errada-E2E");
+  await page.getByRole("dialog").getByRole("button", { name: "Cancelar venda" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Senha incorreta." })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("dialog").getByRole("button", { name: "Voltar" }).click();
 
   await page.goto(`/e/${empresaId}/loja/caixa`);
   await page.getByRole("button", { name: /Sangria/ }).click();
@@ -221,7 +226,9 @@ test("dono: cancela a venda, o estoque volta e o recebimento é cancelado", asyn
   await page.goto(`/e/${empresaId}/loja/vendas/${vendaDinheiro}`);
   await page.getByRole("button", { name: "Cancelar venda" }).click();
   await page.getByLabel("Motivo").fill("Cliente desistiu (E2E)");
-  await page.getByRole("alertdialog").getByRole("button", { name: "Cancelar venda" }).click();
+  // O dono autoriza com o próprio nome (único da lista) e a senha do portal
+  await page.getByLabel("Senha").fill(SENHA);
+  await page.getByRole("dialog").getByRole("button", { name: "Cancelar venda" }).click();
   await expect(page.getByText(/Venda cancelada em/)).toBeVisible({ timeout: 30_000 });
   expect(await estoque("mourao")).toBe(antes + 10);
   const { data: lancs } = await servico!.from("lancamentos").select("situacao").eq("origem_referencia", vendaDinheiro);

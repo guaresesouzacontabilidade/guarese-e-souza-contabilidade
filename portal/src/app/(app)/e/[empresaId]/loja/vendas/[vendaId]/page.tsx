@@ -10,6 +10,7 @@ import { Alerta } from "@/components/ui/feedback";
 import { Table, TBody, TFoot, Td, Th, THead, Tr } from "@/components/ui/table";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { CancelarVenda } from "@/components/loja/acoes-venda";
+import { TrocarVendedor } from "@/components/loja/vendedores";
 import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { FORMAS_PAGAMENTO, formatarQuantidade, hora, parcelasDoPrazo, type FormaPagamento, un } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
@@ -45,7 +46,7 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
     .maybeSingle();
   if (!v) notFound();
   const orcamento = v.tipo === "orcamento";
-  const [{ data: parcelas }, { data: origem }, { data: virou }] = await Promise.all([
+  const [{ data: parcelas }, { data: origem }, { data: virou }, { data: listaVendedores }, { data: trocas }, { data: comissao }, { data: autorizadores }] = await Promise.all([
     ctx.pode("financeiro.ver") && !orcamento
       ? ctx.supabase
           .from("lancamentos")
@@ -57,7 +58,14 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
       : Promise.resolve({ data: null }),
     v.orcamento_id ? ctx.supabase.from("vendas").select("id, numero").eq("id", v.orcamento_id).maybeSingle() : Promise.resolve({ data: null }),
     orcamento && v.status === "convertido" ? ctx.supabase.from("vendas").select("id, numero").eq("orcamento_id", v.id).eq("tipo", "venda").maybeSingle() : Promise.resolve({ data: null }),
+    ctx.supabase.rpc("loja_vendedores_lista", { p_empresa_id: empresaId }),
+    ctx.supabase.from("venda_vendedor_trocas").select("id, de_vendedor_id, para_vendedor_id, motivo, created_at, quem:perfis!venda_vendedor_trocas_trocado_por_fkey(nome)").eq("venda_id", vendaId).order("created_at"),
+    // O banco só entrega a comissão a quem gerencia a loja ou ao próprio vendedor
+    !orcamento ? ctx.supabase.from("venda_comissoes").select("percentual, valor, lancamento_id").eq("venda_id", vendaId).maybeSingle() : Promise.resolve({ data: null }),
+    v.status === "aberto" || v.status === "concluida" ? ctx.supabase.rpc("loja_autorizadores_cancelamento", { p_empresa_id: empresaId }) : Promise.resolve({ data: [] }),
   ]);
+  const nomesVendedores = new Map((listaVendedores ?? []).map((x) => [x.id, x.nome]));
+  const vendedorLoja = v.loja_vendedor_id ? (nomesVendedores.get(v.loja_vendedor_id) ?? "Vendedor") : null;
 
   const sessao = v.sessao as { id: string; caixa_nome: string; status: string } | null;
   const nfe = v.nfe as { id: string; numero: number; serie: number; situacao: string } | null;
@@ -73,7 +81,8 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
         : v.status === "aberto"
           ? { rotulo: "Em aberto", variante: "info" as const }
           : { rotulo: "Virou venda", variante: "neutro" as const };
-  const podeCancelar = orcamento ? v.status === "aberto" : v.status === "concluida" && ctx.gerente && sessao?.status === "aberto" && !nfe;
+  // Quem vende pede o cancelamento; quem pode cancelar autoriza com a senha
+  const podeCancelar = orcamento ? v.status === "aberto" : v.status === "concluida" && sessao?.status === "aberto" && !nfe;
   const nfeAtiva = nfe && !["cancelada", "descartada", "rejeitada", "denegada", "falha"].includes(nfe.situacao);
   const podeNfe = !orcamento && v.status === "concluida" && ctx.pode("nfe.emitir") && !nfeAtiva;
   // Orçamento pelo WhatsApp do aparelho: a mensagem vai pronta com o link do orçamento (sem login)
@@ -94,7 +103,7 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
             {doSite && !orcamento ? <Badge variante="info">Pedido do site</Badge> : null}
           </span>
         }
-        descricao={`${formatarData(v.data)} às ${hora(v.created_at)}${nome(v.vendedor) ? ` · ${orcamento ? "feito" : "vendido"} por ${nome(v.vendedor)}` : ""}${sessao ? ` · ${sessao.caixa_nome}` : ""}`}
+        descricao={`${formatarData(v.data)} às ${hora(v.created_at)}${vendedorLoja ? ` · vendedor: ${vendedorLoja}` : nome(v.vendedor) ? ` · ${orcamento ? "feito" : "vendido"} por ${nome(v.vendedor)}` : ""}${sessao ? ` · ${sessao.caixa_nome}` : ""}`}
         voltar={{ href: `/e/${empresaId}/loja/vendas${orcamento ? "?tipo=orcamento" : ""}`, rotulo: "Vendas e orçamentos" }}
         acoes={
           <>
@@ -131,7 +140,7 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
                 <Printer /> {orcamento ? "Imprimir orçamento" : "Imprimir comprovante"}
               </a>
             </Button>
-            {podeCancelar ? <CancelarVenda empresaId={empresaId} vendaId={v.id} orcamento={orcamento} /> : null}
+            {podeCancelar ? <CancelarVenda empresaId={empresaId} vendaId={v.id} orcamento={orcamento} autorizadores={(autorizadores ?? []).map((a) => ({ id: a.id, nome: a.nome }))} /> : null}
           </>
         }
       />
@@ -279,6 +288,41 @@ export default async function PaginaVenda({ params }: PageProps<"/e/[empresaId]/
                   </a>
                 ) : null}
                 {orcamento && v.validade ? <p className="pt-2">Válido até {formatarData(v.validade)}</p> : null}
+              </CardContent>
+            </Card>
+
+            <Card data-testid="card-vendedor">
+              <CardHeader className="flex-row items-center justify-between gap-2">
+                <CardTitle>Vendedor</CardTitle>
+                {ctx.gerente && v.status !== "cancelada" && (listaVendedores ?? []).some((x) => x.ativo) ? (
+                  <TrocarVendedor
+                    empresaId={empresaId}
+                    vendaId={v.id}
+                    atual={v.loja_vendedor_id}
+                    vendedores={(listaVendedores ?? []).filter((x) => x.ativo).map((x) => ({ id: x.id, nome: x.nome }))}
+                  />
+                ) : null}
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <p className="font-medium">{vendedorLoja ?? "Sem vendedor"}</p>
+                {comissao ? (
+                  <p className="text-muted-foreground">
+                    Comissão: {Number(comissao.percentual).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% = {formatarMoeda(comissao.valor ?? 0)}
+                    {comissao.lancamento_id ? " · lançada no Contas a pagar" : ""}
+                  </p>
+                ) : null}
+                {nome(v.vendedor) ? <p className="text-xs text-muted-foreground">Registrado por {nome(v.vendedor)}</p> : null}
+                {trocas?.length ? (
+                  <ul className="space-y-1 border-t border-border pt-2 text-xs text-muted-foreground" aria-label="Trocas de vendedor">
+                    {trocas.map((t) => (
+                      <li key={t.id}>
+                        {formatarDataHora(t.created_at)}: {t.de_vendedor_id ? (nomesVendedores.get(t.de_vendedor_id) ?? "—") : "sem vendedor"} →{" "}
+                        <strong>{nomesVendedores.get(t.para_vendedor_id) ?? "—"}</strong>
+                        {nome(t.quem) ? ` por ${nome(t.quem)}` : ""} — {t.motivo}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </CardContent>
             </Card>
 

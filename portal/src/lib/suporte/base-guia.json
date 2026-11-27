@@ -654,36 +654,43 @@
   "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--22",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
-  "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Cancelar uma venda",
-  "texto": "só quem gerencia a loja, e enquanto o caixa da venda estiver aberto. O estoque volta e o recebimento é cancelado no Financeiro."
+  "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Cancelar uma venda ou um orçamento",
+  "texto": "quem está no caixa clica em Cancelar venda (ou Cancelar orçamento), escreve o motivo e chama quem pode autorizar. Essa pessoa escolhe o próprio nome na lista e digita a senha que usa para entrar no portal. Sem essa autorização, ninguém cancela (o banco de dados recusa mesmo fora da tela). - Pode autorizar quem tem a permissão Cancelar vendas e orçamentos: vem ligada para o dono da empresa, que pode dar a um gerente em Acessos. - A senha é conferida pelo sistema de login do portal e não fica guardada. Cinco senhas erradas seguidas bloqueiam novas tentativas por alguns minutos. - O cancelamento guarda quem pediu, quem autorizou, quando e o motivo. - A venda só pode ser cancelada enquanto o caixa dela estiver aberto. O estoque volta e o recebimento é cancelado no Financeiro."
  },
  {
   "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--23",
+  "publico": "cliente",
+  "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
+  "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Vendedores e comissões",
+  "texto": "- Loja → Vendedores (quem gerencia a loja): cadastre cada vendedor com o nome e a comissão em %. Vários vendedores podem usar o mesmo login do balcão. Se o vendedor tiver login próprio, ligue o login ao cadastro: o nome dele já vem escolhido no caixa e ele vê só as próprias comissões. - Exigir o vendedor em todo orçamento e venda: com a opção ligada, o portal não salva orçamento nem conclui venda sem escolher o vendedor. - No orçamento e no caixa aparece o campo Vendedor. Quando o orçamento vira venda, o vendedor do orçamento vai junto. O nome sai na impressão do orçamento e do comprovante. - A comissão é calculada sobre o valor dos produtos com desconto, sem o frete, na data da venda. O % fica gravado na venda: mudar o % do vendedor depois não altera as vendas já feitas. Venda cancelada não gera comissão. - Trocar o vendedor de uma venda (na página da venda): só quem gerencia a loja, com o motivo. A troca fica no histórico da venda. - Loja → Comissões: por período e por vendedor, quantas vendas, o total vendido e a comissão, com o detalhe venda a venda. Baixa em Excel e sai em PDF pela impressão. - Lançar no Contas a pagar: cria uma conta a pagar para cada vendedor com as comissões ainda não lançadas do período (escolha a conta de despesa e o vencimento). Cada venda só é lançada uma vez."
+ },
+ {
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--24",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › NF-e na hora da venda",
   "texto": "marque Emitir NF-e ao concluir (fica embaixo do pagamento) e clique em Concluir venda e emitir NF-e — a nota sai sozinha com os itens, o frete, o desconto e o pagamento da venda, e o caixa mostra a situação até a SEFAZ responder (autorizada: botão Imprimir DANFE). O cliente precisa ter CPF/CNPJ e endereço; se faltar o endereço, use Completar endereço ali mesmo (fica guardado para as próximas notas). Se a nota não sair, a venda continua valendo e dá para emitir depois pela venda (Emitir NF-e desta venda, que abre a nota preenchida para conferir). Em Loja → Configurações, escolha a operação da nota e quem emite, e se a caixinha já vem marcada em toda venda. Precisa da emissão de NF-e ligada pelo escritório (certificado digital); sem ela, a caixinha aparece desativada com o motivo. A NFC-e (cupom fiscal) depende do credenciamento na SEFAZ-TO e do código CSC e fica desligada até lá."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--24",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--25",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Quem pode",
-  "texto": "o responsável pela empresa vende, gerencia e vê os custos. Para um funcionário do balcão, dê só a permissão Vender no caixa (ele não cancela vendas, não muda preços além do desconto permitido, não mexe no estoque e não vê custos, margens, preços de venda nem a análise do estoque)."
+  "texto": "o responsável pela empresa vende, gerencia, vê os custos e autoriza cancelamentos. Para um funcionário do balcão, dê só a permissão Vender no caixa (ele pede o cancelamento, mas não cancela sem a senha de quem autoriza; não muda preços além do desconto permitido, não mexe no estoque e não vê custos, margens, preços de venda nem a análise do estoque)."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--25",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--26",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja) › Ver custos e margens",
   "texto": "(Configurações → Usuários e permissões → Editar permissões): separa quem cuida da loja de quem vê o custo. Quem tem Gerenciar a loja sem Ver custos e margens cadastra produtos, muda o preço de venda, ajusta o estoque, faz inventário e importa a planilha, mas não vê o custo de compra, o custo médio, a margem, o valor do estoque, a tabela de Preços de venda, a Reposição e análise nem a Entrada de mercadorias por nota (a nota traz o custo de cada item). Ao salvar um produto ou importar a planilha, o custo que já está no cadastro continua o mesmo (a coluna de custo da planilha é ignorada). O bloqueio vale no servidor e no banco, não só na tela. No começo, só o titular da empresa e o escritório têm essa permissão: marque nos colaboradores que podem ver. Os relatórios do Financeiro (DRE, lucro do mês) seguem a permissão Relatórios."
  },
  {
-  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--26",
+  "id": "loja-vender-caixa-do-dia-estoque-e-orcamentos-quem-aderiu-a--27",
   "publico": "cliente",
   "secao": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
   "titulo": "Loja: vender, caixa do dia, estoque e orçamentos (quem aderiu à gestão da loja)",
-  "texto": "Serviço opcional do escritório. Quando ligado, o menu ganha Loja, Vender, Orçamento, Caixa do dia, Produtos e estoque, Vendas e orçamentos, Clientes e Fornecedores. Tudo o que é vendido aqui baixa o estoque e entra no Financeiro sozinho (à vista como recebido, a prazo como conta a receber), e o escritório recebe tudo pronto para a contabilidade. Abrir o caixa: em Vender, informe o nome do caixa (ex.: Caixa 1) e o troco inicial que está na gaveta. Vender: busque o produto pelo nome, código ou código de barras (Enter adiciona). Para madeira vendida em m³, digite as peças e o comprimento: o portal calcula os m³ pelas medidas da peça (ex.: 10 caibros 5 × 6 cm de 3 m = 0,09 m³). Ajuste preço e desconto se precisar. Cliente: busque no cadastro, digite só o nome ou cadastre na hora (botão ao lado). Sem cadastro, dá para colocar também o CPF/CNPJ e o telefone (opcionais; o portal confere os números). Venda a prazo exige o cliente. Pagamento: toque na forma (Dinheiro, PIX, Débito, Crédito, A prazo) — dá para dividir em mais de uma. Em dinheiro, digite quanto o cliente entregou e o portal mostra o troco. A prazo: escolha as parcelas e o 1º vencimento. Concluir venda: abre o comprovante para imprimir (bobina de 80 mm ou folha A4 — \"não é documento fiscal\"). Salvar orçamento guarda a proposta com validade; depois, em Vendas e orçamentos, use Vender este orçamento."
+  "texto": "Serviço opcional do escritório. Quando ligado, o menu ganha Loja, Vender, Orçamento, Caixa do dia, Produtos e estoque, Vendas e orçamentos, Clientes, Fornecedores, Vendedores e Comissões. Tudo o que é vendido aqui baixa o estoque e entra no Financeiro sozinho (à vista como recebido, a prazo como conta a receber), e o escritório recebe tudo pronto para a contabilidade. Abrir o caixa: em Vender, informe o nome do caixa (ex.: Caixa 1) e o troco inicial que está na gaveta. Vender: busque o produto pelo nome, código ou código de barras (Enter adiciona). Para madeira vendida em m³, digite as peças e o comprimento: o portal calcula os m³ pelas medidas da peça (ex.: 10 caibros 5 × 6 cm de 3 m = 0,09 m³). Ajuste preço e desconto se precisar. Cliente: busque no cadastro, digite só o nome ou cadastre na hora (botão ao lado). Sem cadastro, dá para colocar também o CPF/CNPJ e o telefone (opcionais; o portal confere os números). Venda a prazo exige o cliente. Pagamento: toque na forma (Dinheiro, PIX, Débito, Crédito, A prazo) — dá para dividir em mais de uma. Em dinheiro, digite quanto o cliente entregou e o portal mostra o troco. A prazo: escolha as parcelas e o 1º vencimento. Concluir venda: abre o comprovante para imprimir (bobina de 80 mm ou folha A4 — \"não é documento fiscal\"). Salvar orçamento guarda a proposta com validade; depois, em Vendas e orçamentos, use Vender este orçamento."
  },
  {
   "id": "hotel-reservas-quartos-conta-do-hospede-e-restaurante-quem-a",

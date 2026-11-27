@@ -78,6 +78,8 @@ select set_config('testes.venda', (public.gestao_venda_finalizar(current_setting
 reset role;
 select is((select codigo_publico from public.vendas where id = current_setting('testes.venda')::uuid), null, 'venda não ganha link de orçamento');
 
+insert into public.venda_cancelamento_autorizacoes (empresa_id, venda_id, autorizado_por, solicitado_por)
+values (current_setting('testes.empresa_a')::uuid, current_setting('testes.orc')::uuid, '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000b1');
 select pg_temp.como('00000000-0000-0000-0000-0000000000b1');
 set local role authenticated;
 select public.gestao_venda_cancelar(current_setting('testes.orc')::uuid, 'Cliente desistiu');

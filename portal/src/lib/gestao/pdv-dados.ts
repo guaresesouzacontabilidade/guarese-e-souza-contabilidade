@@ -18,12 +18,15 @@ export interface DadosPdv {
   orcamento: OrcamentoInicial | null;
   /** O endereço pediu um orçamento que não está mais em aberto. */
   orcamentoFechado: boolean;
+  /** Vendedores ativos (para a comissão); `meu` = ligado a quem está logado. */
+  vendedores: { id: string; nome: string; meu: boolean }[];
+  vendedorObrigatorio: boolean;
 }
 
 /** Produtos, clientes e configuração da loja para a tela de vender e a de orçamento. */
 export async function carregarPdv(supabase: Cliente, empresaId: string, orcamentoPedido: unknown): Promise<DadosPdv> {
   const orcamentoId = typeof orcamentoPedido === "string" && UUID.test(orcamentoPedido) ? orcamentoPedido : null;
-  const [produtosR, clientesR, cfgR, orcR] = await Promise.all([
+  const [produtosR, clientesR, cfgR, orcR, vendR] = await Promise.all([
     supabase
       .from("nfe_produtos")
       .select("id, codigo, descricao, unidade, gtin, grupo, valor_unitario, estoque_atual, controla_estoque, espessura_cm, largura_cm, comprimento_m, tara_kg")
@@ -39,18 +42,19 @@ export async function carregarPdv(supabase: Cliente, empresaId: string, orcament
       .contains("papeis", ["cliente"])
       .order("nome")
       .limit(5000),
-    supabase.from("gestao_config").select("permitir_venda_prazo, balanca_etiqueta, balanca_digitos_codigo").eq("empresa_id", empresaId).maybeSingle(),
+    supabase.from("gestao_config").select("permitir_venda_prazo, balanca_etiqueta, balanca_digitos_codigo, vendedor_obrigatorio").eq("empresa_id", empresaId).maybeSingle(),
     orcamentoId
       ? supabase
           .from("vendas")
           .select(
-            "id, numero, status, cliente_id, cliente_nome, cliente_documento, cliente_telefone, desconto, frete, observacao, entrega, venda_itens(ordem, produto_id, pecas, comprimento_m, quantidade, preco_unitario, desconto)",
+            "id, numero, status, cliente_id, cliente_nome, cliente_documento, cliente_telefone, desconto, frete, observacao, entrega, loja_vendedor_id, venda_itens(ordem, produto_id, pecas, comprimento_m, quantidade, preco_unitario, desconto)",
           )
           .eq("id", orcamentoId)
           .eq("empresa_id", empresaId)
           .eq("tipo", "orcamento")
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.rpc("loja_vendedores_lista", { p_empresa_id: empresaId }),
   ]);
 
   const produtos: ProdutoPdv[] = (produtosR.data ?? []).map((p) => ({
@@ -94,6 +98,7 @@ export async function carregarPdv(supabase: Cliente, empresaId: string, orcament
           frete: String(o.frete),
           observacao: o.observacao,
           entrega: o.entrega,
+          vendedorId: o.loja_vendedor_id,
         }
       : null;
 
@@ -108,5 +113,8 @@ export async function carregarPdv(supabase: Cliente, empresaId: string, orcament
         : null,
     orcamento,
     orcamentoFechado: Boolean(orcamentoId && !orcamento),
+    // Os ativos e, num orçamento em edição, o vendedor dele mesmo que tenha sido desativado
+    vendedores: (vendR.data ?? []).filter((v) => v.ativo || v.id === orcamento?.vendedorId).map((v) => ({ id: v.id, nome: v.nome, meu: Boolean(v.meu) })),
+    vendedorObrigatorio: Boolean(cfg?.vendedor_obrigatorio),
   };
 }
