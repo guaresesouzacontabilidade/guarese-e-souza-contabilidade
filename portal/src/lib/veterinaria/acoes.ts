@@ -6,7 +6,6 @@ import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { lerValorBR } from "@/lib/dinheiro";
 import { validarCpf } from "@/lib/formatos";
 import type { Json } from "@/lib/supabase/database.types";
-import { processarFilaDepois } from "@/lib/jobs/disparo";
 import { TIPOS_DOCUMENTO } from "./rotulos";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -827,9 +826,4 @@ export async function confirmarAnexo(empresaId: string, anexoId: string): Promis
     revalidar(empresaId);
     return sucesso("Anexo guardado no prontuário.");
   });
-}
-
-/** Processa os e-mails da fila depois de uma ação (lembretes enviados pela rotina diária já vão sozinhos). */
-export async function dispararEnvios(): Promise<void> {
-  processarFilaDepois({ tipos: ["enviar_envio"], limite: 20 });
 }

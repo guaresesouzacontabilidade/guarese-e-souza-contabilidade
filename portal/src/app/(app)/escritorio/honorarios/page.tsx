@@ -24,7 +24,7 @@ export default async function PainelHonorarios() {
   const fimMes = ultimoDiaDoMes(mes);
 
   const [{ data: cfg }, { data: abertas }, { count: rascunhos }, { data: pagasMes }, { data: fichas }, { data: lancMes }, { count: aClassificar }, { data: esc }] = await Promise.all([
-    s.supabase.from("honorarios_config").select("*").single(),
+    s.supabase.from("honorarios_config").select("pix_chave, whatsapp_ativo, whatsapp_template, competencia_referencia, geracao_automatica, dia_geracao").single(),
     s.supabase.from("honorarios_cobrancas").select("id, ano, numero, pagador_nome, descricao, valor, vencimento, situacao").eq("situacao", "aberta").order("vencimento").limit(1000),
     s.supabase.from("honorarios_cobrancas").select("id", { count: "exact", head: true }).eq("situacao", "rascunho"),
     s.supabase.from("honorarios_cobrancas").select("valor_pago").eq("situacao", "paga").gte("pago_em", mes).lte("pago_em", fimMes),

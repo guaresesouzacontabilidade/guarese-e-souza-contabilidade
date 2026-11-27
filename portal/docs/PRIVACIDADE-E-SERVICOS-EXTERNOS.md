@@ -68,11 +68,14 @@ Qualquer outro recurso de IA externa deverá ser documentado aqui (serviço, dad
 - **Isolamento por empresa** no banco (Row Level Security) e verificação de permissão no servidor e na interface; testes automáticos garantem que um cliente não acessa dados de outro.
 - **Permissões por empresa e por operação** (ver, enviar, baixar, aprovar, editar o financeiro, publicar relatórios…). Os dados de colaboradores e a previsão de impostos só aparecem para quem tem a permissão de cálculos da empresa (por padrão, o empresário titular e o escritório).
 - **Senhas** fortes guardadas somente pelo Supabase Auth; **verificação em duas etapas** disponível para todos e que pode ser exigida pelo escritório. Com a opção “não pedir o código de novo hoje”, a sessão já confirmada com o código fica guardada no aparelho até o fim do dia: ao fechar o portal ela é **travada no banco** (nenhum dado é entregue a ela) e só volta com a senha, conferida pelo servidor; 5 senhas erradas encerram a sessão.
+- **Limite de tentativas**: 10 senhas erradas seguidas para o mesmo e-mail (ou 50 vindas do mesmo endereço de internet) fazem esperar 15 minutos; o e-mail de troca de senha sai no máximo 3 vezes por hora por e-mail (10 por endereço de internet). A contagem fica no banco só com o e-mail e o endereço **embaralhados** (código SHA-256, sem o texto original) e é apagada em até 2 dias.
+- **Endereços de volta** depois do login só levam a páginas do próprio portal (inclusive contra endereços disfarçados com caracteres invisíveis).
 - **Sessões** revogáveis: cada pessoa vê e encerra os próprios dispositivos; o administrador encerra sessões e desativa acessos na hora.
 - **Arquivos**: armazenamento privado, links temporários, conferência do tipo pelo conteúdo real, verificação de integridade (SHA-256), limites contra “bombas” de ZIP e antivírus opcional.
 - **Auditoria** que nenhum usuário consegue alterar, com entradas, alterações, permissões e downloads.
 - **Cabeçalhos de segurança** no site (política de conteúdo com nonce, proteção contra enquadramento, HTTPS obrigatório).
-- **Chaves secretas** apenas no servidor; nada sensível no código ou no navegador.
+- **Chaves secretas** apenas no servidor; nada sensível no código ou no navegador (inclusive o código do aviso de Pix do banco, que o navegador não consegue ler). O custo dos produtos usados nos atendimentos da veterinária só aparece para quem tem a permissão “Ver custos e margens”.
+- **Pente fino de segurança (novembro/2026)**: ataque simulado na demonstração com um cliente tentando ler, alterar e apagar dados de outra empresa por todas as 430 funções do banco, 103 tabelas e os arquivos (nenhum acesso); revisão do código (chave do servidor, rotas, envios de arquivo, links públicos, chamadas a sites externos), do histórico do código (nenhuma chave verdadeira) e das bibliotecas (nenhuma vulnerabilidade conhecida).
 
 ## 6. Guarda e eliminação
 

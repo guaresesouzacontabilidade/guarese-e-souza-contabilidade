@@ -12,10 +12,12 @@ function ipPrivado(ip: string): boolean {
   if (isIP(ip) === 6) {
     const v = ip.toLowerCase();
     if (v === "::1" || v === "::" || v.startsWith("fc") || v.startsWith("fd") || v.startsWith("fe8") || v.startsWith("fe9") || v.startsWith("fea") || v.startsWith("feb")) return true;
+    // Tradução IPv4↔IPv6 (NAT64, 6to4, Teredo) pode apontar para a rede interna
+    if (v.startsWith("64:ff9b:") || v.startsWith("2002:") || v.startsWith("2001:0:") || v.startsWith("2001::")) return true;
     const v4 = /::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(v)?.[1];
     return v4 ? ipPrivado(v4) : false;
   }
-  const [a, b] = ip.split(".").map(Number);
+  const [a, b, c] = ip.split(".").map(Number);
   return (
     a === 10 ||
     a === 127 ||
@@ -23,6 +25,10 @@ function ipPrivado(ip: string): boolean {
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 168) ||
+    (a === 192 && b === 0 && (c === 0 || c === 2)) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51 && c === 100) ||
+    (a === 203 && b === 0 && c === 113) ||
     (a === 100 && b >= 64 && b <= 127) ||
     a >= 224
   );

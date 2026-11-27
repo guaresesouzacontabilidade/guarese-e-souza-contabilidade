@@ -9,9 +9,4 @@ export async function dadosRequisicao() {
   return { ip, userAgent };
 }
 
-/** Garante que um destino de redirecionamento é interno (evita open redirect). */
-export function destinoSeguro(destino: string | null | undefined, padrao = "/painel") {
-  if (!destino) return padrao;
-  if (!destino.startsWith("/") || destino.startsWith("//") || destino.startsWith("/\\")) return padrao;
-  return destino;
-}
+export { destinoSeguro } from "./destino-seguro";

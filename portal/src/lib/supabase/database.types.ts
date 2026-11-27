@@ -8125,6 +8125,15 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"limite_consumir":
+{ Args: { "p_chave": string,"p_janela_segundos": number,"p_maximo": number }; Returns: boolean
+                           },
+"limite_estourado":
+{ Args: { "p_chave": string,"p_maximo": number }; Returns: boolean
+                           },
+"limite_zerar":
+{ Args: { "p_chave": string }; Returns: undefined
+                           },
 "loja_site_banner_excluir":
 { Args: { "p_empresa_id": string,"p_id": string }; Returns: (string)[]
                            },

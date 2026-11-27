@@ -6,6 +6,8 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { emailConfigurado, enviarEmail } from "@/lib/email/enviar";
 import { envPublico } from "@/lib/env";
 import { falhaValidacao, sucesso, type ResultadoAcao } from "@/lib/acoes";
+import { dadosRequisicao } from "@/lib/requisicao";
+import { chaveLimite, consumirLimite } from "@/lib/seguranca/limite";
 
 const esquema = z.object({ email: z.string().trim().toLowerCase().email("Informe um e-mail válido.") });
 
@@ -17,6 +19,15 @@ export async function solicitarRecuperacao(_anterior: ResultadoAcao, formData: F
   if (!dados.success) return falhaValidacao(dados.error);
   const email = dados.data.email;
   const site = envPublico.siteUrl();
+
+  // Contra robôs que disparam e-mails para alguém: até 3 por e-mail e 10 por
+  // endereço de internet a cada hora. A resposta é sempre a mesma.
+  const { ip } = await dadosRequisicao();
+  const [porEmail, porIp] = await Promise.all([
+    consumirLimite(chaveLimite("recuperar:email", email), 3, 3600),
+    ip ? consumirLimite(chaveLimite("recuperar:ip", ip), 10, 3600) : true,
+  ]);
+  if (!porEmail || !porIp) return sucesso(MENSAGEM);
 
   try {
     if (emailConfigurado()) {

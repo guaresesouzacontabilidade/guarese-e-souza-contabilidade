@@ -18,7 +18,13 @@ export default async function ConfiguracoesHonorarios() {
   const s = await exigirHonorarios();
   const admin = s.perfil.tipo === "admin";
   const [{ data: cfg }, { data: esc }, { data: categorias }, { data: equipe }, { data: acessos }] = await Promise.all([
-    s.supabase.from("honorarios_config").select("*").single(),
+    // Colunas da tela (o código secreto do aviso de Pix fica só no servidor)
+    s.supabase
+      .from("honorarios_config")
+      .select(
+        "pix_chave, pix_tipo, pix_nome, pix_cidade, geracao_automatica, dia_geracao, aprovacao_automatica, competencia_referencia, cobrar_encargos, multa_percentual, juros_mes_percentual, robo_ativo, regua, email_ativo, whatsapp_ativo, whatsapp_template, mensagens, recibo_automatico, recibo_publicar, banco_pix, banco_ambiente, banco_ativo, banco_cadastrado_em, banco_certificado_validade, banco_testado_em, banco_teste_ok, banco_teste_erro, banco_webhook_em",
+      )
+      .single(),
     s.supabase.from("escritorio").select("razao_social, cidade, whatsapp_phone_number_id").eq("id", 1).single(),
     s.supabase.from("escritorio_categorias").select("*").order("codigo"),
     admin ? s.supabase.from("perfis").select("id, nome, email").eq("tipo", "equipe").eq("ativo", true).order("nome") : Promise.resolve({ data: [] }),
