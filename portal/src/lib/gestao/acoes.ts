@@ -1,0 +1,529 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { exigirPermissao } from "@/lib/auth/sessao";
+import { falha, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
+import { lerValorBR } from "@/lib/dinheiro";
+import type { Json } from "@/lib/supabase/database.types";
+import type { DocumentoFiscal, FormaPagamento } from "./rotulos";
+import { emitirNotaDaVendaCom, situacaoNotaDaVendaCom, type ResultadoNotaVenda, type SituacaoNotaVenda } from "./nfe-venda";
+import { MODALIDADES_GESTAO } from "./carregamentos";
+import { atualizarTelasDaEmpresa } from "@/lib/atualizar-telas";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DATA = /^\d{4}-\d{2}-\d{2}$/;
+
+function texto(fd: FormData, nome: string) {
+  return String(fd.get(nome) ?? "").trim();
+}
+
+/** Número digitado no padrão brasileiro ("1.234,5") → texto com ponto, ou null. */
+function numero(v: string): string | null {
+  if (!v) return null;
+  const d = lerValorBR(v);
+  return d ? d.toString() : null;
+}
+
+function revalidarLoja(empresaId: string) {
+  revalidatePath(`/e/${empresaId}/loja`, "layout");
+  // O caixa é o mesmo do turno da recepção do hotel
+  revalidatePath(`/e/${empresaId}/hotel`, "layout");
+}
+
+// -----------------------------------------------------------------------------
+// Configuração (o escritório liga; o gerente ajusta as preferências)
+// -----------------------------------------------------------------------------
+export async function salvarConfiguracaoLoja(empresaId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+  const ctx = await exigirPermissao(empresaId, "empresa.ver");
+  if (!ctx.equipe && !ctx.pode("gestao.gerenciar")) return falha("Você não tem permissão para configurar a loja.");
+  const dados: Record<string, unknown> = { mensagem_comprovante: texto(fd, "mensagem_comprovante").slice(0, 500) };
+  // Preferências do caixa: só vêm no formulário da loja completa (na modalidade "notas" ficam como estão)
+  if (fd.has("validade_orcamento_dias")) {
+    dados.permitir_estoque_negativo = fd.get("permitir_estoque_negativo") === "on";
+    dados.permitir_venda_prazo = fd.get("permitir_venda_prazo") === "on";
+    dados.desconto_maximo_operador = numero(texto(fd, "desconto_maximo_operador"));
+    dados.validade_orcamento_dias = Number(texto(fd, "validade_orcamento_dias")) || 15;
+  }
+  for (const c of ["conta_dinheiro_id", "conta_pix_id", "conta_cartao_id"]) {
+    const v = texto(fd, c);
+    if (v && !UUID.test(v)) return falha("Conta inválida.");
+    if (v) dados[c] = v;
+  }
+  // NF-e na hora da venda (os campos só vêm quando a empresa tem a emissão de NF-e configurada)
+  if (fd.has("nfe_operacao_id")) {
+    for (const c of ["nfe_operacao_id", "nfe_emitente_id"]) {
+      const v = texto(fd, c);
+      if (v && !UUID.test(v)) return falha("Escolha inválida para a NF-e.");
+      dados[c] = v;
+    }
+    if (fd.has("validade_orcamento_dias")) dados.nfe_marcada_padrao = fd.get("nfe_marcada_padrao") === "on";
+  }
+  // Cupom fiscal: operação do cupom e a nota que o caixa já deixa escolhida
+  if (fd.has("nfce_operacao_id")) {
+    const v = texto(fd, "nfce_operacao_id");
+    if (v && !UUID.test(v)) return falha("Escolha inválida para o cupom fiscal.");
+    dados.nfce_operacao_id = v;
+  }
+  const docPadrao = texto(fd, "documento_padrao");
+  if (docPadrao === "nfe" || docPadrao === "nfce") dados.documento_padrao = docPadrao;
+  // Regra do escritório para o cartão (o banco também só aceita do escritório)
+  if (ctx.equipe && fd.has("regra_cartao")) {
+    dados.nota_obrigatoria_formas = fd.getAll("nota_obrigatoria_formas").map(String).filter((f) => f === "cartao_credito" || f === "cartao_debito");
+  }
+  if (ctx.equipe) {
+    dados.ativa = fd.get("ativa") === "on";
+    const perfil = texto(fd, "perfil_fiscal");
+    if (perfil) dados.perfil_fiscal = perfil;
+    // Qualquer modalidade da lista (loja, notas e transporte, hotel, clínica veterinária ou de fisioterapia)
+    const modalidade = texto(fd, "modalidade");
+    if (Object.hasOwn(MODALIDADES_GESTAO, modalidade)) dados.modalidade = modalidade;
+  }
+  const { error } = await ctx.supabase.rpc("gestao_configurar", { p_empresa_id: empresaId, p_dados: dados as Json });
+  if (error) return falha(mensagemErro(error));
+  // Etiqueta da balança (só vem no formulário da loja completa)
+  if (fd.has("balanca_etiqueta")) {
+    const etiqueta = texto(fd, "balanca_etiqueta");
+    const digitos = Number(texto(fd, "balanca_digitos_codigo")) || 4;
+    const { error: e2 } = await ctx.supabase.rpc("gestao_balanca_configurar", {
+      p_empresa_id: empresaId,
+      p_etiqueta: (etiqueta === "preco" || etiqueta === "peso" ? etiqueta : null) as unknown as string,
+      p_digitos_codigo: digitos,
+    });
+    if (e2) return falha(mensagemErro(e2));
+  }
+  revalidarLoja(empresaId);
+  revalidatePath(`/e/${empresaId}`, "layout");
+  if (!(ctx.equipe && dados.ativa)) return sucesso("Configurações salvas.");
+  return sucesso(
+    dados.modalidade === "hotel"
+      ? "Gestão do hotel ligada e configurada."
+      : dados.modalidade === "veterinaria"
+        ? "Gestão da clínica veterinária ligada e configurada."
+        : dados.modalidade === "fisioterapia"
+          ? "Gestão da clínica de fisioterapia ligada e configurada."
+          : "Gestão da loja ligada e configurada.",
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Produtos e estoque
+// -----------------------------------------------------------------------------
+/**
+ * Exclui o produto: sem histórico (nunca vendido, comprado por nota ou usado em
+ * nota, hotel, clínica ou carregamento), ele é apagado; com histórico, é
+ * desativado e as vendas e notas antigas continuam guardadas.
+ */
+export async function excluirProdutoLoja(empresaId: string, produtoId: string): Promise<ResultadoAcao<{ resultado: "excluido" | "desativado" }>> {
+  if (!UUID.test(empresaId) || !UUID.test(produtoId)) return falha("Registro inválido.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const { data: noSite } = await ctx.supabase.from("loja_site_produtos").select("fotos").eq("produto_id", produtoId).maybeSingle();
+  const { data, error } = await ctx.supabase.rpc("gestao_produto_excluir", { p_empresa_id: empresaId, p_produto_id: produtoId });
+  if (error) return falha(mensagemErro(error));
+  // Produto apagado: as fotos do site saem do armazenamento junto
+  if (data === "excluido" && noSite?.fotos?.length) {
+    await ctx.supabase.storage.from("loja-site").remove(noSite.fotos.flatMap((f) => [`${f}-p.webp`, `${f}-g.webp`]));
+  }
+  revalidarLoja(empresaId);
+  const resultado = data === "excluido" ? "excluido" : "desativado";
+  return sucesso(
+    resultado === "excluido"
+      ? "Produto excluído."
+      : "O produto já tem vendas, notas ou compras no histórico, então foi desativado: saiu das listas, do caixa e das notas (fica em Inativos).",
+    { resultado },
+  );
+}
+
+export async function salvarProdutoLoja(empresaId: string, produtoId: string | null, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao<{ id: string }>> {
+  if (!UUID.test(empresaId) || (produtoId && !UUID.test(produtoId))) return falha("Registro inválido.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const erros: Record<string, string[]> = {};
+  const descricao = texto(fd, "descricao");
+  if (descricao.length < 2 || descricao.length > 120) erros.descricao = ["Descreva o produto (2 a 120 letras)."];
+  const ncm = texto(fd, "ncm").replace(/\D/g, "");
+  if (!/^\d{8}$/.test(ncm)) erros.ncm = ["O NCM tem 8 números. Na dúvida, peça ao escritório."];
+  const unidade = texto(fd, "unidade").toUpperCase();
+  if (!unidade || unidade.length > 6) erros.unidade = ["Escolha a unidade."];
+  const preco = numero(texto(fd, "valor_unitario"));
+  if (!preco) erros.valor_unitario = ["Informe o preço de venda."];
+  const medidas = ["espessura_cm", "largura_cm", "comprimento_m"].map((c) => [c, numero(texto(fd, c))] as const);
+  if (unidade === "M3" && Boolean(medidas[0][1]) !== Boolean(medidas[1][1])) {
+    erros.largura_cm = ["Para a cubagem, informe a espessura e a largura da peça."];
+  }
+  // Peso do prato/embalagem: só produto por quilo
+  const taraTexto = unidade === "KG" ? texto(fd, "tara_kg") : "";
+  const tara = taraTexto ? numero(taraTexto) : null;
+  if (taraTexto && (!tara || Number(tara) < 0 || Number(tara) >= 10)) erros.tara_kg = ["Informe o peso em kg (ex.: 0,350)."];
+  // Margem que quer ganhar (opcional; o campo só vem do cadastro completo)
+  const temMargem = fd.has("margem_desejada");
+  const margemTexto = texto(fd, "margem_desejada").replace("%", "");
+  const margem = margemTexto ? numero(margemTexto) : null;
+  if (margemTexto && (!margem || Number(margem) < 0 || Number(margem) > 1000)) erros.margem_desejada = ["Informe a margem em % (ex.: 30), entre 0 e 1000."];
+  // Compra numa unidade e vende em outra (o campo só vem do cadastro completo; sem ele, fica como está)
+  const temConversao = fd.has("conversao");
+  const converte = fd.get("converte") === "on";
+  const unidadeCompra = converte ? texto(fd, "unidade_compra").toUpperCase() : "";
+  const fatorTexto = converte ? texto(fd, "fator_compra") : "";
+  const fatorCompra = fatorTexto ? numero(fatorTexto) : null;
+  if (converte) {
+    if (!unidadeCompra || unidadeCompra.length > 6) erros.unidade_compra = ["Escolha a unidade de compra."];
+    else if (unidadeCompra === unidade) erros.unidade_compra = ["Escolha uma unidade diferente da de venda."];
+    if (!fatorCompra || Number(fatorCompra) <= 0) erros.fator_compra = ["Informe quanto cada unidade de compra rende (ex.: 3)."];
+  }
+  if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
+  const dados = {
+    codigo: texto(fd, "codigo"),
+    descricao,
+    ncm,
+    cest: texto(fd, "cest"),
+    gtin: texto(fd, "gtin"),
+    unidade,
+    valor_unitario: preco,
+    preco_custo: numero(texto(fd, "preco_custo")),
+    grupo: texto(fd, "grupo"),
+    controla_estoque: fd.get("controla_estoque") === "on",
+    estoque_minimo: numero(texto(fd, "estoque_minimo")),
+    ativo: fd.get("ativo") !== "off",
+    ...Object.fromEntries(medidas),
+    ...(temConversao ? { unidade_compra: unidadeCompra, fator_compra: converte ? fatorCompra : "" } : {}),
+  };
+  const { data, error } = await ctx.supabase.rpc("gestao_produto_salvar", {
+    p_empresa_id: empresaId,
+    p_id: (produtoId ?? null) as unknown as string,
+    p_dados: dados as Json,
+  });
+  if (error) return falha(mensagemErro(error));
+  const { error: erroTara } = await ctx.supabase.rpc("gestao_produto_tara", {
+    p_empresa_id: empresaId,
+    p_produto_id: data as string,
+    p_tara_kg: (tara ?? null) as unknown as number,
+  });
+  if (erroTara) return falha(`Produto salvo, mas o peso do prato não: ${mensagemErro(erroTara)}`, { tara_kg: [mensagemErro(erroTara)] });
+  if (temMargem) {
+    const { error: erroMargem } = await ctx.supabase.rpc("gestao_produto_margem", {
+      p_empresa_id: empresaId,
+      p_produto_id: data as string,
+      p_margem: (margem === null ? null : Number(margem)) as unknown as number,
+    });
+    if (erroMargem) return falha(`Produto salvo, mas a margem não: ${mensagemErro(erroMargem)}`, { margem_desejada: [mensagemErro(erroMargem)] });
+  }
+  revalidarLoja(empresaId);
+  return sucesso(produtoId ? "Produto atualizado." : "Produto cadastrado.", { id: data as string });
+}
+
+export async function lancarEstoque(empresaId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const produtoId = texto(fd, "produto_id");
+  if (!UUID.test(produtoId)) return falha("Escolha o produto.");
+  const tipo = texto(fd, "tipo");
+  const quantidade = numero(texto(fd, "quantidade"));
+  if (!quantidade) return falha("Informe a quantidade.", { quantidade: ["Informe a quantidade."] });
+  // Correção: digita a quantidade certa e o banco lança a diferença (como no inventário)
+  if (tipo === "corrigir") {
+    const { data, error } = await ctx.supabase.rpc("gestao_inventario", {
+      p_empresa_id: empresaId,
+      p_itens: [{ produto_id: produtoId, contado: quantidade }],
+      p_observacao: (texto(fd, "observacao") || "Correção manual do estoque").slice(0, 300),
+    });
+    if (error) return falha(mensagemErro(error));
+    revalidarLoja(empresaId);
+    return sucesso(Number(data ?? 0) ? "Estoque corrigido." : "O estoque já estava com essa quantidade.");
+  }
+  const { error } = await ctx.supabase.rpc("gestao_estoque_lancar", {
+    p_empresa_id: empresaId,
+    p_dados: { tipo, produto_id: produtoId, quantidade, custo_unitario: numero(texto(fd, "custo_unitario")), observacao: texto(fd, "observacao") },
+  });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  return sucesso(tipo === "entrada_manual" ? "Entrada registrada no estoque." : "Saída registrada no estoque.");
+}
+
+export async function registrarInventario(empresaId: string, itens: { produto_id: string; contado: string }[], observacao: string): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const lista = itens
+    .filter((i) => UUID.test(i.produto_id) && i.contado.trim() !== "")
+    .map((i) => ({ produto_id: i.produto_id, contado: numero(i.contado) }));
+  if (lista.some((i) => i.contado === null)) return falha("Há uma contagem com número inválido.");
+  const { data, error } = await ctx.supabase.rpc("gestao_inventario", { p_empresa_id: empresaId, p_itens: lista, p_observacao: observacao.slice(0, 300) });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  const n = Number(data ?? 0);
+  return sucesso(n ? `Inventário registrado: ${n} produto(s) ajustado(s).` : "Inventário conferido: nenhum ajuste foi preciso.");
+}
+
+/** Um item da nota de compra na entrada do estoque (quantidade e custo já na unidade da loja). */
+export interface ItemEntradaNota {
+  numero_item: number;
+  /** Produto da loja; vazio com `novo` cria o produto a partir do item. */
+  produto_id: string | null;
+  novo: { descricao: string; ncm: string; unidade: string; valor_unitario: string; grupo?: string } | null;
+  quantidade: string;
+  custo_unitario: string;
+  /** Quantas unidades da loja vêm em uma unidade da nota (1 caixa = 12 kg → 12). */
+  fator: string;
+  /** Guarda o vínculo para a próxima nota do mesmo fornecedor. */
+  lembrar: boolean;
+}
+
+export async function darEntradaNota(empresaId: string, documentoFiscalId: string, itens: ItemEntradaNota[]): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId) || !UUID.test(documentoFiscalId)) return falha("Nota inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.custos");
+  if (!Array.isArray(itens) || itens.length > 990) return falha("Itens inválidos.");
+  const lista = [];
+  for (const i of itens) {
+    const rotulo = `Item ${Number(i.numero_item) || "?"}`;
+    const base = {
+      numero_item: Number.isInteger(i.numero_item) ? i.numero_item : null,
+      quantidade: numero(String(i.quantidade ?? "")),
+      custo_unitario: numero(String(i.custo_unitario ?? "")),
+      fator: numero(String(i.fator ?? "")) ?? "1",
+      lembrar: i.lembrar !== false,
+    };
+    if (!base.quantidade || Number(base.quantidade) <= 0) return falha(`${rotulo}: informe a quantidade.`);
+    if (base.custo_unitario === null) return falha(`${rotulo}: informe o custo.`);
+    if (Number(base.fator) <= 0) return falha(`${rotulo}: o fator de conversão precisa ser maior que zero.`);
+    if (i.novo) {
+      const descricao = String(i.novo.descricao ?? "").trim();
+      const ncm = String(i.novo.ncm ?? "").replace(/\D/g, "");
+      const unidade = String(i.novo.unidade ?? "").trim().toUpperCase();
+      const preco = numero(String(i.novo.valor_unitario ?? ""));
+      if (descricao.length < 2 || descricao.length > 120) return falha(`${rotulo}: descreva o produto novo (2 a 120 letras).`);
+      if (!/^\d{8}$/.test(ncm)) return falha(`${rotulo}: o NCM do produto novo tem 8 números.`);
+      if (!unidade || unidade.length > 6) return falha(`${rotulo}: escolha a unidade do produto novo.`);
+      if (!preco || Number(preco) <= 0) return falha(`${rotulo}: informe o preço de venda do produto novo.`);
+      const grupo = String(i.novo.grupo ?? "").trim();
+      lista.push({ ...base, novo: { descricao, ncm, unidade, valor_unitario: preco, grupo: grupo || null, controla_estoque: true } });
+    } else if (i.produto_id && UUID.test(i.produto_id)) {
+      lista.push({ ...base, produto_id: i.produto_id });
+    }
+  }
+  if (!lista.length) return falha("Escolha o produto de pelo menos um item da nota.");
+  const { data, error } = await ctx.supabase.rpc("gestao_entrada_nota", { p_empresa_id: empresaId, p_documento_fiscal_id: documentoFiscalId, p_itens: lista as Json });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  return sucesso(`Entrada registrada: ${data} item(ns) da nota no estoque.`);
+}
+
+/** Liga ou desliga a entrada automática das notas de compra no estoque. */
+export async function definirEntradaAutomatica(empresaId: string, ligada: boolean): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const { error } = await ctx.supabase.rpc("gestao_entrada_automatica_definir", { p_empresa_id: empresaId, p_ligada: ligada === true });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  return sucesso(ligada ? "Entrada automática ligada." : "Entrada automática desligada.");
+}
+
+/** Esquece o vínculo de um item do fornecedor (a próxima nota volta a pedir conferência). */
+export async function apagarVinculoEstoque(empresaId: string, vinculoId: string): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId) || !UUID.test(vinculoId)) return falha("Registro inválido.");
+  const ctx = await exigirPermissao(empresaId, "gestao.gerenciar");
+  const { error, count } = await ctx.supabase.from("estoque_vinculos").delete({ count: "exact" }).eq("id", vinculoId).eq("empresa_id", empresaId);
+  if (error) return falha(mensagemErro(error));
+  if (!count) return falha("Vínculo não encontrado.");
+  revalidarLoja(empresaId);
+  return sucesso("Vínculo apagado. A próxima nota com este item vai pedir conferência.");
+}
+
+// -----------------------------------------------------------------------------
+// Clientes, caixa e vendas
+// -----------------------------------------------------------------------------
+export async function salvarClienteLoja(empresaId: string, dados: { nome: string; documento?: string; telefone?: string; email?: string }): Promise<ResultadoAcao<{ id: string; nome: string }>> {
+  if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  const { data, error } = await ctx.supabase.rpc("gestao_cliente_salvar", { p_empresa_id: empresaId, p_dados: dados });
+  if (error) return falha(mensagemErro(error));
+  atualizarTelasDaEmpresa(empresaId);
+  return sucesso("Cliente cadastrado.", { id: data as string, nome: dados.nome.trim() });
+}
+
+export async function abrirCaixa(empresaId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId)) return falha("Empresa inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  const valor = texto(fd, "valor_abertura") ? numero(texto(fd, "valor_abertura")) : "0";
+  if (valor === null) return falha("Troco inicial inválido.", { valor_abertura: ["Use o formato 100,00."] });
+  const { error } = await ctx.supabase.rpc("gestao_caixa_abrir", { p_empresa_id: empresaId, p_caixa_nome: texto(fd, "caixa_nome") || "Caixa 1", p_valor_abertura: Number(valor) });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  return sucesso("Caixa aberto. Boas vendas!");
+}
+
+export async function movimentarCaixa(empresaId: string, sessaoId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId) || !UUID.test(sessaoId)) return falha("Caixa inválido.");
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  const tipo = texto(fd, "tipo");
+  const valor = numero(texto(fd, "valor"));
+  if (!valor) return falha("Informe o valor.", { valor: ["Informe o valor."] });
+  const conta = texto(fd, "conta_id");
+  if (conta && !UUID.test(conta)) return falha("Conta inválida.");
+  const { error } = await ctx.supabase.rpc("gestao_caixa_movimento", {
+    p_sessao_id: sessaoId,
+    p_tipo: tipo,
+    p_valor: Number(valor),
+    p_motivo: texto(fd, "motivo"),
+    p_conta_id: (conta || null) as unknown as string,
+  });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  return sucesso(tipo === "sangria" ? "Sangria registrada." : "Suprimento registrado.");
+}
+
+export async function fecharCaixa(empresaId: string, sessaoId: string, _a: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  if (!UUID.test(empresaId) || !UUID.test(sessaoId)) return falha("Caixa inválido.");
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  const contado = numero(texto(fd, "valor_contado"));
+  if (contado === null) return falha("Informe quanto dinheiro tem na gaveta.", { valor_contado: ["Conte o dinheiro e informe o valor (pode ser zero)."] });
+  const { data, error } = await ctx.supabase.rpc("gestao_caixa_fechar", { p_sessao_id: sessaoId, p_valor_contado: Number(contado), p_observacao: texto(fd, "observacao") });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  const dif = Number((data as { diferenca?: number } | null)?.diferenca ?? 0);
+  return sucesso(dif === 0 ? "Caixa fechado. O dinheiro conferiu certinho." : dif > 0 ? "Caixa fechado com sobra de dinheiro." : "Caixa fechado com falta de dinheiro.");
+}
+
+export interface ItemVendaEntrada {
+  produto_id: string;
+  pecas?: string | null;
+  comprimento_m?: string | null;
+  quantidade?: string | null;
+  preco_unitario: string;
+  desconto?: string | null;
+}
+
+export interface PagamentoEntrada {
+  forma: FormaPagamento;
+  valor: string;
+  valor_recebido?: string | null;
+  parcelas?: number;
+  primeiro_vencimento?: string | null;
+  intervalo_dias?: number;
+}
+
+export interface VendaEntrada {
+  sessao_id?: string;
+  orcamento_id?: string | null;
+  cliente_id?: string | null;
+  cliente_nome?: string;
+  cliente_documento?: string;
+  cliente_telefone?: string;
+  itens: ItemVendaEntrada[];
+  desconto?: string;
+  frete?: string;
+  pagamentos?: PagamentoEntrada[];
+  observacao?: string;
+  entrega?: string;
+  validade?: string;
+  /** Vendedor da comissão (cadastro da loja); vazio = o do orçamento ou o ligado a quem está logado. */
+  loja_vendedor_id?: string | null;
+}
+
+function normalizarItens(itens: ItemVendaEntrada[]) {
+  return itens.map((i) => ({
+    produto_id: i.produto_id,
+    pecas: i.pecas ? numero(i.pecas) : null,
+    comprimento_m: i.comprimento_m ? numero(i.comprimento_m) : null,
+    quantidade: i.quantidade ? numero(i.quantidade) : null,
+    preco_unitario: numero(i.preco_unitario),
+    desconto: i.desconto ? numero(i.desconto) : null,
+  }));
+}
+
+export type { ResultadoNotaVenda, SituacaoNotaVenda };
+
+export async function finalizarVenda(
+  empresaId: string,
+  venda: VendaEntrada,
+  opcoes: { documento?: DocumentoFiscal | null } = {},
+): Promise<ResultadoAcao<{ id: string; numero: number; troco: number; total: number; nota?: ResultadoNotaVenda }>> {
+  if (!UUID.test(empresaId) || !venda.sessao_id || !UUID.test(venda.sessao_id)) return falha("Abra o caixa antes de vender.");
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  if (venda.pagamentos?.some((p) => p.primeiro_vencimento && !DATA.test(p.primeiro_vencimento))) return falha("Vencimento inválido.");
+  const dados = {
+    sessao_id: venda.sessao_id,
+    orcamento_id: venda.orcamento_id && UUID.test(venda.orcamento_id) ? venda.orcamento_id : null,
+    cliente_id: venda.cliente_id && UUID.test(venda.cliente_id) ? venda.cliente_id : null,
+    cliente_nome: venda.cliente_nome?.slice(0, 120),
+    cliente_documento: venda.cliente_documento,
+    cliente_telefone: venda.cliente_telefone,
+    itens: normalizarItens(venda.itens),
+    desconto: venda.desconto ? numero(venda.desconto) : null,
+    frete: venda.frete ? numero(venda.frete) : null,
+    pagamentos: (venda.pagamentos ?? []).map((p) => ({
+      forma: p.forma,
+      valor: numero(p.valor),
+      valor_recebido: p.valor_recebido ? numero(p.valor_recebido) : null,
+      parcelas: p.parcelas ?? 1,
+      primeiro_vencimento: p.primeiro_vencimento || null,
+      intervalo_dias: p.intervalo_dias ?? 30,
+    })),
+    observacao: venda.observacao?.slice(0, 1000),
+    entrega: venda.entrega?.slice(0, 300),
+    loja_vendedor_id: venda.loja_vendedor_id && /^[0-9a-f-]{36}$/i.test(venda.loja_vendedor_id) ? venda.loja_vendedor_id : "",
+    // Nota fiscal pedida no caixa (o banco confere a regra do cartão e se o documento está disponível)
+    documento_fiscal: opcoes.documento === "nfe" || opcoes.documento === "nfce" ? opcoes.documento : null,
+  };
+  const { data, error } = await ctx.supabase.rpc("gestao_venda_finalizar", { p_empresa_id: empresaId, p_dados: dados as Json });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  const r = data as { id: string; numero: number; troco: number; total: number };
+  // Nota na hora da venda: a venda já está gravada; se a nota não sair, ela fica pendente na venda
+  const documento = dados.documento_fiscal;
+  if (documento) {
+    try {
+      const nota = await emitirNotaDaVendaCom(ctx.supabase, r.id, documento);
+      atualizarTelasDaEmpresa(empresaId);
+      return sucesso(`Venda nº ${r.numero} concluída.`, { ...r, nota });
+    } catch (e) {
+      console.error("Falha ao emitir a nota da venda", e);
+      const nome = documento === "nfce" ? "o cupom fiscal" : "a NF-e";
+      return sucesso(`Venda nº ${r.numero} concluída.`, {
+        ...r,
+        nota: { ok: false, documento, mensagem: `A venda foi concluída, mas ${nome} não pôde ser enviado agora. Emita pela venda.` },
+      });
+    }
+  }
+  return sucesso(`Venda nº ${r.numero} concluída.`, r);
+}
+
+export async function salvarOrcamento(empresaId: string, orcamentoId: string | null, venda: VendaEntrada): Promise<ResultadoAcao<{ id: string; numero: number }>> {
+  if (!UUID.test(empresaId) || (orcamentoId && !UUID.test(orcamentoId))) return falha("Registro inválido.");
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  if (venda.validade && !DATA.test(venda.validade)) return falha("Validade inválida.");
+  const dados = {
+    cliente_id: venda.cliente_id && UUID.test(venda.cliente_id) ? venda.cliente_id : null,
+    cliente_nome: venda.cliente_nome?.slice(0, 120),
+    cliente_documento: venda.cliente_documento,
+    cliente_telefone: venda.cliente_telefone,
+    itens: normalizarItens(venda.itens),
+    desconto: venda.desconto ? numero(venda.desconto) : null,
+    frete: venda.frete ? numero(venda.frete) : null,
+    observacao: venda.observacao?.slice(0, 1000),
+    entrega: venda.entrega?.slice(0, 300),
+    loja_vendedor_id: venda.loja_vendedor_id && /^[0-9a-f-]{36}$/i.test(venda.loja_vendedor_id) ? venda.loja_vendedor_id : "",
+    validade: venda.validade || null,
+  };
+  const { data, error } = await ctx.supabase.rpc("gestao_orcamento_salvar", { p_empresa_id: empresaId, p_id: (orcamentoId ?? null) as unknown as string, p_dados: dados as Json });
+  if (error) return falha(mensagemErro(error));
+  revalidarLoja(empresaId);
+  const r = data as { id: string; numero: number };
+  return sucesso(`Orçamento nº ${r.numero} salvo.`, r);
+}
+
+/** Situação da nota (cupom ou NF-e) da venda, para o caixa acompanhar até a autorização. */
+export async function situacaoNotaDaVenda(empresaId: string, vendaId: string): Promise<SituacaoNotaVenda | null> {
+  if (!UUID.test(empresaId) || !UUID.test(vendaId)) return null;
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  return situacaoNotaDaVendaCom(ctx.supabase, vendaId);
+}
+
+/** Emite (ou emite de novo, se recusada) a nota de uma venda concluída: cupom fiscal ou NF-e. */
+export async function emitirNotaDaVenda(empresaId: string, vendaId: string, documento: DocumentoFiscal): Promise<ResultadoAcao<ResultadoNotaVenda>> {
+  if (!UUID.test(empresaId) || !UUID.test(vendaId) || (documento !== "nfe" && documento !== "nfce")) return falha("Venda inválida.");
+  const ctx = await exigirPermissao(empresaId, "gestao.vender");
+  const r = await emitirNotaDaVendaCom(ctx.supabase, vendaId, documento);
+  if (!r.ok) return falha(r.mensagem);
+  revalidarLoja(empresaId);
+  atualizarTelasDaEmpresa(empresaId);
+  return sucesso(r.mensagem, r);
+}

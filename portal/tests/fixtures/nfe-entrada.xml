@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe><infNFe Id="NFe17260998765432000198550010000004561876543215" versao="4.00">
+    <ide><cUF>17</cUF><natOp>Venda</natOp><mod>55</mod><serie>1</serie><nNF>456</nNF><dhEmi>2026-09-20T08:00:00-03:00</dhEmi><tpNF>1</tpNF><finNFe>1</finNFe></ide>
+    <emit><CNPJ>98765432000198</CNPJ><xNome>FORNECEDOR Y SA (FICTICIO)</xNome><enderEmit><UF>GO</UF></enderEmit><IE>99999</IE></emit>
+    <dest><CNPJ>11222333000181</CNPJ><xNome>EMPRESA A COMERCIO LTDA (FICTICIA)</xNome><enderDest><UF>TO</UF></enderDest></dest>
+    <det nItem="1"><prod><cProd>X1</cProd><xProd>MERCADORIA PARA REVENDA</xProd><NCM>12345678</NCM><CFOP>6102</CFOP><uCom>CX</uCom><qCom>10</qCom><vUnCom>32.99</vUnCom><vProd>329.90</vProd></prod><imposto><ICMS><ICMS00><vICMS>39.59</vICMS></ICMS00></ICMS><IPI><IPITrib><vIPI>16.50</vIPI></IPITrib></IPI></imposto></det>
+    <total><ICMSTot><vBC>329.90</vBC><vICMS>39.59</vICMS><vProd>329.90</vProd><vFrete>0.00</vFrete><vDesc>0.00</vDesc><vIPI>16.50</vIPI><vOutro>0.00</vOutro><vNF>346.40</vNF></ICMSTot></total>
+  </infNFe></NFe>
+</nfeProc>

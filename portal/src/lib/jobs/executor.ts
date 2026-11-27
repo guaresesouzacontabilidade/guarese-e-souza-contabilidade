@@ -1,0 +1,110 @@
+import "server-only";
+import { criarClienteAdmin, type ClienteAdmin } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/database.types";
+
+export type Job = Database["public"]["Tables"]["jobs"]["Row"];
+/** Até quando (Date.now()) a tarefa pode trabalhar antes de devolver a vez (tarefas longas se dividem). */
+export interface ContextoTarefa {
+  prazo: number;
+}
+type Manipulador = (admin: ClienteAdmin, job: Job, contexto: ContextoTarefa) => Promise<unknown>;
+
+/** Registro dos tipos de tarefa (carregados sob demanda). */
+const MANIPULADORES: Record<string, () => Promise<Manipulador>> = {
+  enviar_envio: async () => (await import("@/lib/notificacoes/envio")).executarEnvio,
+  enviar_push: async () => (await import("@/lib/notificacoes/push")).executarPush,
+  pix_banco: async () => (await import("@/lib/honorarios/banco")).executarPixBanco,
+  processar_documento: async () => (await import("@/lib/documentos/processar")).processarDocumento,
+  sugerir_conciliacao: async () => (await import("@/lib/conciliacao/motor")).executarSugestoes,
+  remover_arquivos: async () => (await import("@/lib/documentos/processar")).removerArquivos,
+  notas_automaticas: async () => {
+    const { executarNotasAutomaticas } = await import("@/lib/notas-automaticas/sincronizar");
+    return (admin, job) => executarNotasAutomaticas(admin, job);
+  },
+  auditor_fiscal: async () => (await import("@/lib/auditor-fiscal/executar")).executarAuditorFiscal,
+  estudo_tributario: async () => (await import("@/lib/estudos/executar")).executarEstudoTributario,
+  reler_notas_mes: async () => (await import("@/lib/fiscal/releitura")).executarReleituraMes,
+  importar_maquininha: async () => (await import("@/lib/maquininhas/importar")).importarMaquininha,
+  emitir_nfse: async () => {
+    const { emitirNfse } = await import("@/lib/nfse-emissao/emitir");
+    return (admin, job) => emitirNfse(admin, job);
+  },
+  cancelar_nfse: async () => {
+    const { cancelarNfse } = await import("@/lib/nfse-emissao/emitir");
+    return (admin, job) => cancelarNfse(admin, job);
+  },
+  emitir_nfe: async () => {
+    const { emitirNfe } = await import("@/lib/nfe-emissao/emitir");
+    return (admin, job) => emitirNfe(admin, job);
+  },
+  evento_nfe: async () => {
+    const { eventoNfe } = await import("@/lib/nfe-emissao/emitir");
+    return (admin, job) => eventoNfe(admin, job);
+  },
+  emitir_cte: async () => {
+    const { emitirCte } = await import("@/lib/cte-emissao/emitir");
+    return (admin, job) => emitirCte(admin, job);
+  },
+  evento_cte: async () => {
+    const { eventoCte } = await import("@/lib/cte-emissao/emitir");
+    return (admin, job) => eventoCte(admin, job);
+  },
+  gerar_lote_xml: async () => {
+    const { gerarLoteXml } = await import("@/lib/lotes-xml/gerar");
+    return (admin, job, contexto) => gerarLoteXml(admin, job, contexto);
+  },
+};
+
+function espera(tentativas: number) {
+  // 1 min, 5 min, 15 min, 1 h...
+  return [60, 300, 900, 3600, 7200][Math.min(tentativas - 1, 4)];
+}
+
+export async function processarFila({
+  limite = 50,
+  tempoMaximoMs = 50_000,
+  tipos,
+}: { limite?: number; tempoMaximoMs?: number; tipos?: string[] } = {}) {
+  const admin = criarClienteAdmin();
+  const worker = `w-${process.pid}-${Math.random().toString(36).slice(2, 8)}`;
+  const inicio = Date.now();
+  let processados = 0;
+  let falhas = 0;
+
+  while (Date.now() - inicio < tempoMaximoMs && processados < limite) {
+    const { data: jobs, error } = await admin.rpc("jobs_reservar", { p_limite: 5, p_worker: worker, p_tipos: tipos ?? undefined });
+    if (error) throw new Error(`Falha ao reservar tarefas: ${error.message}`);
+    if (!jobs?.length) break;
+    for (const job of jobs as Job[]) {
+      const carregar = MANIPULADORES[job.tipo];
+      try {
+        if (!carregar) throw new Error(`Tipo de tarefa desconhecido: ${job.tipo}`);
+        const manipulador = await carregar();
+        const resultado = await manipulador(admin, job, { prazo: inicio + tempoMaximoMs });
+        await admin.rpc("jobs_concluir", { p_id: job.id, p_resultado: (resultado ?? null) as never });
+      } catch (e) {
+        falhas++;
+        const mensagem = e instanceof Error ? e.message : String(e);
+        console.error(`[fila] tarefa ${job.id} (${job.tipo}) falhou:`, mensagem);
+        await admin.rpc("jobs_falhar", {
+          p_id: job.id,
+          p_erro: mensagem,
+          p_reprogramar_segundos: job.tentativas < job.max_tentativas ? espera(job.tentativas) : undefined,
+        });
+      }
+      processados++;
+    }
+  }
+  return { processados, falhas };
+}
+
+/** Guarda a última execução de uma rotina agendada (exibida em Configurações → Integrações). */
+export async function registrarRotina(
+  admin: ClienteAdmin,
+  rotina: "fila" | "diaria",
+  r: { ok: boolean; resultado?: unknown; erro?: string },
+) {
+  await admin
+    .from("rotinas_status")
+    .upsert({ rotina, ultima_execucao: new Date().toISOString(), ok: r.ok, resultado: (r.resultado ?? null) as never, erro: r.erro ?? null });
+}

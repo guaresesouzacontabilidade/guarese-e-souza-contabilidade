@@ -1,0 +1,401 @@
+import "server-only";
+import type { ContextoEmpresa } from "@/lib/auth/sessao";
+import { dec, somar } from "@/lib/dinheiro";
+import type { FormaPagamento } from "./rotulos";
+import type { ProdutoLoja } from "@/components/loja/produtos";
+
+type Cliente = ContextoEmpresa["supabase"];
+
+export interface ResumoCaixa {
+  abertura: number;
+  vendas_quantidade: number;
+  vendas_total: number;
+  descontos: number;
+  troco: number;
+  canceladas_quantidade: number;
+  canceladas_total: number;
+  por_forma: Partial<Record<FormaPagamento, { valor: number; vendas: number }>>;
+  sangrias: number;
+  suprimentos: number;
+  qtd_sangrias: number;
+  qtd_suprimentos: number;
+  dinheiro_esperado: number;
+  contado?: number;
+  diferenca?: number;
+  /** Recebimentos do hotel neste caixa (quando a empresa usa a gestão do hotel) */
+  hotel_total?: number;
+  hotel_por_forma?: Record<string, { valor: number; quantidade: number }>;
+  /** Recebimentos da clínica veterinária neste caixa (contas da clínica pagas com o caixa aberto) */
+  clinica_quantidade?: number;
+  clinica_total?: number;
+  clinica_por_forma?: Record<string, { valor: number; quantidade: number }>;
+  /** Recebimentos das ordens de serviço neste caixa (sinal e restante) */
+  os_quantidade?: number;
+  os_total?: number;
+  os_por_forma?: Record<string, { valor: number; quantidade: number }>;
+}
+
+/** Recebimento do hotel feito com este caixa aberto, com os comprovantes anexados. */
+export interface RecebimentoHotelCaixa {
+  id: string;
+  hora: string;
+  forma: string;
+  valor: string;
+  sinal: boolean;
+  estornado: boolean;
+  reserva_id: string | null;
+  reserva_numero: number | null;
+  quarto: string | null;
+  hospede: string | null;
+  /** Recibo de serviços extras pago na hora por uma empresa (sem reserva; o nome da empresa vem em `hospede`). */
+  recibo_numero: number | null;
+  comprovantes: { id: string; nome: string; mime: string }[];
+}
+
+export interface VendaDoCaixa {
+  id: string;
+  numero: number;
+  status: string;
+  hora: string;
+  cliente: string | null;
+  vendedor: string | null;
+  subtotal: string;
+  desconto: string;
+  frete: string;
+  total: string;
+  troco: string;
+  motivo_cancelamento: string | null;
+  nfe: boolean;
+  itens: { descricao: string; unidade: string; pecas: string | null; comprimento_m: string | null; quantidade: string; preco_unitario: string; desconto: string; total: string }[];
+  pagamentos: { forma: FormaPagamento; valor: string; valor_recebido: string | null; parcelas: number; primeiro_vencimento: string | null }[];
+}
+
+export interface MovimentoDoCaixa {
+  id: string;
+  tipo: "sangria" | "suprimento";
+  valor: string;
+  motivo: string;
+  hora: string;
+  conta: string | null;
+  quem: string | null;
+}
+
+export interface ProdutoVendidoNoDia {
+  descricao: string;
+  unidade: string;
+  quantidade: string;
+  pecas: string | null;
+  total: string;
+}
+
+export interface RelatorioCaixa {
+  sessao: {
+    id: string;
+    empresa_id: string;
+    caixa_nome: string;
+    status: "aberto" | "fechado";
+    data: string;
+    aberto_em: string;
+    fechado_em: string | null;
+    valor_abertura: string;
+    valor_contado: string | null;
+    valor_esperado: string | null;
+    diferenca: string | null;
+    observacao_fechamento: string | null;
+    operador_id: string;
+    operador: string | null;
+    fechado_por: string | null;
+  };
+  resumo: ResumoCaixa;
+  vendas: VendaDoCaixa[];
+  movimentos: MovimentoDoCaixa[];
+  produtos: ProdutoVendidoNoDia[];
+  hotel: RecebimentoHotelCaixa[];
+}
+
+const nome = (p: unknown) => (p as { nome?: string } | null)?.nome ?? null;
+
+/**
+ * Tudo o que aconteceu num caixa: vendas (itens e pagamentos), sangrias,
+ * suprimentos, resumo por forma de pagamento e o total por produto. Usado na
+ * tela do caixa e no relatório do dia em PDF. O acesso segue as regras do banco.
+ */
+export async function carregarRelatorioCaixa(supabase: Cliente, sessaoId: string): Promise<RelatorioCaixa | null> {
+  const { data: s } = await supabase
+    .from("caixa_sessoes")
+    .select(
+      "id, empresa_id, caixa_nome, status, data, aberto_em, fechado_em, valor_abertura, valor_contado, valor_esperado, diferenca, observacao_fechamento, resumo, operador_id, operador:perfis!caixa_sessoes_operador_id_fkey(nome), fechador:perfis!caixa_sessoes_fechado_por_fkey(nome)",
+    )
+    .eq("id", sessaoId)
+    .maybeSingle();
+  if (!s) return null;
+
+  const [resumoAoVivo, vendasR, movR, hotelR, recibosR] = await Promise.all([
+    s.status === "aberto" ? supabase.rpc("gestao_caixa_resumo", { p_sessao_id: sessaoId }) : Promise.resolve({ data: s.resumo }),
+    supabase
+      .from("vendas")
+      .select(
+        "id, numero, status, created_at, cliente_nome, subtotal, desconto, frete, total, troco, motivo_cancelamento, nfe_emissao_id, vendedor:perfis!vendas_vendedor_id_fkey(nome), venda_itens(ordem, descricao, unidade, pecas, comprimento_m, quantidade, preco_unitario, desconto, total), venda_pagamentos(forma, valor, valor_recebido, parcelas, primeiro_vencimento)",
+      )
+      .eq("sessao_id", sessaoId)
+      .eq("tipo", "venda")
+      .order("numero"),
+    supabase
+      .from("caixa_movimentos")
+      .select("id, tipo, valor, motivo, created_at, conta:contas_financeiras(nome), autor:perfis!caixa_movimentos_criado_por_fkey(nome)")
+      .eq("sessao_id", sessaoId)
+      .order("created_at"),
+    // Hotel: recebimentos das hospedagens neste caixa e os comprovantes (só aparece para quem usa o hotel)
+    supabase
+      .from("hotel_pagamentos")
+      .select(
+        "id, created_at, forma, valor, adiantamento, cancelado_em, reserva:hotel_reservas!hotel_pagamentos_empresa_id_reserva_id_fkey(id, numero, quarto:hotel_quartos!hotel_reservas_empresa_id_quarto_id_fkey(numero), hospede:hotel_hospedes!hotel_reservas_empresa_id_hospede_id_fkey(nome)), anexos:hotel_pagamento_anexos!hotel_pagamento_anexos_empresa_id_pagamento_id_fkey(id, nome, mime, confirmado_em, created_at)",
+      )
+      .eq("sessao_id", sessaoId)
+      .order("created_at"),
+    // Hotel: serviços extras pagos na hora por empresas (recibo) neste caixa
+    supabase
+      .from("hotel_extras_recibos")
+      .select("id, created_at, numero, forma, total, cancelado_em, empresa:contrapartes!hotel_extras_recibos_empresa_id_contraparte_id_fkey(nome)")
+      .eq("sessao_id", sessaoId)
+      .order("created_at"),
+  ]);
+
+  const vendas: VendaDoCaixa[] = (vendasR.data ?? []).map((v) => ({
+    id: v.id,
+    numero: Number(v.numero),
+    status: v.status,
+    hora: v.created_at,
+    cliente: v.cliente_nome,
+    vendedor: nome(v.vendedor),
+    subtotal: String(v.subtotal),
+    desconto: String(v.desconto),
+    frete: String(v.frete),
+    total: String(v.total),
+    troco: String(v.troco),
+    motivo_cancelamento: v.motivo_cancelamento,
+    nfe: Boolean(v.nfe_emissao_id),
+    itens: [...(v.venda_itens ?? [])]
+      .sort((a, b) => a.ordem - b.ordem)
+      .map((i) => ({
+        descricao: i.descricao,
+        unidade: i.unidade,
+        pecas: i.pecas == null ? null : String(i.pecas),
+        comprimento_m: i.comprimento_m == null ? null : String(i.comprimento_m),
+        quantidade: String(i.quantidade),
+        preco_unitario: String(i.preco_unitario),
+        desconto: String(i.desconto),
+        total: String(i.total),
+      })),
+    pagamentos: (v.venda_pagamentos ?? []).map((p) => ({
+      forma: p.forma as FormaPagamento,
+      valor: String(p.valor),
+      valor_recebido: p.valor_recebido == null ? null : String(p.valor_recebido),
+      parcelas: p.parcelas,
+      primeiro_vencimento: p.primeiro_vencimento,
+    })),
+  }));
+
+  // Total vendido por produto (só vendas concluídas)
+  const porProduto = new Map<string, { descricao: string; unidade: string; quantidade: ReturnType<typeof dec>; pecas: ReturnType<typeof dec> | null; total: ReturnType<typeof dec> }>();
+  for (const v of vendas) {
+    if (v.status !== "concluida") continue;
+    for (const i of v.itens) {
+      const chave = `${i.descricao}|${i.unidade}`;
+      const atual = porProduto.get(chave) ?? { descricao: i.descricao, unidade: i.unidade, quantidade: dec(0), pecas: null, total: dec(0) };
+      atual.quantidade = atual.quantidade.plus(dec(i.quantidade));
+      if (i.pecas != null) atual.pecas = (atual.pecas ?? dec(0)).plus(dec(i.pecas));
+      atual.total = atual.total.plus(dec(i.total));
+      porProduto.set(chave, atual);
+    }
+  }
+  const produtos = [...porProduto.values()]
+    .sort((a, b) => b.total.comparedTo(a.total))
+    .map((p) => ({ descricao: p.descricao, unidade: p.unidade, quantidade: p.quantidade.toString(), pecas: p.pecas?.toString() ?? null, total: p.total.toFixed(2) }));
+
+  const movimentos: MovimentoDoCaixa[] = (movR.data ?? []).map((m) => ({
+    id: m.id,
+    tipo: m.tipo as MovimentoDoCaixa["tipo"],
+    valor: String(m.valor),
+    motivo: m.motivo,
+    hora: m.created_at,
+    conta: nome(m.conta),
+    quem: nome(m.autor),
+  }));
+
+  const hotel: RecebimentoHotelCaixa[] = [
+    ...(hotelR.data ?? []).map((p) => ({
+    id: p.id,
+    hora: p.created_at,
+    forma: p.forma,
+    valor: String(p.valor),
+    sinal: p.adiantamento,
+    estornado: Boolean(p.cancelado_em),
+    reserva_id: p.reserva?.id ?? null,
+    reserva_numero: p.reserva?.numero ?? null,
+    quarto: p.reserva?.quarto?.numero ?? null,
+    hospede: p.reserva?.hospede?.nome ?? null,
+    recibo_numero: null,
+    comprovantes: (p.anexos ?? [])
+      .filter((a) => a.confirmado_em)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+      .map((a) => ({ id: a.id, nome: a.nome, mime: a.mime })),
+    })),
+    ...(recibosR.data ?? []).map((r) => ({
+      id: r.id,
+      hora: r.created_at,
+      forma: r.forma ?? "outro",
+      valor: String(r.total),
+      sinal: false,
+      estornado: Boolean(r.cancelado_em),
+      reserva_id: null,
+      reserva_numero: null,
+      quarto: null,
+      hospede: nome(r.empresa),
+      recibo_numero: Number(r.numero),
+      comprovantes: [],
+    })),
+  ].sort((a, b) => a.hora.localeCompare(b.hora));
+
+  const resumo = (resumoAoVivo.data ?? {}) as unknown as ResumoCaixa;
+  return {
+    sessao: {
+      id: s.id,
+      empresa_id: s.empresa_id,
+      caixa_nome: s.caixa_nome,
+      status: s.status as "aberto" | "fechado",
+      data: s.data,
+      aberto_em: s.aberto_em,
+      fechado_em: s.fechado_em,
+      valor_abertura: String(s.valor_abertura),
+      valor_contado: s.valor_contado == null ? null : String(s.valor_contado),
+      valor_esperado: s.valor_esperado == null ? null : String(s.valor_esperado),
+      diferenca: s.diferenca == null ? null : String(s.diferenca),
+      observacao_fechamento: s.observacao_fechamento,
+      operador_id: s.operador_id,
+      operador: nome(s.operador),
+      fechado_por: nome(s.fechador),
+    },
+    resumo,
+    vendas,
+    movimentos,
+    produtos,
+    hotel,
+  };
+}
+
+/** Soma de uma forma de pagamento no resumo (0 quando não houve). */
+export function valorDaForma(r: ResumoCaixa, forma: FormaPagamento) {
+  return dec(r.por_forma?.[forma]?.valor ?? 0);
+}
+
+/** Total recebido em cartão (débito + crédito). */
+export function totalCartao(r: ResumoCaixa) {
+  return somar([r.por_forma?.cartao_debito?.valor, r.por_forma?.cartao_credito?.valor]);
+}
+
+
+/**
+ * Produtos da loja (cadastro único com a NF-e), com os números em texto para o
+ * navegador. O custo de compra, o custo médio e a margem desejada só vêm com
+ * `custos: true` (pela função do banco que confere a permissão "Ver custos e
+ * margens"); sem isso ficam vazios.
+ */
+export async function carregarProdutosLoja(supabase: Cliente, empresaId: string, opcoes: { ativos?: boolean; custos?: boolean } = {}) {
+  let q = supabase
+    .from("nfe_produtos")
+    .select(
+      "id, codigo, descricao, ncm, cest, gtin, unidade, grupo, valor_unitario, controla_estoque, estoque_atual, estoque_minimo, ativo, espessura_cm, largura_cm, comprimento_m, tara_kg, unidade_compra, fator_compra",
+    )
+    .eq("empresa_id", empresaId)
+    .order("descricao")
+    .limit(5000);
+  if (opcoes.ativos) q = q.eq("ativo", true);
+  const [{ data }, custos] = await Promise.all([q, opcoes.custos ? carregarCustosProdutos(supabase, empresaId) : null]);
+  const t = (v: unknown) => (v === null || v === undefined ? null : String(v));
+  return (data ?? []).map((p): ProdutoLoja => {
+    const c = custos?.get(p.id);
+    return {
+      id: p.id,
+      codigo: p.codigo,
+      descricao: p.descricao,
+      ncm: p.ncm,
+      cest: p.cest,
+      gtin: p.gtin,
+      unidade: p.unidade,
+      grupo: p.grupo,
+      valor_unitario: t(p.valor_unitario),
+      preco_custo: c?.preco_custo ?? null,
+      controla_estoque: p.controla_estoque,
+      estoque_atual: String(p.estoque_atual ?? 0),
+      estoque_minimo: t(p.estoque_minimo),
+      custo_medio: c?.custo_medio ?? null,
+      ativo: p.ativo,
+      espessura_cm: t(p.espessura_cm),
+      largura_cm: t(p.largura_cm),
+      comprimento_m: t(p.comprimento_m),
+      tara_kg: t(p.tara_kg),
+      margem_desejada: c?.margem_desejada ?? null,
+      unidade_compra: p.unidade_compra,
+      fator_compra: t(p.fator_compra),
+    };
+  });
+}
+
+export interface CustoProduto {
+  preco_custo: string | null;
+  custo_medio: string | null;
+  margem_desejada: string | null;
+}
+
+/** Custos de todos os produtos da empresa (o banco recusa sem a permissão "Ver custos e margens"). */
+export async function carregarCustosProdutos(supabase: Cliente, empresaId: string) {
+  const { data, error } = await supabase.rpc("gestao_produtos_custos", { p_empresa_id: empresaId });
+  if (error) throw new Error(error.message);
+  const t = (v: unknown) => (v === null || v === undefined ? null : String(v));
+  const mapa = new Map<string, CustoProduto>();
+  for (const [id, c] of Object.entries((data ?? {}) as Record<string, Record<string, unknown>>)) {
+    mapa.set(id, { preco_custo: t(c.preco_custo), custo_medio: t(c.custo_medio), margem_desejada: t(c.margem_desejada) });
+  }
+  return mapa;
+}
+
+export interface SituacaoPreco {
+  ultimo_custo_entrada: string | null;
+  ultima_entrada_em: string | null;
+  preco_alterado_em: string | null;
+  custo_na_alteracao: string | null;
+}
+
+/**
+ * Metas de margem (por grupo e a padrão) e, por produto, o custo da última
+ * compra e quando o preço mudou. Só para quem vê custos e margens (o banco confere).
+ */
+export async function carregarMargens(supabase: Cliente, empresaId: string) {
+  const [{ data: situacao }, { data: grupos }, { data: config }] = await Promise.all([
+    supabase.rpc("gestao_precos_situacao", { p_empresa_id: empresaId }),
+    supabase.from("gestao_grupos_margem").select("grupo, margem_desejada").eq("empresa_id", empresaId),
+    supabase.from("gestao_config").select("margem_entrada").eq("empresa_id", empresaId).maybeSingle(),
+  ]);
+  const t = (v: unknown) => (v === null || v === undefined ? null : String(v));
+  return {
+    situacao: new Map<string, SituacaoPreco>(
+      (situacao ?? []).map((s) => [
+        s.produto_id,
+        { ultimo_custo_entrada: t(s.ultimo_custo_entrada), ultima_entrada_em: s.ultima_entrada_em ?? null, preco_alterado_em: s.preco_alterado_em ?? null, custo_na_alteracao: t(s.custo_na_alteracao) },
+      ]),
+    ),
+    grupos: Object.fromEntries((grupos ?? []).map((g) => [g.grupo, String(g.margem_desejada)])) as Record<string, string>,
+    padrao: config?.margem_entrada != null ? String(config.margem_entrada) : null,
+  };
+}
+
+/** Estoque abaixo do mínimo (ou zerado/negativo). */
+export function estoqueBaixo(p: ProdutoLoja) {
+  if (!p.controla_estoque || !p.ativo) return false;
+  const atual = dec(p.estoque_atual);
+  return atual.lte(0) || (p.estoque_minimo != null && atual.lt(dec(p.estoque_minimo)));
+}
+
+/** Formas em que se espera um comprovante (foto do PIX, do cartão, da transferência). */
+export const FORMAS_COM_COMPROVANTE = new Set(["pix", "cartao_debito", "cartao_credito", "transferencia"]);

@@ -1,0 +1,37 @@
+{
+  "name": "shop-luana-araujo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site da Shop Luana Araújo, ligado à gestão da loja do Portal Guarese's ON",
+  "scripts": {
+    "dev": "next dev --port 3100",
+    "build": "next build",
+    "start": "next start --port 3100",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@fontsource-variable/cormorant": "^5.3.0",
+    "@fontsource-variable/montserrat": "^5.3.0",
+    "lucide-react": "^1.69.0",
+    "next": "16.4.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.4",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.2",
+    "tailwindcss": "^4.3.4",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

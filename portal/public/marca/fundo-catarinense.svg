@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <!-- Fundo claro do tema Catarinense (vidro líquido claro): luzes suaves de
+       verde e vermelho e duas faixas em onda, como as do símbolo, bem leves. -->
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef5f0"/>
+    </linearGradient>
+    <radialGradient id="luzVerde" cx="0.12" cy="0.08" r="0.55">
+      <stop offset="0" stop-color="#0a6b32" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#0a6b32" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="luzMenta" cx="0.78" cy="0.12" r="0.45">
+      <stop offset="0" stop-color="#7fcf9c" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#7fcf9c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="luzVermelha" cx="0.92" cy="0.9" r="0.5">
+      <stop offset="0" stop-color="#c0141f" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#c0141f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="faixaVerde" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#0a6b32" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#0a6b32" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#07461f" stop-opacity="0.13"/>
+    </linearGradient>
+    <linearGradient id="faixaVermelha" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#b3121c" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#b3121c" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#8e1018" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#base)"/>
+  <rect width="1600" height="1000" fill="url(#luzVerde)"/>
+  <rect width="1600" height="1000" fill="url(#luzMenta)"/>
+  <rect width="1600" height="1000" fill="url(#luzVermelha)"/>
+  <!-- Faixa verde em onda -->
+  <path d="M-80 860 C 260 620, 560 600, 860 560 C 1160 520, 1400 380, 1700 120 L 1700 250 C 1420 520, 1180 650, 880 690 C 580 730, 300 760, -80 980 Z" fill="url(#faixaVerde)"/>
+  <!-- Faixa vermelha logo abaixo, separada por um vão branco -->
+  <path d="M-80 1010 C 280 800, 600 770, 900 740 C 1200 710, 1440 600, 1700 380 L 1700 560 C 1450 760, 1220 860, 920 890 C 620 920, 320 940, -80 1100 Z" fill="url(#faixaVermelha)"/>
+</svg>

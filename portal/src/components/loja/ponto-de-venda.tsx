@@ -1,0 +1,1075 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Banknote, CreditCard, FileCheck2, FileText, Loader2, MapPin, Plus, QrCode, Receipt, Scale, Search, ShoppingCart, Trash2, UserPlus, UserRound, Wallet, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Campo, Checkbox, Input, Select } from "@/components/ui/form";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Alerta } from "@/components/ui/feedback";
+import { Badge } from "@/components/ui/badge";
+import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
+import { formatarDocumento, formatarTelefone, validarCnpj, validarCpf } from "@/lib/formatos";
+import { cn } from "@/lib/utils";
+import { finalizarVenda, salvarClienteLoja, salvarOrcamento, situacaoNotaDaVenda, type ResultadoNotaVenda, type SituacaoNotaVenda, type VendaEntrada } from "@/lib/gestao/acoes";
+import {
+  DOCUMENTO_FISCAL,
+  DOCUMENTOS_FISCAIS,
+  FORMAS_PAGAMENTO,
+  formatarQuantidade,
+  modoMedida,
+  quantidadePorPecas,
+  secaoPeca,
+  un,
+  type DocumentoFiscal,
+  type FormaPagamento,
+  type NotaNaVenda,
+} from "@/lib/gestao/rotulos";
+import { buscarProdutos } from "@/lib/gestao/busca-produtos";
+import { EM_ANDAMENTO, SITUACAO_NFE, type SituacaoNfe } from "@/lib/nfe-emissao/rotulos";
+import { FormDestinatario, type Destinatario } from "@/components/nfe/cadastros";
+import { PainelBalanca, useBalanca } from "@/components/loja/balanca";
+import { MENSAGEM_LEITURA, lerEtiquetaBalanca, mesmoCodigo, pesoLiquido, pesoPeloValor, type ConfigEtiqueta } from "@/lib/gestao/balanca";
+import { useListaDoServidor } from "@/lib/use-lista-servidor";
+import { filtrarLista } from "@/lib/busca";
+
+export interface ProdutoPdv {
+  id: string;
+  codigo: string;
+  descricao: string;
+  unidade: string;
+  gtin: string | null;
+  grupo: string | null;
+  valor_unitario: string | null;
+  estoque_atual: string;
+  controla_estoque: boolean;
+  espessura_cm: string | null;
+  largura_cm: string | null;
+  comprimento_m: string | null;
+  /** Peso do prato/embalagem descontado na pesagem (produto por quilo). */
+  tara_kg: string | null;
+}
+
+export interface ClientePdv {
+  id: string;
+  nome: string;
+  documento: string | null;
+  telefone: string | null;
+}
+
+interface Linha {
+  chave: string;
+  produto: ProdutoPdv;
+  pecas: string;
+  comprimento: string;
+  quantidade: string;
+  preco: string;
+  desconto: string;
+  /** Produto por quilo com peso do prato: o peso lido na balança (a quantidade cobrada é o peso menos o prato). */
+  bruto: string;
+  /** Veio da etiqueta da balança: o peso impresso já é o cobrado. */
+  daEtiqueta?: boolean;
+}
+
+interface Pagamento {
+  chave: string;
+  forma: FormaPagamento;
+  valor: string;
+  recebido: string;
+  parcelas: number;
+  vencimento: string;
+}
+
+export interface OrcamentoInicial {
+  id: string;
+  numero: number;
+  cliente: ClientePdv | null;
+  clienteNome: string | null;
+  /** CPF/CNPJ e telefone de quem não tem cadastro. */
+  clienteDocumento?: string | null;
+  clienteTelefone?: string | null;
+  itens: { produto_id: string; pecas: string | null; comprimento_m: string | null; quantidade: string; preco_unitario: string; desconto: string }[];
+  desconto: string;
+  frete: string;
+  observacao: string | null;
+  entrega: string | null;
+  /** Vendedor do orçamento (vai para a venda). */
+  vendedorId?: string | null;
+}
+
+export interface VendedorPdv {
+  id: string;
+  nome: string;
+  /** Ligado a quem está logado: já vem escolhido. */
+  meu: boolean;
+}
+
+const ICONES: Record<FormaPagamento, React.ComponentType<{ className?: string }>> = {
+  dinheiro: Banknote,
+  pix: QrCode,
+  cartao_debito: CreditCard,
+  cartao_credito: CreditCard,
+  a_prazo: Wallet,
+  outro: Receipt,
+};
+
+const BR = (v: Decimal | number | string | null | undefined) => (v === null || v === undefined || v === "" ? "" : formatarMoeda(v, { semSimbolo: true }));
+const ler = (t: string) => lerValorBR(t) ?? new Decimal(0);
+let seq = 0;
+const novaChave = () => `k${++seq}`;
+/** Produto vendido por quilo: pesado no caixa. */
+const porQuilo = (p: ProdutoPdv) => p.unidade === "KG";
+const formatarPeso = (d: Decimal) => d.toFixed(3).replace(".", ",");
+
+function quantidadeDaLinha(l: Linha): Decimal | null {
+  if (modoMedida(l.produto) !== "direto") return quantidadePorPecas(l.produto, ler(l.pecas), l.comprimento ? ler(l.comprimento) : null);
+  const q = lerValorBR(l.quantidade);
+  return q && q.gt(0) ? q.toDecimalPlaces(4) : null;
+}
+
+function totalDaLinha(l: Linha): Decimal {
+  const q = quantidadeDaLinha(l);
+  if (!q) return new Decimal(0);
+  return q.times(ler(l.preco)).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).minus(ler(l.desconto));
+}
+
+function hojeMais(dias: number) {
+  const d = new Date(Date.now() - 3 * 3600 * 1000 + dias * 86400000);
+  return d.toISOString().slice(0, 10);
+}
+
+export function PontoDeVenda({
+  modo = "venda",
+  empresaId,
+  sessaoId,
+  caixaNome,
+  produtos,
+  clientes: clientesIniciais,
+  permitirPrazo,
+  orcamento,
+  nota,
+  etiqueta = null,
+  vendedores = [],
+  vendedorObrigatorio = false,
+}: {
+  /** "orcamento": só monta e salva o orçamento (sem caixa, sem pagamento). */
+  modo?: "venda" | "orcamento";
+  empresaId: string;
+  /** Caixa aberto de quem vende (o orçamento não precisa). */
+  sessaoId: string | null;
+  caixaNome: string;
+  produtos: ProdutoPdv[];
+  clientes: ClientePdv[];
+  permitirPrazo: boolean;
+  orcamento: OrcamentoInicial | null;
+  /** Nota fiscal na hora da venda: cupom (NFC-e) ou NF-e, e a regra do escritório para o cartão. */
+  nota: NotaNaVenda;
+  /** Etiqueta impressa pela balança (código de barras que começa com 2), quando a loja usa. */
+  etiqueta?: ConfigEtiqueta | null;
+  /** Vendedores da loja (comissão). Sem cadastro, o campo não aparece. */
+  vendedores?: VendedorPdv[];
+  vendedorObrigatorio?: boolean;
+}) {
+  const router = useRouter();
+  const porId = React.useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
+  const [clientes, setClientes] = useListaDoServidor(clientesIniciais);
+  const [busca, setBusca] = React.useState("");
+  const [linhas, setLinhas] = React.useState<Linha[]>(() =>
+    (orcamento?.itens ?? []).flatMap((i) => {
+      const p = porId.get(i.produto_id);
+      if (!p) return [];
+      return [{ chave: novaChave(), produto: p, pecas: i.pecas ? formatarQuantidade(i.pecas, 3) : "", comprimento: i.comprimento_m ? formatarQuantidade(i.comprimento_m, 3) : "", quantidade: i.pecas ? "" : formatarQuantidade(i.quantidade), preco: BR(i.preco_unitario), desconto: Number(i.desconto) ? BR(i.desconto) : "", bruto: "" }];
+    }),
+  );
+  const [cliente, setCliente] = React.useState<ClientePdv | null>(orcamento?.cliente ?? null);
+  const [clienteNome, setClienteNome] = React.useState(orcamento?.clienteNome ?? "");
+  const [clienteDocumento, setClienteDocumento] = React.useState(orcamento?.clienteDocumento ? formatarDocumento(orcamento.clienteDocumento) : "");
+  const [clienteTelefone, setClienteTelefone] = React.useState(orcamento?.clienteTelefone ? formatarTelefone(orcamento.clienteTelefone) : "");
+  const [buscaCliente, setBuscaCliente] = React.useState("");
+  const soOrcamento = modo === "orcamento";
+  const [desconto, setDesconto] = React.useState(orcamento && Number(orcamento.desconto) ? BR(orcamento.desconto) : "");
+  const [frete, setFrete] = React.useState(orcamento && Number(orcamento.frete) ? BR(orcamento.frete) : "");
+  const [observacao, setObservacao] = React.useState(orcamento?.observacao ?? "");
+  const [entrega, setEntrega] = React.useState(orcamento?.entrega ?? "");
+  const vendedorPadrao = vendedores.find((v) => v.meu)?.id ?? "";
+  const [vendedor, setVendedor] = React.useState(() =>
+    orcamento?.vendedorId && vendedores.some((v) => v.id === orcamento.vendedorId) ? orcamento.vendedorId : vendedorPadrao,
+  );
+  const [pagamentos, setPagamentos] = React.useState<Pagamento[]>([]);
+  const [enviando, setEnviando] = React.useState<"venda" | "orcamento" | null>(null);
+  const [concluida, setConcluida] = React.useState<{ id: string; numero: number; troco: number; total: number; nota?: ResultadoNotaVenda } | null>(null);
+  const algumaNota = nota.nfe.disponivel || nota.nfce.disponivel;
+  const documentoInicial = (): DocumentoFiscal => (nota[nota.documentoPadrao].disponivel ? nota.documentoPadrao : nota.nfce.disponivel ? "nfce" : "nfe");
+  const [emitirNota, setEmitirNota] = React.useState(nota.marcadaPadrao && algumaNota);
+  const [documento, setDocumento] = React.useState<DocumentoFiscal>(documentoInicial);
+  const [comEndereco, setComEndereco] = React.useState(() => new Set(nota.documentosComEndereco));
+  const [enderecoNfe, setEnderecoNfe] = React.useState(false);
+  const [novoCliente, setNovoCliente] = React.useState(false);
+  const buscaRef = React.useRef<HTMLInputElement>(null);
+  const balanca = useBalanca();
+  const temProdutoPorQuilo = React.useMemo(() => produtos.some(porQuilo), [produtos]);
+  const [focarPeso, setFocarPeso] = React.useState<string | null>(null);
+
+  const subtotal = linhas.reduce((s, l) => s.plus(totalDaLinha(l)), new Decimal(0));
+  const total = subtotal.minus(ler(desconto)).plus(ler(frete));
+  const pago = pagamentos.reduce((s, p) => s.plus(ler(p.valor)), new Decimal(0));
+  const falta = total.minus(pago);
+  const troco = pagamentos
+    .filter((p) => p.forma === "dinheiro" && p.recebido)
+    .reduce((s, p) => s.plus(Decimal.max(ler(p.recebido).minus(ler(p.valor)), 0)), new Decimal(0));
+
+  const termo = busca.trim().toLowerCase();
+  const { itens: encontrados, total: totalEncontrados } = React.useMemo(() => buscarProdutos(produtos, busca, 30), [produtos, busca]);
+
+  function adicionar(p: ProdutoPdv, pesado?: { quantidade: string; desconto?: string }) {
+    const modo = modoMedida(p);
+    const chave = novaChave();
+    const pesar = porQuilo(p) && !pesado;
+    setLinhas((ls) => [
+      ...ls,
+      {
+        chave,
+        produto: p,
+        pecas: modo === "direto" ? "" : "1",
+        comprimento: modo === "direto" ? "" : p.comprimento_m ? formatarQuantidade(p.comprimento_m, 3) : "",
+        quantidade: pesado ? pesado.quantidade : pesar ? "" : modo === "direto" ? "1" : "",
+        preco: BR(p.valor_unitario),
+        desconto: pesado?.desconto ?? "",
+        bruto: "",
+        daEtiqueta: Boolean(pesado),
+      },
+    ]);
+    setBusca("");
+    if (pesar) {
+      // Produto por quilo: lê a balança (se conectada) ou deixa o cursor no peso
+      if (balanca.conectada) void lerBalancaNaLinha(chave, p);
+      else setFocarPeso(chave);
+    } else buscaRef.current?.focus();
+  }
+
+  /** Peso digitado ou lido: com peso do prato, guarda o lido e cobra o líquido. */
+  function definirPeso(chave: string, produto: ProdutoPdv, texto: string) {
+    const tara = produto.tara_kg ? new Decimal(produto.tara_kg) : null;
+    const linha = linhas.find((l) => l.chave === chave);
+    if (!tara || tara.lte(0) || linha?.daEtiqueta) return atualizarLinha(chave, "quantidade", texto);
+    const lido = lerValorBR(texto);
+    setLinhas((ls) =>
+      ls.map((l) => (l.chave === chave ? { ...l, bruto: texto, quantidade: lido && lido.gt(0) ? formatarPeso(pesoLiquido(lido, tara)) : "" } : l)),
+    );
+  }
+
+  async function lerBalancaNaLinha(chave: string, produto: ProdutoPdv) {
+    const r = await balanca.lerPeso();
+    if (r.estado === "estavel" && r.pesoKg && r.pesoKg.gt(0)) {
+      definirPeso(chave, produto, formatarPeso(r.pesoKg));
+      buscaRef.current?.focus();
+    } else {
+      toast.error(r.estado === "estavel" ? "A balança está sem peso. Coloque o prato e leia de novo." : MENSAGEM_LEITURA[r.estado]);
+      setFocarPeso(chave);
+    }
+  }
+
+  /** Etiqueta da balança (EAN-13 iniciado em 2): produto e peso ou preço já impressos. */
+  function adicionarPelaEtiqueta(codigo: string): boolean {
+    if (!etiqueta) return false;
+    const e = lerEtiquetaBalanca(codigo, etiqueta);
+    if (!e) return false;
+    const p = produtos.find((x) => mesmoCodigo(x.codigo, e.codigoProduto));
+    if (!p) {
+      toast.error(`A etiqueta é do produto ${e.codigoProduto}, que não está no cadastro da loja com esse código.`);
+      return true;
+    }
+    if (e.pesoKg) {
+      adicionar(p, { quantidade: formatarPeso(e.pesoKg) });
+      return true;
+    }
+    const r = e.valor && p.valor_unitario ? pesoPeloValor(e.valor, p.valor_unitario) : null;
+    if (!r) {
+      toast.error(`O produto ${p.descricao} está sem preço por quilo no cadastro.`);
+      return true;
+    }
+    adicionar(p, { quantidade: formatarPeso(r.pesoKg), desconto: r.desconto.gt(0) ? BR(r.desconto) : "" });
+    return true;
+  }
+
+  function aoTeclarBusca(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (/^2[0-9]{12}$/.test(termo) && adicionarPelaEtiqueta(termo)) return;
+    const exato = produtos.find((p) => p.gtin === termo || p.codigo.toLowerCase() === termo);
+    if (exato) adicionar(exato);
+    else if (encontrados.length === 1) adicionar(encontrados[0]);
+  }
+
+  function atualizarLinha(chave: string, campo: keyof Linha, valor: string) {
+    setLinhas((ls) => ls.map((l) => (l.chave === chave ? { ...l, [campo]: valor } : l)));
+  }
+
+  function adicionarPagamento(forma: FormaPagamento) {
+    const restante = Decimal.max(falta, 0);
+    setPagamentos((ps) => [
+      ...ps,
+      { chave: novaChave(), forma, valor: BR(restante), recebido: "", parcelas: 1, vencimento: forma === "a_prazo" ? hojeMais(30) : "" },
+    ]);
+  }
+
+  function atualizarPagamento(chave: string, dados: Partial<Pagamento>) {
+    setPagamentos((ps) => ps.map((p) => (p.chave === chave ? { ...p, ...dados } : p)));
+  }
+
+  function montarVenda(): VendaEntrada {
+    const doc = clienteDocumento.replace(/\D/g, "");
+    const tel = clienteTelefone.replace(/\D/g, "").replace(/^55(?=[1-9][0-9]{9,10}$)/, "");
+    return {
+      sessao_id: sessaoId ?? undefined,
+      orcamento_id: orcamento?.id ?? null,
+      cliente_id: cliente?.id ?? null,
+      cliente_nome: cliente ? undefined : clienteNome.trim() || undefined,
+      cliente_documento: cliente || !doc ? undefined : doc,
+      cliente_telefone: cliente || !tel ? undefined : tel,
+      itens: linhas.map((l) => ({
+        produto_id: l.produto.id,
+        pecas: modoMedida(l.produto) !== "direto" ? l.pecas : null,
+        comprimento_m: modoMedida(l.produto) !== "direto" ? l.comprimento : null,
+        quantidade: modoMedida(l.produto) === "direto" ? l.quantidade : null,
+        preco_unitario: l.preco,
+        desconto: l.desconto || null,
+      })),
+      desconto: desconto || undefined,
+      frete: frete || undefined,
+      pagamentos: pagamentos.map((p) => ({
+        forma: p.forma,
+        valor: p.valor,
+        valor_recebido: p.forma === "dinheiro" && p.recebido ? p.recebido : null,
+        parcelas: p.parcelas,
+        primeiro_vencimento: p.forma === "a_prazo" ? p.vencimento : null,
+      })),
+      observacao: observacao || undefined,
+      entrega: entrega || undefined,
+      loja_vendedor_id: vendedor || null,
+    };
+  }
+
+  const docCliente = cliente?.documento ?? null;
+  // Regra do escritório: pagamento no cartão (crédito/débito, conforme a loja) sai com nota
+  const notaObrigatoria = !soOrcamento && pagamentos.some((p) => nota.obrigatoriaFormas.includes(p.forma));
+  const comNota = emitirNota || notaObrigatoria;
+  // Se o documento escolhido não está disponível e o outro está, vale o outro
+  const outroDocumento: DocumentoFiscal = documento === "nfce" ? "nfe" : "nfce";
+  const doc: DocumentoFiscal = !nota[documento].disponivel && nota[outroDocumento].disponivel ? outroDocumento : documento;
+  const pendenciaNfe = !comNota
+    ? null
+    : !algumaNota
+      ? `Nesta loja a venda no cartão sai com nota fiscal, mas nenhuma nota está disponível agora (${nota.nfce.motivo ?? nota.nfe.motivo ?? "fale com o escritório"}). Receba de outra forma ou fale com o escritório.`
+      : !nota[doc].disponivel
+        ? nota[doc].motivo
+        : doc === "nfce"
+          ? ler(frete).gt(0)
+            ? "Venda com frete não sai em cupom fiscal: escolha NF-e."
+            : null
+          : !cliente
+            ? "Para a NF-e, escolha ou cadastre o cliente (com CPF ou CNPJ)."
+            : !docCliente
+              ? "O cliente não tem CPF/CNPJ no cadastro. Cadastre-o de novo com o documento para a nota."
+              : !comEndereco.has(docCliente)
+                ? "Falta o endereço do cliente para a nota."
+                : null;
+
+  /** CPF/CNPJ e telefone de quem não tem cadastro (opcionais, mas certos quando informados). */
+  function problemaClienteAvulso(): string | null {
+    if (cliente) return null;
+    const doc = clienteDocumento.replace(/\D/g, "");
+    if (doc && !(doc.length === 11 ? validarCpf(doc) : doc.length === 14 ? validarCnpj(doc) : false)) return "CPF ou CNPJ do cliente inválido. Confira os números ou deixe em branco.";
+    const tel = clienteTelefone.replace(/\D/g, "").replace(/^55(?=[1-9][0-9]{9,10}$)/, "");
+    if (tel && !/^[1-9][0-9]{9,10}$/.test(tel)) return "Telefone do cliente com DDD (ex.: 63 99999-1234), ou deixe em branco.";
+    return null;
+  }
+
+  async function concluir() {
+    if (!linhas.length) return toast.error("Adicione pelo menos um produto.");
+    if (vendedorObrigatorio && vendedores.length && !vendedor) return toast.error("Escolha o vendedor.");
+    const avulso = problemaClienteAvulso();
+    if (avulso) return toast.error(avulso);
+    if (pendenciaNfe) return toast.error(notaObrigatoria ? pendenciaNfe : `${pendenciaNfe} Ou desmarque "Emitir nota fiscal".`);
+    if (!pagamentos.length) return toast.error("Escolha a forma de pagamento.");
+    if (!falta.isZero()) return toast.error(falta.gt(0) ? `Falta informar ${formatarMoeda(falta)} no pagamento.` : `Os pagamentos passam do total em ${formatarMoeda(falta.negated())}.`);
+    setEnviando("venda");
+    const r = await finalizarVenda(empresaId, montarVenda(), { documento: comNota ? doc : null });
+    setEnviando(null);
+    if (!r.ok || !r.dados) return toast.error(r.mensagem ?? "Não foi possível concluir a venda.");
+    setConcluida(r.dados);
+    router.refresh();
+  }
+
+  async function guardarOrcamento() {
+    if (!linhas.length) return toast.error("Adicione pelo menos um produto.");
+    if (vendedorObrigatorio && vendedores.length && !vendedor) return toast.error("Escolha o vendedor.");
+    const avulso = problemaClienteAvulso();
+    if (avulso) return toast.error(avulso);
+    setEnviando("orcamento");
+    const v = montarVenda();
+    const r = await salvarOrcamento(empresaId, orcamento?.id ?? null, v);
+    setEnviando(null);
+    if (!r.ok || !r.dados) return toast.error(r.mensagem ?? "Não foi possível salvar o orçamento.");
+    toast.success(r.mensagem);
+    router.push(`/e/${empresaId}/loja/vendas/${r.dados.id}`);
+  }
+
+  function novaVenda() {
+    setConcluida(null);
+    setVendedor(vendedorPadrao);
+    setEmitirNota(nota.marcadaPadrao && algumaNota);
+    setDocumento(documentoInicial());
+    setLinhas([]);
+    setPagamentos([]);
+    setCliente(null);
+    setClienteNome("");
+    setClienteDocumento("");
+    setClienteTelefone("");
+    setDesconto("");
+    setFrete("");
+    setObservacao("");
+    setEntrega("");
+    if (orcamento) router.replace(`/e/${empresaId}/loja/${soOrcamento ? "orcamento" : "vender"}`);
+    setTimeout(() => buscaRef.current?.focus(), 50);
+  }
+
+  // Nome, CPF/CNPJ ou telefone, sem acento e com as palavras em qualquer ordem
+  const clientesFiltrados = buscaCliente.trim() ? filtrarLista(clientes, buscaCliente, (c) => [c.nome, c.documento, c.telefone]).slice(0, 6) : [];
+
+  return (
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="min-w-0 space-y-4">
+        {orcamento && soOrcamento ? (
+          <Alerta tom="info" titulo={`Editando o orçamento nº ${orcamento.numero}`}>
+            Ajuste os itens, os preços ou o cliente e salve. O número e o link do WhatsApp continuam os mesmos.
+          </Alerta>
+        ) : orcamento ? (
+          <Alerta tom="info" titulo={`Venda a partir do orçamento nº ${orcamento.numero}`}>
+            Confira os itens e os preços e informe o pagamento. Ao concluir, o orçamento fica marcado como convertido.
+          </Alerta>
+        ) : null}
+        <Card>
+          <CardContent className="space-y-3 pt-5">
+            {temProdutoPorQuilo ? <PainelBalanca balanca={balanca} /> : null}
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                ref={buscaRef}
+                autoFocus
+                aria-label="Buscar produto"
+                placeholder="Buscar produto pelo nome, código ou código de barras"
+                className="h-12 pl-9 text-base"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                onKeyDown={aoTeclarBusca}
+              />
+            </div>
+            {encontrados.length ? (
+              <ul className="max-h-[26rem] divide-y divide-border overflow-y-auto rounded-xl border border-border" aria-label="Produtos encontrados">
+                {encontrados.map((p) => (
+                  <li key={p.id}>
+                    <button type="button" onClick={() => adicionar(p)} className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-accent">
+                      <span className="min-w-0">
+                        <span className="block break-words font-medium">{p.descricao}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Cód. {p.codigo}
+                          {secaoPeca(p) ? ` · ${secaoPeca(p)}` : ""}
+                          {p.controla_estoque ? ` · estoque ${formatarQuantidade(p.estoque_atual)} ${un(p.unidade)}` : ""}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right text-sm font-semibold numero">
+                        {p.valor_unitario ? formatarMoeda(p.valor_unitario) : "sem preço"}
+                        <span className="block text-xs font-normal text-muted-foreground">por {un(p.unidade)}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : busca.trim() ? (
+              <p className="text-sm text-muted-foreground">Nenhum produto encontrado. Tente outra palavra do nome ou o código.</p>
+            ) : null}
+            {totalEncontrados > encontrados.length ? (
+              <p className="text-xs text-muted-foreground">
+                Mostrando {encontrados.length} de {totalEncontrados} produtos. Digite mais uma palavra (modelo, cor, tamanho) para achar mais rápido.
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart className="size-5 text-primary" /> {soOrcamento ? "Itens do orçamento" : "Itens da venda"}
+            </CardTitle>
+            {caixaNome ? <span className="text-sm text-muted-foreground">{caixaNome}</span> : null}
+          </CardHeader>
+          <CardContent>
+            {linhas.length ? (
+              <ul className="space-y-3" aria-label="Itens da venda">
+                {linhas.map((l) => {
+                  const modo = modoMedida(l.produto);
+                  const q = quantidadeDaLinha(l);
+                  const semEstoque = l.produto.controla_estoque && q && q.gt(l.produto.estoque_atual);
+                  return (
+                    <li key={l.chave} className="rounded-xl border border-border p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium">{l.produto.descricao}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Cód. {l.produto.codigo}
+                            {secaoPeca(l.produto) ? ` · seção ${secaoPeca(l.produto)}` : ""} · preço por {un(l.produto.unidade)}
+                          </p>
+                        </div>
+                        <Button variante="fantasma" tamanho="iconeSm" aria-label={`Tirar ${l.produto.descricao}`} onClick={() => setLinhas((ls) => ls.filter((x) => x.chave !== l.chave))}>
+                          <Trash2 />
+                        </Button>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {porQuilo(l.produto) ? (
+                          <Campo rotulo={l.produto.tara_kg && !l.daEtiqueta ? "Peso na balança (kg)" : "Peso (kg)"} htmlFor={`q-${l.chave}`} className="col-span-2 sm:col-span-1">
+                            <div className="flex gap-1.5">
+                              <Input
+                                id={`q-${l.chave}`}
+                                inputMode="decimal"
+                                placeholder="0,000"
+                                value={l.produto.tara_kg && !l.daEtiqueta ? l.bruto : l.quantidade}
+                                onChange={(e) => definirPeso(l.chave, l.produto, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    buscaRef.current?.focus();
+                                  }
+                                }}
+                                ref={(el) => {
+                                  if (el && focarPeso === l.chave) {
+                                    el.focus();
+                                    setFocarPeso(null);
+                                  }
+                                }}
+                              />
+                              {balanca.conectada ? (
+                                <Button
+                                  variante="contorno"
+                                  tamanho="icone"
+                                  aria-label={`Ler a balança para ${l.produto.descricao}`}
+                                  title="Ler a balança"
+                                  disabled={balanca.lendo}
+                                  onClick={() => lerBalancaNaLinha(l.chave, l.produto)}
+                                >
+                                  {balanca.lendo ? <Loader2 className="animate-spin" /> : <Scale />}
+                                </Button>
+                              ) : null}
+                            </div>
+                          </Campo>
+                        ) : modo === "direto" ? (
+                          <Campo rotulo={`Quantidade (${un(l.produto.unidade)})`} htmlFor={`q-${l.chave}`}>
+                            <Input id={`q-${l.chave}`} inputMode="decimal" value={l.quantidade} onChange={(e) => atualizarLinha(l.chave, "quantidade", e.target.value)} />
+                          </Campo>
+                        ) : (
+                          <>
+                            <Campo rotulo="Peças" htmlFor={`p-${l.chave}`}>
+                              <Input id={`p-${l.chave}`} inputMode="decimal" value={l.pecas} onChange={(e) => atualizarLinha(l.chave, "pecas", e.target.value)} />
+                            </Campo>
+                            <Campo rotulo="Comprimento (m)" htmlFor={`c-${l.chave}`}>
+                              <Input id={`c-${l.chave}`} inputMode="decimal" value={l.comprimento} onChange={(e) => atualizarLinha(l.chave, "comprimento", e.target.value)} />
+                            </Campo>
+                          </>
+                        )}
+                        <Campo rotulo={`Preço por ${un(l.produto.unidade)}`} htmlFor={`v-${l.chave}`}>
+                          <Input id={`v-${l.chave}`} inputMode="decimal" value={l.preco} onChange={(e) => atualizarLinha(l.chave, "preco", e.target.value)} />
+                        </Campo>
+                        <Campo rotulo="Desconto (R$)" htmlFor={`d-${l.chave}`}>
+                          <Input id={`d-${l.chave}`} inputMode="decimal" value={l.desconto} onChange={(e) => atualizarLinha(l.chave, "desconto", e.target.value)} />
+                        </Campo>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <span className="text-muted-foreground">
+                          {modo !== "direto" ? (q ? `${formatarQuantidade(q)} ${un(l.produto.unidade)}` : "informe peças e comprimento") : null}
+                          {l.daEtiqueta
+                            ? "peso da etiqueta da balança"
+                            : porQuilo(l.produto) && l.produto.tara_kg && Number(l.produto.tara_kg) > 0
+                            ? q
+                              ? `− prato ${formatarPeso(new Decimal(l.produto.tara_kg))} kg = ${formatarPeso(q)} kg cobrados`
+                              : `o prato (${formatarPeso(new Decimal(l.produto.tara_kg))} kg) é descontado do peso`
+                            : porQuilo(l.produto) && !q
+                              ? "pese o produto"
+                              : null}
+                          {semEstoque ? <Badge variante="alerta" className="ml-2">acima do estoque ({formatarQuantidade(l.produto.estoque_atual)})</Badge> : null}
+                        </span>
+                        <span className="font-semibold numero">{formatarMoeda(totalDaLinha(l))}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="py-6 text-center text-sm text-muted-foreground">Busque um produto acima para começar a venda.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UserRound className="size-4 text-primary" /> Cliente
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {cliente ? (
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{cliente.nome}</p>
+                  {cliente.documento ? <p className="text-xs text-muted-foreground">{formatarDocumento(cliente.documento)}</p> : null}
+                </div>
+                <Button variante="fantasma" tamanho="iconeSm" aria-label="Trocar cliente" onClick={() => setCliente(null)}>
+                  <X />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Input aria-label="Buscar cliente" placeholder="Buscar cliente (nome ou CPF/CNPJ)" value={buscaCliente} onChange={(e) => setBuscaCliente(e.target.value)} />
+                {clientesFiltrados.length ? (
+                  <ul className="divide-y divide-border rounded-lg border border-border">
+                    {clientesFiltrados.map((c) => (
+                      <li key={c.id}>
+                        <button type="button" className="w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setCliente(c); setBuscaCliente(""); }}>
+                          {c.nome}
+                          {c.documento ? <span className="ml-1 text-xs text-muted-foreground">{formatarDocumento(c.documento)}</span> : null}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <div className="flex gap-2">
+                  <Input aria-label="Nome do cliente (sem cadastro)" placeholder="Ou só o nome, sem cadastro" value={clienteNome} onChange={(e) => setClienteNome(e.target.value)} />
+                  <Button variante="contorno" tamanho="icone" aria-label="Cadastrar cliente" onClick={() => setNovoCliente(true)}>
+                    <UserPlus />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    aria-label="CPF ou CNPJ do cliente (opcional)"
+                    placeholder="CPF/CNPJ (opcional)"
+                    inputMode="numeric"
+                    value={clienteDocumento}
+                    onChange={(e) => setClienteDocumento(e.target.value)}
+                    onBlur={() => {
+                      const d = clienteDocumento.replace(/\D/g, "");
+                      if (d.length === 11 || d.length === 14) setClienteDocumento(formatarDocumento(d));
+                    }}
+                  />
+                  <Input
+                    aria-label="Telefone ou WhatsApp do cliente (opcional)"
+                    placeholder="Telefone (opcional)"
+                    inputMode="tel"
+                    value={clienteTelefone}
+                    onChange={(e) => setClienteTelefone(e.target.value)}
+                    onBlur={() => {
+                      const d = clienteTelefone.replace(/\D/g, "");
+                      if (d.length === 10 || d.length === 11) setClienteTelefone(formatarTelefone(d));
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {soOrcamento
+                    ? "Com o telefone, o orçamento vai direto para o WhatsApp do cliente. Saem no papel o nome, o CPF e o telefone."
+                    : "Para vender a prazo, escolha ou cadastre o cliente."}
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{soOrcamento ? "Valores do orçamento" : "Pagamento"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <dl className="space-y-1.5 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Produtos</dt><dd className="numero">{formatarMoeda(subtotal)}</dd></div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground"><label htmlFor="pdv-desconto">Desconto (R$)</label></dt>
+                <dd><Input id="pdv-desconto" inputMode="decimal" className="h-8 w-28 text-right" value={desconto} onChange={(e) => setDesconto(e.target.value)} /></dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground"><label htmlFor="pdv-frete">Frete / entrega (R$)</label></dt>
+                <dd><Input id="pdv-frete" inputMode="decimal" className="h-8 w-28 text-right" value={frete} onChange={(e) => setFrete(e.target.value)} /></dd>
+              </div>
+              <div className="flex justify-between border-t border-border pt-2 text-lg font-bold">
+                <dt>Total</dt>
+                <dd className="numero">{formatarMoeda(total)}</dd>
+              </div>
+            </dl>
+
+            {soOrcamento ? null : (
+            <div className="grid grid-cols-3 gap-2" role="group" aria-label="Formas de pagamento">
+              {(["dinheiro", "pix", "cartao_debito", "cartao_credito", "a_prazo"] as FormaPagamento[])
+                .filter((f) => f !== "a_prazo" || permitirPrazo)
+                .map((f) => {
+                  const Icone = ICONES[f];
+                  return (
+                    <Button key={f} variante="contorno" tamanho="sm" className="h-auto flex-col gap-1 py-2 text-xs" onClick={() => adicionarPagamento(f)} disabled={!linhas.length}>
+                      <Icone className="size-4" /> {FORMAS_PAGAMENTO[f]}
+                    </Button>
+                  );
+                })}
+            </div>
+            )}
+
+            {pagamentos.length ? (
+              <ul className="space-y-2" aria-label="Pagamentos da venda">
+                {pagamentos.map((p) => (
+                  <li key={p.chave} className="space-y-2 rounded-lg border border-border p-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="flex-1 text-sm font-medium">{FORMAS_PAGAMENTO[p.forma]}</span>
+                      <Input aria-label={`Valor em ${FORMAS_PAGAMENTO[p.forma]}`} inputMode="decimal" className="h-8 w-28 text-right" value={p.valor} onChange={(e) => atualizarPagamento(p.chave, { valor: e.target.value })} />
+                      <Button variante="fantasma" tamanho="iconeSm" aria-label={`Tirar ${FORMAS_PAGAMENTO[p.forma]}`} onClick={() => setPagamentos((ps) => ps.filter((x) => x.chave !== p.chave))}>
+                        <X />
+                      </Button>
+                    </div>
+                    {p.forma === "dinheiro" ? (
+                      <div className="flex items-center justify-end gap-2 text-sm">
+                        <label htmlFor={`rec-${p.chave}`} className="text-muted-foreground">Recebido</label>
+                        <Input id={`rec-${p.chave}`} inputMode="decimal" className="h-8 w-28 text-right" placeholder={p.valor} value={p.recebido} onChange={(e) => atualizarPagamento(p.chave, { recebido: e.target.value })} />
+                      </div>
+                    ) : null}
+                    {p.forma === "a_prazo" || p.forma === "cartao_credito" ? (
+                      <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
+                        <label htmlFor={`parc-${p.chave}`} className="text-muted-foreground">Parcelas</label>
+                        <Select id={`parc-${p.chave}`} className="h-8 w-20" value={p.parcelas} onChange={(e) => atualizarPagamento(p.chave, { parcelas: Number(e.target.value) })}>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                            <option key={n} value={n}>{n}x</option>
+                          ))}
+                        </Select>
+                        {p.forma === "a_prazo" ? (
+                          <>
+                            <label htmlFor={`venc-${p.chave}`} className="text-muted-foreground">1º vencimento</label>
+                            <Input id={`venc-${p.chave}`} type="date" className="h-8 w-40" value={p.vencimento} onChange={(e) => atualizarPagamento(p.chave, { vencimento: e.target.value })} />
+                          </>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {pagamentos.length ? (
+              <p className={cn("text-right text-sm font-semibold", falta.isZero() ? "text-sucesso" : "text-alerta")}>
+                {falta.gt(0) ? `Falta ${formatarMoeda(falta)}` : falta.lt(0) ? `Passou ${formatarMoeda(falta.negated())}` : "Pagamento completo"}
+                {troco.gt(0) ? <span className="block text-base text-primary">Troco: {formatarMoeda(troco)}</span> : null}
+              </p>
+            ) : null}
+
+            {vendedores.length ? (
+              <label className="block text-sm">
+                <span className="mb-1 flex items-center gap-1.5 font-medium">
+                  <UserRound className="size-4 text-primary" /> Vendedor{vendedorObrigatorio ? <span className="text-perigo">*</span> : null}
+                </span>
+                <Select aria-label="Vendedor" value={vendedor} onChange={(e) => setVendedor(e.target.value)} className={cn(vendedorObrigatorio && !vendedor ? "border-alerta" : "")}>
+                  <option value="">{vendedorObrigatorio ? "Escolha o vendedor…" : "Sem vendedor"}</option>
+                  {vendedores.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.nome}
+                      {v.meu ? " (você)" : ""}
+                    </option>
+                  ))}
+                </Select>
+              </label>
+            ) : null}
+
+            <details className="text-sm" open={soOrcamento || undefined}>
+              <summary className="cursor-pointer text-muted-foreground">Observação e entrega</summary>
+              <div className="mt-2 space-y-2">
+                <Input aria-label="Observação" placeholder={soOrcamento ? "Observação (sai no orçamento)" : "Observação (sai no comprovante)"} value={observacao} onChange={(e) => setObservacao(e.target.value)} />
+                <Input aria-label="Endereço de entrega" placeholder="Endereço de entrega" value={entrega} onChange={(e) => setEntrega(e.target.value)} />
+              </div>
+            </details>
+
+            {nota.configurada && !soOrcamento ? (
+              <div className="space-y-2 rounded-lg border border-border p-2.5 text-sm" data-testid="caixa-nota">
+                <label className="flex items-center gap-2 font-medium">
+                  <Checkbox
+                    checked={comNota}
+                    disabled={notaObrigatoria || !algumaNota}
+                    onChange={(e) => setEmitirNota(e.target.checked)}
+                    aria-label="Emitir nota fiscal ao concluir a venda"
+                  />
+                  <FileCheck2 className="size-4 text-primary" /> Emitir nota fiscal ao concluir
+                  {comNota && nota[doc].disponivel && nota[doc].ambiente === "homologacao" ? <Badge variante="alerta">teste</Badge> : null}
+                </label>
+                {notaObrigatoria ? (
+                  <p className="text-xs text-muted-foreground">Pagamento no cartão: nesta loja a venda sai com nota fiscal (regra do escritório).</p>
+                ) : null}
+                {comNota && algumaNota ? (
+                  <fieldset className="grid grid-cols-2 gap-2">
+                    <legend className="sr-only">Tipo de nota</legend>
+                    {DOCUMENTOS_FISCAIS.map((d) => (
+                      <label
+                        key={d}
+                        title={nota[d].disponivel ? DOCUMENTO_FISCAL[d].ajuda : (nota[d].motivo ?? undefined)}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-xs",
+                          doc === d ? "border-primary bg-primary/10 font-medium" : "border-border",
+                          !nota[d].disponivel && "cursor-not-allowed opacity-50",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="documento-fiscal"
+                          value={d}
+                          checked={doc === d}
+                          disabled={!nota[d].disponivel}
+                          onChange={() => setDocumento(d)}
+                          className="accent-primary"
+                        />
+                        {DOCUMENTO_FISCAL[d].longo}
+                      </label>
+                    ))}
+                  </fieldset>
+                ) : null}
+                {!algumaNota && !notaObrigatoria ? <p className="text-xs text-muted-foreground">{nota.nfce.motivo ?? nota.nfe.motivo}</p> : null}
+                {pendenciaNfe ? (
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-alerta-fg">
+                    <span>{pendenciaNfe}</span>
+                    {doc === "nfe" && docCliente && !comEndereco.has(docCliente) ? (
+                      <Button variante="contorno" tamanho="sm" onClick={() => setEnderecoNfe(true)}>
+                        <MapPin /> Completar endereço
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {soOrcamento ? (
+              <div className="flex gap-2">
+                <Button className="h-12 flex-1 text-base" onClick={guardarOrcamento} disabled={enviando !== null || !linhas.length}>
+                  {enviando === "orcamento" ? <Loader2 className="animate-spin" /> : <FileText />} Salvar orçamento
+                </Button>
+                <Button variante="fantasma" className="h-12" onClick={novaVenda} disabled={enviando !== null}>
+                  Limpar
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button className="h-12 w-full text-base" onClick={concluir} disabled={enviando !== null || !linhas.length}>
+                  {enviando === "venda" ? <Loader2 className="animate-spin" /> : <Receipt />} {comNota ? `Concluir venda e emitir ${doc === "nfce" ? "cupom" : "NF-e"}` : "Concluir venda"}
+                </Button>
+                <div className="flex gap-2">
+                  <Button variante="contorno" className="flex-1" onClick={guardarOrcamento} disabled={enviando !== null || !linhas.length}>
+                    {enviando === "orcamento" ? <Loader2 className="animate-spin" /> : <FileText />} Salvar orçamento
+                  </Button>
+                  <Button variante="fantasma" onClick={novaVenda} disabled={enviando !== null}>
+                    Limpar
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <NovoCliente
+        aberto={novoCliente}
+        aoFechar={() => setNovoCliente(false)}
+        empresaId={empresaId}
+        aoCriar={(c) => {
+          setClientes((cs) => [c, ...cs]);
+          setCliente(c);
+        }}
+      />
+
+      <Dialog open={enderecoNfe} onOpenChange={setEnderecoNfe}>
+        <DialogContent titulo="Endereço do cliente para a NF-e" descricao="Fica cadastrado para as próximas notas deste cliente." largura="lg">
+          {cliente && docCliente ? (
+            <FormDestinatario
+              empresaId={empresaId}
+              inicial={destinatarioInicial(cliente, docCliente)}
+              aoSalvar={() => {
+                setComEndereco((s) => new Set(s).add(docCliente));
+                setEnderecoNfe(false);
+                toast.success("Endereço cadastrado. Já dá para emitir a NF-e.");
+              }}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(concluida)} onOpenChange={(v) => !v && novaVenda()}>
+        <DialogContent titulo={concluida ? `Venda nº ${concluida.numero} concluída` : "Venda concluída"} descricao="O estoque e o financeiro já foram atualizados.">
+          {concluida ? (
+            <div className="space-y-4">
+              <div className="rounded-xl bg-secondary p-4 text-center">
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="font-titulo text-3xl font-bold numero">{formatarMoeda(concluida.total)}</p>
+                {Number(concluida.troco) > 0 ? <p className="mt-1 text-lg font-semibold text-primary">Troco: {formatarMoeda(concluida.troco)}</p> : null}
+              </div>
+              {concluida.nota ? <NotaDaVendaConcluida empresaId={empresaId} vendaId={concluida.id} nota={concluida.nota} /> : null}
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button variante="contorno" asChild>
+                  <Link href={`/impressao/venda/${concluida.id}`} target="_blank">
+                    <Receipt /> Comprovante
+                  </Link>
+                </Button>
+                <Button variante="contorno" asChild>
+                  <Link href={`/e/${empresaId}/loja/vendas/${concluida.id}`}>Ver a venda</Link>
+                </Button>
+                <Button onClick={novaVenda} autoFocus>
+                  <Plus /> Nova venda
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function NovoCliente({ aberto, aoFechar, empresaId, aoCriar }: { aberto: boolean; aoFechar: () => void; empresaId: string; aoCriar: (c: ClientePdv) => void }) {
+  const [nome, setNome] = React.useState("");
+  const [documento, setDocumento] = React.useState("");
+  const [telefone, setTelefone] = React.useState("");
+  const [enviando, setEnviando] = React.useState(false);
+  async function salvar(e: React.FormEvent) {
+    e.preventDefault();
+    setEnviando(true);
+    const r = await salvarClienteLoja(empresaId, { nome, documento, telefone });
+    setEnviando(false);
+    if (!r.ok || !r.dados) return toast.error(r.mensagem ?? "Não foi possível cadastrar.");
+    aoCriar({ id: r.dados.id, nome: r.dados.nome, documento: documento.replace(/\D/g, "") || null, telefone: telefone.replace(/\D/g, "") || null });
+    toast.success("Cliente cadastrado.");
+    setNome("");
+    setDocumento("");
+    setTelefone("");
+    aoFechar();
+  }
+  return (
+    <Dialog open={aberto} onOpenChange={(v) => !v && aoFechar()}>
+      <DialogContent titulo="Cadastrar cliente" descricao="Fica no cadastro de clientes da empresa, também usado no Financeiro.">
+        <form onSubmit={salvar} className="space-y-3">
+          <Campo rotulo="Nome" htmlFor="nc-nome" obrigatorio>
+            <Input id="nc-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={120} />
+          </Campo>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Campo rotulo="CPF ou CNPJ" htmlFor="nc-doc">
+              <Input id="nc-doc" inputMode="numeric" value={documento} onChange={(e) => setDocumento(e.target.value)} />
+            </Campo>
+            <Campo rotulo="Telefone / WhatsApp" htmlFor="nc-tel">
+              <Input id="nc-tel" inputMode="tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+            </Campo>
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit" disabled={enviando}>
+              {enviando ? <Loader2 className="animate-spin" /> : <UserPlus />} Cadastrar
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Dados do cliente do caixa para começar o cadastro do endereço da NF-e. */
+function destinatarioInicial(c: ClientePdv, documento: string): Destinatario {
+  const cpf = documento.length === 11;
+  return {
+    id: "",
+    tipo: cpf ? "cpf" : "cnpj",
+    documento,
+    nome: c.nome.slice(0, 60),
+    indicador_ie: cpf ? 9 : 1,
+    inscricao_estadual: null,
+    logradouro: "",
+    numero: "",
+    complemento: null,
+    bairro: "",
+    municipio_ibge: null,
+    uf: null,
+    municipio: null,
+    codigo_pais: null,
+    pais: null,
+    cidade_exterior: null,
+    cep: null,
+    telefone: c.telefone,
+    email: null,
+  };
+}
+
+/** Situação da nota (cupom ou NF-e) enviada ao concluir a venda: acompanha até a SEFAZ responder. */
+function NotaDaVendaConcluida({ empresaId, vendaId, nota }: { empresaId: string; vendaId: string; nota: ResultadoNotaVenda }) {
+  const [estado, setEstado] = React.useState<SituacaoNotaVenda | null>(null);
+  React.useEffect(() => {
+    if (!nota.ok) return;
+    let vivo = true;
+    let tentativas = 0;
+    const consultar = async () => {
+      const r = await situacaoNotaDaVenda(empresaId, vendaId);
+      if (!vivo) return;
+      if (r) setEstado(r);
+      tentativas++;
+      if (tentativas < 40 && (!r?.situacao || EM_ANDAMENTO.includes(r.situacao as SituacaoNfe))) window.setTimeout(consultar, 3000);
+    };
+    consultar();
+    return () => {
+      vivo = false;
+    };
+  }, [empresaId, vendaId, nota.ok]);
+
+  const nome = DOCUMENTO_FISCAL[nota.documento].curto;
+  if (!nota.ok) {
+    return (
+      <Alerta tom="alerta" titulo={`A venda foi concluída, mas ${nota.documento === "nfce" ? "o cupom fiscal" : "a NF-e"} não saiu`}>
+        {nota.mensagem}{" "}
+        <Link href={`/e/${empresaId}/loja/vendas/${vendaId}`} className="underline">
+          Abrir a venda para emitir de novo
+        </Link>
+      </Alerta>
+    );
+  }
+  const sit = estado?.situacao ? SITUACAO_NFE[estado.situacao as SituacaoNfe] : null;
+  const andamento = !estado?.situacao || EM_ANDAMENTO.includes(estado.situacao as SituacaoNfe);
+  return (
+    <div className="space-y-2 rounded-xl border border-border p-3 text-sm" data-testid="nota-da-venda">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-2 font-medium">
+          <FileCheck2 className="size-4 text-primary" />
+          {nome}
+          {nota.numero ? ` nº ${nota.numero}` : ""}
+        </span>
+        {andamento ? (
+          <Badge variante="info">
+            <Loader2 className="animate-spin" /> Enviando à SEFAZ
+          </Badge>
+        ) : sit ? (
+          <Badge variante={sit.tom}>{sit.rotulo}</Badge>
+        ) : null}
+      </div>
+      {estado && !andamento ? <p className="text-xs text-muted-foreground">{sit?.ajuda}</p> : null}
+      {estado?.motivo && !andamento && estado.situacao !== "autorizada" ? <p className="text-xs text-perigo">{estado.motivo}</p> : null}
+      <div className="flex flex-wrap gap-2">
+        {estado?.situacao === "autorizada" && nota.documento === "nfce" ? (
+          <Button asChild tamanho="sm">
+            <a href={`/impressao/cupom/${vendaId}`} target="_blank" rel="noopener">
+              <Receipt /> Imprimir cupom
+            </a>
+          </Button>
+        ) : null}
+        {estado?.situacao === "autorizada" && nota.documento === "nfe" && nota.id ? (
+          <Button asChild tamanho="sm">
+            <a href={`/api/nfe/${empresaId}/${nota.id}`} target="_blank" rel="noopener">
+              <FileText /> Imprimir DANFE
+            </a>
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}

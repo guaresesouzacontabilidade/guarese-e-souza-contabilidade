@@ -1,0 +1,215 @@
+import { test, expect, type Page } from "@playwright/test";
+import { existsSync, readFileSync } from "node:fs";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+/**
+ * Emissão de NFS-e pelo portal (dados fictícios da demonstração, Oficina):
+ *  - a equipe vê a emissão desligada (sem certificado), vê as atividades
+ *    (CNAE) da empresa com o serviço sugerido, cadastra um serviço buscando
+ *    na lista nacional e não consegue ligar a emissão sem o certificado;
+ *  - o empresário vê a emissão desconectada e não configura nada;
+ *  - com a emissão ligada (certificado fictício gravado pelo teste), o
+ *    empresário pede a nota pela tela; neste ambiente nenhuma consulta fiscal
+ *    sai (NOTAS_AUTOMATICAS_SEM_REDE), então a nota fica "Sem resposta" com o
+ *    aviso de que nada foi enviado ao Emissor Nacional — nada é simulado.
+ */
+const SENHA = process.env.DEMO_SENHA ?? "Demo-Teste-2026!";
+const DOMINIO = "demo.guareses.test";
+const OFICINA = "44555666000181";
+
+function clienteServico(): SupabaseClient | null {
+  if (existsSync(".env.local")) {
+    for (const linha of readFileSync(".env.local", "utf8").split("\n")) {
+      const m = /^([A-Z0-9_]+)=(.*)$/.exec(linha.trim());
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
+    }
+  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const chave = process.env.SUPABASE_SECRET_KEY ?? "";
+  return url && chave ? createClient(url, chave, { auth: { persistSession: false } }) : null;
+}
+
+async function entrar(page: Page, email: string) {
+  await page.goto("/login");
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="senha"]', SENHA);
+  await page.click('button[type="submit"]');
+  await page.waitForURL((u) => /^\/(aceite|e\/|escritorio|conta)/.test(u.pathname), { timeout: 90_000 });
+  if (page.url().includes("/aceite")) {
+    for (const b of await page.locator('input[type="checkbox"]').all()) await b.check();
+    await page.click('button[type="submit"]');
+    await page.waitForURL((u) => !u.pathname.startsWith("/aceite"), { timeout: 90_000 });
+  }
+}
+
+const servico = clienteServico();
+test.skip(!servico, "Precisa do Supabase local (.env.local).");
+test.skip(process.env.NOTAS_AUTOMATICAS_SEM_REDE !== "1", "Só roda com as consultas fiscais desligadas neste ambiente.");
+
+let empresaId = "";
+
+async function limpar() {
+  if (!empresaId) return;
+  await servico!.from("nfse_emissoes").delete().eq("empresa_id", empresaId);
+  await servico!.from("nfse_tomadores").delete().eq("empresa_id", empresaId);
+  await servico!.from("nfse_servicos").delete().eq("empresa_id", empresaId).like("nome", "%(E2E)%");
+  await servico!.from("nfse_emissao_config").update({ ativa: false }).eq("empresa_id", empresaId);
+  await servico!.from("certificados_digitais").delete().eq("empresa_id", empresaId).eq("titular", "CERTIFICADO FICTICIO (E2E)");
+  await servico!.from("jobs").delete().eq("empresa_id", empresaId).in("tipo", ["emitir_nfse", "cancelar_nfse"]);
+}
+
+test.beforeAll(async () => {
+  const { data } = await servico!.from("empresas").select("id").eq("documento", OFICINA).single();
+  empresaId = data!.id;
+  await limpar();
+});
+test.afterAll(limpar);
+
+test("equipe: emissão desligada sem certificado, cadastro de serviço e bloqueio ao ligar", async ({ page }) => {
+  test.setTimeout(300_000);
+  await entrar(page, `contador@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/notas-servico`);
+  await expect(page.getByRole("heading", { name: "Notas de serviço", level: 1 })).toBeVisible();
+  await expect(page.getByText("Emissão desconectada")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Emitir nota", exact: true })).toHaveCount(0);
+
+  await page.getByRole("link", { name: /Configurar emissão/ }).first().click();
+  await page.waitForURL(/\/notas-servico\/configuracao/);
+  await expect(page.getByText("Sem certificado digital válido")).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Revisão e manutenção de veículos", exact: true })).toBeVisible();
+  // Atividade principal da Oficina (CNAE 4520-0/01) com o serviço sugerido da lista nacional, já cadastrado
+  await expect(page.getByText("Atividades da empresa (CNAE)")).toBeVisible();
+  await expect(page.getByText("4520-0/01", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cadastrado", { exact: true })).toBeVisible();
+
+  // Novo serviço escolhido pela busca na lista nacional
+  await page.getByRole("button", { name: "Novo serviço" }).click();
+  const dialogo = page.getByRole("dialog");
+  await dialogo.locator("#sv-nacional").fill("assessoria consultoria");
+  await dialogo.getByRole("button", { name: /^17\.01\.01/ }).click();
+  await expect(dialogo.getByText(/Assessoria ou consultoria de qualquer natureza/)).toBeVisible();
+  await dialogo.locator("#sv-nome").fill("Consultoria automotiva (E2E)");
+  await dialogo.getByRole("button", { name: "Cadastrar serviço" }).click();
+  await expect(page.getByText("Serviço cadastrado.")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("cell", { name: "Consultoria automotiva (E2E)", exact: true })).toBeVisible();
+
+  await page.getByLabel(/Emissão ligada/).check();
+  await page.fill("#autorizacao_texto", "Autorização fictícia do teste automático (E2E).");
+  await page.getByRole("button", { name: "Salvar configuração" }).click();
+  await expect(page.getByText(/Cadastre o certificado digital A1 da empresa/)).toBeVisible({ timeout: 30_000 });
+  const { data: cfg } = await servico!.from("nfse_emissao_config").select("ativa").eq("empresa_id", empresaId).single();
+  expect(cfg!.ativa).toBe(false);
+});
+
+test("empresário: emissão desconectada sem configurar; com a emissão ligada pede a nota e vê que nada saiu deste ambiente", async ({ page }) => {
+  test.setTimeout(300_000);
+  await entrar(page, `cliente2@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/notas-servico`);
+  await expect(page.getByText("Emissão desconectada")).toBeVisible();
+  await expect(page.getByText(/O escritório ainda não ligou a emissão/)).toBeVisible();
+  await expect(page.getByRole("link", { name: /Configurar emissão/ })).toHaveCount(0);
+  await page.goto(`/e/${empresaId}/notas-servico/configuracao`);
+  await expect(page.getByText("Somente a equipe do escritório configura a emissão de notas.")).toBeVisible();
+
+  // Liga a emissão pelo banco com um certificado FICTÍCIO (o teste não tem certificado real)
+  await servico!.from("certificados_digitais").insert({
+    empresa_id: empresaId,
+    titular: "CERTIFICADO FICTICIO (E2E)",
+    documento: OFICINA,
+    impressao_digital: "C".repeat(64),
+    valido_de: new Date(Date.now() - 86_400_000).toISOString(),
+    valido_ate: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    autorizacao: "autorizacao_escrita",
+    autorizacao_texto: "Teste automático (E2E).",
+  });
+  await servico!
+    .from("nfse_emissao_config")
+    .update({ ativa: true, autorizacao_texto: "Teste automático (E2E).", autorizado_em: new Date().toISOString() })
+    .eq("empresa_id", empresaId);
+
+  await page.goto(`/e/${empresaId}/notas-servico`);
+  await expect(page.getByText("Emissão em teste")).toBeVisible();
+  await page.getByRole("link", { name: "Emitir nota", exact: true }).click();
+  await page.waitForURL(/\/notas-servico\/nova/);
+  await page.selectOption("#servico_id", { label: "Revisão e manutenção de veículos (140101)" });
+  await page.getByLabel("Pessoa física (CPF)").check();
+  await page.fill("#tomador_documento", "529.982.247-25");
+  await page.fill("#tomador_nome", "Fulano de Tal (fictício)");
+  await page.fill("#valor", "350,00");
+  await page.fill("#descricao", "Troca de óleo e revisão (teste automático E2E)");
+  await page.getByRole("button", { name: "Emitir nota" }).click();
+  const confirmacao = page.getByRole("dialog");
+  await expect(confirmacao.getByText("Teste — nota sem validade jurídica")).toBeVisible();
+  await expect(confirmacao.getByText("R$ 350,00")).toBeVisible();
+  await confirmacao.getByRole("button", { name: "Emitir agora" }).click();
+
+  await page.waitForURL(/\/notas-servico\/[0-9a-f-]{36}$/, { timeout: 60_000 });
+  await expect(page.getByText(/nada foi enviado ao Emissor Nacional/)).toBeVisible({ timeout: 90_000 });
+  await expect(page.getByText("Sem resposta").first()).toBeVisible();
+  const { data: notas } = await servico!.from("nfse_emissoes").select("situacao, chave_acesso, valor").eq("empresa_id", empresaId);
+  expect(notas).toEqual([expect.objectContaining({ situacao: "falha", chave_acesso: null, valor: 350 })]);
+
+  // "Salvar este tomador" vem marcado: o CPF ficou salvo e aparece na próxima nota
+  const { data: salvos } = await servico!.from("nfse_tomadores").select("documento, nome, ultimo_uso_em").eq("empresa_id", empresaId);
+  expect(salvos).toEqual([expect.objectContaining({ documento: "52998224725", nome: "Fulano de Tal (fictício)" })]);
+  expect(salvos![0].ultimo_uso_em).toBeTruthy();
+  await page.goto(`/e/${empresaId}/notas-servico/nova`);
+  await page.selectOption("#tomador_salvo", { label: "Fulano de Tal (fictício) — 529.982.247-25" });
+  await expect(page.locator("#tomador_documento")).toHaveValue("529.982.247-25");
+  await expect(page.locator("#tomador_nome")).toHaveValue("Fulano de Tal (fictício)");
+  await expect(page.getByText("Atualizar os dados salvos deste tomador")).toBeVisible();
+});
+
+test("tomadores salvos: cadastrar, editar e excluir um CPF", async ({ page }) => {
+  test.setTimeout(180_000);
+  // Começa sem tomadores (o teste anterior salva um ao emitir)
+  await servico!.from("nfse_tomadores").delete().eq("empresa_id", empresaId);
+  await entrar(page, `cliente2@${DOMINIO}`);
+  await page.goto(`/e/${empresaId}/notas-servico`);
+  await page.getByRole("link", { name: /Tomadores salvos/ }).click();
+  await page.waitForURL(/\/notas-servico\/tomadores$/);
+  await expect(page.getByText("Nenhum tomador salvo ainda")).toBeVisible();
+
+  await page.getByRole("button", { name: "Novo tomador" }).click();
+  const dialogo = page.getByRole("dialog");
+  await dialogo.getByLabel("Pessoa (CPF)").check();
+  await dialogo.locator("#tom_documento").fill("111.444.777-35");
+  await dialogo.locator("#tom_nome").fill("Beltrana Souza (fictícia)");
+  await dialogo.locator("#tom_email").fill("beltrana@exemplo.com");
+  await dialogo.getByRole("button", { name: "Salvar tomador" }).click();
+  await expect(page.getByRole("cell", { name: "Beltrana Souza (fictícia)", exact: true })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "111.444.777-35", exact: true })).toBeVisible();
+
+  // CPF inválido é recusado com o campo destacado
+  await page.getByRole("button", { name: "Novo tomador" }).click();
+  await dialogo.getByLabel("Pessoa (CPF)").check();
+  await dialogo.locator("#tom_documento").fill("111.111.111-11");
+  await dialogo.locator("#tom_nome").fill("Errado");
+  await dialogo.getByRole("button", { name: "Salvar tomador" }).click();
+  await expect(dialogo.getByText("CPF inválido.")).toBeVisible();
+  await dialogo.getByRole("button", { name: "Voltar" }).click();
+
+  // Editar: muda o nome (o CPF fica travado)
+  await page.getByRole("button", { name: "Editar Beltrana Souza (fictícia)" }).click();
+  await expect(dialogo.locator("#tom_documento")).toHaveAttribute("readonly", "");
+  await dialogo.locator("#tom_nome").fill("Beltrana Souza Lima (fictícia)");
+  await dialogo.getByRole("button", { name: "Salvar tomador" }).click();
+  await expect(page.getByRole("cell", { name: "Beltrana Souza Lima (fictícia)", exact: true })).toBeVisible();
+
+  // Excluir, com confirmação
+  await page.getByRole("button", { name: "Excluir Beltrana Souza Lima (fictícia)" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Excluir" }).click();
+  await expect(page.getByText("Nenhum tomador salvo ainda")).toBeVisible();
+  const { count } = await servico!.from("nfse_tomadores").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId);
+  expect(count).toBe(0);
+});
+
+test("colaborador sem a permissão não vê a emissão", async ({ page }) => {
+  test.setTimeout(180_000);
+  await entrar(page, `colaborador@${DOMINIO}`);
+  await page.waitForURL(/\/e\/[0-9a-f-]{36}/, { timeout: 90_000 });
+  await expect(page.getByRole("link", { name: "Emitir nota de serviço" })).toHaveCount(0);
+  const padaria = page.url().match(/\/e\/([0-9a-f-]{36})/)![1];
+  await page.goto(`/e/${padaria}/notas-servico`);
+  await expect(page.getByText("Seu acesso não inclui a emissão de notas desta empresa.")).toBeVisible();
+});

@@ -1,0 +1,369 @@
+# Configurações e integrações
+
+Este guia explica cada configuração do portal. A maior parte é feita **dentro do próprio portal**, em **Configurações** (somente administradores). Chaves e senhas de serviços externos ficam nas **variáveis de ambiente da hospedagem** (Vercel → Project → Settings → Environment Variables) e nunca aparecem nas telas nem no navegador.
+
+> Regra de ouro: variáveis que começam com `NEXT_PUBLIC_` chegam ao navegador. **Nunca** coloque chaves secretas com esse prefixo.
+
+## 1. Variáveis de ambiente
+
+O script de publicação (`scripts/publicar.ts`) cadastra automaticamente as variáveis marcadas com ✔. As demais são opcionais e ficam “desconectadas” até serem preenchidas.
+
+| Variável | Obrigatória | O que é |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | ✔ | endereço do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | ✔ | chave pública do Supabase (pode ir ao navegador; o acesso é limitado pelas regras do banco) |
+| `SUPABASE_SECRET_KEY` | ✔ | chave secreta do Supabase — **somente servidor**, marcada como protegida na Vercel |
+| `NEXT_PUBLIC_SITE_URL` | ✔ | endereço público do portal (usado nos links dos e-mails e convites) |
+| `NEXT_PUBLIC_AMBIENTE` | ✔ | `producao`, `demonstracao` ou `desenvolvimento` (os dois últimos mostram a faixa de aviso) |
+| `CRON_SECRET` | ✔ | segredo das rotinas automáticas (`/api/cron/*`) |
+| `OCR_ATIVO` | ✔ | `true` liga a leitura automática de imagens e PDFs digitalizados |
+| `OCR_CAMINHO_IDIOMAS` | | pasta ou endereço próprio do modelo de idioma do OCR (opcional) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | | envio de e-mails (seção 3) |
+| `WHATSAPP_TOKEN`, `WHATSAPP_API_VERSION` | | WhatsApp Business Platform (seção 4) |
+| `CLAMAV_HOST`, `CLAMAV_PORT` | | antivírus ClamAV (seção 6) |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | ✔ (as duas chaves) | notificações no aparelho (seção 12); a chave privada é **somente servidor** |
+| `CERTIFICADOS_CHAVE` | ✔ | chave que cifra os certificados A1 das notas automáticas (seção 13) — **somente servidor**, criada uma vez e mantida |
+| `NOTAS_AUTOMATICAS_SEM_REDE` | | `1` desliga as consultas à SEFAZ e ao Ambiente Nacional (demonstração e testes; seção 13) |
+| `PORTAL_URL`, `WORKER_INTERVALO_SEGUNDOS`, `WORKER_ROTINA_DIARIA` | | processador contínuo opcional (seção 5) |
+
+Depois de alterar variáveis na Vercel, é preciso publicar de novo (**Deployments → ⋯ → Redeploy**) para que passem a valer.
+
+O modelo completo está em `.env.example`.
+
+## 2. Configurações dentro do portal
+
+**Configurações** (menu do escritório, somente administradores):
+
+| Aba | O que se configura |
+| --- | --- |
+| Escritório | nome, razão social, CNPJ, endereço, contatos, textos da tela de entrada e, se quiser substituir a logomarca oficial, outra imagem (PNG ou JPG, até 2 MB) |
+| Segurança | verificação em duas etapas obrigatória (equipe / clientes) e limites de envio de arquivos (tamanho por arquivo, arquivos por ZIP, tamanho do ZIP) |
+| Lembretes | dias de aviso em relação ao prazo (ex.: `-5, -2, 0, +2, +5`), envio por e-mail e por WhatsApp, dados do WhatsApp Business |
+| Integrações | situação de cada serviço (conectado / desconectado), envio de e-mail de teste, última execução das rotinas automáticas |
+| Privacidade (LGPD) | pedidos dos titulares, prazos de guarda por tipo de documento e eliminação revisada de documentos vencidos |
+
+Outras configurações:
+
+- **Empresas → empresa → Checklist mensal**: quais documentos cada empresa deve enviar todo mês, prazos e responsáveis.
+- **Empresas → empresa → Contas bancárias**: contas, saldos iniciais e cartões.
+- **Equipe e permissões**: perfis e o que cada pessoa pode fazer em cada empresa.
+- **Minha conta** (cada usuário): dados pessoais, senha, verificação em duas etapas, avisos por e-mail.
+
+## 3. E-mail (SMTP)
+
+Sem SMTP, o portal **não finge** que enviou: convites mostram um link para copiar (e enviar por WhatsApp, por exemplo), avisos aparecem só no sino do portal e o histórico registra “não configurado”.
+
+**Jeito mais simples (Gmail do escritório, produção):** crie a senha de app do Gmail (abaixo) e guarde-a na variável `SMTP_PASS` nas configurações do ambiente do Claude Code (nunca no chat). Ao publicar a produção, o script cadastra sozinho o envio na Vercel (`smtp.gmail.com`, porta 465, remetente “Catarinense Tech <e-mail do escritório>”) e no login do Supabase (convites e “Esqueci minha senha”). Para outro Gmail, informe também `SMTP_USER`. A demonstração nunca envia e-mails reais.
+
+Para ativar manualmente, cadastre na Vercel:
+
+```
+SMTP_HOST=servidor SMTP do provedor
+SMTP_PORT=587            (ou 465)
+SMTP_SECURE=false        (true quando a porta for 465)
+SMTP_USER=usuário
+SMTP_PASS=senha do SMTP  (marque como “Sensitive”)
+SMTP_FROM="Catarinense Tech <nao-responda@seudominio.com.br>"
+```
+
+Opções comuns:
+
+- **Gmail do escritório**: ative a verificação em duas etapas da conta Google, crie uma **senha de app** (Conta Google → Segurança → Senhas de app) e use `smtp.gmail.com`, porta 465, `SMTP_SECURE=true`, `SMTP_USER` = o Gmail e `SMTP_PASS` = a senha de app. Limite de cerca de 500 envios por dia.
+- **Serviços de envio** (Brevo, Resend, Amazon SES e similares): costumam ter plano gratuito com limite diário e melhor entrega para caixas de entrada. Exigem confirmar o domínio do remetente.
+
+Depois, em **Configurações → Integrações**, use **Enviar e-mail de teste para mim**.
+
+**“Esqueci minha senha”** é enviado pelo Supabase, não pelo portal. Configure o mesmo SMTP em **Supabase → Authentication → Emails → SMTP Settings**. Sem isso, o Supabase só entrega esses e-mails para membros da conta do Supabase.
+
+## 4. WhatsApp Business Platform (API oficial da Meta)
+
+Fica **desconectado** até que três coisas estejam prontas; enquanto isso nenhuma mensagem é enviada por WhatsApp.
+
+1. Em https://developers.facebook.com, criar um app do tipo **Business** e adicionar o produto **WhatsApp**, com um número de telefone do escritório verificado.
+2. Gerar um **token permanente** (Meta Business Suite → Configurações do negócio → Usuários do sistema → gerar token com as permissões `whatsapp_business_messaging` e `whatsapp_business_management`). Guardar o token nas **configurações do ambiente do Claude Code** como `WHATSAPP_TOKEN` (nunca no chat): na próxima publicação na produção, o script `scripts/publicar.ts` o cadastra na Vercel como segredo. (Quem publica à mão cadastra direto na Vercel como `WHATSAPP_TOKEN`, marcado como “Sensitive”.)
+3. Criar e aprovar um **modelo de mensagem** (categoria “Utilidade”), em português, com 4 variáveis, por exemplo:
+
+   > Olá! A empresa {{1}} tem {{3}} documento(s) pendente(s) referente(s) a {{2}}. Envie pelo portal: {{4}}
+
+4. No portal, em **Configurações → Lembretes**, informar o **identificador do número** (Phone Number ID), o **nome do modelo** e o idioma (`pt_BR`), e marcar “Enviar lembretes por WhatsApp”.
+5. Em cada empresa, cadastrar os contatos com WhatsApp e marcar “recebe lembretes”.
+
+### Avisos ao cliente por WhatsApp (documentos, mensagens e solicitações)
+
+Além dos lembretes de pendências, o cliente pode receber no WhatsApp um aviso quando o escritório **publica um documento ou relatório**, **manda uma mensagem** ou **faz uma solicitação** (item novo no checklist, pedido de correção, pendência do fechamento). Usa a mesma integração acima e também fica **desligado** até ser ativado.
+
+1. Criar e aprovar na Meta um segundo modelo (categoria “Utilidade”), em português, com **3 variáveis**:
+
+   > Olá! Há novidades no Catarinense Tech para {{1}}: {{2}}. Acesse: {{3}}
+
+   `{{1}}` recebe o nome da empresa, `{{2}}` o resumo do aviso (ex.: “Novo documento disponível: Guia DAS 09/2026”) e `{{3}}` o link do portal.
+2. Em **Configurações → Lembretes → Avisos ao cliente por WhatsApp**, informar o **nome do modelo de aviso aprovado** e marcar a opção de avisar por WhatsApp.
+3. Cadastrar o WhatsApp de quem vai receber, **com a autorização da pessoa**:
+   - pelo escritório: na empresa → **Usuários e permissões** → menu da pessoa → **WhatsApp para avisos** (ou já no convite, nos campos “WhatsApp” e “O cliente autorizou receber avisos por WhatsApp”);
+   - pelo próprio cliente: **Minha conta** → informar o telefone em “Seus dados” e marcar **Receber avisos por WhatsApp** em “Avisos”. O cliente pode desligar quando quiser.
+
+Como o portal evita excesso de mensagens:
+
+- Avisos seguidos viram **uma única mensagem**, enviada **2 minutos** depois do primeiro (ex.: “3 novidades. A mais recente: …”).
+- Se a pessoa já viu os avisos no portal nesse intervalo (por exemplo, estava no bate-papo), **nada é enviado**. O e-mail de mensagem também espera 2 minutos e é dispensado se a conversa já foi lida.
+- Só clientes recebem; a equipe do escritório usa o sino e os avisos no aparelho.
+- Nenhum documento é enviado pelo WhatsApp: a mensagem só avisa e traz o link do portal, onde é preciso entrar com e-mail e senha.
+
+A Meta cobra por conversa iniciada pela empresa conforme a tabela vigente dela.
+
+## 5. Rotinas automáticas
+
+Duas rotinas mantêm o portal em dia:
+
+| Rotina | Frequência | O que faz |
+| --- | --- | --- |
+| Fila de tarefas (`/api/cron/processar`) | a cada 5 minutos | lê documentos enviados (XML, OCR), envia e-mails e WhatsApp, gera sugestões de conciliação, remove arquivos eliminados, faz a busca das notas automáticas das empresas com certificado |
+| Rotina diária (`/api/cron/diario`) | 6h05 (Brasília) | gera o checklist do mês, os lançamentos recorrentes e os lembretes; limpa envios incompletos; gera as tarefas das obrigações (sem duplicar) e os alertas de prazo para a equipe; avisa os vencimentos de certificados, alvarás, licenças e certidões |
+
+Na publicação padrão, o **próprio banco (Supabase, extensões `pg_cron` e `pg_net`)** chama essas rotas com o `CRON_SECRET`, guardado no cofre do Supabase (Vault). A situação aparece em **Configurações → Integrações → Rotinas automáticas**.
+
+Em um servidor próprio, ou para processar mais rápido, é possível rodar o processador contínuo:
+
+```bash
+PORTAL_URL=https://seu-portal CRON_SECRET=... WORKER_ROTINA_DIARIA=1 npm run worker
+```
+
+## 6. Antivírus (ClamAV) — opcional
+
+Todo arquivo enviado já passa por conferência de tipo (pelo conteúdo real, não só pela extensão), tamanho e estrutura de ZIP. Para também varrer contra vírus, aponte `CLAMAV_HOST`/`CLAMAV_PORT` para um servidor `clamd` acessível pela hospedagem. Sem isso, a integração aparece como “desconectada”.
+
+## 7. Leitura automática de documentos (OCR)
+
+- Feita **no próprio servidor do portal** com o Tesseract: nenhum documento é enviado a serviços externos.
+- Na primeira execução, o servidor baixa o modelo do idioma português (arquivo público, sem nenhum dado de cliente) da CDN jsDelivr. Para evitar esse download, informe uma pasta ou endereço próprio em `OCR_CAMINHO_IDIOMAS`.
+- Os dados lidos (CNPJ, datas, valores) são **sugestões**: uma pessoa do escritório confere antes de virar lançamento.
+- Para desligar: `OCR_ATIVO=false`.
+
+## 8. Login e segurança (Supabase Auth)
+
+Aplicado automaticamente pelo script de publicação (confira em **Supabase → Authentication**):
+
+- Cadastro público **desligado** (só entra quem for convidado).
+- Senha com no mínimo 10 caracteres, com letras maiúsculas, minúsculas e números.
+- Verificação em duas etapas por aplicativo autenticador (TOTP) habilitada; o código pode ser pedido uma vez por dia por aparelho (a sessão confirmada fica travada ao fechar o portal e volta com a senha).
+- Endereço do site e endereços de retorno permitidos (**URL Configuration**).
+- Renovação de sessão com rotação de token; links enviados por e-mail (convite e redefinição de senha) válidos por 1 hora.
+- Modelos de e-mail em português.
+
+No Supabase Pro, o script também encerra a sessão depois de 8 horas sem uso.
+
+## 9. Domínio próprio
+
+1. Registrar o domínio (ex.: no Registro.br).
+2. Executar a publicação com `--dominio portal.seudominio.com.br` (veja `IMPLANTACAO.md`).
+3. No Registro.br, criar um registro **CNAME** de `portal` para `cname.vercel-dns.com`.
+4. Aguardar a propagação (minutos a algumas horas). A Vercel emite o certificado HTTPS sozinha.
+
+## 10. Logomarca
+
+O sistema se chama **Catarinense Tech** (bordão: *Sua empresa conectada ao futuro.*), um produto separado do escritório. O nome e o bordão ficam em `src/lib/marca/sistema.ts`. A marca usa o símbolo da Catarinense (arte original em `docs/marca/catarinense-original.png`): `public/marca/simbolo.png` (fundo transparente), com o nome “CATARINENSE” na letra Cinzel e “TECH” embaixo, desenhados pelo componente `src/components/marca/logo.tsx` (as cores do nome seguem o tema). Os ícones de instalação e da aba ficam em `public/marca/icone-*.png`, `public/marca/selo-96.png` (notificações), `src/app/icon.png` e `src/app/apple-icon.png`.
+
+A logo do **escritório** (Catarinense Contabilidade e Gestão) é a padrão dos documentos do escritório (honorários, contrato, recibo, declaração, estudo tributário e relatório do auditor), em `src/lib/marca/logo-png.ts`. Se o escritório enviar outra logo em Configurações, ela passa a valer nesses documentos e no portal. Os dados do escritório (razão social, CNPJ, endereço e contatos) que aparecem nos rodapés, nos e-mails e na política de privacidade vêm de **Configurações do escritório**.
+
+**Visual do portal (Catarinense, Luz, Aurora, Bronze, Grafite e Vidro líquido).** As cores ficam todas em `src/app/globals.css`: o “Catarinense” (o padrão: vidro líquido claro, verde `#07461f` e vermelho `#8e1018` do símbolo, fundo em `public/marca/fundo-catarinense.svg`) em `.catarinense`, o tema claro (“Luz”) em `:root`, o escuro (“Aurora”) em `.dark`, o “Bronze” (escuro, dourado e cobre) em `.bronze`, o “Grafite” (claro, grafite `#39312b` sobre branco) em `.grafite` e o “Vidro líquido” em `.vidro`, com o degradê dos botões principais (`--gradiente`), o fundo com brilhos (`--fundo-app`), as cores dos gráficos (`--grafico-1` a `--grafico-6`) e as de alerta. Os títulos usam a fonte Space Grotesk e o texto, Inter (as duas instaladas pelo `npm`, sem chamar serviços externos). Cada tela entra com uma animação curta (`cascata` no `app-shell`); quem desliga as animações no aparelho vê tudo parado. Cada pessoa escolhe Luz, Aurora, Bronze, Grafite, Vidro líquido ou “igual ao sistema” no ícone de aparência do topo (a escolha fica guardada no navegador). Os e-mails e os PDFs continuam com as cores antigas da marca.
+
+## 11. Obrigações e prazos (camada operacional)
+
+Fica em **Obrigações e prazos** (somente equipe). Configurações necessárias depois de publicar:
+
+1. **Endereço do escritório** (Configurações → Escritório): a cidade e a UF definem o calendário de dias úteis usado nos **prazos internos** da equipe.
+2. **Regras do catálogo**: chegam como propostas, com a fonte oficial e a data da consulta. Um administrador confere, **valida** e **aplica** em Obrigações → Atualizações normativas. Nenhum prazo é calculado sem regra validada.
+3. **ICMS, ISS e EFD ICMS/IPI**: sem regra padrão — cada estado e município define o prazo. Proponha a regra por UF ou município, com a lei e o link oficial.
+4. **Feriados municipais**: cadastre em Obrigações → Feriados, com a fonte. Os nacionais e os do Tocantins (2024–2030) já vêm cadastrados; o Carnaval e o Corpus Christi contam só para regras que dependem de expediente bancário.
+5. **Empresas**: município (código do IBGE), ICMS/ISS, empregados e pró-labore, histórico de regimes (no Lucro Real, trimestral ou anual) e, se preciso, inclusões ou exclusões por vigência, responsável, revisor e prazo interno próprio.
+
+Como funciona:
+
+- Cada regra informa aplicabilidade (regimes, local, exigências do cadastro), periodicidade, regra de vencimento (dia fixo, n-ésimo dia útil ou último dia útil), o que fazer quando não é dia útil (antecipar, adiar ou manter), quais feriados contam e a fonte oficial.
+- O prazo de entrega, o vencimento do pagamento e o prazo interno são separados. O prazo interno é contado em dias úteis do escritório antes do prazo legal.
+- A reforma tributária é tratada por competência: PIS/Cofins até 12/2026, CBS e IBS a partir de 01/2027 (com prazo a regulamentar até a publicação do regulamento) e o destaque de teste em 2026. ICMS e ISS seguem até que uma atualização normativa encerre a regra; o histórico das competências anteriores é mantido.
+- Regra validada não é alterada: mudanças entram como atualização normativa (proposta → validação → aplicação). Na aplicação, a regra anterior é encerrada no mês anterior à vigência nova e as tarefas abertas são recalculadas.
+- As tarefas são geradas pela rotina diária para os últimos 12 meses (sem criar atrasos de períodos anteriores ao uso do sistema) e pelo botão **Gerar tarefas**. Não há duplicidade: cada empresa, obrigação, competência e etapa tem uma única tarefa.
+- Entrega e pagamento só são concluídos com recibo ou comprovante que esteja no portal. Tarefas com revisor só são concluídas por quem revisa (ou por um administrador).
+- Todas as mudanças ficam na Auditoria (filtro “Obrigações, prazos e normas”) e no histórico de cada tarefa.
+
+Os dados de municípios vêm da tabela oficial do IBGE (5.571 municípios) e foram carregados no próprio banco: o portal não consulta serviços externos para calcular prazos.
+
+## 12. Notificações no aparelho (Web Push)
+
+Os avisos do portal (por exemplo, “Padaria enviou 3 arquivos”) também podem chegar como notificação no celular ou no computador, mesmo com o portal fechado. Cada pessoa ativa em **Minha conta → Avisos → Ativar neste aparelho**; a situação geral aparece em **Configurações → Integrações**.
+
+- **Chaves**: o padrão Web Push usa um par de chaves (VAPID). O script de publicação cria o par na primeira publicação e o mantém nas seguintes — trocar as chaves desativa os avisos de todos os aparelhos, que precisariam ser ativados de novo. A chave pública vai ao navegador; a privada fica só na hospedagem (variável protegida).
+- **Sem as chaves**, a integração aparece como **desconectada**: os avisos ficam só no sino e nada é enviado aos aparelhos (o portal não simula a entrega).
+- **Para gerar manualmente** (servidor próprio): `npx web-push generate-vapid-keys` e cadastre `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY`. `VAPID_SUBJECT` é opcional (padrão: o endereço do portal).
+- **Entrega**: a fila de tarefas envia o aviso logo depois da ação que o gerou (ex.: o envio de arquivos pelo cliente) e, nos demais casos, na rotina de 5 minutos. Aparelhos cuja permissão foi retirada são removidos automaticamente; o aviso só vai para aparelhos com a sessão ativa.
+- **Instalação na tela inicial**: o portal tem manifesto e ícones próprios. No iPhone/iPad, as notificações só funcionam com o portal instalado na Tela de Início (iOS 16.4 ou mais recente).
+
+## 13. Notas automáticas (SEFAZ e NFS-e Nacional)
+
+A busca automática traz as notas fiscais de cada empresa direto dos serviços oficiais, com o certificado digital A1 da própria empresa (e-CNPJ; no produtor rural pessoa física, o e-CPF do produtor — a consulta vai pelo CPF):
+
+| Serviço | Endereço | O que traz |
+| --- | --- | --- |
+| NF-e — Distribuição de DF-e (Ambiente Nacional, NT 2014.002) | `www1.nfe.fazenda.gov.br` | resumos e XML completos das NF-e em que a empresa é destinatária ou autorizada, e os eventos delas (cancelamento, carta de correção) |
+| NF-e — Recepção de evento (Ambiente Nacional) | `www.nfe.fazenda.gov.br` | registra a **ciência da emissão** (evento 210210), quando a empresa ativa essa opção |
+| NFS-e — Ambiente de Dados Nacional (ADN) | `adn.nfse.gov.br` | NFS-e emitidas e tomadas pela empresa, dos municípios ligados ao padrão nacional |
+
+**Como ativar**
+
+1. A variável `CERTIFICADOS_CHAVE` precisa existir na hospedagem (o script de publicação cria). Sem ela, a tela avisa que o cadastro está indisponível.
+2. Em cada empresa, **Notas automáticas → Certificado digital A1**: o cliente (empresário titular) ou a equipe envia o arquivo `.pfx`/`.p12` e a senha e marca a autorização. A equipe declara que tem a autorização escrita do cliente; o cliente é avisado do cadastro.
+3. O portal confere a senha, a validade e o CNPJ (a raiz precisa ser a da empresa), guarda **só a chave e o certificado, cifrados** (a senha é descartada) e agenda a primeira busca. A validade também entra em **Vencimentos**, com os avisos de renovação.
+
+**Regras da busca**
+
+- Roda pela fila de tarefas, de hora em hora por empresa. A SEFAZ exige 1 hora de espera depois de uma consulta sem documentos novos (código 137) ou ao chegar ao último NSU; com o código 656 (consumo indevido) a SEFAZ bloqueia por 1 hora — o portal respeita as duas regras.
+- Cada documento é guardado uma vez (controle por NSU e pela chave). Notas e eventos que já estavam no portal (enviados pelo cliente) não são duplicados; o resumo fica ligado ao XML existente.
+- As manifestações da própria empresa (ciência, confirmação) não viram documento.
+- Confirmação da operação (evento 210200): só para as notas que uma pessoa escolheu, com a declaração marcada (guardada na auditoria); sai na busca seguinte, em lotes de até 20, com o certificado da empresa. A SEFAZ aceita até 180 dias depois da emissão. Exige certificado válido e a busca da NF-e ligada; um pedido recusado pela SEFAZ pode ser refeito.
+- Ciência da emissão: enviada em lotes de até 20 eventos (o máximo da SEFAZ por lote), até 5 lotes — 100 notas — por busca, só para as NF-e recebidas em resumo que ainda não têm o XML. A SEFAZ aceita a ciência até 10 dias depois da emissão da nota (depois disso responde 596 — "evento apresentado após o prazo permitido"); uma nota com a ciência recusada não é reenviada (o motivo fica na tela) e o XML dela precisa vir do fornecedor. Um XML enviado em Documentos é ligado ao resumo da mesma chave (gatilho no banco), e a nota deixa de contar como "só resumo". O botão **Pedir os XML completos** (empresa) e **Pedir os XML de todas as empresas** (carteira) só ligam essa opção; o envio segue as mesmas regras e o mesmo horário da busca.
+- Erros (certificado recusado, serviço fora do ar) ficam no histórico da empresa e a próxima tentativa é espaçada (15 minutos, 30 minutos, 1 hora... até 6 horas). Nada é inventado quando um serviço falha.
+- Certificado vencido: a busca para e a tela pede o certificado renovado.
+
+**Demonstração e testes**: com `NOTAS_AUTOMATICAS_SEM_REDE=1` (ligado pela publicação da demonstração e no ambiente de desenvolvimento), nenhuma consulta fiscal sai do ambiente; a tela mostra o aviso “Consultas desligadas neste ambiente”.
+
+**Se a chave `CERTIFICADOS_CHAVE` for perdida ou trocada**, os certificados guardados não podem mais ser abertos (a tela da empresa mostra o erro): basta cadastrar os certificados de novo. A chave nunca aparece no portal nem no navegador.
+
+**O que foi conferido e o que depende da ativação**: os endereços oficiais respondem e exigem o certificado da empresa na conexão (conferido em 02/10/2026); o certificado TLS desses servidores é emitido por autoridades públicas reconhecidas pelo Node (GlobalSign e Let's Encrypt), sem exceções de segurança. A leitura das respostas, a assinatura da ciência (verificada por um verificador independente) e a conexão com certificado foram testadas contra um servidor local. A primeira busca real só acontece com o certificado de uma empresa cadastrada no portal oficial — acompanhe o resultado no histórico da empresa.
+
+## 14. Auditor fiscal
+
+Não precisa de configuração nem de chaves: roda pela fila de tarefas (`auditor_fiscal`).
+
+- **Quando roda**: alguns minutos depois que chegam notas de uma empresa (uma análise por janela de 10 minutos, juntando os envios), quando a equipe clica em **Analisar agora** e, todo dia 2, para todas as empresas com notas nos últimos 5 anos (rotina diária: `rotina_auditor_fiscal`).
+- **Período**: as competências ainda dentro do prazo de restituição (5 anos contados do pagamento, no dia 20 do mês seguinte).
+- **Notas antigas**: as NF-e/NFC-e lidas antes da versão 2 da leitura (sem os códigos fiscais de cada item) e as NFS-e lidas antes da versão 3 (sem o regime do prestador, a alíquota e a retenção do ISS e as retenções federais) são relidas do arquivo guardado, em lotes de 120 por tarefa (6 arquivos ao mesmo tempo), antes da análise.
+- **Notas de serviço**: as regras ficam em `src/lib/auditor-fiscal/servicos.ts`. Na NFS-e nacional, as retenções de PIS, Cofins e CSLL seguem a NT SE/CGNFS-e nº 007/2026 (soma no campo vRetCSLL; antes, PIS e Cofins retidos vinham em vPis/vCofins); quando a nota traz o total de retenções (vTotalRet), ele prevalece. No padrão ABRASF, os valores de PIS, Cofins, INSS, IR e CSLL da nota são retenções. O anexo dos serviços (III, IV ou V, com o Fator R) vem de **Cálculos → Configuração**; sem ele, o auditor presume o Anexo III e marca confiança média.
+- **Simples Nacional**: a faixa e a alíquota efetiva de cada mês usam a mesma receita de 12 meses da previsão de impostos (receita informada em **Cálculos** ou a das notas) e o anexo das vendas configurado; sem configuração, presume o Anexo I e marca confiança média. A partilha do DAS (PIS, Cofins e ICMS por faixa) segue os Anexos I e II da LC 123/2006.
+- **Atualização das regras**: a lista de NCM monofásicos fica na tabela `auditor_ncm_monofasico` (com fonte e vigência); as regras e tabelas, em `src/lib/auditor-fiscal/`. Revise quando a legislação mudar (por exemplo, com o fim do PIS/Cofins em 2027, na reforma tributária).
+
+
+## 15. XML em lote por competência
+
+Também não precisa de configuração: roda pela fila de tarefas (`gerar_lote_xml`) e usa o armazenamento privado `documentos`.
+
+- **Pedido**: em **Notas automáticas** (da empresa ou da carteira), escolhendo o mês de emissão e os tipos. A competência é a data de emissão escrita no XML (horário de quem emitiu), não a data em UTC.
+- **Montagem**: a primeira tarefa escolhe os arquivos (`preparar_lote_xml`); cada tarefa seguinte grava uma parte do ZIP (até cerca de 30 segundos de trabalho, 30 MB ou 20 mil arquivos por parte) em `<empresa>/lotes-xml/<lote>/parte-N.zip`; a última parte leva a planilha e o LEIA-ME. Partes ficam abaixo do limite de 50 MB por arquivo do plano gratuito do Supabase.
+- **Download**: `/api/lotes-xml/<lote>/<parte>` confere a permissão no banco (`baixar_lote_xml`), registra o acesso a cada documento e só então gera um link de 1 minuto. Os arquivos dos lotes não têm leitura direta pela API.
+- **Limpeza**: a rotina diária (`rotina_lotes_xml`) apaga os arquivos dos lotes com mais de 7 dias e marca como erro pedidos que não andaram em 2 dias; o histórico some depois de 90 dias.
+- **Limites**: 30 lotes por hora por pessoa e 5 pedidos de carteira por hora.
+
+## 16. Maquininhas (conferência das taxas)
+
+Não precisa de configuração nem de chaves: roda pela fila de tarefas. O relatório enviado na categoria **Relatórios de maquininhas** é lido pela tarefa `processar_documento`, que registra o formato (`maquininha_registrar_relatorio`); se o formato já é conhecido, a tarefa `importar_maquininha` grava as vendas e confere as taxas na mesma rodada.
+
+- **Leitura**: CSV (separador ";" ou "," detectado sozinho, mesmo com muitas linhas de título e rodapé; UTF-8 ou Windows-1252) e Excel (.xlsx), até 50 mil linhas; o cabeçalho é procurado nas 40 primeiras linhas (relatórios com linhas de título funcionam). O formato é identificado pelos nomes das colunas (`maquininha_layouts`; empresa nula = vale para o escritório todo). Excel antigo (.xls) não é lido.
+- **PDF da Cielo** (`src/lib/maquininhas/pdf.ts`): a "Lista de Vendas" visualizada por forma de pagamento tem o texto extraído dentro do portal (biblioteca unpdf, sem serviço externo) e vira linhas de planilha com um cabeçalho fixo; o formato já vem cadastrado para o escritório todo (migração `20261016005400`), então entra sozinho. Cada linha soma as vendas do dia naquela forma de pagamento (coluna `quantidade`). Débito/crédito pré-pago são conferidos com as taxas de débito/crédito à vista. A lista por bandeira e os PDFs de outros formatos ficam com a situação "erro" e a orientação; o arquivo segue a leitura normal dos documentos.
+- **Cielo em CSV**: a "Lista de Vendas" em CSV tem o mesmo cabeçalho do PDF e também já vem cadastrada (migração `20261017005500`). Ao ler de novo um relatório cujo cabeçalho mudou, as colunas conferidas para o cabeçalho antigo deixam de valer (vale o formato do cabeçalho novo ou uma nova conferência).
+- **Sem duplicar**: a chave de cada venda é adquirente + data + NSU (ou código de autorização) + valor; sem esses códigos, data + valor + parcelas + bandeira + modalidade + terminal e a ordem entre vendas iguais. A mesma venda em outro relatório fica com a leitura mais recente.
+- **Conferência** (`app.maquininha_auditar`): contrato ativo vigente na data da venda; taxa da mesma modalidade com o número de parcelas dentro da faixa; a da bandeira vale mais que a de "todas"; entre faixas, a mais estreita. Esperado = valor × taxa ÷ 100 + tarifa por venda × quantidade de vendas da linha, arredondado em centavos; tolerância de R$ 0,02 por venda. A tela e o aviso mostram só as vendas aprovadas (canceladas e estornos ficam fora).
+- **Catálogo**: tabela `maquininha_adquirentes` (cartão, frota, benefícios e convênios), alterável só pelo administrador.
+- **Conexão direta com as adquirentes: desconectada.** Cada adquirente tem o seu serviço de arquivos de conciliação (EDI) ou API, que exige credenciamento próprio e a autorização da empresa para o CNPJ. Até essa ativação, o portal não consulta nenhuma adquirente e trabalha só com os relatórios enviados.
+
+## 17. SPED Fiscal × XML
+
+Não precisa de configuração: roda na leitura do documento (`processar_documento`). Entra pela categoria **Arquivos do SPED** (`.txt`) ou por qualquer `.txt` que comece com o registro `|0000|`.
+
+- **Leitura** (`src/lib/sped/leitura.ts`): registro 0000 (a EFD ICMS/IPI tem DT_INI no 4º campo; a EFD-Contribuições, no 6º), 0150 (participantes), C100 (notas, modelos 01, 1B, 04, 55 e 65), C190 (CFOP e valores) e E110 (apuração), até o registro 9999 — a assinatura digital depois dele é ignorada. Datas `ddmmaaaa`, valores com vírgula, texto em UTF-8 ou Latin-1 (Windows-1252).
+- **Gravação**: `sped_registrar_arquivo` (cabeçalho), `sped_gravar_documentos` (notas, em lotes de 2.000) e `sped_concluir` (totais, arquivo vigente do período, cruzamento e aviso à equipe). O arquivo de outro CNPJ (raiz diferente) fica com erro.
+- **Cruzamento** (`app.sped_conferir`): os XML considerados são as NF-e/NFC-e da empresa no portal (documentos não excluídos e sem protocolo de denegação); a data do XML é a data de emissão no horário de Brasília. A nota recebida só é apontada se não estiver em nenhum SPED vigente da empresa no portal. A tolerância de valores é de R$ 0,01. Em 2026, o VL_DOC não inclui IBS/CBS (Guia Prático 3.2.2), como o total do XML.
+- **Permissão**: tabelas `sped_arquivos`, `sped_documentos` e `sped_divergencias` com leitura só para quem tem `auditor.gerenciar`; gravação só pelo processador (`service_role`).
+- **EFD-Contribuições**: reconhecida e guardada com o período; a leitura dos blocos A, C, F e M fica para uma próxima versão.
+
+## 18. Emissão de NFS-e (Emissor Nacional)
+
+Não precisa de chave nova: usa o certificado A1 já cadastrado da empresa (cifrado com `CERTIFICADOS_CHAVE`) e a fila de tarefas. Sem certificado, sem serviços ou sem a autorização registrada, a emissão não liga (desconectada).
+
+- **API**: Sefin Nacional (`src/lib/nfse-emissao/sefin.ts`) — produção `https://sefin.nfse.gov.br/SefinNacional`, produção restrita (testes) `https://sefin.producaorestrita.nfse.gov.br/SefinNacional`; `POST /nfse` (DPS assinada em GZip+Base64 no campo `dpsXmlGZipB64`), `GET /dps/{id}`, `GET /nfse/{chave}`, `POST /nfse/{chave}/eventos` (cancelamento, `pedidoRegistroEventoXmlGZipB64`). Conexão com o certificado da empresa (TLS com certificado do cliente). Referência: "Guia para utilização das APIs do Emissor Público Nacional" v1.2 (out/2025).
+- **DPS** (`src/lib/nfse-emissao/dps.ts`): leiaute 1.01 (esquemas XSD de 09/02/2026, em `tests/fixtures/nfse-xsd-1.01`), XML canônico assinado com RSA-SHA1 (XMLDSig envelopado, C14N). Regras aplicadas: emitente é o prestador (sem nome/endereço do prestador); IM só se informada na configuração; Simples ME/EPP com ISS no DAS informa a alíquota (`pAliq`) só com ISS retido; tributos aproximados por `pTotTribSN` (Simples), `pTotTrib` (não optante) ou `indTotTrib` (MEI); grupo IBS/CBS não enviado (opcional em 2026; para o Simples, a partir de 2027). Texto limpo para o Latin-1 do leiaute.
+- **Fila**: `nfse_pedir` reserva o número da DPS (série 00001–49999, por empresa e ambiente; nunca reaproveitado) e põe `emitir_nfse` na fila com prioridade; a ação dispara o processamento logo após a resposta. Falha de conexão volta à fila (1, 5, 15 min...) e a nova tentativa consulta `GET /dps/{id}` antes de reenviar (nunca emite duas vezes); rejeição guarda os motivos (`mensagens`) e avisa. `cancelar_nfse` envia o evento 101101.
+- **Em produção**: a nota autorizada é registrada nos documentos fiscais (origem "emissão") e enviada ao tomador por e-mail (PDF e XML), se configurado o SMTP e marcado na empresa. Notas de teste ficam só na tela de notas.
+- **DANFSe** (`src/lib/nfse-emissao/danfse.ts`): gerado a partir do XML conforme a NT 008 v1.02 (a API de DANFSe do ADN foi suspensa em 03/08/2026): uma página A4, logomarca oficial da NFS-e, QR Code da consulta pública, "NFS-e SEM VALIDADE JURÍDICA" no teste e marca d'água "CANCELADA".
+- **Leiaute em etapas (NT 009)**: o governo implanta a NT 009 v1.01 (Anexo VI v1.04.01, de 01/10/2026, publicado só como planilha, sem XSD) em etapas — a produção restrita, em 20/10/2026, já exigia `finNFSe` no `infDPS` e o grupo `IBSCBS` (obrigatório para competência a partir de 01/10/2026, regra E0855) com `CST`/`cClassTrib` direto no `trib`, mas recusava os campos do Simples (`regApIBSCBSSN`, `cAtvSN`); o `indDest` na raiz e a nova ordem do `cServ` vêm depois; a produção recebe tudo (segundo os desenvolvedores, em 03/11/2026). Por isso a DPS é montada por partes (`VarianteLeiaute` em `src/lib/nfse-emissao/dps.ts`), com um padrão por ambiente (`VARIANTE_PADRAO`: produção no leiaute 1.01; teste na etapa atual). Quando o Sistema Nacional recusa pelo esquema (E1235, "The element 'X' has invalid child element 'Y'. List of possible elements expected: 'Z'") ou pela obrigatoriedade do IBS/CBS (E0855), `ajustarVariante` acha a parte a trocar, o emissor envia de novo a mesma DPS (não registrada) e guarda a combinação aceita em `nfse_leiaute_ambiente` (só o servidor lê), que vale para as próximas notas do ambiente; para voltar ao padrão, apague a linha do ambiente. Os testes conferem cada combinação com uma cópia dos esquemas ajustada pela planilha (`tests/unit/apoio/xsd-nt009.ts`). O XML vai com a declaração `<?xml version="1.0" encoding="UTF-8"?>` (sem ela, rejeição E1229).
+- **Tabela da reforma** (`nfse_correlacao_ibscbs`): Anexo VIII v1.01.00 da documentação RTC (item da LC 116 × NBS × cIndOp × cClassTrib), 1.502 linhas; cópia em `tests/fixtures/nfse-correlacao-ibscbs-1.01.json`. `nfse_servico_salvar` confere o NBS e a classificação nessa tabela (com o NBS e sem classificação, usa a operação final 01 e a tributação integral); a atividade do Simples sem escolha vem do anexo em `calculo_parametros` (III: 07; IV: 14; V ou Fator R: 09; 16.01: 10; 99.04.01: 11; 7.02/7.05: 12 ou 13). O pedido copia NBS, indicador, classificação e atividade do serviço para a nota.
+- **Lista nacional de serviços**: `nfse_lista_servicos` guarda os 338 códigos de tributação nacional do Anexo B do leiaute 1.01 (22/01/2026; cópia em `tests/fixtures/nfse-lista-servicos-1.01.json`). `nfse_servico_salvar` só aceita código da lista. As sugestões por CNAE (`src/lib/nfse-emissao/lista-servicos.ts`) comparam a descrição da atividade com as descrições oficiais, limitadas aos itens da LC 116 típicos de cada divisão da CNAE; comércio (divisões 45 a 47, menos os consertos 4520 e 4543) não recebe sugestão. As atividades vêm de `empresas.dados_receita` (consulta à Receita) ou, sem ela, do CNAE do cadastro. Quando sair uma nova versão do Anexo B, gere uma migração com a lista nova e atualize o arquivo de teste.
+- **Banco**: `nfse_emissao_config`, `nfse_servicos`, `nfse_emissoes` (leitura com `nfse.emitir` ou `nfse.configurar`; escrita só pelas funções); permissões `nfse.emitir` (equipe e titular) e `nfse.configurar` (só equipe). Proteção contra pedido repetido (mesmo tomador, valor e descrição em 10 minutos) e limite de 60 notas por hora por empresa.
+- **Demonstração e testes**: com `NOTAS_AUTOMATICAS_SEM_REDE=1`, nada é enviado (a nota fica "Sem resposta" com o aviso). Os testes automáticos usam um servidor local no papel do Emissor Nacional e notas fictícias.
+
+
+## 19. Emissão de NF-e (nota de produto, modelo 55)
+
+Não precisa de chave nova: usa o certificado A1 já cadastrado da empresa (cifrado com `CERTIFICADOS_CHAVE`) e a fila de tarefas. Sem certificado, inscrição (série), operação ou autorização registrada, a emissão não liga (desconectada). A empresa ou o produtor precisa estar **credenciado na SEFAZ** do estado como emissor de NF-e.
+
+- **Leiaute**: NF-e 4.00 com a reforma tributária (NT 2025.002, esquemas PL_010f v1.04, em `tests/fixtures/nfe-xsd-PL010f`); eventos de cancelamento (110111) e carta de correção (110110) v1.00. O XML é montado em forma canônica e assinado com RSA-SHA1/C14N (`src/lib/nfe-emissao/nfe.ts`, `src/lib/fiscal/xml-assinatura.ts`). Os testes validam cada XML gerado nos esquemas oficiais.
+- **Cálculo** (`src/lib/nfe-emissao/calculo.ts`): decimais exatos; ICMS por CST (00, 20, 40/41/50, 51, 90) ou CSOSN (101, 102/103/300/400, 900); DIFAL (`ICMSUFDest`, base única ou dupla, FCP, alíquota interna do destino da tabela `icms_uf`); ICMS do frete retido (`retTransp`); PIS/Cofins com a exclusão do ICMS (Tema 69); IBS/CBS (alíquotas de 2026 — CBS 0,9%, IBS UF 0,1% — com redução e diferimento da `nfe_cclass_trib`, 104 classificações da tabela oficial de 01/09/2026; para 2027 em diante o cálculo recusa até as alíquotas serem cadastradas); FUNRURAL e contribuições por tonelada (FETHAB) nas informações complementares e nas guias.
+- **SEFAZ** (`src/lib/nfe-emissao/sefaz.ts`): SOAP 1.2 nos autorizadores de cada UF (AM, BA, GO, MG, MS, MT, PE, PR, RS e SP próprios; MA na SVAN; os demais, inclusive TO, na SVRS), envio síncrono com consulta do recibo, consulta por chave antes de reenviar (nunca emite duas vezes) e tratamento de duplicidade (204/539). A conexão confia nas raízes do Node **e** nas da ICP-Brasil (`src/lib/fiscal/icp-brasil.ts`; a SEFAZ-MT usa a cadeia v10), sem desligar a verificação TLS.
+- **Fila**: `nfe_emitir` monta os dados da nota no banco a partir das regras da operação (o pedido não traz regra fiscal), reserva o número por série e ambiente e põe `emitir_nfe` na fila; nota rejeitada é corrigida e reenviada com o mesmo número. Proteção contra pedido repetido (mesmo cliente e valor em 10 minutos) e limite de 60 notas por hora por empresa. `evento_nfe` envia cancelamento e carta de correção.
+- **Guias** (`nfe_guias`): na autorização, cada valor a recolher por nota vira uma guia "a gerar" com o vencimento na data da emissão (pagamento antes da saída). A equipe gera o documento oficial no site (SEFAZ-MT: "Recolhimento prévio ICMS – Posto Fiscal" pela chave; GNRE para outro estado) e anexa o PDF, que vira documento `esc_guia` publicado e entra na agenda de pagamentos. **GNRE automática: desconectada** — o Portal GNRE exige credenciamento do sistema; até lá, a guia é gerada no portal oficial.
+- **DANFE** (`src/lib/nfe-emissao/danfe.ts`): retrato A4 com código de barras Code 128C da chave, "SEM VALOR FISCAL" no teste e marca d'água "CANCELADA".
+- **Em produção**: a nota autorizada é registrada nos documentos fiscais (origem "emissão NF-e") e enviada ao comprador por e-mail (DANFE e XML), se configurado o SMTP e marcado na empresa.
+- **Banco**: `nfe_config`, `nfe_emitentes`, `nfe_produtos`, `nfe_operacoes`, `nfe_destinatarios`, `nfe_transportadores`, `nfe_emissoes`, `nfe_eventos`, `nfe_guias` (leitura com `nfe.emitir` ou `nfe.configurar`; escrita só pelas funções); permissões `nfe.emitir` (equipe e titular) e `nfe.configurar` (só equipe). Empresa de demonstração não liga a emissão em produção.
+- **Demonstração e testes**: com `NOTAS_AUTOMATICAS_SEM_REDE=1`, nada é enviado (a nota fica "Sem resposta" com o aviso). Os testes automáticos usam um servidor local no papel da SEFAZ e notas fictícias.
+- **Próxima etapa (não incluída)**: MDF-e, inutilização de numeração, LCDPR e SPED/Sintegra.
+
+## 20. Escalas de trabalho e assistente de IA (Claude, da Anthropic)
+
+A ferramenta de escalas funciona sem nenhuma chave: cadastro dos funcionários, modelos de escala, gerador da grade e conferência da CLT rodam dentro do portal (`src/lib/escalas`). Só o **assistente de IA** depende de serviço externo e fica **desconectado** até ser ativado.
+
+- **Ativar o assistente** (administrador do escritório, em **Configurações → Integrações**):
+  1. Criar uma conta em console.anthropic.com, colocar créditos e gerar uma chave em **API Keys** (começa com `sk-ant-`).
+  2. Colar a chave no cartão **Inteligência artificial (Claude, da Anthropic)** e clicar em **Guardar chave**. O portal testa a chave (consulta o modelo, sem gastar créditos), cifra com `CERTIFICADOS_CHAVE` e guarda em `escritorio_ia_segredo` — tabela sem acesso pelo navegador, fora da auditoria. A tela mostra só os 4 últimos caracteres.
+  3. Marcar **Ligar o assistente**, escolher o modelo e o limite diário por empresa e salvar.
+- **Modelos**: `claude-opus-5-5` (padrão) ou `claude-sonnet-5-5`. Nenhum dos dois exige retenção adicional de dados. A chamada usa a API comercial (`@anthropic-ai/sdk`, `src/lib/escalas/ia.ts`) com saída estruturada (JSON conferido no servidor), esforço `medium` e o plano B de recusa do próprio serviço (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`). Tempo máximo da página do editor: 180 s.
+- **O que vai para a Anthropic** (`src/lib/escalas/ia-prompt.ts` e `apelidos.ts`): apelidos P1, P2... no lugar dos nomes; cargo, jornada, restrições, preferências e o texto do pedido com nomes, CPF e telefones trocados ou removidos; turnos, funcionamento, cobertura, feriados e, no ajuste, a grade atual. Nunca documentos, salário ou CPF.
+- **Controle de uso**: `escala_ia_reservar` confere a permissão `escalas.gerenciar`, se o assistente está ligado e o limite do dia (fuso de São Paulo) com trava por empresa; `escala_ia_concluir` registra o resultado e os tokens. A tabela `escala_ia_usos` não guarda o conteúdo.
+- **Banco**: `escala_funcionarios`, `escalas` (configuração e grade em JSON, conferidas por `src/lib/escalas/tipos.ts`), `escala_ia_usos`, `escritorio_ia` e `escritorio_ia_segredo`. Permissões `escalas.ver` (vê as publicadas) e `escalas.gerenciar` (monta e publica; equipe e titular por padrão). A ferramenta pode ser desligada por empresa em **Ferramentas** (chave `escalas`).
+- **Demonstração**: a padaria tem funcionários e uma escala fictícios (`scripts/demo-escalas.ts`); sem chave, o assistente aparece como desconectado.
+- **Regras conferidas** (`src/lib/escalas/conferencia.ts`, fontes em `modelos.ts`): Constituição, art. 7º, XIII, XIV e XV; CLT, arts. 58-A, 59, 59-A, 66, 67, 71, 73, 386, 404 e 413; Lei 605/1949; Lei 10.101/2000, art. 6º e 6º-A; Portaria MTP 671/2021 (domingo a cada 7 semanas nas atividades autorizadas); TST, OJ 410 da SDI-1 e Súmulas 146 e 423. Feriados nacionais com a Lei 14.759/2023 (20 de novembro).
+
+## 21. Recibos de honorários assinados digitalmente (certificado do escritório)
+
+Os recibos de honorários (**Financeiro → Recibos de honorários**) funcionam sem nenhuma configuração; a **assinatura digital** é opcional e fica **desconectada** até o administrador cadastrar o certificado.
+
+- **Ativar** (administrador, em **Configurações → Integrações → Assinatura digital dos recibos**): enviar o certificado **A1** (arquivo `.pfx`/`.p12`) do escritório (e-CNPJ, mesma raiz do CNPJ do escritório) ou do contador (e-CPF igual ao CPF do contador cadastrado em Configurações) e a senha. O A3 (cartão ou token) não pode ser usado por um servidor. Requer a variável `CERTIFICADOS_CHAVE` na hospedagem (a mesma dos certificados das empresas).
+- **Guarda**: o arquivo é aberto no servidor só para conferir; a senha não é guardada. A chave privada e os certificados vão cifrados (AES-256-GCM com `CERTIFICADOS_CHAVE`) para `escritorio_certificado_segredo` — tabela sem acesso pelo navegador nem pela API dos usuários, fora da auditoria. `escritorio_certificado` guarda só titular, CNPJ/CPF, emissor, validade e impressão digital (a equipe vê; só o administrador cadastra ou remove, conferido na função `escritorio_certificado_definir`).
+- **Padrão da assinatura** (`src/lib/assinatura`): PAdES (PDF) com CMS destacado `ETSI.CAdES.detached`, SHA-256 com RSA (2048 bits ou mais) e os atributos exigidos pela política **AD-RB** da ICP-Brasil em vigor (`PA_PAdES_AD_RB_v1_3`, OID 2.16.76.1.7.1.11.1.3, de 23/07/2025 a 22/10/2037). No atributo da política vai o resumo declarado dentro do arquivo da política (campo signPolicyHash), e não o hash do arquivo publicado na LPA, que serve só para conferir o arquivo; `/Filter /PBAD_PAdES`, como pede a política. O PDF é marcado como 1.7 com a extensão ESIC: content-type, message-digest, signing-certificate-v2 e signature-policy-identifier. Sem carimbo do tempo (o horário da assinatura é o do servidor). Conferência: validar.iti.gov.br.
+- **Fluxo**: ao emitir, o servidor gera o PDF (com o carimbo "Documento assinado digitalmente" em cima da linha de assinatura), assina e guarda no bucket privado `recibos` (`ANO/ID.pdf`); os downloads e a publicação para o cliente entregam esse mesmo arquivo. Recibo cancelado sai gerado na hora, com a marca CANCELADO e sem assinatura. Recibos emitidos sem certificado podem ser assinados depois pelo botão **Assinar**, e os já assinados podem ser assinados outra vez em **Assinar de novo** (ex.: certificado trocado); se já publicados, a versão nova substitui a anterior nos documentos do cliente. Se a assinatura falhar, o recibo é emitido mesmo assim, sem assinatura, com aviso.
+- **Banco**: `escritorio_certificado`, `escritorio_certificado_segredo`, colunas `arquivo_path`, `assinado_em`, `assinatura_titular` e `assinatura_documento` em `recibos_honorarios`, função `recibo_registrar_assinatura` (só equipe) e bucket `recibos` (sem políticas para usuários; o servidor confere a equipe e entrega o arquivo).
+
+## 22. Honorários do escritório: cobrança com Pix, robô (e-mail e WhatsApp) e DRE
+
+Funciona sem chaves externas: fichas, cobranças, Pix comum, baixa, recibo e DRE rodam dentro do portal. Os **canais de envio** dependem do e-mail (seção 3) e do WhatsApp oficial (seção 4) e ficam **desconectados** até a ativação — nada é simulado (o histórico do robô mostra "Canal desconectado").
+
+- **Acesso**: só o administrador e quem ele liberar (`honorarios_acessos`, função `honorarios_acesso_definir`, só administrador). A regra está no banco (`app.pode_honorarios()` nas políticas e nas funções); o cliente vê só as cobranças da própria empresa já enviadas, com a permissão `financeiro.ver`.
+- **Pix comum** (`src/lib/honorarios/pix.ts`): BR Code estático do Banco Central (EMV, CRC16-CCITT) com a chave do escritório, o valor e o identificador `HON` + ano + número. O QR é desenhado no servidor com o codificador do pdfmake (`src/lib/honorarios/qr.ts`). A chave, o nome e a cidade são copiados para a cobrança na aprovação. Sem confirmação automática: a baixa é feita pela equipe.
+- **Pix Sicredi com confirmação automática** (API Pix do Sicredi, padrão do Banco Central v2; `src/lib/honorarios/sicredi-api.ts` e `banco.ts`): **desconectado** até o administrador cadastrar as credenciais em **Honorários → Configurações da cobrança → Pix Sicredi**, testar e ligar. Passo a passo do lado do escritório (precisa de login no Internet Banking e criar conta no Portal do Desenvolvedor):
+  1. Pedir à cooperativa (Sicredi Porto Nacional) a **adesão à API Pix** e assinar o termo; o Sicredi manda por e-mail o **ID de Adesão**.
+  2. Criar a conta no **Portal do Desenvolvedor do Sicredi** com o mesmo e-mail da adesão e abrir um chamado do tipo **"Acesso à API Pix"** informando o ID de Adesão.
+  3. Liberado o acesso, em **Certificados e Credenciais**: gerar a chave privada e o pedido de certificado (CSR), enviar ("Registrar novo CSR"), aguardar a validação e **baixar o certificado assinado pelo Sicredi**; gerar o **Client ID** e o **Client Secret** sobre esse certificado.
+  4. Pedir à cooperativa que habilite os escopos de **cobrança com vencimento (cobv)**, **consulta de Pix (pix.read)** e **webhook**.
+  5. No portal, enviar Client ID, Client Secret, certificado e chave, clicar em **Testar conexão** (pede o token e cadastra o aviso automático de pagamento) e em **Ligar a confirmação automática**.
+  - Produção: token `https://api-pix.sicredi.com.br/oauth/token`, API `https://api-pix.sicredi.com.br/api/v2` (mTLS com o certificado). Homologação: endereços informados pelo Sicredi.
+  - Guarda: credenciais cifradas (AES-256-GCM com `CERTIFICADOS_CHAVE`) em `honorarios_banco_segredo`, sem acesso pelo navegador.
+  - Funcionamento: ao enviar a cobrança, o servidor cria a **cobrança com vencimento (cobv)** no banco (devedor com CPF/CNPJ, multa percentual e juros ao mês em dias corridos) e o Pix do cliente passa a ser o **dinâmico** do banco. O banco avisa o pagamento em `/api/pix/sicredi/<código secreto>` (o aviso só agenda a consulta) e o portal confere os Pix recebidos a cada 15 minutos. Com o pagamento confirmado na consulta ao banco: baixa, lançamentos na DRE, recibo (assinado) e agradecimento por e-mail com o recibo. Cancelou ou recebeu por fora: a cobrança sai do banco. Mudou valor ou vencimento: é trocada no banco.
+  - Sem CPF/CNPJ do cliente (o banco exige), vale o Pix comum para aquela cobrança.
+- **Link de pagamento** (`/pagar/<código>`): código aleatório de 32 caracteres por cobrança, enviado só ao contato do cliente; mostra o nome do cliente, a descrição, os itens, o valor e o Pix (sem CPF/CNPJ), com `noindex`. Lido no servidor; o navegador não recebe chave.
+- **Robô** (`public.rotina_honorarios`, chamada pela rotina diária): no dia escolhido gera as cobranças do mês (uma vez por mês de referência, `honorarios_geracoes`); agenda os lembretes da régua às 9h de Brasília, só em dia útil (feriados nacionais e do estado do escritório); para quando a cobrança é paga ou cancelada (os envios ainda na fila são dispensados). O envio monta o texto na hora (`src/lib/honorarios/envio.ts`), com o valor do dia.
+- **WhatsApp**: além do token e do número da seção 4, crie na Meta um **modelo de mensagem** (categoria Utilidade, idioma `pt_BR`) com 4 variáveis e informe o nome dele em **Honorários → Configurações da cobrança → Robô de cobrança**. Texto sugerido:
+  > Olá, {{1}}! {{2}} Pix copia e cola: {{3}} Para ver a cobrança e pagar: {{4}}
+
+  {{1}} nome do contato, {{2}} resumo da cobrança (valor e vencimento), {{3}} Pix copia e cola, {{4}} link de pagamento. Só recebe quem tem o WhatsApp marcado como autorizado na ficha.
+- **O que sai do portal**: para o Sicredi (com a ligação ativa) — nome e CPF/CNPJ do cliente, valor, vencimento, multa, juros e a descrição da cobrança. Pelo e-mail (provedor SMTP configurado) — nome do contato, descrição, itens e valor da cobrança, Pix, link, PDF da cobrança e, no pagamento, o recibo. Pelo WhatsApp (Meta) — os 4 dados do modelo. Nenhum dado é enviado para inteligência artificial.
+- **DRE**: `escritorio_lancamentos` (descrição obrigatória; sem linha da DRE = "a classificar", fora do resultado) e `escritorio_categorias` (plano de contas do escritório, com as linhas do sistema usadas pela baixa). A baixa (`honorarios_cobranca_baixar`) cria um lançamento por item, um de multa e juros e um de desconto; `honorarios_cobranca_estornar` desfaz.
+- **Banco**: `honorarios_config`, `honorarios_fichas`, `honorarios_cobrancas`, `honorarios_cobranca_itens`, `honorarios_lembretes`, `honorarios_geracoes`, `honorarios_acessos`, `escritorio_categorias`, `escritorio_lancamentos` (migração `20261203010000_honorarios_cobrancas.sql`, testes `71_honorarios_cobrancas.test.sql`).
+
+## 23. Contratos de prestação de serviços (gerados pela ficha)
+
+Funcionam sem chaves externas. O código de confirmação vai pelo e-mail do portal (seção 3); com o e-mail desconectado, a assinatura usa só a sessão do portal (senha), e isso fica registrado.
+
+- **Texto** (`src/lib/honorarios/contrato.ts`, testes em `tests/unit/contrato.test.ts`): cláusulas mínimas do art. 2º da Resolução CFC nº 1.590/2020, montadas pela ficha; aditivo pela diferença entre a ficha e o último contrato/aditivo assinado; distrato pelos arts. 6º a 10.
+- **Arquivos** (bucket privado `contratos`): o PDF enviado (assinado com o certificado do escritório, quando cadastrado) e a via final com o registro das assinaturas. O resumo SHA-256 do PDF enviado fica no contrato e o aceite só vale para esse mesmo arquivo.
+- **Aceite** (`honorarios_contrato_registrar_codigo` e `honorarios_contrato_aceitar`, só pela chave de serviço, depois de o servidor conferir a sessão): só o sócio titular da empresa; código de 6 números guardado como hash, vale 15 minutos, 5 tentativas, um pedido por minuto; registra nome, CPF, e-mail, data e hora, IP e navegador.
+- **Acesso**: o financeiro do escritório monta e envia; o cliente vê os contratos da própria empresa já enviados (titular ou quem tem `financeiro.ver`).
+- **Banco**: `honorarios_contratos`, `honorarios_contrato_codigos`, categoria de documento `esc_contrato` (migração `20261204010000_honorarios_contratos.sql`, testes `72_honorarios_contratos.test.sql`).
+

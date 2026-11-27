@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1230"/>
+      <stop offset="0.32" stop-color="#262457"/>
+      <stop offset="0.5" stop-color="#5a3a72"/>
+      <stop offset="0.62" stop-color="#a45a72"/>
+      <stop offset="0.7" stop-color="#e08a63"/>
+      <stop offset="0.76" stop-color="#f2b27a"/>
+    </linearGradient>
+    <radialGradient id="sol" cx="0.68" cy="0.66" r="0.34">
+      <stop offset="0" stop-color="#ffcf9e" stop-opacity="0.75"/>
+      <stop offset="0.25" stop-color="#ffb886" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#ff9a6b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0" stop-color="#7c5cff" stop-opacity="0"/>
+      <stop offset="0.35" stop-color="#7c5cff" stop-opacity="0.45"/>
+      <stop offset="0.65" stop-color="#22d3ee" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9788c"/><stop offset="1" stop-color="#7b4f78"/></linearGradient>
+    <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d5277"/><stop offset="1" stop-color="#4b335c"/></linearGradient>
+    <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3159"/><stop offset="1" stop-color="#2a1e3c"/></linearGradient>
+    <linearGradient id="s4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1d38"/><stop offset="1" stop-color="#120d1c"/></linearGradient>
+    <linearGradient id="lago" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0a877" stop-opacity="0"/>
+      <stop offset="0.12" stop-color="#f0a877" stop-opacity="0.42"/>
+      <stop offset="0.45" stop-color="#6b3f6e" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#0c0a16" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="nuvem" x="-40%" y="-600%" width="180%" height="1300%"><feGaussianBlur stdDeviation="28"/></filter>
+    <filter id="suave" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="60"/></filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#ceu)"/>
+  <path d="M-100,250 C300,120 700,330 1100,170 C1350,70 1550,160 1700,120 L1700,330 C1450,380 1250,290 1000,360 C650,450 300,300 -100,420 Z" fill="url(#aurora)" filter="url(#suave)"/>
+  <rect width="1600" height="1000" fill="url(#sol)"/>
+  <g filter="url(#nuvem)" opacity="0.55">
+    <ellipse cx="380" cy="430" rx="260" ry="34" fill="#f3a3a0"/>
+    <ellipse cx="1180" cy="380" rx="300" ry="30" fill="#ffc29a"/>
+    <ellipse cx="820" cy="300" rx="220" ry="22" fill="#b98bd8"/>
+  </g>
+  <path d="M-40,615 C-20,613 40,599 80,602 C120,606 160,635 200,636 C240,637 280,603 320,607 C360,612 400,650 440,662 C480,675 520,686 560,683 C600,680 640,647 680,642 C720,637 760,662 800,655 C840,647 880,610 920,598 C960,586 1000,575 1040,582 C1080,590 1120,631 1160,643 C1200,655 1240,645 1280,652 C1320,659 1360,679 1400,684 C1440,690 1480,702 1520,687 C1560,672 1620,611 1640,596 L1640,1010 L-40,1010 Z" fill="url(#s1)"/>
+  <path d="M-40,635 C-17,646 53,687 100,699 C147,711 193,699 240,709 C287,719 333,758 380,759 C427,760 473,732 520,715 C567,699 613,667 660,660 C707,652 753,670 800,668 C847,667 893,652 940,652 C987,652 1033,658 1080,671 C1127,684 1173,724 1220,728 C1267,732 1313,696 1360,695 C1407,694 1453,719 1500,722 C1547,725 1617,714 1640,713 L1640,1010 L-40,1010 Z" fill="url(#s2)"/>
+  <path d="M-40,747 C-12,749 72,746 128,758 C184,770 240,817 296,822 C352,827 408,810 464,788 C520,767 576,708 632,693 C688,678 744,698 800,696 C856,695 912,677 968,682 C1024,688 1080,708 1136,731 C1192,754 1248,815 1304,822 C1360,829 1416,786 1472,774 C1528,762 1612,755 1640,752 L1640,1010 L-40,1010 Z" fill="url(#s3)"/>
+  <path d="M-40,822 C-9,822 84,822 147,822 C209,822 271,832 333,822 C396,812 458,767 520,762 C582,757 644,790 707,790 C769,790 831,758 893,760 C956,763 1018,794 1080,804 C1142,814 1204,819 1267,822 C1329,825 1391,822 1453,822 C1516,822 1609,822 1640,822 L1640,1010 L-40,1010 Z" fill="url(#s4)"/>
+  <rect x="0" y="838" width="1600" height="162" fill="url(#lago)"/>
+  <ellipse cx="1090" cy="905" rx="240" ry="10" fill="#ffd9ad" opacity="0.35" filter="url(#nuvem)"/>
+</svg>

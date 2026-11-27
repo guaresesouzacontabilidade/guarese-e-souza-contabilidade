@@ -1,0 +1,307 @@
+import "server-only";
+import Decimal from "decimal.js";
+import type { ClienteAdmin } from "@/lib/supabase/admin";
+import type { Job } from "@/lib/jobs/executor";
+import { hojeISO, somarMeses } from "@/lib/competencia";
+import { relerNota } from "@/lib/fiscal/releitura";
+import { dasSimples, receitaBruta12Meses, type ColaboradorFolha, type DadosPrevisao, type MesDados, type ParametrosCalculo } from "@/lib/calculos/previsao";
+import type { LinhaCatalogo } from "./catalogo";
+import { auditar, inicioPrazo, type GrupoItens, type MesSimples } from "./regras";
+import type { ExclusaoSt, SegmentoExclusaoSt } from "./st-estadual";
+import { auditarServicos, type AnexoServicos, type MesSimplesServicos, type NotaServico } from "./servicos";
+
+/**
+ * Tarefa "auditor_fiscal" da fila: analisa as NF-e/NFC-e e as NFS-e de uma
+ * empresa nos últimos 5 anos (prazo de restituição) e grava os achados.
+ *  1. Relê, do arquivo guardado, as notas lidas antes da leitura completa
+ *     (NF-e/NFC-e antes da versão 2; NFS-e antes da 3), em lotes; o restante
+ *     continua numa nova tarefa.
+ *  2. Busca os itens agrupados por mês e códigos fiscais, as notas de serviço,
+ *     o regime de cada mês, a receita de 12 meses do Simples (e o Fator R) e o
+ *     catálogo de produtos monofásicos.
+ *  3. Aplica as regras (regras.ts para mercadorias, servicos.ts para serviços)
+ *     e registra.
+ */
+
+const LOTE_RELEITURA = 120;
+const TEMPO_RELEITURA_MS = 25_000;
+const RELEITURAS_SIMULTANEAS = 6;
+
+interface Payload {
+  empresa_id: string;
+  execucao_id?: string;
+  origem?: "automatica" | "manual" | "mensal";
+}
+
+interface DadosAuditor {
+  empresa: { id: string; nome: string; documento: string; uf: string | null; regime: string | null };
+  parametros: (ParametrosCalculo & { anexo_mercadorias: "I" | "II" }) | null;
+  meses: (MesDados & { regime: string | null })[];
+  catalogo: LinhaCatalogo[];
+  leitura_antiga: number;
+  notas: number;
+  notas_servico?: number;
+  colaboradores?: ColaboradorFolha[];
+  sem_ibscbs: { competencia: string; total: number; apos_normal: number }[];
+}
+
+/** Notas que ainda precisam ser relidas: NF-e/NFC-e antes da leitura 2 e NFS-e antes da 3. */
+const FILTRO_RELEITURA = "and(modelo.in.(55,65),leitura_versao.lt.2),and(modelo.like.nfse*,leitura_versao.lt.3)";
+
+async function iniciarExecucao(admin: ClienteAdmin, p: Payload): Promise<string> {
+  if (p.execucao_id) {
+    const { data } = await admin.from("auditor_execucoes").select("id, iniciada_em").eq("id", p.execucao_id).maybeSingle();
+    if (data) {
+      await admin
+        .from("auditor_execucoes")
+        .update({ situacao: "processando", iniciada_em: data.iniciada_em ?? new Date().toISOString(), erro: null })
+        .eq("id", data.id);
+      return data.id;
+    }
+  }
+  const { data, error } = await admin
+    .from("auditor_execucoes")
+    .insert({ empresa_id: p.empresa_id, origem: p.origem ?? "automatica", situacao: "processando", iniciada_em: new Date().toISOString() })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error(`Não foi possível registrar a análise: ${error?.message ?? "sem retorno"}`);
+  return data.id;
+}
+
+/** Relê do armazenamento as notas gravadas antes da leitura completa dos códigos fiscais (algumas ao mesmo tempo). */
+async function relerNotasAntigas(admin: ClienteAdmin, empresa: { id: string; documento: string }, inicio: string) {
+  const t0 = Date.now();
+  let relidas = 0;
+  const { data: notas, error } = await admin
+    .from("documentos_fiscais")
+    .select("id, documento_id")
+    .eq("empresa_id", empresa.id)
+    .or(FILTRO_RELEITURA)
+    .gte("competencia", inicio)
+    .order("competencia", { ascending: false })
+    .limit(LOTE_RELEITURA);
+  if (error) throw new Error(`Falha ao listar notas para releitura: ${error.message}`);
+  const lista = notas ?? [];
+  for (let i = 0; i < lista.length; i += RELEITURAS_SIMULTANEAS) {
+    if (Date.now() - t0 > TEMPO_RELEITURA_MS) break;
+    const grupo = lista.slice(i, i + RELEITURAS_SIMULTANEAS);
+    await Promise.all(grupo.map((n) => relerNota(admin, empresa.documento, n)));
+    relidas += grupo.length;
+  }
+  const { count } = await admin
+    .from("documentos_fiscais")
+    .select("id", { count: "exact", head: true })
+    .eq("empresa_id", empresa.id)
+    .or(FILTRO_RELEITURA)
+    .gte("competencia", inicio);
+  return { relidas, pendentes: count ?? 0 };
+}
+
+export async function executarAuditorFiscal(admin: ClienteAdmin, job: Job) {
+  const p = job.payload as unknown as Payload;
+  if (!p?.empresa_id) return { ignorado: "tarefa sem empresa" };
+  const execucaoId = await iniciarExecucao(admin, p);
+  try {
+    const hoje = hojeISO();
+    const fim = `${hoje.slice(0, 7)}-01`;
+    const inicio = inicioPrazo(hoje);
+    const { data: empresa } = await admin.from("empresas").select("id, documento").eq("id", p.empresa_id).maybeSingle();
+    if (!empresa?.documento) {
+      await admin.from("auditor_execucoes").update({ situacao: "erro", erro: "Empresa sem CNPJ/CPF cadastrado.", concluida_em: new Date().toISOString() }).eq("id", execucaoId);
+      return { erro: "empresa sem documento" };
+    }
+
+    // 1. Notas antigas: relê antes de analisar
+    const releitura = await relerNotasAntigas(admin, empresa, inicio);
+    if (releitura.pendentes > 0) {
+      const { data: atual } = await admin.from("auditor_execucoes").select("notas_relidas").eq("id", execucaoId).single();
+      await admin
+        .from("auditor_execucoes")
+        .update({ situacao: "pendente", notas_relidas: (atual?.notas_relidas ?? 0) + releitura.relidas })
+        .eq("id", execucaoId);
+      await admin.from("jobs").insert({
+        tipo: "auditor_fiscal",
+        payload: { empresa_id: p.empresa_id, execucao_id: execucaoId, origem: p.origem ?? "automatica" },
+        empresa_id: p.empresa_id,
+        chave_idempotencia: `auditor:releitura:${execucaoId}:${releitura.pendentes}`,
+        prioridade: 110,
+      });
+      return { relidas: releitura.relidas, pendentes: releitura.pendentes };
+    }
+
+    if (releitura.relidas > 0) {
+      const { data: atual } = await admin.from("auditor_execucoes").select("notas_relidas").eq("id", execucaoId).single();
+      await admin
+        .from("auditor_execucoes")
+        .update({ notas_relidas: (atual?.notas_relidas ?? 0) + releitura.relidas })
+        .eq("id", execucaoId);
+    }
+
+    // 2. Dados
+    const { data: bruto, error: erroDados } = await admin.rpc("auditor_dados", { p_empresa_id: p.empresa_id, p_inicio: inicio, p_fim: fim });
+    if (erroDados || !bruto) throw new Error(`Falha ao carregar os dados da empresa: ${erroDados?.message ?? "sem retorno"}`);
+    const dados = bruto as unknown as DadosAuditor;
+    const grupos: GrupoItens[] = [];
+    const servicos: NotaServico[] = [];
+    for (let c = inicio; c <= fim; c = somarMeses(c, 12)) {
+      const ate = somarMeses(c, 11) < fim ? somarMeses(c, 11) : fim;
+      const { data, error } = await admin.rpc("auditor_itens_agrupados", { p_empresa_id: p.empresa_id, p_inicio: c, p_fim: ate });
+      if (error) throw new Error(`Falha ao carregar as notas: ${error.message}`);
+      grupos.push(...((data ?? []) as unknown as GrupoItens[]));
+      const { data: notasServico, error: erroServico } = await admin.rpc("auditor_servicos", { p_empresa_id: p.empresa_id, p_inicio: c, p_fim: ate });
+      if (erroServico) throw new Error(`Falha ao carregar as notas de serviço: ${erroServico.message}`);
+      servicos.push(...((notasServico ?? []) as unknown as NotaServico[]));
+    }
+
+    // 3. Regime e Simples de cada mês
+    const regimes = new Map(dados.meses.map((m) => [String(m.competencia).slice(0, 7), m.regime]));
+    const previsao: DadosPrevisao = {
+      competencia: fim,
+      empresa: {
+        nome: dados.empresa.nome,
+        regime: dados.empresa.regime,
+        lucro_real_apuracao: null,
+        contribuinte_icms: true,
+        contribuinte_iss: false,
+        tem_empregados: false,
+        tem_pro_labore: false,
+        uf: dados.empresa.uf,
+      },
+      parametros: dados.parametros,
+      meses: dados.meses,
+      checklist: null,
+      colaboradores: dados.colaboradores ?? [],
+      ajustes: [],
+      vencimentos: [],
+      guias_publicadas: 0,
+    };
+    const cacheSimples = new Map<string, MesSimples>();
+    const simples = (c: string): MesSimples => {
+      const chave = c.slice(0, 7);
+      const salvo = cacheSimples.get(chave);
+      if (salvo) return salvo;
+      const r = receitaBruta12Meses(previsao, c);
+      const s: MesSimples = {
+        rbt12: new Decimal(r.rbt12.toString()),
+        anexo: dados.parametros?.anexo_mercadorias === "II" ? "II" : "I",
+        anexoInformado: Boolean(dados.parametros),
+        mesesSemDados: r.mesesSemDados,
+        observacao: r.observacao,
+      };
+      cacheSimples.set(chave, s);
+      return s;
+    };
+
+    // Serviços no Simples: anexo (com o Fator R) e RBT12 de cada mês
+    const cacheServicos = new Map<string, MesSimplesServicos>();
+    const simplesServicos = (c: string): MesSimplesServicos | null => {
+      const chave = c.slice(0, 7);
+      const salvo = cacheServicos.get(chave);
+      if (salvo) return salvo;
+      let s: MesSimplesServicos;
+      if (dados.parametros) {
+        const r = dasSimples(previsao, c);
+        const anexo = (["III", "IV", "V"].includes(r.anexoServicos) ? r.anexoServicos : dados.parametros.anexo_servicos) as AnexoServicos;
+        s = {
+          rbt12: new Decimal(r.rbt12.toString()),
+          anexo,
+          anexoInformado: true,
+          fatorREstimado: dados.parametros.anexo_servicos === "V" && Boolean(dados.parametros.fator_r) && r.folhaEstimada,
+          mesesSemDados: r.mesesSemDados,
+          observacao: null,
+        };
+      } else {
+        const r = receitaBruta12Meses(previsao, c);
+        s = { rbt12: new Decimal(r.rbt12.toString()), anexo: "III", anexoInformado: false, fatorREstimado: false, mesesSemDados: r.mesesSemDados, observacao: r.observacao };
+      }
+      cacheServicos.set(chave, s);
+      return s;
+    };
+
+    // Produtos que saíram da ST por regra do Estado da empresa
+    const uf = dados.empresa.uf?.toUpperCase() ?? null;
+    const exclusoesSt: ExclusaoSt[] = [];
+    if (uf) {
+      const { data: linhas, error: erroSt } = await admin
+        .from("auditor_st_exclusoes")
+        .select("uf, item, segmento, cest_prefixo, ncm_prefixo, descricao, condicao, somente_fabricante_uf, confianca, fonte_titulo, fonte_url, vigencia_inicio, vigencia_fim")
+        .eq("ativo", true)
+        .eq("uf", uf);
+      if (erroSt) throw new Error(`Falha ao carregar a lista de ST do Estado: ${erroSt.message}`);
+      for (const l of linhas ?? []) {
+        exclusoesSt.push({
+          uf: l.uf,
+          item: l.item,
+          segmento: l.segmento as SegmentoExclusaoSt,
+          cest: l.cest_prefixo,
+          ncm: l.ncm_prefixo,
+          descricao: l.descricao,
+          condicao: l.condicao,
+          somente_fabricante_uf: l.somente_fabricante_uf,
+          confianca: l.confianca === "alta" ? "alta" : "conferir",
+          fonte: { titulo: l.fonte_titulo, ...(l.fonte_url ? { url: l.fonte_url } : {}) },
+          inicio: l.vigencia_inicio,
+          fim: l.vigencia_fim,
+        });
+      }
+    }
+
+    // 4. Regras
+    const semIbsCbs = new Map(dados.sem_ibscbs.map((x) => [String(x.competencia).slice(0, 7), x]));
+    const regimeDoMes = (c: string) => regimes.get(c.slice(0, 7)) ?? dados.empresa.regime;
+    const achados = [
+      ...auditar({
+        hoje,
+        inicio,
+        fim,
+        regimeDoMes,
+        simples,
+        grupos,
+        catalogo: dados.catalogo,
+        semIbsCbs: (c) => semIbsCbs.get(c.slice(0, 7)) ?? null,
+        uf,
+        exclusoesSt,
+      }),
+      ...auditarServicos({
+        inicio,
+        fim,
+        regimeDoMes,
+        simples: simplesServicos,
+        inicioAtividade: dados.parametros?.inicio_atividade ? `${String(dados.parametros.inicio_atividade).slice(0, 7)}-01` : null,
+        notas: servicos,
+      }),
+    ];
+
+    // 5. Registro
+    const notas = dados.notas;
+    const itens = grupos.reduce((t, g) => t + g.itens, 0);
+    const oportunidades = achados.filter((a) => a.tipo === "oportunidade");
+    const resumo = {
+      periodo_inicio: inicio,
+      periodo_fim: fim,
+      notas,
+      notas_servico: servicos.length,
+      itens,
+      grupos: grupos.length,
+      achados: achados.length,
+      oportunidades: oportunidades.length,
+      riscos: achados.filter((a) => a.tipo === "risco").length,
+      valor_oportunidades: oportunidades.reduce((t, a) => t.plus(a.valor_estimado ?? 0), new Decimal(0)).toFixed(2),
+      anexo_informado: Boolean(dados.parametros),
+    };
+    const { data: registro, error: erroRegistro } = await admin.rpc("auditor_registrar_resultado", {
+      p_execucao_id: execucaoId,
+      p_achados: achados as never,
+      p_resumo: resumo as never,
+    });
+    if (erroRegistro) throw new Error(`Falha ao registrar os achados: ${erroRegistro.message}`);
+    return { ...resumo, registro };
+  } catch (e) {
+    const mensagem = e instanceof Error ? e.message : String(e);
+    await admin
+      .from("auditor_execucoes")
+      .update({ situacao: "erro", erro: mensagem.slice(0, 2000), concluida_em: new Date().toISOString() })
+      .eq("id", execucaoId);
+    throw e;
+  }
+}

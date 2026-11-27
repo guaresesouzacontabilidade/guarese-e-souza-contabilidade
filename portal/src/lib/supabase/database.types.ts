@@ -1,0 +1,9411 @@
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export type Database = {
+  
+  "public": {
+          Tables: {
+            "aceites_termos": {
+                  Row: {
+                    "aceito_em": string,"id": number,"ip": string | null,"user_agent": string | null,"user_id": string,"versao": string
+                  }
+                  Insert: {
+                    "aceito_em"?: string,"id"?: never,"ip"?: string | null,"user_agent"?: string | null,"user_id": string,"versao": string
+                  }
+                  Update: {
+                    "aceito_em"?: string,"id"?: never,"ip"?: string | null,"user_agent"?: string | null,"user_id"?: string,"versao"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "aceites_termos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"atualizacoes_normativas": {
+                  Row: {
+                    "aplicada_em": string | null,"aplicada_por": string | null,"fonte_consultada_em": string,"fonte_publicada_em": string | null,"fonte_titulo": string,"fonte_url": string | null,"id": string,"motivo_rejeicao": string | null,"obrigacao_id": string,"proposta_em": string,"proposta_por": string | null,"regra_anterior_id": string | null,"regra_proposta_id": string | null,"rejeitada_em": string | null,"rejeitada_por": string | null,"resultado": Json | null,"resumo": string | null,"status": string,"tipo": string,"titulo": string,"validacao_observacao": string | null,"validada_em": string | null,"validada_por": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "aplicada_em"?: string | null,"aplicada_por"?: string | null,"fonte_consultada_em": string,"fonte_publicada_em"?: string | null,"fonte_titulo": string,"fonte_url"?: string | null,"id"?: string,"motivo_rejeicao"?: string | null,"obrigacao_id": string,"proposta_em"?: string,"proposta_por"?: string | null,"regra_anterior_id"?: string | null,"regra_proposta_id"?: string | null,"rejeitada_em"?: string | null,"rejeitada_por"?: string | null,"resultado"?: Json | null,"resumo"?: string | null,"status"?: string,"tipo": string,"titulo": string,"validacao_observacao"?: string | null,"validada_em"?: string | null,"validada_por"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "aplicada_em"?: string | null,"aplicada_por"?: string | null,"fonte_consultada_em"?: string,"fonte_publicada_em"?: string | null,"fonte_titulo"?: string,"fonte_url"?: string | null,"id"?: string,"motivo_rejeicao"?: string | null,"obrigacao_id"?: string,"proposta_em"?: string,"proposta_por"?: string | null,"regra_anterior_id"?: string | null,"regra_proposta_id"?: string | null,"rejeitada_em"?: string | null,"rejeitada_por"?: string | null,"resultado"?: Json | null,"resumo"?: string | null,"status"?: string,"tipo"?: string,"titulo"?: string,"validacao_observacao"?: string | null,"validada_em"?: string | null,"validada_por"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "atualizacoes_normativas_aplicada_por_fkey"
+      columns: ["aplicada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_obrigacao_id_fkey"
+      columns: ["obrigacao_id"]
+isOneToOne: false
+      referencedRelation: "obrigacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_proposta_por_fkey"
+      columns: ["proposta_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_regra_anterior_id_fkey"
+      columns: ["regra_anterior_id"]
+isOneToOne: false
+      referencedRelation: "obrigacao_regras"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_regra_proposta_id_fkey"
+      columns: ["regra_proposta_id"]
+isOneToOne: false
+      referencedRelation: "obrigacao_regras"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_rejeitada_por_fkey"
+      columns: ["rejeitada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atualizacoes_normativas_validada_por_fkey"
+      columns: ["validada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"auditor_achados": {
+                  Row: {
+                    "atualizado_em": string,"chave": string,"competencia": string,"confianca": string,"criterios": NonNullable<Json>,"detectado_em": string,"empresa_id": string,"execucao_id": string | null,"fontes": NonNullable<Json>,"id": string,"memoria": NonNullable<Json>,"motivo": string | null,"publicado_em": string | null,"publicado_por": string | null,"referencias": NonNullable<Json>,"regra": string,"resumo": string,"revisado_em": string | null,"revisado_por": string | null,"situacao": string,"solicitacao_id": string | null,"texto_cliente": string | null,"tipo": string,"titulo": string,"valor_base": number | null,"valor_estimado": number | null,"valores_alterados_em": string | null
+                  }
+                  Insert: {
+                    "atualizado_em"?: string,"chave": string,"competencia": string,"confianca": string,"criterios"?: NonNullable<Json>,"detectado_em"?: string,"empresa_id": string,"execucao_id"?: string | null,"fontes"?: NonNullable<Json>,"id"?: string,"memoria"?: NonNullable<Json>,"motivo"?: string | null,"publicado_em"?: string | null,"publicado_por"?: string | null,"referencias"?: NonNullable<Json>,"regra": string,"resumo": string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"solicitacao_id"?: string | null,"texto_cliente"?: string | null,"tipo": string,"titulo": string,"valor_base"?: number | null,"valor_estimado"?: number | null,"valores_alterados_em"?: string | null
+                  }
+                  Update: {
+                    "atualizado_em"?: string,"chave"?: string,"competencia"?: string,"confianca"?: string,"criterios"?: NonNullable<Json>,"detectado_em"?: string,"empresa_id"?: string,"execucao_id"?: string | null,"fontes"?: NonNullable<Json>,"id"?: string,"memoria"?: NonNullable<Json>,"motivo"?: string | null,"publicado_em"?: string | null,"publicado_por"?: string | null,"referencias"?: NonNullable<Json>,"regra"?: string,"resumo"?: string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"solicitacao_id"?: string | null,"texto_cliente"?: string | null,"tipo"?: string,"titulo"?: string,"valor_base"?: number | null,"valor_estimado"?: number | null,"valores_alterados_em"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "auditor_achados_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_achados_execucao_id_fkey"
+      columns: ["execucao_id"]
+isOneToOne: false
+      referencedRelation: "auditor_execucoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_achados_publicado_por_fkey"
+      columns: ["publicado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_achados_revisado_por_fkey"
+      columns: ["revisado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_achados_solicitacao_id_fkey"
+      columns: ["solicitacao_id"]
+isOneToOne: false
+      referencedRelation: "solicitacoes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"auditor_execucoes": {
+                  Row: {
+                    "achados_atualizados": number | null,"achados_novos": number | null,"concluida_em": string | null,"criada_em": string,"empresa_id": string,"erro": string | null,"id": string,"iniciada_em": string | null,"itens_analisados": number | null,"notas_analisadas": number | null,"notas_relidas": number | null,"origem": string,"periodo_fim": string | null,"periodo_inicio": string | null,"resumo": Json | null,"situacao": string,"solicitada_por": string | null
+                  }
+                  Insert: {
+                    "achados_atualizados"?: number | null,"achados_novos"?: number | null,"concluida_em"?: string | null,"criada_em"?: string,"empresa_id": string,"erro"?: string | null,"id"?: string,"iniciada_em"?: string | null,"itens_analisados"?: number | null,"notas_analisadas"?: number | null,"notas_relidas"?: number | null,"origem"?: string,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"resumo"?: Json | null,"situacao"?: string,"solicitada_por"?: string | null
+                  }
+                  Update: {
+                    "achados_atualizados"?: number | null,"achados_novos"?: number | null,"concluida_em"?: string | null,"criada_em"?: string,"empresa_id"?: string,"erro"?: string | null,"id"?: string,"iniciada_em"?: string | null,"itens_analisados"?: number | null,"notas_analisadas"?: number | null,"notas_relidas"?: number | null,"origem"?: string,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"resumo"?: Json | null,"situacao"?: string,"solicitada_por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "auditor_execucoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "auditor_execucoes_solicitada_por_fkey"
+      columns: ["solicitada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"auditor_ncm_monofasico": {
+                  Row: {
+                    "ativo": boolean,"condicao": string | null,"confianca": string,"created_at": string,"descricao": string,"ex_tipi": string | null,"excecao": boolean,"fonte_titulo": string,"fonte_url": string | null,"grupo": string,"id": string,"ncm_prefixo": string,"somente_varejo": boolean,"updated_at": string,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"condicao"?: string | null,"confianca"?: string,"created_at"?: string,"descricao": string,"ex_tipi"?: string | null,"excecao"?: boolean,"fonte_titulo": string,"fonte_url"?: string | null,"grupo": string,"id"?: string,"ncm_prefixo": string,"somente_varejo"?: boolean,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"condicao"?: string | null,"confianca"?: string,"created_at"?: string,"descricao"?: string,"ex_tipi"?: string | null,"excecao"?: boolean,"fonte_titulo"?: string,"fonte_url"?: string | null,"grupo"?: string,"id"?: string,"ncm_prefixo"?: string,"somente_varejo"?: boolean,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"auditor_st_exclusoes": {
+                  Row: {
+                    "ativo": boolean,"cest_prefixo": string,"condicao": string | null,"confianca": string,"created_at": string,"descricao": string,"fonte_titulo": string,"fonte_url": string | null,"id": string,"item": string,"ncm_prefixo": string | null,"segmento": string,"somente_fabricante_uf": boolean,"uf": string,"updated_at": string,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cest_prefixo": string,"condicao"?: string | null,"confianca"?: string,"created_at"?: string,"descricao": string,"fonte_titulo": string,"fonte_url"?: string | null,"id"?: string,"item": string,"ncm_prefixo"?: string | null,"segmento": string,"somente_fabricante_uf"?: boolean,"uf": string,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cest_prefixo"?: string,"condicao"?: string | null,"confianca"?: string,"created_at"?: string,"descricao"?: string,"fonte_titulo"?: string,"fonte_url"?: string | null,"id"?: string,"item"?: string,"ncm_prefixo"?: string | null,"segmento"?: string,"somente_fabricante_uf"?: boolean,"uf"?: string,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"auditoria": {
+                  Row: {
+                    "acao": string,"dados_antes": Json | null,"dados_depois": Json | null,"detalhes": Json | null,"empresa_id": string | null,"entidade": string,"entidade_id": string | null,"id": number,"ip": string | null,"ocorrido_em": string,"user_agent": string | null,"user_email": string | null,"user_id": string | null
+                  }
+                  Insert: {
+                    "acao": string,"dados_antes"?: Json | null,"dados_depois"?: Json | null,"detalhes"?: Json | null,"empresa_id"?: string | null,"entidade": string,"entidade_id"?: string | null,"id"?: never,"ip"?: string | null,"ocorrido_em"?: string,"user_agent"?: string | null,"user_email"?: string | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "acao"?: string,"dados_antes"?: Json | null,"dados_depois"?: Json | null,"detalhes"?: Json | null,"empresa_id"?: string | null,"entidade"?: string,"entidade_id"?: string | null,"id"?: never,"ip"?: string | null,"ocorrido_em"?: string,"user_agent"?: string | null,"user_email"?: string | null,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"baixas": {
+                  Row: {
+                    "chave_idempotencia": string | null,"conciliacao_id": string | null,"conta_financeira_id": string,"created_at": string,"criado_por": string | null,"data_pagamento": string,"desconto": number,"empresa_id": string,"forma_pagamento": string | null,"id": string,"juros": number,"lancamento_id": string,"multa": number,"observacao": string | null,"origem": string,"taxas": number,"tipo": string,"valor_principal": number,"valor_total": number | null
+                  }
+                  Insert: {
+                    "chave_idempotencia"?: string | null,"conciliacao_id"?: string | null,"conta_financeira_id": string,"created_at"?: string,"criado_por"?: string | null,"data_pagamento": string,"desconto"?: number,"empresa_id": string,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"lancamento_id": string,"multa"?: number,"observacao"?: string | null,"origem"?: string,"taxas"?: number,"tipo": string,"valor_principal": number,"valor_total"?: never
+                  }
+                  Update: {
+                    "chave_idempotencia"?: string | null,"conciliacao_id"?: string | null,"conta_financeira_id"?: string,"created_at"?: string,"criado_por"?: string | null,"data_pagamento"?: string,"desconto"?: number,"empresa_id"?: string,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"lancamento_id"?: string,"multa"?: number,"observacao"?: string | null,"origem"?: string,"taxas"?: number,"tipo"?: string,"valor_principal"?: number,"valor_total"?: never
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "baixas_conciliacao_fk"
+      columns: ["empresa_id","conciliacao_id"]
+isOneToOne: false
+      referencedRelation: "conciliacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "baixas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "baixas_empresa_id_conta_financeira_id_fkey"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "baixas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "baixas_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"baixas_estornadas": {
+                  Row: {
+                    "conta_financeira_id": string | null,"criado_em": string,"criado_por": string | null,"data_pagamento": string,"desconto": number,"empresa_id": string,"estornado_em": string,"estornado_por": string | null,"forma_pagamento": string | null,"id": string,"juros": number,"lancamento_id": string,"motivo_estorno": string,"multa": number,"observacao": string | null,"origem": string,"taxas": number,"tipo": string,"valor_principal": number,"valor_total": number
+                  }
+                  Insert: {
+                    "conta_financeira_id"?: string | null,"criado_em": string,"criado_por"?: string | null,"data_pagamento": string,"desconto"?: number,"empresa_id": string,"estornado_em"?: string,"estornado_por"?: string | null,"forma_pagamento"?: string | null,"id": string,"juros"?: number,"lancamento_id": string,"motivo_estorno": string,"multa"?: number,"observacao"?: string | null,"origem": string,"taxas"?: number,"tipo": string,"valor_principal": number,"valor_total": number
+                  }
+                  Update: {
+                    "conta_financeira_id"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_pagamento"?: string,"desconto"?: number,"empresa_id"?: string,"estornado_em"?: string,"estornado_por"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"lancamento_id"?: string,"motivo_estorno"?: string,"multa"?: number,"observacao"?: string | null,"origem"?: string,"taxas"?: number,"tipo"?: string,"valor_principal"?: number,"valor_total"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "baixas_estornadas_conta_fk"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "baixas_estornadas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "baixas_estornadas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "baixas_estornadas_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "baixas_estornadas_estornado_por_fkey"
+      columns: ["estornado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"caixa_movimentos": {
+                  Row: {
+                    "conta_id": string | null,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"motivo": string,"sessao_id": string,"tipo": string,"transferencia_id": string | null,"valor": number
+                  }
+                  Insert: {
+                    "conta_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"motivo": string,"sessao_id": string,"tipo": string,"transferencia_id"?: string | null,"valor": number
+                  }
+                  Update: {
+                    "conta_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"motivo"?: string,"sessao_id"?: string,"tipo"?: string,"transferencia_id"?: string | null,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "caixa_movimentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "caixa_movimentos_empresa_id_conta_id_fkey"
+      columns: ["empresa_id","conta_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "caixa_movimentos_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "caixa_movimentos_transferencia_id_fkey"
+      columns: ["transferencia_id"]
+isOneToOne: false
+      referencedRelation: "transferencias"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"caixa_sessoes": {
+                  Row: {
+                    "aberto_em": string,"caixa_nome": string,"data": string,"diferenca": number | null,"empresa_id": string,"fechado_em": string | null,"fechado_por": string | null,"id": string,"observacao_fechamento": string | null,"operador_id": string,"resumo": Json | null,"status": string,"valor_abertura": number,"valor_contado": number | null,"valor_esperado": number | null
+                  }
+                  Insert: {
+                    "aberto_em"?: string,"caixa_nome"?: string,"data"?: string,"diferenca"?: number | null,"empresa_id": string,"fechado_em"?: string | null,"fechado_por"?: string | null,"id"?: string,"observacao_fechamento"?: string | null,"operador_id"?: string,"resumo"?: Json | null,"status"?: string,"valor_abertura"?: number,"valor_contado"?: number | null,"valor_esperado"?: number | null
+                  }
+                  Update: {
+                    "aberto_em"?: string,"caixa_nome"?: string,"data"?: string,"diferenca"?: number | null,"empresa_id"?: string,"fechado_em"?: string | null,"fechado_por"?: string | null,"id"?: string,"observacao_fechamento"?: string | null,"operador_id"?: string,"resumo"?: Json | null,"status"?: string,"valor_abertura"?: number,"valor_contado"?: number | null,"valor_esperado"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "caixa_sessoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "caixa_sessoes_fechado_por_fkey"
+      columns: ["fechado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "caixa_sessoes_operador_id_fkey"
+      columns: ["operador_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"calculo_ajustes": {
+                  Row: {
+                    "competencia": string,"created_at": string,"criado_por": string | null,"descricao": string,"empresa_id": string,"id": string,"observacao": string | null,"valor": number
+                  }
+                  Insert: {
+                    "competencia": string,"created_at"?: string,"criado_por"?: string | null,"descricao": string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"valor": number
+                  }
+                  Update: {
+                    "competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "calculo_ajustes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calculo_ajustes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"calculo_meses": {
+                  Row: {
+                    "atualizado_por": string | null,"competencia": string,"empresa_id": string,"folha_fator_r": number | null,"observacao": string | null,"receita_mercadorias": number | null,"receita_servicos": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"competencia": string,"empresa_id": string,"folha_fator_r"?: number | null,"observacao"?: string | null,"receita_mercadorias"?: number | null,"receita_servicos"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"competencia"?: string,"empresa_id"?: string,"folha_fator_r"?: number | null,"observacao"?: string | null,"receita_mercadorias"?: number | null,"receita_servicos"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "calculo_meses_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calculo_meses_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"calculo_parametros": {
+                  Row: {
+                    "acrescimo_lc224": boolean,"aliquota_icms_media": number | null,"aliquota_iss": number | null,"anexo_mercadorias": string,"anexo_servicos": string,"atualizado_por": string | null,"calcular_icms": boolean,"calcular_ipi": boolean,"created_at": string,"creditos_pis_cofins": boolean,"empresa_id": string,"fap": number,"fator_r": boolean,"icms_destinacao_padrao": string,"inicio_atividade": string | null,"margem_lucro": number | null,"mei_atividade": string | null,"presuncao_csll_mercadorias": number,"presuncao_csll_servicos": number,"presuncao_irpj_mercadorias": number,"presuncao_irpj_servicos": number,"pro_labore": number,"rat": number,"socios_pro_labore": number,"terceiros": number,"updated_at": string
+                  }
+                  Insert: {
+                    "acrescimo_lc224"?: boolean,"aliquota_icms_media"?: number | null,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id": string,"fap"?: number,"fator_r"?: boolean,"icms_destinacao_padrao"?: string,"inicio_atividade"?: string | null,"margem_lucro"?: number | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "acrescimo_lc224"?: boolean,"aliquota_icms_media"?: number | null,"aliquota_iss"?: number | null,"anexo_mercadorias"?: string,"anexo_servicos"?: string,"atualizado_por"?: string | null,"calcular_icms"?: boolean,"calcular_ipi"?: boolean,"created_at"?: string,"creditos_pis_cofins"?: boolean,"empresa_id"?: string,"fap"?: number,"fator_r"?: boolean,"icms_destinacao_padrao"?: string,"inicio_atividade"?: string | null,"margem_lucro"?: number | null,"mei_atividade"?: string | null,"presuncao_csll_mercadorias"?: number,"presuncao_csll_servicos"?: number,"presuncao_irpj_mercadorias"?: number,"presuncao_irpj_servicos"?: number,"pro_labore"?: number,"rat"?: number,"socios_pro_labore"?: number,"terceiros"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "calculo_parametros_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calculo_parametros_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"categorias_documento": {
+                  Row: {
+                    "ativo": boolean,"codigo": string,"descricao": string | null,"escritorio": boolean,"extensoes": (string)[],"grupo": string,"nome": string,"ordem": number
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"codigo": string,"descricao"?: string | null,"escritorio"?: boolean,"extensoes": (string)[],"grupo": string,"nome": string,"ordem"?: number
+                  }
+                  Update: {
+                    "ativo"?: boolean,"codigo"?: string,"descricao"?: string | null,"escritorio"?: boolean,"extensoes"?: (string)[],"grupo"?: string,"nome"?: string,"ordem"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"categorias_financeiras": {
+                  Row: {
+                    "ativa": boolean,"codigo": string,"codigo_sistema": string | null,"created_at": string,"dre_linha_id": string | null,"empresa_id": string,"id": string,"natureza": string | null,"nome": string,"pai_id": string | null,"sintetica": boolean,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"codigo": string,"codigo_sistema"?: string | null,"created_at"?: string,"dre_linha_id"?: string | null,"empresa_id": string,"id"?: string,"natureza"?: never,"nome": string,"pai_id"?: string | null,"sintetica"?: boolean,"tipo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"codigo"?: string,"codigo_sistema"?: string | null,"created_at"?: string,"dre_linha_id"?: string | null,"empresa_id"?: string,"id"?: string,"natureza"?: never,"nome"?: string,"pai_id"?: string | null,"sintetica"?: boolean,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "categorias_financeiras_dre_linha_fk"
+      columns: ["empresa_id","dre_linha_id"]
+isOneToOne: false
+      referencedRelation: "dre_modelo_linhas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "categorias_financeiras_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "categorias_financeiras_pai_fk"
+      columns: ["empresa_id","pai_id"]
+isOneToOne: false
+      referencedRelation: "categorias_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"centros_custo": {
+                  Row: {
+                    "ativo": boolean,"codigo": string | null,"created_at": string,"empresa_id": string,"id": string,"nome": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"codigo"?: string | null,"created_at"?: string,"empresa_id": string,"id"?: string,"nome": string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"codigo"?: string | null,"created_at"?: string,"empresa_id"?: string,"id"?: string,"nome"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "centros_custo_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"certificados_digitais": {
+                  Row: {
+                    "autorizacao": string,"autorizacao_texto": string,"cadastrado_por": string | null,"created_at": string,"documento": string | null,"emissor": string | null,"empresa_id": string,"id": string,"impressao_digital": string,"motivo_revogacao": string | null,"numero_serie": string | null,"revogado_em": string | null,"revogado_por": string | null,"titular": string,"valido_ate": string,"valido_de": string,"vencimento_id": string | null
+                  }
+                  Insert: {
+                    "autorizacao": string,"autorizacao_texto": string,"cadastrado_por"?: string | null,"created_at"?: string,"documento"?: string | null,"emissor"?: string | null,"empresa_id": string,"id"?: string,"impressao_digital": string,"motivo_revogacao"?: string | null,"numero_serie"?: string | null,"revogado_em"?: string | null,"revogado_por"?: string | null,"titular": string,"valido_ate": string,"valido_de": string,"vencimento_id"?: string | null
+                  }
+                  Update: {
+                    "autorizacao"?: string,"autorizacao_texto"?: string,"cadastrado_por"?: string | null,"created_at"?: string,"documento"?: string | null,"emissor"?: string | null,"empresa_id"?: string,"id"?: string,"impressao_digital"?: string,"motivo_revogacao"?: string | null,"numero_serie"?: string | null,"revogado_em"?: string | null,"revogado_por"?: string | null,"titular"?: string,"valido_ate"?: string,"valido_de"?: string,"vencimento_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "certificados_digitais_cadastrado_por_fkey"
+      columns: ["cadastrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificados_digitais_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificados_digitais_revogado_por_fkey"
+      columns: ["revogado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificados_digitais_vencimento_id_fkey"
+      columns: ["vencimento_id"]
+isOneToOne: false
+      referencedRelation: "vencimentos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"certificados_segredos": {
+                  Row: {
+                    "certificado_id": string,"conteudo_cifrado": string,"created_at": string
+                  }
+                  Insert: {
+                    "certificado_id": string,"conteudo_cifrado": string,"created_at"?: string
+                  }
+                  Update: {
+                    "certificado_id"?: string,"conteudo_cifrado"?: string,"created_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "certificados_segredos_certificado_id_fkey"
+      columns: ["certificado_id"]
+isOneToOne: true
+      referencedRelation: "certificados_digitais"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"checklist_historico": {
+                  Row: {
+                    "acao": string,"alterado_em": string,"alterado_por": string | null,"empresa_id": string,"id": number,"item_id": string,"motivo": string | null,"status_anterior": string | null,"status_novo": string | null
+                  }
+                  Insert: {
+                    "acao": string,"alterado_em"?: string,"alterado_por"?: string | null,"empresa_id": string,"id"?: never,"item_id": string,"motivo"?: string | null,"status_anterior"?: string | null,"status_novo"?: string | null
+                  }
+                  Update: {
+                    "acao"?: string,"alterado_em"?: string,"alterado_por"?: string | null,"empresa_id"?: string,"id"?: never,"item_id"?: string,"motivo"?: string | null,"status_anterior"?: string | null,"status_novo"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "checklist_historico_alterado_por_fkey"
+      columns: ["alterado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_historico_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_historico_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: false
+      referencedRelation: "checklist_itens"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"checklist_itens": {
+                  Row: {
+                    "categoria_codigo": string,"chave_geracao": string | null,"competencia": string,"concluido_em": string | null,"concluido_por": string | null,"conclusao_manual": boolean,"conclusao_observacao": string | null,"conta_financeira_id": string | null,"correcao_motivo": string | null,"correcao_solicitada_em": string | null,"created_at": string,"criado_por": string | null,"descricao": string | null,"empresa_id": string,"id": string,"modelo_id": string | null,"nao_aplica_justificativa": string | null,"nao_aplica_resposta": string | null,"nao_aplica_revisado_em": string | null,"nao_aplica_revisado_por": string | null,"nao_aplica_solicitado_em": string | null,"nao_aplica_solicitado_por": string | null,"obrigatorio": boolean,"observacao_equipe": string | null,"prazo": string,"quantidade_minima": number,"responsavel_cliente_id": string | null,"responsavel_equipe_id": string | null,"status": string,"status_atualizado_em": string,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "categoria_codigo": string,"chave_geracao"?: string | null,"competencia": string,"concluido_em"?: string | null,"concluido_por"?: string | null,"conclusao_manual"?: boolean,"conclusao_observacao"?: string | null,"conta_financeira_id"?: string | null,"correcao_motivo"?: string | null,"correcao_solicitada_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id": string,"id"?: string,"modelo_id"?: string | null,"nao_aplica_justificativa"?: string | null,"nao_aplica_resposta"?: string | null,"nao_aplica_revisado_em"?: string | null,"nao_aplica_revisado_por"?: string | null,"nao_aplica_solicitado_em"?: string | null,"nao_aplica_solicitado_por"?: string | null,"obrigatorio"?: boolean,"observacao_equipe"?: string | null,"prazo": string,"quantidade_minima"?: number,"responsavel_cliente_id"?: string | null,"responsavel_equipe_id"?: string | null,"status"?: string,"status_atualizado_em"?: string,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "categoria_codigo"?: string,"chave_geracao"?: string | null,"competencia"?: string,"concluido_em"?: string | null,"concluido_por"?: string | null,"conclusao_manual"?: boolean,"conclusao_observacao"?: string | null,"conta_financeira_id"?: string | null,"correcao_motivo"?: string | null,"correcao_solicitada_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id"?: string,"id"?: string,"modelo_id"?: string | null,"nao_aplica_justificativa"?: string | null,"nao_aplica_resposta"?: string | null,"nao_aplica_revisado_em"?: string | null,"nao_aplica_revisado_por"?: string | null,"nao_aplica_solicitado_em"?: string | null,"nao_aplica_solicitado_por"?: string | null,"obrigatorio"?: boolean,"observacao_equipe"?: string | null,"prazo"?: string,"quantidade_minima"?: number,"responsavel_cliente_id"?: string | null,"responsavel_equipe_id"?: string | null,"status"?: string,"status_atualizado_em"?: string,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "checklist_itens_categoria_codigo_fkey"
+      columns: ["categoria_codigo"]
+isOneToOne: false
+      referencedRelation: "categorias_documento"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "checklist_itens_concluido_por_fkey"
+      columns: ["concluido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_itens_conta_fk"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "checklist_itens_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_itens_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_itens_modelo_id_fkey"
+      columns: ["modelo_id"]
+isOneToOne: false
+      referencedRelation: "checklist_modelos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_itens_nao_aplica_revisado_por_fkey"
+      columns: ["nao_aplica_revisado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_itens_nao_aplica_solicitado_por_fkey"
+      columns: ["nao_aplica_solicitado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_itens_responsavel_cliente_id_fkey"
+      columns: ["responsavel_cliente_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_itens_responsavel_equipe_id_fkey"
+      columns: ["responsavel_equipe_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"checklist_modelos": {
+                  Row: {
+                    "ativo": boolean,"categoria_codigo": string,"codigo_padrao": string | null,"conta_financeira_id": string | null,"created_at": string,"descricao": string | null,"dia_prazo": number,"empresa_id": string,"id": string,"meses": (number)[] | null,"meses_apos": number,"obrigatorio": boolean,"ordem": number,"periodicidade": string,"por_conta": boolean,"quantidade_minima": number,"responsavel_cliente_id": string | null,"responsavel_equipe_id": string | null,"servico": string | null,"tipos_conta": (string)[] | null,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"categoria_codigo": string,"codigo_padrao"?: string | null,"conta_financeira_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"dia_prazo"?: number,"empresa_id": string,"id"?: string,"meses"?: (number)[] | null,"meses_apos"?: number,"obrigatorio"?: boolean,"ordem"?: number,"periodicidade"?: string,"por_conta"?: boolean,"quantidade_minima"?: number,"responsavel_cliente_id"?: string | null,"responsavel_equipe_id"?: string | null,"servico"?: string | null,"tipos_conta"?: (string)[] | null,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"categoria_codigo"?: string,"codigo_padrao"?: string | null,"conta_financeira_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"dia_prazo"?: number,"empresa_id"?: string,"id"?: string,"meses"?: (number)[] | null,"meses_apos"?: number,"obrigatorio"?: boolean,"ordem"?: number,"periodicidade"?: string,"por_conta"?: boolean,"quantidade_minima"?: number,"responsavel_cliente_id"?: string | null,"responsavel_equipe_id"?: string | null,"servico"?: string | null,"tipos_conta"?: (string)[] | null,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "checklist_modelos_categoria_codigo_fkey"
+      columns: ["categoria_codigo"]
+isOneToOne: false
+      referencedRelation: "categorias_documento"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "checklist_modelos_conta_fk"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "checklist_modelos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_modelos_responsavel_cliente_id_fkey"
+      columns: ["responsavel_cliente_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "checklist_modelos_responsavel_equipe_id_fkey"
+      columns: ["responsavel_equipe_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"colaboradores": {
+                  Row: {
+                    "adicionais": number,"admissao": string,"cargo": string | null,"contrato": string,"created_at": string,"criado_por": string | null,"dependentes_ir": number,"desligamento": string | null,"empresa_id": string,"ferias_vencidas": number,"fim_contrato": string | null,"id": string,"nome": string,"observacao": string | null,"salario": number,"saldo_fgts": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "adicionais"?: number,"admissao": string,"cargo"?: string | null,"contrato"?: string,"created_at"?: string,"criado_por"?: string | null,"dependentes_ir"?: number,"desligamento"?: string | null,"empresa_id": string,"ferias_vencidas"?: number,"fim_contrato"?: string | null,"id"?: string,"nome": string,"observacao"?: string | null,"salario": number,"saldo_fgts"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "adicionais"?: number,"admissao"?: string,"cargo"?: string | null,"contrato"?: string,"created_at"?: string,"criado_por"?: string | null,"dependentes_ir"?: number,"desligamento"?: string | null,"empresa_id"?: string,"ferias_vencidas"?: number,"fim_contrato"?: string | null,"id"?: string,"nome"?: string,"observacao"?: string | null,"salario"?: number,"saldo_fgts"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "colaboradores_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "colaboradores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competencia_historico": {
+                  Row: {
+                    "acao": string,"competencia_id": string,"detalhes": Json | null,"em": string,"empresa_id": string,"etapa": string | null,"id": number,"por": string | null
+                  }
+                  Insert: {
+                    "acao": string,"competencia_id": string,"detalhes"?: Json | null,"em"?: string,"empresa_id": string,"etapa"?: string | null,"id"?: never,"por"?: string | null
+                  }
+                  Update: {
+                    "acao"?: string,"competencia_id"?: string,"detalhes"?: Json | null,"em"?: string,"empresa_id"?: string,"etapa"?: string | null,"id"?: never,"por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competencia_historico_competencia_id_fkey"
+      columns: ["competencia_id"]
+isOneToOne: false
+      referencedRelation: "competencias"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "competencia_historico_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "competencia_historico_por_fkey"
+      columns: ["por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competencias": {
+                  Row: {
+                    "competencia": string,"created_at": string,"empresa_id": string,"fechada_em": string | null,"fechada_por": string | null,"id": string,"observacoes": string | null,"reaberta_em": string | null,"reaberta_por": string | null,"reabertura_justificativa": string | null,"status": string,"updated_at": string
+                  }
+                  Insert: {
+                    "competencia": string,"created_at"?: string,"empresa_id": string,"fechada_em"?: string | null,"fechada_por"?: string | null,"id"?: string,"observacoes"?: string | null,"reaberta_em"?: string | null,"reaberta_por"?: string | null,"reabertura_justificativa"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "competencia"?: string,"created_at"?: string,"empresa_id"?: string,"fechada_em"?: string | null,"fechada_por"?: string | null,"id"?: string,"observacoes"?: string | null,"reaberta_em"?: string | null,"reaberta_por"?: string | null,"reabertura_justificativa"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "competencias_fechada_por_fkey"
+      columns: ["fechada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "competencias_reaberta_por_fkey"
+      columns: ["reaberta_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"conciliacao_itens": {
+                  Row: {
+                    "ativo": boolean,"baixa_id": string | null,"conciliacao_id": string,"empresa_id": string,"id": string,"lancamento_id": string | null,"movimento_id": string | null,"transferencia_id": string | null,"valor": number
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"baixa_id"?: string | null,"conciliacao_id": string,"empresa_id": string,"id"?: string,"lancamento_id"?: string | null,"movimento_id"?: string | null,"transferencia_id"?: string | null,"valor": number
+                  }
+                  Update: {
+                    "ativo"?: boolean,"baixa_id"?: string | null,"conciliacao_id"?: string,"empresa_id"?: string,"id"?: string,"lancamento_id"?: string | null,"movimento_id"?: string | null,"transferencia_id"?: string | null,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conciliacao_itens_empresa_id_baixa_id_fkey"
+      columns: ["empresa_id","baixa_id"]
+isOneToOne: false
+      referencedRelation: "baixas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "conciliacao_itens_empresa_id_conciliacao_id_fkey"
+      columns: ["empresa_id","conciliacao_id"]
+isOneToOne: false
+      referencedRelation: "conciliacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "conciliacao_itens_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "conciliacao_itens_empresa_id_movimento_id_fkey"
+      columns: ["empresa_id","movimento_id"]
+isOneToOne: false
+      referencedRelation: "movimentos_bancarios"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "conciliacao_itens_empresa_id_transferencia_id_fkey"
+      columns: ["empresa_id","transferencia_id"]
+isOneToOne: false
+      referencedRelation: "transferencias"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"conciliacao_rejeicoes": {
+                  Row: {
+                    "alvo_id": string,"empresa_id": string,"movimento_id": string,"rejeitada_em": string,"rejeitada_por": string | null
+                  }
+                  Insert: {
+                    "alvo_id": string,"empresa_id": string,"movimento_id": string,"rejeitada_em"?: string,"rejeitada_por"?: string | null
+                  }
+                  Update: {
+                    "alvo_id"?: string,"empresa_id"?: string,"movimento_id"?: string,"rejeitada_em"?: string,"rejeitada_por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conciliacao_rejeicoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conciliacao_rejeicoes_rejeitada_por_fkey"
+      columns: ["rejeitada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"conciliacoes": {
+                  Row: {
+                    "confirmada_em": string | null,"confirmada_por": string | null,"conta_financeira_id": string | null,"created_at": string,"criado_por": string | null,"criterios": NonNullable<Json>,"desfeita_em": string | null,"desfeita_por": string | null,"diferenca": number,"empresa_id": string,"id": string,"lancamentos_criados": (string)[],"motivo_desfazer": string | null,"motivo_rejeicao": string | null,"observacao": string | null,"origem": string,"pontuacao": number | null,"rejeitada_em": string | null,"rejeitada_por": string | null,"status": string,"tipo": string,"tratamento_diferenca": string | null
+                  }
+                  Insert: {
+                    "confirmada_em"?: string | null,"confirmada_por"?: string | null,"conta_financeira_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"criterios"?: NonNullable<Json>,"desfeita_em"?: string | null,"desfeita_por"?: string | null,"diferenca"?: number,"empresa_id": string,"id"?: string,"lancamentos_criados"?: (string)[],"motivo_desfazer"?: string | null,"motivo_rejeicao"?: string | null,"observacao"?: string | null,"origem"?: string,"pontuacao"?: number | null,"rejeitada_em"?: string | null,"rejeitada_por"?: string | null,"status"?: string,"tipo"?: string,"tratamento_diferenca"?: string | null
+                  }
+                  Update: {
+                    "confirmada_em"?: string | null,"confirmada_por"?: string | null,"conta_financeira_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"criterios"?: NonNullable<Json>,"desfeita_em"?: string | null,"desfeita_por"?: string | null,"diferenca"?: number,"empresa_id"?: string,"id"?: string,"lancamentos_criados"?: (string)[],"motivo_desfazer"?: string | null,"motivo_rejeicao"?: string | null,"observacao"?: string | null,"origem"?: string,"pontuacao"?: number | null,"rejeitada_em"?: string | null,"rejeitada_por"?: string | null,"status"?: string,"tipo"?: string,"tratamento_diferenca"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conciliacoes_confirmada_por_fkey"
+      columns: ["confirmada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conciliacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conciliacoes_desfeita_por_fkey"
+      columns: ["desfeita_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conciliacoes_empresa_id_conta_financeira_id_fkey"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "conciliacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conciliacoes_rejeitada_por_fkey"
+      columns: ["rejeitada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"contas_financeiras": {
+                  Row: {
+                    "agencia": string | null,"ativa": boolean,"banco_codigo": string | null,"banco_nome": string | null,"cartao_conta_pagamento_id": string | null,"cartao_dia_fechamento": number | null,"cartao_dia_vencimento": number | null,"compoe_saldo_disponivel": boolean,"created_at": string,"empresa_id": string,"id": string,"limite": number | null,"nome": string,"numero": string | null,"observacoes": string | null,"saldo_inicial": number,"saldo_inicial_data": string,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "agencia"?: string | null,"ativa"?: boolean,"banco_codigo"?: string | null,"banco_nome"?: string | null,"cartao_conta_pagamento_id"?: string | null,"cartao_dia_fechamento"?: number | null,"cartao_dia_vencimento"?: number | null,"compoe_saldo_disponivel"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"limite"?: number | null,"nome": string,"numero"?: string | null,"observacoes"?: string | null,"saldo_inicial"?: number,"saldo_inicial_data": string,"tipo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "agencia"?: string | null,"ativa"?: boolean,"banco_codigo"?: string | null,"banco_nome"?: string | null,"cartao_conta_pagamento_id"?: string | null,"cartao_dia_fechamento"?: number | null,"cartao_dia_vencimento"?: number | null,"compoe_saldo_disponivel"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"limite"?: number | null,"nome"?: string,"numero"?: string | null,"observacoes"?: string | null,"saldo_inicial"?: number,"saldo_inicial_data"?: string,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contas_financeiras_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "contas_financeiras_pagamento_fk"
+      columns: ["empresa_id","cartao_conta_pagamento_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"contrapartes": {
+                  Row: {
+                    "ativo": boolean,"bairro": string | null,"cep": string | null,"complemento": string | null,"contato": string | null,"created_at": string,"documento": string | null,"email": string | null,"empresa_id": string,"id": string,"inscricao_estadual": string | null,"logradouro": string | null,"municipio_ibge": string | null,"nome": string,"numero": string | null,"observacoes": string | null,"papeis": (string)[],"prazo_pagamento_dias": number | null,"telefone": string | null,"tipo_pessoa": string | null,"updated_at": string,"busca": string | null
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"complemento"?: string | null,"contato"?: string | null,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id": string,"id"?: string,"inscricao_estadual"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome": string,"numero"?: string | null,"observacoes"?: string | null,"papeis"?: (string)[],"prazo_pagamento_dias"?: number | null,"telefone"?: string | null,"tipo_pessoa"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"complemento"?: string | null,"contato"?: string | null,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id"?: string,"id"?: string,"inscricao_estadual"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome"?: string,"numero"?: string | null,"observacoes"?: string | null,"papeis"?: (string)[],"prazo_pagamento_dias"?: number | null,"telefone"?: string | null,"tipo_pessoa"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contrapartes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "contrapartes_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    }
+                  ]
+                },"conversa_leituras": {
+                  Row: {
+                    "conversa_id": string,"lida_em": string,"user_id": string
+                  }
+                  Insert: {
+                    "conversa_id": string,"lida_em"?: string,"user_id": string
+                  }
+                  Update: {
+                    "conversa_id"?: string,"lida_em"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conversa_leituras_conversa_id_fkey"
+      columns: ["conversa_id"]
+isOneToOne: false
+      referencedRelation: "conversas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conversa_leituras_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"conversas": {
+                  Row: {
+                    "aguardando": string | null,"assunto": string,"checklist_item_id": string | null,"competencia": string | null,"created_at": string,"criado_por": string | null,"documento_id": string | null,"empresa_id": string,"id": string,"status": string,"tipo": string,"ultima_mensagem_em": string,"updated_at": string
+                  }
+                  Insert: {
+                    "aguardando"?: string | null,"assunto": string,"checklist_item_id"?: string | null,"competencia"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento_id"?: string | null,"empresa_id": string,"id"?: string,"status"?: string,"tipo"?: string,"ultima_mensagem_em"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "aguardando"?: string | null,"assunto"?: string,"checklist_item_id"?: string | null,"competencia"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento_id"?: string | null,"empresa_id"?: string,"id"?: string,"status"?: string,"tipo"?: string,"ultima_mensagem_em"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conversas_checklist_item_id_fkey"
+      columns: ["checklist_item_id"]
+isOneToOne: false
+      referencedRelation: "checklist_itens"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conversas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conversas_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conversas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"convites": {
+                  Row: {
+                    "aceito_em": string | null,"convidado_por": string | null,"created_at": string,"email": string,"empresa_id": string | null,"envio_erro": string | null,"envio_status": string,"id": string,"nome": string | null,"papel": string | null,"permissoes": (string)[],"status": string,"tipo_usuario": string,"ultimo_envio_em": string | null,"user_id": string | null
+                  }
+                  Insert: {
+                    "aceito_em"?: string | null,"convidado_por"?: string | null,"created_at"?: string,"email": string,"empresa_id"?: string | null,"envio_erro"?: string | null,"envio_status"?: string,"id"?: string,"nome"?: string | null,"papel"?: string | null,"permissoes"?: (string)[],"status"?: string,"tipo_usuario": string,"ultimo_envio_em"?: string | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "aceito_em"?: string | null,"convidado_por"?: string | null,"created_at"?: string,"email"?: string,"empresa_id"?: string | null,"envio_erro"?: string | null,"envio_status"?: string,"id"?: string,"nome"?: string | null,"papel"?: string | null,"permissoes"?: (string)[],"status"?: string,"tipo_usuario"?: string,"ultimo_envio_em"?: string | null,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "convites_convidado_por_fkey"
+      columns: ["convidado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "convites_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "convites_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cte_config": {
+                  Row: {
+                    "ambiente": string,"ativa": boolean,"atualizado_por": string | null,"autorizacao_texto": string | null,"autorizado_em": string | null,"autorizado_por": string | null,"autorizar_escritorio_xml": boolean,"created_at": string,"crt": number,"emitente_id": string | null,"empresa_id": string,"informacoes_padrao": string | null,"proximo_numero_homologacao": number,"proximo_numero_producao": number,"rntrc": string | null,"serie": number,"updated_at": string
+                  }
+                  Insert: {
+                    "ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"autorizar_escritorio_xml"?: boolean,"created_at"?: string,"crt"?: number,"emitente_id"?: string | null,"empresa_id": string,"informacoes_padrao"?: string | null,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"rntrc"?: string | null,"serie"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"autorizar_escritorio_xml"?: boolean,"created_at"?: string,"crt"?: number,"emitente_id"?: string | null,"empresa_id"?: string,"informacoes_padrao"?: string | null,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"rntrc"?: string | null,"serie"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cte_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_config_autorizado_por_fkey"
+      columns: ["autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_config_emitente_id_fkey"
+      columns: ["emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cte_emissoes": {
+                  Row: {
+                    "ambiente": string,"autorizada_em": string | null,"cancelada_em": string | null,"chave": string | null,"codigo_numerico": string,"created_at": string,"dados": NonNullable<Json>,"descartada_em": string | null,"documento_id": string | null,"emitida_em": string | null,"empresa_id": string,"id": string,"mensagens": Json | null,"municipio_fim": string,"municipio_inicio": string,"natureza": string,"nfe_chaves": (string)[],"numero": number,"operacao_id": string | null,"origem": Json | null,"pedido": NonNullable<Json>,"pedido_por": string | null,"peso_kg": number | null,"protocolo": string | null,"serie": number,"situacao": string,"tentativas": number,"tomador_documento": string | null,"tomador_nome": string,"totais": Json | null,"uf_fim": string,"uf_inicio": string,"ultimo_envio_em": string | null,"updated_at": string,"valor_carga": number | null,"valor_total": number,"xml_assinado": string | null,"xml_autorizado": string | null
+                  }
+                  Insert: {
+                    "ambiente": string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"chave"?: string | null,"codigo_numerico": string,"created_at"?: string,"dados": NonNullable<Json>,"descartada_em"?: string | null,"documento_id"?: string | null,"emitida_em"?: string | null,"empresa_id": string,"id"?: string,"mensagens"?: Json | null,"municipio_fim": string,"municipio_inicio": string,"natureza": string,"nfe_chaves"?: (string)[],"numero": number,"operacao_id"?: string | null,"origem"?: Json | null,"pedido": NonNullable<Json>,"pedido_por"?: string | null,"peso_kg"?: number | null,"protocolo"?: string | null,"serie": number,"situacao"?: string,"tentativas"?: number,"tomador_documento"?: string | null,"tomador_nome": string,"totais"?: Json | null,"uf_fim": string,"uf_inicio": string,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor_carga"?: number | null,"valor_total": number,"xml_assinado"?: string | null,"xml_autorizado"?: string | null
+                  }
+                  Update: {
+                    "ambiente"?: string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"chave"?: string | null,"codigo_numerico"?: string,"created_at"?: string,"dados"?: NonNullable<Json>,"descartada_em"?: string | null,"documento_id"?: string | null,"emitida_em"?: string | null,"empresa_id"?: string,"id"?: string,"mensagens"?: Json | null,"municipio_fim"?: string,"municipio_inicio"?: string,"natureza"?: string,"nfe_chaves"?: (string)[],"numero"?: number,"operacao_id"?: string | null,"origem"?: Json | null,"pedido"?: NonNullable<Json>,"pedido_por"?: string | null,"peso_kg"?: number | null,"protocolo"?: string | null,"serie"?: number,"situacao"?: string,"tentativas"?: number,"tomador_documento"?: string | null,"tomador_nome"?: string,"totais"?: Json | null,"uf_fim"?: string,"uf_inicio"?: string,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor_carga"?: number | null,"valor_total"?: number,"xml_assinado"?: string | null,"xml_autorizado"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cte_emissoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_emissoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_emissoes_operacao_id_fkey"
+      columns: ["operacao_id"]
+isOneToOne: false
+      referencedRelation: "cte_operacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_emissoes_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cte_eventos": {
+                  Row: {
+                    "correcoes": Json | null,"created_at": string,"emissao_id": string,"empresa_id": string,"id": string,"mensagens": Json | null,"pedido_por": string | null,"protocolo": string | null,"registrado_em": string | null,"sequencia": number,"situacao": string,"tentativas": number,"texto": string,"tipo": string,"updated_at": string,"xml": string | null
+                  }
+                  Insert: {
+                    "correcoes"?: Json | null,"created_at"?: string,"emissao_id": string,"empresa_id": string,"id"?: string,"mensagens"?: Json | null,"pedido_por"?: string | null,"protocolo"?: string | null,"registrado_em"?: string | null,"sequencia": number,"situacao"?: string,"tentativas"?: number,"texto": string,"tipo": string,"updated_at"?: string,"xml"?: string | null
+                  }
+                  Update: {
+                    "correcoes"?: Json | null,"created_at"?: string,"emissao_id"?: string,"empresa_id"?: string,"id"?: string,"mensagens"?: Json | null,"pedido_por"?: string | null,"protocolo"?: string | null,"registrado_em"?: string | null,"sequencia"?: number,"situacao"?: string,"tentativas"?: number,"texto"?: string,"tipo"?: string,"updated_at"?: string,"xml"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cte_eventos_emissao_id_fkey"
+      columns: ["emissao_id"]
+isOneToOne: false
+      referencedRelation: "cte_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_eventos_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cte_operacoes": {
+                  Row: {
+                    "ativa": boolean,"cfop": string,"created_at": string,"destino": string,"empresa_id": string,"excluir_icms_base_ibscbs": boolean,"ibscbs_cclass_trib": string | null,"ibscbs_diferimento": number | null,"icms_aliquota": number | null,"icms_beneficio": string | null,"icms_credito_presumido": number | null,"icms_cst": string,"icms_reducao": number | null,"id": string,"informacoes": string | null,"natureza": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"cfop": string,"created_at"?: string,"destino": string,"empresa_id": string,"excluir_icms_base_ibscbs"?: boolean,"ibscbs_cclass_trib"?: string | null,"ibscbs_diferimento"?: number | null,"icms_aliquota"?: number | null,"icms_beneficio"?: string | null,"icms_credito_presumido"?: number | null,"icms_cst": string,"icms_reducao"?: number | null,"id"?: string,"informacoes"?: string | null,"natureza": string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"cfop"?: string,"created_at"?: string,"destino"?: string,"empresa_id"?: string,"excluir_icms_base_ibscbs"?: boolean,"ibscbs_cclass_trib"?: string | null,"ibscbs_diferimento"?: number | null,"icms_aliquota"?: number | null,"icms_beneficio"?: string | null,"icms_credito_presumido"?: number | null,"icms_cst"?: string,"icms_reducao"?: number | null,"id"?: string,"informacoes"?: string | null,"natureza"?: string,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cte_operacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cte_operacoes_ibscbs_cclass_trib_fkey"
+      columns: ["ibscbs_cclass_trib"]
+isOneToOne: false
+      referencedRelation: "nfe_cclass_trib"
+      referencedColumns: ["cclass_trib"]
+    }
+                  ]
+                },"dar_emissoes": {
+                  Row: {
+                    "competencia": string,"created_at": string,"dias_atraso": number,"documento_id": string | null,"efd_geracao_id": string | null,"empresa_id": string,"gerado_por": string | null,"id": string,"juros": number,"juros_percentual": number,"linha_digitavel": string | null,"meses_selic": (string)[],"multa": number,"multa_percentual": number,"numero": string,"origem": string,"principal": number,"receita": string,"total": number,"uf": string,"vencimento": string,"vencimento_imposto": string
+                  }
+                  Insert: {
+                    "competencia": string,"created_at"?: string,"dias_atraso"?: number,"documento_id"?: string | null,"efd_geracao_id"?: string | null,"empresa_id": string,"gerado_por"?: string | null,"id"?: string,"juros"?: number,"juros_percentual"?: number,"linha_digitavel"?: string | null,"meses_selic"?: (string)[],"multa"?: number,"multa_percentual"?: number,"numero": string,"origem": string,"principal": number,"receita": string,"total": number,"uf"?: string,"vencimento": string,"vencimento_imposto": string
+                  }
+                  Update: {
+                    "competencia"?: string,"created_at"?: string,"dias_atraso"?: number,"documento_id"?: string | null,"efd_geracao_id"?: string | null,"empresa_id"?: string,"gerado_por"?: string | null,"id"?: string,"juros"?: number,"juros_percentual"?: number,"linha_digitavel"?: string | null,"meses_selic"?: (string)[],"multa"?: number,"multa_percentual"?: number,"numero"?: string,"origem"?: string,"principal"?: number,"receita"?: string,"total"?: number,"uf"?: string,"vencimento"?: string,"vencimento_imposto"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dar_emissoes_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "dar_emissoes_efd_geracao_id_fkey"
+      columns: ["efd_geracao_id"]
+isOneToOne: false
+      referencedRelation: "efd_geracoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dar_emissoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dar_emissoes_gerado_por_fkey"
+      columns: ["gerado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"declaracoes_faturamento": {
+                  Row: {
+                    "assinada_em": string | null,"assinada_path": string | null,"assinada_por": string | null,"assinatura_digital": boolean | null,"cancelada_em": string | null,"cancelada_por": string | null,"cidade": string,"contador_crc": string,"contador_nome": string,"criado_em": string,"criado_por": string | null,"data_declaracao": string,"empresa_id": string,"finalidade": string | null,"id": string,"meses": NonNullable<Json>,"motivo_cancelamento": string | null,"observacao": string | null,"periodo_fim": string,"periodo_inicio": string,"representante_cargo": string | null,"representante_cpf": string | null,"representante_nome": string,"situacao": string,"total": number,"uf": string | null
+                  }
+                  Insert: {
+                    "assinada_em"?: string | null,"assinada_path"?: string | null,"assinada_por"?: string | null,"assinatura_digital"?: boolean | null,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"cidade": string,"contador_crc": string,"contador_nome": string,"criado_em"?: string,"criado_por"?: string | null,"data_declaracao": string,"empresa_id": string,"finalidade"?: string | null,"id"?: string,"meses": NonNullable<Json>,"motivo_cancelamento"?: string | null,"observacao"?: string | null,"periodo_fim": string,"periodo_inicio": string,"representante_cargo"?: string | null,"representante_cpf"?: string | null,"representante_nome": string,"situacao"?: string,"total": number,"uf"?: string | null
+                  }
+                  Update: {
+                    "assinada_em"?: string | null,"assinada_path"?: string | null,"assinada_por"?: string | null,"assinatura_digital"?: boolean | null,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"cidade"?: string,"contador_crc"?: string,"contador_nome"?: string,"criado_em"?: string,"criado_por"?: string | null,"data_declaracao"?: string,"empresa_id"?: string,"finalidade"?: string | null,"id"?: string,"meses"?: NonNullable<Json>,"motivo_cancelamento"?: string | null,"observacao"?: string | null,"periodo_fim"?: string,"periodo_inicio"?: string,"representante_cargo"?: string | null,"representante_cpf"?: string | null,"representante_nome"?: string,"situacao"?: string,"total"?: number,"uf"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "declaracoes_faturamento_assinada_por_fkey"
+      columns: ["assinada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "declaracoes_faturamento_cancelada_por_fkey"
+      columns: ["cancelada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "declaracoes_faturamento_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "declaracoes_faturamento_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"documento_acessos": {
+                  Row: {
+                    "documento_id": string,"empresa_id": string,"id": number,"ip": string | null,"ocorrido_em": string,"tipo": string,"user_agent": string | null,"user_id": string | null,"versao": number | null
+                  }
+                  Insert: {
+                    "documento_id": string,"empresa_id": string,"id"?: never,"ip"?: string | null,"ocorrido_em"?: string,"tipo": string,"user_agent"?: string | null,"user_id"?: string | null,"versao"?: number | null
+                  }
+                  Update: {
+                    "documento_id"?: string,"empresa_id"?: string,"id"?: never,"ip"?: string | null,"ocorrido_em"?: string,"tipo"?: string,"user_agent"?: string | null,"user_id"?: string | null,"versao"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documento_acessos_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documento_acessos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documento_acessos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"documento_fiscal_eventos": {
+                  Row: {
+                    "chave_acesso": string,"correcao": string | null,"created_at": string,"cstat": string | null,"data_evento": string | null,"descricao_evento": string | null,"documento_id": string,"empresa_id": string,"id": string,"identificador": string,"justificativa": string | null,"modelo": string | null,"protocolo": string | null,"sequencia": number | null,"tipo_evento": string
+                  }
+                  Insert: {
+                    "chave_acesso": string,"correcao"?: string | null,"created_at"?: string,"cstat"?: string | null,"data_evento"?: string | null,"descricao_evento"?: string | null,"documento_id": string,"empresa_id": string,"id"?: string,"identificador": string,"justificativa"?: string | null,"modelo"?: string | null,"protocolo"?: string | null,"sequencia"?: number | null,"tipo_evento": string
+                  }
+                  Update: {
+                    "chave_acesso"?: string,"correcao"?: string | null,"created_at"?: string,"cstat"?: string | null,"data_evento"?: string | null,"descricao_evento"?: string | null,"documento_id"?: string,"empresa_id"?: string,"id"?: string,"identificador"?: string,"justificativa"?: string | null,"modelo"?: string | null,"protocolo"?: string | null,"sequencia"?: number | null,"tipo_evento"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documento_fiscal_eventos_empresa_id_documento_id_fkey"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "documento_fiscal_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"documento_fiscal_itens": {
+                  Row: {
+                    "cest": string | null,"cfop": string | null,"codigo": string | null,"descricao": string | null,"documento_fiscal_id": string,"empresa_id": string,"ex_tipi": string | null,"gtin": string | null,"id": string,"ncm": string | null,"numero_item": number,"quantidade": number | null,"tributos": NonNullable<Json>,"unidade": string | null,"valor_desconto": number | null,"valor_total": number | null,"valor_unitario": number | null
+                  }
+                  Insert: {
+                    "cest"?: string | null,"cfop"?: string | null,"codigo"?: string | null,"descricao"?: string | null,"documento_fiscal_id": string,"empresa_id": string,"ex_tipi"?: string | null,"gtin"?: string | null,"id"?: string,"ncm"?: string | null,"numero_item": number,"quantidade"?: number | null,"tributos"?: NonNullable<Json>,"unidade"?: string | null,"valor_desconto"?: number | null,"valor_total"?: number | null,"valor_unitario"?: number | null
+                  }
+                  Update: {
+                    "cest"?: string | null,"cfop"?: string | null,"codigo"?: string | null,"descricao"?: string | null,"documento_fiscal_id"?: string,"empresa_id"?: string,"ex_tipi"?: string | null,"gtin"?: string | null,"id"?: string,"ncm"?: string | null,"numero_item"?: number,"quantidade"?: number | null,"tributos"?: NonNullable<Json>,"unidade"?: string | null,"valor_desconto"?: number | null,"valor_total"?: number | null,"valor_unitario"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documento_fiscal_itens_empresa_id_documento_fiscal_id_fkey"
+      columns: ["empresa_id","documento_fiscal_id"]
+isOneToOne: false
+      referencedRelation: "documentos_fiscais"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"documento_historico": {
+                  Row: {
+                    "acao": string,"alterado_em": string,"alterado_por": string | null,"detalhes": Json | null,"documento_id": string,"empresa_id": string,"id": number,"motivo": string | null,"status_anterior": string | null,"status_novo": string | null
+                  }
+                  Insert: {
+                    "acao": string,"alterado_em"?: string,"alterado_por"?: string | null,"detalhes"?: Json | null,"documento_id": string,"empresa_id": string,"id"?: never,"motivo"?: string | null,"status_anterior"?: string | null,"status_novo"?: string | null
+                  }
+                  Update: {
+                    "acao"?: string,"alterado_em"?: string,"alterado_por"?: string | null,"detalhes"?: Json | null,"documento_id"?: string,"empresa_id"?: string,"id"?: never,"motivo"?: string | null,"status_anterior"?: string | null,"status_novo"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documento_historico_alterado_por_fkey"
+      columns: ["alterado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documento_historico_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documento_historico_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"documento_versoes": {
+                  Row: {
+                    "criado_em": string,"documento_id": string,"empresa_id": string,"enviado_por": string | null,"id": string,"mime": string | null,"motivo": string | null,"nome_original": string,"sha256": string | null,"storage_path": string,"tamanho": number | null,"upload_concluido_em": string | null,"verificacao_detalhes": string | null,"verificacao_status": string,"versao": number
+                  }
+                  Insert: {
+                    "criado_em"?: string,"documento_id": string,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"mime"?: string | null,"motivo"?: string | null,"nome_original": string,"sha256"?: string | null,"storage_path": string,"tamanho"?: number | null,"upload_concluido_em"?: string | null,"verificacao_detalhes"?: string | null,"verificacao_status"?: string,"versao": number
+                  }
+                  Update: {
+                    "criado_em"?: string,"documento_id"?: string,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"mime"?: string | null,"motivo"?: string | null,"nome_original"?: string,"sha256"?: string | null,"storage_path"?: string,"tamanho"?: number | null,"upload_concluido_em"?: string | null,"verificacao_detalhes"?: string | null,"verificacao_status"?: string,"versao"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documento_versoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documento_versoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documento_versoes_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"documentos": {
+                  Row: {
+                    "apos_fechamento_avaliado_em": string | null,"apos_fechamento_avaliado_por": string | null,"apos_fechamento_parecer": string | null,"categoria_codigo": string,"checklist_item_id": string | null,"competencia": string,"created_at": string,"direcao": string,"duplicado_de": string | null,"empresa_id": string,"enviado_em": string | null,"enviado_por": string | null,"excluido_em": string | null,"excluido_por": string | null,"expurgado_em": string | null,"expurgado_por": string | null,"expurgo_motivo": string | null,"extensao": string | null,"extracao": Json | null,"id": string,"mime": string | null,"motivo_exclusao": string | null,"nome_original": string,"observacao": string | null,"origem": string,"processamento_detalhes": Json | null,"processamento_status": string,"publicado_em": string | null,"recebido_apos_fechamento": boolean,"requer_conferencia": boolean,"sha256": string | null,"status": string | null,"status_alterado_em": string | null,"status_alterado_por": string | null,"status_motivo": string | null,"storage_path": string | null,"sugestao": Json | null,"tamanho": number | null,"titulo": string | null,"updated_at": string,"upload_status": string,"valor": number | null,"vencimento": string | null,"verificacao_detalhes": string | null,"verificacao_status": string,"versao_atual": number,"zip_caminho": string | null,"zip_origem_id": string | null,"busca": string | null
+                  }
+                  Insert: {
+                    "apos_fechamento_avaliado_em"?: string | null,"apos_fechamento_avaliado_por"?: string | null,"apos_fechamento_parecer"?: string | null,"categoria_codigo": string,"checklist_item_id"?: string | null,"competencia": string,"created_at"?: string,"direcao"?: string,"duplicado_de"?: string | null,"empresa_id": string,"enviado_em"?: string | null,"enviado_por"?: string | null,"excluido_em"?: string | null,"excluido_por"?: string | null,"expurgado_em"?: string | null,"expurgado_por"?: string | null,"expurgo_motivo"?: string | null,"extensao"?: string | null,"extracao"?: Json | null,"id"?: string,"mime"?: string | null,"motivo_exclusao"?: string | null,"nome_original": string,"observacao"?: string | null,"origem"?: string,"processamento_detalhes"?: Json | null,"processamento_status"?: string,"publicado_em"?: string | null,"recebido_apos_fechamento"?: boolean,"requer_conferencia"?: boolean,"sha256"?: string | null,"status"?: string | null,"status_alterado_em"?: string | null,"status_alterado_por"?: string | null,"status_motivo"?: string | null,"storage_path"?: string | null,"sugestao"?: Json | null,"tamanho"?: number | null,"titulo"?: string | null,"updated_at"?: string,"upload_status"?: string,"valor"?: number | null,"vencimento"?: string | null,"verificacao_detalhes"?: string | null,"verificacao_status"?: string,"versao_atual"?: number,"zip_caminho"?: string | null,"zip_origem_id"?: string | null
+                  }
+                  Update: {
+                    "apos_fechamento_avaliado_em"?: string | null,"apos_fechamento_avaliado_por"?: string | null,"apos_fechamento_parecer"?: string | null,"categoria_codigo"?: string,"checklist_item_id"?: string | null,"competencia"?: string,"created_at"?: string,"direcao"?: string,"duplicado_de"?: string | null,"empresa_id"?: string,"enviado_em"?: string | null,"enviado_por"?: string | null,"excluido_em"?: string | null,"excluido_por"?: string | null,"expurgado_em"?: string | null,"expurgado_por"?: string | null,"expurgo_motivo"?: string | null,"extensao"?: string | null,"extracao"?: Json | null,"id"?: string,"mime"?: string | null,"motivo_exclusao"?: string | null,"nome_original"?: string,"observacao"?: string | null,"origem"?: string,"processamento_detalhes"?: Json | null,"processamento_status"?: string,"publicado_em"?: string | null,"recebido_apos_fechamento"?: boolean,"requer_conferencia"?: boolean,"sha256"?: string | null,"status"?: string | null,"status_alterado_em"?: string | null,"status_alterado_por"?: string | null,"status_motivo"?: string | null,"storage_path"?: string | null,"sugestao"?: Json | null,"tamanho"?: number | null,"titulo"?: string | null,"updated_at"?: string,"upload_status"?: string,"valor"?: number | null,"vencimento"?: string | null,"verificacao_detalhes"?: string | null,"verificacao_status"?: string,"versao_atual"?: number,"zip_caminho"?: string | null,"zip_origem_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documentos_apos_fechamento_avaliado_por_fkey"
+      columns: ["apos_fechamento_avaliado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documentos_categoria_codigo_fkey"
+      columns: ["categoria_codigo"]
+isOneToOne: false
+      referencedRelation: "categorias_documento"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "documentos_checklist_item_fk"
+      columns: ["checklist_item_id"]
+isOneToOne: false
+      referencedRelation: "checklist_itens"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documentos_duplicado_de_fkey"
+      columns: ["duplicado_de"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documentos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documentos_excluido_por_fkey"
+      columns: ["excluido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documentos_expurgado_por_fkey"
+      columns: ["expurgado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documentos_status_alterado_por_fkey"
+      columns: ["status_alterado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documentos_zip_origem_id_fkey"
+      columns: ["zip_origem_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"documentos_fiscais": {
+                  Row: {
+                    "avisos": NonNullable<Json>,"cancelada_evento": boolean,"cfops": (string)[],"chave_acesso": string | null,"competencia": string,"complemento": Json | null,"consumidor_final": boolean | null,"created_at": string,"crt_emitente": string | null,"data_emissao": string | null,"destinatario_documento": string | null,"destinatario_nome": string | null,"destinatario_uf": string | null,"documento_id": string,"duplicatas": NonNullable<Json>,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"emitente_uf": string | null,"empresa_id": string,"finalidade": string | null,"id": string,"id_destino": string | null,"identificador": string,"ind_ie_dest": string | null,"leitura_versao": number,"modelo": string,"natureza_operacao": string | null,"numero": string | null,"operacao": string,"pagamentos": NonNullable<Json>,"protocolo": Json | null,"relacionado_empresa": boolean,"serie": string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf": string | null,"tributos": NonNullable<Json>,"updated_at": string,"valor_desconto": number | null,"valor_frete": number | null,"valor_outros": number | null,"valor_produtos": number | null,"valor_servicos": number | null,"valor_total": number | null,"busca": string | null
+                  }
+                  Insert: {
+                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia": string,"complemento"?: Json | null,"consumidor_final"?: boolean | null,"created_at"?: string,"crt_emitente"?: string | null,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id": string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id": string,"finalidade"?: string | null,"id"?: string,"id_destino"?: string | null,"identificador": string,"ind_ie_dest"?: string | null,"leitura_versao"?: number,"modelo": string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao": string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo": string,"tipo_documento": string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
+                  }
+                  Update: {
+                    "avisos"?: NonNullable<Json>,"cancelada_evento"?: boolean,"cfops"?: (string)[],"chave_acesso"?: string | null,"competencia"?: string,"complemento"?: Json | null,"consumidor_final"?: boolean | null,"created_at"?: string,"crt_emitente"?: string | null,"data_emissao"?: string | null,"destinatario_documento"?: string | null,"destinatario_nome"?: string | null,"destinatario_uf"?: string | null,"documento_id"?: string,"duplicatas"?: NonNullable<Json>,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"emitente_uf"?: string | null,"empresa_id"?: string,"finalidade"?: string | null,"id"?: string,"id_destino"?: string | null,"identificador"?: string,"ind_ie_dest"?: string | null,"leitura_versao"?: number,"modelo"?: string,"natureza_operacao"?: string | null,"numero"?: string | null,"operacao"?: string,"pagamentos"?: NonNullable<Json>,"protocolo"?: Json | null,"relacionado_empresa"?: boolean,"serie"?: string | null,"situacao_arquivo"?: string,"tipo_documento"?: string,"tp_nf"?: string | null,"tributos"?: NonNullable<Json>,"updated_at"?: string,"valor_desconto"?: number | null,"valor_frete"?: number | null,"valor_outros"?: number | null,"valor_produtos"?: number | null,"valor_servicos"?: number | null,"valor_total"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documentos_fiscais_empresa_id_documento_id_fkey"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "documentos_fiscais_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dre_ajustes": {
+                  Row: {
+                    "categoria_id": string,"competencia": string,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"motivo": string,"valor": number
+                  }
+                  Insert: {
+                    "categoria_id": string,"competencia": string,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"motivo": string,"valor": number
+                  }
+                  Update: {
+                    "categoria_id"?: string,"competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"motivo"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dre_ajustes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dre_ajustes_empresa_id_categoria_id_fkey"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "categorias_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "dre_ajustes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dre_modelo_linhas": {
+                  Row: {
+                    "chave_padrao": string | null,"created_at": string,"destaque": boolean,"empresa_id": string,"id": string,"mostrar_contas": boolean,"oculta": boolean,"ordem": number,"rotulo": string,"tipo": string,"tipos": (string)[],"updated_at": string
+                  }
+                  Insert: {
+                    "chave_padrao"?: string | null,"created_at"?: string,"destaque"?: boolean,"empresa_id": string,"id"?: string,"mostrar_contas"?: boolean,"oculta"?: boolean,"ordem": number,"rotulo": string,"tipo": string,"tipos"?: (string)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "chave_padrao"?: string | null,"created_at"?: string,"destaque"?: boolean,"empresa_id"?: string,"id"?: string,"mostrar_contas"?: boolean,"oculta"?: boolean,"ordem"?: number,"rotulo"?: string,"tipo"?: string,"tipos"?: (string)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dre_modelo_linhas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"efd_configuracoes": {
+                  Row: {
+                    "atualizado_por": string | null,"codigo_receita": string | null,"credito_presumido_codigo": string | null,"credito_presumido_cte": number | null,"empresa_id": string,"perfil": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"credito_presumido_codigo"?: string | null,"credito_presumido_cte"?: number | null,"empresa_id": string,"perfil"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"credito_presumido_codigo"?: string | null,"credito_presumido_cte"?: number | null,"empresa_id"?: string,"perfil"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "efd_configuracoes_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "efd_configuracoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"efd_geracoes": {
+                  Row: {
+                    "avisos": NonNullable<Json>,"competencia": string,"created_at": string,"empresa_id": string,"finalidade": number,"gerado_por": string | null,"id": string,"linhas": number,"nome_arquivo": string,"resumo": NonNullable<Json>,"sha256": string,"storage_path": string,"tamanho": number
+                  }
+                  Insert: {
+                    "avisos"?: NonNullable<Json>,"competencia": string,"created_at"?: string,"empresa_id": string,"finalidade"?: number,"gerado_por"?: string | null,"id"?: string,"linhas": number,"nome_arquivo": string,"resumo"?: NonNullable<Json>,"sha256": string,"storage_path": string,"tamanho": number
+                  }
+                  Update: {
+                    "avisos"?: NonNullable<Json>,"competencia"?: string,"created_at"?: string,"empresa_id"?: string,"finalidade"?: number,"gerado_por"?: string | null,"id"?: string,"linhas"?: number,"nome_arquivo"?: string,"resumo"?: NonNullable<Json>,"sha256"?: string,"storage_path"?: string,"tamanho"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "efd_geracoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "efd_geracoes_gerado_por_fkey"
+      columns: ["gerado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"empresa_contatos": {
+                  Row: {
+                    "created_at": string,"email": string | null,"empresa_id": string,"funcao": string,"id": string,"nome": string,"observacoes": string | null,"principal": boolean,"recebe_lembretes": boolean,"telefone": string | null,"updated_at": string,"whatsapp": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"email"?: string | null,"empresa_id": string,"funcao"?: string,"id"?: string,"nome": string,"observacoes"?: string | null,"principal"?: boolean,"recebe_lembretes"?: boolean,"telefone"?: string | null,"updated_at"?: string,"whatsapp"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"email"?: string | null,"empresa_id"?: string,"funcao"?: string,"id"?: string,"nome"?: string,"observacoes"?: string | null,"principal"?: boolean,"recebe_lembretes"?: boolean,"telefone"?: string | null,"updated_at"?: string,"whatsapp"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "empresa_contatos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"empresa_membros": {
+                  Row: {
+                    "ativo": boolean,"convidado_em": string,"convidado_por": string | null,"created_at": string,"empresa_id": string,"id": string,"motivo_revogacao": string | null,"papel": string,"permissoes": (string)[],"revogado_em": string | null,"revogado_por": string | null,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"convidado_em"?: string,"convidado_por"?: string | null,"created_at"?: string,"empresa_id": string,"id"?: string,"motivo_revogacao"?: string | null,"papel": string,"permissoes"?: (string)[],"revogado_em"?: string | null,"revogado_por"?: string | null,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"convidado_em"?: string,"convidado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"id"?: string,"motivo_revogacao"?: string | null,"papel"?: string,"permissoes"?: (string)[],"revogado_em"?: string | null,"revogado_por"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "empresa_membros_convidado_por_fkey"
+      columns: ["convidado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_membros_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_membros_revogado_por_fkey"
+      columns: ["revogado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_membros_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"empresa_obrigacoes": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"modo": string,"motivo": string | null,"obrigacao_id": string,"prazo_interno_dias_uteis": number | null,"responsavel_id": string | null,"revisor_id": string | null,"updated_at": string,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"modo"?: string,"motivo"?: string | null,"obrigacao_id": string,"prazo_interno_dias_uteis"?: number | null,"responsavel_id"?: string | null,"revisor_id"?: string | null,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"modo"?: string,"motivo"?: string | null,"obrigacao_id"?: string,"prazo_interno_dias_uteis"?: number | null,"responsavel_id"?: string | null,"revisor_id"?: string | null,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "empresa_obrigacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_obrigacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_obrigacoes_obrigacao_id_fkey"
+      columns: ["obrigacao_id"]
+isOneToOne: false
+      referencedRelation: "obrigacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_obrigacoes_responsavel_id_fkey"
+      columns: ["responsavel_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_obrigacoes_revisor_id_fkey"
+      columns: ["revisor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"empresa_regimes": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"empresa_id": string,"fim": string | null,"id": string,"inicio": string,"lucro_real_apuracao": string | null,"observacao": string | null,"regime": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"fim"?: string | null,"id"?: string,"inicio": string,"lucro_real_apuracao"?: string | null,"observacao"?: string | null,"regime": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"fim"?: string | null,"id"?: string,"inicio"?: string,"lucro_real_apuracao"?: string | null,"observacao"?: string | null,"regime"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "empresa_regimes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresa_regimes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"empresas": {
+                  Row: {
+                    "ativa": boolean,"atividade_principal": string | null,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnae": string | null,"complemento": string | null,"contador_responsavel_id": string | null,"contribuinte_icms": boolean,"contribuinte_iss": boolean,"controla_estoque": boolean,"created_at": string,"criado_por": string | null,"dados_receita": Json | null,"dados_receita_em": string | null,"data_inicio_atendimento": string | null,"demonstracao": boolean,"documento": string,"email": string | null,"ferramentas_alteradas_em": string | null,"ferramentas_desligadas": (string)[],"id": string,"inscricao_estadual": string | null,"inscricao_municipal": string | null,"logo_atualizado_em": string | null,"logo_path": string | null,"logradouro": string | null,"municipio_ibge": string | null,"nome_fantasia": string | null,"numero": string | null,"observacoes": string | null,"razao_social": string,"regime_tributario": string,"servicos": (string)[],"sugerir_lancamentos_xml": boolean,"telefone": string | null,"tem_empregados": boolean,"tem_pro_labore": boolean,"tipo_pessoa": string,"uf": string | null,"updated_at": string,"busca": string | null
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"contribuinte_icms"?: boolean,"contribuinte_iss"?: boolean,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"dados_receita"?: Json | null,"dados_receita_em"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento": string,"email"?: string | null,"ferramentas_alteradas_em"?: string | null,"ferramentas_desligadas"?: (string)[],"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social": string,"regime_tributario": string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tem_empregados"?: boolean,"tem_pro_labore"?: boolean,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"atividade_principal"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnae"?: string | null,"complemento"?: string | null,"contador_responsavel_id"?: string | null,"contribuinte_icms"?: boolean,"contribuinte_iss"?: boolean,"controla_estoque"?: boolean,"created_at"?: string,"criado_por"?: string | null,"dados_receita"?: Json | null,"dados_receita_em"?: string | null,"data_inicio_atendimento"?: string | null,"demonstracao"?: boolean,"documento"?: string,"email"?: string | null,"ferramentas_alteradas_em"?: string | null,"ferramentas_desligadas"?: (string)[],"id"?: string,"inscricao_estadual"?: string | null,"inscricao_municipal"?: string | null,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"municipio_ibge"?: string | null,"nome_fantasia"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"razao_social"?: string,"regime_tributario"?: string,"servicos"?: (string)[],"sugerir_lancamentos_xml"?: boolean,"telefone"?: string | null,"tem_empregados"?: boolean,"tem_pro_labore"?: boolean,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "empresas_contador_responsavel_id_fkey"
+      columns: ["contador_responsavel_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "empresas_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    }
+                  ]
+                },"envios": {
+                  Row: {
+                    "assunto": string | null,"canal": string,"conteudo": string | null,"created_at": string,"destinatario": string,"empresa_id": string | null,"enviado_em": string | null,"erro": string | null,"id": string,"provedor_id": string | null,"referencia_id": string | null,"referencia_tipo": string | null,"solicitado_por": string | null,"status": string,"tentativas": number,"tipo": string,"user_id": string | null
+                  }
+                  Insert: {
+                    "assunto"?: string | null,"canal": string,"conteudo"?: string | null,"created_at"?: string,"destinatario": string,"empresa_id"?: string | null,"enviado_em"?: string | null,"erro"?: string | null,"id"?: string,"provedor_id"?: string | null,"referencia_id"?: string | null,"referencia_tipo"?: string | null,"solicitado_por"?: string | null,"status"?: string,"tentativas"?: number,"tipo"?: string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "assunto"?: string | null,"canal"?: string,"conteudo"?: string | null,"created_at"?: string,"destinatario"?: string,"empresa_id"?: string | null,"enviado_em"?: string | null,"erro"?: string | null,"id"?: string,"provedor_id"?: string | null,"referencia_id"?: string | null,"referencia_tipo"?: string | null,"solicitado_por"?: string | null,"status"?: string,"tentativas"?: number,"tipo"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "envios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "envios_solicitado_por_fkey"
+      columns: ["solicitado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "envios_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escala_funcionarios": {
+                  Row: {
+                    "ativo": boolean,"cargo": string | null,"cargo_id": string | null,"created_at": string,"criado_por": string | null,"domingo_quinzenal": boolean,"empresa_id": string,"id": string,"jornada_semanal": number,"menor_idade": boolean,"nao_trabalha": (number)[],"nome": string,"preferencias": string | null,"setor": string | null,"updated_at": string,"usuario_id": string | null
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cargo"?: string | null,"cargo_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"domingo_quinzenal"?: boolean,"empresa_id": string,"id"?: string,"jornada_semanal"?: number,"menor_idade"?: boolean,"nao_trabalha"?: (number)[],"nome": string,"preferencias"?: string | null,"setor"?: string | null,"updated_at"?: string,"usuario_id"?: string | null
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cargo"?: string | null,"cargo_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"domingo_quinzenal"?: boolean,"empresa_id"?: string,"id"?: string,"jornada_semanal"?: number,"menor_idade"?: boolean,"nao_trabalha"?: (number)[],"nome"?: string,"preferencias"?: string | null,"setor"?: string | null,"updated_at"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escala_funcionarios_cargo_fk"
+      columns: ["empresa_id","cargo_id"]
+isOneToOne: false
+      referencedRelation: "rh_cargos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "escala_funcionarios_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escala_funcionarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escala_funcionarios_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escala_ia_usos": {
+                  Row: {
+                    "concluido_em": string | null,"created_at": string,"empresa_id": string,"erro": string | null,"id": number,"modelo": string,"situacao": string,"tipo": string,"tokens_entrada": number | null,"tokens_saida": number | null,"user_id": string | null
+                  }
+                  Insert: {
+                    "concluido_em"?: string | null,"created_at"?: string,"empresa_id": string,"erro"?: string | null,"id"?: never,"modelo": string,"situacao"?: string,"tipo": string,"tokens_entrada"?: number | null,"tokens_saida"?: number | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "concluido_em"?: string | null,"created_at"?: string,"empresa_id"?: string,"erro"?: string | null,"id"?: never,"modelo"?: string,"situacao"?: string,"tipo"?: string,"tokens_entrada"?: number | null,"tokens_saida"?: number | null,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escala_ia_usos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escala_ia_usos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escalas": {
+                  Row: {
+                    "competencia": string,"config": NonNullable<Json>,"created_at": string,"criado_por": string | null,"empresa_id": string,"grade": NonNullable<Json>,"ia_resumo": string | null,"id": string,"nome": string,"publicada_em": string | null,"publicada_por": string | null,"status": string,"updated_at": string
+                  }
+                  Insert: {
+                    "competencia": string,"config"?: NonNullable<Json>,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"grade"?: NonNullable<Json>,"ia_resumo"?: string | null,"id"?: string,"nome": string,"publicada_em"?: string | null,"publicada_por"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "competencia"?: string,"config"?: NonNullable<Json>,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"grade"?: NonNullable<Json>,"ia_resumo"?: string | null,"id"?: string,"nome"?: string,"publicada_em"?: string | null,"publicada_por"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escalas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escalas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escalas_publicada_por_fkey"
+      columns: ["publicada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio": {
+                  Row: {
+                    "avisos_whatsapp_ativo": boolean,"bairro": string | null,"cep": string | null,"cidade": string | null,"cnpj": string,"complemento": string | null,"contador_crc": string | null,"contador_nome": string | null,"descricao_sistema": string,"email": string | null,"exigir_2fa_clientes": boolean,"exigir_2fa_equipe": boolean,"id": number,"instagram": string | null,"lembretes_dias": (number)[],"lembretes_email_ativo": boolean,"lembretes_whatsapp_ativo": boolean,"logo_atualizado_em": string | null,"logo_path": string | null,"logradouro": string | null,"mensagem_login": string,"nome_fantasia": string,"nome_sistema": string,"numero": string | null,"razao_social": string,"retencao_padrao_anos": number,"site": string | null,"telefone": string | null,"uf": string | null,"updated_at": string,"updated_by": string | null,"upload_tamanho_maximo_mb": number,"whatsapp": string | null,"whatsapp_phone_number_id": string | null,"whatsapp_template_aviso": string | null,"whatsapp_template_idioma": string,"whatsapp_template_lembrete": string | null,"zip_max_arquivos": number,"zip_max_tamanho_mb": number
+                  }
+                  Insert: {
+                    "avisos_whatsapp_ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnpj": string,"complemento"?: string | null,"contador_crc"?: string | null,"contador_nome"?: string | null,"descricao_sistema"?: string,"email"?: string | null,"exigir_2fa_clientes"?: boolean,"exigir_2fa_equipe"?: boolean,"id"?: number,"instagram"?: string | null,"lembretes_dias"?: (number)[],"lembretes_email_ativo"?: boolean,"lembretes_whatsapp_ativo"?: boolean,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"mensagem_login"?: string,"nome_fantasia": string,"nome_sistema"?: string,"numero"?: string | null,"razao_social": string,"retencao_padrao_anos"?: number,"site"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"upload_tamanho_maximo_mb"?: number,"whatsapp"?: string | null,"whatsapp_phone_number_id"?: string | null,"whatsapp_template_aviso"?: string | null,"whatsapp_template_idioma"?: string,"whatsapp_template_lembrete"?: string | null,"zip_max_arquivos"?: number,"zip_max_tamanho_mb"?: number
+                  }
+                  Update: {
+                    "avisos_whatsapp_ativo"?: boolean,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"cnpj"?: string,"complemento"?: string | null,"contador_crc"?: string | null,"contador_nome"?: string | null,"descricao_sistema"?: string,"email"?: string | null,"exigir_2fa_clientes"?: boolean,"exigir_2fa_equipe"?: boolean,"id"?: number,"instagram"?: string | null,"lembretes_dias"?: (number)[],"lembretes_email_ativo"?: boolean,"lembretes_whatsapp_ativo"?: boolean,"logo_atualizado_em"?: string | null,"logo_path"?: string | null,"logradouro"?: string | null,"mensagem_login"?: string,"nome_fantasia"?: string,"nome_sistema"?: string,"numero"?: string | null,"razao_social"?: string,"retencao_padrao_anos"?: number,"site"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"upload_tamanho_maximo_mb"?: number,"whatsapp"?: string | null,"whatsapp_phone_number_id"?: string | null,"whatsapp_template_aviso"?: string | null,"whatsapp_template_idioma"?: string,"whatsapp_template_lembrete"?: string | null,"zip_max_arquivos"?: number,"zip_max_tamanho_mb"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"escritorio_categorias": {
+                  Row: {
+                    "ativa": boolean,"chave": string | null,"codigo": string,"created_at": string,"id": string,"nome": string,"sistema": boolean,"tipo": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"chave"?: string | null,"codigo": string,"created_at"?: string,"id"?: string,"nome": string,"sistema"?: boolean,"tipo": string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"chave"?: string | null,"codigo"?: string,"created_at"?: string,"id"?: string,"nome"?: string,"sistema"?: boolean,"tipo"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"escritorio_certificado": {
+                  Row: {
+                    "cadastrado_em": string,"cadastrado_por": string | null,"documento": string,"emissor": string | null,"id": number,"impressao_digital": string,"numero_serie": string | null,"titular": string,"valido_ate": string,"valido_de": string
+                  }
+                  Insert: {
+                    "cadastrado_em"?: string,"cadastrado_por"?: string | null,"documento": string,"emissor"?: string | null,"id"?: number,"impressao_digital": string,"numero_serie"?: string | null,"titular": string,"valido_ate": string,"valido_de": string
+                  }
+                  Update: {
+                    "cadastrado_em"?: string,"cadastrado_por"?: string | null,"documento"?: string,"emissor"?: string | null,"id"?: number,"impressao_digital"?: string,"numero_serie"?: string | null,"titular"?: string,"valido_ate"?: string,"valido_de"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_certificado_cadastrado_por_fkey"
+      columns: ["cadastrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio_certificado_segredo": {
+                  Row: {
+                    "conteudo_cifrado": string,"created_at": string,"id": number
+                  }
+                  Insert: {
+                    "conteudo_cifrado": string,"created_at"?: string,"id"?: number
+                  }
+                  Update: {
+                    "conteudo_cifrado"?: string,"created_at"?: string,"id"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_certificado_segredo_id_fkey"
+      columns: ["id"]
+isOneToOne: true
+      referencedRelation: "escritorio_certificado"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio_contador": {
+                  Row: {
+                    "cpf": string | null,"email": string | null,"id": number,"telefone": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  Insert: {
+                    "cpf"?: string | null,"email"?: string | null,"id"?: number,"telefone"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "cpf"?: string | null,"email"?: string | null,"id"?: number,"telefone"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_contador_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio_ia": {
+                  Row: {
+                    "ativa": boolean,"atualizado_por": string | null,"chave_final": string | null,"id": number,"limite_diario": number,"modelo": string,"suporte_ativo": boolean,"suporte_limite_usuario": number,"testada_em": string | null,"teste_erro": string | null,"teste_ok": boolean | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"atualizado_por"?: string | null,"chave_final"?: string | null,"id"?: number,"limite_diario"?: number,"modelo"?: string,"suporte_ativo"?: boolean,"suporte_limite_usuario"?: number,"testada_em"?: string | null,"teste_erro"?: string | null,"teste_ok"?: boolean | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"atualizado_por"?: string | null,"chave_final"?: string | null,"id"?: number,"limite_diario"?: number,"modelo"?: string,"suporte_ativo"?: boolean,"suporte_limite_usuario"?: number,"testada_em"?: string | null,"teste_erro"?: string | null,"teste_ok"?: boolean | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_ia_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio_ia_segredo": {
+                  Row: {
+                    "chave_cifrada": string,"created_at": string,"id": number
+                  }
+                  Insert: {
+                    "chave_cifrada": string,"created_at"?: string,"id"?: number
+                  }
+                  Update: {
+                    "chave_cifrada"?: string,"created_at"?: string,"id"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_ia_segredo_id_fkey"
+      columns: ["id"]
+isOneToOne: true
+      referencedRelation: "escritorio_ia"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"escritorio_lancamentos": {
+                  Row: {
+                    "categoria_id": string | null,"cobranca_id": string | null,"competencia": string,"created_at": string,"criado_por": string | null,"data": string,"descricao": string,"empresa_id": string | null,"forma_pagamento": string | null,"id": string,"natureza": string,"observacao": string | null,"origem": string,"updated_at": string,"valor": number
+                  }
+                  Insert: {
+                    "categoria_id"?: string | null,"cobranca_id"?: string | null,"competencia": string,"created_at"?: string,"criado_por"?: string | null,"data": string,"descricao": string,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"natureza": string,"observacao"?: string | null,"origem"?: string,"updated_at"?: string,"valor": number
+                  }
+                  Update: {
+                    "categoria_id"?: string | null,"cobranca_id"?: string | null,"competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"data"?: string,"descricao"?: string,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"natureza"?: string,"observacao"?: string | null,"origem"?: string,"updated_at"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "escritorio_lancamentos_categoria_id_fkey"
+      columns: ["categoria_id"]
+isOneToOne: false
+      referencedRelation: "escritorio_categorias"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escritorio_lancamentos_cobranca_id_fkey"
+      columns: ["cobranca_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_cobrancas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escritorio_lancamentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "escritorio_lancamentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"estoque_conferencias": {
+                  Row: {
+                    "conferido_em": string,"conferido_por": string,"empresa_id": string,"id": string,"observacao": string | null,"tarefa_id": string | null
+                  }
+                  Insert: {
+                    "conferido_em"?: string,"conferido_por"?: string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"tarefa_id"?: string | null
+                  }
+                  Update: {
+                    "conferido_em"?: string,"conferido_por"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"tarefa_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estoque_conferencias_conferido_por_fkey"
+      columns: ["conferido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_conferencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_conferencias_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"estoque_movimentos": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"custo_medio_apos": number,"custo_unitario": number | null,"documento_fiscal_id": string | null,"empresa_id": string,"id": string,"observacao": string | null,"produto_id": string,"quantidade": number,"saldo_apos": number,"tipo": string,"venda_id": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"custo_medio_apos": number,"custo_unitario"?: number | null,"documento_fiscal_id"?: string | null,"empresa_id": string,"id"?: string,"observacao"?: string | null,"produto_id": string,"quantidade": number,"saldo_apos": number,"tipo": string,"venda_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"custo_medio_apos"?: number,"custo_unitario"?: number | null,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"produto_id"?: string,"quantidade"?: number,"saldo_apos"?: number,"tipo"?: string,"venda_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estoque_movimentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_movimentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_movimentos_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"estoque_notas_pdf": {
+                  Row: {
+                    "chave": string,"created_at": string,"criado_por": string | null,"data_emissao": string | null,"emitente_documento": string,"emitente_nome": string | null,"empresa_id": string,"id": string,"itens": NonNullable<Json>,"numero": string | null,"serie": string | null,"valor_total": number | null
+                  }
+                  Insert: {
+                    "chave": string,"created_at"?: string,"criado_por"?: string | null,"data_emissao"?: string | null,"emitente_documento": string,"emitente_nome"?: string | null,"empresa_id": string,"id"?: string,"itens"?: NonNullable<Json>,"numero"?: string | null,"serie"?: string | null,"valor_total"?: number | null
+                  }
+                  Update: {
+                    "chave"?: string,"created_at"?: string,"criado_por"?: string | null,"data_emissao"?: string | null,"emitente_documento"?: string,"emitente_nome"?: string | null,"empresa_id"?: string,"id"?: string,"itens"?: NonNullable<Json>,"numero"?: string | null,"serie"?: string | null,"valor_total"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estoque_notas_pdf_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_notas_pdf_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"estoque_vinculos": {
+                  Row: {
+                    "atualizado_por": string | null,"codigo_fornecedor": string,"created_at": string,"descricao_fornecedor": string | null,"empresa_id": string,"fator": number,"fornecedor_documento": string,"id": string,"produto_id": string,"unidade_fornecedor": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"codigo_fornecedor": string,"created_at"?: string,"descricao_fornecedor"?: string | null,"empresa_id": string,"fator"?: number,"fornecedor_documento": string,"id"?: string,"produto_id": string,"unidade_fornecedor"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"codigo_fornecedor"?: string,"created_at"?: string,"descricao_fornecedor"?: string | null,"empresa_id"?: string,"fator"?: number,"fornecedor_documento"?: string,"id"?: string,"produto_id"?: string,"unidade_fornecedor"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estoque_vinculos_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_vinculos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoque_vinculos_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"estoques": {
+                  Row: {
+                    "competencia": string,"created_at": string,"documento_id": string | null,"empresa_id": string,"fonte": string | null,"id": string,"informado_por": string | null,"observacao": string | null,"valor_estoque_final": number
+                  }
+                  Insert: {
+                    "competencia": string,"created_at"?: string,"documento_id"?: string | null,"empresa_id": string,"fonte"?: string | null,"id"?: string,"informado_por"?: string | null,"observacao"?: string | null,"valor_estoque_final": number
+                  }
+                  Update: {
+                    "competencia"?: string,"created_at"?: string,"documento_id"?: string | null,"empresa_id"?: string,"fonte"?: string | null,"id"?: string,"informado_por"?: string | null,"observacao"?: string | null,"valor_estoque_final"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estoques_empresa_id_documento_id_fkey"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "estoques_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estoques_informado_por_fkey"
+      columns: ["informado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"estudo_execucoes": {
+                  Row: {
+                    "concluido_em": string | null,"empresa_id": string,"erro": string | null,"id": number,"iniciado_em": string,"origem": string,"pedido_por": string | null,"resumo": Json | null,"situacao": string
+                  }
+                  Insert: {
+                    "concluido_em"?: string | null,"empresa_id": string,"erro"?: string | null,"id"?: never,"iniciado_em"?: string,"origem": string,"pedido_por"?: string | null,"resumo"?: Json | null,"situacao"?: string
+                  }
+                  Update: {
+                    "concluido_em"?: string | null,"empresa_id"?: string,"erro"?: string | null,"id"?: never,"iniciado_em"?: string,"origem"?: string,"pedido_por"?: string | null,"resumo"?: Json | null,"situacao"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estudo_execucoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estudo_execucoes_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"estudo_oportunidades": {
+                  Row: {
+                    "apresentado_em": string | null,"atualizado_em": string,"detalhes": NonNullable<Json>,"detectado_em": string,"economia_anual": number | null,"empresa_id": string,"estado": string,"faltando": (string)[],"id": string,"motivo": string | null,"resumo": string,"revisado_em": string | null,"revisado_por": string | null,"situacao": string,"tipo": string,"titulo": string,"valor_na_revisao": number | null,"valor_unico": number | null
+                  }
+                  Insert: {
+                    "apresentado_em"?: string | null,"atualizado_em"?: string,"detalhes"?: NonNullable<Json>,"detectado_em"?: string,"economia_anual"?: number | null,"empresa_id": string,"estado": string,"faltando"?: (string)[],"id"?: string,"motivo"?: string | null,"resumo": string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"tipo": string,"titulo": string,"valor_na_revisao"?: number | null,"valor_unico"?: number | null
+                  }
+                  Update: {
+                    "apresentado_em"?: string | null,"atualizado_em"?: string,"detalhes"?: NonNullable<Json>,"detectado_em"?: string,"economia_anual"?: number | null,"empresa_id"?: string,"estado"?: string,"faltando"?: (string)[],"id"?: string,"motivo"?: string | null,"resumo"?: string,"revisado_em"?: string | null,"revisado_por"?: string | null,"situacao"?: string,"tipo"?: string,"titulo"?: string,"valor_na_revisao"?: number | null,"valor_unico"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "estudo_oportunidades_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "estudo_oportunidades_revisado_por_fkey"
+      columns: ["revisado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"extrato_saldos": {
+                  Row: {
+                    "conta_financeira_id": string,"created_at": string,"data": string,"empresa_id": string,"fonte": string,"id": string,"importacao_id": string | null,"informado_por": string | null,"saldo": number
+                  }
+                  Insert: {
+                    "conta_financeira_id": string,"created_at"?: string,"data": string,"empresa_id": string,"fonte"?: string,"id"?: string,"importacao_id"?: string | null,"informado_por"?: string | null,"saldo": number
+                  }
+                  Update: {
+                    "conta_financeira_id"?: string,"created_at"?: string,"data"?: string,"empresa_id"?: string,"fonte"?: string,"id"?: string,"importacao_id"?: string | null,"informado_por"?: string | null,"saldo"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "extrato_saldos_empresa_id_conta_financeira_id_fkey"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "extrato_saldos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "extrato_saldos_empresa_id_importacao_id_fkey"
+      columns: ["empresa_id","importacao_id"]
+isOneToOne: false
+      referencedRelation: "importacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "extrato_saldos_informado_por_fkey"
+      columns: ["informado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fechamento_etapas": {
+                  Row: {
+                    "competencia_id": string,"concluida_em": string | null,"concluida_por": string | null,"empresa_id": string,"etapa": string,"id": string,"iniciada_em": string | null,"observacao": string | null,"ordem": number,"responsavel_id": string | null,"status": string,"updated_at": string
+                  }
+                  Insert: {
+                    "competencia_id": string,"concluida_em"?: string | null,"concluida_por"?: string | null,"empresa_id": string,"etapa": string,"id"?: string,"iniciada_em"?: string | null,"observacao"?: string | null,"ordem": number,"responsavel_id"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "competencia_id"?: string,"concluida_em"?: string | null,"concluida_por"?: string | null,"empresa_id"?: string,"etapa"?: string,"id"?: string,"iniciada_em"?: string | null,"observacao"?: string | null,"ordem"?: number,"responsavel_id"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fechamento_etapas_competencia_id_fkey"
+      columns: ["competencia_id"]
+isOneToOne: false
+      referencedRelation: "competencias"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fechamento_etapas_concluida_por_fkey"
+      columns: ["concluida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fechamento_etapas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fechamento_etapas_responsavel_id_fkey"
+      columns: ["responsavel_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fechamento_pendencias": {
+                  Row: {
+                    "competencia_id": string,"criada_em": string,"criada_por": string | null,"descricao": string,"empresa_id": string,"etapa": string | null,"id": string,"impeditiva": boolean,"resolucao": string | null,"resolvida_em": string | null,"resolvida_por": string | null,"status": string,"visivel_cliente": boolean
+                  }
+                  Insert: {
+                    "competencia_id": string,"criada_em"?: string,"criada_por"?: string | null,"descricao": string,"empresa_id": string,"etapa"?: string | null,"id"?: string,"impeditiva"?: boolean,"resolucao"?: string | null,"resolvida_em"?: string | null,"resolvida_por"?: string | null,"status"?: string,"visivel_cliente"?: boolean
+                  }
+                  Update: {
+                    "competencia_id"?: string,"criada_em"?: string,"criada_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"etapa"?: string | null,"id"?: string,"impeditiva"?: boolean,"resolucao"?: string | null,"resolvida_em"?: string | null,"resolvida_por"?: string | null,"status"?: string,"visivel_cliente"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fechamento_pendencias_competencia_id_fkey"
+      columns: ["competencia_id"]
+isOneToOne: false
+      referencedRelation: "competencias"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fechamento_pendencias_criada_por_fkey"
+      columns: ["criada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fechamento_pendencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fechamento_pendencias_resolvida_por_fkey"
+      columns: ["resolvida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"feriados": {
+                  Row: {
+                    "abrangencia": string,"created_at": string,"criado_por": string | null,"data": string,"fonte": string,"id": string,"municipio_ibge": string | null,"nome": string,"tipo": string,"uf": string | null
+                  }
+                  Insert: {
+                    "abrangencia": string,"created_at"?: string,"criado_por"?: string | null,"data": string,"fonte": string,"id"?: string,"municipio_ibge"?: string | null,"nome": string,"tipo"?: string,"uf"?: string | null
+                  }
+                  Update: {
+                    "abrangencia"?: string,"created_at"?: string,"criado_por"?: string | null,"data"?: string,"fonte"?: string,"id"?: string,"municipio_ibge"?: string | null,"nome"?: string,"tipo"?: string,"uf"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feriados_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "feriados_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    }
+                  ]
+                },"financeiro_aprovacao_faixas": {
+                  Row: {
+                    "aprovacoes": number,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"valor_minimo": number
+                  }
+                  Insert: {
+                    "aprovacoes"?: number,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"valor_minimo": number
+                  }
+                  Update: {
+                    "aprovacoes"?: number,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"valor_minimo"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "financeiro_aprovacao_faixas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "financeiro_aprovacao_faixas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"financeiro_config": {
+                  Row: {
+                    "atualizado_por": string | null,"empresa_id": string,"pagar_desde": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"empresa_id": string,"pagar_desde"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"empresa_id"?: string,"pagar_desde"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "financeiro_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "financeiro_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_adendos": {
+                  Row: {
+                    "avaliacao_id": string | null,"created_at": string,"criado_por": string | null,"empresa_id": string,"evolucao_id": string | null,"id": string,"profissional_id": string,"texto": string
+                  }
+                  Insert: {
+                    "avaliacao_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"evolucao_id"?: string | null,"id"?: string,"profissional_id": string,"texto": string
+                  }
+                  Update: {
+                    "avaliacao_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"evolucao_id"?: string | null,"id"?: string,"profissional_id"?: string,"texto"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_adendos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_adendos_empresa_id_avaliacao_id_fkey"
+      columns: ["empresa_id","avaliacao_id"]
+isOneToOne: false
+      referencedRelation: "fisio_avaliacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_adendos_empresa_id_evolucao_id_fkey"
+      columns: ["empresa_id","evolucao_id"]
+isOneToOne: false
+      referencedRelation: "fisio_evolucoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_adendos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_adendos_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"fisio_agenda": {
+                  Row: {
+                    "confirmacao_codigo": string | null,"confirmacao_destino": string | null,"confirmacao_enviada_em": string | null,"confirmacao_envio": string | null,"confirmacao_erro": string | null,"confirmacao_respondida_em": string | null,"confirmacao_resposta": string | null,"confirmado_em": string | null,"created_at": string,"criado_por": string | null,"duracao_min": number,"empresa_id": string,"id": string,"inicio": string,"motivo": string | null,"nome_avulso": string | null,"observacoes": string | null,"paciente_id": string | null,"pacote_id": string | null,"profissional_id": string | null,"sala": string | null,"serie_id": string | null,"status": string,"telefone_avulso": string | null,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "confirmacao_codigo"?: string | null,"confirmacao_destino"?: string | null,"confirmacao_enviada_em"?: string | null,"confirmacao_envio"?: string | null,"confirmacao_erro"?: string | null,"confirmacao_respondida_em"?: string | null,"confirmacao_resposta"?: string | null,"confirmado_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id": string,"id"?: string,"inicio": string,"motivo"?: string | null,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"pacote_id"?: string | null,"profissional_id"?: string | null,"sala"?: string | null,"serie_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "confirmacao_codigo"?: string | null,"confirmacao_destino"?: string | null,"confirmacao_enviada_em"?: string | null,"confirmacao_envio"?: string | null,"confirmacao_erro"?: string | null,"confirmacao_respondida_em"?: string | null,"confirmacao_resposta"?: string | null,"confirmado_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id"?: string,"id"?: string,"inicio"?: string,"motivo"?: string | null,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"pacote_id"?: string | null,"profissional_id"?: string | null,"sala"?: string | null,"serie_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_agenda_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_agenda_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_agenda_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_agenda_empresa_id_pacote_id_fkey"
+      columns: ["empresa_id","pacote_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacotes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_agenda_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"fisio_avaliacoes": {
+                  Row: {
+                    "agendamento_id": string | null,"amplitude_movimento": string | null,"antecedentes": string | null,"cancelado_motivo": string | null,"cid": string | null,"condutas": string | null,"created_at": string,"criado_por": string | null,"data_hora": string,"diagnostico": string | null,"dor_eva": number | null,"dor_local": string | null,"empresa_id": string,"exame_fisico": string | null,"exames_complementares": string | null,"finalizado_em": string | null,"finalizado_por": string | null,"forca_muscular": string | null,"frequencia_semanal": number | null,"habitos": string | null,"historia_atual": string | null,"historia_pregressa": string | null,"id": string,"medicamentos": string | null,"numero": number,"objetivos": string | null,"paciente_id": string,"profissional_id": string,"prognostico": string | null,"queixa_principal": string | null,"sessoes_previstas": number | null,"status": string,"testes_especiais": string | null,"tipo": string,"tratamentos_anteriores": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "agendamento_id"?: string | null,"amplitude_movimento"?: string | null,"antecedentes"?: string | null,"cancelado_motivo"?: string | null,"cid"?: string | null,"condutas"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"diagnostico"?: string | null,"dor_eva"?: number | null,"dor_local"?: string | null,"empresa_id": string,"exame_fisico"?: string | null,"exames_complementares"?: string | null,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"forca_muscular"?: string | null,"frequencia_semanal"?: number | null,"habitos"?: string | null,"historia_atual"?: string | null,"historia_pregressa"?: string | null,"id"?: string,"medicamentos"?: string | null,"numero": number,"objetivos"?: string | null,"paciente_id": string,"profissional_id": string,"prognostico"?: string | null,"queixa_principal"?: string | null,"sessoes_previstas"?: number | null,"status"?: string,"testes_especiais"?: string | null,"tipo"?: string,"tratamentos_anteriores"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "agendamento_id"?: string | null,"amplitude_movimento"?: string | null,"antecedentes"?: string | null,"cancelado_motivo"?: string | null,"cid"?: string | null,"condutas"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"diagnostico"?: string | null,"dor_eva"?: number | null,"dor_local"?: string | null,"empresa_id"?: string,"exame_fisico"?: string | null,"exames_complementares"?: string | null,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"forca_muscular"?: string | null,"frequencia_semanal"?: number | null,"habitos"?: string | null,"historia_atual"?: string | null,"historia_pregressa"?: string | null,"id"?: string,"medicamentos"?: string | null,"numero"?: number,"objetivos"?: string | null,"paciente_id"?: string,"profissional_id"?: string,"prognostico"?: string | null,"queixa_principal"?: string | null,"sessoes_previstas"?: number | null,"status"?: string,"testes_especiais"?: string | null,"tipo"?: string,"tratamentos_anteriores"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_avaliacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_empresa_id_agendamento_id_fkey"
+      columns: ["empresa_id","agendamento_id"]
+isOneToOne: false
+      referencedRelation: "fisio_agenda"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_avaliacoes_finalizado_por_fkey"
+      columns: ["finalizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_config": {
+                  Row: {
+                    "atualizado_por": string | null,"cidade_documentos": string | null,"created_at": string,"duracao_padrao_min": number,"email": string | null,"empresa_id": string,"endereco": string | null,"falta_desconta_sessao": boolean,"horario_fim": string,"horario_inicio": string,"mensagem_confirmacao": string | null,"nome_clinica": string | null,"proximo_numero_documento": number,"proximo_numero_registro": number,"registro_crefito": string | null,"telefone": string | null,"updated_at": string,"valor_sessao": number,"whatsapp_ativo": boolean,"whatsapp_hora_envio": string,"whatsapp_idioma": string,"whatsapp_modelo": string | null,"whatsapp_modo_teste": boolean,"whatsapp_numero_teste": string | null,"whatsapp_phone_number_id": string | null
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"falta_desconta_sessao"?: boolean,"horario_fim"?: string,"horario_inicio"?: string,"mensagem_confirmacao"?: string | null,"nome_clinica"?: string | null,"proximo_numero_documento"?: number,"proximo_numero_registro"?: number,"registro_crefito"?: string | null,"telefone"?: string | null,"updated_at"?: string,"valor_sessao"?: number,"whatsapp_ativo"?: boolean,"whatsapp_hora_envio"?: string,"whatsapp_idioma"?: string,"whatsapp_modelo"?: string | null,"whatsapp_modo_teste"?: boolean,"whatsapp_numero_teste"?: string | null,"whatsapp_phone_number_id"?: string | null
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"falta_desconta_sessao"?: boolean,"horario_fim"?: string,"horario_inicio"?: string,"mensagem_confirmacao"?: string | null,"nome_clinica"?: string | null,"proximo_numero_documento"?: number,"proximo_numero_registro"?: number,"registro_crefito"?: string | null,"telefone"?: string | null,"updated_at"?: string,"valor_sessao"?: number,"whatsapp_ativo"?: boolean,"whatsapp_hora_envio"?: string,"whatsapp_idioma"?: string,"whatsapp_modelo"?: string | null,"whatsapp_modo_teste"?: boolean,"whatsapp_numero_teste"?: string | null,"whatsapp_phone_number_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_documentos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"criado_por": string | null,"emitido_em": string,"empresa_id": string,"id": string,"numero": number,"paciente_id": string,"profissional_id": string,"texto": string,"tipo": string,"titulo": string
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"criado_por"?: string | null,"emitido_em"?: string,"empresa_id": string,"id"?: string,"numero": number,"paciente_id": string,"profissional_id": string,"texto": string,"tipo": string,"titulo": string
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"criado_por"?: string | null,"emitido_em"?: string,"empresa_id"?: string,"id"?: string,"numero"?: number,"paciente_id"?: string,"profissional_id"?: string,"texto"?: string,"tipo"?: string,"titulo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_documentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_documentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_documentos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_documentos_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"fisio_evolucoes": {
+                  Row: {
+                    "agendamento_id": string | null,"alta_motivo": string | null,"analise": string | null,"cancelado_motivo": string | null,"condutas": (string)[],"created_at": string,"criado_por": string | null,"data_hora": string,"dor_antes": number | null,"dor_depois": number | null,"empresa_id": string,"finalizado_em": string | null,"finalizado_por": string | null,"id": string,"intercorrencias": string | null,"numero": number,"objetivo": string | null,"orientacoes": string | null,"paciente_id": string,"plano": string | null,"profissional_id": string,"status": string,"subjetivo": string | null,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "agendamento_id"?: string | null,"alta_motivo"?: string | null,"analise"?: string | null,"cancelado_motivo"?: string | null,"condutas"?: (string)[],"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"dor_antes"?: number | null,"dor_depois"?: number | null,"empresa_id": string,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"id"?: string,"intercorrencias"?: string | null,"numero": number,"objetivo"?: string | null,"orientacoes"?: string | null,"paciente_id": string,"plano"?: string | null,"profissional_id": string,"status"?: string,"subjetivo"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "agendamento_id"?: string | null,"alta_motivo"?: string | null,"analise"?: string | null,"cancelado_motivo"?: string | null,"condutas"?: (string)[],"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"dor_antes"?: number | null,"dor_depois"?: number | null,"empresa_id"?: string,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"id"?: string,"intercorrencias"?: string | null,"numero"?: number,"objetivo"?: string | null,"orientacoes"?: string | null,"paciente_id"?: string,"plano"?: string | null,"profissional_id"?: string,"status"?: string,"subjetivo"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_evolucoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_empresa_id_agendamento_id_fkey"
+      columns: ["empresa_id","agendamento_id"]
+isOneToOne: false
+      referencedRelation: "fisio_agenda"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_empresa_id_profissional_id_fkey"
+      columns: ["empresa_id","profissional_id"]
+isOneToOne: false
+      referencedRelation: "fisio_profissionais"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_evolucoes_finalizado_por_fkey"
+      columns: ["finalizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_pacientes": {
+                  Row: {
+                    "aceita_whatsapp": boolean,"ativo": boolean,"bairro": string | null,"carteirinha": string | null,"cep": string | null,"cidade": string | null,"complemento": string | null,"consentimento_em": string | null,"consentimento_por": string | null,"contato_emergencia": string | null,"convenio": string | null,"cpf": string | null,"created_at": string,"criado_por": string | null,"email": string | null,"empresa_id": string,"estado_civil": string | null,"genero": string | null,"id": string,"logradouro": string | null,"medico_encaminhador": string | null,"nascimento": string | null,"naturalidade": string | null,"nome": string,"nome_social": string | null,"numero": string | null,"observacoes": string | null,"profissao": string | null,"responsavel": string | null,"telefone": string | null,"uf": string | null,"updated_at": string,"busca": string | null
+                  }
+                  Insert: {
+                    "aceita_whatsapp"?: boolean,"ativo"?: boolean,"bairro"?: string | null,"carteirinha"?: string | null,"cep"?: string | null,"cidade"?: string | null,"complemento"?: string | null,"consentimento_em"?: string | null,"consentimento_por"?: string | null,"contato_emergencia"?: string | null,"convenio"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"email"?: string | null,"empresa_id": string,"estado_civil"?: string | null,"genero"?: string | null,"id"?: string,"logradouro"?: string | null,"medico_encaminhador"?: string | null,"nascimento"?: string | null,"naturalidade"?: string | null,"nome": string,"nome_social"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"profissao"?: string | null,"responsavel"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "aceita_whatsapp"?: boolean,"ativo"?: boolean,"bairro"?: string | null,"carteirinha"?: string | null,"cep"?: string | null,"cidade"?: string | null,"complemento"?: string | null,"consentimento_em"?: string | null,"consentimento_por"?: string | null,"contato_emergencia"?: string | null,"convenio"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"email"?: string | null,"empresa_id"?: string,"estado_civil"?: string | null,"genero"?: string | null,"id"?: string,"logradouro"?: string | null,"medico_encaminhador"?: string | null,"nascimento"?: string | null,"naturalidade"?: string | null,"nome"?: string,"nome_social"?: string | null,"numero"?: string | null,"observacoes"?: string | null,"profissao"?: string | null,"responsavel"?: string | null,"telefone"?: string | null,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_pacientes_consentimento_por_fkey"
+      columns: ["consentimento_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_pacientes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_pacientes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_pacotes": {
+                  Row: {
+                    "convenio": string | null,"created_at": string,"criado_por": string | null,"descricao": string,"empresa_id": string,"guia": string | null,"id": string,"inicio": string,"observacao": string | null,"paciente_id": string,"sessoes": number,"status": string,"updated_at": string,"validade": string | null,"valor_total": number
+                  }
+                  Insert: {
+                    "convenio"?: string | null,"created_at"?: string,"criado_por"?: string | null,"descricao": string,"empresa_id": string,"guia"?: string | null,"id"?: string,"inicio": string,"observacao"?: string | null,"paciente_id": string,"sessoes": number,"status"?: string,"updated_at"?: string,"validade"?: string | null,"valor_total"?: number
+                  }
+                  Update: {
+                    "convenio"?: string | null,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"guia"?: string | null,"id"?: string,"inicio"?: string,"observacao"?: string | null,"paciente_id"?: string,"sessoes"?: number,"status"?: string,"updated_at"?: string,"validade"?: string | null,"valor_total"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_pacotes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_pacotes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_pacotes_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"fisio_profissionais": {
+                  Row: {
+                    "ativo": boolean,"cor": string,"created_at": string,"crefito": string,"crefito_regiao": number,"email": string | null,"empresa_id": string,"especialidade": string | null,"id": string,"nome": string,"perfil_id": string | null,"repasse_percentual": number,"responsavel_tecnico": boolean,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cor"?: string,"created_at"?: string,"crefito": string,"crefito_regiao": number,"email"?: string | null,"empresa_id": string,"especialidade"?: string | null,"id"?: string,"nome": string,"perfil_id"?: string | null,"repasse_percentual"?: number,"responsavel_tecnico"?: boolean,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cor"?: string,"created_at"?: string,"crefito"?: string,"crefito_regiao"?: number,"email"?: string | null,"empresa_id"?: string,"especialidade"?: string | null,"id"?: string,"nome"?: string,"perfil_id"?: string | null,"repasse_percentual"?: number,"responsavel_tecnico"?: boolean,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_profissionais_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_profissionais_perfil_id_fkey"
+      columns: ["perfil_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_recebimentos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"created_at": string,"data": string,"descricao": string,"empresa_id": string,"forma": string,"id": string,"lancamento_id": string | null,"observacao": string | null,"paciente_id": string,"pacote_id": string | null,"registrado_por": string | null,"valor": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"data": string,"descricao": string,"empresa_id": string,"forma": string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"paciente_id": string,"pacote_id"?: string | null,"registrado_por"?: string | null,"valor": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"data"?: string,"descricao"?: string,"empresa_id"?: string,"forma"?: string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"paciente_id"?: string,"pacote_id"?: string | null,"registrado_por"?: string | null,"valor"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_recebimentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_recebimentos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_recebimentos_empresa_id_pacote_id_fkey"
+      columns: ["empresa_id","pacote_id"]
+isOneToOne: false
+      referencedRelation: "fisio_pacotes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "fisio_recebimentos_lancamento_id_fkey"
+      columns: ["lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_recebimentos_registrado_por_fkey"
+      columns: ["registrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fisio_whatsapp_segredo": {
+                  Row: {
+                    "atualizado_por": string | null,"empresa_id": string,"token_cifrado": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"empresa_id": string,"token_cifrado": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"empresa_id"?: string,"token_cifrado"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fisio_whatsapp_segredo_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fisio_whatsapp_segredo_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"frota_despesas": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"data": string,"descricao": string,"documento": string | null,"empresa_id": string,"fornecedor": string | null,"grupo": string,"id": string,"km": number | null,"litros": number | null,"valor": number,"veiculo_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"data": string,"descricao": string,"documento"?: string | null,"empresa_id": string,"fornecedor"?: string | null,"grupo": string,"id"?: string,"km"?: number | null,"litros"?: number | null,"valor": number,"veiculo_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"data"?: string,"descricao"?: string,"documento"?: string | null,"empresa_id"?: string,"fornecedor"?: string | null,"grupo"?: string,"id"?: string,"km"?: number | null,"litros"?: number | null,"valor"?: number,"veiculo_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "frota_despesas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "frota_despesas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "frota_despesas_veiculo_id_fkey"
+      columns: ["veiculo_id"]
+isOneToOne: false
+      referencedRelation: "frota_veiculos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"frota_veiculos": {
+                  Row: {
+                    "ativo": boolean,"created_at": string,"custo_motorista_mensal": number,"depreciacao_mensal": number,"descricao": string,"empresa_id": string,"financiamento_mensal": number,"id": string,"km_inicial": number | null,"outros_fixos_mensal": number,"placa": string,"seguro_mensal": number,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"created_at"?: string,"custo_motorista_mensal"?: number,"depreciacao_mensal"?: number,"descricao": string,"empresa_id": string,"financiamento_mensal"?: number,"id"?: string,"km_inicial"?: number | null,"outros_fixos_mensal"?: number,"placa": string,"seguro_mensal"?: number,"tipo"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"created_at"?: string,"custo_motorista_mensal"?: number,"depreciacao_mensal"?: number,"descricao"?: string,"empresa_id"?: string,"financiamento_mensal"?: number,"id"?: string,"km_inicial"?: number | null,"outros_fixos_mensal"?: number,"placa"?: string,"seguro_mensal"?: number,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "frota_veiculos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"frota_viagens": {
+                  Row: {
+                    "comissao_motorista": number,"created_at": string,"criado_por": string | null,"cte_numero": string | null,"data": string,"destinatario": string | null,"destino": string | null,"empresa_id": string,"icms": number,"id": string,"mercadoria": string | null,"motorista": string | null,"origem": string | null,"outras_deducoes": number,"peso_kg": number | null,"quebra": number,"remetente": string | null,"valor_frete": number,"veiculo_id": string
+                  }
+                  Insert: {
+                    "comissao_motorista"?: number,"created_at"?: string,"criado_por"?: string | null,"cte_numero"?: string | null,"data": string,"destinatario"?: string | null,"destino"?: string | null,"empresa_id": string,"icms"?: number,"id"?: string,"mercadoria"?: string | null,"motorista"?: string | null,"origem"?: string | null,"outras_deducoes"?: number,"peso_kg"?: number | null,"quebra"?: number,"remetente"?: string | null,"valor_frete": number,"veiculo_id": string
+                  }
+                  Update: {
+                    "comissao_motorista"?: number,"created_at"?: string,"criado_por"?: string | null,"cte_numero"?: string | null,"data"?: string,"destinatario"?: string | null,"destino"?: string | null,"empresa_id"?: string,"icms"?: number,"id"?: string,"mercadoria"?: string | null,"motorista"?: string | null,"origem"?: string | null,"outras_deducoes"?: number,"peso_kg"?: number | null,"quebra"?: number,"remetente"?: string | null,"valor_frete"?: number,"veiculo_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "frota_viagens_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "frota_viagens_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "frota_viagens_veiculo_id_fkey"
+      columns: ["veiculo_id"]
+isOneToOne: false
+      referencedRelation: "frota_veiculos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gestao_config": {
+                  Row: {
+                    "ativa": boolean,"ativada_em": string | null,"ativada_por": string | null,"atualizado_por": string | null,"balanca_digitos_codigo": number,"balanca_etiqueta": string | null,"conta_cartao_id": string | null,"conta_dinheiro_id": string | null,"conta_pix_id": string | null,"created_at": string,"desconto_maximo_operador": number | null,"documento_padrao": string,"empresa_id": string,"entrada_automatica": boolean,"margem_entrada": number | null,"mensagem_comprovante": string | null,"modalidade": string,"nfce_operacao_id": string | null,"nfe_emitente_id": string | null,"nfe_marcada_padrao": boolean,"nfe_operacao_id": string | null,"nota_obrigatoria_formas": (string)[],"perfil_fiscal": string,"permitir_estoque_negativo": boolean,"permitir_venda_prazo": boolean,"proximo_numero_orcamento": number,"proximo_numero_ordem": number,"proximo_numero_venda": number,"updated_at": string,"validade_orcamento_dias": number,"vendedor_obrigatorio": boolean
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"balanca_digitos_codigo"?: number,"balanca_etiqueta"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"documento_padrao"?: string,"empresa_id": string,"entrada_automatica"?: boolean,"margem_entrada"?: number | null,"mensagem_comprovante"?: string | null,"modalidade"?: string,"nfce_operacao_id"?: string | null,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"nota_obrigatoria_formas"?: (string)[],"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_ordem"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number,"vendedor_obrigatorio"?: boolean
+                  }
+                  Update: {
+                    "ativa"?: boolean,"ativada_em"?: string | null,"ativada_por"?: string | null,"atualizado_por"?: string | null,"balanca_digitos_codigo"?: number,"balanca_etiqueta"?: string | null,"conta_cartao_id"?: string | null,"conta_dinheiro_id"?: string | null,"conta_pix_id"?: string | null,"created_at"?: string,"desconto_maximo_operador"?: number | null,"documento_padrao"?: string,"empresa_id"?: string,"entrada_automatica"?: boolean,"margem_entrada"?: number | null,"mensagem_comprovante"?: string | null,"modalidade"?: string,"nfce_operacao_id"?: string | null,"nfe_emitente_id"?: string | null,"nfe_marcada_padrao"?: boolean,"nfe_operacao_id"?: string | null,"nota_obrigatoria_formas"?: (string)[],"perfil_fiscal"?: string,"permitir_estoque_negativo"?: boolean,"permitir_venda_prazo"?: boolean,"proximo_numero_orcamento"?: number,"proximo_numero_ordem"?: number,"proximo_numero_venda"?: number,"updated_at"?: string,"validade_orcamento_dias"?: number,"vendedor_obrigatorio"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gestao_config_ativada_por_fkey"
+      columns: ["ativada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_empresa_id_conta_cartao_id_fkey"
+      columns: ["empresa_id","conta_cartao_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "gestao_config_empresa_id_conta_dinheiro_id_fkey"
+      columns: ["empresa_id","conta_dinheiro_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "gestao_config_empresa_id_conta_pix_id_fkey"
+      columns: ["empresa_id","conta_pix_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "gestao_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_nfce_operacao_id_fkey"
+      columns: ["nfce_operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_nfe_emitente_id_fkey"
+      columns: ["nfe_emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_config_nfe_operacao_id_fkey"
+      columns: ["nfe_operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gestao_grupos_margem": {
+                  Row: {
+                    "atualizado_por": string | null,"empresa_id": string,"grupo": string,"margem_desejada": number,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"empresa_id": string,"grupo": string,"margem_desejada": number,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"empresa_id"?: string,"grupo"?: string,"margem_desejada"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gestao_grupos_margem_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gestao_grupos_margem_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gta_conferencias": {
+                  Row: {
+                    "created_at": string,"empresa_id": string,"feito_por": string | null,"id": string,"mapeamento": Json | null,"mensagem": string | null,"ok": boolean,"pedido_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"empresa_id": string,"feito_por"?: string | null,"id"?: string,"mapeamento"?: Json | null,"mensagem"?: string | null,"ok": boolean,"pedido_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"empresa_id"?: string,"feito_por"?: string | null,"id"?: string,"mapeamento"?: Json | null,"mensagem"?: string | null,"ok"?: boolean,"pedido_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gta_conferencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_conferencias_feito_por_fkey"
+      columns: ["feito_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_conferencias_pedido_id_fkey"
+      columns: ["pedido_id"]
+isOneToOne: false
+      referencedRelation: "gta_pedidos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gta_pedidos": {
+                  Row: {
+                    "animais": NonNullable<Json>,"created_at": string,"criado_por": string | null,"data_saida": string,"destino_codigo": string | null,"destino_documento": string | null,"destino_ie": string | null,"destino_municipio_ibge": string | null,"destino_nome": string,"emitente_id": string | null,"empresa_id": string,"especie": string,"finalidade": string,"gta_numero": string | null,"gta_serie": string | null,"id": string,"nf_chave": string | null,"nf_numero": number | null,"nf_serie": number | null,"nfe_emissao_id": string | null,"observacoes": string | null,"placa": string | null,"placa_uf": string | null,"status": string,"total_animais": number,"transportador_documento": string | null,"transportador_nome": string | null,"transporte": string,"ultima_conferencia_em": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "animais": NonNullable<Json>,"created_at"?: string,"criado_por"?: string | null,"data_saida": string,"destino_codigo"?: string | null,"destino_documento"?: string | null,"destino_ie"?: string | null,"destino_municipio_ibge"?: string | null,"destino_nome": string,"emitente_id"?: string | null,"empresa_id": string,"especie"?: string,"finalidade": string,"gta_numero"?: string | null,"gta_serie"?: string | null,"id"?: string,"nf_chave"?: string | null,"nf_numero"?: number | null,"nf_serie"?: number | null,"nfe_emissao_id"?: string | null,"observacoes"?: string | null,"placa"?: string | null,"placa_uf"?: string | null,"status"?: string,"total_animais": number,"transportador_documento"?: string | null,"transportador_nome"?: string | null,"transporte"?: string,"ultima_conferencia_em"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "animais"?: NonNullable<Json>,"created_at"?: string,"criado_por"?: string | null,"data_saida"?: string,"destino_codigo"?: string | null,"destino_documento"?: string | null,"destino_ie"?: string | null,"destino_municipio_ibge"?: string | null,"destino_nome"?: string,"emitente_id"?: string | null,"empresa_id"?: string,"especie"?: string,"finalidade"?: string,"gta_numero"?: string | null,"gta_serie"?: string | null,"id"?: string,"nf_chave"?: string | null,"nf_numero"?: number | null,"nf_serie"?: number | null,"nfe_emissao_id"?: string | null,"observacoes"?: string | null,"placa"?: string | null,"placa_uf"?: string | null,"status"?: string,"total_animais"?: number,"transportador_documento"?: string | null,"transportador_nome"?: string | null,"transporte"?: string,"ultima_conferencia_em"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gta_pedidos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_pedidos_destino_municipio_ibge_fkey"
+      columns: ["destino_municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    },{
+      foreignKeyName: "gta_pedidos_emitente_id_fkey"
+      columns: ["emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_pedidos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_pedidos_nfe_emissao_id_fkey"
+      columns: ["nfe_emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gta_sidago_acesso": {
+                  Row: {
+                    "atualizado_por": string | null,"created_at": string,"empresa_id": string,"login_mascarado": string,"situacao": string,"ultima_mensagem": string | null,"ultimo_teste_em": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"created_at"?: string,"empresa_id": string,"login_mascarado": string,"situacao"?: string,"ultima_mensagem"?: string | null,"ultimo_teste_em"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"login_mascarado"?: string,"situacao"?: string,"ultima_mensagem"?: string | null,"ultimo_teste_em"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gta_sidago_acesso_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gta_sidago_acesso_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gta_sidago_segredo": {
+                  Row: {
+                    "conteudo_cifrado": string,"created_at": string,"empresa_id": string
+                  }
+                  Insert: {
+                    "conteudo_cifrado": string,"created_at"?: string,"empresa_id": string
+                  }
+                  Update: {
+                    "conteudo_cifrado"?: string,"created_at"?: string,"empresa_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gta_sidago_segredo_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "gta_sidago_acesso"
+      referencedColumns: ["empresa_id"]
+    }
+                  ]
+                },"guia_pagamentos": {
+                  Row: {
+                    "comprovante_documento_id": string | null,"empresa_id": string,"guia_documento_id": string,"informado_em": string,"informado_por": string | null,"observacao": string | null,"pago_em": string,"valor_pago": number | null
+                  }
+                  Insert: {
+                    "comprovante_documento_id"?: string | null,"empresa_id": string,"guia_documento_id": string,"informado_em"?: string,"informado_por"?: string | null,"observacao"?: string | null,"pago_em": string,"valor_pago"?: number | null
+                  }
+                  Update: {
+                    "comprovante_documento_id"?: string | null,"empresa_id"?: string,"guia_documento_id"?: string,"informado_em"?: string,"informado_por"?: string | null,"observacao"?: string | null,"pago_em"?: string,"valor_pago"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "guia_pagamentos_comprovante_fk"
+      columns: ["empresa_id","comprovante_documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "guia_pagamentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "guia_pagamentos_guia_fk"
+      columns: ["empresa_id","guia_documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "guia_pagamentos_informado_por_fkey"
+      columns: ["informado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_acessos": {
+                  Row: {
+                    "concedido_em": string,"concedido_por": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "concedido_em"?: string,"concedido_por"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "concedido_em"?: string,"concedido_por"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_acessos_concedido_por_fkey"
+      columns: ["concedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_acessos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_banco_segredo": {
+                  Row: {
+                    "atualizado_em": string,"conteudo_cifrado": string,"id": number
+                  }
+                  Insert: {
+                    "atualizado_em"?: string,"conteudo_cifrado": string,"id"?: number
+                  }
+                  Update: {
+                    "atualizado_em"?: string,"conteudo_cifrado"?: string,"id"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"honorarios_cobranca_itens": {
+                  Row: {
+                    "categoria_id": string,"cobranca_id": string,"descricao": string,"id": string,"ordem": number,"quantidade": number,"valor": number,"valor_unitario": number
+                  }
+                  Insert: {
+                    "categoria_id": string,"cobranca_id": string,"descricao": string,"id"?: string,"ordem"?: number,"quantidade"?: number,"valor": number,"valor_unitario": number
+                  }
+                  Update: {
+                    "categoria_id"?: string,"cobranca_id"?: string,"descricao"?: string,"id"?: string,"ordem"?: number,"quantidade"?: number,"valor"?: number,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_cobranca_itens_categoria_id_fkey"
+      columns: ["categoria_id"]
+isOneToOne: false
+      referencedRelation: "escritorio_categorias"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_cobranca_itens_cobranca_id_fkey"
+      columns: ["cobranca_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_cobrancas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_cobrancas": {
+                  Row: {
+                    "ano": number,"aprovada_em": string | null,"aprovada_por": string | null,"baixa_observacao": string | null,"baixada_em": string | null,"baixada_por": string | null,"banco_atualizado_em": string | null,"banco_e2e": string | null,"banco_erro": string | null,"banco_pix": string | null,"banco_situacao": string | null,"banco_txid": string | null,"cancelada_em": string | null,"cobrar_encargos": boolean,"competencia": string | null,"contato_email": string | null,"contato_whatsapp": string | null,"created_at": string,"criado_por": string | null,"desconto": number,"descricao": string,"empresa_id": string | null,"ficha_id": string | null,"forma_pagamento": string | null,"id": string,"juros": number,"juros_mes_percentual": number,"motivo_cancelamento": string | null,"multa": number,"multa_percentual": number,"numero": number,"pagador_documento": string | null,"pagador_nome": string,"pago_em": string | null,"pix_chave": string | null,"pix_cidade": string | null,"pix_nome": string | null,"pix_txid": string | null,"recibo_id": string | null,"robo_ativo": boolean,"situacao": string,"tipo": string,"token_publico": string | null,"updated_at": string,"valor": number,"valor_pago": number | null,"vencimento": string,"whatsapp_autorizado": boolean,"busca": string | null
+                  }
+                  Insert: {
+                    "ano": number,"aprovada_em"?: string | null,"aprovada_por"?: string | null,"baixa_observacao"?: string | null,"baixada_em"?: string | null,"baixada_por"?: string | null,"banco_atualizado_em"?: string | null,"banco_e2e"?: string | null,"banco_erro"?: string | null,"banco_pix"?: string | null,"banco_situacao"?: string | null,"banco_txid"?: string | null,"cancelada_em"?: string | null,"cobrar_encargos"?: boolean,"competencia"?: string | null,"contato_email"?: string | null,"contato_whatsapp"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"descricao": string,"empresa_id"?: string | null,"ficha_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"juros_mes_percentual"?: number,"motivo_cancelamento"?: string | null,"multa"?: number,"multa_percentual"?: number,"numero": number,"pagador_documento"?: string | null,"pagador_nome": string,"pago_em"?: string | null,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_txid"?: string | null,"recibo_id"?: string | null,"robo_ativo"?: boolean,"situacao"?: string,"tipo": string,"token_publico"?: string | null,"updated_at"?: string,"valor": number,"valor_pago"?: number | null,"vencimento": string,"whatsapp_autorizado"?: boolean
+                  }
+                  Update: {
+                    "ano"?: number,"aprovada_em"?: string | null,"aprovada_por"?: string | null,"baixa_observacao"?: string | null,"baixada_em"?: string | null,"baixada_por"?: string | null,"banco_atualizado_em"?: string | null,"banco_e2e"?: string | null,"banco_erro"?: string | null,"banco_pix"?: string | null,"banco_situacao"?: string | null,"banco_txid"?: string | null,"cancelada_em"?: string | null,"cobrar_encargos"?: boolean,"competencia"?: string | null,"contato_email"?: string | null,"contato_whatsapp"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"descricao"?: string,"empresa_id"?: string | null,"ficha_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"juros"?: number,"juros_mes_percentual"?: number,"motivo_cancelamento"?: string | null,"multa"?: number,"multa_percentual"?: number,"numero"?: number,"pagador_documento"?: string | null,"pagador_nome"?: string,"pago_em"?: string | null,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_txid"?: string | null,"recibo_id"?: string | null,"robo_ativo"?: boolean,"situacao"?: string,"tipo"?: string,"token_publico"?: string | null,"updated_at"?: string,"valor"?: number,"valor_pago"?: number | null,"vencimento"?: string,"whatsapp_autorizado"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_cobrancas_aprovada_por_fkey"
+      columns: ["aprovada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_cobrancas_baixada_por_fkey"
+      columns: ["baixada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_cobrancas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_cobrancas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_cobrancas_ficha_id_fkey"
+      columns: ["ficha_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_fichas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_cobrancas_recibo_id_fkey"
+      columns: ["recibo_id"]
+isOneToOne: false
+      referencedRelation: "recibos_honorarios"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_config": {
+                  Row: {
+                    "aprovacao_automatica": boolean,"banco_ambiente": string,"banco_ativo": boolean,"banco_cadastrado_em": string | null,"banco_certificado_validade": string | null,"banco_conferido_em": string | null,"banco_pix": string | null,"banco_testado_em": string | null,"banco_teste_erro": string | null,"banco_teste_ok": boolean | null,"banco_url_api": string | null,"banco_url_token": string | null,"banco_webhook_em": string | null,"banco_webhook_segredo": string | null,"cobrar_encargos": boolean,"competencia_referencia": string,"dia_geracao": number,"email_ativo": boolean,"geracao_automatica": boolean,"id": number,"juros_mes_percentual": number,"mensagens": NonNullable<Json>,"multa_percentual": number,"pix_chave": string | null,"pix_cidade": string | null,"pix_nome": string | null,"pix_tipo": string | null,"recibo_automatico": boolean,"recibo_publicar": boolean,"regua": (number)[],"robo_ativo": boolean,"updated_at": string,"updated_by": string | null,"whatsapp_ativo": boolean,"whatsapp_template": string | null
+                  }
+                  Insert: {
+                    "aprovacao_automatica"?: boolean,"banco_ambiente"?: string,"banco_ativo"?: boolean,"banco_cadastrado_em"?: string | null,"banco_certificado_validade"?: string | null,"banco_conferido_em"?: string | null,"banco_pix"?: string | null,"banco_testado_em"?: string | null,"banco_teste_erro"?: string | null,"banco_teste_ok"?: boolean | null,"banco_url_api"?: string | null,"banco_url_token"?: string | null,"banco_webhook_em"?: string | null,"banco_webhook_segredo"?: string | null,"cobrar_encargos"?: boolean,"competencia_referencia"?: string,"dia_geracao"?: number,"email_ativo"?: boolean,"geracao_automatica"?: boolean,"id"?: number,"juros_mes_percentual"?: number,"mensagens"?: NonNullable<Json>,"multa_percentual"?: number,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_tipo"?: string | null,"recibo_automatico"?: boolean,"recibo_publicar"?: boolean,"regua"?: (number)[],"robo_ativo"?: boolean,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_ativo"?: boolean,"whatsapp_template"?: string | null
+                  }
+                  Update: {
+                    "aprovacao_automatica"?: boolean,"banco_ambiente"?: string,"banco_ativo"?: boolean,"banco_cadastrado_em"?: string | null,"banco_certificado_validade"?: string | null,"banco_conferido_em"?: string | null,"banco_pix"?: string | null,"banco_testado_em"?: string | null,"banco_teste_erro"?: string | null,"banco_teste_ok"?: boolean | null,"banco_url_api"?: string | null,"banco_url_token"?: string | null,"banco_webhook_em"?: string | null,"banco_webhook_segredo"?: string | null,"cobrar_encargos"?: boolean,"competencia_referencia"?: string,"dia_geracao"?: number,"email_ativo"?: boolean,"geracao_automatica"?: boolean,"id"?: number,"juros_mes_percentual"?: number,"mensagens"?: NonNullable<Json>,"multa_percentual"?: number,"pix_chave"?: string | null,"pix_cidade"?: string | null,"pix_nome"?: string | null,"pix_tipo"?: string | null,"recibo_automatico"?: boolean,"recibo_publicar"?: boolean,"regua"?: (number)[],"robo_ativo"?: boolean,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_ativo"?: boolean,"whatsapp_template"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_config_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_contrato_codigos": {
+                  Row: {
+                    "codigo_hash": string,"contrato_id": string,"criado_em": string,"expira_em": string,"tentativas": number,"user_id": string
+                  }
+                  Insert: {
+                    "codigo_hash": string,"contrato_id": string,"criado_em"?: string,"expira_em": string,"tentativas"?: number,"user_id": string
+                  }
+                  Update: {
+                    "codigo_hash"?: string,"contrato_id"?: string,"criado_em"?: string,"expira_em"?: string,"tentativas"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_contrato_codigos_contrato_id_fkey"
+      columns: ["contrato_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_contratos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contrato_codigos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_contratos": {
+                  Row: {
+                    "aceite_cpf": string | null,"aceite_em": string | null,"aceite_email": string | null,"aceite_ip": string | null,"aceite_metodo": string | null,"aceite_nome": string | null,"aceite_user_agent": string | null,"aceite_user_id": string | null,"ano": number,"arquivo_assinado": boolean,"arquivo_hash": string | null,"arquivo_path": string | null,"cancelado_em": string | null,"clausulas": NonNullable<Json>,"contrato_origem_id": string | null,"created_at": string,"criado_por": string | null,"dados": NonNullable<Json>,"documento_id": string | null,"empresa_id": string,"enviado_em": string | null,"enviado_por": string | null,"ficha_id": string | null,"final_hash": string | null,"final_path": string | null,"id": string,"motivo_cancelamento": string | null,"numero": number,"situacao": string,"tipo": string,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "aceite_cpf"?: string | null,"aceite_em"?: string | null,"aceite_email"?: string | null,"aceite_ip"?: string | null,"aceite_metodo"?: string | null,"aceite_nome"?: string | null,"aceite_user_agent"?: string | null,"aceite_user_id"?: string | null,"ano": number,"arquivo_assinado"?: boolean,"arquivo_hash"?: string | null,"arquivo_path"?: string | null,"cancelado_em"?: string | null,"clausulas": NonNullable<Json>,"contrato_origem_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dados": NonNullable<Json>,"documento_id"?: string | null,"empresa_id": string,"enviado_em"?: string | null,"enviado_por"?: string | null,"ficha_id"?: string | null,"final_hash"?: string | null,"final_path"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"numero": number,"situacao"?: string,"tipo": string,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "aceite_cpf"?: string | null,"aceite_em"?: string | null,"aceite_email"?: string | null,"aceite_ip"?: string | null,"aceite_metodo"?: string | null,"aceite_nome"?: string | null,"aceite_user_agent"?: string | null,"aceite_user_id"?: string | null,"ano"?: number,"arquivo_assinado"?: boolean,"arquivo_hash"?: string | null,"arquivo_path"?: string | null,"cancelado_em"?: string | null,"clausulas"?: NonNullable<Json>,"contrato_origem_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dados"?: NonNullable<Json>,"documento_id"?: string | null,"empresa_id"?: string,"enviado_em"?: string | null,"enviado_por"?: string | null,"ficha_id"?: string | null,"final_hash"?: string | null,"final_path"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"numero"?: number,"situacao"?: string,"tipo"?: string,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_contratos_aceite_user_id_fkey"
+      columns: ["aceite_user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_contrato_origem_id_fkey"
+      columns: ["contrato_origem_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_contratos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_contratos_ficha_id_fkey"
+      columns: ["ficha_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_fichas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_fichas": {
+                  Row: {
+                    "canal_email": boolean,"canal_whatsapp": boolean,"contato_email": string | null,"contato_nome": string | null,"contato_whatsapp": string | null,"created_at": string,"criado_por": string | null,"decimo_terceiro": boolean,"decimo_terceiro_mes": number,"dia_vencimento": number,"empresa_id": string,"fim": string | null,"funcionarios_inclusos": number | null,"id": string,"inicio": string,"notas_inclusas": number | null,"observacao": string | null,"reajuste_indice": string,"reajuste_mes": number | null,"robo_pausado_ate": string | null,"servicos": (string)[],"situacao": string,"updated_at": string,"valor_funcionario_extra": number | null,"valor_mensal": number,"valor_nota_extra": number | null,"whatsapp_autorizado": boolean
+                  }
+                  Insert: {
+                    "canal_email"?: boolean,"canal_whatsapp"?: boolean,"contato_email"?: string | null,"contato_nome"?: string | null,"contato_whatsapp"?: string | null,"created_at"?: string,"criado_por"?: string | null,"decimo_terceiro"?: boolean,"decimo_terceiro_mes"?: number,"dia_vencimento": number,"empresa_id": string,"fim"?: string | null,"funcionarios_inclusos"?: number | null,"id"?: string,"inicio": string,"notas_inclusas"?: number | null,"observacao"?: string | null,"reajuste_indice"?: string,"reajuste_mes"?: number | null,"robo_pausado_ate"?: string | null,"servicos"?: (string)[],"situacao"?: string,"updated_at"?: string,"valor_funcionario_extra"?: number | null,"valor_mensal": number,"valor_nota_extra"?: number | null,"whatsapp_autorizado"?: boolean
+                  }
+                  Update: {
+                    "canal_email"?: boolean,"canal_whatsapp"?: boolean,"contato_email"?: string | null,"contato_nome"?: string | null,"contato_whatsapp"?: string | null,"created_at"?: string,"criado_por"?: string | null,"decimo_terceiro"?: boolean,"decimo_terceiro_mes"?: number,"dia_vencimento"?: number,"empresa_id"?: string,"fim"?: string | null,"funcionarios_inclusos"?: number | null,"id"?: string,"inicio"?: string,"notas_inclusas"?: number | null,"observacao"?: string | null,"reajuste_indice"?: string,"reajuste_mes"?: number | null,"robo_pausado_ate"?: string | null,"servicos"?: (string)[],"situacao"?: string,"updated_at"?: string,"valor_funcionario_extra"?: number | null,"valor_mensal"?: number,"valor_nota_extra"?: number | null,"whatsapp_autorizado"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_fichas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_fichas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_geracoes": {
+                  Row: {
+                    "automatica": boolean,"competencia": string,"gerado_em": string,"gerado_por": string | null,"quantidade": number
+                  }
+                  Insert: {
+                    "automatica"?: boolean,"competencia": string,"gerado_em"?: string,"gerado_por"?: string | null,"quantidade"?: number
+                  }
+                  Update: {
+                    "automatica"?: boolean,"competencia"?: string,"gerado_em"?: string,"gerado_por"?: string | null,"quantidade"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_geracoes_gerado_por_fkey"
+      columns: ["gerado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"honorarios_lembretes": {
+                  Row: {
+                    "canal": string,"cobranca_id": string,"criado_em": string,"dias": number | null,"envio_id": string | null,"id": string,"motivo": string,"situacao": string
+                  }
+                  Insert: {
+                    "canal": string,"cobranca_id": string,"criado_em"?: string,"dias"?: number | null,"envio_id"?: string | null,"id"?: string,"motivo": string,"situacao"?: string
+                  }
+                  Update: {
+                    "canal"?: string,"cobranca_id"?: string,"criado_em"?: string,"dias"?: number | null,"envio_id"?: string | null,"id"?: string,"motivo"?: string,"situacao"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "honorarios_lembretes_cobranca_id_fkey"
+      columns: ["cobranca_id"]
+isOneToOne: false
+      referencedRelation: "honorarios_cobrancas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "honorarios_lembretes_envio_id_fkey"
+      columns: ["envio_id"]
+isOneToOne: false
+      referencedRelation: "envios"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_categorias": {
+                  Row: {
+                    "adicional_pessoa": number,"ativa": boolean,"capacidade": number,"created_at": string,"descricao": string | null,"diaria": number,"empresa_id": string,"id": string,"nome": string,"ordem": number,"pessoas_incluidas": number,"updated_at": string
+                  }
+                  Insert: {
+                    "adicional_pessoa"?: number,"ativa"?: boolean,"capacidade"?: number,"created_at"?: string,"descricao"?: string | null,"diaria": number,"empresa_id": string,"id"?: string,"nome": string,"ordem"?: number,"pessoas_incluidas"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "adicional_pessoa"?: number,"ativa"?: boolean,"capacidade"?: number,"created_at"?: string,"descricao"?: string | null,"diaria"?: number,"empresa_id"?: string,"id"?: string,"nome"?: string,"ordem"?: number,"pessoas_incluidas"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_categorias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_config": {
+                  Row: {
+                    "atualizado_por": string | null,"cafe_incluso": boolean,"created_at": string,"doc_cadastur": string | null,"doc_cor": string | null,"doc_email": string | null,"doc_endereco": string | null,"doc_modelo": string,"doc_nome": string | null,"doc_site": string | null,"doc_telefone": string | null,"doc_whatsapp": string | null,"empresa_id": string,"hora_checkin": string,"hora_checkout": string,"politica": string | null,"proximo_numero_recibo_extra": number,"proximo_numero_reserva": number,"taxa_servico": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"cafe_incluso"?: boolean,"created_at"?: string,"doc_cadastur"?: string | null,"doc_cor"?: string | null,"doc_email"?: string | null,"doc_endereco"?: string | null,"doc_modelo"?: string,"doc_nome"?: string | null,"doc_site"?: string | null,"doc_telefone"?: string | null,"doc_whatsapp"?: string | null,"empresa_id": string,"hora_checkin"?: string,"hora_checkout"?: string,"politica"?: string | null,"proximo_numero_recibo_extra"?: number,"proximo_numero_reserva"?: number,"taxa_servico"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"cafe_incluso"?: boolean,"created_at"?: string,"doc_cadastur"?: string | null,"doc_cor"?: string | null,"doc_email"?: string | null,"doc_endereco"?: string | null,"doc_modelo"?: string,"doc_nome"?: string | null,"doc_site"?: string | null,"doc_telefone"?: string | null,"doc_whatsapp"?: string | null,"empresa_id"?: string,"hora_checkin"?: string,"hora_checkout"?: string,"politica"?: string | null,"proximo_numero_recibo_extra"?: number,"proximo_numero_reserva"?: number,"taxa_servico"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_conta_itens": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_por": string | null,"created_at": string,"data": string,"descricao": string,"empresa_id": string,"extra_id": string | null,"id": string,"lancado_por": string | null,"motivo_cancelamento": string | null,"produto_id": string | null,"quantidade": number,"reserva_id": string,"setor": string | null,"tipo": string,"total": number,"valor_unitario": number
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_por"?: string | null,"created_at"?: string,"data"?: string,"descricao": string,"empresa_id": string,"extra_id"?: string | null,"id"?: string,"lancado_por"?: string | null,"motivo_cancelamento"?: string | null,"produto_id"?: string | null,"quantidade"?: number,"reserva_id": string,"setor"?: string | null,"tipo": string,"total": number,"valor_unitario": number
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_por"?: string | null,"created_at"?: string,"data"?: string,"descricao"?: string,"empresa_id"?: string,"extra_id"?: string | null,"id"?: string,"lancado_por"?: string | null,"motivo_cancelamento"?: string | null,"produto_id"?: string | null,"quantidade"?: number,"reserva_id"?: string,"setor"?: string | null,"tipo"?: string,"total"?: number,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_conta_itens_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_conta_itens_empresa_id_reserva_id_fkey"
+      columns: ["empresa_id","reserva_id"]
+isOneToOne: false
+      referencedRelation: "hotel_reservas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_conta_itens_extra_id_fkey"
+      columns: ["extra_id"]
+isOneToOne: false
+      referencedRelation: "hotel_extras"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_conta_itens_lancado_por_fkey"
+      columns: ["lancado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_conta_itens_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_extras": {
+                  Row: {
+                    "ativo": boolean,"atualizado_por": string | null,"created_at": string,"empresa_id": string,"id": string,"natureza": string,"nome": string,"ordem": number,"preco": number,"unidade": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"created_at"?: string,"empresa_id": string,"id"?: string,"natureza": string,"nome": string,"ordem"?: number,"preco": number,"unidade": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"id"?: string,"natureza"?: string,"nome"?: string,"ordem"?: number,"preco"?: number,"unidade"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_extras_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_extras_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_extras_recibo_itens": {
+                  Row: {
+                    "descricao": string,"empresa_id": string,"extra_id": string | null,"id": string,"natureza": string,"quantidade": number,"recibo_id": string,"total": number,"unidade": string,"valor_unitario": number
+                  }
+                  Insert: {
+                    "descricao": string,"empresa_id": string,"extra_id"?: string | null,"id"?: string,"natureza": string,"quantidade": number,"recibo_id": string,"total": number,"unidade": string,"valor_unitario": number
+                  }
+                  Update: {
+                    "descricao"?: string,"empresa_id"?: string,"extra_id"?: string | null,"id"?: string,"natureza"?: string,"quantidade"?: number,"recibo_id"?: string,"total"?: number,"unidade"?: string,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_extras_recibo_itens_empresa_id_recibo_id_fkey"
+      columns: ["empresa_id","recibo_id"]
+isOneToOne: false
+      referencedRelation: "hotel_extras_recibos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_extras_recibo_itens_extra_id_fkey"
+      columns: ["extra_id"]
+isOneToOne: false
+      referencedRelation: "hotel_extras"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_extras_recibos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_por": string | null,"contraparte_id": string,"created_at": string,"data": string,"empresa_id": string,"forma": string | null,"id": string,"lancado_por": string | null,"lancamento_id": string | null,"motivo_cancelamento": string | null,"numero": number,"observacao": string | null,"pagamento": string,"sessao_id": string | null,"solicitante": string | null,"total": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_por"?: string | null,"contraparte_id": string,"created_at"?: string,"data"?: string,"empresa_id": string,"forma"?: string | null,"id"?: string,"lancado_por"?: string | null,"lancamento_id"?: string | null,"motivo_cancelamento"?: string | null,"numero": number,"observacao"?: string | null,"pagamento": string,"sessao_id"?: string | null,"solicitante"?: string | null,"total": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_por"?: string | null,"contraparte_id"?: string,"created_at"?: string,"data"?: string,"empresa_id"?: string,"forma"?: string | null,"id"?: string,"lancado_por"?: string | null,"lancamento_id"?: string | null,"motivo_cancelamento"?: string | null,"numero"?: number,"observacao"?: string | null,"pagamento"?: string,"sessao_id"?: string | null,"solicitante"?: string | null,"total"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_extras_recibos_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_empresa_id_contraparte_id_fkey"
+      columns: ["empresa_id","contraparte_id"]
+isOneToOne: false
+      referencedRelation: "contrapartes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_extras_recibos_lancado_por_fkey"
+      columns: ["lancado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_hospedes": {
+                  Row: {
+                    "cep": string | null,"cidade": string | null,"cnpj": string | null,"cpf": string | null,"created_at": string,"criado_por": string | null,"documento": string | null,"documento_tipo": string | null,"email": string | null,"empresa_id": string,"endereco": string | null,"genero": string | null,"id": string,"nacionalidade": string | null,"nascimento": string | null,"nome": string,"observacoes": string | null,"pais": string | null,"profissao": string | null,"telefone": string | null,"tipo_pessoa": string,"uf": string | null,"updated_at": string,"busca": string | null
+                  }
+                  Insert: {
+                    "cep"?: string | null,"cidade"?: string | null,"cnpj"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento"?: string | null,"documento_tipo"?: string | null,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"genero"?: string | null,"id"?: string,"nacionalidade"?: string | null,"nascimento"?: string | null,"nome": string,"observacoes"?: string | null,"pais"?: string | null,"profissao"?: string | null,"telefone"?: string | null,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "cep"?: string | null,"cidade"?: string | null,"cnpj"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento"?: string | null,"documento_tipo"?: string | null,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"genero"?: string | null,"id"?: string,"nacionalidade"?: string | null,"nascimento"?: string | null,"nome"?: string,"observacoes"?: string | null,"pais"?: string | null,"profissao"?: string | null,"telefone"?: string | null,"tipo_pessoa"?: string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_hospedes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_hospedes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_pagamento_anexos": {
+                  Row: {
+                    "caminho": string,"confirmado_em": string | null,"created_at": string,"empresa_id": string,"enviado_por": string | null,"id": string,"mime": string,"nome": string,"origem": string,"pagamento_id": string,"tamanho": number
+                  }
+                  Insert: {
+                    "caminho": string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"mime": string,"nome": string,"origem"?: string,"pagamento_id": string,"tamanho": number
+                  }
+                  Update: {
+                    "caminho"?: string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"mime"?: string,"nome"?: string,"origem"?: string,"pagamento_id"?: string,"tamanho"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_pagamento_anexos_empresa_id_pagamento_id_fkey"
+      columns: ["empresa_id","pagamento_id"]
+isOneToOne: false
+      referencedRelation: "hotel_pagamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_pagamento_anexos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_pagamentos": {
+                  Row: {
+                    "adiantamento": boolean,"cancelado_em": string | null,"cancelado_por": string | null,"contraparte_id": string | null,"created_at": string,"data": string,"empresa_id": string,"forma": string,"id": string,"lancamento_id": string | null,"motivo_cancelamento": string | null,"observacao": string | null,"recebido_por": string | null,"reserva_id": string,"sessao_id": string | null,"valor": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "adiantamento"?: boolean,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"data"?: string,"empresa_id": string,"forma": string,"id"?: string,"lancamento_id"?: string | null,"motivo_cancelamento"?: string | null,"observacao"?: string | null,"recebido_por"?: string | null,"reserva_id": string,"sessao_id"?: string | null,"valor": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "adiantamento"?: boolean,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"data"?: string,"empresa_id"?: string,"forma"?: string,"id"?: string,"lancamento_id"?: string | null,"motivo_cancelamento"?: string | null,"observacao"?: string | null,"recebido_por"?: string | null,"reserva_id"?: string,"sessao_id"?: string | null,"valor"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_pagamentos_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_pagamentos_empresa_id_contraparte_id_fkey"
+      columns: ["empresa_id","contraparte_id"]
+isOneToOne: false
+      referencedRelation: "contrapartes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_pagamentos_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_pagamentos_empresa_id_reserva_id_fkey"
+      columns: ["empresa_id","reserva_id"]
+isOneToOne: false
+      referencedRelation: "hotel_reservas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_pagamentos_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_pagamentos_recebido_por_fkey"
+      columns: ["recebido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_quartos": {
+                  Row: {
+                    "andar": string | null,"ativo": boolean,"camas": string | null,"categoria_id": string,"created_at": string,"empresa_id": string,"id": string,"limpeza": string,"limpeza_atualizada_em": string | null,"limpeza_por": string | null,"motivo_manutencao": string | null,"numero": string,"observacao": string | null,"ordem": number,"updated_at": string
+                  }
+                  Insert: {
+                    "andar"?: string | null,"ativo"?: boolean,"camas"?: string | null,"categoria_id": string,"created_at"?: string,"empresa_id": string,"id"?: string,"limpeza"?: string,"limpeza_atualizada_em"?: string | null,"limpeza_por"?: string | null,"motivo_manutencao"?: string | null,"numero": string,"observacao"?: string | null,"ordem"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "andar"?: string | null,"ativo"?: boolean,"camas"?: string | null,"categoria_id"?: string,"created_at"?: string,"empresa_id"?: string,"id"?: string,"limpeza"?: string,"limpeza_atualizada_em"?: string | null,"limpeza_por"?: string | null,"motivo_manutencao"?: string | null,"numero"?: string,"observacao"?: string | null,"ordem"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_quartos_empresa_id_categoria_id_fkey"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "hotel_categorias"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_quartos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_quartos_limpeza_por_fkey"
+      columns: ["limpeza_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hotel_reserva_hospedes": {
+                  Row: {
+                    "empresa_id": string,"hospede_id": string,"reserva_id": string
+                  }
+                  Insert: {
+                    "empresa_id": string,"hospede_id": string,"reserva_id": string
+                  }
+                  Update: {
+                    "empresa_id"?: string,"hospede_id"?: string,"reserva_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_reserva_hospedes_empresa_id_hospede_id_fkey"
+      columns: ["empresa_id","hospede_id"]
+isOneToOne: false
+      referencedRelation: "hotel_hospedes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_reserva_hospedes_empresa_id_reserva_id_fkey"
+      columns: ["empresa_id","reserva_id"]
+isOneToOne: false
+      referencedRelation: "hotel_reservas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"hotel_reservas": {
+                  Row: {
+                    "adultos": number,"cancelada_em": string | null,"cancelada_por": string | null,"categoria_id": string,"checkin_em": string | null,"checkin_por": string | null,"checkout_em": string | null,"checkout_por": string | null,"created_at": string,"criado_por": string | null,"criancas": number,"destino": string | null,"diaria_acordada": number | null,"empresa_faturar_id": string | null,"empresa_id": string,"entrada": string,"hospede_id": string,"id": string,"meio_transporte": string | null,"motivo_cancelamento": string | null,"motivo_viagem": string | null,"numero": number,"observacoes": string | null,"ocupante_id": string | null,"origem": string,"placa_veiculo": string | null,"procedencia": string | null,"quarto_id": string,"saida": string,"saida_prevista": string | null,"status": string,"updated_at": string,"valor_previsto": number
+                  }
+                  Insert: {
+                    "adultos"?: number,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"categoria_id": string,"checkin_em"?: string | null,"checkin_por"?: string | null,"checkout_em"?: string | null,"checkout_por"?: string | null,"created_at"?: string,"criado_por"?: string | null,"criancas"?: number,"destino"?: string | null,"diaria_acordada"?: number | null,"empresa_faturar_id"?: string | null,"empresa_id": string,"entrada": string,"hospede_id": string,"id"?: string,"meio_transporte"?: string | null,"motivo_cancelamento"?: string | null,"motivo_viagem"?: string | null,"numero": number,"observacoes"?: string | null,"ocupante_id"?: string | null,"origem"?: string,"placa_veiculo"?: string | null,"procedencia"?: string | null,"quarto_id": string,"saida": string,"saida_prevista"?: string | null,"status"?: string,"updated_at"?: string,"valor_previsto"?: number
+                  }
+                  Update: {
+                    "adultos"?: number,"cancelada_em"?: string | null,"cancelada_por"?: string | null,"categoria_id"?: string,"checkin_em"?: string | null,"checkin_por"?: string | null,"checkout_em"?: string | null,"checkout_por"?: string | null,"created_at"?: string,"criado_por"?: string | null,"criancas"?: number,"destino"?: string | null,"diaria_acordada"?: number | null,"empresa_faturar_id"?: string | null,"empresa_id"?: string,"entrada"?: string,"hospede_id"?: string,"id"?: string,"meio_transporte"?: string | null,"motivo_cancelamento"?: string | null,"motivo_viagem"?: string | null,"numero"?: number,"observacoes"?: string | null,"ocupante_id"?: string | null,"origem"?: string,"placa_veiculo"?: string | null,"procedencia"?: string | null,"quarto_id"?: string,"saida"?: string,"saida_prevista"?: string | null,"status"?: string,"updated_at"?: string,"valor_previsto"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_reservas_cancelada_por_fkey"
+      columns: ["cancelada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_reservas_checkin_por_fkey"
+      columns: ["checkin_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_reservas_checkout_por_fkey"
+      columns: ["checkout_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_reservas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_reservas_empresa_id_categoria_id_fkey"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "hotel_categorias"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_reservas_empresa_id_empresa_faturar_id_fkey"
+      columns: ["empresa_id","empresa_faturar_id"]
+isOneToOne: false
+      referencedRelation: "contrapartes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_reservas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_reservas_empresa_id_hospede_id_fkey"
+      columns: ["empresa_id","hospede_id"]
+isOneToOne: false
+      referencedRelation: "hotel_hospedes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_reservas_empresa_id_quarto_id_fkey"
+      columns: ["empresa_id","quarto_id"]
+isOneToOne: false
+      referencedRelation: "hotel_quartos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_reservas_ocupante_fk"
+      columns: ["empresa_id","ocupante_id"]
+isOneToOne: false
+      referencedRelation: "hotel_hospedes"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"hotel_tarifas": {
+                  Row: {
+                    "categoria_id": string,"created_at": string,"criado_por": string | null,"diaria": number,"empresa_id": string,"fim": string,"id": string,"inicio": string,"nome": string
+                  }
+                  Insert: {
+                    "categoria_id": string,"created_at"?: string,"criado_por"?: string | null,"diaria": number,"empresa_id": string,"fim": string,"id"?: string,"inicio": string,"nome": string
+                  }
+                  Update: {
+                    "categoria_id"?: string,"created_at"?: string,"criado_por"?: string | null,"diaria"?: number,"empresa_id"?: string,"fim"?: string,"id"?: string,"inicio"?: string,"nome"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hotel_tarifas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hotel_tarifas_empresa_id_categoria_id_fkey"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "hotel_categorias"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "hotel_tarifas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"icms_apuracoes": {
+                  Row: {
+                    "a_recolher": number | null,"competencia": string,"conferida_em": string | null,"conferida_por": string | null,"empresa_id": string,"motivo_reabertura": string | null,"reaberta_em": string | null,"reaberta_por": string | null,"resultado": Json | null,"saldo_credor_anterior": number | null,"saldo_credor_transportar": number | null,"saldo_observacao": string | null,"total_guias": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "a_recolher"?: number | null,"competencia": string,"conferida_em"?: string | null,"conferida_por"?: string | null,"empresa_id": string,"motivo_reabertura"?: string | null,"reaberta_em"?: string | null,"reaberta_por"?: string | null,"resultado"?: Json | null,"saldo_credor_anterior"?: number | null,"saldo_credor_transportar"?: number | null,"saldo_observacao"?: string | null,"total_guias"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "a_recolher"?: number | null,"competencia"?: string,"conferida_em"?: string | null,"conferida_por"?: string | null,"empresa_id"?: string,"motivo_reabertura"?: string | null,"reaberta_em"?: string | null,"reaberta_por"?: string | null,"resultado"?: Json | null,"saldo_credor_anterior"?: number | null,"saldo_credor_transportar"?: number | null,"saldo_observacao"?: string | null,"total_guias"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "icms_apuracoes_conferida_por_fkey"
+      columns: ["conferida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "icms_apuracoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "icms_apuracoes_reaberta_por_fkey"
+      columns: ["reaberta_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"icms_destinacoes": {
+                  Row: {
+                    "atualizado_por": string | null,"destinacao": string,"documento_fiscal_id": string | null,"empresa_id": string,"fornecedor_documento": string | null,"id": string,"numero_item": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"destinacao": string,"documento_fiscal_id"?: string | null,"empresa_id": string,"fornecedor_documento"?: string | null,"id"?: string,"numero_item"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"destinacao"?: string,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"fornecedor_documento"?: string | null,"id"?: string,"numero_item"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "icms_destinacoes_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "icms_destinacoes_empresa_id_documento_fiscal_id_fkey"
+      columns: ["empresa_id","documento_fiscal_id"]
+isOneToOne: false
+      referencedRelation: "documentos_fiscais"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "icms_destinacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"icms_lancamentos": {
+                  Row: {
+                    "codigo_ajuste": string | null,"competencia": string,"created_at": string,"criado_por": string | null,"descricao": string,"empresa_id": string,"id": string,"observacao": string | null,"tipo": string,"valor": number
+                  }
+                  Insert: {
+                    "codigo_ajuste"?: string | null,"competencia": string,"created_at"?: string,"criado_por"?: string | null,"descricao": string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"tipo": string,"valor": number
+                  }
+                  Update: {
+                    "codigo_ajuste"?: string | null,"competencia"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"tipo"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "icms_lancamentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "icms_lancamentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"icms_uf": {
+                  Row: {
+                    "aliquota_base_legal": string | null,"aliquota_fonte_url": string | null,"aliquota_interna": number | null,"aliquota_observacao": string | null,"aliquota_situacao": string,"aliquota_vigencia": string | null,"atualizado_em": string,"atualizado_por": string | null,"conferido_em": string,"fcp": number | null,"fcp_observacao": string | null,"id": string,"nome": string,"regiao": string,"uf": string,"vencimento_ajuste": string | null,"vencimento_base_legal": string | null,"vencimento_dia": number | null,"vencimento_fonte_url": string | null,"vencimento_observacao": string | null,"vencimento_situacao": string
+                  }
+                  Insert: {
+                    "aliquota_base_legal"?: string | null,"aliquota_fonte_url"?: string | null,"aliquota_interna"?: number | null,"aliquota_observacao"?: string | null,"aliquota_situacao": string,"aliquota_vigencia"?: string | null,"atualizado_em"?: string,"atualizado_por"?: string | null,"conferido_em": string,"fcp"?: number | null,"fcp_observacao"?: string | null,"id"?: string,"nome": string,"regiao": string,"uf": string,"vencimento_ajuste"?: string | null,"vencimento_base_legal"?: string | null,"vencimento_dia"?: number | null,"vencimento_fonte_url"?: string | null,"vencimento_observacao"?: string | null,"vencimento_situacao": string
+                  }
+                  Update: {
+                    "aliquota_base_legal"?: string | null,"aliquota_fonte_url"?: string | null,"aliquota_interna"?: number | null,"aliquota_observacao"?: string | null,"aliquota_situacao"?: string,"aliquota_vigencia"?: string | null,"atualizado_em"?: string,"atualizado_por"?: string | null,"conferido_em"?: string,"fcp"?: number | null,"fcp_observacao"?: string | null,"id"?: string,"nome"?: string,"regiao"?: string,"uf"?: string,"vencimento_ajuste"?: string | null,"vencimento_base_legal"?: string | null,"vencimento_dia"?: number | null,"vencimento_fonte_url"?: string | null,"vencimento_observacao"?: string | null,"vencimento_situacao"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "icms_uf_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"importacoes": {
+                  Row: {
+                    "arquivo_nome": string | null,"arquivo_sha256": string | null,"chave_idempotencia": string,"conta_financeira_id": string | null,"created_at": string,"criado_por": string | null,"data_saldo_final": string | null,"desfeita_em": string | null,"desfeita_por": string | null,"documento_id": string | null,"empresa_id": string,"erros": NonNullable<Json>,"id": string,"mapeamento": Json | null,"motivo_desfazer": string | null,"opcoes": Json | null,"periodo_fim": string | null,"periodo_inicio": string | null,"saldo_final_extrato": number | null,"soma_creditos": number,"soma_debitos": number,"status": string,"tipo": string,"total_duplicadas": number,"total_invalidas": number,"total_linhas": number,"total_novas": number,"total_periodo_fechado": number
+                  }
+                  Insert: {
+                    "arquivo_nome"?: string | null,"arquivo_sha256"?: string | null,"chave_idempotencia": string,"conta_financeira_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_saldo_final"?: string | null,"desfeita_em"?: string | null,"desfeita_por"?: string | null,"documento_id"?: string | null,"empresa_id": string,"erros"?: NonNullable<Json>,"id"?: string,"mapeamento"?: Json | null,"motivo_desfazer"?: string | null,"opcoes"?: Json | null,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"saldo_final_extrato"?: number | null,"soma_creditos"?: number,"soma_debitos"?: number,"status"?: string,"tipo": string,"total_duplicadas"?: number,"total_invalidas"?: number,"total_linhas"?: number,"total_novas"?: number,"total_periodo_fechado"?: number
+                  }
+                  Update: {
+                    "arquivo_nome"?: string | null,"arquivo_sha256"?: string | null,"chave_idempotencia"?: string,"conta_financeira_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_saldo_final"?: string | null,"desfeita_em"?: string | null,"desfeita_por"?: string | null,"documento_id"?: string | null,"empresa_id"?: string,"erros"?: NonNullable<Json>,"id"?: string,"mapeamento"?: Json | null,"motivo_desfazer"?: string | null,"opcoes"?: Json | null,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"saldo_final_extrato"?: number | null,"soma_creditos"?: number,"soma_debitos"?: number,"status"?: string,"tipo"?: string,"total_duplicadas"?: number,"total_invalidas"?: number,"total_linhas"?: number,"total_novas"?: number,"total_periodo_fechado"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "importacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "importacoes_desfeita_por_fkey"
+      columns: ["desfeita_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "importacoes_empresa_id_conta_financeira_id_fkey"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "importacoes_empresa_id_documento_id_fkey"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "importacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"jobs": {
+                  Row: {
+                    "bloqueado_ate": string | null,"chave_idempotencia": string | null,"concluido_em": string | null,"created_at": string,"empresa_id": string | null,"erro": string | null,"executar_apos": string,"id": number,"iniciado_em": string | null,"max_tentativas": number,"payload": NonNullable<Json>,"prioridade": number,"resultado": Json | null,"status": string,"tentativas": number,"tipo": string,"worker": string | null
+                  }
+                  Insert: {
+                    "bloqueado_ate"?: string | null,"chave_idempotencia"?: string | null,"concluido_em"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"erro"?: string | null,"executar_apos"?: string,"id"?: never,"iniciado_em"?: string | null,"max_tentativas"?: number,"payload"?: NonNullable<Json>,"prioridade"?: number,"resultado"?: Json | null,"status"?: string,"tentativas"?: number,"tipo": string,"worker"?: string | null
+                  }
+                  Update: {
+                    "bloqueado_ate"?: string | null,"chave_idempotencia"?: string | null,"concluido_em"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"erro"?: string | null,"executar_apos"?: string,"id"?: never,"iniciado_em"?: string | null,"max_tentativas"?: number,"payload"?: NonNullable<Json>,"prioridade"?: number,"resultado"?: Json | null,"status"?: string,"tentativas"?: number,"tipo"?: string,"worker"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "jobs_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lancamento_aprovacoes": {
+                  Row: {
+                    "created_at": string,"decidido_por": string | null,"decisao": string,"empresa_id": string,"id": string,"justificativa": string | null,"lancamento_id": string,"valor": number
+                  }
+                  Insert: {
+                    "created_at"?: string,"decidido_por"?: string | null,"decisao": string,"empresa_id": string,"id"?: string,"justificativa"?: string | null,"lancamento_id": string,"valor": number
+                  }
+                  Update: {
+                    "created_at"?: string,"decidido_por"?: string | null,"decisao"?: string,"empresa_id"?: string,"id"?: string,"justificativa"?: string | null,"lancamento_id"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lancamento_aprovacoes_decidido_por_fkey"
+      columns: ["decidido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lancamento_aprovacoes_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"lancamento_documentos": {
+                  Row: {
+                    "documento_id": string,"empresa_id": string,"lancamento_id": string,"tipo_vinculo": string,"vinculado_em": string,"vinculado_por": string | null
+                  }
+                  Insert: {
+                    "documento_id": string,"empresa_id": string,"lancamento_id": string,"tipo_vinculo"?: string,"vinculado_em"?: string,"vinculado_por"?: string | null
+                  }
+                  Update: {
+                    "documento_id"?: string,"empresa_id"?: string,"lancamento_id"?: string,"tipo_vinculo"?: string,"vinculado_em"?: string,"vinculado_por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lancamento_documentos_empresa_id_documento_id_fkey"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamento_documentos_empresa_id_lancamento_id_fkey"
+      columns: ["empresa_id","lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamento_documentos_vinculado_por_fkey"
+      columns: ["vinculado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lancamentos": {
+                  Row: {
+                    "aprovacao_status": string,"aprovacoes_necessarias": number,"cancelado_em": string | null,"cancelado_por": string | null,"categoria_id": string | null,"centro_custo_id": string | null,"chave_importacao": string | null,"confirmado_em": string | null,"confirmado_por": string | null,"conta_financeira_id": string | null,"contraparte_id": string | null,"created_at": string,"criado_por": string | null,"data_competencia": string,"data_ultimo_pagamento": string | null,"data_vencimento": string,"descricao": string,"documento_fiscal_id": string | null,"empresa_id": string,"fora_do_resultado": boolean,"id": string,"importacao_id": string | null,"motivo_cancelamento": string | null,"numero_documento": string | null,"observacoes": string | null,"origem": string,"origem_referencia": string | null,"parcela_numero": number | null,"parcela_total": number | null,"parcelamento_id": string | null,"projeto_id": string | null,"recorrencia_data_original": string | null,"recorrencia_id": string | null,"renegociacao_id": string | null,"renegociado_em_id": string | null,"situacao": string,"status_revisao": string,"tipo": string,"updated_at": string,"valor_baixado": number,"valor_previsto": number,"valor_realizado": number,"busca": string | null
+                  }
+                  Insert: {
+                    "aprovacao_status"?: string,"aprovacoes_necessarias"?: number,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"categoria_id"?: string | null,"centro_custo_id"?: string | null,"chave_importacao"?: string | null,"confirmado_em"?: string | null,"confirmado_por"?: string | null,"conta_financeira_id"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_competencia": string,"data_ultimo_pagamento"?: string | null,"data_vencimento": string,"descricao": string,"documento_fiscal_id"?: string | null,"empresa_id": string,"fora_do_resultado"?: boolean,"id"?: string,"importacao_id"?: string | null,"motivo_cancelamento"?: string | null,"numero_documento"?: string | null,"observacoes"?: string | null,"origem"?: string,"origem_referencia"?: string | null,"parcela_numero"?: number | null,"parcela_total"?: number | null,"parcelamento_id"?: string | null,"projeto_id"?: string | null,"recorrencia_data_original"?: string | null,"recorrencia_id"?: string | null,"renegociacao_id"?: string | null,"renegociado_em_id"?: string | null,"situacao"?: string,"status_revisao"?: string,"tipo": string,"updated_at"?: string,"valor_baixado"?: number,"valor_previsto": number,"valor_realizado"?: number
+                  }
+                  Update: {
+                    "aprovacao_status"?: string,"aprovacoes_necessarias"?: number,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"categoria_id"?: string | null,"centro_custo_id"?: string | null,"chave_importacao"?: string | null,"confirmado_em"?: string | null,"confirmado_por"?: string | null,"conta_financeira_id"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_competencia"?: string,"data_ultimo_pagamento"?: string | null,"data_vencimento"?: string,"descricao"?: string,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"fora_do_resultado"?: boolean,"id"?: string,"importacao_id"?: string | null,"motivo_cancelamento"?: string | null,"numero_documento"?: string | null,"observacoes"?: string | null,"origem"?: string,"origem_referencia"?: string | null,"parcela_numero"?: number | null,"parcela_total"?: number | null,"parcelamento_id"?: string | null,"projeto_id"?: string | null,"recorrencia_data_original"?: string | null,"recorrencia_id"?: string | null,"renegociacao_id"?: string | null,"renegociado_em_id"?: string | null,"situacao"?: string,"status_revisao"?: string,"tipo"?: string,"updated_at"?: string,"valor_baixado"?: number,"valor_previsto"?: number,"valor_realizado"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lancamentos_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lancamentos_confirmado_por_fkey"
+      columns: ["confirmado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lancamentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lancamentos_documento_fiscal_fk"
+      columns: ["empresa_id","documento_fiscal_id"]
+isOneToOne: false
+      referencedRelation: "documentos_fiscais"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_empresa_id_categoria_id_fkey"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "categorias_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_empresa_id_centro_custo_id_fkey"
+      columns: ["empresa_id","centro_custo_id"]
+isOneToOne: false
+      referencedRelation: "centros_custo"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_empresa_id_conta_financeira_id_fkey"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_empresa_id_contraparte_id_fkey"
+      columns: ["empresa_id","contraparte_id"]
+isOneToOne: false
+      referencedRelation: "contrapartes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lancamentos_empresa_id_projeto_id_fkey"
+      columns: ["empresa_id","projeto_id"]
+isOneToOne: false
+      referencedRelation: "projetos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_empresa_id_recorrencia_id_fkey"
+      columns: ["empresa_id","recorrencia_id"]
+isOneToOne: false
+      referencedRelation: "recorrencias"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_importacao_fk"
+      columns: ["empresa_id","importacao_id"]
+isOneToOne: false
+      referencedRelation: "importacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_renegociacao_fk"
+      columns: ["empresa_id","renegociacao_id"]
+isOneToOne: false
+      referencedRelation: "renegociacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "lancamentos_renegociado_em_fk"
+      columns: ["empresa_id","renegociado_em_id"]
+isOneToOne: false
+      referencedRelation: "renegociacoes"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"lembretes": {
+                  Row: {
+                    "canais": (string)[],"competencia": string | null,"created_at": string,"data_referencia": string,"destinatarios": number,"empresa_id": string,"enviado_por": string | null,"id": string,"itens": (string)[],"mensagem": string | null,"regra": string | null,"tipo": string
+                  }
+                  Insert: {
+                    "canais"?: (string)[],"competencia"?: string | null,"created_at"?: string,"data_referencia"?: string,"destinatarios"?: number,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"itens"?: (string)[],"mensagem"?: string | null,"regra"?: string | null,"tipo"?: string
+                  }
+                  Update: {
+                    "canais"?: (string)[],"competencia"?: string | null,"created_at"?: string,"data_referencia"?: string,"destinatarios"?: number,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"itens"?: (string)[],"mensagem"?: string | null,"regra"?: string | null,"tipo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lembretes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lembretes_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"loja_site_banners": {
+                  Row: {
+                    "ativo": boolean,"atualizado_por": string | null,"created_at": string,"empresa_id": string,"fim": string | null,"id": string,"imagem_celular": string | null,"imagem_computador": string | null,"inicio": string | null,"link": string | null,"ordem": number,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"created_at"?: string,"empresa_id": string,"fim"?: string | null,"id"?: string,"imagem_celular"?: string | null,"imagem_computador"?: string | null,"inicio"?: string | null,"link"?: string | null,"ordem"?: number,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"fim"?: string | null,"id"?: string,"imagem_celular"?: string | null,"imagem_computador"?: string | null,"inicio"?: string | null,"link"?: string | null,"ordem"?: number,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_banners_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_banners_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"loja_site_categorias": {
+                  Row: {
+                    "ativa": boolean,"created_at": string,"empresa_id": string,"id": string,"nome": string,"ordem": number,"pai_id": string | null,"slug": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"nome": string,"ordem"?: number,"pai_id"?: string | null,"slug": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"nome"?: string,"ordem"?: number,"pai_id"?: string | null,"slug"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_categorias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_categorias_pai_fk"
+      columns: ["empresa_id","pai_id"]
+isOneToOne: false
+      referencedRelation: "loja_site_categorias"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"loja_site_liberacoes": {
+                  Row: {
+                    "created_at": string,"empresa_id": string,"liberado_por": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"empresa_id": string,"liberado_por"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"empresa_id"?: string,"liberado_por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_liberacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_liberacoes_liberado_por_fkey"
+      columns: ["liberado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"loja_site_produtos": {
+                  Row: {
+                    "atualizado_por": string | null,"categoria_id": string | null,"created_at": string,"descricao": string | null,"destaque": boolean,"empresa_id": string,"fotos": (string)[],"nome": string | null,"origem_externa": string | null,"preco_de": number | null,"produto_id": string,"publicado_em": string,"rotulo_variacao": string,"updated_at": string,"variacoes": (string)[],"visivel": boolean
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"categoria_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"destaque"?: boolean,"empresa_id": string,"fotos"?: (string)[],"nome"?: string | null,"origem_externa"?: string | null,"preco_de"?: number | null,"produto_id": string,"publicado_em"?: string,"rotulo_variacao"?: string,"updated_at"?: string,"variacoes"?: (string)[],"visivel"?: boolean
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"categoria_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"destaque"?: boolean,"empresa_id"?: string,"fotos"?: (string)[],"nome"?: string | null,"origem_externa"?: string | null,"preco_de"?: number | null,"produto_id"?: string,"publicado_em"?: string,"rotulo_variacao"?: string,"updated_at"?: string,"variacoes"?: (string)[],"visivel"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_site_produtos_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_produtos_categoria_fk"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "loja_site_categorias"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "loja_site_produtos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_site_produtos_produto_fk"
+      columns: ["empresa_id","produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"loja_sites": {
+                  Row: {
+                    "ativo": boolean,"atualizado_por": string | null,"aviso": string | null,"chave_gerada_em": string | null,"chave_hash": string | null,"chave_inicio": string | null,"cidade": string | null,"created_at": string,"email": string | null,"empresa_id": string,"endereco_loja": string | null,"endereco_site": string | null,"entregas": NonNullable<Json>,"horario": string | null,"instagram": string | null,"nome": string,"pagamentos": (string)[],"pedido_minimo": number | null,"politica_trocas": string | null,"slug": string,"sobre": string | null,"updated_at": string,"whatsapp": string | null
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"aviso"?: string | null,"chave_gerada_em"?: string | null,"chave_hash"?: string | null,"chave_inicio"?: string | null,"cidade"?: string | null,"created_at"?: string,"email"?: string | null,"empresa_id": string,"endereco_loja"?: string | null,"endereco_site"?: string | null,"entregas"?: NonNullable<Json>,"horario"?: string | null,"instagram"?: string | null,"nome": string,"pagamentos"?: (string)[],"pedido_minimo"?: number | null,"politica_trocas"?: string | null,"slug": string,"sobre"?: string | null,"updated_at"?: string,"whatsapp"?: string | null
+                  }
+                  Update: {
+                    "ativo"?: boolean,"atualizado_por"?: string | null,"aviso"?: string | null,"chave_gerada_em"?: string | null,"chave_hash"?: string | null,"chave_inicio"?: string | null,"cidade"?: string | null,"created_at"?: string,"email"?: string | null,"empresa_id"?: string,"endereco_loja"?: string | null,"endereco_site"?: string | null,"entregas"?: NonNullable<Json>,"horario"?: string | null,"instagram"?: string | null,"nome"?: string,"pagamentos"?: (string)[],"pedido_minimo"?: number | null,"politica_trocas"?: string | null,"slug"?: string,"sobre"?: string | null,"updated_at"?: string,"whatsapp"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_sites_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_sites_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"loja_vendedores": {
+                  Row: {
+                    "ativo": boolean,"comissao_percentual": number,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"nome": string,"updated_at": string,"usuario_id": string | null
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"comissao_percentual"?: number,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string,"usuario_id"?: string | null
+                  }
+                  Update: {
+                    "ativo"?: boolean,"comissao_percentual"?: number,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "loja_vendedores_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_vendedores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "loja_vendedores_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_adquirentes": {
+                  Row: {
+                    "ativo": boolean,"codigo": string,"nome": string,"observacao": string | null,"ordem": number,"tipo": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"codigo": string,"nome": string,"observacao"?: string | null,"ordem"?: number,"tipo": string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"codigo"?: string,"nome"?: string,"observacao"?: string | null,"ordem"?: number,"tipo"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"maquininha_contratos": {
+                  Row: {
+                    "adquirente_chave": string | null,"adquirente_codigo": string | null,"adquirente_nome": string,"aluguel_mensal": number | null,"apelido": string | null,"ativo": boolean,"codigo_estabelecimento": string | null,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"observacao": string | null,"tipo": string,"updated_at": string,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "adquirente_chave"?: never,"adquirente_codigo"?: string | null,"adquirente_nome": string,"aluguel_mensal"?: number | null,"apelido"?: string | null,"ativo"?: boolean,"codigo_estabelecimento"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"observacao"?: string | null,"tipo": string,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "adquirente_chave"?: never,"adquirente_codigo"?: string | null,"adquirente_nome"?: string,"aluguel_mensal"?: number | null,"apelido"?: string | null,"ativo"?: boolean,"codigo_estabelecimento"?: string | null,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"tipo"?: string,"updated_at"?: string,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_contratos_adquirente_codigo_fkey"
+      columns: ["adquirente_codigo"]
+isOneToOne: false
+      referencedRelation: "maquininha_adquirentes"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "maquininha_contratos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_contratos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_importacoes": {
+                  Row: {
+                    "adquirente_chave": string | null,"adquirente_codigo": string | null,"adquirente_nome": string | null,"amostra": Json | null,"assinatura": string | null,"cabecalho": Json | null,"canceladas": number | null,"concluida_em": string | null,"created_at": string,"criado_por": string | null,"documento_id": string | null,"duplicadas": number | null,"empresa_id": string,"erro": string | null,"erros": Json | null,"id": string,"invalidas": number | null,"linhas": number | null,"mapeamento": Json | null,"nome_arquivo": string | null,"periodo_fim": string | null,"periodo_inicio": string | null,"situacao": string,"tipo": string | null,"total_acima": number | null,"total_bruto": number | null,"total_taxas": number | null,"vendas": number | null,"versao": number | null
+                  }
+                  Insert: {
+                    "adquirente_chave"?: string | null,"adquirente_codigo"?: string | null,"adquirente_nome"?: string | null,"amostra"?: Json | null,"assinatura"?: string | null,"cabecalho"?: Json | null,"canceladas"?: number | null,"concluida_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento_id"?: string | null,"duplicadas"?: number | null,"empresa_id": string,"erro"?: string | null,"erros"?: Json | null,"id"?: string,"invalidas"?: number | null,"linhas"?: number | null,"mapeamento"?: Json | null,"nome_arquivo"?: string | null,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"situacao"?: string,"tipo"?: string | null,"total_acima"?: number | null,"total_bruto"?: number | null,"total_taxas"?: number | null,"vendas"?: number | null,"versao"?: number | null
+                  }
+                  Update: {
+                    "adquirente_chave"?: string | null,"adquirente_codigo"?: string | null,"adquirente_nome"?: string | null,"amostra"?: Json | null,"assinatura"?: string | null,"cabecalho"?: Json | null,"canceladas"?: number | null,"concluida_em"?: string | null,"created_at"?: string,"criado_por"?: string | null,"documento_id"?: string | null,"duplicadas"?: number | null,"empresa_id"?: string,"erro"?: string | null,"erros"?: Json | null,"id"?: string,"invalidas"?: number | null,"linhas"?: number | null,"mapeamento"?: Json | null,"nome_arquivo"?: string | null,"periodo_fim"?: string | null,"periodo_inicio"?: string | null,"situacao"?: string,"tipo"?: string | null,"total_acima"?: number | null,"total_bruto"?: number | null,"total_taxas"?: number | null,"vendas"?: number | null,"versao"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_importacoes_adquirente_codigo_fkey"
+      columns: ["adquirente_codigo"]
+isOneToOne: false
+      referencedRelation: "maquininha_adquirentes"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "maquininha_importacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_importacoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_importacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_layouts": {
+                  Row: {
+                    "adquirente_codigo": string | null,"adquirente_nome": string,"assinatura": string,"criado_por": string | null,"empresa_id": string | null,"id": string,"mapeamento": NonNullable<Json>,"tipo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "adquirente_codigo"?: string | null,"adquirente_nome": string,"assinatura": string,"criado_por"?: string | null,"empresa_id"?: string | null,"id"?: string,"mapeamento": NonNullable<Json>,"tipo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "adquirente_codigo"?: string | null,"adquirente_nome"?: string,"assinatura"?: string,"criado_por"?: string | null,"empresa_id"?: string | null,"id"?: string,"mapeamento"?: NonNullable<Json>,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_layouts_adquirente_codigo_fkey"
+      columns: ["adquirente_codigo"]
+isOneToOne: false
+      referencedRelation: "maquininha_adquirentes"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "maquininha_layouts_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_layouts_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_taxas": {
+                  Row: {
+                    "bandeira": string | null,"contrato_id": string,"empresa_id": string,"id": string,"modalidade": string,"observacao": string | null,"parcelas_ate": number,"parcelas_de": number,"prazo_dias": number | null,"tarifa_fixa": number,"taxa_percentual": number
+                  }
+                  Insert: {
+                    "bandeira"?: string | null,"contrato_id": string,"empresa_id": string,"id"?: string,"modalidade": string,"observacao"?: string | null,"parcelas_ate"?: number,"parcelas_de"?: number,"prazo_dias"?: number | null,"tarifa_fixa"?: number,"taxa_percentual": number
+                  }
+                  Update: {
+                    "bandeira"?: string | null,"contrato_id"?: string,"empresa_id"?: string,"id"?: string,"modalidade"?: string,"observacao"?: string | null,"parcelas_ate"?: number,"parcelas_de"?: number,"prazo_dias"?: number | null,"tarifa_fixa"?: number,"taxa_percentual"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_taxas_contrato_id_fkey"
+      columns: ["contrato_id"]
+isOneToOne: false
+      referencedRelation: "maquininha_contratos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_taxas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"maquininha_vendas": {
+                  Row: {
+                    "adquirente_chave": string,"autorizacao": string | null,"bandeira": string | null,"chave_unica": string,"conferencia": string,"contrato_id": string | null,"data_prevista": string | null,"data_venda": string,"diferenca": number | null,"empresa_id": string,"id": number,"importacao_id": string,"linha": number | null,"modalidade": string,"nsu": string | null,"parcelas": number,"quantidade": number,"situacao": string,"tarifa_contratada": number | null,"taxa_contratada": number | null,"taxa_id": string | null,"terminal": string | null,"valor_bruto": number,"valor_esperado": number | null,"valor_liquido": number | null,"valor_taxa": number
+                  }
+                  Insert: {
+                    "adquirente_chave": string,"autorizacao"?: string | null,"bandeira"?: string | null,"chave_unica": string,"conferencia"?: string,"contrato_id"?: string | null,"data_prevista"?: string | null,"data_venda": string,"diferenca"?: number | null,"empresa_id": string,"id"?: never,"importacao_id": string,"linha"?: number | null,"modalidade": string,"nsu"?: string | null,"parcelas"?: number,"quantidade"?: number,"situacao"?: string,"tarifa_contratada"?: number | null,"taxa_contratada"?: number | null,"taxa_id"?: string | null,"terminal"?: string | null,"valor_bruto": number,"valor_esperado"?: number | null,"valor_liquido"?: number | null,"valor_taxa": number
+                  }
+                  Update: {
+                    "adquirente_chave"?: string,"autorizacao"?: string | null,"bandeira"?: string | null,"chave_unica"?: string,"conferencia"?: string,"contrato_id"?: string | null,"data_prevista"?: string | null,"data_venda"?: string,"diferenca"?: number | null,"empresa_id"?: string,"id"?: never,"importacao_id"?: string,"linha"?: number | null,"modalidade"?: string,"nsu"?: string | null,"parcelas"?: number,"quantidade"?: number,"situacao"?: string,"tarifa_contratada"?: number | null,"taxa_contratada"?: number | null,"taxa_id"?: string | null,"terminal"?: string | null,"valor_bruto"?: number,"valor_esperado"?: number | null,"valor_liquido"?: number | null,"valor_taxa"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "maquininha_vendas_contrato_id_fkey"
+      columns: ["contrato_id"]
+isOneToOne: false
+      referencedRelation: "maquininha_contratos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_vendas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_vendas_importacao_id_fkey"
+      columns: ["importacao_id"]
+isOneToOne: false
+      referencedRelation: "maquininha_importacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "maquininha_vendas_taxa_id_fkey"
+      columns: ["taxa_id"]
+isOneToOne: false
+      referencedRelation: "maquininha_taxas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"mensagens": {
+                  Row: {
+                    "autor_id": string | null,"conversa_id": string,"corpo": string,"created_at": string,"documento_ids": (string)[],"empresa_id": string,"id": string,"interna": boolean
+                  }
+                  Insert: {
+                    "autor_id"?: string | null,"conversa_id": string,"corpo": string,"created_at"?: string,"documento_ids"?: (string)[],"empresa_id": string,"id"?: string,"interna"?: boolean
+                  }
+                  Update: {
+                    "autor_id"?: string | null,"conversa_id"?: string,"corpo"?: string,"created_at"?: string,"documento_ids"?: (string)[],"empresa_id"?: string,"id"?: string,"interna"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "mensagens_autor_id_fkey"
+      columns: ["autor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "mensagens_conversa_id_fkey"
+      columns: ["conversa_id"]
+isOneToOne: false
+      referencedRelation: "conversas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "mensagens_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"movimentos_bancarios": {
+                  Row: {
+                    "chave_dedupe": string,"conta_financeira_id": string,"created_at": string,"data": string,"descricao": string,"documento_contraparte": string | null,"empresa_id": string,"fitid": string | null,"id": string,"ignorado_em": string | null,"ignorado_motivo": string | null,"ignorado_por": string | null,"importacao_id": string | null,"numero_documento": string | null,"status_conciliacao": string,"tipo_transacao": string | null,"valor": number,"busca": string | null
+                  }
+                  Insert: {
+                    "chave_dedupe": string,"conta_financeira_id": string,"created_at"?: string,"data": string,"descricao": string,"documento_contraparte"?: string | null,"empresa_id": string,"fitid"?: string | null,"id"?: string,"ignorado_em"?: string | null,"ignorado_motivo"?: string | null,"ignorado_por"?: string | null,"importacao_id"?: string | null,"numero_documento"?: string | null,"status_conciliacao"?: string,"tipo_transacao"?: string | null,"valor": number
+                  }
+                  Update: {
+                    "chave_dedupe"?: string,"conta_financeira_id"?: string,"created_at"?: string,"data"?: string,"descricao"?: string,"documento_contraparte"?: string | null,"empresa_id"?: string,"fitid"?: string | null,"id"?: string,"ignorado_em"?: string | null,"ignorado_motivo"?: string | null,"ignorado_por"?: string | null,"importacao_id"?: string | null,"numero_documento"?: string | null,"status_conciliacao"?: string,"tipo_transacao"?: string | null,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "movimentos_bancarios_empresa_id_conta_financeira_id_fkey"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "movimentos_bancarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "movimentos_bancarios_empresa_id_importacao_id_fkey"
+      columns: ["empresa_id","importacao_id"]
+isOneToOne: false
+      referencedRelation: "importacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "movimentos_bancarios_ignorado_por_fkey"
+      columns: ["ignorado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"municipios": {
+                  Row: {
+                    "ibge": string,"nome": string,"uf": string
+                  }
+                  Insert: {
+                    "ibge": string,"nome": string,"uf": string
+                  }
+                  Update: {
+                    "ibge"?: string,"nome"?: string,"uf"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"nfe_cclass_trib": {
+                  Row: {
+                    "base_legal": string | null,"cclass_trib": string,"cst": string,"descricao_cst": string,"fim_vigencia": string | null,"inicio_vigencia": string | null,"nome": string,"p_red_cbs": number,"p_red_ibs": number,"tipo_aliquota": string | null
+                  }
+                  Insert: {
+                    "base_legal"?: string | null,"cclass_trib": string,"cst": string,"descricao_cst": string,"fim_vigencia"?: string | null,"inicio_vigencia"?: string | null,"nome": string,"p_red_cbs"?: number,"p_red_ibs"?: number,"tipo_aliquota"?: string | null
+                  }
+                  Update: {
+                    "base_legal"?: string | null,"cclass_trib"?: string,"cst"?: string,"descricao_cst"?: string,"fim_vigencia"?: string | null,"inicio_vigencia"?: string | null,"nome"?: string,"p_red_cbs"?: number,"p_red_ibs"?: number,"tipo_aliquota"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"nfe_config": {
+                  Row: {
+                    "ambiente": string,"ativa": boolean,"atualizado_por": string | null,"autorizacao_texto": string | null,"autorizado_em": string | null,"autorizado_por": string | null,"autorizar_escritorio_xml": boolean,"created_at": string,"crt": number,"empresa_id": string,"enviar_email_destinatario": boolean,"funrural_modo": string | null,"funrural_percentual": number | null,"informacoes_padrao": string | null,"nfce_ambiente": string,"nfce_ativa": boolean,"presenca": number,"updated_at": string
+                  }
+                  Insert: {
+                    "ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"autorizar_escritorio_xml"?: boolean,"created_at"?: string,"crt"?: number,"empresa_id": string,"enviar_email_destinatario"?: boolean,"funrural_modo"?: string | null,"funrural_percentual"?: number | null,"informacoes_padrao"?: string | null,"nfce_ambiente"?: string,"nfce_ativa"?: boolean,"presenca"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"autorizar_escritorio_xml"?: boolean,"created_at"?: string,"crt"?: number,"empresa_id"?: string,"enviar_email_destinatario"?: boolean,"funrural_modo"?: string | null,"funrural_percentual"?: number | null,"informacoes_padrao"?: string | null,"nfce_ambiente"?: string,"nfce_ativa"?: boolean,"presenca"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_config_autorizado_por_fkey"
+      columns: ["autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_destinatarios": {
+                  Row: {
+                    "bairro": string,"cep": string | null,"cidade_exterior": string | null,"codigo_pais": string | null,"complemento": string | null,"created_at": string,"documento": string | null,"email": string | null,"empresa_id": string,"id": string,"indicador_ie": number,"inscricao_estadual": string | null,"logradouro": string,"municipio_ibge": string | null,"nome": string,"numero": string,"pais": string | null,"telefone": string | null,"tipo": string,"updated_at": string,"busca": string | null
+                  }
+                  Insert: {
+                    "bairro": string,"cep"?: string | null,"cidade_exterior"?: string | null,"codigo_pais"?: string | null,"complemento"?: string | null,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id": string,"id"?: string,"indicador_ie": number,"inscricao_estadual"?: string | null,"logradouro": string,"municipio_ibge"?: string | null,"nome": string,"numero": string,"pais"?: string | null,"telefone"?: string | null,"tipo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "bairro"?: string,"cep"?: string | null,"cidade_exterior"?: string | null,"codigo_pais"?: string | null,"complemento"?: string | null,"created_at"?: string,"documento"?: string | null,"email"?: string | null,"empresa_id"?: string,"id"?: string,"indicador_ie"?: number,"inscricao_estadual"?: string | null,"logradouro"?: string,"municipio_ibge"?: string | null,"nome"?: string,"numero"?: string,"pais"?: string | null,"telefone"?: string | null,"tipo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_destinatarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_destinatarios_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    }
+                  ]
+                },"nfe_emissoes": {
+                  Row: {
+                    "ambiente": string,"autorizada_em": string | null,"cancelada_em": string | null,"chave": string | null,"codigo_numerico": string,"created_at": string,"dados": NonNullable<Json>,"descartada_em": string | null,"destinatario_documento": string | null,"destinatario_id": string | null,"destinatario_nome": string,"destinatario_uf": string | null,"documento_id": string | null,"email_destinatario_enviado_em": string | null,"emitente_id": string,"emitida_em": string | null,"empresa_id": string,"id": string,"mensagens": Json | null,"modelo": number,"natureza": string,"numero": number,"operacao_id": string | null,"pedido": NonNullable<Json>,"pedido_por": string | null,"protocolo": string | null,"qrcode": string | null,"recibo": string | null,"serie": number,"situacao": string,"tentativas": number,"totais": Json | null,"ultimo_envio_em": string | null,"updated_at": string,"valor_total": number,"xml_assinado": string | null,"xml_autorizado": string | null
+                  }
+                  Insert: {
+                    "ambiente": string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"chave"?: string | null,"codigo_numerico": string,"created_at"?: string,"dados": NonNullable<Json>,"descartada_em"?: string | null,"destinatario_documento"?: string | null,"destinatario_id"?: string | null,"destinatario_nome": string,"destinatario_uf"?: string | null,"documento_id"?: string | null,"email_destinatario_enviado_em"?: string | null,"emitente_id": string,"emitida_em"?: string | null,"empresa_id": string,"id"?: string,"mensagens"?: Json | null,"modelo"?: number,"natureza": string,"numero": number,"operacao_id"?: string | null,"pedido": NonNullable<Json>,"pedido_por"?: string | null,"protocolo"?: string | null,"qrcode"?: string | null,"recibo"?: string | null,"serie": number,"situacao"?: string,"tentativas"?: number,"totais"?: Json | null,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor_total": number,"xml_assinado"?: string | null,"xml_autorizado"?: string | null
+                  }
+                  Update: {
+                    "ambiente"?: string,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"chave"?: string | null,"codigo_numerico"?: string,"created_at"?: string,"dados"?: NonNullable<Json>,"descartada_em"?: string | null,"destinatario_documento"?: string | null,"destinatario_id"?: string | null,"destinatario_nome"?: string,"destinatario_uf"?: string | null,"documento_id"?: string | null,"email_destinatario_enviado_em"?: string | null,"emitente_id"?: string,"emitida_em"?: string | null,"empresa_id"?: string,"id"?: string,"mensagens"?: Json | null,"modelo"?: number,"natureza"?: string,"numero"?: number,"operacao_id"?: string | null,"pedido"?: NonNullable<Json>,"pedido_por"?: string | null,"protocolo"?: string | null,"qrcode"?: string | null,"recibo"?: string | null,"serie"?: number,"situacao"?: string,"tentativas"?: number,"totais"?: Json | null,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor_total"?: number,"xml_assinado"?: string | null,"xml_autorizado"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_emissoes_destinatario_id_fkey"
+      columns: ["destinatario_id"]
+isOneToOne: false
+      referencedRelation: "nfe_destinatarios"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_emitente_id_fkey"
+      columns: ["emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_operacao_id_fkey"
+      columns: ["operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emissoes_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_emitentes": {
+                  Row: {
+                    "ativo": boolean,"bairro": string,"cep": string,"complemento": string | null,"created_at": string,"empresa_id": string,"id": string,"inscricao_estadual": string,"logradouro": string,"municipio_ibge": string,"nfce_proximo_numero_homologacao": number,"nfce_proximo_numero_producao": number,"nfce_serie": number | null,"nome": string,"numero": string,"proximo_numero_homologacao": number,"proximo_numero_producao": number,"serie": number,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"bairro": string,"cep": string,"complemento"?: string | null,"created_at"?: string,"empresa_id": string,"id"?: string,"inscricao_estadual": string,"logradouro": string,"municipio_ibge": string,"nfce_proximo_numero_homologacao"?: number,"nfce_proximo_numero_producao"?: number,"nfce_serie"?: number | null,"nome": string,"numero": string,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"serie": number,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"bairro"?: string,"cep"?: string,"complemento"?: string | null,"created_at"?: string,"empresa_id"?: string,"id"?: string,"inscricao_estadual"?: string,"logradouro"?: string,"municipio_ibge"?: string,"nfce_proximo_numero_homologacao"?: number,"nfce_proximo_numero_producao"?: number,"nfce_serie"?: number | null,"nome"?: string,"numero"?: string,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"serie"?: number,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_emitentes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_emitentes_municipio_ibge_fkey"
+      columns: ["municipio_ibge"]
+isOneToOne: false
+      referencedRelation: "municipios"
+      referencedColumns: ["ibge"]
+    }
+                  ]
+                },"nfe_eventos": {
+                  Row: {
+                    "created_at": string,"emissao_id": string,"empresa_id": string,"id": string,"mensagens": Json | null,"pedido_por": string | null,"protocolo": string | null,"registrado_em": string | null,"sequencia": number,"situacao": string,"tentativas": number,"texto": string,"tipo": string,"updated_at": string,"xml": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"emissao_id": string,"empresa_id": string,"id"?: string,"mensagens"?: Json | null,"pedido_por"?: string | null,"protocolo"?: string | null,"registrado_em"?: string | null,"sequencia": number,"situacao"?: string,"tentativas"?: number,"texto": string,"tipo": string,"updated_at"?: string,"xml"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"emissao_id"?: string,"empresa_id"?: string,"id"?: string,"mensagens"?: Json | null,"pedido_por"?: string | null,"protocolo"?: string | null,"registrado_em"?: string | null,"sequencia"?: number,"situacao"?: string,"tentativas"?: number,"texto"?: string,"tipo"?: string,"updated_at"?: string,"xml"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_eventos_emissao_id_fkey"
+      columns: ["emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_eventos_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_guias": {
+                  Row: {
+                    "atualizado_por": string | null,"codigo_receita": string | null,"created_at": string,"descricao": string,"documento_id": string | null,"emissao_id": string,"empresa_id": string,"id": string,"observacao": string | null,"situacao": string,"tipo": string,"uf": string,"updated_at": string,"valor": number,"vencimento": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"created_at"?: string,"descricao": string,"documento_id"?: string | null,"emissao_id": string,"empresa_id": string,"id"?: string,"observacao"?: string | null,"situacao"?: string,"tipo": string,"uf": string,"updated_at"?: string,"valor": number,"vencimento": string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"codigo_receita"?: string | null,"created_at"?: string,"descricao"?: string,"documento_id"?: string | null,"emissao_id"?: string,"empresa_id"?: string,"id"?: string,"observacao"?: string | null,"situacao"?: string,"tipo"?: string,"uf"?: string,"updated_at"?: string,"valor"?: number,"vencimento"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_guias_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_guias_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "nfe_guias_emissao_id_fkey"
+      columns: ["emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_guias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_operacoes": {
+                  Row: {
+                    "ativa": boolean,"cfop": string,"cofins_aliquota": number | null,"cofins_cst": string,"consumidor_final": boolean,"contribuicoes": NonNullable<Json>,"created_at": string,"destino": string,"difal_codigo_receita": string | null,"difal_metodo": string | null,"empresa_id": string,"excluir_icms_pis_cofins": boolean,"exige_gta": boolean,"finalidade": number,"frete_aliquota": number | null,"frete_cfop": string | null,"frete_codigo_receita": string | null,"frete_icms_retido": boolean,"frete_reducao": number | null,"ibscbs_cclass_trib": string | null,"ibscbs_diferimento": number | null,"icms_aliquota": number | null,"icms_beneficio": string | null,"icms_codigo_receita": string | null,"icms_credito_sn": number | null,"icms_cst": string,"icms_diferimento": number | null,"icms_por_operacao": boolean,"icms_reducao": number | null,"id": string,"incide_funrural": boolean,"informacoes": string | null,"modelos": (string)[],"natureza": string,"nome": string,"pis_aliquota": number | null,"pis_cst": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"cfop": string,"cofins_aliquota"?: number | null,"cofins_cst": string,"consumidor_final"?: boolean,"contribuicoes"?: NonNullable<Json>,"created_at"?: string,"destino": string,"difal_codigo_receita"?: string | null,"difal_metodo"?: string | null,"empresa_id": string,"excluir_icms_pis_cofins"?: boolean,"exige_gta"?: boolean,"finalidade"?: number,"frete_aliquota"?: number | null,"frete_cfop"?: string | null,"frete_codigo_receita"?: string | null,"frete_icms_retido"?: boolean,"frete_reducao"?: number | null,"ibscbs_cclass_trib"?: string | null,"ibscbs_diferimento"?: number | null,"icms_aliquota"?: number | null,"icms_beneficio"?: string | null,"icms_codigo_receita"?: string | null,"icms_credito_sn"?: number | null,"icms_cst": string,"icms_diferimento"?: number | null,"icms_por_operacao"?: boolean,"icms_reducao"?: number | null,"id"?: string,"incide_funrural"?: boolean,"informacoes"?: string | null,"modelos"?: (string)[],"natureza": string,"nome": string,"pis_aliquota"?: number | null,"pis_cst": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"cfop"?: string,"cofins_aliquota"?: number | null,"cofins_cst"?: string,"consumidor_final"?: boolean,"contribuicoes"?: NonNullable<Json>,"created_at"?: string,"destino"?: string,"difal_codigo_receita"?: string | null,"difal_metodo"?: string | null,"empresa_id"?: string,"excluir_icms_pis_cofins"?: boolean,"exige_gta"?: boolean,"finalidade"?: number,"frete_aliquota"?: number | null,"frete_cfop"?: string | null,"frete_codigo_receita"?: string | null,"frete_icms_retido"?: boolean,"frete_reducao"?: number | null,"ibscbs_cclass_trib"?: string | null,"ibscbs_diferimento"?: number | null,"icms_aliquota"?: number | null,"icms_beneficio"?: string | null,"icms_codigo_receita"?: string | null,"icms_credito_sn"?: number | null,"icms_cst"?: string,"icms_diferimento"?: number | null,"icms_por_operacao"?: boolean,"icms_reducao"?: number | null,"id"?: string,"incide_funrural"?: boolean,"informacoes"?: string | null,"modelos"?: (string)[],"natureza"?: string,"nome"?: string,"pis_aliquota"?: number | null,"pis_cst"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_operacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_operacoes_ibscbs_cclass_trib_fkey"
+      columns: ["ibscbs_cclass_trib"]
+isOneToOne: false
+      referencedRelation: "nfe_cclass_trib"
+      referencedColumns: ["cclass_trib"]
+    }
+                  ]
+                },"nfe_produtos": {
+                  Row: {
+                    "ativo": boolean,"busca": string | null,"cest": string | null,"codigo": string,"comprimento_m": number | null,"controla_estoque": boolean,"created_at": string,"custo_medio": number,"descricao": string,"empresa_id": string,"espessura_cm": number | null,"estoque_atual": number,"estoque_minimo": number | null,"fator_compra": number | null,"grupo": string | null,"gtin": string | null,"id": string,"largura_cm": number | null,"margem_desejada": number | null,"ncm": string,"operacao_id": string | null,"origem": number,"peso_kg": number | null,"preco_custo": number | null,"tara_kg": number | null,"unidade": string,"unidade_compra": string | null,"updated_at": string,"valor_unitario": number | null
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"busca"?: never,"cest"?: string | null,"codigo": string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao": string,"empresa_id": string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"fator_compra"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"margem_desejada"?: number | null,"ncm": string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"tara_kg"?: number | null,"unidade": string,"unidade_compra"?: string | null,"updated_at"?: string,"valor_unitario"?: number | null
+                  }
+                  Update: {
+                    "ativo"?: boolean,"busca"?: never,"cest"?: string | null,"codigo"?: string,"comprimento_m"?: number | null,"controla_estoque"?: boolean,"created_at"?: string,"custo_medio"?: number,"descricao"?: string,"empresa_id"?: string,"espessura_cm"?: number | null,"estoque_atual"?: number,"estoque_minimo"?: number | null,"fator_compra"?: number | null,"grupo"?: string | null,"gtin"?: string | null,"id"?: string,"largura_cm"?: number | null,"margem_desejada"?: number | null,"ncm"?: string,"operacao_id"?: string | null,"origem"?: number,"peso_kg"?: number | null,"preco_custo"?: number | null,"tara_kg"?: number | null,"unidade"?: string,"unidade_compra"?: string | null,"updated_at"?: string,"valor_unitario"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_produtos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_produtos_operacao_id_fkey"
+      columns: ["operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_resumos": {
+                  Row: {
+                    "chave": string,"ciencia_em": string | null,"ciencia_retorno": string | null,"confirmacao_em": string | null,"confirmacao_pedida_em": string | null,"confirmacao_pedida_por": string | null,"confirmacao_retorno": string | null,"data_emissao": string | null,"documento_id": string | null,"emitente_documento": string | null,"emitente_ie": string | null,"emitente_nome": string | null,"empresa_id": string,"id": string,"nsu": string | null,"protocolo": string | null,"recebido_em": string,"situacao": string,"tipo_operacao": string | null,"valor": number | null
+                  }
+                  Insert: {
+                    "chave": string,"ciencia_em"?: string | null,"ciencia_retorno"?: string | null,"confirmacao_em"?: string | null,"confirmacao_pedida_em"?: string | null,"confirmacao_pedida_por"?: string | null,"confirmacao_retorno"?: string | null,"data_emissao"?: string | null,"documento_id"?: string | null,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"empresa_id": string,"id"?: string,"nsu"?: string | null,"protocolo"?: string | null,"recebido_em"?: string,"situacao"?: string,"tipo_operacao"?: string | null,"valor"?: number | null
+                  }
+                  Update: {
+                    "chave"?: string,"ciencia_em"?: string | null,"ciencia_retorno"?: string | null,"confirmacao_em"?: string | null,"confirmacao_pedida_em"?: string | null,"confirmacao_pedida_por"?: string | null,"confirmacao_retorno"?: string | null,"data_emissao"?: string | null,"documento_id"?: string | null,"emitente_documento"?: string | null,"emitente_ie"?: string | null,"emitente_nome"?: string | null,"empresa_id"?: string,"id"?: string,"nsu"?: string | null,"protocolo"?: string | null,"recebido_em"?: string,"situacao"?: string,"tipo_operacao"?: string | null,"valor"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_resumos_confirmacao_pedida_por_fkey"
+      columns: ["confirmacao_pedida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfe_resumos_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "nfe_resumos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfe_transportadores": {
+                  Row: {
+                    "created_at": string,"documento": string,"empresa_id": string,"endereco": string | null,"id": string,"inscricao_estadual": string | null,"municipio": string | null,"nome": string,"placa": string | null,"placa_uf": string | null,"rntc": string | null,"tipo": string,"uf": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"documento": string,"empresa_id": string,"endereco"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"municipio"?: string | null,"nome": string,"placa"?: string | null,"placa_uf"?: string | null,"rntc"?: string | null,"tipo": string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"documento"?: string,"empresa_id"?: string,"endereco"?: string | null,"id"?: string,"inscricao_estadual"?: string | null,"municipio"?: string | null,"nome"?: string,"placa"?: string | null,"placa_uf"?: string | null,"rntc"?: string | null,"tipo"?: string,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfe_transportadores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfse_correlacao_ibscbs": {
+                  Row: {
+                    "cclass_trib": string,"cind_op": string,"descricao_nbs": string,"item": string,"nbs": string,"nome_cclass_trib": string
+                  }
+                  Insert: {
+                    "cclass_trib": string,"cind_op": string,"descricao_nbs": string,"item": string,"nbs": string,"nome_cclass_trib": string
+                  }
+                  Update: {
+                    "cclass_trib"?: string,"cind_op"?: string,"descricao_nbs"?: string,"item"?: string,"nbs"?: string,"nome_cclass_trib"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"nfse_emissao_config": {
+                  Row: {
+                    "aliquota_iss_retencao": number | null,"ambiente": string,"ativa": boolean,"atualizado_por": string | null,"autorizacao_texto": string | null,"autorizado_em": string | null,"autorizado_por": string | null,"codigo_municipio": string | null,"created_at": string,"empresa_id": string,"enviar_email_tomador": boolean,"inscricao_municipal": string | null,"iss_retencao_permitida": boolean,"percentual_tributos_federais": number | null,"percentual_tributos_municipais": number | null,"percentual_tributos_sn": number | null,"proximo_numero_homologacao": number,"proximo_numero_producao": number,"regime_apuracao_sn": number,"regime_especial": number,"serie": number,"updated_at": string
+                  }
+                  Insert: {
+                    "aliquota_iss_retencao"?: number | null,"ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"codigo_municipio"?: string | null,"created_at"?: string,"empresa_id": string,"enviar_email_tomador"?: boolean,"inscricao_municipal"?: string | null,"iss_retencao_permitida"?: boolean,"percentual_tributos_federais"?: number | null,"percentual_tributos_municipais"?: number | null,"percentual_tributos_sn"?: number | null,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"regime_apuracao_sn"?: number,"regime_especial"?: number,"serie"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "aliquota_iss_retencao"?: number | null,"ambiente"?: string,"ativa"?: boolean,"atualizado_por"?: string | null,"autorizacao_texto"?: string | null,"autorizado_em"?: string | null,"autorizado_por"?: string | null,"codigo_municipio"?: string | null,"created_at"?: string,"empresa_id"?: string,"enviar_email_tomador"?: boolean,"inscricao_municipal"?: string | null,"iss_retencao_permitida"?: boolean,"percentual_tributos_federais"?: number | null,"percentual_tributos_municipais"?: number | null,"percentual_tributos_sn"?: number | null,"proximo_numero_homologacao"?: number,"proximo_numero_producao"?: number,"regime_apuracao_sn"?: number,"regime_especial"?: number,"serie"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfse_emissao_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissao_config_autorizado_por_fkey"
+      columns: ["autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissao_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfse_emissoes": {
+                  Row: {
+                    "aliquota_iss": number | null,"ambiente": string,"atividade_sn": number | null,"autorizada_em": string | null,"cancelada_em": string | null,"cancelamento_justificativa": string | null,"cancelamento_motivo": number | null,"cancelamento_pedido_em": string | null,"cancelamento_pedido_por": string | null,"cancelamento_xml": string | null,"cclass_trib": string | null,"chave_acesso": string | null,"cind_op": string | null,"codigo_municipio_emissor": string,"codigo_nbs": string | null,"codigo_tributacao_municipal": string | null,"codigo_tributacao_nacional": string,"competencia": string,"created_at": string,"descricao": string,"documento_id": string | null,"email_tomador_enviado_em": string | null,"empresa_id": string,"id": string,"id_dps": string,"informacoes_complementares": string | null,"iss_retido": boolean,"local_prestacao": string,"mensagens": Json | null,"numero_dps": number,"numero_nfse": string | null,"pedido_por": string | null,"serie": number,"servico_id": string | null,"situacao": string,"tentativas": number,"tomador_documento": string | null,"tomador_email": string | null,"tomador_endereco": Json | null,"tomador_nome": string | null,"tomador_telefone": string | null,"tomador_tipo": string,"ultimo_envio_em": string | null,"updated_at": string,"valor": number,"xml_nfse": string | null
+                  }
+                  Insert: {
+                    "aliquota_iss"?: number | null,"ambiente": string,"atividade_sn"?: number | null,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"cancelamento_justificativa"?: string | null,"cancelamento_motivo"?: number | null,"cancelamento_pedido_em"?: string | null,"cancelamento_pedido_por"?: string | null,"cancelamento_xml"?: string | null,"cclass_trib"?: string | null,"chave_acesso"?: string | null,"cind_op"?: string | null,"codigo_municipio_emissor": string,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional": string,"competencia": string,"created_at"?: string,"descricao": string,"documento_id"?: string | null,"email_tomador_enviado_em"?: string | null,"empresa_id": string,"id"?: string,"id_dps": string,"informacoes_complementares"?: string | null,"iss_retido"?: boolean,"local_prestacao": string,"mensagens"?: Json | null,"numero_dps": number,"numero_nfse"?: string | null,"pedido_por"?: string | null,"serie": number,"servico_id"?: string | null,"situacao"?: string,"tentativas"?: number,"tomador_documento"?: string | null,"tomador_email"?: string | null,"tomador_endereco"?: Json | null,"tomador_nome"?: string | null,"tomador_telefone"?: string | null,"tomador_tipo": string,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor": number,"xml_nfse"?: string | null
+                  }
+                  Update: {
+                    "aliquota_iss"?: number | null,"ambiente"?: string,"atividade_sn"?: number | null,"autorizada_em"?: string | null,"cancelada_em"?: string | null,"cancelamento_justificativa"?: string | null,"cancelamento_motivo"?: number | null,"cancelamento_pedido_em"?: string | null,"cancelamento_pedido_por"?: string | null,"cancelamento_xml"?: string | null,"cclass_trib"?: string | null,"chave_acesso"?: string | null,"cind_op"?: string | null,"codigo_municipio_emissor"?: string,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional"?: string,"competencia"?: string,"created_at"?: string,"descricao"?: string,"documento_id"?: string | null,"email_tomador_enviado_em"?: string | null,"empresa_id"?: string,"id"?: string,"id_dps"?: string,"informacoes_complementares"?: string | null,"iss_retido"?: boolean,"local_prestacao"?: string,"mensagens"?: Json | null,"numero_dps"?: number,"numero_nfse"?: string | null,"pedido_por"?: string | null,"serie"?: number,"servico_id"?: string | null,"situacao"?: string,"tentativas"?: number,"tomador_documento"?: string | null,"tomador_email"?: string | null,"tomador_endereco"?: Json | null,"tomador_nome"?: string | null,"tomador_telefone"?: string | null,"tomador_tipo"?: string,"ultimo_envio_em"?: string | null,"updated_at"?: string,"valor"?: number,"xml_nfse"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfse_emissoes_cancelamento_pedido_por_fkey"
+      columns: ["cancelamento_pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissoes_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissoes_pedido_por_fkey"
+      columns: ["pedido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_emissoes_servico_id_fkey"
+      columns: ["servico_id"]
+isOneToOne: false
+      referencedRelation: "nfse_servicos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfse_leiaute_ambiente": {
+                  Row: {
+                    "ambiente": string,"atualizado_em": string,"motivo": string | null,"variante": NonNullable<Json>
+                  }
+                  Insert: {
+                    "ambiente": string,"atualizado_em"?: string,"motivo"?: string | null,"variante": NonNullable<Json>
+                  }
+                  Update: {
+                    "ambiente"?: string,"atualizado_em"?: string,"motivo"?: string | null,"variante"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"nfse_lista_servicos": {
+                  Row: {
+                    "codigo": string,"descricao": string,"descricao_item": string | null,"descricao_subitem": string | null,"desdobro": number,"item": number,"subitem": number
+                  }
+                  Insert: {
+                    "codigo": string,"descricao": string,"descricao_item"?: string | null,"descricao_subitem"?: string | null,"desdobro": number,"item": number,"subitem": number
+                  }
+                  Update: {
+                    "codigo"?: string,"descricao"?: string,"descricao_item"?: string | null,"descricao_subitem"?: string | null,"desdobro"?: number,"item"?: number,"subitem"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"nfse_servicos": {
+                  Row: {
+                    "atividade_sn": number | null,"ativo": boolean,"cclass_trib": string | null,"cind_op": string | null,"cnae": string | null,"codigo_nbs": string | null,"codigo_tributacao_municipal": string | null,"codigo_tributacao_nacional": string,"created_at": string,"descricao_padrao": string | null,"empresa_id": string,"id": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atividade_sn"?: number | null,"ativo"?: boolean,"cclass_trib"?: string | null,"cind_op"?: string | null,"cnae"?: string | null,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional": string,"created_at"?: string,"descricao_padrao"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atividade_sn"?: number | null,"ativo"?: boolean,"cclass_trib"?: string | null,"cind_op"?: string | null,"cnae"?: string | null,"codigo_nbs"?: string | null,"codigo_tributacao_municipal"?: string | null,"codigo_tributacao_nacional"?: string,"created_at"?: string,"descricao_padrao"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfse_servicos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"nfse_tomadores": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"documento": string,"email": string | null,"empresa_id": string,"endereco": Json | null,"id": string,"nome": string,"telefone": string | null,"tipo": string,"ultimo_uso_em": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"documento": string,"email"?: string | null,"empresa_id": string,"endereco"?: Json | null,"id"?: string,"nome": string,"telefone"?: string | null,"tipo": string,"ultimo_uso_em"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"documento"?: string,"email"?: string | null,"empresa_id"?: string,"endereco"?: Json | null,"id"?: string,"nome"?: string,"telefone"?: string | null,"tipo"?: string,"ultimo_uso_em"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nfse_tomadores_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nfse_tomadores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notas_automaticas": {
+                  Row: {
+                    "atualizado_por": string | null,"buscar_desde": string | null,"certificado_valido_ate": string | null,"ciencia_automatica": boolean,"empresa_id": string,"erros_seguidos": number,"executando_ate": string | null,"nfe_ativa": boolean,"nfe_max_nsu": string | null,"nfe_proxima": string | null,"nfe_ult_nsu": string,"nfse_ativa": boolean,"nfse_proxima": string | null,"nfse_ult_nsu": number,"pausada": boolean,"ultima_execucao": string | null,"ultimo_erro": string | null,"ultimo_sucesso": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"buscar_desde"?: string | null,"certificado_valido_ate"?: string | null,"ciencia_automatica"?: boolean,"empresa_id": string,"erros_seguidos"?: number,"executando_ate"?: string | null,"nfe_ativa"?: boolean,"nfe_max_nsu"?: string | null,"nfe_proxima"?: string | null,"nfe_ult_nsu"?: string,"nfse_ativa"?: boolean,"nfse_proxima"?: string | null,"nfse_ult_nsu"?: number,"pausada"?: boolean,"ultima_execucao"?: string | null,"ultimo_erro"?: string | null,"ultimo_sucesso"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"buscar_desde"?: string | null,"certificado_valido_ate"?: string | null,"ciencia_automatica"?: boolean,"empresa_id"?: string,"erros_seguidos"?: number,"executando_ate"?: string | null,"nfe_ativa"?: boolean,"nfe_max_nsu"?: string | null,"nfe_proxima"?: string | null,"nfe_ult_nsu"?: string,"nfse_ativa"?: boolean,"nfse_proxima"?: string | null,"nfse_ult_nsu"?: number,"pausada"?: boolean,"ultima_execucao"?: string | null,"ultimo_erro"?: string | null,"ultimo_sucesso"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notas_automaticas_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notas_automaticas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notas_automaticas_execucoes": {
+                  Row: {
+                    "codigo": string | null,"concluido_em": string | null,"documentos": number,"empresa_id": string,"id": number,"ignorados": number,"iniciado_em": string,"mensagem": string | null,"resultado": string,"resumos": number,"servico": string
+                  }
+                  Insert: {
+                    "codigo"?: string | null,"concluido_em"?: string | null,"documentos"?: number,"empresa_id": string,"id"?: never,"ignorados"?: number,"iniciado_em"?: string,"mensagem"?: string | null,"resultado": string,"resumos"?: number,"servico": string
+                  }
+                  Update: {
+                    "codigo"?: string | null,"concluido_em"?: string | null,"documentos"?: number,"empresa_id"?: string,"id"?: never,"ignorados"?: number,"iniciado_em"?: string,"mensagem"?: string | null,"resultado"?: string,"resumos"?: number,"servico"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notas_automaticas_execucoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notas_automaticas_nsu": {
+                  Row: {
+                    "chave": string | null,"competencia": string | null,"documento_id": string | null,"empresa_id": string,"ignorado": boolean,"nsu": string,"recebido_em": string,"servico": string,"tipo": string | null
+                  }
+                  Insert: {
+                    "chave"?: string | null,"competencia"?: string | null,"documento_id"?: string | null,"empresa_id": string,"ignorado"?: boolean,"nsu": string,"recebido_em"?: string,"servico": string,"tipo"?: string | null
+                  }
+                  Update: {
+                    "chave"?: string | null,"competencia"?: string | null,"documento_id"?: string | null,"empresa_id"?: string,"ignorado"?: boolean,"nsu"?: string,"recebido_em"?: string,"servico"?: string,"tipo"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notas_automaticas_nsu_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notas_nsu_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"notificacoes": {
+                  Row: {
+                    "corpo": string | null,"created_at": string,"empresa_id": string | null,"id": string,"lida_em": string | null,"link": string | null,"quantidade": number,"tipo": string,"titulo": string,"user_id": string
+                  }
+                  Insert: {
+                    "corpo"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"id"?: string,"lida_em"?: string | null,"link"?: string | null,"quantidade"?: number,"tipo": string,"titulo": string,"user_id": string
+                  }
+                  Update: {
+                    "corpo"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"id"?: string,"lida_em"?: string | null,"link"?: string | null,"quantidade"?: number,"tipo"?: string,"titulo"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notificacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notificacoes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"obrigacao_regras": {
+                  Row: {
+                    "created_at": string,"criada_por": string | null,"empresa_id": string | null,"exige_empregados": boolean,"exige_folha": boolean,"exige_icms": boolean,"exige_iss": boolean,"fonte_consultada_em": string,"fonte_titulo": string,"fonte_url": string | null,"id": string,"lucro_real_apuracao": string | null,"municipios": (string)[] | null,"obrigacao_id": string,"observacao": string | null,"prazo_apuracao": Json | null,"prazo_entrega": Json | null,"prazo_interno_dias_uteis": number,"prazo_pagamento": Json | null,"regimes": (string)[],"servico": string | null,"status": string,"ufs": (string)[] | null,"updated_at": string,"validada_em": string | null,"validada_por": string | null,"vigencia_fim": string | null,"vigencia_inicio": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criada_por"?: string | null,"empresa_id"?: string | null,"exige_empregados"?: boolean,"exige_folha"?: boolean,"exige_icms"?: boolean,"exige_iss"?: boolean,"fonte_consultada_em": string,"fonte_titulo": string,"fonte_url"?: string | null,"id"?: string,"lucro_real_apuracao"?: string | null,"municipios"?: (string)[] | null,"obrigacao_id": string,"observacao"?: string | null,"prazo_apuracao"?: Json | null,"prazo_entrega"?: Json | null,"prazo_interno_dias_uteis"?: number,"prazo_pagamento"?: Json | null,"regimes": (string)[],"servico"?: string | null,"status"?: string,"ufs"?: (string)[] | null,"updated_at"?: string,"validada_em"?: string | null,"validada_por"?: string | null,"vigencia_fim"?: string | null,"vigencia_inicio": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criada_por"?: string | null,"empresa_id"?: string | null,"exige_empregados"?: boolean,"exige_folha"?: boolean,"exige_icms"?: boolean,"exige_iss"?: boolean,"fonte_consultada_em"?: string,"fonte_titulo"?: string,"fonte_url"?: string | null,"id"?: string,"lucro_real_apuracao"?: string | null,"municipios"?: (string)[] | null,"obrigacao_id"?: string,"observacao"?: string | null,"prazo_apuracao"?: Json | null,"prazo_entrega"?: Json | null,"prazo_interno_dias_uteis"?: number,"prazo_pagamento"?: Json | null,"regimes"?: (string)[],"servico"?: string | null,"status"?: string,"ufs"?: (string)[] | null,"updated_at"?: string,"validada_em"?: string | null,"validada_por"?: string | null,"vigencia_fim"?: string | null,"vigencia_inicio"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "obrigacao_regras_criada_por_fkey"
+      columns: ["criada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "obrigacao_regras_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "obrigacao_regras_obrigacao_id_fkey"
+      columns: ["obrigacao_id"]
+isOneToOne: false
+      referencedRelation: "obrigacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "obrigacao_regras_validada_por_fkey"
+      columns: ["validada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"obrigacoes": {
+                  Row: {
+                    "area": string,"ativa": boolean,"categorias_documento": (string)[],"codigo": string,"created_at": string,"descricao": string | null,"esfera": string,"etapas": (string)[],"id": string,"nome": string,"observacao": string | null,"periodicidade": string,"tributos": (string)[],"updated_at": string
+                  }
+                  Insert: {
+                    "area": string,"ativa"?: boolean,"categorias_documento"?: (string)[],"codigo": string,"created_at"?: string,"descricao"?: string | null,"esfera": string,"etapas": (string)[],"id"?: string,"nome": string,"observacao"?: string | null,"periodicidade": string,"tributos"?: (string)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "area"?: string,"ativa"?: boolean,"categorias_documento"?: (string)[],"codigo"?: string,"created_at"?: string,"descricao"?: string | null,"esfera"?: string,"etapas"?: (string)[],"id"?: string,"nome"?: string,"observacao"?: string | null,"periodicidade"?: string,"tributos"?: (string)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"operacional_anotacoes": {
+                  Row: {
+                    "autor_id": string | null,"criada_em": string,"empresa_id": string,"id": string,"texto": string
+                  }
+                  Insert: {
+                    "autor_id"?: string | null,"criada_em"?: string,"empresa_id": string,"id"?: string,"texto": string
+                  }
+                  Update: {
+                    "autor_id"?: string | null,"criada_em"?: string,"empresa_id"?: string,"id"?: string,"texto"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "operacional_anotacoes_autor_id_fkey"
+      columns: ["autor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "operacional_anotacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"operacional_marcacoes": {
+                  Row: {
+                    "competencia": string | null,"empresa_id": string,"etapa": string,"id": string,"marcada_em": string,"marcada_por": string | null,"observacao": string | null,"situacao": string
+                  }
+                  Insert: {
+                    "competencia"?: string | null,"empresa_id": string,"etapa": string,"id"?: string,"marcada_em"?: string,"marcada_por"?: string | null,"observacao"?: string | null,"situacao": string
+                  }
+                  Update: {
+                    "competencia"?: string | null,"empresa_id"?: string,"etapa"?: string,"id"?: string,"marcada_em"?: string,"marcada_por"?: string | null,"observacao"?: string | null,"situacao"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "operacional_marcacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "operacional_marcacoes_marcada_por_fkey"
+      columns: ["marcada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ordens_carregamento": {
+                  Row: {
+                    "cancelada_em": string | null,"cancelada_por": string | null,"carregado_em": string | null,"contrato": string | null,"created_at": string,"criado_por": string | null,"data_emissao": string,"destinatario_documento": string | null,"destinatario_id": string | null,"destinatario_nome": string,"emitente_id": string | null,"empresa_id": string,"frete_por_conta": number,"id": string,"impureza": number | null,"local_carregamento": string | null,"local_descarga": string | null,"motivo_cancelamento": string | null,"motorista_cpf": string | null,"motorista_nome": string | null,"nfe_emissao_id": string | null,"numero": number,"observacoes": string | null,"operacao_id": string | null,"peso_bruto_kg": number | null,"peso_liquido_kg": number | null,"peso_previsto_kg": number | null,"placa": string | null,"placa_uf": string | null,"placas_reboque": (string)[],"preco_unitario": number | null,"produto_descricao": string,"produto_id": string,"quantidade": number,"rntrc": string | null,"status": string,"tara_kg": number | null,"ticket_balanca": string | null,"transportador_documento": string | null,"transportador_id": string | null,"transportador_nome": string | null,"umidade": number | null,"unidade": string,"updated_at": string,"validade": string | null,"busca": string | null
+                  }
+                  Insert: {
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"carregado_em"?: string | null,"contrato"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_emissao"?: string,"destinatario_documento"?: string | null,"destinatario_id"?: string | null,"destinatario_nome": string,"emitente_id"?: string | null,"empresa_id": string,"frete_por_conta"?: number,"id"?: string,"impureza"?: number | null,"local_carregamento"?: string | null,"local_descarga"?: string | null,"motivo_cancelamento"?: string | null,"motorista_cpf"?: string | null,"motorista_nome"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacoes"?: string | null,"operacao_id"?: string | null,"peso_bruto_kg"?: number | null,"peso_liquido_kg"?: number | null,"peso_previsto_kg"?: number | null,"placa"?: string | null,"placa_uf"?: string | null,"placas_reboque"?: (string)[],"preco_unitario"?: number | null,"produto_descricao": string,"produto_id": string,"quantidade": number,"rntrc"?: string | null,"status"?: string,"tara_kg"?: number | null,"ticket_balanca"?: string | null,"transportador_documento"?: string | null,"transportador_id"?: string | null,"transportador_nome"?: string | null,"umidade"?: number | null,"unidade": string,"updated_at"?: string,"validade"?: string | null
+                  }
+                  Update: {
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"carregado_em"?: string | null,"contrato"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_emissao"?: string,"destinatario_documento"?: string | null,"destinatario_id"?: string | null,"destinatario_nome"?: string,"emitente_id"?: string | null,"empresa_id"?: string,"frete_por_conta"?: number,"id"?: string,"impureza"?: number | null,"local_carregamento"?: string | null,"local_descarga"?: string | null,"motivo_cancelamento"?: string | null,"motorista_cpf"?: string | null,"motorista_nome"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacoes"?: string | null,"operacao_id"?: string | null,"peso_bruto_kg"?: number | null,"peso_liquido_kg"?: number | null,"peso_previsto_kg"?: number | null,"placa"?: string | null,"placa_uf"?: string | null,"placas_reboque"?: (string)[],"preco_unitario"?: number | null,"produto_descricao"?: string,"produto_id"?: string,"quantidade"?: number,"rntrc"?: string | null,"status"?: string,"tara_kg"?: number | null,"ticket_balanca"?: string | null,"transportador_documento"?: string | null,"transportador_id"?: string | null,"transportador_nome"?: string | null,"umidade"?: number | null,"unidade"?: string,"updated_at"?: string,"validade"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ordens_carregamento_cancelada_por_fkey"
+      columns: ["cancelada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_destinatario_id_fkey"
+      columns: ["destinatario_id"]
+isOneToOne: false
+      referencedRelation: "nfe_destinatarios"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_emitente_id_fkey"
+      columns: ["emitente_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emitentes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_nfe_emissao_id_fkey"
+      columns: ["nfe_emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_operacao_id_fkey"
+      columns: ["operacao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_operacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ordens_carregamento_transportador_id_fkey"
+      columns: ["transportador_id"]
+isOneToOne: false
+      referencedRelation: "nfe_transportadores"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_config": {
+                  Row: {
+                    "atualizado_por": string | null,"created_at": string,"dias_semana": (number)[],"empresa_id": string,"executores_simultaneos": number,"exigir_assinatura": boolean,"exigir_pagamento_entrega": boolean,"hora_fim": string,"hora_inicio": string,"mensagem_pronta": string | null,"nome_exibicao": string | null,"proximo_numero": number,"rodape_impressao": string | null,"telefone": string | null,"updated_at": string,"whatsapp_ativo": boolean,"whatsapp_idioma": string,"whatsapp_modelo": string | null,"whatsapp_phone_number_id": string | null
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"created_at"?: string,"dias_semana"?: (number)[],"empresa_id": string,"executores_simultaneos"?: number,"exigir_assinatura"?: boolean,"exigir_pagamento_entrega"?: boolean,"hora_fim"?: string,"hora_inicio"?: string,"mensagem_pronta"?: string | null,"nome_exibicao"?: string | null,"proximo_numero"?: number,"rodape_impressao"?: string | null,"telefone"?: string | null,"updated_at"?: string,"whatsapp_ativo"?: boolean,"whatsapp_idioma"?: string,"whatsapp_modelo"?: string | null,"whatsapp_phone_number_id"?: string | null
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"created_at"?: string,"dias_semana"?: (number)[],"empresa_id"?: string,"executores_simultaneos"?: number,"exigir_assinatura"?: boolean,"exigir_pagamento_entrega"?: boolean,"hora_fim"?: string,"hora_inicio"?: string,"mensagem_pronta"?: string | null,"nome_exibicao"?: string | null,"proximo_numero"?: number,"rodape_impressao"?: string | null,"telefone"?: string | null,"updated_at"?: string,"whatsapp_ativo"?: boolean,"whatsapp_idioma"?: string,"whatsapp_modelo"?: string | null,"whatsapp_phone_number_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_equipe": {
+                  Row: {
+                    "ativo": boolean,"cor": string,"created_at": string,"empresa_id": string,"id": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cor"?: string,"created_at"?: string,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cor"?: string,"created_at"?: string,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_equipe_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_eventos": {
+                  Row: {
+                    "de_etapa": string | null,"detalhe": string | null,"em": string,"empresa_id": string,"id": number,"ordem_id": string,"para_etapa": string | null,"tipo": string,"usuario": string | null
+                  }
+                  Insert: {
+                    "de_etapa"?: string | null,"detalhe"?: string | null,"em"?: string,"empresa_id": string,"id"?: never,"ordem_id": string,"para_etapa"?: string | null,"tipo": string,"usuario"?: string | null
+                  }
+                  Update: {
+                    "de_etapa"?: string | null,"detalhe"?: string | null,"em"?: string,"empresa_id"?: string,"id"?: never,"ordem_id"?: string,"para_etapa"?: string | null,"tipo"?: string,"usuario"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_eventos_empresa_id_ordem_id_fkey"
+      columns: ["empresa_id","ordem_id"]
+isOneToOne: false
+      referencedRelation: "os_ordens"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_eventos_usuario_fkey"
+      columns: ["usuario"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_fotos": {
+                  Row: {
+                    "caminho": string,"confirmado_em": string | null,"created_at": string,"empresa_id": string,"enviado_por": string | null,"id": string,"legenda": string | null,"mime": string,"momento": string,"ordem_id": string,"tamanho": number
+                  }
+                  Insert: {
+                    "caminho": string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"legenda"?: string | null,"mime": string,"momento"?: string,"ordem_id": string,"tamanho": number
+                  }
+                  Update: {
+                    "caminho"?: string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"legenda"?: string | null,"mime"?: string,"momento"?: string,"ordem_id"?: string,"tamanho"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_fotos_empresa_id_ordem_id_fkey"
+      columns: ["empresa_id","ordem_id"]
+isOneToOne: false
+      referencedRelation: "os_ordens"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_fotos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_itens": {
+                  Row: {
+                    "descricao": string,"empresa_id": string,"id": string,"minutos_estimados": number,"ordem_id": string,"posicao": number,"quantidade": number,"servico_id": string | null,"unidade": string,"valor_unitario": number
+                  }
+                  Insert: {
+                    "descricao": string,"empresa_id": string,"id"?: string,"minutos_estimados"?: number,"ordem_id": string,"posicao"?: number,"quantidade": number,"servico_id"?: string | null,"unidade"?: string,"valor_unitario"?: number
+                  }
+                  Update: {
+                    "descricao"?: string,"empresa_id"?: string,"id"?: string,"minutos_estimados"?: number,"ordem_id"?: string,"posicao"?: number,"quantidade"?: number,"servico_id"?: string | null,"unidade"?: string,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_itens_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_itens_empresa_id_ordem_id_fkey"
+      columns: ["empresa_id","ordem_id"]
+isOneToOne: false
+      referencedRelation: "os_ordens"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_itens_empresa_id_servico_id_fkey"
+      columns: ["empresa_id","servico_id"]
+isOneToOne: false
+      referencedRelation: "os_servicos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"os_ordens": {
+                  Row: {
+                    "aberta_em": string,"assinatura_caminho": string | null,"avisar_whatsapp": boolean,"aviso_whatsapp": string | null,"aviso_whatsapp_em": string | null,"aviso_whatsapp_erro": string | null,"cancelada_em": string | null,"cancelada_motivo": string | null,"cliente_documento": string | null,"cliente_nome": string,"cliente_telefone": string | null,"codigo_publico": string,"created_at": string,"criado_por": string | null,"descricao": string | null,"empresa_id": string,"entregue_em": string | null,"entregue_por": string | null,"etapa": string,"execucao_desde": string | null,"id": string,"iniciada_em": string | null,"minutos_estimados": number,"minutos_execucao": number,"minutos_pausa": number,"numero": number,"observacoes": string | null,"ordem": number,"pausa_motivo": string | null,"pausada": boolean,"pausada_em": string | null,"prazo": string | null,"previsao": string | null,"prioridade": string,"pronta_em": string | null,"responsavel_id": string | null,"retirado_documento": string | null,"retirado_por": string | null,"updated_at": string,"valor_a_receber": number,"valor_recebido": number,"valor_total": number,"busca": string | null
+                  }
+                  Insert: {
+                    "aberta_em"?: string,"assinatura_caminho"?: string | null,"avisar_whatsapp"?: boolean,"aviso_whatsapp"?: string | null,"aviso_whatsapp_em"?: string | null,"aviso_whatsapp_erro"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"cliente_documento"?: string | null,"cliente_nome": string,"cliente_telefone"?: string | null,"codigo_publico": string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id": string,"entregue_em"?: string | null,"entregue_por"?: string | null,"etapa"?: string,"execucao_desde"?: string | null,"id"?: string,"iniciada_em"?: string | null,"minutos_estimados"?: number,"minutos_execucao"?: number,"minutos_pausa"?: number,"numero": number,"observacoes"?: string | null,"ordem"?: number,"pausa_motivo"?: string | null,"pausada"?: boolean,"pausada_em"?: string | null,"prazo"?: string | null,"previsao"?: string | null,"prioridade"?: string,"pronta_em"?: string | null,"responsavel_id"?: string | null,"retirado_documento"?: string | null,"retirado_por"?: string | null,"updated_at"?: string,"valor_a_receber"?: number,"valor_recebido"?: number,"valor_total"?: number
+                  }
+                  Update: {
+                    "aberta_em"?: string,"assinatura_caminho"?: string | null,"avisar_whatsapp"?: boolean,"aviso_whatsapp"?: string | null,"aviso_whatsapp_em"?: string | null,"aviso_whatsapp_erro"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"cliente_documento"?: string | null,"cliente_nome"?: string,"cliente_telefone"?: string | null,"codigo_publico"?: string,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id"?: string,"entregue_em"?: string | null,"entregue_por"?: string | null,"etapa"?: string,"execucao_desde"?: string | null,"id"?: string,"iniciada_em"?: string | null,"minutos_estimados"?: number,"minutos_execucao"?: number,"minutos_pausa"?: number,"numero"?: number,"observacoes"?: string | null,"ordem"?: number,"pausa_motivo"?: string | null,"pausada"?: boolean,"pausada_em"?: string | null,"prazo"?: string | null,"previsao"?: string | null,"prioridade"?: string,"pronta_em"?: string | null,"responsavel_id"?: string | null,"retirado_documento"?: string | null,"retirado_por"?: string | null,"updated_at"?: string,"valor_a_receber"?: number,"valor_recebido"?: number,"valor_total"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_ordens_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_ordens_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_ordens_empresa_id_responsavel_id_fkey"
+      columns: ["empresa_id","responsavel_id"]
+isOneToOne: false
+      referencedRelation: "os_equipe"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_ordens_entregue_por_fkey"
+      columns: ["entregue_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_pagamentos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"cancelado_por": string | null,"created_at": string,"empresa_id": string,"forma": string,"id": string,"lancamento_id": string | null,"observacao": string | null,"ordem_id": string,"registrado_por": string | null,"sessao_id": string | null,"sinal": boolean,"valor": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"cancelado_por"?: string | null,"created_at"?: string,"empresa_id": string,"forma": string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"ordem_id": string,"registrado_por"?: string | null,"sessao_id"?: string | null,"sinal"?: boolean,"valor": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"cancelado_por"?: string | null,"created_at"?: string,"empresa_id"?: string,"forma"?: string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"ordem_id"?: string,"registrado_por"?: string | null,"sessao_id"?: string | null,"sinal"?: boolean,"valor"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_pagamentos_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_pagamentos_empresa_id_ordem_id_fkey"
+      columns: ["empresa_id","ordem_id"]
+isOneToOne: false
+      referencedRelation: "os_ordens"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_pagamentos_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "os_pagamentos_lancamento_id_fkey"
+      columns: ["lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_pagamentos_registrado_por_fkey"
+      columns: ["registrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_servicos": {
+                  Row: {
+                    "ativo": boolean,"created_at": string,"empresa_id": string,"id": string,"minutos_fixos": number,"minutos_por_unidade": number,"nome": string,"setor": string | null,"unidade": string,"updated_at": string,"valor_unitario": number
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"minutos_fixos"?: number,"minutos_por_unidade"?: number,"nome": string,"setor"?: string | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number
+                  }
+                  Update: {
+                    "ativo"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"minutos_fixos"?: number,"minutos_por_unidade"?: number,"nome"?: string,"setor"?: string | null,"unidade"?: string,"updated_at"?: string,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_servicos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_setores": {
+                  Row: {
+                    "ativo": boolean,"created_at": string,"empresa_id": string,"id": string,"maquinas": number,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"maquinas"?: number,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"maquinas"?: number,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_setores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"os_whatsapp_segredo": {
+                  Row: {
+                    "atualizado_por": string | null,"empresa_id": string,"token_cifrado": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"empresa_id": string,"token_cifrado": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"empresa_id"?: string,"token_cifrado"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "os_whatsapp_segredo_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "os_whatsapp_segredo_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"perfis": {
+                  Row: {
+                    "aceite_termos_em": string | null,"aceite_termos_versao": string | null,"anonimizado_em": string | null,"ativo": boolean,"cargo": string | null,"created_at": string,"email": string,"id": string,"nome": string,"preferencias": NonNullable<Json>,"telefone": string | null,"tipo": string,"ultimo_acesso_em": string | null,"updated_at": string,"busca": string | null
+                  }
+                  Insert: {
+                    "aceite_termos_em"?: string | null,"aceite_termos_versao"?: string | null,"anonimizado_em"?: string | null,"ativo"?: boolean,"cargo"?: string | null,"created_at"?: string,"email": string,"id": string,"nome": string,"preferencias"?: NonNullable<Json>,"telefone"?: string | null,"tipo"?: string,"ultimo_acesso_em"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "aceite_termos_em"?: string | null,"aceite_termos_versao"?: string | null,"anonimizado_em"?: string | null,"ativo"?: boolean,"cargo"?: string | null,"created_at"?: string,"email"?: string,"id"?: string,"nome"?: string,"preferencias"?: NonNullable<Json>,"telefone"?: string | null,"tipo"?: string,"ultimo_acesso_em"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"politicas_retencao": {
+                  Row: {
+                    "anos": number,"categoria_codigo": string,"observacao": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  Insert: {
+                    "anos": number,"categoria_codigo": string,"observacao"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "anos"?: number,"categoria_codigo"?: string,"observacao"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "politicas_retencao_categoria_codigo_fkey"
+      columns: ["categoria_codigo"]
+isOneToOne: true
+      referencedRelation: "categorias_documento"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "politicas_retencao_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"produto_precos_historico": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"custo_referencia": number | null,"empresa_id": string,"id": number,"origem": string,"preco_anterior": number | null,"preco_novo": number,"produto_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"custo_referencia"?: number | null,"empresa_id": string,"id"?: never,"origem"?: string,"preco_anterior"?: number | null,"preco_novo": number,"produto_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"custo_referencia"?: number | null,"empresa_id"?: string,"id"?: never,"origem"?: string,"preco_anterior"?: number | null,"preco_novo"?: number,"produto_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "produto_precos_historico_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "produto_precos_historico_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "produto_precos_historico_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"projetos": {
+                  Row: {
+                    "ativo": boolean,"codigo": string | null,"created_at": string,"empresa_id": string,"fim": string | null,"id": string,"inicio": string | null,"nome": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"codigo"?: string | null,"created_at"?: string,"empresa_id": string,"fim"?: string | null,"id"?: string,"inicio"?: string | null,"nome": string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"codigo"?: string | null,"created_at"?: string,"empresa_id"?: string,"fim"?: string | null,"id"?: string,"inicio"?: string | null,"nome"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "projetos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"push_aparelhos": {
+                  Row: {
+                    "atualizado_em": string,"chave_auth": string,"chave_p256dh": string,"created_at": string,"descricao": string | null,"endpoint": string,"falhas_seguidas": number,"id": string,"sessao_id": string | null,"ultimo_envio_em": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "atualizado_em"?: string,"chave_auth": string,"chave_p256dh": string,"created_at"?: string,"descricao"?: string | null,"endpoint": string,"falhas_seguidas"?: number,"id"?: string,"sessao_id"?: string | null,"ultimo_envio_em"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "atualizado_em"?: string,"chave_auth"?: string,"chave_p256dh"?: string,"created_at"?: string,"descricao"?: string | null,"endpoint"?: string,"falhas_seguidas"?: number,"id"?: string,"sessao_id"?: string | null,"ultimo_envio_em"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_aparelhos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"recibos_honorarios": {
+                  Row: {
+                    "ano": number,"arquivo_path": string | null,"assinado_em": string | null,"assinatura_documento": string | null,"assinatura_titular": string | null,"cancelado_em": string | null,"cancelado_por": string | null,"cidade": string,"competencia": string | null,"criado_em": string,"criado_por": string | null,"data_recibo": string,"descricao": string | null,"documento_id": string | null,"emitente": NonNullable<Json>,"empresa_id": string | null,"forma_pagamento": string | null,"id": string,"motivo_cancelamento": string | null,"nfse_numero": string | null,"numero": number,"observacao": string | null,"pagador_documento": string | null,"pagador_nome": string,"referencia": string,"situacao": string,"uf": string | null,"valor": number,"busca": string | null
+                  }
+                  Insert: {
+                    "ano": number,"arquivo_path"?: string | null,"assinado_em"?: string | null,"assinatura_documento"?: string | null,"assinatura_titular"?: string | null,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"cidade": string,"competencia"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_recibo": string,"descricao"?: string | null,"documento_id"?: string | null,"emitente": NonNullable<Json>,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"nfse_numero"?: string | null,"numero": number,"observacao"?: string | null,"pagador_documento"?: string | null,"pagador_nome": string,"referencia"?: string,"situacao"?: string,"uf"?: string | null,"valor": number
+                  }
+                  Update: {
+                    "ano"?: number,"arquivo_path"?: string | null,"assinado_em"?: string | null,"assinatura_documento"?: string | null,"assinatura_titular"?: string | null,"cancelado_em"?: string | null,"cancelado_por"?: string | null,"cidade"?: string,"competencia"?: string | null,"criado_em"?: string,"criado_por"?: string | null,"data_recibo"?: string,"descricao"?: string | null,"documento_id"?: string | null,"emitente"?: NonNullable<Json>,"empresa_id"?: string | null,"forma_pagamento"?: string | null,"id"?: string,"motivo_cancelamento"?: string | null,"nfse_numero"?: string | null,"numero"?: number,"observacao"?: string | null,"pagador_documento"?: string | null,"pagador_nome"?: string,"referencia"?: string,"situacao"?: string,"uf"?: string | null,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recibos_honorarios_cancelado_por_fkey"
+      columns: ["cancelado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recibos_honorarios_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recibos_honorarios_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recibos_honorarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"recorrencias": {
+                  Row: {
+                    "ativa": boolean,"categoria_id": string,"centro_custo_id": string | null,"conta_financeira_id": string | null,"contraparte_id": string | null,"created_at": string,"data_fim": string | null,"data_inicio": string,"descricao": string,"dia_vencimento": number | null,"empresa_id": string,"frequencia": string,"id": string,"meses_a_frente": number,"projeto_id": string | null,"tipo": string,"ultima_data_gerada": string | null,"updated_at": string,"valor": number
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"categoria_id": string,"centro_custo_id"?: string | null,"conta_financeira_id"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"data_fim"?: string | null,"data_inicio": string,"descricao": string,"dia_vencimento"?: number | null,"empresa_id": string,"frequencia"?: string,"id"?: string,"meses_a_frente"?: number,"projeto_id"?: string | null,"tipo": string,"ultima_data_gerada"?: string | null,"updated_at"?: string,"valor": number
+                  }
+                  Update: {
+                    "ativa"?: boolean,"categoria_id"?: string,"centro_custo_id"?: string | null,"conta_financeira_id"?: string | null,"contraparte_id"?: string | null,"created_at"?: string,"data_fim"?: string | null,"data_inicio"?: string,"descricao"?: string,"dia_vencimento"?: number | null,"empresa_id"?: string,"frequencia"?: string,"id"?: string,"meses_a_frente"?: number,"projeto_id"?: string | null,"tipo"?: string,"ultima_data_gerada"?: string | null,"updated_at"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recorrencias_empresa_id_categoria_id_fkey"
+      columns: ["empresa_id","categoria_id"]
+isOneToOne: false
+      referencedRelation: "categorias_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "recorrencias_empresa_id_centro_custo_id_fkey"
+      columns: ["empresa_id","centro_custo_id"]
+isOneToOne: false
+      referencedRelation: "centros_custo"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "recorrencias_empresa_id_conta_financeira_id_fkey"
+      columns: ["empresa_id","conta_financeira_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "recorrencias_empresa_id_contraparte_id_fkey"
+      columns: ["empresa_id","contraparte_id"]
+isOneToOne: false
+      referencedRelation: "contrapartes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "recorrencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "recorrencias_empresa_id_projeto_id_fkey"
+      columns: ["empresa_id","projeto_id"]
+isOneToOne: false
+      referencedRelation: "projetos"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"relatorio_acessos": {
+                  Row: {
+                    "empresa_id": string,"id": number,"ocorrido_em": string,"relatorio_id": string,"tipo": string,"user_id": string | null
+                  }
+                  Insert: {
+                    "empresa_id": string,"id"?: never,"ocorrido_em"?: string,"relatorio_id": string,"tipo": string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "empresa_id"?: string,"id"?: never,"ocorrido_em"?: string,"relatorio_id"?: string,"tipo"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "relatorio_acessos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "relatorio_acessos_relatorio_id_fkey"
+      columns: ["relatorio_id"]
+isOneToOne: false
+      referencedRelation: "relatorios_publicados"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "relatorio_acessos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"relatorios_publicados": {
+                  Row: {
+                    "atualizado_em": string,"comentarios_contador": string | null,"competencia": string | null,"dados": NonNullable<Json>,"empresa_id": string,"gerado_em": string,"gerado_por": string | null,"id": string,"limitacoes": NonNullable<Json>,"periodo_fim": string,"periodo_inicio": string,"publicado_em": string | null,"publicado_por": string | null,"resumo_texto": string | null,"situacao": string,"status": string,"substituido_por": string | null,"tipo": string,"titulo": string,"versao": number
+                  }
+                  Insert: {
+                    "atualizado_em"?: string,"comentarios_contador"?: string | null,"competencia"?: string | null,"dados"?: NonNullable<Json>,"empresa_id": string,"gerado_em"?: string,"gerado_por"?: string | null,"id"?: string,"limitacoes"?: NonNullable<Json>,"periodo_fim": string,"periodo_inicio": string,"publicado_em"?: string | null,"publicado_por"?: string | null,"resumo_texto"?: string | null,"situacao"?: string,"status"?: string,"substituido_por"?: string | null,"tipo": string,"titulo": string,"versao"?: number
+                  }
+                  Update: {
+                    "atualizado_em"?: string,"comentarios_contador"?: string | null,"competencia"?: string | null,"dados"?: NonNullable<Json>,"empresa_id"?: string,"gerado_em"?: string,"gerado_por"?: string | null,"id"?: string,"limitacoes"?: NonNullable<Json>,"periodo_fim"?: string,"periodo_inicio"?: string,"publicado_em"?: string | null,"publicado_por"?: string | null,"resumo_texto"?: string | null,"situacao"?: string,"status"?: string,"substituido_por"?: string | null,"tipo"?: string,"titulo"?: string,"versao"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "relatorios_publicados_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "relatorios_publicados_gerado_por_fkey"
+      columns: ["gerado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "relatorios_publicados_publicado_por_fkey"
+      columns: ["publicado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "relatorios_publicados_substituido_por_fkey"
+      columns: ["substituido_por"]
+isOneToOne: false
+      referencedRelation: "relatorios_publicados"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"renegociacoes": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"desfeita_em": string | null,"desfeita_por": string | null,"dre_ajuste_id": string | null,"empresa_id": string,"encargos": number | null,"id": string,"motivo": string,"motivo_desfazer": string | null,"numero": number,"tipo": string,"valor_novo": number,"valor_renegociado": number
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"desfeita_em"?: string | null,"desfeita_por"?: string | null,"dre_ajuste_id"?: string | null,"empresa_id": string,"encargos"?: never,"id"?: string,"motivo": string,"motivo_desfazer"?: string | null,"numero": number,"tipo": string,"valor_novo": number,"valor_renegociado": number
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"desfeita_em"?: string | null,"desfeita_por"?: string | null,"dre_ajuste_id"?: string | null,"empresa_id"?: string,"encargos"?: never,"id"?: string,"motivo"?: string,"motivo_desfazer"?: string | null,"numero"?: number,"tipo"?: string,"valor_novo"?: number,"valor_renegociado"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "renegociacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "renegociacoes_desfeita_por_fkey"
+      columns: ["desfeita_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "renegociacoes_dre_ajuste_id_fkey"
+      columns: ["dre_ajuste_id"]
+isOneToOne: false
+      referencedRelation: "dre_ajustes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "renegociacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"rh_cargos": {
+                  Row: {
+                    "ativo": boolean,"created_at": string,"criado_por": string | null,"descricao": string | null,"empresa_id": string,"id": string,"nome": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id": string,"id"?: string,"nome": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"created_at"?: string,"criado_por"?: string | null,"descricao"?: string | null,"empresa_id"?: string,"id"?: string,"nome"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_cargos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_cargos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"rh_tarefa_dependencias": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"depende_de_id": string,"empresa_id": string,"tarefa_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"depende_de_id": string,"empresa_id": string,"tarefa_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"depende_de_id"?: string,"empresa_id"?: string,"tarefa_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_dependencias_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefa_dependencias_empresa_id_depende_de_id_fkey"
+      columns: ["empresa_id","depende_de_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_dependencias_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"rh_tarefa_eventos": {
+                  Row: {
+                    "detalhe": string | null,"em": string,"empresa_id": string,"id": number,"origem": string,"tarefa_id": string,"tipo": string,"usuario": string | null
+                  }
+                  Insert: {
+                    "detalhe"?: string | null,"em"?: string,"empresa_id": string,"id"?: never,"origem"?: string,"tarefa_id": string,"tipo": string,"usuario"?: string | null
+                  }
+                  Update: {
+                    "detalhe"?: string | null,"em"?: string,"empresa_id"?: string,"id"?: never,"origem"?: string,"tarefa_id"?: string,"tipo"?: string,"usuario"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_eventos_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_eventos_usuario_fkey"
+      columns: ["usuario"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"rh_tarefa_evidencias": {
+                  Row: {
+                    "caminho": string,"confirmado_em": string | null,"created_at": string,"empresa_id": string,"enviado_por": string | null,"id": string,"legenda": string | null,"mime": string,"tamanho": number,"tarefa_id": string
+                  }
+                  Insert: {
+                    "caminho": string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"legenda"?: string | null,"mime": string,"tamanho": number,"tarefa_id": string
+                  }
+                  Update: {
+                    "caminho"?: string,"confirmado_em"?: string | null,"created_at"?: string,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"legenda"?: string | null,"mime"?: string,"tamanho"?: number,"tarefa_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_evidencias_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_evidencias_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"rh_tarefa_modelos": {
+                  Row: {
+                    "ativo": boolean,"cargo_id": string | null,"chave_rotina": string | null,"created_at": string,"criado_por": string | null,"depende_de_id": string | null,"descricao": string | null,"dia_mes": number,"dia_semana": number,"dias_semana": (number)[],"empresa_id": string,"exige_area": boolean,"exige_foto": boolean,"exige_semana": boolean,"hora_limite": string,"id": string,"parametros": NonNullable<Json>,"periodicidade": string,"regra": string,"responsavel_id": string | null,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cargo_id"?: string | null,"chave_rotina"?: string | null,"created_at"?: string,"criado_por"?: string | null,"depende_de_id"?: string | null,"descricao"?: string | null,"dia_mes"?: number,"dia_semana"?: number,"dias_semana"?: (number)[],"empresa_id": string,"exige_area"?: boolean,"exige_foto"?: boolean,"exige_semana"?: boolean,"hora_limite"?: string,"id"?: string,"parametros"?: NonNullable<Json>,"periodicidade": string,"regra"?: string,"responsavel_id"?: string | null,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cargo_id"?: string | null,"chave_rotina"?: string | null,"created_at"?: string,"criado_por"?: string | null,"depende_de_id"?: string | null,"descricao"?: string | null,"dia_mes"?: number,"dia_semana"?: number,"dias_semana"?: (number)[],"empresa_id"?: string,"exige_area"?: boolean,"exige_foto"?: boolean,"exige_semana"?: boolean,"hora_limite"?: string,"id"?: string,"parametros"?: NonNullable<Json>,"periodicidade"?: string,"regra"?: string,"responsavel_id"?: string | null,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_modelos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefa_modelos_empresa_id_cargo_id_fkey"
+      columns: ["empresa_id","cargo_id"]
+isOneToOne: false
+      referencedRelation: "rh_cargos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_modelos_empresa_id_depende_de_id_fkey"
+      columns: ["empresa_id","depende_de_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefa_modelos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefa_modelos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefa_modelos_empresa_id_responsavel_id_fkey"
+      columns: ["empresa_id","responsavel_id"]
+isOneToOne: false
+      referencedRelation: "escala_funcionarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"rh_tarefa_vinculos": {
+                  Row: {
+                    "criado_em": string,"decidido_em": string | null,"decidido_por": string | null,"descricao": string,"detalhe": NonNullable<Json>,"empresa_id": string,"ia_explicacao": string | null,"ia_recomendado": boolean,"id": string,"origem": string,"registro_id": string | null,"situacao": string,"tarefa_id": string,"tipo": string
+                  }
+                  Insert: {
+                    "criado_em"?: string,"decidido_em"?: string | null,"decidido_por"?: string | null,"descricao": string,"detalhe"?: NonNullable<Json>,"empresa_id": string,"ia_explicacao"?: string | null,"ia_recomendado"?: boolean,"id"?: string,"origem"?: string,"registro_id"?: string | null,"situacao"?: string,"tarefa_id": string,"tipo": string
+                  }
+                  Update: {
+                    "criado_em"?: string,"decidido_em"?: string | null,"decidido_por"?: string | null,"descricao"?: string,"detalhe"?: NonNullable<Json>,"empresa_id"?: string,"ia_explicacao"?: string | null,"ia_recomendado"?: boolean,"id"?: string,"origem"?: string,"registro_id"?: string | null,"situacao"?: string,"tarefa_id"?: string,"tipo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefa_vinculos_decidido_por_fkey"
+      columns: ["decidido_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefa_vinculos_empresa_id_tarefa_id_fkey"
+      columns: ["empresa_id","tarefa_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"rh_tarefas": {
+                  Row: {
+                    "area": string | null,"concluida_em": string | null,"concluida_por": string | null,"conclusao_pendente": boolean,"created_at": string,"empresa_id": string,"id": string,"iniciada_em": string | null,"modelo_id": string,"observacao": string | null,"ordem": number,"origem_conclusao": string | null,"periodicidade": string,"periodo_fim": string,"periodo_inicio": string,"prazo": string,"responsavel_id": string | null,"semana_referencia": string | null,"status": string,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "area"?: string | null,"concluida_em"?: string | null,"concluida_por"?: string | null,"conclusao_pendente"?: boolean,"created_at"?: string,"empresa_id": string,"id"?: string,"iniciada_em"?: string | null,"modelo_id": string,"observacao"?: string | null,"ordem"?: number,"origem_conclusao"?: string | null,"periodicidade": string,"periodo_fim": string,"periodo_inicio": string,"prazo": string,"responsavel_id"?: string | null,"semana_referencia"?: string | null,"status"?: string,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "area"?: string | null,"concluida_em"?: string | null,"concluida_por"?: string | null,"conclusao_pendente"?: boolean,"created_at"?: string,"empresa_id"?: string,"id"?: string,"iniciada_em"?: string | null,"modelo_id"?: string,"observacao"?: string | null,"ordem"?: number,"origem_conclusao"?: string | null,"periodicidade"?: string,"periodo_fim"?: string,"periodo_inicio"?: string,"prazo"?: string,"responsavel_id"?: string | null,"semana_referencia"?: string | null,"status"?: string,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rh_tarefas_concluida_por_fkey"
+      columns: ["concluida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rh_tarefas_empresa_id_modelo_id_fkey"
+      columns: ["empresa_id","modelo_id"]
+isOneToOne: false
+      referencedRelation: "rh_tarefa_modelos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "rh_tarefas_empresa_id_responsavel_id_fkey"
+      columns: ["empresa_id","responsavel_id"]
+isOneToOne: false
+      referencedRelation: "escala_funcionarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"rotinas_status": {
+                  Row: {
+                    "erro": string | null,"ok": boolean,"resultado": Json | null,"rotina": string,"ultima_execucao": string
+                  }
+                  Insert: {
+                    "erro"?: string | null,"ok"?: boolean,"resultado"?: Json | null,"rotina": string,"ultima_execucao"?: string
+                  }
+                  Update: {
+                    "erro"?: string | null,"ok"?: boolean,"resultado"?: Json | null,"rotina"?: string,"ultima_execucao"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"servicos_catalogo": {
+                  Row: {
+                    "area": string,"ativo": boolean,"codigo": string,"descricao": string | null,"documentos_necessarios": string | null,"nome": string,"ordem": number,"prazo_dias": number
+                  }
+                  Insert: {
+                    "area": string,"ativo"?: boolean,"codigo": string,"descricao"?: string | null,"documentos_necessarios"?: string | null,"nome": string,"ordem"?: number,"prazo_dias"?: number
+                  }
+                  Update: {
+                    "area"?: string,"ativo"?: boolean,"codigo"?: string,"descricao"?: string | null,"documentos_necessarios"?: string | null,"nome"?: string,"ordem"?: number,"prazo_dias"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"sessoes_portal": {
+                  Row: {
+                    "bloqueada_em": string | null,"created_at": string,"manter_ate": string,"session_id": string,"tentativas": number,"user_id": string
+                  }
+                  Insert: {
+                    "bloqueada_em"?: string | null,"created_at"?: string,"manter_ate": string,"session_id": string,"tentativas"?: number,"user_id": string
+                  }
+                  Update: {
+                    "bloqueada_em"?: string | null,"created_at"?: string,"manter_ate"?: string,"session_id"?: string,"tentativas"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sessoes_portal_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"solicitacao_eventos": {
+                  Row: {
+                    "comentario": string | null,"empresa_id": string,"id": number,"ocorrido_em": string,"solicitacao_id": string,"status_anterior": string | null,"status_novo": string | null,"tipo": string,"usuario_id": string | null
+                  }
+                  Insert: {
+                    "comentario"?: string | null,"empresa_id": string,"id"?: never,"ocorrido_em"?: string,"solicitacao_id": string,"status_anterior"?: string | null,"status_novo"?: string | null,"tipo": string,"usuario_id"?: string | null
+                  }
+                  Update: {
+                    "comentario"?: string | null,"empresa_id"?: string,"id"?: never,"ocorrido_em"?: string,"solicitacao_id"?: string,"status_anterior"?: string | null,"status_novo"?: string | null,"tipo"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "solicitacao_eventos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacao_eventos_solicitacao_id_fkey"
+      columns: ["solicitacao_id"]
+isOneToOne: false
+      referencedRelation: "solicitacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacao_eventos_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"solicitacoes": {
+                  Row: {
+                    "concluida_em": string | null,"conversa_id": string | null,"created_at": string,"descricao": string | null,"empresa_id": string,"id": string,"numero": number,"prazo": string | null,"prioridade": string,"responsavel_id": string | null,"servico_codigo": string,"solicitado_por": string | null,"status": string,"titulo": string,"updated_at": string
+                  }
+                  Insert: {
+                    "concluida_em"?: string | null,"conversa_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"empresa_id": string,"id"?: string,"numero"?: never,"prazo"?: string | null,"prioridade"?: string,"responsavel_id"?: string | null,"servico_codigo": string,"solicitado_por"?: string | null,"status"?: string,"titulo": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "concluida_em"?: string | null,"conversa_id"?: string | null,"created_at"?: string,"descricao"?: string | null,"empresa_id"?: string,"id"?: string,"numero"?: never,"prazo"?: string | null,"prioridade"?: string,"responsavel_id"?: string | null,"servico_codigo"?: string,"solicitado_por"?: string | null,"status"?: string,"titulo"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "solicitacoes_conversa_id_fkey"
+      columns: ["conversa_id"]
+isOneToOne: false
+      referencedRelation: "conversas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacoes_responsavel_id_fkey"
+      columns: ["responsavel_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacoes_servico_codigo_fkey"
+      columns: ["servico_codigo"]
+isOneToOne: false
+      referencedRelation: "servicos_catalogo"
+      referencedColumns: ["codigo"]
+    },{
+      foreignKeyName: "solicitacoes_solicitado_por_fkey"
+      columns: ["solicitado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"solicitacoes_titular": {
+                  Row: {
+                    "created_at": string,"descricao": string | null,"email": string | null,"id": string,"respondida_em": string | null,"respondida_por": string | null,"resposta": string | null,"status": string,"tipo": string,"user_id": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"descricao"?: string | null,"email"?: string | null,"id"?: string,"respondida_em"?: string | null,"respondida_por"?: string | null,"resposta"?: string | null,"status"?: string,"tipo": string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"descricao"?: string | null,"email"?: string | null,"id"?: string,"respondida_em"?: string | null,"respondida_por"?: string | null,"resposta"?: string | null,"status"?: string,"tipo"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "solicitacoes_titular_respondida_por_fkey"
+      columns: ["respondida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "solicitacoes_titular_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sped_arquivos": {
+                  Row: {
+                    "avisos": Json | null,"cnpj": string | null,"conferido_em": string | null,"created_at": string,"documento_id": string | null,"empresa_id": string,"erro": string | null,"finalidade": string | null,"id": string,"ie": string | null,"nome": string | null,"nome_arquivo": string | null,"perfil": string | null,"periodo_fim": string,"periodo_inicio": string,"resumo": Json | null,"situacao": string,"tipo": string,"totais": Json | null,"uf": string | null,"versao": number | null,"versao_leiaute": string | null,"vigente": boolean
+                  }
+                  Insert: {
+                    "avisos"?: Json | null,"cnpj"?: string | null,"conferido_em"?: string | null,"created_at"?: string,"documento_id"?: string | null,"empresa_id": string,"erro"?: string | null,"finalidade"?: string | null,"id"?: string,"ie"?: string | null,"nome"?: string | null,"nome_arquivo"?: string | null,"perfil"?: string | null,"periodo_fim": string,"periodo_inicio": string,"resumo"?: Json | null,"situacao"?: string,"tipo": string,"totais"?: Json | null,"uf"?: string | null,"versao"?: number | null,"versao_leiaute"?: string | null,"vigente"?: boolean
+                  }
+                  Update: {
+                    "avisos"?: Json | null,"cnpj"?: string | null,"conferido_em"?: string | null,"created_at"?: string,"documento_id"?: string | null,"empresa_id"?: string,"erro"?: string | null,"finalidade"?: string | null,"id"?: string,"ie"?: string | null,"nome"?: string | null,"nome_arquivo"?: string | null,"perfil"?: string | null,"periodo_fim"?: string,"periodo_inicio"?: string,"resumo"?: Json | null,"situacao"?: string,"tipo"?: string,"totais"?: Json | null,"uf"?: string | null,"versao"?: number | null,"versao_leiaute"?: string | null,"vigente"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sped_arquivos_documento_id_fkey"
+      columns: ["documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sped_arquivos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sped_divergencias": {
+                  Row: {
+                    "arquivo_id": string,"chave": string | null,"data": string | null,"detalhe": string | null,"diferenca": number | null,"documento_fiscal_id": string | null,"empresa_id": string,"gravidade": string,"id": number,"modelo": string | null,"numero": string | null,"operacao": string | null,"participante": string | null,"regra": string,"serie": string | null,"valor_sped": number | null,"valor_xml": number | null
+                  }
+                  Insert: {
+                    "arquivo_id": string,"chave"?: string | null,"data"?: string | null,"detalhe"?: string | null,"diferenca"?: number | null,"documento_fiscal_id"?: string | null,"empresa_id": string,"gravidade": string,"id"?: never,"modelo"?: string | null,"numero"?: string | null,"operacao"?: string | null,"participante"?: string | null,"regra": string,"serie"?: string | null,"valor_sped"?: number | null,"valor_xml"?: number | null
+                  }
+                  Update: {
+                    "arquivo_id"?: string,"chave"?: string | null,"data"?: string | null,"detalhe"?: string | null,"diferenca"?: number | null,"documento_fiscal_id"?: string | null,"empresa_id"?: string,"gravidade"?: string,"id"?: never,"modelo"?: string | null,"numero"?: string | null,"operacao"?: string | null,"participante"?: string | null,"regra"?: string,"serie"?: string | null,"valor_sped"?: number | null,"valor_xml"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sped_divergencias_arquivo_id_fkey"
+      columns: ["arquivo_id"]
+isOneToOne: false
+      referencedRelation: "sped_arquivos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sped_divergencias_documento_fiscal_id_fkey"
+      columns: ["documento_fiscal_id"]
+isOneToOne: false
+      referencedRelation: "documentos_fiscais"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sped_divergencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sped_documentos": {
+                  Row: {
+                    "arquivo_id": string,"cfops": (string)[],"chave": string | null,"cod_mod": string,"cod_sit": string,"dt_doc": string | null,"dt_e_s": string | null,"empresa_id": string,"id": number,"ind_emit": string,"ind_oper": string,"linha": number | null,"numero": string | null,"participante_documento": string | null,"participante_nome": string | null,"serie": string | null,"vl_doc": number | null,"vl_icms": number | null,"vl_icms_st": number | null,"vl_ipi": number | null
+                  }
+                  Insert: {
+                    "arquivo_id": string,"cfops"?: (string)[],"chave"?: string | null,"cod_mod": string,"cod_sit": string,"dt_doc"?: string | null,"dt_e_s"?: string | null,"empresa_id": string,"id"?: never,"ind_emit": string,"ind_oper": string,"linha"?: number | null,"numero"?: string | null,"participante_documento"?: string | null,"participante_nome"?: string | null,"serie"?: string | null,"vl_doc"?: number | null,"vl_icms"?: number | null,"vl_icms_st"?: number | null,"vl_ipi"?: number | null
+                  }
+                  Update: {
+                    "arquivo_id"?: string,"cfops"?: (string)[],"chave"?: string | null,"cod_mod"?: string,"cod_sit"?: string,"dt_doc"?: string | null,"dt_e_s"?: string | null,"empresa_id"?: string,"id"?: never,"ind_emit"?: string,"ind_oper"?: string,"linha"?: number | null,"numero"?: string | null,"participante_documento"?: string | null,"participante_nome"?: string | null,"serie"?: string | null,"vl_doc"?: number | null,"vl_icms"?: number | null,"vl_icms_st"?: number | null,"vl_ipi"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sped_documentos_arquivo_id_fkey"
+      columns: ["arquivo_id"]
+isOneToOne: false
+      referencedRelation: "sped_arquivos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sped_documentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"suporte_ia_usos": {
+                  Row: {
+                    "created_at": string,"empresa_id": string | null,"erro": string | null,"id": number,"modelo": string,"ok": boolean | null,"tokens_entrada": number | null,"tokens_saida": number | null,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"empresa_id"?: string | null,"erro"?: string | null,"id"?: never,"modelo": string,"ok"?: boolean | null,"tokens_entrada"?: number | null,"tokens_saida"?: number | null,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"empresa_id"?: string | null,"erro"?: string | null,"id"?: never,"modelo"?: string,"ok"?: boolean | null,"tokens_entrada"?: number | null,"tokens_saida"?: number | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "suporte_ia_usos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "suporte_ia_usos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"suporte_perguntas": {
+                  Row: {
+                    "achou": boolean,"atalhos": number,"avaliada_em": string | null,"created_at": string,"empresa_id": string | null,"equipe": boolean,"id": number,"modo": string,"pergunta": string | null,"tela": string | null,"tratada_em": string | null,"tratada_por": string | null,"trechos": (string)[],"user_id": string | null,"util": boolean | null
+                  }
+                  Insert: {
+                    "achou": boolean,"atalhos"?: number,"avaliada_em"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"equipe"?: boolean,"id"?: never,"modo": string,"pergunta"?: string | null,"tela"?: string | null,"tratada_em"?: string | null,"tratada_por"?: string | null,"trechos"?: (string)[],"user_id"?: string | null,"util"?: boolean | null
+                  }
+                  Update: {
+                    "achou"?: boolean,"atalhos"?: number,"avaliada_em"?: string | null,"created_at"?: string,"empresa_id"?: string | null,"equipe"?: boolean,"id"?: never,"modo"?: string,"pergunta"?: string | null,"tela"?: string | null,"tratada_em"?: string | null,"tratada_por"?: string | null,"trechos"?: (string)[],"user_id"?: string | null,"util"?: boolean | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "suporte_perguntas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "suporte_perguntas_tratada_por_fkey"
+      columns: ["tratada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "suporte_perguntas_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"tarefa_historico": {
+                  Row: {
+                    "acao": string,"comentario": string | null,"detalhes": Json | null,"empresa_id": string,"id": number,"ocorrido_em": string,"status_anterior": string | null,"status_novo": string | null,"tarefa_id": string,"usuario_id": string | null
+                  }
+                  Insert: {
+                    "acao": string,"comentario"?: string | null,"detalhes"?: Json | null,"empresa_id": string,"id"?: never,"ocorrido_em"?: string,"status_anterior"?: string | null,"status_novo"?: string | null,"tarefa_id": string,"usuario_id"?: string | null
+                  }
+                  Update: {
+                    "acao"?: string,"comentario"?: string | null,"detalhes"?: Json | null,"empresa_id"?: string,"id"?: never,"ocorrido_em"?: string,"status_anterior"?: string | null,"status_novo"?: string | null,"tarefa_id"?: string,"usuario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tarefa_historico_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefa_historico_tarefa_id_fkey"
+      columns: ["tarefa_id"]
+isOneToOne: false
+      referencedRelation: "tarefas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"tarefas": {
+                  Row: {
+                    "competencia": string,"comprovante_documento_id": string | null,"concluida_em": string | null,"concluida_por": string | null,"created_at": string,"dispensa_motivo": string | null,"empresa_id": string,"enviada_revisao_em": string | null,"etapa": string,"guia_documento_id": string | null,"id": string,"obrigacao_id": string,"observacao": string | null,"prazo_interno": string,"prazo_legal": string | null,"protocolo": string | null,"regra_id": string | null,"responsavel_id": string | null,"revisada_em": string | null,"revisada_por": string | null,"revisor_id": string | null,"status": string,"updated_at": string,"valor": number | null
+                  }
+                  Insert: {
+                    "competencia": string,"comprovante_documento_id"?: string | null,"concluida_em"?: string | null,"concluida_por"?: string | null,"created_at"?: string,"dispensa_motivo"?: string | null,"empresa_id": string,"enviada_revisao_em"?: string | null,"etapa": string,"guia_documento_id"?: string | null,"id"?: string,"obrigacao_id": string,"observacao"?: string | null,"prazo_interno": string,"prazo_legal"?: string | null,"protocolo"?: string | null,"regra_id"?: string | null,"responsavel_id"?: string | null,"revisada_em"?: string | null,"revisada_por"?: string | null,"revisor_id"?: string | null,"status"?: string,"updated_at"?: string,"valor"?: number | null
+                  }
+                  Update: {
+                    "competencia"?: string,"comprovante_documento_id"?: string | null,"concluida_em"?: string | null,"concluida_por"?: string | null,"created_at"?: string,"dispensa_motivo"?: string | null,"empresa_id"?: string,"enviada_revisao_em"?: string | null,"etapa"?: string,"guia_documento_id"?: string | null,"id"?: string,"obrigacao_id"?: string,"observacao"?: string | null,"prazo_interno"?: string,"prazo_legal"?: string | null,"protocolo"?: string | null,"regra_id"?: string | null,"responsavel_id"?: string | null,"revisada_em"?: string | null,"revisada_por"?: string | null,"revisor_id"?: string | null,"status"?: string,"updated_at"?: string,"valor"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tarefas_comprovante_documento_id_fkey"
+      columns: ["comprovante_documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_concluida_por_fkey"
+      columns: ["concluida_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_guia_documento_id_fkey"
+      columns: ["guia_documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_obrigacao_id_fkey"
+      columns: ["obrigacao_id"]
+isOneToOne: false
+      referencedRelation: "obrigacoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_regra_id_fkey"
+      columns: ["regra_id"]
+isOneToOne: false
+      referencedRelation: "obrigacao_regras"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_responsavel_id_fkey"
+      columns: ["responsavel_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_revisada_por_fkey"
+      columns: ["revisada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tarefas_revisor_id_fkey"
+      columns: ["revisor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"transferencias": {
+                  Row: {
+                    "conciliacao_id": string | null,"conta_destino_id": string,"conta_origem_id": string,"created_at": string,"criado_por": string | null,"data": string,"descricao": string | null,"empresa_id": string,"id": string,"origem": string,"tipo": string,"valor": number
+                  }
+                  Insert: {
+                    "conciliacao_id"?: string | null,"conta_destino_id": string,"conta_origem_id": string,"created_at"?: string,"criado_por"?: string | null,"data": string,"descricao"?: string | null,"empresa_id": string,"id"?: string,"origem"?: string,"tipo"?: string,"valor": number
+                  }
+                  Update: {
+                    "conciliacao_id"?: string | null,"conta_destino_id"?: string,"conta_origem_id"?: string,"created_at"?: string,"criado_por"?: string | null,"data"?: string,"descricao"?: string | null,"empresa_id"?: string,"id"?: string,"origem"?: string,"tipo"?: string,"valor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transferencias_conciliacao_fk"
+      columns: ["empresa_id","conciliacao_id"]
+isOneToOne: false
+      referencedRelation: "conciliacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "transferencias_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "transferencias_empresa_id_conta_destino_id_fkey"
+      columns: ["empresa_id","conta_destino_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "transferencias_empresa_id_conta_origem_id_fkey"
+      columns: ["empresa_id","conta_origem_id"]
+isOneToOne: false
+      referencedRelation: "contas_financeiras"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "transferencias_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vencimento_avisos": {
+                  Row: {
+                    "enviado_em": string,"marco": number,"validade": string,"vencimento_id": string
+                  }
+                  Insert: {
+                    "enviado_em"?: string,"marco": number,"validade": string,"vencimento_id": string
+                  }
+                  Update: {
+                    "enviado_em"?: string,"marco"?: number,"validade"?: string,"vencimento_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vencimento_avisos_vencimento_id_fkey"
+      columns: ["vencimento_id"]
+isOneToOne: false
+      referencedRelation: "vencimentos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vencimentos": {
+                  Row: {
+                    "created_at": string,"criado_por": string | null,"descricao": string,"documento_id": string | null,"emissao": string | null,"empresa_id": string,"id": string,"numero": string | null,"observacao": string | null,"orgao": string | null,"responsavel": string,"situacao": string,"tipo": string,"updated_at": string,"validade": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"criado_por"?: string | null,"descricao": string,"documento_id"?: string | null,"emissao"?: string | null,"empresa_id": string,"id"?: string,"numero"?: string | null,"observacao"?: string | null,"orgao"?: string | null,"responsavel"?: string,"situacao"?: string,"tipo": string,"updated_at"?: string,"validade": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criado_por"?: string | null,"descricao"?: string,"documento_id"?: string | null,"emissao"?: string | null,"empresa_id"?: string,"id"?: string,"numero"?: string | null,"observacao"?: string | null,"orgao"?: string | null,"responsavel"?: string,"situacao"?: string,"tipo"?: string,"updated_at"?: string,"validade"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vencimentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vencimentos_documento_fk"
+      columns: ["empresa_id","documento_id"]
+isOneToOne: false
+      referencedRelation: "documentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vencimentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venda_cancelamento_autorizacoes": {
+                  Row: {
+                    "autorizado_por": string,"criada_em": string,"empresa_id": string,"expira_em": string,"id": string,"solicitado_por": string,"usada_em": string | null,"venda_id": string
+                  }
+                  Insert: {
+                    "autorizado_por": string,"criada_em"?: string,"empresa_id": string,"expira_em"?: string,"id"?: string,"solicitado_por": string,"usada_em"?: string | null,"venda_id": string
+                  }
+                  Update: {
+                    "autorizado_por"?: string,"criada_em"?: string,"empresa_id"?: string,"expira_em"?: string,"id"?: string,"solicitado_por"?: string,"usada_em"?: string | null,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_cancelamento_autorizacoes_autorizado_por_fkey"
+      columns: ["autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "venda_cancelamento_autorizacoes_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_cancelamento_autorizacoes_solicitado_por_fkey"
+      columns: ["solicitado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venda_comissoes": {
+                  Row: {
+                    "base": number,"created_at": string,"empresa_id": string,"lancamento_id": string | null,"loja_vendedor_id": string,"percentual": number,"valor": number | null,"venda_id": string
+                  }
+                  Insert: {
+                    "base": number,"created_at"?: string,"empresa_id": string,"lancamento_id"?: string | null,"loja_vendedor_id": string,"percentual": number,"valor"?: never,"venda_id": string
+                  }
+                  Update: {
+                    "base"?: number,"created_at"?: string,"empresa_id"?: string,"lancamento_id"?: string | null,"loja_vendedor_id"?: string,"percentual"?: number,"valor"?: never,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_comissoes_empresa_id_loja_vendedor_id_fkey"
+      columns: ["empresa_id","loja_vendedor_id"]
+isOneToOne: false
+      referencedRelation: "loja_vendedores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_comissoes_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_comissoes_lancamento_id_fkey"
+      columns: ["lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venda_itens": {
+                  Row: {
+                    "codigo": string,"comprimento_m": number | null,"custo_unitario": number | null,"desconto": number,"descricao": string,"empresa_id": string,"id": string,"ordem": number,"pecas": number | null,"preco_tabela": number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"variacao": string | null,"venda_id": string
+                  }
+                  Insert: {
+                    "codigo": string,"comprimento_m"?: number | null,"custo_unitario"?: number | null,"desconto"?: number,"descricao": string,"empresa_id": string,"id"?: string,"ordem": number,"pecas"?: number | null,"preco_tabela"?: number | null,"preco_unitario": number,"produto_id": string,"quantidade": number,"total": number,"unidade": string,"variacao"?: string | null,"venda_id": string
+                  }
+                  Update: {
+                    "codigo"?: string,"comprimento_m"?: number | null,"custo_unitario"?: number | null,"desconto"?: number,"descricao"?: string,"empresa_id"?: string,"id"?: string,"ordem"?: number,"pecas"?: number | null,"preco_tabela"?: number | null,"preco_unitario"?: number,"produto_id"?: string,"quantidade"?: number,"total"?: number,"unidade"?: string,"variacao"?: string | null,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_itens_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_itens_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venda_pagamentos": {
+                  Row: {
+                    "empresa_id": string,"forma": string,"id": string,"intervalo_dias": number | null,"lancamentos": (string)[],"parcelas": number,"primeiro_vencimento": string | null,"valor": number,"valor_recebido": number | null,"venda_id": string
+                  }
+                  Insert: {
+                    "empresa_id": string,"forma": string,"id"?: string,"intervalo_dias"?: number | null,"lancamentos"?: (string)[],"parcelas"?: number,"primeiro_vencimento"?: string | null,"valor": number,"valor_recebido"?: number | null,"venda_id": string
+                  }
+                  Update: {
+                    "empresa_id"?: string,"forma"?: string,"id"?: string,"intervalo_dias"?: number | null,"lancamentos"?: (string)[],"parcelas"?: number,"primeiro_vencimento"?: string | null,"valor"?: number,"valor_recebido"?: number | null,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_pagamentos_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"venda_vendedor_trocas": {
+                  Row: {
+                    "created_at": string,"de_vendedor_id": string | null,"empresa_id": string,"id": string,"motivo": string,"para_vendedor_id": string,"trocado_por": string | null,"venda_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"de_vendedor_id"?: string | null,"empresa_id": string,"id"?: string,"motivo": string,"para_vendedor_id": string,"trocado_por"?: string | null,"venda_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"de_vendedor_id"?: string | null,"empresa_id"?: string,"id"?: string,"motivo"?: string,"para_vendedor_id"?: string,"trocado_por"?: string | null,"venda_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venda_vendedor_trocas_empresa_id_de_vendedor_id_fkey"
+      columns: ["empresa_id","de_vendedor_id"]
+isOneToOne: false
+      referencedRelation: "loja_vendedores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_vendedor_trocas_empresa_id_para_vendedor_id_fkey"
+      columns: ["empresa_id","para_vendedor_id"]
+isOneToOne: false
+      referencedRelation: "loja_vendedores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_vendedor_trocas_empresa_id_venda_id_fkey"
+      columns: ["empresa_id","venda_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "venda_vendedor_trocas_trocado_por_fkey"
+      columns: ["trocado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vendas": {
+                  Row: {
+                    "cancelada_em": string | null,"cancelada_por": string | null,"cancelamento_autorizado_por": string | null,"cliente_documento": string | null,"cliente_id": string | null,"cliente_nome": string | null,"cliente_telefone": string | null,"codigo_publico": string | null,"created_at": string,"data": string,"desconto": number,"documento_fiscal": string | null,"empresa_id": string,"entrega": string | null,"frete": number,"id": string,"loja_vendedor_id": string | null,"motivo_cancelamento": string | null,"nfe_emissao_id": string | null,"numero": number,"observacao": string | null,"orcamento_id": string | null,"origem": string,"sessao_id": string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco": number,"updated_at": string,"validade": string | null,"vendedor_id": string | null,"busca": string | null
+                  }
+                  Insert: {
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cancelamento_autorizado_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"codigo_publico"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"documento_fiscal"?: string | null,"empresa_id": string,"entrega"?: string | null,"frete"?: number,"id"?: string,"loja_vendedor_id"?: string | null,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero": number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status": string,"subtotal": number,"tipo": string,"total": number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                  }
+                  Update: {
+                    "cancelada_em"?: string | null,"cancelada_por"?: string | null,"cancelamento_autorizado_por"?: string | null,"cliente_documento"?: string | null,"cliente_id"?: string | null,"cliente_nome"?: string | null,"cliente_telefone"?: string | null,"codigo_publico"?: string | null,"created_at"?: string,"data"?: string,"desconto"?: number,"documento_fiscal"?: string | null,"empresa_id"?: string,"entrega"?: string | null,"frete"?: number,"id"?: string,"loja_vendedor_id"?: string | null,"motivo_cancelamento"?: string | null,"nfe_emissao_id"?: string | null,"numero"?: number,"observacao"?: string | null,"orcamento_id"?: string | null,"origem"?: string,"sessao_id"?: string | null,"status"?: string,"subtotal"?: number,"tipo"?: string,"total"?: number,"troco"?: number,"updated_at"?: string,"validade"?: string | null,"vendedor_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vendas_cancelada_por_fkey"
+      columns: ["cancelada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_cancelamento_autorizado_por_fkey"
+      columns: ["cancelamento_autorizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_empresa_id_cliente_id_fkey"
+      columns: ["empresa_id","cliente_id"]
+isOneToOne: false
+      referencedRelation: "contrapartes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vendas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_empresa_id_sessao_id_fkey"
+      columns: ["empresa_id","sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vendas_loja_vendedor_fk"
+      columns: ["empresa_id","loja_vendedor_id"]
+isOneToOne: false
+      referencedRelation: "loja_vendedores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vendas_nfe_emissao_id_fkey"
+      columns: ["nfe_emissao_id"]
+isOneToOne: false
+      referencedRelation: "nfe_emissoes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_orcamento_id_fkey"
+      columns: ["orcamento_id"]
+isOneToOne: false
+      referencedRelation: "vendas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vendas_vendedor_id_fkey"
+      columns: ["vendedor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_adendos": {
+                  Row: {
+                    "atendimento_id": string,"created_at": string,"criado_por": string | null,"empresa_id": string,"id": string,"texto": string,"veterinario_id": string
+                  }
+                  Insert: {
+                    "atendimento_id": string,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"id"?: string,"texto": string,"veterinario_id": string
+                  }
+                  Update: {
+                    "atendimento_id"?: string,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"id"?: string,"texto"?: string,"veterinario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_adendos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_adendos_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_adendos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_adendos_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_agenda": {
+                  Row: {
+                    "atendimento_id": string | null,"created_at": string,"criado_por": string | null,"duracao_min": number,"empresa_id": string,"id": string,"inicio": string,"nome_avulso": string | null,"observacoes": string | null,"paciente_id": string | null,"status": string,"telefone_avulso": string | null,"tipo": string,"tutor_id": string | null,"updated_at": string,"veterinario_id": string | null
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id": string,"id"?: string,"inicio": string,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"tutor_id"?: string | null,"updated_at"?: string,"veterinario_id"?: string | null
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"created_at"?: string,"criado_por"?: string | null,"duracao_min"?: number,"empresa_id"?: string,"id"?: string,"inicio"?: string,"nome_avulso"?: string | null,"observacoes"?: string | null,"paciente_id"?: string | null,"status"?: string,"telefone_avulso"?: string | null,"tipo"?: string,"tutor_id"?: string | null,"updated_at"?: string,"veterinario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_agenda_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_agenda_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_anexos": {
+                  Row: {
+                    "atendimento_id": string,"caminho": string,"confirmado_em": string | null,"created_at": string,"descricao": string | null,"empresa_id": string,"enviado_por": string | null,"id": string,"mime": string,"nome": string,"tamanho": number
+                  }
+                  Insert: {
+                    "atendimento_id": string,"caminho": string,"confirmado_em"?: string | null,"created_at"?: string,"descricao"?: string | null,"empresa_id": string,"enviado_por"?: string | null,"id"?: string,"mime": string,"nome": string,"tamanho": number
+                  }
+                  Update: {
+                    "atendimento_id"?: string,"caminho"?: string,"confirmado_em"?: string | null,"created_at"?: string,"descricao"?: string | null,"empresa_id"?: string,"enviado_por"?: string | null,"id"?: string,"mime"?: string,"nome"?: string,"tamanho"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_anexos_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_anexos_enviado_por_fkey"
+      columns: ["enviado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_atendimentos": {
+                  Row: {
+                    "agendamento_id": string | null,"anamnese": string | null,"cancelado_motivo": string | null,"created_at": string,"criado_por": string | null,"data_hora": string,"diagnostico_conclusivo": string | null,"diagnostico_presuntivo": string | null,"empresa_id": string,"estado_geral": string | null,"exame_fisico": string | null,"finalizado_em": string | null,"finalizado_por": string | null,"frequencia_cardiaca": number | null,"frequencia_respiratoria": number | null,"hidratacao": string | null,"id": string,"local": string | null,"mucosas": string | null,"numero": number,"orientacoes": string | null,"paciente_id": string,"peso_kg": number | null,"procedimentos": string | null,"relato": string | null,"retorno_em": string | null,"retorno_motivo": string | null,"status": string,"temperatura": number | null,"tipo": string,"tpc": number | null,"tratamento": string | null,"tutor_id": string,"updated_at": string,"veterinario_id": string
+                  }
+                  Insert: {
+                    "agendamento_id"?: string | null,"anamnese"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"diagnostico_conclusivo"?: string | null,"diagnostico_presuntivo"?: string | null,"empresa_id": string,"estado_geral"?: string | null,"exame_fisico"?: string | null,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"frequencia_cardiaca"?: number | null,"frequencia_respiratoria"?: number | null,"hidratacao"?: string | null,"id"?: string,"local"?: string | null,"mucosas"?: string | null,"numero": number,"orientacoes"?: string | null,"paciente_id": string,"peso_kg"?: number | null,"procedimentos"?: string | null,"relato"?: string | null,"retorno_em"?: string | null,"retorno_motivo"?: string | null,"status"?: string,"temperatura"?: number | null,"tipo"?: string,"tpc"?: number | null,"tratamento"?: string | null,"tutor_id": string,"updated_at"?: string,"veterinario_id": string
+                  }
+                  Update: {
+                    "agendamento_id"?: string | null,"anamnese"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"data_hora"?: string,"diagnostico_conclusivo"?: string | null,"diagnostico_presuntivo"?: string | null,"empresa_id"?: string,"estado_geral"?: string | null,"exame_fisico"?: string | null,"finalizado_em"?: string | null,"finalizado_por"?: string | null,"frequencia_cardiaca"?: number | null,"frequencia_respiratoria"?: number | null,"hidratacao"?: string | null,"id"?: string,"local"?: string | null,"mucosas"?: string | null,"numero"?: number,"orientacoes"?: string | null,"paciente_id"?: string,"peso_kg"?: number | null,"procedimentos"?: string | null,"relato"?: string | null,"retorno_em"?: string | null,"retorno_motivo"?: string | null,"status"?: string,"temperatura"?: number | null,"tipo"?: string,"tpc"?: number | null,"tratamento"?: string | null,"tutor_id"?: string,"updated_at"?: string,"veterinario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_atendimentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_agendamento_id_fkey"
+      columns: ["empresa_id","agendamento_id"]
+isOneToOne: false
+      referencedRelation: "vet_agenda"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_atendimentos_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_atendimentos_finalizado_por_fkey"
+      columns: ["finalizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_avisos": {
+                  Row: {
+                    "canal": string,"created_at": string,"criado_por": string | null,"data_alvo": string,"empresa_id": string,"envio_id": string | null,"id": string,"paciente_id": string,"referencia_id": string,"tipo": string,"tutor_id": string
+                  }
+                  Insert: {
+                    "canal": string,"created_at"?: string,"criado_por"?: string | null,"data_alvo": string,"empresa_id": string,"envio_id"?: string | null,"id"?: string,"paciente_id": string,"referencia_id": string,"tipo": string,"tutor_id": string
+                  }
+                  Update: {
+                    "canal"?: string,"created_at"?: string,"criado_por"?: string | null,"data_alvo"?: string,"empresa_id"?: string,"envio_id"?: string | null,"id"?: string,"paciente_id"?: string,"referencia_id"?: string,"tipo"?: string,"tutor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_avisos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_avisos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_avisos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_avisos_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_avisos_envio_id_fkey"
+      columns: ["envio_id"]
+isOneToOne: false
+      referencedRelation: "envios"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_config": {
+                  Row: {
+                    "atualizado_por": string | null,"cidade_documentos": string | null,"created_at": string,"duracao_padrao_min": number,"email": string | null,"empresa_id": string,"endereco": string | null,"horario_fim": string,"horario_inicio": string,"lembrete_dias_antes": number,"lembrete_email": boolean,"mensagem_retorno": string | null,"mensagem_vacina": string | null,"nome_clinica": string | null,"proximo_numero_atendimento": number,"proximo_numero_conta": number,"proximo_numero_documento": number,"proximo_numero_receita": number,"registro_crmv": string | null,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id": string,"endereco"?: string | null,"horario_fim"?: string,"horario_inicio"?: string,"lembrete_dias_antes"?: number,"lembrete_email"?: boolean,"mensagem_retorno"?: string | null,"mensagem_vacina"?: string | null,"nome_clinica"?: string | null,"proximo_numero_atendimento"?: number,"proximo_numero_conta"?: number,"proximo_numero_documento"?: number,"proximo_numero_receita"?: number,"registro_crmv"?: string | null,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "atualizado_por"?: string | null,"cidade_documentos"?: string | null,"created_at"?: string,"duracao_padrao_min"?: number,"email"?: string | null,"empresa_id"?: string,"endereco"?: string | null,"horario_fim"?: string,"horario_inicio"?: string,"lembrete_dias_antes"?: number,"lembrete_email"?: boolean,"mensagem_retorno"?: string | null,"mensagem_vacina"?: string | null,"nome_clinica"?: string | null,"proximo_numero_atendimento"?: number,"proximo_numero_conta"?: number,"proximo_numero_documento"?: number,"proximo_numero_receita"?: number,"registro_crmv"?: string | null,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_config_atualizado_por_fkey"
+      columns: ["atualizado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_config_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: true
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_conta_itens": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"conta_id": string,"created_at": string,"descricao": string,"empresa_id": string,"id": string,"lancado_por": string | null,"quantidade": number,"servico_id": string | null,"total": number,"valor_unitario": number
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_id": string,"created_at"?: string,"descricao": string,"empresa_id": string,"id"?: string,"lancado_por"?: string | null,"quantidade": number,"servico_id"?: string | null,"total": number,"valor_unitario": number
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_id"?: string,"created_at"?: string,"descricao"?: string,"empresa_id"?: string,"id"?: string,"lancado_por"?: string | null,"quantidade"?: number,"servico_id"?: string | null,"total"?: number,"valor_unitario"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_conta_itens_empresa_id_conta_id_fkey"
+      columns: ["empresa_id","conta_id"]
+isOneToOne: false
+      referencedRelation: "vet_contas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_conta_itens_empresa_id_servico_id_fkey"
+      columns: ["empresa_id","servico_id"]
+isOneToOne: false
+      referencedRelation: "vet_servicos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_conta_itens_lancado_por_fkey"
+      columns: ["lancado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_contas": {
+                  Row: {
+                    "atendimento_id": string | null,"cancelada_motivo": string | null,"created_at": string,"criado_por": string | null,"desconto": number,"empresa_id": string,"fechada_em": string | null,"fechada_por": string | null,"id": string,"numero": number,"observacao": string | null,"paciente_id": string | null,"status": string,"tutor_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"empresa_id": string,"fechada_em"?: string | null,"fechada_por"?: string | null,"id"?: string,"numero": number,"observacao"?: string | null,"paciente_id"?: string | null,"status"?: string,"tutor_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"desconto"?: number,"empresa_id"?: string,"fechada_em"?: string | null,"fechada_por"?: string | null,"id"?: string,"numero"?: number,"observacao"?: string | null,"paciente_id"?: string | null,"status"?: string,"tutor_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_contas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_contas_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_contas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_contas_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_contas_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_contas_fechada_por_fkey"
+      columns: ["fechada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_documentos": {
+                  Row: {
+                    "atendimento_id": string | null,"cancelado_em": string | null,"cancelado_motivo": string | null,"created_at": string,"criado_por": string | null,"dados": NonNullable<Json>,"emitido_em": string,"empresa_id": string,"id": string,"numero": number,"paciente_id": string,"tipo": string,"tutor_id": string,"veterinario_id": string
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dados"?: NonNullable<Json>,"emitido_em"?: string,"empresa_id": string,"id"?: string,"numero": number,"paciente_id": string,"tipo": string,"tutor_id": string,"veterinario_id": string
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dados"?: NonNullable<Json>,"emitido_em"?: string,"empresa_id"?: string,"id"?: string,"numero"?: number,"paciente_id"?: string,"tipo"?: string,"tutor_id"?: string,"veterinario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_documentos_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_documentos_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_pacientes": {
+                  Row: {
+                    "alergias": string | null,"ativo": boolean,"castrado": boolean,"created_at": string,"criado_por": string | null,"empresa_id": string,"especie": string,"especie_outra": string | null,"id": string,"microchip": string | null,"nascimento": string | null,"nascimento_estimado": boolean,"nome": string,"obito_causa": string | null,"obito_em": string | null,"observacoes": string | null,"pelagem": string | null,"peso_kg": number | null,"porte": string | null,"raca": string | null,"sexo": string,"sinais_particulares": string | null,"tutor_id": string,"updated_at": string,"busca": string | null
+                  }
+                  Insert: {
+                    "alergias"?: string | null,"ativo"?: boolean,"castrado"?: boolean,"created_at"?: string,"criado_por"?: string | null,"empresa_id": string,"especie": string,"especie_outra"?: string | null,"id"?: string,"microchip"?: string | null,"nascimento"?: string | null,"nascimento_estimado"?: boolean,"nome": string,"obito_causa"?: string | null,"obito_em"?: string | null,"observacoes"?: string | null,"pelagem"?: string | null,"peso_kg"?: number | null,"porte"?: string | null,"raca"?: string | null,"sexo"?: string,"sinais_particulares"?: string | null,"tutor_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "alergias"?: string | null,"ativo"?: boolean,"castrado"?: boolean,"created_at"?: string,"criado_por"?: string | null,"empresa_id"?: string,"especie"?: string,"especie_outra"?: string | null,"id"?: string,"microchip"?: string | null,"nascimento"?: string | null,"nascimento_estimado"?: boolean,"nome"?: string,"obito_causa"?: string | null,"obito_em"?: string | null,"observacoes"?: string | null,"pelagem"?: string | null,"peso_kg"?: number | null,"porte"?: string | null,"raca"?: string | null,"sexo"?: string,"sinais_particulares"?: string | null,"tutor_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_pacientes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_pacientes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_pacientes_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_pagamentos": {
+                  Row: {
+                    "cancelado_em": string | null,"cancelado_motivo": string | null,"conta_id": string,"created_at": string,"data": string,"empresa_id": string,"forma": string,"id": string,"lancamento_id": string | null,"observacao": string | null,"registrado_por": string | null,"sessao_id": string | null,"valor": number,"vencimento": string | null
+                  }
+                  Insert: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_id": string,"created_at"?: string,"data": string,"empresa_id": string,"forma": string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"registrado_por"?: string | null,"sessao_id"?: string | null,"valor": number,"vencimento"?: string | null
+                  }
+                  Update: {
+                    "cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_id"?: string,"created_at"?: string,"data"?: string,"empresa_id"?: string,"forma"?: string,"id"?: string,"lancamento_id"?: string | null,"observacao"?: string | null,"registrado_por"?: string | null,"sessao_id"?: string | null,"valor"?: number,"vencimento"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_pagamentos_empresa_id_conta_id_fkey"
+      columns: ["empresa_id","conta_id"]
+isOneToOne: false
+      referencedRelation: "vet_contas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_pagamentos_lancamento_id_fkey"
+      columns: ["lancamento_id"]
+isOneToOne: false
+      referencedRelation: "lancamentos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_pagamentos_registrado_por_fkey"
+      columns: ["registrado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_pagamentos_sessao_id_fkey"
+      columns: ["sessao_id"]
+isOneToOne: false
+      referencedRelation: "caixa_sessoes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_receita_itens": {
+                  Row: {
+                    "concentracao": string | null,"duracao": string | null,"empresa_id": string,"forma_farmaceutica": string | null,"id": string,"medicamento": string,"ordem": number,"posologia": string,"quantidade": string,"receita_id": string,"uso": string,"via": string
+                  }
+                  Insert: {
+                    "concentracao"?: string | null,"duracao"?: string | null,"empresa_id": string,"forma_farmaceutica"?: string | null,"id"?: string,"medicamento": string,"ordem": number,"posologia": string,"quantidade": string,"receita_id": string,"uso"?: string,"via"?: string
+                  }
+                  Update: {
+                    "concentracao"?: string | null,"duracao"?: string | null,"empresa_id"?: string,"forma_farmaceutica"?: string | null,"id"?: string,"medicamento"?: string,"ordem"?: number,"posologia"?: string,"quantidade"?: string,"receita_id"?: string,"uso"?: string,"via"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_receita_itens_empresa_id_receita_id_fkey"
+      columns: ["empresa_id","receita_id"]
+isOneToOne: false
+      referencedRelation: "vet_receitas"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_receitas": {
+                  Row: {
+                    "atendimento_id": string | null,"cancelada_em": string | null,"cancelada_motivo": string | null,"created_at": string,"criado_por": string | null,"emitida_em": string,"empresa_id": string,"id": string,"numero": number,"numero_controle": string | null,"observacoes": string | null,"paciente_id": string,"tipo": string,"tutor_id": string,"uso_continuo": boolean,"validade": string | null,"veterinario_id": string
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"emitida_em"?: string,"empresa_id": string,"id"?: string,"numero": number,"numero_controle"?: string | null,"observacoes"?: string | null,"paciente_id": string,"tipo"?: string,"tutor_id": string,"uso_continuo"?: boolean,"validade"?: string | null,"veterinario_id": string
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"emitida_em"?: string,"empresa_id"?: string,"id"?: string,"numero"?: number,"numero_controle"?: string | null,"observacoes"?: string | null,"paciente_id"?: string,"tipo"?: string,"tutor_id"?: string,"uso_continuo"?: boolean,"validade"?: string | null,"veterinario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_receitas_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_tutor_id_fkey"
+      columns: ["empresa_id","tutor_id"]
+isOneToOne: false
+      referencedRelation: "vet_tutores"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_receitas_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_servicos": {
+                  Row: {
+                    "ativo": boolean,"categoria": string,"created_at": string,"empresa_id": string,"id": string,"nome": string,"ordem": number,"preco": number,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"categoria"?: string,"created_at"?: string,"empresa_id": string,"id"?: string,"nome": string,"ordem"?: number,"preco": number,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"categoria"?: string,"created_at"?: string,"empresa_id"?: string,"id"?: string,"nome"?: string,"ordem"?: number,"preco"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_servicos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_tutores": {
+                  Row: {
+                    "aceita_email": boolean,"aceita_whatsapp": boolean,"autorizados": string | null,"bairro": string | null,"cep": string | null,"cidade": string | null,"complemento": string | null,"cpf": string | null,"created_at": string,"criado_por": string | null,"email": string | null,"empresa_id": string,"id": string,"logradouro": string | null,"nome": string,"numero": string | null,"observacoes": string | null,"telefone": string | null,"telefone2": string | null,"uf": string | null,"updated_at": string,"busca": string | null
+                  }
+                  Insert: {
+                    "aceita_email"?: boolean,"aceita_whatsapp"?: boolean,"autorizados"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"complemento"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"email"?: string | null,"empresa_id": string,"id"?: string,"logradouro"?: string | null,"nome": string,"numero"?: string | null,"observacoes"?: string | null,"telefone"?: string | null,"telefone2"?: string | null,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "aceita_email"?: boolean,"aceita_whatsapp"?: boolean,"autorizados"?: string | null,"bairro"?: string | null,"cep"?: string | null,"cidade"?: string | null,"complemento"?: string | null,"cpf"?: string | null,"created_at"?: string,"criado_por"?: string | null,"email"?: string | null,"empresa_id"?: string,"id"?: string,"logradouro"?: string | null,"nome"?: string,"numero"?: string | null,"observacoes"?: string | null,"telefone"?: string | null,"telefone2"?: string | null,"uf"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_tutores_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_tutores_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_usos": {
+                  Row: {
+                    "atendimento_id": string | null,"cancelado_em": string | null,"cancelado_motivo": string | null,"conta_item_id": string | null,"created_at": string,"custo_unitario": number | null,"descricao": string,"empresa_id": string,"id": string,"lancado_por": string | null,"observacao": string | null,"paciente_id": string,"produto_id": string,"quantidade": number,"unidade": string,"vacinacao_id": string | null
+                  }
+                  Insert: {
+                    "atendimento_id"?: string | null,"cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_item_id"?: string | null,"created_at"?: string,"custo_unitario"?: number | null,"descricao": string,"empresa_id": string,"id"?: string,"lancado_por"?: string | null,"observacao"?: string | null,"paciente_id": string,"produto_id": string,"quantidade": number,"unidade": string,"vacinacao_id"?: string | null
+                  }
+                  Update: {
+                    "atendimento_id"?: string | null,"cancelado_em"?: string | null,"cancelado_motivo"?: string | null,"conta_item_id"?: string | null,"created_at"?: string,"custo_unitario"?: number | null,"descricao"?: string,"empresa_id"?: string,"id"?: string,"lancado_por"?: string | null,"observacao"?: string | null,"paciente_id"?: string,"produto_id"?: string,"quantidade"?: number,"unidade"?: string,"vacinacao_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_usos_conta_item_id_fkey"
+      columns: ["conta_item_id"]
+isOneToOne: false
+      referencedRelation: "vet_conta_itens"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_usos_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_usos_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_usos_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_usos_empresa_id_vacinacao_id_fkey"
+      columns: ["empresa_id","vacinacao_id"]
+isOneToOne: false
+      referencedRelation: "vet_vacinacoes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_usos_lancado_por_fkey"
+      columns: ["lancado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_usos_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_vacinacoes": {
+                  Row: {
+                    "aplicada_em": string,"atendimento_id": string | null,"cancelada_em": string | null,"cancelada_motivo": string | null,"created_at": string,"criado_por": string | null,"dose": string,"empresa_id": string,"fabricacao": string | null,"fabricante": string | null,"id": string,"observacao": string | null,"origem": string,"paciente_id": string,"partida": string | null,"proxima_dose_em": string | null,"vacina_id": string | null,"vacina_nome": string,"validade": string | null,"veterinario_externo": string | null,"veterinario_id": string | null
+                  }
+                  Insert: {
+                    "aplicada_em": string,"atendimento_id"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dose": string,"empresa_id": string,"fabricacao"?: string | null,"fabricante"?: string | null,"id"?: string,"observacao"?: string | null,"origem"?: string,"paciente_id": string,"partida"?: string | null,"proxima_dose_em"?: string | null,"vacina_id"?: string | null,"vacina_nome": string,"validade"?: string | null,"veterinario_externo"?: string | null,"veterinario_id"?: string | null
+                  }
+                  Update: {
+                    "aplicada_em"?: string,"atendimento_id"?: string | null,"cancelada_em"?: string | null,"cancelada_motivo"?: string | null,"created_at"?: string,"criado_por"?: string | null,"dose"?: string,"empresa_id"?: string,"fabricacao"?: string | null,"fabricante"?: string | null,"id"?: string,"observacao"?: string | null,"origem"?: string,"paciente_id"?: string,"partida"?: string | null,"proxima_dose_em"?: string | null,"vacina_id"?: string | null,"vacina_nome"?: string,"validade"?: string | null,"veterinario_externo"?: string | null,"veterinario_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_vacinacoes_criado_por_fkey"
+      columns: ["criado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_atendimento_id_fkey"
+      columns: ["empresa_id","atendimento_id"]
+isOneToOne: false
+      referencedRelation: "vet_atendimentos"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_paciente_id_fkey"
+      columns: ["empresa_id","paciente_id"]
+isOneToOne: false
+      referencedRelation: "vet_pacientes"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_vacina_id_fkey"
+      columns: ["empresa_id","vacina_id"]
+isOneToOne: false
+      referencedRelation: "vet_vacinas"
+      referencedColumns: ["empresa_id","id"]
+    },{
+      foreignKeyName: "vet_vacinacoes_empresa_id_veterinario_id_fkey"
+      columns: ["empresa_id","veterinario_id"]
+isOneToOne: false
+      referencedRelation: "vet_veterinarios"
+      referencedColumns: ["empresa_id","id"]
+    }
+                  ]
+                },"vet_vacinas": {
+                  Row: {
+                    "ativa": boolean,"created_at": string,"doses_iniciais": number,"empresa_id": string,"especie": string,"fabricante": string | null,"id": string,"intervalo_doses_dias": number,"nome": string,"observacao": string | null,"ordem": number,"produto_id": string | null,"reforco_dias": number | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativa"?: boolean,"created_at"?: string,"doses_iniciais"?: number,"empresa_id": string,"especie"?: string,"fabricante"?: string | null,"id"?: string,"intervalo_doses_dias"?: number,"nome": string,"observacao"?: string | null,"ordem"?: number,"produto_id"?: string | null,"reforco_dias"?: number | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativa"?: boolean,"created_at"?: string,"doses_iniciais"?: number,"empresa_id"?: string,"especie"?: string,"fabricante"?: string | null,"id"?: string,"intervalo_doses_dias"?: number,"nome"?: string,"observacao"?: string | null,"ordem"?: number,"produto_id"?: string | null,"reforco_dias"?: number | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_vacinas_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_vacinas_produto_id_fkey"
+      columns: ["produto_id"]
+isOneToOne: false
+      referencedRelation: "nfe_produtos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vet_veterinarios": {
+                  Row: {
+                    "ativo": boolean,"cadastro_mapa": string | null,"created_at": string,"crmv": string,"crmv_uf": string,"email": string | null,"empresa_id": string,"especialidade": string | null,"id": string,"nome": string,"perfil_id": string | null,"proximo_numero_magistral": number,"responsavel_tecnico": boolean,"telefone": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "ativo"?: boolean,"cadastro_mapa"?: string | null,"created_at"?: string,"crmv": string,"crmv_uf": string,"email"?: string | null,"empresa_id": string,"especialidade"?: string | null,"id"?: string,"nome": string,"perfil_id"?: string | null,"proximo_numero_magistral"?: number,"responsavel_tecnico"?: boolean,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "ativo"?: boolean,"cadastro_mapa"?: string | null,"created_at"?: string,"crmv"?: string,"crmv_uf"?: string,"email"?: string | null,"empresa_id"?: string,"especialidade"?: string | null,"id"?: string,"nome"?: string,"perfil_id"?: string | null,"proximo_numero_magistral"?: number,"responsavel_tecnico"?: boolean,"telefone"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vet_veterinarios_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vet_veterinarios_perfil_id_fkey"
+      columns: ["perfil_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"xml_lote_itens": {
+                  Row: {
+                    "arquivo": string,"caminho": string | null,"dados": NonNullable<Json>,"documento_id": string | null,"lote_id": string,"ordem": number,"parte": number | null
+                  }
+                  Insert: {
+                    "arquivo": string,"caminho"?: string | null,"dados"?: NonNullable<Json>,"documento_id"?: string | null,"lote_id": string,"ordem": number,"parte"?: number | null
+                  }
+                  Update: {
+                    "arquivo"?: string,"caminho"?: string | null,"dados"?: NonNullable<Json>,"documento_id"?: string | null,"lote_id"?: string,"ordem"?: number,"parte"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "xml_lote_itens_lote_id_fkey"
+      columns: ["lote_id"]
+isOneToOne: false
+      referencedRelation: "xml_lotes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"xml_lotes": {
+                  Row: {
+                    "competencia": string,"concluido_em": string | null,"criado_em": string,"empresa_id": string,"equipe": boolean,"erro": string | null,"expira_em": string | null,"id": string,"partes": NonNullable<Json>,"pedido_id": string | null,"resumo": Json | null,"situacao": string,"solicitado_por": string | null,"tipos": (string)[],"total_arquivos": number | null,"total_bytes": number | null
+                  }
+                  Insert: {
+                    "competencia": string,"concluido_em"?: string | null,"criado_em"?: string,"empresa_id": string,"equipe"?: boolean,"erro"?: string | null,"expira_em"?: string | null,"id"?: string,"partes"?: NonNullable<Json>,"pedido_id"?: string | null,"resumo"?: Json | null,"situacao"?: string,"solicitado_por"?: string | null,"tipos": (string)[],"total_arquivos"?: number | null,"total_bytes"?: number | null
+                  }
+                  Update: {
+                    "competencia"?: string,"concluido_em"?: string | null,"criado_em"?: string,"empresa_id"?: string,"equipe"?: boolean,"erro"?: string | null,"expira_em"?: string | null,"id"?: string,"partes"?: NonNullable<Json>,"pedido_id"?: string | null,"resumo"?: Json | null,"situacao"?: string,"solicitado_por"?: string | null,"tipos"?: (string)[],"total_arquivos"?: number | null,"total_bytes"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "xml_lotes_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "xml_lotes_solicitado_por_fkey"
+      columns: ["solicitado_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "abrir_solicitacao":
+{ Args: { "p_descricao"?: string,"p_documento_ids"?: (string)[],"p_empresa_id": string,"p_prioridade"?: string,"p_servico": string,"p_titulo": string }; Returns: string
+                           },
+"adicionar_item_checklist":
+{ Args: { "p_categoria": string,"p_competencia": string,"p_descricao": string,"p_empresa_id": string,"p_obrigatorio"?: boolean,"p_prazo": string,"p_quantidade_minima"?: number,"p_responsavel_cliente_id"?: string,"p_responsavel_equipe_id"?: string,"p_titulo": string }; Returns: string
+                           },
+"administrar_usuario":
+{ Args: { "p_ativo": boolean,"p_cargo"?: string,"p_tipo": string,"p_user_id": string }; Returns: undefined
+                           },
+"alterar_status_conversa":
+{ Args: { "p_conversa_id": string,"p_status": string }; Returns: undefined
+                           },
+"alterar_status_documento":
+{ Args: { "p_documento_id": string,"p_motivo"?: string,"p_status": string }; Returns: undefined
+                           },
+"anonimizar_usuario":
+{ Args: { "p_motivo": string,"p_user_id": string }; Returns: undefined
+                           },
+"apagar_notas_anteriores":
+{ Args: { "p_empresa_id": string,"p_motivo": string }; Returns: Json
+                           },
+"aplicar_atualizacao_normativa":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"aplicar_checklist_padrao":
+{ Args: { "p_empresa_id": string }; Returns: number
+                           },
+"atribuir_tarefas":
+{ Args: { "p_ids": (string)[],"p_limpar_revisor"?: boolean,"p_responsavel_id"?: string,"p_revisor_id"?: string }; Returns: number
+                           },
+"atualizar_documento":
+{ Args: { "p_categoria": string,"p_checklist_item_id"?: string,"p_competencia": string,"p_documento_id": string,"p_observacao"?: string,"p_titulo"?: string,"p_valor"?: number,"p_vencimento"?: string }; Returns: undefined
+                           },
+"atualizar_etapa_fechamento":
+{ Args: { "p_etapa_id": string,"p_observacao"?: string,"p_responsavel_id"?: string,"p_status": string }; Returns: undefined
+                           },
+"atualizar_item_checklist":
+{ Args: { "p_descricao": string,"p_item_id": string,"p_obrigatorio": boolean,"p_observacao_equipe"?: string,"p_prazo": string,"p_quantidade_minima": number,"p_responsavel_cliente_id": string,"p_responsavel_equipe_id": string,"p_titulo": string }; Returns: undefined
+                           },
+"atualizar_leitura_xml_fiscal":
+{ Args: { "p_dados": Json,"p_documento_fiscal_id": string }; Returns: undefined
+                           },
+"atualizar_membro":
+{ Args: { "p_membro_id": string,"p_papel": string,"p_permissoes": (string)[] }; Returns: undefined
+                           },
+"atualizar_solicitacao":
+{ Args: { "p_comentario"?: string,"p_id": string,"p_prazo"?: string,"p_responsavel"?: string,"p_status"?: string }; Returns: undefined
+                           },
+"atualizar_tarefa":
+{ Args: { "p_comentario"?: string,"p_comprovante_documento_id"?: string,"p_dispensa_motivo"?: string,"p_guia_documento_id"?: string,"p_protocolo"?: string,"p_responsavel_id"?: string,"p_revisor_id"?: string,"p_status"?: string,"p_tarefa_id": string,"p_valor"?: number }; Returns: undefined
+                           },
+"auditor_analisar":
+{ Args: { "p_empresa_id": string }; Returns: string
+                           },
+"auditor_dados":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"auditor_itens_agrupados":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"auditor_pedir_ajuda":
+{ Args: { "p_id": string }; Returns: string
+                           },
+"auditor_registrar_resultado":
+{ Args: { "p_achados": Json,"p_execucao_id": string,"p_resumo": Json }; Returns: Json
+                           },
+"auditor_relatorio_itens":
+{ Args: { "p_empresa_id": string,"p_ids": (string)[] }; Returns: Json
+                           },
+"auditor_revisar":
+{ Args: { "p_acao": string,"p_id": string,"p_motivo"?: string,"p_texto_cliente"?: string }; Returns: undefined
+                           },
+"auditor_servicos":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"avaliar_documento_apos_fechamento":
+{ Args: { "p_documento_id": string,"p_parecer": string }; Returns: undefined
+                           },
+"baixar_lote_xml":
+{ Args: { "p_ip"?: string,"p_lote_id": string,"p_parte": number,"p_user_agent"?: string }; Returns: Json
+                           },
+"busca":
+{ Args: { "t": Database["public"]['Tables']["contrapartes"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["documentos"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["documentos_fiscais"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["empresas"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["fisio_pacientes"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["honorarios_cobrancas"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["hotel_hospedes"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["lancamentos"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["movimentos_bancarios"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["nfe_destinatarios"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["ordens_carregamento"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["os_ordens"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["perfis"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["recibos_honorarios"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["vendas"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["vet_pacientes"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           } |
+{ Args: { "t": Database["public"]['Tables']["vet_tutores"]['Row'] }; Returns: { error: true } & "Could not choose the best candidate function between: public.busca(t => perfis), public.busca(t => empresas), public.busca(t => documentos), public.busca(t => contrapartes), public.busca(t => lancamentos), public.busca(t => documentos_fiscais), public.busca(t => movimentos_bancarios), public.busca(t => nfe_destinatarios), public.busca(t => vendas), public.busca(t => ordens_carregamento), public.busca(t => hotel_hospedes), public.busca(t => vet_tutores), public.busca(t => vet_pacientes), public.busca(t => recibos_honorarios), public.busca(t => honorarios_cobrancas), public.busca(t => fisio_pacientes), public.busca(t => os_ordens). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+                           },
+"buscar_notas_agora":
+{ Args: { "p_empresa_id": string }; Returns: undefined
+                           },
+"calendario_empresa":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: {
+              "area": string,"codigo": string,"config_id": string,"esfera": string,"etapas": (string)[],"fonte": string,"fonte_url": string,"modo": string,"motivo": string,"nome": string,"obrigacao_id": string,"periodicidade": string,"prazo_entrega": string,"prazo_interno_dias_uteis": number,"prazo_pagamento": string,"regra_id": string,"responsavel_id": string,"revisor_id": string,"situacao": string,"tributos": (string)[]
+            }[]
+                           },
+"cancelar_declaracao_faturamento":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"carregamento_cancelar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"carregamento_pesagem":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: number
+                           },
+"carregamento_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: Json
+                           },
+"carregamento_vincular_nfe":
+{ Args: { "p_id": string,"p_nfe_id": string }; Returns: undefined
+                           },
+"categoria_financeira_uso":
+{ Args: { "p_categoria_id": string }; Returns: Json
+                           },
+"classificar_movimento":
+{ Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_contraparte_id"?: string,"p_data_competencia"?: string,"p_descricao"?: string,"p_documento_ids"?: (string)[],"p_movimento_id": string,"p_projeto_id"?: string }; Returns: Json
+                           },
+"conciliar_manual":
+{ Args: { "p_baixas"?: (string)[],"p_conta_contrapartida"?: string,"p_empresa_id": string,"p_lancamentos"?: (string)[],"p_movimentos": (string)[],"p_observacao"?: string,"p_tipo"?: string,"p_transferencias"?: (string)[],"p_tratamento"?: string }; Returns: Json
+                           },
+"concluir_item_checklist":
+{ Args: { "p_item_id": string,"p_observacao"?: string }; Returns: undefined
+                           },
+"concluir_lote_xml":
+{ Args: { "p_erro"?: string,"p_lote_id": string,"p_partes"?: Json,"p_situacao": string,"p_total_bytes"?: number }; Returns: undefined
+                           },
+"conferencia_saldos":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
+              "conta_id": string,"conta_nome": string,"conta_tipo": string,"diferenca": number,"entradas_sistema": number,"movimentos_importados": number,"movimentos_pendentes": number,"movimentos_total": number,"saidas_sistema": number,"saldo_extrato": number,"saldo_extrato_data": string,"saldo_final_sistema": number,"saldo_inicial_sistema": number
+            }[]
+                           },
+"configurar_empresa_padrao":
+{ Args: { "p_empresa_id": string }; Returns: Json
+                           },
+"confirmar_conciliacao":
+{ Args: { "p_conciliacao_id": string,"p_conta_contrapartida"?: string,"p_observacao"?: string,"p_tratamento"?: string }; Returns: Json
+                           },
+"confirmar_operacoes_nfe":
+{ Args: { "p_chaves": (string)[],"p_declaracao": string,"p_empresa_id": string }; Returns: number
+                           },
+"confirmar_upload":
+{ Args: { "p_versao_id": string }; Returns: Json
+                           },
+"criar_conversa":
+{ Args: { "p_assunto": string,"p_checklist_item_id"?: string,"p_competencia"?: string,"p_corpo": string,"p_documento_id"?: string,"p_documento_ids"?: (string)[],"p_empresa_id": string,"p_tipo"?: string }; Returns: string
+                           },
+"criar_documento":
+{ Args: { "p_categoria": string,"p_checklist_item_id"?: string,"p_competencia": string,"p_empresa_id": string,"p_forcar_duplicado"?: boolean,"p_mime": string,"p_nome_arquivo": string,"p_observacao"?: string,"p_origem"?: string,"p_sha256": string,"p_tamanho": number,"p_titulo"?: string,"p_valor"?: number,"p_vencimento"?: string }; Returns: Json
+                           },
+"criar_empresa":
+{ Args: { "p_dados": Json }; Returns: string
+                           },
+"criar_parcelamento":
+{ Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_competencia_por_parcela"?: boolean,"p_conta_financeira_id"?: string,"p_contraparte_id"?: string,"p_data_competencia": string,"p_descricao": string,"p_empresa_id": string,"p_numero_documento"?: string,"p_observacoes"?: string,"p_parcelas": number,"p_primeiro_vencimento": string,"p_projeto_id"?: string,"p_tipo": string,"p_valor_total": number }; Returns: string
+                           },
+"criar_solicitacao_titular":
+{ Args: { "p_descricao": string,"p_tipo": string }; Returns: string
+                           },
+"cte_avisar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"cte_cancelar":
+{ Args: { "p_id": string,"p_justificativa": string }; Returns: undefined
+                           },
+"cte_carta_correcao":
+{ Args: { "p_correcoes": Json,"p_id": string }; Returns: undefined
+                           },
+"cte_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"cte_descartar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"cte_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id"?: string }; Returns: Json
+                           },
+"cte_operacao_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"cte_previa":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"cte_tentar_de_novo":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"dados_apuracao_icms":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_versao_leitura"?: number }; Returns: Json
+                           },
+"dados_dar_icms":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_vencimento"?: string }; Returns: Json
+                           },
+"dados_dare_to":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
+                           },
+"dados_efd_icms_ipi":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
+                           },
+"dados_previsao_impostos":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_meses"?: number }; Returns: Json
+                           },
+"dar_registrar_emissao":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"dar_vincular_documento":
+{ Args: { "p_documento_id": string,"p_id": string }; Returns: undefined
+                           },
+"dare_to_emitidos_mes":
+{ Args: { "p_competencia": string }; Returns: {
+              "created_at": string,"documento_id": string,"empresa_id": string,"numero": string,"total": number,"vencimento": string
+            }[]
+                           },
+"definir_inicio_notas":
+{ Args: { "p_desde": string,"p_empresa_id": string }; Returns: Json
+                           },
+"definir_logo_escritorio":
+{ Args: { "p_path": string }; Returns: undefined
+                           },
+"definir_whatsapp_membro":
+{ Args: { "p_autorizado": boolean,"p_empresa_id": string,"p_telefone": string,"p_user_id": string }; Returns: undefined
+                           },
+"desfazer_conciliacao":
+{ Args: { "p_conciliacao_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"desfazer_importacao":
+{ Args: { "p_importacao_id": string,"p_motivo": string }; Returns: Json
+                           },
+"desfazer_pagamento_guia":
+{ Args: { "p_guia_id": string }; Returns: undefined
+                           },
+"documentos_retencao_vencida":
+{ Args: { "p_limite"?: number }; Returns: {
+              "anos_retencao": number,"categoria_codigo": string,"competencia": string,"documento_id": string,"empresa_id": string,"empresa_nome": string,"nome_original": string,"vence_em": string
+            }[]
+                           },
+"documentos_sem_vinculo":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
+              "apos_fechamento_avaliado_em": string | null,
+"apos_fechamento_avaliado_por": string | null,
+"apos_fechamento_parecer": string | null,
+"categoria_codigo": string,
+"checklist_item_id": string | null,
+"competencia": string,
+"created_at": string,
+"direcao": string,
+"duplicado_de": string | null,
+"empresa_id": string,
+"enviado_em": string | null,
+"enviado_por": string | null,
+"excluido_em": string | null,
+"excluido_por": string | null,
+"expurgado_em": string | null,
+"expurgado_por": string | null,
+"expurgo_motivo": string | null,
+"extensao": string | null,
+"extracao": Json | null,
+"id": string,
+"mime": string | null,
+"motivo_exclusao": string | null,
+"nome_original": string,
+"observacao": string | null,
+"origem": string,
+"processamento_detalhes": Json | null,
+"processamento_status": string,
+"publicado_em": string | null,
+"recebido_apos_fechamento": boolean,
+"requer_conferencia": boolean,
+"sha256": string | null,
+"status": string | null,
+"status_alterado_em": string | null,
+"status_alterado_por": string | null,
+"status_motivo": string | null,
+"storage_path": string | null,
+"sugestao": Json | null,
+"tamanho": number | null,
+"titulo": string | null,
+"updated_at": string,
+"upload_status": string,
+"valor": number | null,
+"vencimento": string | null,
+"verificacao_detalhes": string | null,
+"verificacao_status": string,
+"versao_atual": number,
+"zip_caminho": string | null,
+"zip_origem_id": string | null
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "documentos"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"editar_proposta_regra":
+{ Args: { "p_fonte_consultada_em": string,"p_fonte_publicada_em": string,"p_fonte_titulo": string,"p_fonte_url": string,"p_id": string,"p_regra": Json,"p_resumo": string,"p_titulo": string }; Returns: undefined
+                           },
+"efd_registrar_geracao":
+{ Args: { "p_competencia": string,"p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"efd_reler_notas":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_versao_leitura": number }; Returns: number
+                           },
+"efd_salvar_configuracao":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"emitir_declaracao_faturamento":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"encerrar_sessao":
+{ Args: { "p_sessao_id": string }; Returns: undefined
+                           },
+"encerrar_sessoes_usuario":
+{ Args: { "p_user_id": string }; Returns: number
+                           },
+"enviar_aviso_teste":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"enviar_lembrete_manual":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_mensagem"?: string }; Returns: string
+                           },
+"enviar_mensagem":
+{ Args: { "p_conversa_id": string,"p_corpo": string,"p_documento_ids"?: (string)[],"p_interna"?: boolean }; Returns: string
+                           },
+"escala_ia_concluir":
+{ Args: { "p_erro": string,"p_ok": boolean,"p_tokens_entrada": number,"p_tokens_saida": number,"p_uso_id": number }; Returns: undefined
+                           },
+"escala_ia_reservar":
+{ Args: { "p_empresa_id": string,"p_tipo": string }; Returns: {
+              "modelo": string,"uso_id": number
+            }[]
+                           },
+"escala_ia_situacao":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "ligada": boolean,"limite_diario": number,"usados_hoje": number
+            }[]
+                           },
+"escritorio_categoria_salvar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: string
+                           },
+"escritorio_certificado_definir":
+{ Args: { "p_conteudo_cifrado": string,"p_documento": string,"p_emissor": string,"p_impressao_digital": string,"p_numero_serie": string,"p_titular": string,"p_valido_ate": string,"p_valido_de": string }; Returns: undefined
+                           },
+"escritorio_certificado_remover":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"escritorio_ia_configurar":
+{ Args: { "p_ativa": boolean,"p_limite_diario": number,"p_modelo": string }; Returns: undefined
+                           },
+"escritorio_ia_registrar_teste":
+{ Args: { "p_erro": string,"p_ok": boolean }; Returns: undefined
+                           },
+"escritorio_ia_salvar_chave":
+{ Args: { "p_chave_cifrada": string,"p_chave_final": string }; Returns: undefined
+                           },
+"escritorio_ia_suporte":
+{ Args: { "p_ativo": boolean,"p_limite_usuario": number }; Returns: undefined
+                           },
+"escritorio_lancamento_excluir":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"escritorio_lancamento_salvar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: string
+                           },
+"escritorio_publico":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"estado_acesso":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"estoque_entrada_automatica":
+{ Args: { "p_documento_fiscal_id": string }; Returns: Json
+                           },
+"estudo_dados":
+{ Args: { "p_ate": string,"p_empresa_id": string }; Returns: Json
+                           },
+"estudo_falhou":
+{ Args: { "p_empresa_id": string,"p_erro": string,"p_execucao_id": number,"p_origem": string }; Returns: undefined
+                           },
+"estudo_premissas_salvar":
+{ Args: { "p_aliquota_icms": number,"p_empresa_id": string,"p_margem_lucro": number }; Returns: undefined
+                           },
+"estudo_registrar":
+{ Args: { "p_empresa_id": string,"p_estudos": Json,"p_execucao_id": number,"p_origem": string,"p_pedir_auditor"?: boolean }; Returns: Json
+                           },
+"estudo_revisar":
+{ Args: { "p_acao": string,"p_id": string,"p_motivo"?: string }; Returns: undefined
+                           },
+"estudo_rodar":
+{ Args: { "p_empresa_id"?: string }; Returns: number
+                           },
+"excluir_categoria_financeira":
+{ Args: { "p_categoria_id": string,"p_destino_id"?: string }; Returns: Json
+                           },
+"excluir_documento":
+{ Args: { "p_documento_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"excluir_rascunho_relatorio":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"exportar_meus_dados":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"expurgar_documentos":
+{ Args: { "p_ids": (string)[],"p_motivo": string }; Returns: number
+                           },
+"faturamento_mensal":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"fechar_competencia":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_observacao"?: string }; Returns: undefined
+                           },
+"financeiro_aprovacao_salvar":
+{ Args: { "p_empresa_id": string,"p_faixas": Json }; Returns: number
+                           },
+"financeiro_aprovar":
+{ Args: { "p_decisao": string,"p_empresa_id": string,"p_ids": (string)[],"p_justificativa"?: string }; Returns: number
+                           },
+"financeiro_baixar":
+{ Args: { "p_chave"?: string,"p_conta_id": string,"p_data": string,"p_desconto"?: number,"p_empresa_id": string,"p_forma"?: string,"p_juros"?: number,"p_lancamento_id": string,"p_multa"?: number,"p_observacao"?: string,"p_taxas"?: number,"p_valor_principal": number }; Returns: string
+                           },
+"financeiro_baixar_lote":
+{ Args: { "p_chave"?: string,"p_conta_id": string,"p_data": string,"p_empresa_id": string,"p_forma"?: string,"p_ids": (string)[] }; Returns: Json
+                           },
+"financeiro_criar_parcelas":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_parcelas": Json }; Returns: string
+                           },
+"financeiro_definir_pagar_desde":
+{ Args: { "p_data": string,"p_empresa_id": string }; Returns: undefined
+                           },
+"financeiro_desfazer_renegociacao":
+{ Args: { "p_empresa_id": string,"p_motivo": string,"p_renegociacao_id": string }; Returns: undefined
+                           },
+"financeiro_estornar_baixa":
+{ Args: { "p_baixa_id": string,"p_empresa_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"financeiro_historico_contraparte":
+{ Args: { "p_contraparte_id": string,"p_empresa_id": string }; Returns: Json
+                           },
+"financeiro_lote_alterar":
+{ Args: { "p_acao": string,"p_empresa_id": string,"p_ids": (string)[],"p_valor"?: string }; Returns: number
+                           },
+"financeiro_painel":
+{ Args: { "p_centro_custo_id"?: string,"p_conta_id"?: string,"p_empresa_id": string }; Returns: Json
+                           },
+"financeiro_recorrencia_alterar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_escopo": string,"p_lancamento_id": string }; Returns: number
+                           },
+"financeiro_renegociar":
+{ Args: { "p_descricao"?: string,"p_empresa_id": string,"p_lancamentos": (string)[],"p_motivo": string,"p_parcelas": Json }; Returns: string
+                           },
+"fisio_adendo_registrar":
+{ Args: { "p_id": string,"p_texto": string,"p_tipo": string }; Returns: string
+                           },
+"fisio_agenda_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: number
+                           },
+"fisio_agenda_status":
+{ Args: { "p_agenda_id": string,"p_motivo"?: string,"p_status": string,"p_toda_serie"?: boolean }; Returns: undefined
+                           },
+"fisio_avaliacao_abrir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"fisio_avaliacao_finalizar":
+{ Args: { "p_avaliacao_id": string }; Returns: undefined
+                           },
+"fisio_avaliacao_salvar":
+{ Args: { "p_avaliacao_id": string,"p_dados": Json }; Returns: undefined
+                           },
+"fisio_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"fisio_configurar_whatsapp":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"fisio_confirmacao_enviar":
+{ Args: { "p_agenda_id": string }; Returns: string
+                           },
+"fisio_confirmacao_responder":
+{ Args: { "p_codigo": string,"p_motivo"?: string,"p_resposta": string }; Returns: string
+                           },
+"fisio_confirmacao_resultado":
+{ Args: { "p_agenda_id": string,"p_erro": string,"p_situacao": string }; Returns: undefined
+                           },
+"fisio_confirmacao_ver":
+{ Args: { "p_codigo": string }; Returns: Json
+                           },
+"fisio_documento_cancelar":
+{ Args: { "p_documento_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"fisio_documento_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"fisio_evolucao_abrir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"fisio_evolucao_finalizar":
+{ Args: { "p_evolucao_id": string }; Returns: undefined
+                           },
+"fisio_evolucao_salvar":
+{ Args: { "p_dados": Json,"p_evolucao_id": string }; Returns: undefined
+                           },
+"fisio_paciente_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"fisio_pacote_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"fisio_pacotes_resumo":
+{ Args: { "p_empresa_id": string,"p_paciente_id"?: string }; Returns: {
+              "agendadas": number,"convenio": string,"descricao": string,"guia": string,"id": string,"inicio": string,"paciente_id": string,"recebido": number,"sessoes": number,"status": string,"usadas": number,"validade": string,"valor_total": number
+            }[]
+                           },
+"fisio_profissional_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"fisio_recebimento_estornar":
+{ Args: { "p_motivo": string,"p_recebimento_id": string }; Returns: undefined
+                           },
+"fisio_recebimento_registrar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"fisio_registro_cancelar":
+{ Args: { "p_id": string,"p_motivo": string,"p_tipo": string }; Returns: undefined
+                           },
+"fisio_repasse":
+{ Args: { "p_empresa_id": string,"p_mes": string }; Returns: {
+              "avaliacoes": number,"faltas": number,"nome": string,"profissional_id": string,"repasse": number,"repasse_percentual": number,"sessoes": number,"valor_sessoes": number
+            }[]
+                           },
+"gerar_checklist_competencia":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: number
+                           },
+"gerar_recorrencias_empresa":
+{ Args: { "p_empresa_id": string }; Returns: number
+                           },
+"gerar_tarefas":
+{ Args: { "p_competencia": string,"p_empresa_id"?: string }; Returns: number
+                           },
+"gestao_balanca_configurar":
+{ Args: { "p_digitos_codigo": number,"p_empresa_id": string,"p_etiqueta": string }; Returns: undefined
+                           },
+"gestao_caixa_abrir":
+{ Args: { "p_caixa_nome": string,"p_empresa_id": string,"p_valor_abertura": number }; Returns: string
+                           },
+"gestao_caixa_fechar":
+{ Args: { "p_observacao": string,"p_sessao_id": string,"p_valor_contado": number }; Returns: Json
+                           },
+"gestao_caixa_movimento":
+{ Args: { "p_conta_id": string,"p_motivo": string,"p_sessao_id": string,"p_tipo": string,"p_valor": number }; Returns: string
+                           },
+"gestao_caixa_resumo":
+{ Args: { "p_sessao_id": string }; Returns: Json
+                           },
+"gestao_cliente_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"gestao_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"gestao_contraparte_ativar":
+{ Args: { "p_ativo": boolean,"p_empresa_id": string,"p_id": string }; Returns: undefined
+                           },
+"gestao_contraparte_ficha":
+{ Args: { "p_empresa_id": string,"p_id": string,"p_papel": string }; Returns: Json
+                           },
+"gestao_contraparte_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"gestao_documentos_fiscais":
+{ Args: { "p_empresa_id": string }; Returns: Json
+                           },
+"gestao_entrada_automatica_definir":
+{ Args: { "p_empresa_id": string,"p_ligada": boolean }; Returns: undefined
+                           },
+"gestao_entrada_nota":
+{ Args: { "p_documento_fiscal_id": string,"p_empresa_id": string,"p_itens": Json }; Returns: number
+                           },
+"gestao_estoque_lancar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"gestao_fornecedores_das_notas":
+{ Args: { "p_empresa_id": string }; Returns: number
+                           },
+"gestao_grupo_margem":
+{ Args: { "p_empresa_id": string,"p_grupo": string,"p_margem": number }; Returns: undefined
+                           },
+"gestao_importar_contrapartes":
+{ Args: { "p_empresa_id": string,"p_linhas": Json,"p_papel": string }; Returns: Json
+                           },
+"gestao_importar_nota":
+{ Args: { "p_documento_fiscal_id": string,"p_empresa_id": string,"p_margem": number,"p_pdf": Json }; Returns: Json
+                           },
+"gestao_importar_produtos":
+{ Args: { "p_empresa_id": string,"p_linhas": Json }; Returns: Json
+                           },
+"gestao_inventario":
+{ Args: { "p_empresa_id": string,"p_itens": Json,"p_observacao": string }; Returns: number
+                           },
+"gestao_margem_padrao":
+{ Args: { "p_empresa_id": string,"p_margem": number }; Returns: undefined
+                           },
+"gestao_orcamento_publico":
+{ Args: { "p_codigo": string }; Returns: Json
+                           },
+"gestao_orcamento_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: Json
+                           },
+"gestao_precos_salvar":
+{ Args: { "p_empresa_id": string,"p_itens": Json }; Returns: number
+                           },
+"gestao_precos_situacao":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "custo_na_alteracao": number,"preco_alterado_em": string,"produto_id": string,"ultima_entrada_em": string,"ultimo_custo_entrada": number
+            }[]
+                           },
+"gestao_produto_custos":
+{ Args: { "p_empresa_id": string,"p_produto_id": string }; Returns: Json
+                           },
+"gestao_produto_excluir":
+{ Args: { "p_empresa_id": string,"p_produto_id": string }; Returns: string
+                           },
+"gestao_produto_margem":
+{ Args: { "p_empresa_id": string,"p_margem": number,"p_produto_id": string }; Returns: undefined
+                           },
+"gestao_produto_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"gestao_produto_tara":
+{ Args: { "p_empresa_id": string,"p_produto_id": string,"p_tara_kg": number }; Returns: undefined
+                           },
+"gestao_produtos_custos":
+{ Args: { "p_empresa_id": string }; Returns: Json
+                           },
+"gestao_venda_cancelar":
+{ Args: { "p_motivo": string,"p_venda_id": string }; Returns: undefined
+                           },
+"gestao_venda_emitir_nota":
+{ Args: { "p_documento": string,"p_venda_id": string }; Returns: Json
+                           },
+"gestao_venda_finalizar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"gestao_venda_nota":
+{ Args: { "p_venda_id": string }; Returns: Json
+                           },
+"gestao_venda_vincular_nfe":
+{ Args: { "p_nfe_id": string,"p_venda_id": string }; Returns: undefined
+                           },
+"gestao_vendas_por_produto":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
+              "custo": number,"faturamento": number,"produto_id": string,"quantidade": number,"ultima_venda": string,"vendas": number
+            }[]
+                           },
+"gta_conferencia_registrar":
+{ Args: { "p_mapeamento": Json,"p_mensagem": string,"p_ok": boolean,"p_pedido_id": string,"p_usuario": string }; Returns: string
+                           },
+"gta_pedido_excluir":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"gta_pedido_registrar_emissao":
+{ Args: { "p_id": string,"p_numero": string,"p_serie": string }; Returns: undefined
+                           },
+"gta_pedido_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"gta_sidago_remover_acesso":
+{ Args: { "p_empresa_id": string }; Returns: undefined
+                           },
+"gta_sidago_salvar_acesso":
+{ Args: { "p_conteudo_cifrado": string,"p_empresa_id": string,"p_login_mascarado": string }; Returns: undefined
+                           },
+"honorarios_acesso_definir":
+{ Args: { "p_ativo": boolean,"p_user_id": string }; Returns: undefined
+                           },
+"honorarios_banco_baixar":
+{ Args: { "p_data": string,"p_e2e": string,"p_id": string,"p_valor": number }; Returns: Json
+                           },
+"honorarios_banco_configurar":
+{ Args: { "p_dados": Json }; Returns: undefined
+                           },
+"honorarios_banco_guardar":
+{ Args: { "p_ambiente": string,"p_conteudo": string,"p_url_api": string,"p_url_token": string,"p_validade": string }; Returns: undefined
+                           },
+"honorarios_banco_registrar_cobranca":
+{ Args: { "p_erro": string,"p_id": string,"p_pix": string,"p_situacao": string,"p_txid": string }; Returns: undefined
+                           },
+"honorarios_banco_remover":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"honorarios_banco_resultado_teste":
+{ Args: { "p_erro": string,"p_ok": boolean,"p_webhook": boolean }; Returns: undefined
+                           },
+"honorarios_banco_vincular_recibo":
+{ Args: { "p_id": string,"p_recibo_id": string }; Returns: undefined
+                           },
+"honorarios_cobranca_baixar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: Json
+                           },
+"honorarios_cobranca_cancelar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"honorarios_cobranca_estornar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: string
+                           },
+"honorarios_cobranca_reenviar":
+{ Args: { "p_id": string }; Returns: number
+                           },
+"honorarios_cobranca_salvar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: string
+                           },
+"honorarios_cobranca_vincular_recibo":
+{ Args: { "p_id": string,"p_recibo_id": string }; Returns: undefined
+                           },
+"honorarios_cobrancas_aprovar":
+{ Args: { "p_ids": (string)[] }; Returns: number
+                           },
+"honorarios_config_salvar":
+{ Args: { "p_dados": Json }; Returns: undefined
+                           },
+"honorarios_contrato_aceitar":
+{ Args: { "p_codigo": string,"p_contrato_id": string,"p_cpf": string,"p_hash": string,"p_ip": string,"p_nome": string,"p_user_agent": string,"p_user_id": string }; Returns: undefined
+                           },
+"honorarios_contrato_cancelar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"honorarios_contrato_enviar":
+{ Args: { "p_id": string }; Returns: number
+                           },
+"honorarios_contrato_registrar_arquivo":
+{ Args: { "p_assinado": boolean,"p_hash": string,"p_id": string,"p_path": string }; Returns: undefined
+                           },
+"honorarios_contrato_registrar_codigo":
+{ Args: { "p_codigo": string,"p_contrato_id": string,"p_user_id": string }; Returns: undefined
+                           },
+"honorarios_contrato_registrar_final":
+{ Args: { "p_documento_id": string,"p_hash": string,"p_id": string,"p_path": string }; Returns: undefined
+                           },
+"honorarios_contrato_salvar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: string
+                           },
+"honorarios_ficha_salvar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: string
+                           },
+"honorarios_gerar":
+{ Args: { "p_competencia": string }; Returns: number
+                           },
+"hotel_categoria_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"hotel_checkin":
+{ Args: { "p_dados": Json,"p_reserva_id": string }; Returns: undefined
+                           },
+"hotel_checkout":
+{ Args: { "p_reserva_id": string }; Returns: Json
+                           },
+"hotel_comprovante_confirmar":
+{ Args: { "p_anexo_id": string }; Returns: undefined
+                           },
+"hotel_comprovante_excluir":
+{ Args: { "p_anexo_id": string }; Returns: string
+                           },
+"hotel_comprovante_iniciar":
+{ Args: { "p_dados": Json,"p_pagamento_id": string }; Returns: Json
+                           },
+"hotel_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"hotel_consumo_lancar":
+{ Args: { "p_dados": Json,"p_reserva_id": string }; Returns: Json
+                           },
+"hotel_conta_resumo":
+{ Args: { "p_reserva_id": string }; Returns: Json
+                           },
+"hotel_documentos_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"hotel_extra_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"hotel_extras_lancar":
+{ Args: { "p_dados": Json,"p_reserva_id": string }; Returns: number
+                           },
+"hotel_extras_periodo":
+{ Args: { "p_ate": string,"p_de": string,"p_empresa_id": string }; Returns: Json
+                           },
+"hotel_extras_recibo_cancelar":
+{ Args: { "p_motivo": string,"p_recibo_id": string }; Returns: undefined
+                           },
+"hotel_extras_recibo_lancar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"hotel_extras_recibos_listar":
+{ Args: { "p_ate": string,"p_de": string,"p_empresa_id": string }; Returns: Json
+                           },
+"hotel_hospede_excluir":
+{ Args: { "p_hospede_id": string }; Returns: undefined
+                           },
+"hotel_hospede_observacoes":
+{ Args: { "p_hospede_id": string,"p_texto": string }; Returns: undefined
+                           },
+"hotel_hospede_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"hotel_item_cancelar":
+{ Args: { "p_item_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"hotel_movimento":
+{ Args: { "p_ate": string,"p_de": string,"p_empresa_id": string }; Returns: Json
+                           },
+"hotel_pagamento_estornar":
+{ Args: { "p_motivo": string,"p_pagamento_id": string }; Returns: undefined
+                           },
+"hotel_pagamento_registrar":
+{ Args: { "p_dados": Json,"p_reserva_id": string }; Returns: string
+                           },
+"hotel_quarto_limpeza":
+{ Args: { "p_limpeza": string,"p_motivo": string,"p_quarto_id": string }; Returns: undefined
+                           },
+"hotel_quarto_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"hotel_quartos_lote":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"hotel_reserva_cancelar":
+{ Args: { "p_motivo": string,"p_no_show": boolean,"p_reserva_id": string }; Returns: undefined
+                           },
+"hotel_reserva_ocupante":
+{ Args: { "p_hospede_id": string,"p_reserva_id": string }; Returns: undefined
+                           },
+"hotel_reserva_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: Json
+                           },
+"hotel_servico_lancar":
+{ Args: { "p_dados": Json,"p_reserva_id": string }; Returns: undefined
+                           },
+"hotel_tarifa_excluir":
+{ Args: { "p_tarifa_id": string }; Returns: undefined
+                           },
+"hotel_tarifa_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"hotel_trocar_quarto":
+{ Args: { "p_motivo": string,"p_quarto_id": string,"p_reserva_id": string }; Returns: undefined
+                           },
+"icms_carteira":
+{ Args: { "p_competencia": string }; Returns: Json
+                           },
+"icms_conferir":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_resultado": Json }; Returns: undefined
+                           },
+"icms_definir_codigo_ajuste":
+{ Args: { "p_codigo": string,"p_lancamento_id": string }; Returns: undefined
+                           },
+"icms_definir_destinacao":
+{ Args: { "p_destinacao": string,"p_documento_fiscal_id": string,"p_empresa_id": string,"p_fornecedor": string,"p_numero_item": number }; Returns: undefined
+                           },
+"icms_definir_destinacao_padrao":
+{ Args: { "p_destinacao": string,"p_empresa_id": string }; Returns: undefined
+                           },
+"icms_informar_saldo_anterior":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_observacao"?: string,"p_valor": number }; Returns: undefined
+                           },
+"icms_reabrir":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"icms_reler_notas":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_versao_leitura": number }; Returns: number
+                           },
+"icms_uf_propor_regra":
+{ Args: { "p_uf": string }; Returns: string
+                           },
+"ignorar_movimento":
+{ Args: { "p_ignorar": boolean,"p_motivo"?: string,"p_movimento_id": string }; Returns: undefined
+                           },
+"importar_extrato":
+{ Args: { "p_arquivo_nome": string,"p_arquivo_sha256": string,"p_chave_idempotencia": string,"p_conta_id": string,"p_data_saldo_final"?: string,"p_documento_id": string,"p_empresa_id": string,"p_erros"?: Json,"p_linhas": Json,"p_mapeamento": Json,"p_saldo_final"?: number,"p_tipo": string,"p_total_invalidas"?: number }; Returns: Json
+                           },
+"importar_lancamentos":
+{ Args: { "p_arquivo_nome": string,"p_arquivo_sha256": string,"p_chave_idempotencia": string,"p_documento_id": string,"p_empresa_id": string,"p_erros"?: Json,"p_linhas": Json,"p_mapeamento": Json,"p_total_invalidas"?: number }; Returns: Json
+                           },
+"informar_pagamento_guia":
+{ Args: { "p_comprovante_id"?: string,"p_guia_id": string,"p_observacao"?: string,"p_pago_em": string,"p_valor"?: number }; Returns: undefined
+                           },
+"iniciar_fechamento":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: string
+                           },
+"inserir_linha_dre":
+{ Args: { "p_depois_de"?: string,"p_empresa_id": string,"p_rotulo": string,"p_tipo": string }; Returns: string
+                           },
+"jobs_concluir":
+{ Args: { "p_id": number,"p_resultado"?: Json }; Returns: undefined
+                           },
+"jobs_falhar":
+{ Args: { "p_erro": string,"p_id": number,"p_reprogramar_segundos"?: number }; Returns: undefined
+                           },
+"jobs_reservar":
+{ Args: { "p_limite"?: number,"p_tipos"?: (string)[],"p_worker"?: string }; Returns: {
+              "bloqueado_ate": string | null,
+"chave_idempotencia": string | null,
+"concluido_em": string | null,
+"created_at": string,
+"empresa_id": string | null,
+"erro": string | null,
+"executar_apos": string,
+"id": number,
+"iniciado_em": string | null,
+"max_tentativas": number,
+"payload": NonNullable<Json>,
+"prioridade": number,
+"resultado": Json | null,
+"status": string,
+"tentativas": number,
+"tipo": string,
+"worker": string | null
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "jobs"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"limite_consumir":
+{ Args: { "p_chave": string,"p_janela_segundos": number,"p_maximo": number }; Returns: boolean
+                           },
+"limite_estourado":
+{ Args: { "p_chave": string,"p_maximo": number }; Returns: boolean
+                           },
+"limite_zerar":
+{ Args: { "p_chave": string }; Returns: undefined
+                           },
+"loja_autorizadores_cancelamento":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "id": string,"nome": string
+            }[]
+                           },
+"loja_comissoes_lancar":
+{ Args: { "p_categoria_id": string,"p_empresa_id": string,"p_fim": string,"p_inicio": string,"p_vencimento": string }; Returns: Json
+                           },
+"loja_site_banner_excluir":
+{ Args: { "p_empresa_id": string,"p_id": string }; Returns: (string)[]
+                           },
+"loja_site_banner_imagens":
+{ Args: { "p_celular": string,"p_computador": string,"p_empresa_id": string,"p_id": string }; Returns: (string)[]
+                           },
+"loja_site_banner_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"loja_site_categoria_excluir":
+{ Args: { "p_empresa_id": string,"p_id": string }; Returns: undefined
+                           },
+"loja_site_categoria_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"loja_site_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"loja_site_definir_chave":
+{ Args: { "p_empresa_id": string,"p_hash": string,"p_inicio": string }; Returns: undefined
+                           },
+"loja_site_importar":
+{ Args: { "p_empresa_id": string,"p_itens": Json }; Returns: Json
+                           },
+"loja_site_liberar":
+{ Args: { "p_empresa_id": string,"p_liberar": boolean }; Returns: undefined
+                           },
+"loja_site_pedido":
+{ Args: { "p_chave_hash": string,"p_dados": Json,"p_slug": string }; Returns: Json
+                           },
+"loja_site_produto_fotos":
+{ Args: { "p_empresa_id": string,"p_fotos": (string)[],"p_produto_id": string }; Returns: (string)[]
+                           },
+"loja_site_produto_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_produto_id": string }; Returns: undefined
+                           },
+"loja_site_visibilidade":
+{ Args: { "p_empresa_id": string,"p_produtos": (string)[],"p_visivel": boolean }; Returns: number
+                           },
+"loja_site_vitrine":
+{ Args: { "p_chave_hash": string,"p_slug": string }; Returns: Json
+                           },
+"loja_site_vitrine_produto":
+{ Args: { "p_chave_hash": string,"p_produto_id": string,"p_slug": string }; Returns: Json
+                           },
+"loja_venda_trocar_vendedor":
+{ Args: { "p_motivo": string,"p_venda_id": string,"p_vendedor_id": string }; Returns: undefined
+                           },
+"loja_vendedor_obrigatorio_definir":
+{ Args: { "p_empresa_id": string,"p_obrigatorio": boolean }; Returns: undefined
+                           },
+"loja_vendedores_lista":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "ativo": boolean,"id": string,"meu": boolean,"nome": string
+            }[]
+                           },
+"maquininha_carteira":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"maquininha_concluir_importacao":
+{ Args: { "p_importacao_id": string,"p_resumo": Json }; Returns: Json
+                           },
+"maquininha_confirmar_mapeamento":
+{ Args: { "p_adquirente_codigo"?: string,"p_adquirente_nome"?: string,"p_importacao_id": string,"p_lembrar"?: boolean,"p_mapeamento": Json }; Returns: string
+                           },
+"maquininha_excluir_importacao":
+{ Args: { "p_importacao_id": string }; Returns: undefined
+                           },
+"maquininha_gravar_vendas":
+{ Args: { "p_importacao_id": string,"p_vendas": Json }; Returns: Json
+                           },
+"maquininha_reconferir":
+{ Args: { "p_empresa_id": string,"p_fim"?: string,"p_inicio"?: string }; Returns: number
+                           },
+"maquininha_registrar_relatorio":
+{ Args: { "p_amostra": Json,"p_assinatura": string,"p_cabecalho": Json,"p_documento_id": string,"p_linhas": number,"p_nome": string,"p_versao": number }; Returns: Json
+                           },
+"maquininha_resumo":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"marcar_conversa_lida":
+{ Args: { "p_conversa_id": string }; Returns: undefined
+                           },
+"minhas_sessoes":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "aal": string,"atual": boolean,"atualizada_em": string,"criada_em": string,"id": string,"ip": string,"user_agent": string
+            }[]
+                           },
+"mover_linha_dre":
+{ Args: { "p_direcao": number,"p_linha_id": string }; Returns: undefined
+                           },
+"movimentos_sem_comprovante":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
+              "chave_dedupe": string,
+"conta_financeira_id": string,
+"created_at": string,
+"data": string,
+"descricao": string,
+"documento_contraparte": string | null,
+"empresa_id": string,
+"fitid": string | null,
+"id": string,
+"ignorado_em": string | null,
+"ignorado_motivo": string | null,
+"ignorado_por": string | null,
+"importacao_id": string | null,
+"numero_documento": string | null,
+"status_conciliacao": string,
+"tipo_transacao": string | null,
+"valor": number
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "movimentos_bancarios"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"nfce_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"nfe_avisar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfe_cancelar":
+{ Args: { "p_id": string,"p_justificativa": string }; Returns: undefined
+                           },
+"nfe_carta_correcao":
+{ Args: { "p_id": string,"p_texto": string }; Returns: undefined
+                           },
+"nfe_carteira":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"nfe_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"nfe_descartar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfe_destinatario_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_emitente_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id"?: string }; Returns: Json
+                           },
+"nfe_guia_atualizar":
+{ Args: { "p_documento_id"?: string,"p_id": string,"p_observacao"?: string,"p_situacao": string }; Returns: undefined
+                           },
+"nfe_operacao_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_previa":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"nfe_produto_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfe_produtos_definir_operacao":
+{ Args: { "p_empresa_id": string,"p_operacao_id": string,"p_produtos": (string)[] }; Returns: number
+                           },
+"nfe_tentar_de_novo":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfe_transportador_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfse_avisar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfse_cancelar":
+{ Args: { "p_id": string,"p_justificativa": string,"p_motivo": number }; Returns: undefined
+                           },
+"nfse_carteira":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"nfse_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"nfse_pedir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: Json
+                           },
+"nfse_servico_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"nfse_tentar_de_novo":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"nfse_tomador_excluir":
+{ Args: { "p_empresa_id": string,"p_id": string }; Returns: undefined
+                           },
+"nfse_tomador_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"notas_agendar":
+{ Args: { "p_empresa_id": string,"p_quando": string }; Returns: undefined
+                           },
+"notas_automaticas_por_mes":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "competencia": string,"nfe_entrada": number,"nfe_saida": number,"nfse_prestada": number,"nfse_tomada": number,"outros": number,"total": number
+            }[]
+                           },
+"notas_reservar":
+{ Args: { "p_empresa_id": string,"p_segundos"?: number }; Returns: boolean
+                           },
+"operacional_anotacao_excluir":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"operacional_anotar":
+{ Args: { "p_empresa_id": string,"p_texto": string }; Returns: string
+                           },
+"operacional_desmarcar":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_etapa": string,"p_todas"?: boolean }; Returns: undefined
+                           },
+"operacional_empresas":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "abertas": number,"aguardando_cliente": number,"atrasadas": number,"documento": string,"em_revisao": number,"empresa_id": string,"municipio": string,"nome_fantasia": string,"proximo_prazo": string,"razao_social": string,"regime": string,"responsavel": string,"uf": string,"vencendo_7d": number
+            }[]
+                           },
+"operacional_historico":
+{ Args: { "p_ate": string,"p_empresa_id": string,"p_meses"?: number }; Returns: {
+              "competencia": string,"dados": Json
+            }[]
+                           },
+"operacional_mapa":
+{ Args: { "p_competencia": string,"p_empresa_id"?: string }; Returns: {
+              "cidade": string,"dados": Json,"documento": string,"empresa_id": string,"nome_fantasia": string,"razao_social": string,"regime": string,"responsavel": string,"responsavel_id": string,"uf": string
+            }[]
+                           },
+"operacional_marcar":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_etapa": string,"p_observacao"?: string,"p_situacao": string,"p_todas"?: boolean }; Returns: string
+                           },
+"operacional_ultimas_acoes":
+{ Args: { "p_empresa_id": string,"p_limite"?: number }; Returns: {
+              "quando": string,"quem": string,"texto": string
+            }[]
+                           },
+"os_acompanhar":
+{ Args: { "p_codigo": string }; Returns: Json
+                           },
+"os_atribuir":
+{ Args: { "p_id": string,"p_responsavel_id": string }; Returns: undefined
+                           },
+"os_aviso_resultado":
+{ Args: { "p_erro": string,"p_ordem_id": string,"p_situacao": string }; Returns: undefined
+                           },
+"os_cancelar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"os_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"os_configurar_extras":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"os_entregar":
+{ Args: { "p_dados": Json,"p_id": string }; Returns: undefined
+                           },
+"os_equipe_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"os_fila_setores":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "maquinas": number,"minutos": number,"ordens": number,"setor": string
+            }[]
+                           },
+"os_foto_confirmar":
+{ Args: { "p_foto_id": string }; Returns: undefined
+                           },
+"os_foto_excluir":
+{ Args: { "p_foto_id": string }; Returns: string
+                           },
+"os_foto_iniciar":
+{ Args: { "p_dados": Json,"p_ordem_id": string }; Returns: Json
+                           },
+"os_mover":
+{ Args: { "p_etapa": string,"p_id": string,"p_posicao"?: number,"p_retirado_por"?: string }; Returns: undefined
+                           },
+"os_pagamento_estornar":
+{ Args: { "p_motivo": string,"p_pagamento_id": string }; Returns: undefined
+                           },
+"os_pagamento_registrar":
+{ Args: { "p_dados": Json,"p_ordem_id": string }; Returns: string
+                           },
+"os_pausar":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"os_previsao":
+{ Args: { "p_empresa_id": string,"p_minutos": number,"p_prioridade": string }; Returns: string
+                           },
+"os_previsao_itens":
+{ Args: { "p_empresa_id": string,"p_itens": Json,"p_prioridade": string }; Returns: string
+                           },
+"os_retomar":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"os_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"os_servico_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"os_setor_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"personalizar_dre":
+{ Args: { "p_empresa_id": string }; Returns: number
+                           },
+"preparar_lote_xml":
+{ Args: { "p_lote_id": string }; Returns: Json
+                           },
+"propor_regra":
+{ Args: { "p_fonte_consultada_em": string,"p_fonte_publicada_em": string,"p_fonte_titulo": string,"p_fonte_url": string,"p_obrigacao_id": string,"p_regra": Json,"p_regra_anterior_id"?: string,"p_resumo": string,"p_titulo": string }; Returns: string
+                           },
+"propor_revogacao":
+{ Args: { "p_fonte_consultada_em": string,"p_fonte_publicada_em": string,"p_fonte_titulo": string,"p_fonte_url": string,"p_regra_id": string,"p_resumo": string,"p_titulo": string,"p_vigencia_inicio": string }; Returns: string
+                           },
+"publicar_relatorio":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"qualidade_dados":
+{ Args: { "p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: Json
+                           },
+"reabrir_competencia":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_justificativa": string }; Returns: undefined
+                           },
+"reabrir_item_checklist":
+{ Args: { "p_item_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"recalcular_tarefas_abertas":
+{ Args: { "p_motivo"?: string }; Returns: number
+                           },
+"recibo_cancelar":
+{ Args: { "p_motivo": string,"p_recibo_id": string }; Returns: string
+                           },
+"recibo_emitir":
+{ Args: { "p_dados": Json }; Returns: {
+              "ano": number,"id": string,"numero": number
+            }[]
+                           },
+"recibo_registrar_assinatura":
+{ Args: { "p_documento": string,"p_path": string,"p_recibo_id": string,"p_titular": string }; Returns: undefined
+                           },
+"recibo_vincular_documento":
+{ Args: { "p_documento_id": string,"p_recibo_id": string }; Returns: undefined
+                           },
+"registrar_aceite_termos":
+{ Args: { "p_ip"?: string,"p_user_agent"?: string,"p_versao": string }; Returns: undefined
+                           },
+"registrar_acesso_documento":
+{ Args: { "p_documento_id": string,"p_ip"?: string,"p_tipo": string,"p_user_agent"?: string,"p_versao"?: number }; Returns: Json
+                           },
+"registrar_acesso_relatorio":
+{ Args: { "p_id": string,"p_tipo": string }; Returns: undefined
+                           },
+"registrar_aparelho_push":
+{ Args: { "p_auth": string,"p_descricao"?: string,"p_endpoint": string,"p_p256dh": string }; Returns: string
+                           },
+"registrar_certificado":
+{ Args: { "p_autorizacao_texto": string,"p_buscar_desde"?: string,"p_conteudo_cifrado": string,"p_documento": string,"p_emissor": string,"p_empresa_id": string,"p_impressao_digital": string,"p_numero_serie": string,"p_sem_limite"?: boolean,"p_titular": string,"p_valido_ate": string,"p_valido_de": string }; Returns: string
+                           },
+"registrar_compra_cartao":
+{ Args: { "p_categoria_id": string,"p_centro_custo_id"?: string,"p_conta_cartao_id": string,"p_contraparte_id"?: string,"p_data_compra": string,"p_descricao": string,"p_empresa_id": string,"p_parcelas"?: number,"p_projeto_id"?: string,"p_valor": number }; Returns: string
+                           },
+"registrar_convite":
+{ Args: { "p_email": string,"p_empresa_id": string,"p_envio_erro"?: string,"p_envio_status": string,"p_nome": string,"p_papel": string,"p_permissoes": (string)[],"p_tipo_usuario": string,"p_user_id": string }; Returns: string
+                           },
+"registrar_declaracao_assinada":
+{ Args: { "p_assinatura_digital": boolean,"p_id": string,"p_path": string }; Returns: undefined
+                           },
+"registrar_evento":
+{ Args: { "p_acao": string,"p_detalhes"?: Json,"p_empresa_id"?: string,"p_entidade": string,"p_entidade_id"?: string,"p_ip"?: string,"p_user_agent"?: string }; Returns: undefined
+                           },
+"registrar_login":
+{ Args: { "p_ip"?: string,"p_user_agent"?: string }; Returns: Json
+                           },
+"registrar_parcela_emprestimo":
+{ Args: { "p_conta_id": string,"p_contraparte_id"?: string,"p_data_vencimento": string,"p_descricao": string,"p_empresa_id": string,"p_pago_em"?: string,"p_valor_juros": number,"p_valor_principal": number }; Returns: Json
+                           },
+"registrar_parte_lote_xml":
+{ Args: { "p_ate_ordem": number,"p_falhos": (number)[],"p_lote_id": string,"p_parte": Json }; Returns: undefined
+                           },
+"registrar_pendencia_fechamento":
+{ Args: { "p_competencia_id": string,"p_descricao": string,"p_etapa": string,"p_impeditiva"?: boolean,"p_visivel_cliente"?: boolean }; Returns: string
+                           },
+"registrar_regime":
+{ Args: { "p_empresa_id": string,"p_inicio": string,"p_lucro_real_apuracao"?: string,"p_observacao"?: string,"p_regime": string }; Returns: string
+                           },
+"registrar_sugestoes_conciliacao":
+{ Args: { "p_empresa_id": string,"p_sugestoes": Json }; Returns: number
+                           },
+"registrar_venda_maquininha":
+{ Args: { "p_categoria_receita_id": string,"p_centro_custo_id"?: string,"p_conta_recebimento_id": string,"p_contraparte_id"?: string,"p_data_recebimento": string,"p_data_venda": string,"p_descricao": string,"p_empresa_id": string,"p_recebido"?: boolean,"p_taxa": number,"p_valor_bruto": number }; Returns: string
+                           },
+"registrar_xml_fiscal":
+{ Args: { "p_dados": Json,"p_documento_id": string }; Returns: Json
+                           },
+"rejeitar_atualizacao_normativa":
+{ Args: { "p_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"rejeitar_sugestao_conciliacao":
+{ Args: { "p_conciliacao_id": string,"p_motivo"?: string }; Returns: undefined
+                           },
+"relatorio_dre_composicao":
+{ Args: { "p_categoria_id"?: string,"p_categorias"?: (string)[],"p_centro_custo_id"?: string,"p_empresa_id": string,"p_fim": string,"p_inicio": string,"p_tipos": (string)[] }; Returns: {
+              "ajuste_id": string,"baixa_id": string,"categoria_nome": string,"contraparte": string,"data": string,"descricao": string,"lancamento_id": string,"origem": string,"tipo_categoria": string,"valor": number
+            }[]
+                           },
+"relatorio_dre_linhas":
+{ Args: { "p_centro_custo_id"?: string,"p_empresa_id": string,"p_fim": string,"p_inicio": string,"p_projeto_id"?: string }; Returns: {
+              "categoria_codigo": string,"categoria_id": string,"categoria_nome": string,"mes": string,"origem": string,"quantidade": number,"tipo": string,"valor": number
+            }[]
+                           },
+"relatorio_fluxo_projetado":
+{ Args: { "p_ate": string,"p_empresa_id": string }; Returns: {
+              "categoria_nome": string,"contraparte": string,"data": string,"descricao": string,"entrada": number,"lancamento_id": string,"origem": string,"saida": number,"vencido": boolean
+            }[]
+                           },
+"relatorio_fluxo_realizado":
+{ Args: { "p_centro_custo_id"?: string,"p_contas"?: (string)[],"p_empresa_id": string,"p_fim": string,"p_inicio": string }; Returns: {
+              "categoria_id": string,"categoria_nome": string,"conta_contrapartida_disponivel": boolean,"conta_contrapartida_id": string,"conta_disponivel": boolean,"conta_id": string,"conta_nome": string,"contraparte": string,"data": string,"descricao": string,"entrada": number,"grupo": string,"lancamento_id": string,"registro": string,"registro_id": string,"saida": number,"tipo_categoria": string
+            }[]
+                           },
+"remover_aparelho_push":
+{ Args: { "p_endpoint"?: string,"p_id"?: string }; Returns: number
+                           },
+"reprocessar_documento":
+{ Args: { "p_documento_id": string }; Returns: number
+                           },
+"resolver_pendencia_fechamento":
+{ Args: { "p_pendencia_id": string,"p_resolucao": string,"p_status": string }; Returns: undefined
+                           },
+"responder_solicitacao_titular":
+{ Args: { "p_id": string,"p_resposta": string,"p_status": string }; Returns: undefined
+                           },
+"restaurar_dre_padrao":
+{ Args: { "p_empresa_id": string }; Returns: number
+                           },
+"resumo_checklist":
+{ Args: { "p_competencia": string,"p_empresa_id": string }; Returns: Json
+                           },
+"resumo_conciliacao_carteira":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "conciliadas_30d": number,"empresa_id": string,"entradas_pendentes": number,"pendente_mais_antiga": string,"pendentes": number,"saidas_pendentes": number,"sugestoes": number,"ultima_importacao": string
+            }[]
+                           },
+"resumo_financeiro_carteira":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: {
+              "contas_sem_saldo": number,"empresa_id": string,"pagar_30": number,"pagar_vencido": number,"receber_30": number,"receber_vencido": number,"receita": number,"resultado": number,"saldo_disponivel": number,"sugeridos": number
+            }[]
+                           },
+"revisar_nao_aplica":
+{ Args: { "p_aprovar": boolean,"p_item_id": string,"p_resposta"?: string }; Returns: undefined
+                           },
+"revogar_certificado":
+{ Args: { "p_empresa_id": string,"p_motivo"?: string }; Returns: undefined
+                           },
+"revogar_membro":
+{ Args: { "p_membro_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"rh_cargo_excluir":
+{ Args: { "p_cargo_id": string }; Returns: undefined
+                           },
+"rh_cargo_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"rh_conciliacao_progresso":
+{ Args: { "p_empresa_id": string,"p_semanas": (string)[] }; Returns: {
+              "pendentes": number,"semana": string,"total": number
+            }[]
+                           },
+"rh_confirmar_conferencia_estoque":
+{ Args: { "p_empresa_id": string,"p_observacao": string }; Returns: Json
+                           },
+"rh_criar_rotinas_iniciais":
+{ Args: { "p_chaves": (string)[],"p_empresa_id": string }; Returns: number
+                           },
+"rh_evidencia_confirmar":
+{ Args: { "p_evidencia_id": string }; Returns: undefined
+                           },
+"rh_evidencia_excluir":
+{ Args: { "p_evidencia_id": string }; Returns: string
+                           },
+"rh_evidencia_iniciar":
+{ Args: { "p_dados": Json,"p_tarefa_id": string }; Returns: Json
+                           },
+"rh_ia_reservar":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "modelo": string,"uso_id": number
+            }[]
+                           },
+"rh_modelo_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"rh_reprocessar_caixa":
+{ Args: { "p_sessao_id": string }; Returns: number
+                           },
+"rh_tarefa_atribuir":
+{ Args: { "p_funcionario_id": string,"p_tarefa_id": string }; Returns: undefined
+                           },
+"rh_tarefa_concluir":
+{ Args: { "p_dados": Json,"p_tarefa_id": string }; Returns: undefined
+                           },
+"rh_tarefa_dependencia":
+{ Args: { "p_depende_de_id": string,"p_ligar": boolean,"p_tarefa_id": string }; Returns: undefined
+                           },
+"rh_tarefa_mover":
+{ Args: { "p_ordem": number,"p_status": string,"p_tarefa_id": string }; Returns: undefined
+                           },
+"rh_vinculo_confirmar":
+{ Args: { "p_vinculo_id": string }; Returns: undefined
+                           },
+"rh_vinculo_ia_registrar":
+{ Args: { "p_explicacao": string,"p_vinculo_id": string }; Returns: undefined
+                           },
+"rh_vinculo_recusar":
+{ Args: { "p_vinculo_id": string }; Returns: undefined
+                           },
+"rotina_auditor_fiscal":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_diaria":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_estudos":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_fisio_confirmacoes":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_honorarios":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_lotes_xml":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_notas_automaticas":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_operacional":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_rh_tarefas":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rotina_suporte_limpeza":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"rotina_vencimentos":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"saldo_conta":
+{ Args: { "p_conta_id": string,"p_data": string }; Returns: number
+                           },
+"saldos_contas":
+{ Args: { "p_data": string,"p_empresa_id": string }; Returns: {
+              "compoe_saldo_disponivel": boolean,"conciliado_ate": string,"conta_id": string,"movimentos_pendentes": number,"nome": string,"saldo_extrato": number,"saldo_extrato_data": string,"saldo_sistema": number,"tipo": string,"ultimo_movimento_data": string
+            }[]
+                           },
+"salvar_notas_automaticas":
+{ Args: { "p_ciencia": boolean,"p_empresa_id": string,"p_nfe": boolean,"p_nfse": boolean,"p_pausada": boolean }; Returns: undefined
+                           },
+"salvar_rascunho_relatorio":
+{ Args: { "p_comentarios": string,"p_competencia": string,"p_dados": Json,"p_empresa_id": string,"p_fim": string,"p_id": string,"p_inicio": string,"p_limitacoes": Json,"p_resumo": string,"p_tipo": string,"p_titulo": string }; Returns: string
+                           },
+"seguranca_usuarios":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "sessoes": number,"tem_2fa": boolean,"ultima_atividade": string,"user_id": string
+            }[]
+                           },
+"sessao_desbloqueio":
+{ Args: { "p_senha_ok": boolean,"p_session_id": string,"p_user_id": string }; Returns: number
+                           },
+"sessao_manter_hoje":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"sessao_portal_fechado":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"simular_regra":
+{ Args: { "p_empresa_id"?: string,"p_inicio": string,"p_meses"?: number,"p_municipio"?: string,"p_periodicidade": string,"p_regra": Json,"p_uf"?: string }; Returns: {
+              "competencia": string,"prazo_apuracao": string,"prazo_entrega": string,"prazo_pagamento": string
+            }[]
+                           },
+"sincronizar_tarefas_empresa":
+{ Args: { "p_empresa_id": string,"p_motivo"?: string }; Returns: Json
+                           },
+"sistema_bloquear_documento":
+{ Args: { "p_documento_id": string,"p_motivo": string,"p_versao_id": string }; Returns: undefined
+                           },
+"sistema_notificar":
+{ Args: { "p_corpo"?: string,"p_email"?: boolean,"p_empresa_id": string,"p_link"?: string,"p_tipo": string,"p_titulo": string,"p_user_id": string }; Returns: string
+                           },
+"sistema_notificar_equipe":
+{ Args: { "p_corpo"?: string,"p_empresa_id": string,"p_link"?: string,"p_tipo": string,"p_titulo": string }; Returns: number
+                           },
+"sistema_push_destinos":
+{ Args: { "p_notificacao_id": string }; Returns: {
+              "aparelho_id": string,"chave_auth": string,"chave_p256dh": string,"endpoint": string
+            }[]
+                           },
+"sistema_push_resultado":
+{ Args: { "p_aparelho_id": string,"p_entregue": boolean,"p_remover"?: boolean }; Returns: undefined
+                           },
+"solicitar_correcao_item":
+{ Args: { "p_item_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"solicitar_lote_xml":
+{ Args: { "p_competencia": string,"p_empresa_id": string,"p_tipos": (string)[] }; Returns: string
+                           },
+"solicitar_lotes_xml_carteira":
+{ Args: { "p_competencia": string,"p_tipos": (string)[] }; Returns: Json
+                           },
+"solicitar_nao_aplica":
+{ Args: { "p_item_id": string,"p_justificativa": string }; Returns: undefined
+                           },
+"sped_carteira":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"sped_concluir":
+{ Args: { "p_arquivo_id": string,"p_avisos": Json,"p_totais": Json }; Returns: Json
+                           },
+"sped_conferir_de_novo":
+{ Args: { "p_arquivo_id": string }; Returns: Json
+                           },
+"sped_excluir_arquivo":
+{ Args: { "p_arquivo_id": string }; Returns: undefined
+                           },
+"sped_gravar_documentos":
+{ Args: { "p_arquivo_id": string,"p_documentos": Json }; Returns: number
+                           },
+"sped_registrar_arquivo":
+{ Args: { "p_cabecalho": Json,"p_documento_id": string,"p_erro"?: string,"p_nome": string,"p_situacao": string,"p_versao": number }; Returns: string
+                           },
+"substituir_documento":
+{ Args: { "p_documento_id": string,"p_mime": string,"p_motivo": string,"p_nome_arquivo": string,"p_sha256": string,"p_tamanho": number }; Returns: Json
+                           },
+"suporte_avaliar":
+{ Args: { "p_id": number,"p_pergunta"?: string,"p_util": boolean }; Returns: undefined
+                           },
+"suporte_ia_concluir":
+{ Args: { "p_erro": string,"p_ok": boolean,"p_tokens_entrada": number,"p_tokens_saida": number,"p_uso_id": number }; Returns: undefined
+                           },
+"suporte_ia_reservar":
+{ Args: { "p_empresa_id": string }; Returns: {
+              "modelo": string,"uso_id": number
+            }[]
+                           },
+"suporte_registrar":
+{ Args: { "p_dados": Json }; Returns: number
+                           },
+"suporte_tratar":
+{ Args: { "p_id": number,"p_tratada": boolean }; Returns: undefined
+                           },
+"validar_atualizacao_normativa":
+{ Args: { "p_id": string,"p_observacao"?: string }; Returns: undefined
+                           },
+"vet_adendo_registrar":
+{ Args: { "p_atendimento_id": string,"p_texto": string }; Returns: string
+                           },
+"vet_agenda_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_agenda_status":
+{ Args: { "p_agenda_id": string,"p_status": string }; Returns: undefined
+                           },
+"vet_anexo_confirmar":
+{ Args: { "p_anexo_id": string }; Returns: undefined
+                           },
+"vet_anexo_iniciar":
+{ Args: { "p_atendimento_id": string,"p_dados": Json }; Returns: Json
+                           },
+"vet_atendimento_abrir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_atendimento_cancelar":
+{ Args: { "p_atendimento_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"vet_atendimento_finalizar":
+{ Args: { "p_atendimento_id": string }; Returns: undefined
+                           },
+"vet_atendimento_salvar":
+{ Args: { "p_atendimento_id": string,"p_dados": Json }; Returns: undefined
+                           },
+"vet_aviso_registrar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_configurar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: undefined
+                           },
+"vet_conta_abrir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_conta_cancelar":
+{ Args: { "p_conta_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"vet_conta_desconto":
+{ Args: { "p_conta_id": string,"p_desconto": number }; Returns: undefined
+                           },
+"vet_conta_fechar":
+{ Args: { "p_conta_id": string }; Returns: undefined
+                           },
+"vet_conta_item_cancelar":
+{ Args: { "p_item_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"vet_conta_item_lancar":
+{ Args: { "p_conta_id": string,"p_dados": Json }; Returns: string
+                           },
+"vet_conta_resumo":
+{ Args: { "p_conta_id": string }; Returns: Json
+                           },
+"vet_documento_cancelar":
+{ Args: { "p_documento_id": string,"p_motivo": string }; Returns: undefined
+                           },
+"vet_documento_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_importar_tutores":
+{ Args: { "p_empresa_id": string,"p_tutores": Json }; Returns: Json
+                           },
+"vet_lembretes_pendentes":
+{ Args: { "p_ate": string,"p_empresa_id": string }; Returns: Json
+                           },
+"vet_paciente_excluir":
+{ Args: { "p_paciente_id": string }; Returns: undefined
+                           },
+"vet_paciente_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_pagamento_estornar":
+{ Args: { "p_motivo": string,"p_pagamento_id": string }; Returns: undefined
+                           },
+"vet_pagamento_registrar":
+{ Args: { "p_conta_id": string,"p_dados": Json }; Returns: string
+                           },
+"vet_receita_cancelar":
+{ Args: { "p_motivo": string,"p_receita_id": string }; Returns: undefined
+                           },
+"vet_receita_emitir":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_servico_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_tutor_excluir":
+{ Args: { "p_tutor_id": string }; Returns: undefined
+                           },
+"vet_tutor_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_uso_cancelar":
+{ Args: { "p_motivo": string,"p_uso_id": string }; Returns: undefined
+                           },
+"vet_uso_registrar":
+{ Args: { "p_atendimento_id": string,"p_dados": Json }; Returns: string
+                           },
+"vet_vacina_produto_definir":
+{ Args: { "p_produto_id": string,"p_vacina_id": string }; Returns: undefined
+                           },
+"vet_vacina_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vet_vacinacao_cancelar":
+{ Args: { "p_motivo": string,"p_vacinacao_id": string }; Returns: undefined
+                           },
+"vet_vacinacao_registrar":
+{ Args: { "p_dados": Json,"p_empresa_id": string }; Returns: string
+                           },
+"vet_veterinario_salvar":
+{ Args: { "p_dados": Json,"p_empresa_id": string,"p_id": string }; Returns: string
+                           },
+"vincular_membro":
+{ Args: { "p_empresa_id": string,"p_papel": string,"p_permissoes"?: (string)[],"p_user_id": string }; Returns: string
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        }
+}
+
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
+
+export const Constants = {
+  "public": {
+          Enums: {
+            
+          }
+        }
+} as const

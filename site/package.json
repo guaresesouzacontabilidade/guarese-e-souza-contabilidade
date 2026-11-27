@@ -1,0 +1,16 @@
+{
+  "name": "site-catarinense",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Site institucional da Catarinense Contabilidade & Gestão (Vite, HTML, CSS e JavaScript sem bibliotecas).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test testes/site.test.mjs"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}

@@ -1,0 +1,223 @@
+import type { Metadata } from "next";
+import { nfceNaUf } from "@/lib/nfe-emissao/nfce";
+import Link from "next/link";
+import { CheckCircle2, Circle } from "lucide-react";
+import { obterContextoEmpresa } from "@/lib/auth/sessao";
+import { CabecalhoPagina } from "@/components/ui/pagina";
+import { Alerta } from "@/components/ui/feedback";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  EmitentesNfe,
+  FormConfiguracaoNfe,
+  FormCupomFiscal,
+  OperacoesNfe,
+  ProdutosNfe,
+  type PisCofinsPadrao,
+  type ClasseIbsCbs,
+  type ConfigNfe,
+  type EmitenteNfe,
+  type OperacaoNfe,
+  type ProdutoNfe,
+} from "@/components/nfe/configuracao";
+import { mensagemErro } from "@/lib/acoes";
+import { formatarData } from "@/lib/formatos";
+import { SEM_PIS_COFINS, certificadoValido, cfopExportacao } from "@/lib/nfe-emissao/rotulos";
+import { CSOSN } from "@/lib/nfe-emissao/calculo";
+
+export const metadata: Metadata = { title: "Configurar emissão de NF-e" };
+
+function Passo({ feito, children }: { feito: boolean; children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2 text-sm">
+      {feito ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-sucesso" /> : <Circle className="mt-0.5 size-4 shrink-0 text-muted-foreground" />}
+      <span className={feito ? "text-muted-foreground" : undefined}>{children}</span>
+    </li>
+  );
+}
+
+export default async function ConfiguracaoNfe({ params }: PageProps<"/e/[empresaId]/notas-produto/configuracao">) {
+  const { empresaId } = await params;
+  const ctx = await obterContextoEmpresa(empresaId);
+  if (!ctx.pode("nfe.configurar")) return <Alerta tom="alerta">Somente a equipe do escritório configura a emissão de NF-e.</Alerta>;
+  const base = `/e/${empresaId}`;
+
+  const [{ data: cfg }, { data: emp }, { data: cert }, { data: emitentes, error }, { data: produtos }, { data: operacoes }, { data: classes }] = await Promise.all([
+    ctx.supabase.from("nfe_config").select("*").eq("empresa_id", empresaId).maybeSingle(),
+    ctx.supabase.from("empresas").select("tipo_pessoa, regime_tributario, uf").eq("id", empresaId).maybeSingle(),
+    ctx.supabase.from("certificados_digitais").select("valido_ate").eq("empresa_id", empresaId).is("revogado_em", null).maybeSingle(),
+    ctx.supabase.from("nfe_emitentes").select("*, municipio:municipios(nome, uf)").eq("empresa_id", empresaId).order("serie"),
+    ctx.supabase.from("nfe_produtos").select("id, codigo, descricao, ncm, cest, gtin, unidade, peso_kg, valor_unitario, origem, ativo, operacao_id").eq("empresa_id", empresaId).order("descricao"),
+    ctx.supabase.from("nfe_operacoes").select("*").eq("empresa_id", empresaId).order("nome"),
+    ctx.supabase.from("nfe_cclass_trib").select("cclass_trib, cst, nome, p_red_ibs, p_red_cbs").order("cclass_trib"),
+  ]);
+  if (error) return <Alerta tom="perigo">Não foi possível carregar a configuração: {mensagemErro(error)}</Alerta>;
+
+  const pessoaFisica = emp?.tipo_pessoa === "PF";
+  const regimeSimples = emp?.regime_tributario === "simples_nacional" || emp?.regime_tributario === "mei";
+  const atual: ConfigNfe = {
+    ativa: cfg?.ativa ?? false,
+    ambiente: (cfg?.ambiente as ConfigNfe["ambiente"]) ?? "homologacao",
+    crt: cfg?.crt ?? (emp?.regime_tributario === "mei" ? 4 : regimeSimples ? 1 : 3),
+    presenca: cfg?.presenca ?? 9,
+    funrural_percentual: cfg?.funrural_percentual ?? null,
+    funrural_modo: cfg?.funrural_modo ?? null,
+    enviar_email_destinatario: cfg?.enviar_email_destinatario ?? true,
+    autorizar_escritorio_xml: cfg?.autorizar_escritorio_xml ?? true,
+    informacoes_padrao: cfg?.informacoes_padrao ?? null,
+    autorizacao_texto: cfg?.autorizacao_texto ?? null,
+  };
+  const simples = atual.crt === 1 || atual.crt === 4;
+  const certificadoOk = certificadoValido(cert?.valido_ate);
+  const listaEmitentes: EmitenteNfe[] = (emitentes ?? []).map((e) => {
+    const m = e.municipio as { nome?: string; uf?: string } | null;
+    return {
+      ...e,
+      municipio: m?.nome ?? null,
+      uf: m?.uf ?? null,
+      proximo_numero_homologacao: Number(e.proximo_numero_homologacao),
+      proximo_numero_producao: Number(e.proximo_numero_producao),
+      nfce_proximo_numero_homologacao: Number(e.nfce_proximo_numero_homologacao),
+      nfce_proximo_numero_producao: Number(e.nfce_proximo_numero_producao),
+    };
+  });
+  const listaOperacoes = (operacoes ?? []).map((o) => ({ ...o, contribuicoes: Array.isArray(o.contribuicoes) ? o.contribuicoes : [] })) as unknown as OperacaoNfe[];
+  // PIS e Cofins das vendas: Lucro Real (não cumulativo) 1,65% e 7,6%; Lucro Presumido (cumulativo) 0,65% e 3%
+  const pisCofins: PisCofinsPadrao =
+    pessoaFisica || simples ? null : emp?.regime_tributario === "lucro_real" ? { pis: 1.65, cofins: 7.6 } : emp?.regime_tributario === "lucro_presumido" ? { pis: 0.65, cofins: 3 } : null;
+  const operacoesSemPisCofins = pisCofins
+    ? listaOperacoes.filter((o) => o.ativa && o.finalidade === 1 && !cfopExportacao(o.cfop) && (SEM_PIS_COFINS.includes(o.pis_cst) || SEM_PIS_COFINS.includes(o.cofins_cst)))
+    : [];
+  const operacoesSemRegra = listaOperacoes.filter((o) => o.ativa && (simples ? !(o.icms_cst in CSOSN) : o.icms_cst in CSOSN || (atual.crt === 3 && !o.ibscbs_cclass_trib)));
+
+  return (
+    <>
+      <CabecalhoPagina
+        titulo="Configurar emissão de NF-e"
+        descricao="Quem emite (inscrições e séries), os produtos e as operações com as regras fiscais. Quem emite a nota só escolhe a operação, o cliente e os produtos."
+        voltar={{ href: `${base}/notas-produto`, rotulo: "Notas de produto" }}
+      />
+
+      <div className="mb-4 grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+        <Alerta tom={certificadoOk ? "sucesso" : "alerta"} titulo={certificadoOk ? "Certificado digital válido" : "Sem certificado digital válido"}>
+          {certificadoOk ? (
+            `O certificado A1 vale até ${formatarData(cert!.valido_ate)}. Ele assina as notas e faz a conexão com a SEFAZ.`
+          ) : (
+            <>
+              A emissão só liga com o certificado A1 da empresa.{" "}
+              <Link href={`${base}/notas-automaticas`} className="font-medium underline">
+                Cadastrar o certificado
+              </Link>
+              .
+            </>
+          )}
+        </Alerta>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="mb-2 text-sm font-medium">Para ligar a emissão</p>
+            <ul className="space-y-1.5">
+              <Passo feito={certificadoOk}>Certificado digital A1 da empresa</Passo>
+              <Passo feito={listaEmitentes.some((e) => e.ativo)}>{pessoaFisica ? "Inscrição estadual de cada propriedade, com a série" : "Inscrição estadual e série"}</Passo>
+              <Passo feito={listaOperacoes.some((o) => o.ativa)}>Operação com as regras fiscais</Passo>
+              <Passo feito={(produtos ?? []).some((p) => p.ativo)}>Produtos (NCM, unidade e peso)</Passo>
+              <Passo feito={Boolean(atual.autorizacao_texto)}>Autorização do cliente registrada</Passo>
+              <Passo feito={atual.ativa}>Emissão ligada (comece em teste)</Passo>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Alerta tom="info" className="mb-4" titulo="Credenciamento na SEFAZ">
+        A empresa (ou o produtor) precisa estar credenciada como emissora de NF-e na SEFAZ do estado. Sem o credenciamento, a SEFAZ recusa a nota (rejeição 203). Depois de
+        salvar, use &quot;Testar conexão com a SEFAZ&quot; e emita uma nota de teste antes de passar para produção.
+      </Alerta>
+
+      {operacoesSemRegra.length ? (
+        <Alerta tom="alerta" className="mb-4" titulo="Operações que não combinam com o regime">
+          {operacoesSemRegra.map((o) => o.nome).join(", ")}: {simples ? "o Simples usa CSOSN no ICMS." : "o regime normal usa CST no ICMS e exige a classificação do IBS/CBS."} Edite antes de emitir.
+        </Alerta>
+      ) : null}
+
+      {operacoesSemPisCofins.length ? (
+        <Alerta tom="alerta" className="mb-4" titulo="Operações de venda sem PIS e Cofins">
+          {operacoesSemPisCofins.map((o) => `${o.nome} (PIS ${o.pis_cst} / Cofins ${o.cofins_cst})`).join(", ")}: as notas saem sem PIS e Cofins. Para empresa do{" "}
+          {emp?.regime_tributario === "lucro_real" ? "Lucro Real" : "Lucro Presumido"}, a venda comum (inclusive de milho e soja em grão) é tributada: CST 01 com{" "}
+          {String(pisCofins!.pis).replace(".", ",")}% e {String(pisCofins!.cofins).replace(".", ",")}%. Mantenha só se a venda for isenta, com alíquota zero, suspensa ou sem
+          incidência.
+        </Alerta>
+      ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+        <div className="space-y-4 [&>*]:min-w-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>Emissão</CardTitle>
+              <CardDescription>Comece no ambiente de teste e passe para produção depois de conferir uma nota.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormConfiguracaoNfe empresaId={empresaId} cfg={atual} pessoaFisica={pessoaFisica} />
+            </CardContent>
+          </Card>
+          <Card id="cupom-fiscal">
+            <CardHeader>
+              <CardTitle>Cupom fiscal (NFC-e)</CardTitle>
+              <CardDescription>Para a venda no balcão da loja. Fica desligado até o escritório ligar.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormCupomFiscal
+                empresaId={empresaId}
+                ativa={cfg?.nfce_ativa ?? false}
+                ambiente={cfg?.nfce_ambiente === "producao" ? "producao" : "homologacao"}
+                ufAtendida={nfceNaUf(emp?.uf ?? "")}
+                temSerie={listaEmitentes.some((e) => e.ativo && e.nfce_serie != null)}
+                temOperacao={listaOperacoes.some((o) => o.ativa && (o.modelos ?? []).includes("nfce"))}
+              />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="space-y-4 [&>*]:min-w-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>{pessoaFisica ? "Propriedades (quem emite)" : "Quem emite"}</CardTitle>
+              <CardDescription>
+                {pessoaFisica
+                  ? "O produtor emite com o CPF e a inscrição estadual de cada propriedade, cada uma com a própria série."
+                  : "A inscrição estadual do estabelecimento, com a série e a numeração da NF-e."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmitentesNfe empresaId={empresaId} emitentes={listaEmitentes} pessoaFisica={pessoaFisica} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Produtos</CardTitle>
+              <CardDescription>O que a empresa vende, com NCM, unidade e peso. O produto com ST pode ter a própria regra fiscal.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProdutosNfe empresaId={empresaId} produtos={(produtos ?? []) as ProdutoNfe[]} operacoes={listaOperacoes} simples={simples} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Operações (regras fiscais)</CardTitle>
+          <CardDescription>
+            CFOP, ICMS, DIFAL, ICMS do frete, PIS/Cofins, IBS/CBS, FUNRURAL e contribuições como o FETHAB. As guias de cada nota saem destas regras.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <OperacoesNfe
+            empresaId={empresaId}
+            operacoes={listaOperacoes}
+            simples={simples}
+            pisCofins={pisCofins}
+            classes={(classes ?? []) as ClasseIbsCbs[]}
+            uf={listaEmitentes.find((e) => e.uf)?.uf ?? emp?.uf ?? null}
+          />
+        </CardContent>
+      </Card>
+    </>
+  );
+}
