@@ -13,6 +13,7 @@ import { TIPOS_MOVIMENTO, formatarQuantidade, secaoPeca, un } from "@/lib/gestao
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { custoUnitario } from "@/lib/gestao/analise-estoque";
 import { formatarDataHora } from "@/lib/formatos";
+import { nomeUnidade, temConversao } from "@/lib/gestao/conversao";
 
 export const metadata: Metadata = { title: "Produto" };
 
@@ -72,7 +73,7 @@ export default async function PaginaProduto({ params }: PageProps<"/e/[empresaId
     <>
       <CabecalhoPagina
         titulo={p.descricao}
-        descricao={`Código ${p.codigo} · NCM ${p.ncm}${p.grupo ? ` · ${p.grupo}` : ""}${secaoPeca(p) ? ` · peça ${secaoPeca(p)}` : ""}${p.comprimento_m ? ` × ${formatarQuantidade(p.comprimento_m, 3)} m` : ""}`}
+        descricao={`Código ${p.codigo} · NCM ${p.ncm}${p.grupo ? ` · ${p.grupo}` : ""}${secaoPeca(p) ? ` · peça ${secaoPeca(p)}` : ""}${p.comprimento_m ? ` × ${formatarQuantidade(p.comprimento_m, 3)} m` : ""}${temConversao(p) ? ` · compra em ${nomeUnidade(p.unidade_compra, 1).toLowerCase()}: 1 ${p.unidade_compra} = ${formatarQuantidade(p.fator_compra, 6)} ${un(p.unidade)}` : ""}`}
         voltar={{ href: `/e/${empresaId}/loja/produtos`, rotulo: "Produtos e estoque" }}
         acoes={
           ctx.gerente ? (

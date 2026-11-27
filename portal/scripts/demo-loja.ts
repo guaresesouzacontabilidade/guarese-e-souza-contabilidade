@@ -237,6 +237,31 @@ async function semearCadastrosLoja(admin: SupabaseClient, empresaId: string) {
   }
 }
 
+/** Vigota comprada em peça e vendida em metro (1 peça = 3 m), com estoque inicial — dados fictícios. */
+async function semearConversaoLoja(admin: SupabaseClient, conexao: { url: string; publica: string }, empresaId: string, emailDono: string) {
+  const { data: existe } = await admin.from("nfe_produtos").select("id").eq("empresa_id", empresaId).eq("codigo", "VIG-88").maybeSingle();
+  if (existe) return;
+  const dono = await entrarComo(admin, conexao, emailDono);
+  const id = ok(
+    "produto Vigota 8x8 (compra em peça, vende em metro)",
+    await dono.rpc("gestao_produto_salvar", {
+      p_empresa_id: empresaId,
+      p_id: null,
+      p_dados: {
+        codigo: "VIG-88", descricao: "Vigota 8x8 tachi preto (DEMO)", grupo: "Vigas", ncm: "44071100", unidade: "M", valor_unitario: "18",
+        preco_custo: "10", controla_estoque: true, estoque_minimo: "15", comprimento_m: "3", unidade_compra: "PC", fator_compra: "3", ativo: true,
+      },
+    }),
+  ) as string;
+  ok(
+    "estoque inicial da vigota (20 peças = 60 m)",
+    await dono.rpc("gestao_estoque_lancar", {
+      p_empresa_id: empresaId,
+      p_dados: { tipo: "entrada_manual", produto_id: id, quantidade: "60", custo_unitario: "10", observacao: "Estoque inicial: 20 peças de 3 m (DEMONSTRAÇÃO)" },
+    }),
+  );
+}
+
 async function semearComprasLoja(admin: SupabaseClient, conexao: { url: string; publica: string }, empresaId: string, emailDono: string) {
   const { count } = await admin.from("documentos").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).like("nome_original", `${MARCA_COMPRAS}%`);
   if (count) return false;
@@ -314,6 +339,7 @@ export async function semearLoja(
     await semearNfeLoja(admin, existente.id);
     await semearLogoLoja(admin, existente.id);
     await semearCadastrosLoja(admin, existente.id);
+    await semearConversaoLoja(admin, conexao, existente.id, `madeireira@${opcoes.dominio}`);
     if (await semearComprasLoja(admin, conexao, existente.id, `madeireira@${opcoes.dominio}`)) {
       console.log("  Madeireira: entrada automática ligada e notas de compra fictícias enviadas (a leitura e a entrada no estoque rodam na fila)");
     }
@@ -420,6 +446,7 @@ export async function semearLoja(
   const fazenda = await cliente("Fazenda Santa Luzia — José Exemplo (DEMO)", cpfValido("321654987"), "63977776666");
   const joao = await cliente("João Carpinteiro Exemplo (DEMO)", cpfValido("147258369"), "63966665555");
   await semearCadastrosLoja(admin, empresaId);
+  await semearConversaoLoja(admin, conexao, empresaId, `madeireira@${opcoes.dominio}`);
 
 
   // Turno da manhã: balconista abre, vende, faz sangria e fecha (conferiu certinho)

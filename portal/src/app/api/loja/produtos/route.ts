@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   ws.addRow(CAMPOS_PLANILHA.map((c) => c.titulo));
   ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
   ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4A2C1D" } };
-  ws.columns.forEach((c, i) => (c.width = [14, 42, 12, 10, 16, 16, 12, 16, 18, 24, 12][i] ?? 14));
+  ws.columns.forEach((c, i) => (c.width = [14, 42, 12, 10, 16, 16, 12, 16, 18, 24, 12, 18, 10][i] ?? 14));
   // Texto nas colunas de código (mantém os zeros à esquerda)
   for (const i of [1, 3, 10, 11]) ws.getColumn(i).numFmt = "@";
 
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       buscarTudo((de, ate) =>
         s.supabase
           .from("nfe_produtos")
-          .select("id, codigo, descricao, ncm, unidade, valor_unitario, estoque_atual, estoque_minimo, grupo, gtin, cest, controla_estoque")
+          .select("id, codigo, descricao, ncm, unidade, valor_unitario, estoque_atual, estoque_minimo, grupo, gtin, cest, controla_estoque, unidade_compra, fator_compra")
           .eq("empresa_id", empresaId)
           .eq("ativo", true)
           .order("descricao")
@@ -61,11 +61,14 @@ export async function GET(req: NextRequest) {
         p.grupo,
         p.gtin,
         p.cest,
+        p.unidade_compra,
+        p.fator_compra == null ? null : Number(p.fator_compra),
       ]);
     }
   } else {
-    ws.addRow(["", "Tábua de pinus 30 cm x 3 m (exemplo)", "44071100", "UN", 42.9, 28.5, 120, 20, "Tábuas", "", ""]);
-    ws.addRow(["", "Prego 17x27 (exemplo)", "73170020", "KG", 25, 14, 40, 10, "Fixação", "", ""]);
+    ws.addRow(["", "Tábua de pinus 30 cm x 3 m (exemplo)", "44071100", "UN", 42.9, 28.5, 120, 20, "Tábuas", "", "", "", null]);
+    ws.addRow(["", "Prego 17x27 (exemplo)", "73170020", "KG", 25, 14, 40, 10, "Fixação", "", "", "", null]);
+    ws.addRow(["", "Vigota 8x8 (exemplo: compra a peça de 3 m, vende o metro)", "44071100", "M", 18, 10, 60, 15, "Vigas", "", "", "PC", 3]);
   }
 
   const ajuda = wb.addWorksheet("Como preencher");

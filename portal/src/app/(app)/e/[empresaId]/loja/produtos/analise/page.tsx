@@ -15,6 +15,7 @@ import { obterContextoLoja } from "@/lib/gestao/contexto";
 import { ALVOS, LIMITES_PARADO, PERIODOS, carregarAnaliseEstoque, opcao } from "@/lib/gestao/dados-analise";
 import { curvaAbc, estoquePorGrupo, produtosParados, sugestaoCompra, totaisEstoque } from "@/lib/gestao/analise-estoque";
 import { formatarQuantidade, un } from "@/lib/gestao/rotulos";
+import { nomeUnidade } from "@/lib/gestao/conversao";
 import { Decimal, formatarMoeda } from "@/lib/dinheiro";
 import { formatarData } from "@/lib/formatos";
 
@@ -194,7 +195,18 @@ export default async function PaginaAnalise({ params, searchParams }: PageProps<
                       <Td className="text-right numero">{c.cobertura === null ? <span className="text-muted-foreground">não vendeu</span> : c.cobertura === 0 ? <span className="text-perigo">acabou</span> : `${c.cobertura} dia(s)`}</Td>
                       <Td className="text-right numero">{c.media.gt(0) ? `${formatarQuantidade(c.media, 2)} ${un(c.produto.unidade)}` : "—"}</Td>
                       <Td className="text-right numero font-semibold">
-                        {formatarQuantidade(c.comprar, 3)} {un(c.produto.unidade)}
+                        {c.comprarNaCompra && c.produto.unidade_compra ? (
+                          <>
+                            {formatarQuantidade(c.comprarNaCompra, 0)} {nomeUnidade(c.produto.unidade_compra, c.comprarNaCompra).toLowerCase()}
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              = {formatarQuantidade(c.comprar, 3)} {un(c.produto.unidade)}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            {formatarQuantidade(c.comprar, 3)} {un(c.produto.unidade)}
+                          </>
+                        )}
                       </Td>
                       <Td className="text-right numero">{c.valorCompra.gt(0) ? formatarMoeda(c.valorCompra) : <span className="text-xs text-muted-foreground">sem custo</span>}</Td>
                     </Tr>

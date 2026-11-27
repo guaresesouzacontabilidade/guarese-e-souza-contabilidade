@@ -100,7 +100,12 @@ export function pdfListaCompras(d: DadosRelatorioEstoque): Content[] {
     direita(`${formatarQuantidade(c.produto.estoque_atual, 3)} ${un(c.produto.unidade)}`),
     direita(c.cobertura === null ? "não vendeu" : c.cobertura === 0 ? "acabou" : `${c.cobertura} d`),
     direita(c.media.gt(0) ? formatarQuantidade(c.media, 2) : "—"),
-    direita(`${formatarQuantidade(c.comprar, 3)} ${un(c.produto.unidade)}`, { bold: true }),
+    direita(
+      c.comprarNaCompra && c.produto.unidade_compra
+        ? `${formatarQuantidade(c.comprarNaCompra, 0)} ${c.produto.unidade_compra} (${formatarQuantidade(c.comprar, 3)} ${un(c.produto.unidade)})`
+        : `${formatarQuantidade(c.comprar, 3)} ${un(c.produto.unidade)}`,
+      { bold: true },
+    ),
     moedaPdf(custoUnitario(c.produto)),
     moedaPdf(c.valorCompra),
     { text: "", margin: [0, 6, 0, 0] },
@@ -140,11 +145,11 @@ export function planilhasEstoque(wb: ExcelJS.Workbook, info: InfoPlanilha, d: Da
 
   // Lista de compras
   const wc = wb.addWorksheet("Lista de compras");
-  cabecalhoPlanilha(wc, { ...info, titulo: `Lista de compras — estoque para ${d.alvo} dias (ritmo de ${d.dias} dias)` }, ["Produto", "Código", "Grupo", "Estoque", "Mínimo", "Dura (dias)", "Vende por dia", "Comprar", "Unidade", "Custo", "Valor estimado"], [44, 14, 18, 12, 10, 12, 13, 12, 9, 13, 15]);
+  cabecalhoPlanilha(wc, { ...info, titulo: `Lista de compras — estoque para ${d.alvo} dias (ritmo de ${d.dias} dias)` }, ["Produto", "Código", "Grupo", "Estoque", "Mínimo", "Dura (dias)", "Vende por dia", "Comprar", "Unidade", "Custo", "Valor estimado", "Na unidade de compra"], [44, 14, 18, 12, 10, 12, 13, 12, 9, 13, 15, 20]);
   let totalCompra = new Decimal(0);
   for (const c of sugestaoCompra(d.produtos, d.vendas, d.dias, d.alvo)) {
     totalCompra = totalCompra.plus(c.valorCompra);
-    const r = wc.addRow([c.produto.descricao, c.produto.codigo, c.produto.grupo ?? "", n(c.produto.estoque_atual), c.produto.estoque_minimo ? n(c.produto.estoque_minimo) : null, c.cobertura, n(c.media.toDecimalPlaces(3)), n(c.comprar), un(c.produto.unidade), n(custoUnitario(c.produto)), n(c.valorCompra)]);
+    const r = wc.addRow([c.produto.descricao, c.produto.codigo, c.produto.grupo ?? "", n(c.produto.estoque_atual), c.produto.estoque_minimo ? n(c.produto.estoque_minimo) : null, c.cobertura, n(c.media.toDecimalPlaces(3)), n(c.comprar), un(c.produto.unidade), n(custoUnitario(c.produto)), n(c.valorCompra), c.comprarNaCompra && c.produto.unidade_compra ? `${formatarQuantidade(c.comprarNaCompra, 0)} ${c.produto.unidade_compra}` : ""]);
     for (const col of [10, 11]) r.getCell(col).numFmt = MOEDA;
   }
   const tc = wc.addRow(["Total estimado", "", "", null, null, null, null, null, "", null, n(totalCompra)]);

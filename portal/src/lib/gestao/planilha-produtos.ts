@@ -20,6 +20,8 @@ export const CAMPOS_PLANILHA = [
   { chave: "grupo", titulo: "Grupo", ajuda: "Categoria para organizar (ex.: Vigas, Tábuas)." },
   { chave: "gtin", titulo: "Código de barras (GTIN)", ajuda: "8, 12, 13 ou 14 números." },
   { chave: "cest", titulo: "CEST", ajuda: "7 números (produtos com substituição tributária)." },
+  { chave: "unidade_compra", titulo: "Unidade de compra", ajuda: "Só se compra numa unidade e vende em outra (ex.: compra PC e vende M). Vazio: fica como está." },
+  { chave: "fator_compra", titulo: "Rende", ajuda: "Quanto 1 unidade de compra rende na unidade de venda (ex.: 1 PC = 3 M → 3). Junto com a unidade de compra." },
 ] as const;
 
 export type CampoPlanilha = (typeof CAMPOS_PLANILHA)[number]["chave"];
@@ -43,7 +45,7 @@ const ALIASES: Record<CampoPlanilha, RegExp> = {
   codigo: /^(cod|codigo|cod produto|codigo do produto|codigo produto|sku|referencia|ref)$/,
   descricao: /^(descricao|descricao do produto|produto|nome|nome do produto|item)$/,
   ncm: /^ncm/,
-  unidade: /^(un|und|unid|unidade|unidade de medida|medida|um)$/,
+  unidade: /^(un|und|unid|unidade|unidade de medida|medida|um|unidade de venda|un venda|unid venda)$/,
   preco_venda: /^(preco|preco de venda|preco venda|valor|valor de venda|valor unitario|preco unitario|venda)$/,
   preco_custo: /^(custo|preco de custo|preco custo|valor de custo|custo unitario)$/,
   estoque: /^(estoque|estoque atual|saldo|saldo atual|quantidade|qtd|qtde|qt)$/,
@@ -51,6 +53,8 @@ const ALIASES: Record<CampoPlanilha, RegExp> = {
   grupo: /^(grupo|categoria|familia|departamento|secao)$/,
   gtin: /^(gtin|ean|codigo de barras|cod barras|codigo de barras gtin|gtin ean)$/,
   cest: /^cest/,
+  unidade_compra: /^(unidade de compra|un compra|unid compra|und compra|unidade compra|unidade da compra)$/,
+  fator_compra: /^(rende|rendimento|cada unidade rende|fator|fator de conversao|fator conversao|conversao|qtd por unidade de compra|quantidade por embalagem)$/,
 };
 
 /** Título de coluna sem acentos, pontuação e espaços repetidos. */
@@ -208,6 +212,27 @@ export function analisarProdutos(linhas: Celula[][], codigosExistentes: Set<stri
     if (gtin) {
       linha.gtin = gtin.replace(/\D/g, "");
       if (!/^(\d{8}|\d{12,14})$/.test(linha.gtin)) erros.push("código de barras precisa de 8, 12, 13 ou 14 números");
+    }
+    const unCompra = textoCelula(pega("unidade_compra"));
+    if (unCompra) {
+      linha.unidade_compra = unCompra.toUpperCase();
+      if (linha.unidade_compra.length > 6) erros.push("unidade de compra com mais de 6 letras");
+    }
+    {
+      const bruto = pega("fator_compra");
+      let f = numeroCelula(bruto);
+      if (f instanceof Decimal && typeof bruto === "number") f = f.toDecimalPlaces(6);
+      if (f === "invalido") erros.push("rende não é um número");
+      else if (f !== null) {
+        if (f.lte(0)) erros.push("rende precisa ser maior que zero");
+        else if (f.decimalPlaces() > 6) erros.push("rende com mais de 6 casas decimais");
+        else linha.fator_compra = f.toString();
+      }
+    }
+    if (Boolean(linha.unidade_compra) !== Boolean(linha.fator_compra) && !erros.some((e) => e.startsWith("rende"))) {
+      erros.push("informe juntos a unidade de compra e quanto rende");
+    } else if (linha.unidade_compra && linha.unidade && linha.unidade_compra === linha.unidade) {
+      erros.push("unidade de compra igual à de venda");
     }
     const cest = textoCelula(pega("cest"));
     if (cest) {

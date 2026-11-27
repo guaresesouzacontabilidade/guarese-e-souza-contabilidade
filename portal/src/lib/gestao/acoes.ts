@@ -146,6 +146,17 @@ export async function salvarProdutoLoja(empresaId: string, produtoId: string | n
   const margemTexto = texto(fd, "margem_desejada").replace("%", "");
   const margem = margemTexto ? numero(margemTexto) : null;
   if (margemTexto && (!margem || Number(margem) < 0 || Number(margem) > 1000)) erros.margem_desejada = ["Informe a margem em % (ex.: 30), entre 0 e 1000."];
+  // Compra numa unidade e vende em outra (o campo só vem do cadastro completo; sem ele, fica como está)
+  const temConversao = fd.has("conversao");
+  const converte = fd.get("converte") === "on";
+  const unidadeCompra = converte ? texto(fd, "unidade_compra").toUpperCase() : "";
+  const fatorTexto = converte ? texto(fd, "fator_compra") : "";
+  const fatorCompra = fatorTexto ? numero(fatorTexto) : null;
+  if (converte) {
+    if (!unidadeCompra || unidadeCompra.length > 6) erros.unidade_compra = ["Escolha a unidade de compra."];
+    else if (unidadeCompra === unidade) erros.unidade_compra = ["Escolha uma unidade diferente da de venda."];
+    if (!fatorCompra || Number(fatorCompra) <= 0) erros.fator_compra = ["Informe quanto cada unidade de compra rende (ex.: 3)."];
+  }
   if (Object.keys(erros).length) return falha("Revise os campos destacados.", erros);
   const dados = {
     codigo: texto(fd, "codigo"),
@@ -161,6 +172,7 @@ export async function salvarProdutoLoja(empresaId: string, produtoId: string | n
     estoque_minimo: numero(texto(fd, "estoque_minimo")),
     ativo: fd.get("ativo") !== "off",
     ...Object.fromEntries(medidas),
+    ...(temConversao ? { unidade_compra: unidadeCompra, fator_compra: converte ? fatorCompra : "" } : {}),
   };
   const { data, error } = await ctx.supabase.rpc("gestao_produto_salvar", {
     p_empresa_id: empresaId,

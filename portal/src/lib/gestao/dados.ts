@@ -304,7 +304,9 @@ export function totalCartao(r: ResumoCaixa) {
 export async function carregarProdutosLoja(supabase: Cliente, empresaId: string, opcoes: { ativos?: boolean; custos?: boolean } = {}) {
   let q = supabase
     .from("nfe_produtos")
-    .select("id, codigo, descricao, ncm, cest, gtin, unidade, grupo, valor_unitario, controla_estoque, estoque_atual, estoque_minimo, ativo, espessura_cm, largura_cm, comprimento_m, tara_kg")
+    .select(
+      "id, codigo, descricao, ncm, cest, gtin, unidade, grupo, valor_unitario, controla_estoque, estoque_atual, estoque_minimo, ativo, espessura_cm, largura_cm, comprimento_m, tara_kg, unidade_compra, fator_compra",
+    )
     .eq("empresa_id", empresaId)
     .order("descricao")
     .limit(5000);
@@ -334,6 +336,8 @@ export async function carregarProdutosLoja(supabase: Cliente, empresaId: string,
       comprimento_m: t(p.comprimento_m),
       tara_kg: t(p.tara_kg),
       margem_desejada: c?.margem_desejada ?? null,
+      unidade_compra: p.unidade_compra,
+      fator_compra: t(p.fator_compra),
     };
   });
 }

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowDownUp, ClipboardCheck, PackagePlus, Pencil, Trash2 } from "lucide-react";
+import { ArrowDownUp, ArrowLeftRight, ClipboardCheck, PackagePlus, Pencil, Trash2 } from "lucide-react";
 import { BotaoAcao, BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import { excluirProdutoLoja, lancarEstoque, registrarInventario, salvarProdutoLoja, darEntradaNota } from "@/lib/gestao/acoes";
 import { UNIDADES_LOJA, formatarQuantidade, modoMedida, quantidadePorPecas, un } from "@/lib/gestao/rotulos";
 import { precoSugerido } from "@/lib/gestao/precos";
+import { classeUnidade, fatorDaNota, nomeUnidade, rendimentoSugerido, resumoConversao, temConversao } from "@/lib/gestao/conversao";
 
 export interface ProdutoLoja {
   id: string;
@@ -40,6 +41,9 @@ export interface ProdutoLoja {
   tara_kg?: string | null;
   /** Margem que quer ganhar (%) sobre o custo; vazio usa a do grupo ou a padrão. */
   margem_desejada?: string | null;
+  /** Compra em outra unidade (ex.: PC) e quanto cada uma rende na unidade de venda (ex.: 3 metros). */
+  unidade_compra?: string | null;
+  fator_compra?: string | null;
 }
 
 const num = (v: string | null | undefined, casas = 4) => (v == null || v === "" ? "" : formatarQuantidade(v, casas));
@@ -70,6 +74,10 @@ export function FormProduto({
   const [precoInicial, setPrecoInicial] = React.useState<string | null>(produto?.valor_unitario ?? null);
   const [chavePreco, setChavePreco] = React.useState(0);
   const sugerido = precoSugerido(lerValorBR(custo)?.toString() ?? null, lerValorBR(margem)?.toString() ?? null);
+  // Compra numa unidade e vende em outra (ex.: compra a peça e vende o metro)
+  const [converte, setConverte] = React.useState(Boolean(produto?.unidade_compra && produto.fator_compra));
+  const [unidadeCompra, setUnidadeCompra] = React.useState(produto?.unidade_compra ?? (unidade === "UN" ? "CX" : "UN"));
+  const [fator, setFator] = React.useState(produto?.fator_compra ? formatarQuantidade(produto.fator_compra, 6) : "");
   const medidas = unidade === "M3" || unidade === "M" || unidade === "ML";
   const idp = produto?.id ?? "novo";
 
@@ -151,6 +159,19 @@ export function FormProduto({
               <Input id={`tara-${idp}`} name="tara_kg" defaultValue={produto?.tara_kg ? new Decimal(produto.tara_kg).toFixed(3).replace(".", ",") : ""} inputMode="decimal" placeholder="0,000" />
             </Campo>
           ) : null}
+          <SecaoConversao
+            idp={idp}
+            unidade={unidade}
+            medidas={{ unidade, espessura_cm: lerValorBR(esp)?.toString() ?? null, largura_cm: lerValorBR(larg)?.toString() ?? null, comprimento_m: lerValorBR(comp)?.toString() ?? null }}
+            converte={converte}
+            setConverte={setConverte}
+            unidadeCompra={unidadeCompra}
+            setUnidadeCompra={setUnidadeCompra}
+            fator={fator}
+            setFator={setFator}
+            custo={custos ? custo : ""}
+            erros={estado.erros}
+          />
           <div className="grid gap-4 sm:grid-cols-3">
             {custos ? (
               <>
@@ -219,6 +240,104 @@ export function FormProduto({
   );
 }
 
+/** "Compro em uma unidade e vendo em outra": unidade de compra, rendimento e o resumo da conversão. */
+function SecaoConversao({
+  idp,
+  unidade,
+  medidas,
+  converte,
+  setConverte,
+  unidadeCompra,
+  setUnidadeCompra,
+  fator,
+  setFator,
+  custo,
+  erros,
+}: {
+  idp: string;
+  unidade: string;
+  medidas: Parameters<typeof rendimentoSugerido>[0];
+  converte: boolean;
+  setConverte: (v: boolean) => void;
+  unidadeCompra: string;
+  setUnidadeCompra: (v: string) => void;
+  fator: string;
+  setFator: (v: string) => void;
+  custo: string;
+  erros?: Record<string, string[] | undefined>;
+}) {
+  const mesma = unidadeCompra === unidade;
+  const f = lerValorBR(fator);
+  const sugestao = converte && !mesma ? rendimentoSugerido(medidas, unidadeCompra) : null;
+  const resumo = converte && !mesma && f && f.gt(0) ? resumoConversao(unidadeCompra, f, unidade) : null;
+  const custoCompra = resumo && custo ? lerValorBR(custo)?.times(f!).toDecimalPlaces(2, Decimal.ROUND_HALF_UP) : null;
+  const nomeCompra = nomeUnidade(unidadeCompra, 1).toLowerCase();
+  return (
+    <div className="rounded-xl border border-border p-3">
+      <input type="hidden" name="conversao" value="1" />
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <Checkbox name="converte" checked={converte} onChange={(e) => setConverte(e.target.checked)} />
+        <ArrowLeftRight className="size-4 text-muted-foreground" aria-hidden />
+        Compro em uma unidade e vendo em outra
+      </label>
+      <p className="mt-1 text-xs text-muted-foreground">Ex.: compra a peça e vende o metro; compra a caixa e vende a unidade. O estoque e o preço ficam na unidade de venda.</p>
+      {converte ? (
+        <div className="mt-3 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Campo rotulo="Unidade de compra" htmlFor={`un-compra-${idp}`} obrigatorio erro={erros?.unidade_compra ?? (mesma ? ["Escolha uma unidade diferente da de venda."] : undefined)}>
+              <Select id={`un-compra-${idp}`} name="unidade_compra" value={unidadeCompra} onChange={(e) => setUnidadeCompra(e.target.value)}>
+                {UNIDADES_LOJA.map((u) => (
+                  <option key={u.valor} value={u.valor} disabled={u.valor === unidade}>
+                    {u.rotulo}
+                  </option>
+                ))}
+              </Select>
+            </Campo>
+            <Campo
+              rotulo={`Cada ${nomeCompra} rende (em ${nomeUnidade(unidade, 2).toLowerCase()})`}
+              htmlFor={`fator-${idp}`}
+              obrigatorio
+              erro={erros?.fator_compra}
+            >
+              <Input id={`fator-${idp}`} name="fator_compra" value={fator} onChange={(e) => setFator(e.target.value.replace(/[^\d.,]/g, ""))} inputMode="decimal" placeholder="Ex.: 3" />
+              {sugestao && !(f && f.eq(sugestao)) ? (
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Pelas medidas da peça: {formatarQuantidade(sugestao, 6)} {un(unidade)}{" "}
+                  <button type="button" className="text-primary hover:underline" onClick={() => setFator(formatarQuantidade(sugestao, 6))}>
+                    usar
+                  </button>
+                </span>
+              ) : null}
+            </Campo>
+            <div className="text-sm">
+              <p className="mb-1.5 font-medium">Unidade de venda</p>
+              <p className="rounded-md border border-border bg-muted/40 px-3 py-2">{nomeUnidade(unidade, 1)} (escolhida acima)</p>
+            </div>
+          </div>
+          {resumo ? (
+            <div className="flex items-start gap-3 rounded-lg bg-muted/40 p-3" data-testid="resumo-conversao">
+              <ArrowLeftRight className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+              <div className="text-sm">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Resumo da conversão</p>
+                <p className="font-semibold">{resumo.frase}</p>
+                <p className="text-xs text-muted-foreground">
+                  Compra em {nomeUnidade(unidadeCompra, 1)} · Estoque e venda em {nomeUnidade(unidade, 1)} · Ex.: {resumo.exemplo}
+                  {custoCompra ? ` · Custo de 1 ${nomeCompra}: ${formatarMoeda(custoCompra)}` : ""}
+                </p>
+              </div>
+            </div>
+          ) : null}
+          {resumo && f?.eq(1) ? (
+            <Alerta tom="alerta">
+              Confira: 1 {nomeCompra} rende só 1 {nomeUnidade(unidade, 1).toLowerCase()}? Se a peça tem 3 m, por exemplo, o certo é 3. Com o número errado, o estoque e o custo saem errados.
+            </Alerta>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function DialogoProduto({ empresaId, produto, grupos, custos = false }: { empresaId: string; produto?: ProdutoLoja; grupos: string[]; custos?: boolean }) {
   const [aberto, setAberto] = React.useState(false);
   return (
@@ -283,8 +402,12 @@ export function LancarEstoque({
   const [pecas, setPecas] = React.useState("");
   const [comp, setComp] = React.useState("");
   const [qtd, setQtd] = React.useState("");
+  const [qtdCompra, setQtdCompra] = React.useState("");
   const produto = produtos.find((p) => p.id === pid);
   const modo = produto ? modoMedida(produto) : "direto";
+  // Compra em outra unidade (ex.: peça): digita na unidade de compra e o portal converte
+  const conversao = produto && temConversao(produto) && !(modo !== "direto" && classeUnidade(produto.unidade_compra) === "UN") ? produto : null;
+  const convertida = conversao && qtdCompra ? lerValorBR(qtdCompra)?.times(conversao.fator_compra).toDecimalPlaces(4) : null;
   const calculada = produto && modo !== "direto" && pecas ? quantidadePorPecas(produto, lerValorBR(pecas) ?? 0, comp ? (lerValorBR(comp)?.toString() ?? null) : null) : null;
   const certa = tipo === "corrigir" && qtd.trim() ? lerValorBR(qtd) : null;
   const diferenca = produto && certa ? certa.minus(produto.estoque_atual) : null;
@@ -358,6 +481,24 @@ export function LancarEstoque({
                   </div>
                 </div>
               ) : null}
+              {conversao ? (
+                <div className="grid gap-3 rounded-xl border border-border bg-muted/30 p-3 sm:grid-cols-2">
+                  <Campo rotulo={`Em ${nomeUnidade(conversao.unidade_compra, 2).toLowerCase()} (unidade de compra)`} htmlFor="qtd-compra-mov">
+                    <Input id="qtd-compra-mov" value={qtdCompra} onChange={(e) => setQtdCompra(e.target.value)} inputMode="decimal" />
+                  </Campo>
+                  <div className="self-end pb-2 text-sm">
+                    {convertida && convertida.gt(0) ? (
+                      <button type="button" className="text-primary hover:underline" onClick={() => setQtd(formatarQuantidade(convertida))}>
+                        = {formatarQuantidade(convertida)} {un(conversao.unidade)} (usar)
+                      </button>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        1 {nomeUnidade(conversao.unidade_compra, 1).toLowerCase()} = {formatarQuantidade(conversao.fator_compra, 6)} {un(conversao.unidade)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : null}
               <div className="grid gap-4 sm:grid-cols-2">
                 <Campo
                   rotulo={`${tipo === "corrigir" ? "Quantidade certa agora" : "Quantidade"}${produto ? ` (${un(produto.unidade)})` : ""}`}
@@ -369,7 +510,11 @@ export function LancarEstoque({
                   <Input id="qtd-mov" name="quantidade" value={qtd} onChange={(e) => setQtd(e.target.value)} inputMode="decimal" />
                 </Campo>
                 {tipo === "entrada_manual" && custos ? (
-                  <Campo rotulo="Custo unitário (opcional)" htmlFor="custo-mov" ajuda="Entra no custo médio.">
+                  <Campo
+                    rotulo={`Custo unitário${produto ? ` por ${un(produto.unidade)}` : ""} (opcional)`}
+                    htmlFor="custo-mov"
+                    ajuda={conversao ? `Entra no custo médio. É o custo de 1 ${un(conversao.unidade)}, não da ${nomeUnidade(conversao.unidade_compra, 1).toLowerCase()}.` : "Entra no custo médio."}
+                  >
                     <CampoValor id="custo-mov" name="custo_unitario" />
                   </Campo>
                 ) : null}
@@ -534,6 +679,13 @@ function converter(item: ItemNota, fatorTexto: string) {
   return { quantidade: formatarQuantidade(qtd), custo: formatarQuantidade(custo) };
 }
 
+/** Rendimento pelo cadastro do produto (compra numa unidade e vende em outra): "1" quando não converte; null quando a unidade da nota não bate. */
+function fatorDoCadastro(p: ProdutoLoja | undefined, unidadeNota: string | null): string | null {
+  if (!p) return "1";
+  const f = fatorDaNota(p, unidadeNota);
+  return f ? formatarQuantidade(f, 6) : null;
+}
+
 /** Entrada pela nota de compra: liga cada item do XML a um produto da loja (ou cria o produto) e lembra o vínculo. */
 export function EntradaPorNota({
   empresaId,
@@ -556,12 +708,13 @@ export function EntradaPorNota({
       const v = vinculos.find((x) => x.codigo === codigo && produtos.some((p) => p.id === x.produto_id));
       const porGtin = i.gtin && /^\d{8,14}$/.test(i.gtin) ? produtos.filter((p) => p.gtin === i.gtin) : [];
       const porCodigo = produtos.find((p) => p.codigo === codigo || p.descricao.toLowerCase() === d);
+      // Sem vínculo com o fornecedor: o rendimento vem do cadastro do produto (ex.: 1 peça = 3 m)
       const [escolha, origem, fator]: [string, OrigemSugestao, string] = v
         ? [v.produto_id, "vinculo", formatarQuantidade(v.fator, 6)]
         : porGtin.length === 1
-          ? [porGtin[0].id, "gtin", "1"]
+          ? [porGtin[0].id, "gtin", fatorDoCadastro(porGtin[0], i.unidade) ?? "1"]
           : porCodigo
-            ? [porCodigo.id, "codigo", "1"]
+            ? [porCodigo.id, "codigo", fatorDoCadastro(porCodigo, i.unidade) ?? "1"]
             : ["", null, "1"];
       const conv = converter(i, fator);
       const unidadeItem = (i.unidade ?? "").trim().toUpperCase();
@@ -642,7 +795,11 @@ export function EntradaPorNota({
                     id={`produto-${id}`}
                     aria-label={`Produto do item ${id}`}
                     value={l.escolha}
-                    onChange={(e) => mudar(n, { escolha: e.target.value, origem: null })}
+                    onChange={(e) => {
+                      const escolha = e.target.value;
+                      const f = fatorDoCadastro(produtos.find((x) => x.id === escolha), l.item.unidade);
+                      setLinhas((ls) => ls.map((x, i) => (i === n ? { ...x, escolha, origem: null, ...(f ? { fator: f, ...(converter(x.item, f) ?? {}) } : {}) } : x)));
+                    }}
                   >
                     <option value="">Não dar entrada</option>
                     <option value="novo">+ Criar produto novo com este item</option>
@@ -663,6 +820,13 @@ export function EntradaPorNota({
                     className="text-right"
                     disabled={!l.escolha}
                   />
+                  {p && temConversao(p) ? (
+                    <span className={`mt-1 block text-xs ${fatorDaNota(p, l.item.unidade) ? "text-muted-foreground" : "font-medium text-alerta-fg"}`} data-testid={`conversao-item-${id}`}>
+                      {fatorDaNota(p, l.item.unidade)
+                        ? `Cadastro: 1 ${nomeUnidade(p.unidade_compra, 1).toLowerCase()} = ${formatarQuantidade(p.fator_compra, 6)} ${un(p.unidade)}`
+                        : `A nota vem em ${l.item.unidade ?? "outra unidade"}; o produto é comprado em ${p.unidade_compra} e vendido em ${un(p.unidade)}. Informe quantos ${un(p.unidade)} vêm em 1 ${l.item.unidade ?? "unidade"}.`}
+                    </span>
+                  ) : null}
                 </Campo>
                 <Campo rotulo={`Quantidade${unLoja ? ` (${un(unLoja)})` : ""}`} htmlFor={`qtd-${id}`}>
                   <Input

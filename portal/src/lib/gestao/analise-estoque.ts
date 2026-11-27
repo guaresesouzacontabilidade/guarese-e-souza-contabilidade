@@ -1,5 +1,6 @@
 import { Decimal } from "@/lib/dinheiro";
 import { m3PorUnidade } from "./precos";
+import { temConversao } from "./conversao";
 
 /**
  * Contas da reposição e análise do estoque (sem acesso ao banco, para testar):
@@ -21,6 +22,9 @@ export interface ProdutoAnalise {
   espessura_cm: string | null;
   largura_cm: string | null;
   comprimento_m: string | null;
+  /** Compra em outra unidade (ex.: PC) e quanto cada uma rende na unidade de venda. */
+  unidade_compra?: string | null;
+  fator_compra?: string | null;
 }
 
 export interface VendaProduto {
@@ -74,7 +78,10 @@ export interface LinhaReposicao {
   vendido: Decimal;
   media: Decimal;
   cobertura: number | null;
+  /** Na unidade de venda (com conversão: as unidades de compra inteiras × rendimento). */
   comprar: Decimal;
+  /** Na unidade de compra, quando o produto compra numa unidade e vende em outra (ex.: 5 peças). */
+  comprarNaCompra: Decimal | null;
   valorCompra: Decimal;
   motivo: "zerado" | "minimo" | "ritmo";
 }
@@ -92,7 +99,10 @@ export function sugestaoCompra(produtos: ProdutoAnalise[], vendas: Map<string, V
     const estoque = d(p.estoque_atual);
     const minimo = d(p.estoque_minimo);
     const meta = Decimal.max(minimo, media.times(diasAlvo));
-    const comprar = arredondarCompra(meta.minus(estoque), p.unidade);
+    const falta = meta.minus(estoque);
+    // Compra em peça (ou caixa): compra peças inteiras, que rendem a quantidade em metros (ou unidades)
+    const naCompra = temConversao(p) && falta.gt(0) ? falta.div(p.fator_compra).toDecimalPlaces(0, Decimal.ROUND_UP) : null;
+    const comprar = naCompra ? naCompra.times(p.fator_compra!).toDecimalPlaces(4) : arredondarCompra(falta, p.unidade);
     if (comprar.lte(0)) continue;
     linhas.push({
       produto: p,
@@ -100,6 +110,7 @@ export function sugestaoCompra(produtos: ProdutoAnalise[], vendas: Map<string, V
       media,
       cobertura: diasDeCobertura(estoque, media),
       comprar,
+      comprarNaCompra: naCompra,
       valorCompra: comprar.times(custoUnitario(p)).toDecimalPlaces(2, Decimal.ROUND_HALF_UP),
       motivo: estoque.lte(0) ? "zerado" : minimo.gt(0) && estoque.lt(minimo) ? "minimo" : "ritmo",
     });
