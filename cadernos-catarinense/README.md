@@ -2,6 +2,19 @@
 
 Capas de caderno de anotações com espiral para a **Catarinense Contabilidade e Gestão**, feitas a partir da logo oficial.
 
+## ✅ Modelo escolhido: Minimalista (frente e verso)
+
+Os arquivos finais estão em [`minimalista-frente-e-verso/`](minimalista-frente-e-verso/):
+
+![Frente e verso](minimalista-frente-e-verso/caderno-minimalista-frente-e-verso.jpg)
+
+- `impressao/capa-frente.pdf|jpg` e `impressao/capa-verso.pdf|jpg`: A5 + 3 mm de sangria, 300 dpi.
+- No verso, o espiral fica do **lado direito**, por isso os ~15 mm da direita ficam livres de texto.
+- O QR code do verso leva para https://catarinensegestao.com.br/ (testado). Ele também está solto em `qr-code-site.png`.
+- Contatos do verso: Catarinensegestao@gmail.com · (63) 99296-9763 ou (63) 99243-5636 · Porto Nacional - TO.
+
+As outras 5 propostas abaixo ficam só como referência.
+
 ![Apresentação](apresentacao-6-cadernos.jpg)
 
 | # | Nome | Espiral / elástico sugeridos |

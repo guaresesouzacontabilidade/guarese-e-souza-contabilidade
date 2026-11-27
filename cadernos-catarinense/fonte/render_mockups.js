@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-const CONFIG = process.env.LUX ? {
+const CONFIG = process.env.CFG ? JSON.parse(process.env.CFG) : process.env.LUX ? {
   'lx1-imperial': { spiral: 'gold', elastic: 'caramel', back: '#04261a', bg: 'dark' },
   'lx2-noir':     { spiral: 'gold', elastic: 'green', back: '#0d0d0d', bg: 'dark', corners: 'gold' },
   'lx3-bordeaux': { spiral: 'gold', elastic: 'green', back: '#3a050c', bg: 'dark' },
