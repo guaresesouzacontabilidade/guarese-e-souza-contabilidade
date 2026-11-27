@@ -63,6 +63,13 @@
   "texto": "No canto superior direito (iniciais do nome) → Minha conta:"
  },
  {
+  "id": "suporte-24h-botao-ajuda-mudar-o-botao-ajuda-de-lugar",
+  "publico": "todos",
+  "secao": "Suporte 24h (botão Ajuda)",
+  "titulo": "Suporte 24h (botão Ajuda) › Mudar o botão Ajuda de lugar",
+  "texto": "se o botão atrapalhar (por exemplo, cobrindo um botão da tela), segure e arraste o botão Ajuda para onde quiser — com o mouse ou com o dedo. Ao soltar, ele encosta no lado mais perto (esquerdo ou direito), na altura escolhida, e o portal guarda esse lugar neste aparelho (no celular e no computador, cada um tem o seu). A janela de ajuda abre colada no botão, sem cobri-lo. Dentro da janela, embaixo, também dá para passar para a esquerda/direita sem arrastar, ou voltar ao lugar padrão (canto de baixo, à direita). O X no alto da janela (ou a tecla Esc) fecha a ajuda."
+ },
+ {
   "id": "suporte-24h-botao-ajuda-isso-ajudou",
   "publico": "todos",
   "secao": "Suporte 24h (botão Ajuda)",
