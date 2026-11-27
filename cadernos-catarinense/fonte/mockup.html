@@ -1,0 +1,130 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;padding:0}
+#scene{position:relative;width:1000px;height:1250px;overflow:hidden;
+  background:radial-gradient(ellipse 70% 60% at 50% 42%,#f6f6f7 0%,#e4e5e8 60%,#d2d4d8 100%)}
+.abs{position:absolute}
+#cover{overflow:hidden;border-radius:0 13px 13px 0}
+#cover img{position:absolute}
+#cover .ov{position:absolute;inset:0}
+#elastic::after{content:"";position:absolute;inset:0;border-radius:3px;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0 1px,transparent 1px 3px)}
+</style></head>
+<body><div id="scene"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const coverSrc = q.get('cover');
+const spiral = q.get('spiral') || 'white';
+const elastic = q.get('elastic') || 'green';
+const back = q.get('back') || '#0a4a25';
+
+const W = 640, H = 908;           // A5 trim (148 x 210 mm) at 4.32 px/mm
+const NX = 205, NY = 168;          // notebook position in the scene
+const S = document.getElementById('scene');
+
+const metals = {
+  white:  { out: '#8c8c8c', base: '#ededed', hi: '#ffffff', bout: '#6a6a6a', bbase: '#b9b9b9' },
+  silver: { out: '#4a4c50', base: '#b4b8bd', hi: '#f4f6f8', bout: '#2e3033', bbase: '#7d8186' },
+  gold:   { out: '#5f4413', base: '#c9a24e', hi: '#f8e8b4', bout: '#3f2d0c', bbase: '#8c6e2d' },
+  black:  { out: '#000000', base: '#2b2b2d', hi: '#77787c', bout: '#000000', bbase: '#1a1a1a' },
+};
+const bands = {
+  green: ['#03230f', '#0a4a25', '#1d6e3e'],
+  wine:  ['#3a0408', '#7a0d16', '#a52430'],
+  black: ['#050505', '#1e1e1f', '#4a4a4c'],
+  gold:  ['#5f4413', '#b08a3e', '#e8cf8a'],
+};
+const m = metals[spiral], b = bands[elastic];
+
+function el(tag, style, parent = S) { const e = document.createElement(tag); e.className = 'abs'; Object.assign(e.style, style); parent.appendChild(e); return e; }
+
+// ground shadow
+el('div', { left: NX + 10 + 'px', top: NY + 22 + 'px', width: W + 'px', height: H + 'px', borderRadius: '0 14px 14px 0',
+  background: 'rgba(0,0,0,.30)', filter: 'blur(26px)' });
+el('div', { left: NX + 4 + 'px', top: NY + 8 + 'px', width: W + 4 + 'px', height: H + 2 + 'px', borderRadius: '0 14px 14px 0',
+  background: 'rgba(0,0,0,.28)', filter: 'blur(6px)' });
+
+// back cover + page block (visible as edges on the right / bottom)
+el('div', { left: NX + 'px', top: NY + 7 + 'px', width: W + 7 + 'px', height: H + 'px', borderRadius: '0 14px 14px 0', background: back,
+  boxShadow: 'inset 0 -2px 0 rgba(0,0,0,.25)' });
+const pages = el('div', { left: NX + 'px', top: NY + 2 + 'px', width: W + 4 + 'px', height: H + 3 + 'px', borderRadius: '0 13px 13px 0',
+  background: '#f3f3f0', boxShadow: '1px 1px 0 #d9d9d5, 2px 2px 0 #f6f6f3, 3px 3px 0 #d2d2ce, 4px 3px 0 #efefec' });
+
+// spiral geometry
+const N = 32, top0 = 15, pitch = (H - 2 * top0) / (N - 1);
+const HX = 20, R = 17, K = 0.42, WIRE = 4.6;
+function arc(y0, t0, t1, steps = 28) {
+  const pts = [];
+  for (let s = 0; s <= steps; s++) {
+    const t = t0 + (t1 - t0) * s / steps;
+    const x = (HX - R) + R * Math.cos(t), z = R * Math.sin(t);
+    const y = y0 + pitch * (t / (2 * Math.PI)) - K * z;
+    pts.push([NX + x, NY + y]);
+  }
+  return 'M' + pts.map(p => p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join(' L');
+}
+const svgNS = 'http://www.w3.org/2000/svg';
+function svgLayer(z) {
+  const s = document.createElementNS(svgNS, 'svg');
+  s.setAttribute('width', 1000); s.setAttribute('height', 1250);
+  s.style.position = 'absolute'; s.style.left = 0; s.style.top = 0; S.appendChild(s); return s;
+}
+function path(svg, d, stroke, w, extra = {}) {
+  const p = document.createElementNS(svgNS, 'path');
+  p.setAttribute('d', d); p.setAttribute('fill', 'none'); p.setAttribute('stroke', stroke);
+  p.setAttribute('stroke-width', w); p.setAttribute('stroke-linecap', 'round'); p.setAttribute('stroke-linejoin', 'round');
+  for (const k in extra) p.setAttribute(k, extra[k]);
+  svg.appendChild(p); return p;
+}
+// back half of each loop (behind the cover)
+const backSvg = svgLayer();
+for (let i = 0; i < N - 1; i++) {
+  const y0 = top0 + i * pitch, d = arc(y0, Math.PI, 2 * Math.PI);
+  path(backSvg, d, m.bout, WIRE + 1.4); path(backSvg, d, m.bbase, WIRE - 0.4);
+}
+
+// cover
+const cov = el('div', { left: NX + 'px', top: NY + 'px', width: W + 'px', height: H + 'px' });
+cov.id = 'cover';
+const img = document.createElement('img');
+const bleed = 15 * W / 740;
+img.src = coverSrc; img.style.left = -bleed + 'px'; img.style.top = -bleed + 'px';
+img.style.width = (W * 770 / 740) + 'px'; img.style.height = (H * 1080 / 1050) + 'px';
+cov.appendChild(img);
+el('div', { inset: 0, background: 'linear-gradient(90deg,rgba(0,0,0,.20) 0,rgba(0,0,0,.07) 34px,rgba(0,0,0,0) 70px)' }, cov).className = 'ov';
+el('div', { inset: 0, background: 'linear-gradient(118deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 68%,rgba(0,0,0,.07) 100%)' }, cov).className = 'ov';
+el('div', { inset: 0, borderRadius: '0 13px 13px 0', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.10), inset -2px -2px 3px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.35)' }, cov).className = 'ov';
+
+// elastic band
+const EX = NX + Math.round(W * 0.922);
+el('div', { left: EX + 4 + 'px', top: NY - 3 + 'px', width: '14px', height: H + 12 + 'px', background: 'rgba(0,0,0,.35)', filter: 'blur(3px)', borderRadius: '4px' });
+const band = el('div', { left: EX + 'px', top: NY - 5 + 'px', width: '14px', height: H + 13 + 'px', borderRadius: '3px',
+  background: `linear-gradient(90deg,${b[0]} 0%,${b[1]} 22%,${b[2]} 50%,${b[1]} 78%,${b[0]} 100%)`,
+  boxShadow: 'inset 0 6px 5px -3px rgba(0,0,0,.45), inset 0 -6px 5px -3px rgba(0,0,0,.45)' });
+band.id = 'elastic';
+
+// holes + front loops
+const front = svgLayer();
+const defs = document.createElementNS(svgNS, 'defs');
+defs.innerHTML = '<filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>';
+front.appendChild(defs);
+for (let i = 0; i < N; i++) {
+  const y0 = top0 + i * pitch;
+  const h = document.createElementNS(svgNS, 'rect');
+  h.setAttribute('x', NX + HX - 5); h.setAttribute('y', NY + y0 - 4.2); h.setAttribute('width', 10); h.setAttribute('height', 8.4);
+  h.setAttribute('rx', 3.6); h.setAttribute('fill', '#1d1d1d'); h.setAttribute('stroke', 'rgba(255,255,255,.35)'); h.setAttribute('stroke-width', .8);
+  front.appendChild(h);
+}
+const shadowG = document.createElementNS(svgNS, 'g');
+shadowG.setAttribute('filter', 'url(#blur)'); shadowG.setAttribute('opacity', '.42'); shadowG.setAttribute('transform', 'translate(3.5 4.5)');
+front.appendChild(shadowG);
+for (let i = 0; i < N; i++) path(shadowG, arc(top0 + i * pitch, 0, Math.PI), '#000', WIRE + 1);
+for (let i = 0; i < N; i++) {
+  const d = arc(top0 + i * pitch, 0.08, Math.PI);
+  path(front, d, m.out, WIRE + 1.6);
+  path(front, d, m.base, WIRE);
+  path(front, d, m.hi, WIRE * 0.34, { transform: 'translate(-0.6 -1.1)', opacity: .9 });
+}
+document.title = 'ready';
+</script></body></html>
