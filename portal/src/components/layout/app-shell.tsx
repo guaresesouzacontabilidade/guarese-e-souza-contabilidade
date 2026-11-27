@@ -223,13 +223,13 @@ function GruposMenu({ grupos, caminho, prefixo }: { grupos: GrupoMenu[]; caminho
   );
 }
 
-/** Abas do grupo no topo da página: as telas que andam juntas ficam a um toque. */
+/** Abas do grupo no topo da página (celular e tablet; no computador o menu lateral já mostra as mesmas telas). */
 function AbasGrupo({ grupo, caminho }: { grupo: GrupoMenu; caminho: string }) {
   const Icone = grupo.icone;
   // O item mais específico é o atual (ex.: /loja/carregamentos não marca /loja)
   const atual = grupo.itens.filter((i) => itemAtivo(caminho, i)).sort((a, b) => b.href.length - a.href.length)[0];
   return (
-    <nav aria-label={`Telas de ${grupo.rotulo}`} className="-mx-3 mb-4 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0 nao-imprimir">
+    <nav aria-label={`Telas de ${grupo.rotulo}`} className="-mx-3 mb-4 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0 lg:hidden nao-imprimir">
       <ul className="flex min-w-max items-center gap-1.5">
         <li className="mr-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Icone className="size-3.5" aria-hidden /> {grupo.rotulo}

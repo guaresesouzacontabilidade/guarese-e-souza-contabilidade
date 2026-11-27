@@ -11,7 +11,7 @@ import { ordemLancamentos, type OrdemLancamentos } from "@/lib/financeiro/ordem-
 const UUID = /^[0-9a-f-]{36}$/i;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 
-export const SITUACOES = ["em_aberto", "aberto", "parcial", "quitado", "cancelado", "renegociado", "todos"] as const;
+export const SITUACOES = ["em_aberto", "aberto", "parcial", "quitado", "cancelado", "renegociado", "nao_canceladas", "todos"] as const;
 export const PRAZOS = ["vencido", "hoje", "proximos7", "proximos30", "a_vencer"] as const;
 export const APROVACOES = ["pendente", "aprovado", "reprovado"] as const;
 
@@ -36,7 +36,8 @@ type Sp = Record<string, string | string[] | undefined>;
 
 export function lerFiltros(sp: Sp, tipoFixo?: "receber" | "pagar"): FiltrosTitulos {
   // Endereços antigos: situacao=atrasado vira prazo=vencido (em aberto)
-  let situacao = parametro(sp, "situacao", [...SITUACOES, "atrasado"]) as string;
+  // Sem escolha no endereço, a lista começa pelo que está em aberto ("Todas" = nao_canceladas)
+  let situacao = sp.situacao === undefined ? "em_aberto" : (parametro(sp, "situacao", [...SITUACOES, "atrasado"]) as string);
   let prazo = parametro(sp, "prazo", [...PRAZOS]) as FiltrosTitulos["prazo"];
   if (situacao === "atrasado") {
     situacao = "em_aberto";
@@ -84,6 +85,7 @@ export function aplicarFiltros<Q extends { eq: any; neq: any; in: any; lt: any; 
     case "todos":
       break;
     case "":
+    case "nao_canceladas":
       r = r.not("situacao", "in", "(cancelado,renegociado)");
       break;
     default:

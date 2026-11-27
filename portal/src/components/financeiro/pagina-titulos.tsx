@@ -100,6 +100,8 @@ export async function PaginaTitulos({ ctx, empresaId, tipo, sp }: { ctx: Context
     { rotulo: "Liquidados", href: urlCom(base, {}, { situacao: "quitado" }), ativo: f.situacao === "quitado" },
   ];
 
+  // Algum filtro de "Mais filtros" em uso: o bloco já abre
+  const maisFiltros = Boolean(f.contraparte || f.categoria || f.centro || f.aprovacao || f.inicio || f.fim || f.por === "competencia" || (typeof sp.ordem === "string" && sp.ordem));
   const consulta = new URLSearchParams(Object.entries(sp).filter(([, v]) => typeof v === "string" && v) as [string, string][]).toString();
   const exportar = (formato: string) => urlCom(`/api/financeiro/exportar`, filtrosNaUrl(f), { empresa: empresaId, formato });
   const categoriasTipo = (categorias ?? []).filter((c) => !c.sintetica && c.natureza === natureza);
@@ -179,84 +181,94 @@ export async function PaginaTitulos({ ctx, empresaId, tipo, sp }: { ctx: Context
       </nav>
 
       {/* Filtros */}
-      <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-6" role="search">
-        <div className="relative sm:col-span-2">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={f.busca} placeholder="Descrição ou nº do documento" className="pl-9" aria-label="Buscar" />
-        </div>
-        <Select name="situacao" defaultValue={f.situacao} aria-label="Situação do pagamento">
-          <option value="">Todas (sem canceladas)</option>
-          <option value="em_aberto">Em aberto (inclui pagas em parte)</option>
-          <option value="parcial">{pagar ? "Pagas em parte" : "Recebidas em parte"}</option>
-          <option value="quitado">Liquidadas</option>
-          <option value="renegociado">Renegociadas</option>
-          <option value="cancelado">Canceladas</option>
-          <option value="todos">Todas (com canceladas)</option>
-        </Select>
-        <Select name="prazo" defaultValue={f.prazo} aria-label="Prazo">
-          <option value="">Qualquer vencimento</option>
-          <option value="vencido">Vencidas</option>
-          <option value="hoje">Vencem hoje</option>
-          <option value="proximos7">Próximos 7 dias</option>
-          <option value="proximos30">Próximos 30 dias</option>
-          <option value="a_vencer">A vencer (depois de hoje)</option>
-        </Select>
-        <Select name="contraparte" defaultValue={f.contraparte} aria-label={pagar ? "Fornecedor" : "Cliente"}>
-          <option value="">{pagar ? "Todos os fornecedores" : "Todos os clientes"}</option>
-          {(contrapartes ?? []).map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
-          ))}
-        </Select>
-        <Select name="categoria" defaultValue={f.categoria} aria-label="Categoria">
-          <option value="">Todas as categorias</option>
-          {categoriasTipo.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.codigo} {c.nome}
-            </option>
-          ))}
-        </Select>
-        <Select name="centro" defaultValue={f.centro} aria-label="Centro de custo">
-          <option value="">Todos os centros de custo</option>
-          {(centros ?? []).map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
-          ))}
-        </Select>
-        {pagar ? (
-          <Select name="aprovacao" defaultValue={f.aprovacao} aria-label="Aprovação">
-            <option value="">Aprovação: qualquer</option>
-            <option value="pendente">Aguardando aprovação</option>
-            <option value="aprovado">Aprovados</option>
-            <option value="reprovado">Reprovados</option>
+      <form className="mb-4 space-y-2" role="search">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
+          <div className="relative sm:col-span-2">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input name="busca" defaultValue={f.busca} placeholder="Descrição ou nº do documento" className="pl-9" aria-label="Buscar" />
+          </div>
+          <Select name="situacao" defaultValue={f.situacao} aria-label="Situação do pagamento">
+            <option value="nao_canceladas">Todas (sem canceladas)</option>
+            <option value="em_aberto">Em aberto (inclui pagas em parte)</option>
+            <option value="parcial">{pagar ? "Pagas em parte" : "Recebidas em parte"}</option>
+            <option value="quitado">Liquidadas</option>
+            <option value="renegociado">Renegociadas</option>
+            <option value="cancelado">Canceladas</option>
+            <option value="todos">Todas (com canceladas)</option>
           </Select>
-        ) : (
-          <Select name="revisao" defaultValue={f.revisao} aria-label="Revisão">
-            <option value="">Confirmados e sugeridos</option>
-            <option value="sugerido">Só sugeridos (a conferir)</option>
-            <option value="confirmado">Só confirmados</option>
+          <Select name="prazo" defaultValue={f.prazo} aria-label="Prazo">
+            <option value="">Qualquer vencimento</option>
+            <option value="vencido">Vencidas</option>
+            <option value="hoje">Vencem hoje</option>
+            <option value="proximos7">Próximos 7 dias</option>
+            <option value="proximos30">Próximos 30 dias</option>
+            <option value="a_vencer">A vencer (depois de hoje)</option>
           </Select>
-        )}
-        <Select name="por" defaultValue={f.por} aria-label="Período por">
-          <option value="vencimento">Período por vencimento</option>
-          <option value="competencia">Período por competência</option>
-        </Select>
-        <Input type="date" name="inicio" defaultValue={f.inicio} aria-label="Data inicial" />
-        <Input type="date" name="fim" defaultValue={f.fim} aria-label="Data final" />
-        <Select name="ordem" defaultValue={f.ordem} aria-label="Ordem">
-          <option value="crescente">Data mais antiga primeiro (hoje antes de 2027)</option>
-          <option value="decrescente">Data mais nova primeiro</option>
-        </Select>
-        <div className="flex gap-2">
-          <Button type="submit" variante="secundario" className="flex-1">
-            Filtrar
-          </Button>
-          <Button asChild variante="fantasma">
-            <Link href={base}>Limpar</Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" variante="secundario" className="flex-1">
+              Filtrar
+            </Button>
+            <Button asChild variante="fantasma">
+              <Link href={base}>Limpar</Link>
+            </Button>
+          </div>
         </div>
+        <details className="rounded-xl border border-border bg-card/60" open={maisFiltros || undefined}>
+          <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium">
+            Mais filtros{" "}
+            <span className="font-normal text-muted-foreground">— {pagar ? "fornecedor" : "cliente"}, categoria, centro de custo, {pagar ? "aprovação" : "revisão"}, período e ordem</span>
+          </summary>
+          <div className="grid gap-2 border-t border-border p-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Select name="contraparte" defaultValue={f.contraparte} aria-label={pagar ? "Fornecedor" : "Cliente"}>
+              <option value="">{pagar ? "Todos os fornecedores" : "Todos os clientes"}</option>
+              {(contrapartes ?? []).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </Select>
+            <Select name="categoria" defaultValue={f.categoria} aria-label="Categoria">
+              <option value="">Todas as categorias</option>
+              {categoriasTipo.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.codigo} {c.nome}
+                </option>
+              ))}
+            </Select>
+            <Select name="centro" defaultValue={f.centro} aria-label="Centro de custo">
+              <option value="">Todos os centros de custo</option>
+              {(centros ?? []).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </Select>
+            {pagar ? (
+              <Select name="aprovacao" defaultValue={f.aprovacao} aria-label="Aprovação">
+                <option value="">Aprovação: qualquer</option>
+                <option value="pendente">Aguardando aprovação</option>
+                <option value="aprovado">Aprovados</option>
+                <option value="reprovado">Reprovados</option>
+              </Select>
+            ) : (
+              <Select name="revisao" defaultValue={f.revisao} aria-label="Revisão">
+                <option value="">Confirmados e sugeridos</option>
+                <option value="sugerido">Só sugeridos (a conferir)</option>
+                <option value="confirmado">Só confirmados</option>
+              </Select>
+            )}
+            <Select name="por" defaultValue={f.por} aria-label="Período por">
+              <option value="vencimento">Período por vencimento</option>
+              <option value="competencia">Período por competência</option>
+            </Select>
+            <Input type="date" name="inicio" defaultValue={f.inicio} aria-label="Data inicial" />
+            <Input type="date" name="fim" defaultValue={f.fim} aria-label="Data final" />
+            <Select name="ordem" defaultValue={f.ordem} aria-label="Ordem">
+              <option value="crescente">Data mais antiga primeiro (hoje antes de 2027)</option>
+              <option value="decrescente">Data mais nova primeiro</option>
+            </Select>
+          </div>
+        </details>
       </form>
 
       {/* Totais do filtro */}

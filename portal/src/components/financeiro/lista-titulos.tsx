@@ -17,6 +17,7 @@ import { APROVACAO_PAGAMENTO, ORIGEM_LANCAMENTO, SITUACAO_LANCAMENTO } from "@/l
 import { alterarEmLote, baixarEmLote, decidirAprovacao, renegociarTitulos } from "@/lib/financeiro/acoes-titulos";
 import type { ResultadoAcao } from "@/lib/acoes";
 import { dividir, somarMeses } from "@/lib/financeiro/parcelas";
+import { cn } from "@/lib/utils";
 
 export interface LinhaTitulo {
   id: string;
@@ -246,13 +247,20 @@ export function ListaTitulos({
                   </span>
                 </Td>
                 <Td>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variante={st?.tom ?? "neutro"}>{st?.rotulo ?? l.situacao}</Badge>
-                    {l.vencido ? <Badge variante="perigo">Vencido</Badge> : null}
-                    {ap && emAberto(l) ? <Badge variante={ap.tom}>{ap.rotulo}</Badge> : null}
-                    {l.revisao === "sugerido" ? <Badge variante="alerta">A conferir</Badge> : null}
-                    {l.acordo ? <Badge variante="info">Acordo</Badge> : null}
-                  </div>
+                  {/* Uma etiqueta só (vencido junta com a situação); o resto em texto pequeno */}
+                  <Badge variante={l.vencido ? "perigo" : (st?.tom ?? "neutro")}>
+                    {l.vencido ? (l.situacao === "parcial" ? `${st?.rotulo ?? "Pago em parte"} · vencido` : "Vencido") : (st?.rotulo ?? l.situacao)}
+                  </Badge>
+                  {(() => {
+                    const extras = [
+                      ap && emAberto(l) ? ap.rotulo : null,
+                      l.revisao === "sugerido" ? "A conferir" : null,
+                      l.acordo ? "Acordo" : null,
+                    ].filter(Boolean);
+                    return extras.length ? (
+                      <span className={cn("mt-0.5 block text-xs", l.revisao === "sugerido" || ap?.tom === "alerta" ? "text-alerta-fg" : "text-muted-foreground")}>{extras.join(" · ")}</span>
+                    ) : null;
+                  })()}
                 </Td>
                 <Td className="whitespace-nowrap text-right numero">{formatarMoeda(l.valor)}</Td>
                 <Td className="whitespace-nowrap text-right text-sucesso numero">{dec(l.pago).isZero() ? "—" : formatarMoeda(l.pago)}</Td>

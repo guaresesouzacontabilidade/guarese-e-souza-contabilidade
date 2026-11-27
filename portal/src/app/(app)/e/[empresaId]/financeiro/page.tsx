@@ -108,6 +108,9 @@ export default async function VisaoFinanceira({ params, searchParams }: PageProp
   const conferir = pend.sugeridos + pend.aprovacoes + pend.conciliar + pend.sem_categoria;
   const contasDisponiveis = p.contas.filter((c) => c.disponivel || conta);
   const negativo = p.projecao.primeiro_negativo;
+  // "Clientes em atraso" só com clientes do cadastro; o vencido sem cliente (balcão) vem à parte
+  const clientesAtraso = p.clientes_atraso.filter((c) => c.contraparte_id);
+  const semCliente = p.clientes_atraso.find((c) => !c.contraparte_id) ?? null;
 
   return (
     <>
@@ -289,11 +292,26 @@ export default async function VisaoFinanceira({ params, searchParams }: PageProp
           <CardContent>
             <PendenciasPainel
               empresaId={empresaId}
-              itens={p.urgentes}
+              itens={p.urgentes.slice(0, 6)}
               hoje={p.hoje}
               permissoes={{ baixar: ctx.pode("financeiro.baixar"), aprovar: ctx.pode("financeiro.aprovar") }}
               contas={contasLista ?? []}
             />
+            {p.urgentes.length > 6 ? (
+              <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-3 text-sm" data-testid="ver-todos-urgentes">
+                <span className="text-muted-foreground">Mostrando os 6 mais urgentes de {p.urgentes.length}.</span>
+                {g.vencido.qtd || g.hoje.qtd ? (
+                  <Link href={`${pagar}?prazo=vencido&revisao=confirmado${filtroCentro}`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                    Ver todos a pagar <ArrowRight className="size-3.5" />
+                  </Link>
+                ) : null}
+                {r.vencido.qtd || r.hoje.qtd ? (
+                  <Link href={`${receber}?prazo=vencido&revisao=confirmado${filtroCentro}`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                    Ver todos a receber <ArrowRight className="size-3.5" />
+                  </Link>
+                ) : null}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -350,9 +368,9 @@ export default async function VisaoFinanceira({ params, searchParams }: PageProp
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {p.clientes_atraso.length ? (
+              {clientesAtraso.length ? (
                 <ul className="divide-y divide-border text-sm" data-testid="clientes-atraso">
-                  {p.clientes_atraso.map((c) => (
+                  {clientesAtraso.map((c) => (
                     <li key={c.contraparte_id ?? "sem"} className="flex items-center justify-between gap-2 py-1.5">
                       {c.contraparte_id ? (
                         <Link href={`${receber}/contraparte/${c.contraparte_id}`} className="min-w-0 truncate hover:underline">
@@ -371,6 +389,15 @@ export default async function VisaoFinanceira({ params, searchParams }: PageProp
               ) : (
                 <p className="text-sm text-muted-foreground">Nenhum cliente com recebimento vencido.</p>
               )}
+              {semCliente ? (
+                <p className="mt-2 border-t border-border pt-2 text-xs text-muted-foreground">
+                  E mais{" "}
+                  <Link href={`${receber}?prazo=vencido&revisao=confirmado`} className="numero font-medium text-perigo hover:underline">
+                    {formatarMoeda(semCliente.total)}
+                  </Link>{" "}
+                  vencidos sem cliente no cadastro (vendas de balcão e outros).
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         </div>

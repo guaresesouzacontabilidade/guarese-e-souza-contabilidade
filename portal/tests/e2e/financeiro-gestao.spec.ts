@@ -206,7 +206,10 @@ test("totais batem com o filtro; renegociação e pagamento em lote", async ({ p
   await selecionarOpcao(page, "#lote-conta", "Banco do Brasil");
   await page.getByRole("button", { name: "Confirmar pagamento de R$ 170,00" }).click();
   await expect(page.getByRole("dialog")).toBeHidden({ timeout: 30_000 });
+  // A lista começa pelo que está em aberto; "Todas (sem canceladas)" mostra as liquidadas
   await page.goto(lista);
+  await expect(page.getByTestId("linha-titulo")).toHaveCount(0);
+  await page.goto(`${lista}&situacao=nao_canceladas`);
   await expect(page.getByTestId("saldo-aberto-filtro")).toHaveText("R$ 0,00");
   await expect(page.getByTestId("linha-titulo").filter({ hasText: "Liquidado" })).toHaveCount(2);
 });

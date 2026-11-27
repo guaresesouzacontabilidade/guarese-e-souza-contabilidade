@@ -448,3 +448,46 @@ export async function semearFinanceiro(admin: SupabaseClient, usuario: SupabaseC
   }
   return true;
 }
+
+/**
+ * Contas mensais fictícias (aluguel, salários, energia, internet e fornecimento
+ * a clientes) como recorrências: a rotina diária do portal gera os próximos
+ * meses sozinha, então a demonstração sempre tem contas a pagar e a receber
+ * pela frente. Só cria o que ainda não existe; serve só para a demonstração.
+ */
+export async function semearRecorrenciasDemo(admin: SupabaseClient, usuario: SupabaseClient, empresaId: string) {
+  const { data: existentes } = await admin.from("recorrencias").select("descricao").eq("empresa_id", empresaId);
+  const ja = new Set((existentes ?? []).map((r) => r.descricao));
+  const { data: cats } = await admin.from("categorias_financeiras").select("id, codigo").eq("empresa_id", empresaId);
+  const cat = (codigo: string) => cats?.find((c) => c.codigo === codigo)?.id ?? null;
+  const { data: cps } = await admin.from("contrapartes").select("id, nome").eq("empresa_id", empresaId);
+  const cp = (trecho: string) => cps?.find((c) => c.nome.toLowerCase().includes(trecho))?.id ?? null;
+  const hoje = new Date().toISOString().slice(0, 10);
+  const modelos = [
+    { tipo: "pagar", descricao: "Aluguel da loja (mensal)", categoria: "4.04", contraparte: "imobili", dia: 5, valor: 2500 },
+    { tipo: "pagar", descricao: "Salários da equipe (mensal)", categoria: "4.01", contraparte: null, dia: 5, valor: 4200 },
+    { tipo: "pagar", descricao: "Energia elétrica (mensal)", categoria: "4.05", contraparte: "energia", dia: 12, valor: 1400 },
+    { tipo: "pagar", descricao: "Internet e telefone (mensal)", categoria: "4.05", contraparte: "net", dia: 15, valor: 129.9 },
+    { tipo: "receber", descricao: "Fornecimento de pães — Mercado Bom Preço (mensal)", categoria: "1.01", contraparte: "mercado", dia: 10, valor: 3200 },
+    { tipo: "receber", descricao: "Fornecimento de pães — Restaurante Sabor Local (mensal)", categoria: "1.01", contraparte: "restaurante", dia: 15, valor: 1850 },
+  ] as const;
+  const novas = modelos
+    .filter((m) => !ja.has(m.descricao) && cat(m.categoria))
+    .map((m) => ({
+      empresa_id: empresaId,
+      tipo: m.tipo,
+      descricao: m.descricao,
+      categoria_id: cat(m.categoria),
+      contraparte_id: m.contraparte ? cp(m.contraparte) : null,
+      valor: m.valor,
+      frequencia: "mensal",
+      dia_vencimento: m.dia,
+      data_inicio: hoje,
+    }));
+  if (!novas.length) return false;
+  const { error } = await admin.from("recorrencias").insert(novas);
+  if (error) throw new Error(`Recorrências de demonstração: ${error.message}`);
+  const { error: e2 } = await usuario.rpc("gerar_recorrencias_empresa", { p_empresa_id: empresaId });
+  if (e2) throw new Error(`Gerar recorrências de demonstração: ${e2.message}`);
+  return true;
+}
