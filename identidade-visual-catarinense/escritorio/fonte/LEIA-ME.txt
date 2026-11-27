@@ -1,0 +1,9 @@
+Arquivos-fonte da papelaria/escritório Catarinense (HTML/CSS/SVG renderizado com Playwright).
+Estes arquivos ficavam em work/escritorio/ e usam, da pasta acima: assets/ (logo, máscaras, qr_site.png),
+fonts/ (Montserrat, Cinzel, Cormorant via @fontsource), covers.css e out/cover_04-minimalista.png.
+Ordem para gerar de novo:
+  python3 itens.py                 -> p_*.html (peças planas no tamanho real)
+  node render.js jobs_print.json   -> print/*.png (300 dpi)
+  python3 tex.py && node render.js jobs_tex.json && python3 warp.py   -> caneca/garrafas projetadas no cilindro
+  node render.js jobs_m.json; node render.js jobs_flat.json; node render.js jobs_sheet.json
+Os dados de contato ficam no topo de itens.py (PHONE, PHONE2, EMAIL, CITY, SITE, NAME, ROLE).

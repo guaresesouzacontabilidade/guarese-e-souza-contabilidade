@@ -1,0 +1,56 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="esc.css">
+<style>
+.it{position:absolute;transform-origin:center}
+.paper{filter:drop-shadow(0 1px 1px rgba(60,40,20,.22)) drop-shadow(0 8px 14px rgba(60,40,20,.16))}
+.thick{filter:drop-shadow(0 2px 2px rgba(60,40,20,.28)) drop-shadow(0 14px 22px rgba(60,40,20,.2))}
+.it img{display:block;width:100%;height:100%}
+</style>
+<script src="objs.js"></script></head><body>
+<div class="art" id="A" style="width:2400px;height:1600px"></div>
+<script>
+window.READY_FLAG = true;
+const A = document.getElementById('A');
+A.style.background = woodBG(5) + ' center/cover';
+const P = 2.75; // px per mm
+function put(html, x, y, w, h, rot, cls = 'paper', z = 1) {
+  const d = document.createElement('div'); d.className = 'it ' + cls;
+  Object.assign(d.style, { left: x + 'px', top: y + 'px', width: w ? w + 'px' : 'auto', height: h ? h + 'px' : 'auto', transform: `rotate(${rot}deg)`, zIndex: z });
+  d.innerHTML = html; A.appendChild(d); return d;
+}
+const img = (src, r = 0) => `<img src="${src}" style="border-radius:${r}px">`;
+// plank seams
+const seams=document.createElement('div');seams.className='seams';seams.style.cssText='position:absolute;inset:0;z-index:0;pointer-events:none;background:'+[372,770,1180].map(y=>`linear-gradient(180deg,transparent ${y-2}px,rgba(110,80,45,.28) ${y-1}px,rgba(255,255,255,.35) ${y+1}px,transparent ${y+2}px)`).join(',');A.appendChild(seams);
+// soft vignette light
+const v = document.createElement('div'); v.style.cssText = 'position:absolute;inset:0;z-index:50;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 45% 45%,rgba(255,255,255,.10),rgba(0,0,0,.10) 100%)'; A.appendChild(v);
+
+// folder (pasta) centre-left
+put(img('trim/pasta-frente.png', 3), 380, 400, 230 * P, 320 * P, -6, 'thick', 2);
+// letterhead over it
+put(img('trim/timbrado-exemplo.png'), 900, 150, 210 * P, 297 * P, 4, 'paper', 3);
+// envelope bottom centre
+put(img('trim/envelope.png'), 960, 1160, 229 * P, 114 * P, -3.5, 'paper', 4);
+// notebook top-left (minimalist cover)
+put(notebookHTML({ cover: '../out/cover_04-minimalista.png', w: 148 * P }), 20, -150, null, null, -13, 'thick', 3);
+// mug bottom-left
+put(mugTopSVG({ r: 41 * P }), 70, 1150, null, null, -25, '', 6);
+// notepad top-right
+put(img('trim/bloco.png'), 1580, 90, 105 * P, 148 * P, -8, 'paper', 2);
+// business cards (stack + back)
+for (let i = 0; i < 4; i++) put(img('trim/cartao-frente.png', 2), 1930 + i * .6, 560 - i * 1.2, 90 * P, 50 * P, 11, 'paper', 5 + i);
+put(img('trim/cartao-verso.png', 2), 1890, 760, 90 * P, 50 * P, -7, 'paper', 9);
+// pens
+put(penSVG({ color: 'green', width: 140 * P }), 1530, 1000, null, null, -28, 'thick', 12);
+put(penSVG({ color: 'white', width: 140 * P }), 1705, 330, null, null, 70, 'thick', 11);
+// lanyard + badge bottom-right
+const lan = document.createElement('div'); lan.style.cssText = 'position:absolute;left:0;top:0;z-index:7'; A.appendChild(lan);
+lan.innerHTML = lanyardSVG({ d: 'M2460 960 C2300 980 2180 1040 2190 1140 C2198 1205 2232 1222 2212 1262 M2600 1250 C2440 1215 2340 1215 2296 1246 C2266 1266 2236 1268 2216 1270', w: 40, size: 13.5 });
+put(`<div style="position:relative;width:${54 * P}px;height:${86 * P}px"><img src="trim/cracha.png" style="border-radius:${3 * P}px">
+  <div style="position:absolute;left:50%;top:${3 * P}px;width:${13 * P}px;height:${3.2 * P}px;margin-left:${-6.5 * P}px;border-radius:9px;background:#b8a98f;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)"></div></div>`,
+  2130, 1268, null, null, -10, 'paper', 8);
+put(`<svg width="40" height="70" viewBox="0 0 40 70"><defs>${lin('clp', CHROME, 1, 0)}</defs>
+  <path d="M20 22 C8 24 6 44 14 54 C18 60 24 60 27 54 C30 48 28 40 24 38" fill="none" stroke="#3c3f44" stroke-width="7.4" stroke-linecap="round" opacity=".35" transform="translate(1.5 2)"/>
+  <rect x="12" y="0" width="16" height="22" rx="4" fill="url(#clp)" stroke="#555" stroke-width=".6"/>
+  <path d="M20 22 C8 24 6 44 14 54 C18 60 24 60 27 54 C30 48 28 40 24 38" fill="none" stroke="url(#clp)" stroke-width="6" stroke-linecap="round"/></svg>`,
+  2193, 1238, null, null, -10, 'paper', 9);
+window.READY = true;
+</script></body></html>

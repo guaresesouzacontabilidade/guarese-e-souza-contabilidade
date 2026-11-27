@@ -1,0 +1,100 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;padding:0}
+#scene{position:relative;width:1600px;height:1200px;overflow:hidden}
+.abs{position:absolute}
+.trim{position:absolute;overflow:hidden}
+.trim img{position:absolute}
+</style></head>
+<body><div id="scene"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const mode = q.get('mode') || 'desk';
+const S = document.getElementById('scene');
+function el(tag, style, parent = S, html = '') { const e = document.createElement(tag); e.className = 'abs'; Object.assign(e.style, style); if (html) e.innerHTML = html; parent.appendChild(e); return e; }
+// show an image cropped to its trim box (bleed in px of the layout: mm * pxPerMm)
+function trimmed(src, parent, W, H, bleedFracX, bleedFracY, extra = {}) {
+  const t = el('div', Object.assign({ width: W + 'px', height: H + 'px', overflow: 'hidden' }, extra), parent);
+  const img = document.createElement('img'); img.src = src;
+  img.style.position = 'absolute';
+  img.style.width = W / (1 - 2 * bleedFracX) + 'px'; img.style.height = H / (1 - 2 * bleedFracY) + 'px';
+  img.style.left = -W / (1 - 2 * bleedFracX) * bleedFracX + 'px'; img.style.top = -H / (1 - 2 * bleedFracY) * bleedFracY + 'px';
+  t.appendChild(img); return t;
+}
+const svgNS = 'http://www.w3.org/2000/svg';
+
+if (mode === 'desk') {
+  S.style.background = 'linear-gradient(180deg,#eef0f1 0%,#e3e6e8 58%,#d5d8db 58.1%,#e4e6e8 100%)';
+  el('div', { left: 0, right: 0, top: '696px', height: '504px', background: 'radial-gradient(ellipse 60% 70% at 50% 0%,rgba(255,255,255,.55),transparent 70%)' });
+  const W = 920, H = 690, X = (1600 - W) / 2, BOTTOM = 960;
+  // contact shadow on desk
+  el('div', { left: X - 30 + 'px', top: BOTTOM - 18 + 'px', width: W + 60 + 'px', height: '70px', background: 'rgba(0,0,0,.35)', filter: 'blur(22px)', borderRadius: '50%' });
+  el('div', { left: X + 40 + 'px', top: BOTTOM - 260 + 'px', width: W + 'px', height: '300px', background: 'rgba(0,0,0,.10)', filter: 'blur(40px)', transform: 'skewX(-18deg)' });
+  // tilted page group
+  const grp = el('div', { left: X + 'px', top: BOTTOM - H - 26 + 'px', width: W + 'px', height: H + 'px',
+    transform: 'perspective(2400px) rotateX(16deg)', transformOrigin: '50% 100%' });
+  // page stack edges (pages behind the front one)
+  for (let i = 4; i >= 1; i--) el('div', { left: 0, top: -i * 2.2 + 'px', width: W + 'px', height: H + 'px', background: i % 2 ? '#f4f2ec' : '#e6e3db', boxShadow: '0 0 0 .5px rgba(0,0,0,.12)' }, grp);
+  const page = trimmed(q.get('page'), grp, W, H, 3 / 206, 3 / 156, { left: 0, top: 0, boxShadow: '0 0 0 .6px rgba(0,0,0,.18)' });
+  el('div', { inset: 0, background: 'linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,0) 18%,rgba(255,255,255,.08) 60%,rgba(0,0,0,.05))' }, page);
+  // wire-o along the top edge
+  const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('width', W); svg.setAttribute('height', 60);
+  Object.assign(svg.style, { position: 'absolute', left: 0, top: '-30px', overflow: 'visible' }); grp.appendChild(svg);
+  const pitch = 38.2, n = Math.floor((W - 60) / pitch), off = (W - (n - 1) * pitch) / 2;
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const cx = off + i * pitch;
+    const hole = document.createElementNS(svgNS, 'rect');
+    hole.setAttribute('x', cx - 7); hole.setAttribute('y', 37); hole.setAttribute('width', 14); hole.setAttribute('height', 9); hole.setAttribute('rx', 3);
+    hole.setAttribute('fill', '#2a2a2a'); svg.appendChild(hole);
+    for (const dx of [-4.2, 4.2]) d += `M${cx + dx} 42 C${cx + dx} 26 ${cx + dx * 1.15} 12 ${cx + dx * 1.3} 9 `;
+  }
+  for (const [w, c, o] of [[5.4, '#6f7276', 1], [3.6, '#e9ebed', 1], [1.1, '#ffffff', .9]]) {
+    const p = document.createElementNS(svgNS, 'path'); p.setAttribute('d', d); p.setAttribute('fill', 'none');
+    p.setAttribute('stroke', c); p.setAttribute('stroke-width', w); p.setAttribute('stroke-linecap', 'round'); p.setAttribute('opacity', o); svg.appendChild(p);
+  }
+  const bar = document.createElementNS(svgNS, 'path'); bar.setAttribute('d', `M${off - 6} 8 H${off + (n - 1) * pitch + 6}`);
+  bar.setAttribute('stroke', '#bfc2c5'); bar.setAttribute('stroke-width', 3); bar.setAttribute('stroke-linecap', 'round'); svg.appendChild(bar);
+  // base lip (cardboard tent base, brand green)
+  el('div', { left: X - 6 + 'px', top: BOTTOM - 26 + 'px', width: W + 12 + 'px', height: '30px', borderRadius: '3px',
+    background: 'linear-gradient(180deg,#0b5a2e 0%,#07431f 45%,#042c14 100%)', boxShadow: '0 6px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.25)' },
+    S, '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 13px Montserrat,sans-serif;letter-spacing:5px;color:rgba(255,255,255,.85)">CATARINENSEGESTAO.COM.BR</div>');
+}
+
+if (mode === 'wall') {
+  S.style.background = 'radial-gradient(ellipse 60% 70% at 45% 35%,#f6f5f2 0%,#e9e7e2 60%,#d9d6cf 100%)';
+  el('div', { inset: 0, opacity: .5, mixBlendMode: 'multiply', backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.38  0 0 0 0 0.34  0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" });
+  const W = 680, H = W * 420 / 297, X = (1600 - W) / 2, Y = 150;
+  if (S.style) S.style.height = '1200px';
+  // cord + nail
+  const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('width', 1600); svg.setAttribute('height', 300);
+  Object.assign(svg.style, { position: 'absolute', left: 0, top: 0 }); S.appendChild(svg);
+  svg.innerHTML = `<path d="M${X + W * .38} ${Y + 6} L800 70 L${X + W * .62} ${Y + 6}" fill="none" stroke="#3b3d40" stroke-width="2.2"/>
+    <circle cx="800" cy="66" r="7" fill="#9a9da1"/><circle cx="798" cy="64" r="3" fill="#e3e5e7"/>`;
+  el('div', { left: X + 18 + 'px', top: Y + 26 + 'px', width: W + 'px', height: H + 'px', background: 'rgba(0,0,0,.28)', filter: 'blur(20px)' });
+  el('div', { left: X + 4 + 'px', top: Y + 6 + 'px', width: W + 'px', height: H + 'px', background: 'rgba(0,0,0,.2)', filter: 'blur(4px)' });
+  const poster = trimmed(q.get('page'), S, W, H, 3 / 303, 3 / 426, { left: X + 'px', top: Y + 'px' });
+  el('div', { inset: 0, background: 'linear-gradient(105deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,0) 40%,rgba(0,0,0,.05) 100%)' }, poster);
+  // green plastic strips (top and bottom)
+  for (const [top, h] of [[Y - 6, 22], [Y + H - 14, 20]]) {
+    el('div', { left: X - 3 + 'px', top: top + 'px', width: W + 6 + 'px', height: h + 'px', borderRadius: '4px',
+      background: 'linear-gradient(180deg,#0f6a37 0%,#07431f 55%,#03270f 100%)', boxShadow: '0 3px 5px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.3)' });
+  }
+}
+
+if (mode === 'pocket') {
+  S.style.background = 'radial-gradient(ellipse 70% 70% at 50% 40%,#f7f7f6 0%,#e7e8e8 65%,#d6d8da 100%)';
+  const W = 640, H = W * 50 / 90;
+  const card = (src, x, y, rot, z) => {
+    const wrap = el('div', { left: x + 'px', top: y + 'px', width: W + 'px', height: H + 'px', transform: `rotate(${rot}deg)`, zIndex: z });
+    el('div', { left: '10px', top: '18px', width: W + 'px', height: H + 'px', background: 'rgba(0,0,0,.30)', filter: 'blur(14px)', borderRadius: '22px' }, wrap);
+    const t = trimmed(src, wrap, W, H, 2 / 94, 2 / 54, { left: 0, top: 0, borderRadius: '20px', boxShadow: '0 1px 2px rgba(0,0,0,.25)' });
+    el('div', { inset: 0, background: 'linear-gradient(120deg,rgba(255,255,255,.22),rgba(255,255,255,0) 45%)' }, t);
+  };
+  card(q.get('back'), 760, 470, 7, 1);
+  card(q.get('front'), 180, 300, -6, 2);
+  card(q.get('back'), 270, 700, -2, 3);
+}
+document.title = 'ready';
+</script></body></html>

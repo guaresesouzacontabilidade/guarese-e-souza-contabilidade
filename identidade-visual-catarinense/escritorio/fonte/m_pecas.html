@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="esc.css">
+<style>.it{position:absolute;transform-origin:center}.it img{display:block;width:100%;height:100%}
+.paper{filter:drop-shadow(0 1px 1px rgba(50,35,15,.2)) drop-shadow(0 6px 10px rgba(50,35,15,.14))}</style>
+<script src="objs.js"></script></head><body><div class="art" id="A" style="width:2000px;height:1500px"></div><script src="scene.js"></script><script>
+A.style.background = stoneBG();
+const P = 3.45;
+put(img('trim/timbrado.png'), 150, 175, 210*P, 297*P, 0, 'paper', 2);
+put(img('trim/cartao-frente.png', 3), 900, 150, 90*P*1.45, 50*P*1.45, 0, 'paper', 2);
+put(img('trim/cartao-verso.png', 3), 900, 440, 90*P*1.45, 50*P*1.45, 0, 'paper', 2);
+put(img('trim/cracha.png', 10), 1420, 150, 54*P*1.55, 86*P*1.55, 0, 'paper', 2);
+put(img('trim/envelope.png'), 900, 740, 229*P*1.03, 114*P*1.03, 0, 'paper', 2);
+put(img('trim/caneca.png'), 900, 1190, 200*P*.95, 95*P*.95, 0, 'paper', 2);
+window.READY = true;</script></body></html>

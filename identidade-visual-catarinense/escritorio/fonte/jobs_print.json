@@ -1,0 +1,65 @@
+[
+{
+"html": "p_cartao-frente.html",
+"out": "print/cartao-frente.png",
+"dsf": 1.1811,
+"w": 940,
+"h": 540
+},
+{
+"html": "p_cartao-verso.html",
+"out": "print/cartao-verso.png",
+"dsf": 1.1811,
+"w": 940,
+"h": 540
+},
+{
+"html": "p_timbrado.html",
+"out": "print/timbrado.png",
+"dsf": 2.9528,
+"w": 864,
+"h": 1212
+},
+{
+"html": "p_timbrado-exemplo.html",
+"out": "print/timbrado-exemplo.png",
+"dsf": 2.9528,
+"w": 864,
+"h": 1212
+},
+{
+"html": "p_envelope.html",
+"out": "print/envelope.png",
+"dsf": 2.3622,
+"w": 1175,
+"h": 600
+},
+{
+"html": "p_cracha.html",
+"out": "print/cracha.png",
+"dsf": 1.1811,
+"w": 580,
+"h": 900
+},
+{
+"html": "p_caneca.html",
+"out": "print/caneca.png",
+"dsf": 2.3622,
+"w": 1000,
+"h": 475
+},
+{
+"html": "p_pasta-frente.html",
+"out": "print/pasta-frente.png",
+"dsf": 2.9528,
+"w": 944,
+"h": 1304
+},
+{
+"html": "p_bloco.html",
+"out": "print/bloco.png",
+"dsf": 2.3622,
+"w": 525,
+"h": 740
+}
+]

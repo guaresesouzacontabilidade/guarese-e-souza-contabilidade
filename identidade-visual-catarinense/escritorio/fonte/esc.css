@@ -1,0 +1,18 @@
+@import url(../covers.css);
+@font-face{font-family:Montserrat;font-weight:400;src:url(../fonts/fontsource-montserrat-5.0.19/package/files/montserrat-latin-400-normal.woff2)}
+@font-face{font-family:Montserrat;font-weight:300;src:url(../fonts/fontsource-montserrat-5.0.19/package/files/montserrat-latin-300-normal.woff2)}
+@font-face{font-family:Cormorant;font-weight:500;src:url(../fonts/fontsource-cormorant-garamond-5.0.13/package/files/cormorant-garamond-latin-500-normal.woff2)}
+@font-face{font-family:Cormorant;font-weight:600;src:url(../fonts/fontsource-cormorant-garamond-5.0.13/package/files/cormorant-garamond-latin-600-normal.woff2)}
+@font-face{font-family:Cormorant;font-weight:500;font-style:italic;src:url(../fonts/fontsource-cormorant-garamond-5.0.13/package/files/cormorant-garamond-latin-500-italic.woff2)}
+
+html,body{margin:0;padding:0;background:transparent}
+.art{position:relative;overflow:hidden;font-family:Montserrat,sans-serif}
+.abs{position:absolute}
+.full{position:absolute;inset:0}
+/* masks for the tight logo pieces */
+.mword{-webkit-mask:url(a/word_tight.png) center/100% 100% no-repeat;mask:url(a/word_tight.png) center/100% 100% no-repeat;aspect-ratio:1408/174}
+.mtag{-webkit-mask:url(a/tag_tight.png) center/100% 100% no-repeat;mask:url(a/tag_tight.png) center/100% 100% no-repeat;aspect-ratio:1408/63}
+.mmark{-webkit-mask:url(a/mark_mask_t.png) center/100% 100% no-repeat;mask:url(a/mark_mask_t.png) center/100% 100% no-repeat;aspect-ratio:539/543}
+.felt{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;opacity:.25;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>")}
+.ico{display:inline-flex;width:30px;height:30px;border-radius:50%;align-items:center;justify-content:center;flex:none}
