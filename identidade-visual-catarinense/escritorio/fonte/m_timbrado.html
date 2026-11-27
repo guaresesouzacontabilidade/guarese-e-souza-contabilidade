@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="esc.css">
+<style>.it{position:absolute;transform-origin:center}.it img{display:block;width:100%;height:100%}
+.paper{filter:drop-shadow(0 1px 1px rgba(50,35,15,.22)) drop-shadow(0 9px 15px rgba(50,35,15,.16))}
+.thick{filter:drop-shadow(0 2px 2px rgba(50,35,15,.28)) drop-shadow(0 14px 22px rgba(50,35,15,.2))}</style>
+<script src="objs.js"></script></head><body><div class="art" id="A" style="width:2000px;height:1500px"></div><script src="scene.js"></script><script>
+A.style.background = stoneBG();
+const P = 4.15;
+put(img('trim/timbrado-exemplo.png'), 250, 120, 210*P, 297*P, -3, 'paper', 2);
+put(img('trim/envelope.png'), 1010, 820, 229*P, 114*P, 6, 'paper', 4);
+put(img('trim/envelope.png'), 1090, 700, 229*P, 114*P, 2, 'paper', 3);
+put(img('trim/bloco.png'), 1300, 140, 105*P, 148*P, 8, 'paper', 2);
+put(penSVG({color:'green', width:140*P}), 1180, 620, null, null, -14, 'thick', 6);
+
+window.READY = true;</script></body></html>
