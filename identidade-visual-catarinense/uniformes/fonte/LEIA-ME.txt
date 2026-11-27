@@ -1,0 +1,8 @@
+Fontes dos mockups de uniformes (SVG/HTML gerados por Python, renderizados com Playwright).
+Estes arquivos ficavam em work/uniformes/ e usam ../covers.css, ../assets/ e ../fonts/ (pasta
+cadernos-catarinense/fonte/ tem covers.css, fonts/ e parte de assets/; logo_mask.png e mark_mask.png
+vêm do make_mono.py da pasta work/). Para regerar:
+  cd work/uniformes && python3 gen.py && python3 extras.py
+  node render.js final 2 polo_masculina polo_feminina camisa_social camiseta_vermelha
+  node render.js final 1.25 closeup_bordado && node render.js final 1.5 ficha_tecnica
+  (apresentacao.html usa crops/*.png gerados a partir de final/*.png; ver o fim de extras.py)
