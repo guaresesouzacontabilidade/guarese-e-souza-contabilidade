@@ -1,3 +1,7 @@
+import { normalizarBusca } from "@/lib/busca";
+
+export { normalizarBusca };
+
 /**
  * Busca de produtos do caixa: acha pelo nome, código, grupo ou código de
  * barras com as palavras digitadas em qualquer ordem, sem ligar para acento,
@@ -9,16 +13,6 @@ export interface ProdutoBuscavel {
   descricao: string;
   gtin: string | null;
   grupo: string | null;
-}
-
-/** Minúsculo, sem acento, e pontuação (":", "-", "*", "/"...) vira espaço. */
-export function normalizarBusca(texto: string) {
-  return texto
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
 }
 
 /**

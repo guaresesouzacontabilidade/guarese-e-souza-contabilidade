@@ -1,4 +1,4 @@
-import { parametro, termoBusca } from "@/lib/busca";
+import { aplicarBusca, parametro, termoBusca } from "@/lib/busca";
 import { ordemLancamentos, type OrdemLancamentos } from "@/lib/financeiro/ordem-lancamentos";
 
 /**
@@ -75,7 +75,7 @@ function somarDias(iso: string, dias: number) {
 
 /** Aplica os filtros numa consulta de "lancamentos" (o banco ainda confere a empresa e a permissão). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function aplicarFiltros<Q extends { eq: any; neq: any; in: any; lt: any; lte: any; gt: any; gte: any; or: any; not: any }>(q: Q, f: FiltrosTitulos, hoje: string): Q {
+export function aplicarFiltros<Q extends { eq: any; neq: any; in: any; lt: any; lte: any; gt: any; gte: any; or: any; not: any; ilike: any }>(q: Q, f: FiltrosTitulos, hoje: string): Q {
   let r = q;
   if (f.tipo) r = r.eq("tipo", f.tipo);
   switch (f.situacao) {
@@ -104,7 +104,7 @@ export function aplicarFiltros<Q extends { eq: any; neq: any; in: any; lt: any; 
   if (f.categoria) r = r.eq("categoria_id", f.categoria);
   if (f.contraparte) r = r.eq("contraparte_id", f.contraparte);
   if (f.centro) r = r.eq("centro_custo_id", f.centro);
-  if (f.busca) r = r.or(`descricao.ilike.%${f.busca}%,numero_documento.ilike.%${f.busca}%`);
+  r = aplicarBusca(r, f.busca);
   return r;
 }
 

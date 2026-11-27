@@ -33,6 +33,7 @@ import {
 import { DialogoEntregar } from "./entregar-os";
 import { FormOs, type PessoaOs, type ServicoOs } from "./form-os";
 import { DialogoReceber } from "./receber-os";
+import { casaBusca } from "@/lib/busca";
 
 export interface OsCartao extends TempoOs, ValoresOs {
   id: string;
@@ -182,9 +183,9 @@ export function Esteira({
     for (const s of servicos) if (s.setor?.trim()) m.set(chaveSetor(s.setor), s.setor.trim());
     return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [servicos]);
-  const termo = busca.trim().toLowerCase();
+  const numeroBuscado = busca.trim().replace(/^#/, "");
   const visivel = (o: OsCartao) =>
-    (!termo || o.cliente_nome.toLowerCase().includes(termo) || String(o.numero) === termo.replace("#", "")) &&
+    (/^\d{1,6}$/.test(numeroBuscado) ? String(o.numero) === numeroBuscado : casaBusca(busca, o.cliente_nome, o.cliente_telefone, o.itens.map((i) => i.descricao).join(" "))) &&
     (!pessoa || (pessoa === "sem" ? !o.responsavel_id : o.responsavel_id === pessoa)) &&
     (!setor || o.itens.some((i) => chaveSetor(i.setor) === setor)) &&
     (!soAtrasadas || atrasada(o, agora));

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { aplicarBusca } from "@/lib/busca";
+
 import { CabecalhoPagina, Paginacao } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/form";
+
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
@@ -24,11 +26,7 @@ export default async function PaginaHospedes({ params, searchParams }: PageProps
   const busca = typeof sp.busca === "string" ? sp.busca.slice(0, 60).trim() : "";
   const pagina = Math.max(1, Number(sp.pagina) || 1);
   let q = ctx.supabase.from("hotel_hospedes").select("id, nome, tipo_pessoa, cnpj, cpf, documento, telefone, cidade, uf, email", { count: "exact" }).eq("empresa_id", empresaId);
-  if (busca) {
-    const digitos = busca.replace(/\D/g, "");
-    const termo = busca.replace(/[%,()]/g, " ");
-    q = digitos.length >= 3 ? q.or(`cpf.like.%${digitos}%,cnpj.like.%${digitos}%,telefone.like.%${digitos}%`) : q.ilike("nome", `%${termo}%`);
-  }
+  q = aplicarBusca(q, busca);
   const inicio = (pagina - 1) * POR_PAGINA;
   const { data: hospedes, count } = await q.order("nome").range(inicio, inicio + POR_PAGINA - 1);
   const ids = (hospedes ?? []).map((h) => h.id);
@@ -47,10 +45,7 @@ export default async function PaginaHospedes({ params, searchParams }: PageProps
     <>
       <CabecalhoPagina titulo="Hóspedes" descricao="Cadastro com os dados da ficha de registro e o histórico de cada hóspede. Só o hotel vê." acoes={<DialogoHospede empresaId={empresaId} abrirAoCriar />} />
       <form className="mb-4 flex gap-2" action={`${base}/hospedes`}>
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Nome, CPF ou telefone" className="pl-9" aria-label="Buscar hóspede" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Nome, CPF ou telefone" rotulo="Buscar hóspede" className="flex-1" />
         <Button type="submit" variante="contorno">
           Buscar
         </Button>

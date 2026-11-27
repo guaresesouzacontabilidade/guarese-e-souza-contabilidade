@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileText, Search } from "lucide-react";
+import { FileText } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { competenciaAtual, lerCompetencia, listaCompetencias, somarMeses } from "@/lib/competencia";
 import { formatarCompetencia, formatarData, formatarDataHora } from "@/lib/formatos";
 import { TIPOS_RELATORIO, type TipoRelatorio } from "@/lib/relatorios/snapshot";
@@ -44,7 +45,7 @@ export default async function RelatoriosCarteira({ searchParams }: PageProps<"/e
   const semPacote = empresas.filter((e) => !comPacote.has(e.id));
   const lista = relatorios
     .filter((r) => !status || r.status === status)
-    .filter((r) => !busca || (nome.get(r.empresa_id) ?? "").toLowerCase().includes(busca) || r.titulo.toLowerCase().includes(busca))
+    .filter((r) => casaBusca(busca, nome.get(r.empresa_id), r.titulo))
     .slice(0, 300);
 
   return (
@@ -88,10 +89,7 @@ export default async function RelatoriosCarteira({ searchParams }: PageProps<"/e
           <option value="rascunho">Somente rascunhos</option>
           <option value="publicado">Somente publicados</option>
         </Select>
-        <div className="relative w-full sm:w-56">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Empresa ou título" className="pl-9" aria-label="Buscar" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Empresa ou título" rotulo="Buscar" className="w-full sm:w-56" />
         <Button type="submit" variante="contorno">
           Filtrar
         </Button>

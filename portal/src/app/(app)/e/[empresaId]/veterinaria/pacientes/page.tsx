@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileSpreadsheet, PawPrint, Search } from "lucide-react";
+import { FileSpreadsheet, PawPrint } from "lucide-react";
 import { CabecalhoPagina, Paginacao } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/form";
+import { aplicarBusca, condicaoBusca } from "@/lib/busca";
+
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { DialogoTutor } from "@/components/veterinaria/cadastros";
@@ -27,21 +29,12 @@ export default async function PaginaPacientes({ params, searchParams }: PageProp
   const base = `/e/${empresaId}/veterinaria`;
 
   let q = ctx.supabase.from("vet_tutores").select("id, nome, cpf, telefone, cidade, uf", { count: "exact" }).eq("empresa_id", empresaId);
-  if (busca) {
-    const digitos = busca.replace(/\D/g, "");
-    const termo = busca.replace(/[%,()*]/g, " ").trim();
-    if (digitos.length >= 4) q = q.or(`cpf.like.%${digitos}%,telefone.like.%${digitos}%,telefone2.like.%${digitos}%`);
-    else {
-      // Pelo nome do tutor ou de um animal dele (ou o microchip)
-      const { data: animais } = await ctx.supabase
-        .from("vet_pacientes")
-        .select("tutor_id")
-        .eq("empresa_id", empresaId)
-        .or(`nome.ilike.%${termo}%,microchip.ilike.%${termo.replace(/\s/g, "")}%`)
-        .limit(200);
-      const ids = [...new Set((animais ?? []).map((a) => a.tutor_id))];
-      q = ids.length ? q.or(`nome.ilike.%${termo}%,id.in.(${ids.join(",")})`) : q.ilike("nome", `%${termo}%`);
-    }
+  const cond = condicaoBusca(busca);
+  if (cond) {
+    // Pelo tutor (nome, CPF, telefone) ou por um animal dele (nome ou microchip)
+    const { data: animais } = await aplicarBusca(ctx.supabase.from("vet_pacientes").select("tutor_id").eq("empresa_id", empresaId), busca).limit(200);
+    const ids = [...new Set((animais ?? []).map((a) => a.tutor_id))];
+    q = ids.length ? q.or(`${cond},id.in.(${ids.join(",")})`) : aplicarBusca(q, busca);
   }
   const inicio = (pagina - 1) * POR_PAGINA;
   const { data: tutores, count } = await q.order("nome").range(inicio, inicio + POR_PAGINA - 1);
@@ -72,10 +65,7 @@ export default async function PaginaPacientes({ params, searchParams }: PageProp
         }
       />
       <form className="mb-4 flex gap-2" action={`${base}/pacientes`}>
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Nome do tutor ou do animal, CPF, telefone ou microchip" className="pl-9" aria-label="Buscar tutor ou animal" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Nome do tutor ou do animal, CPF, telefone ou microchip" rotulo="Buscar tutor ou animal" className="flex-1" />
         <Button type="submit" variante="contorno">
           Buscar
         </Button>

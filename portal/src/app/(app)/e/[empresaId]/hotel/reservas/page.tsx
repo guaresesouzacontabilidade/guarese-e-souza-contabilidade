@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarPlus, Search } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 import { CabecalhoPagina, Paginacao } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { HotelIndisponivel } from "@/components/hotel/navegacao";
@@ -56,10 +57,7 @@ export default async function PaginaReservas({ params, searchParams }: PageProps
         }
       />
       <form className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto]" action={`${base}/reservas`}>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Nome do hóspede" className="pl-9" aria-label="Buscar pelo nome do hóspede" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Nome do hóspede" rotulo="Buscar pelo nome do hóspede" />
         <Select name="status" defaultValue={status} aria-label="Situação">
           <option value="ativas">Em aberto (reservas e hospedados)</option>
           <option value="todas">Todas</option>

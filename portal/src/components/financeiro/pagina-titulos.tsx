@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Download, FileUp, Minus, Plus, Receipt, ReceiptText, Search } from "lucide-react";
+import { Download, FileUp, Minus, Plus, Receipt, ReceiptText } from "lucide-react";
 import type { ContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Paginacao, urlCom } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { ListaTitulos, type LinhaTitulo } from "@/components/financeiro/lista-titulos";
 import { hojeISO } from "@/lib/competencia";
@@ -183,10 +184,7 @@ export async function PaginaTitulos({ ctx, empresaId, tipo, sp }: { ctx: Context
       {/* Filtros */}
       <form className="mb-4 space-y-2" role="search">
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
-          <div className="relative sm:col-span-2">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input name="busca" defaultValue={f.busca} placeholder="Descrição ou nº do documento" className="pl-9" aria-label="Buscar" />
-          </div>
+          <CampoBusca name="busca" defaultValue={f.busca} placeholder="Descrição ou nº do documento" rotulo="Buscar" className="sm:col-span-2" />
           <Select name="situacao" defaultValue={f.situacao} aria-label="Situação do pagamento">
             <option value="nao_canceladas">Todas (sem canceladas)</option>
             <option value="em_aberto">Em aberto (inclui pagas em parte)</option>

@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarClock, Search } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { situacaoVencimento, TIPOS_VENCIMENTO } from "@/lib/vencimentos/rotulos";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { hojeISO, somarDias } from "@/lib/competencia";
 import { formatarData } from "@/lib/formatos";
 import { mensagemErro } from "@/lib/acoes";
@@ -47,7 +48,7 @@ export default async function VencimentosCarteira({ searchParams }: PageProps<"/
       const e = v.empresa as unknown as { razao_social: string; nome_fantasia: string | null };
       return { ...v, nomeEmpresa: e.nome_fantasia ?? e.razao_social, s: situacaoVencimento(v.validade, hoje) };
     })
-    .filter((v) => !busca || `${v.nomeEmpresa} ${v.descricao}`.toLowerCase().includes(busca));
+    .filter((v) => casaBusca(busca, v.nomeEmpresa, v.descricao));
   const vencidos = linhas.filter((v) => v.s.situacao === "vencido" || v.s.situacao === "vence_hoje").length;
   const em15 = linhas.filter((v) => v.s.situacao === "proximo").length;
   const em30 = linhas.filter((v) => v.s.situacao === "atencao").length;
@@ -65,10 +66,7 @@ export default async function VencimentosCarteira({ searchParams }: PageProps<"/
         <Indicador rotulo="Vencem em 16 a 30 dias" valor={em30} tom={em30 ? "info" : "neutro"} />
       </div>
       <form className="mb-4 flex flex-wrap gap-2" role="search">
-        <div className="relative min-w-48 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar empresa ou documento" className="pl-9" aria-label="Buscar" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar empresa ou documento" rotulo="Buscar" className="min-w-48 flex-1" />
         <Select name="situacao" defaultValue={filtro} aria-label="Período">
           <option value="vencidos">Somente vencidos</option>
           <option value="30">Vencidos e próximos 30 dias</option>

@@ -16,6 +16,7 @@ import { Decimal, formatarMoeda, lerValorBR } from "@/lib/dinheiro";
 import { definirMargemGrupo, definirMargemPadrao, salvarPrecos, type PrecoParaSalvar } from "@/lib/gestao/acoes-precos";
 import { custoMudouSemPreco, custoReferencia, margemAlvo, margemReal, precoPorM3, precoSugerido, type OrigemMargem } from "@/lib/gestao/precos";
 import { formatarQuantidade, un } from "@/lib/gestao/rotulos";
+import { casaBusca } from "@/lib/busca";
 
 export interface LinhaPreco {
   id: string;
@@ -152,7 +153,6 @@ export function TabelaPrecos({
     abaixo: calculadas.filter((c) => c.abaixo).length,
     semcusto: calculadas.filter((c) => !c.custo).length,
   };
-  const termo = busca.trim().toLowerCase();
   const visiveis = calculadas.filter(
     (c) =>
       (filtro === "todos" ||
@@ -161,7 +161,7 @@ export function TabelaPrecos({
         (filtro === "abaixo" && c.abaixo) ||
         (filtro === "semcusto" && !c.custo)) &&
       (!grupo || c.l.grupo === grupo) &&
-      (!termo || `${c.l.descricao} ${c.l.codigo}`.toLowerCase().includes(termo)),
+      casaBusca(busca, c.l.descricao, c.l.codigo, c.l.grupo),
   );
   const alteradas = calculadas.filter((c) => c.precoMudou || c.margemMudou);
   const invalidas = calculadas.filter((c) => c.precoInvalido || c.margemInvalida);

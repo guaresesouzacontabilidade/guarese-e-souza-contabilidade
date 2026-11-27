@@ -15,11 +15,12 @@ import { ValorSinal } from "@/components/conciliacao/conciliar-manual";
 import { BotaoBuscarSugestoes, BotaoReativar, DesfazerConciliacao, ExcluirSaldo, InformarSaldo } from "@/components/conciliacao/acoes-conciliacao";
 import { carregarOpcoes } from "@/lib/financeiro/opcoes";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { parametro, termoBusca } from "@/lib/busca";
+import { aplicarBusca, parametro, termoBusca } from "@/lib/busca";
 import { competenciaAtual, hojeISO, listaCompetencias, periodoDeParametros, somarDias, somarMeses } from "@/lib/competencia";
 import { dec, formatarMoeda, somar } from "@/lib/dinheiro";
 import { formatarCompetencia, formatarData, formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { ROTULO_TRATAMENTO, type Tratamento } from "@/lib/conciliacao/tipos";
+import { CampoBusca } from "@/components/ui/campo-busca";
 
 export const metadata: Metadata = { title: "Conciliação bancária" };
 
@@ -305,7 +306,7 @@ async function AbaPendentes({ ctx, empresaId, conta, contas, sp, podeExecutar }:
   if (sentido === "saidas") q = q.lt("valor", 0);
   if (inicio) q = q.gte("data", inicio);
   if (fim) q = q.lte("data", fim);
-  if (busca) q = q.ilike("descricao", `%${busca}%`);
+  q = aplicarBusca(q, busca);
   const { data, count, error } = await q
     .order("data")
     .order("id")
@@ -355,7 +356,7 @@ async function AbaPendentes({ ctx, empresaId, conta, contas, sp, podeExecutar }:
             </Select>
             <Input type="date" name="inicio" defaultValue={inicio} aria-label="De" className="w-full sm:w-40" />
             <Input type="date" name="fim" defaultValue={fim} aria-label="Até" className="w-full sm:w-40" />
-            <Input name="busca" defaultValue={busca} placeholder="Descrição" aria-label="Buscar na descrição" className="w-full sm:w-52" />
+            <CampoBusca name="busca" defaultValue={busca} placeholder="Descrição ou documento" rotulo="Buscar na descrição" className="w-full sm:w-56" />
           </>
         }
       />

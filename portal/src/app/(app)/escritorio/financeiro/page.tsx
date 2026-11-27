@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, Landmark, Search, TrendingDown, TrendingUp } from "lucide-react";
+import { AlertTriangle, Landmark, TrendingDown, TrendingUp } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { Dinheiro } from "@/components/relatorios/tabelas";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { competenciaAtual, hojeISO, lerCompetencia, listaCompetencias, somarMeses, ultimoDiaDoMes } from "@/lib/competencia";
 import { dec, formatarMoeda, somar } from "@/lib/dinheiro";
 import { formatarCompetencia } from "@/lib/formatos";
@@ -61,7 +62,7 @@ export default async function FinanceiroCarteira({ searchParams }: PageProps<"/e
       if (r.sugeridos) alertas.push(`${r.sugeridos} sugerido(s) a revisar`);
       return { id: e.id, nome: e.nome_fantasia || e.razao_social, razao: e.razao_social, contador: (e.contador as { nome: string } | null)?.nome ?? null, r, saldo, projetado, alertas };
     })
-    .filter((l) => !busca || l.nome.toLowerCase().includes(busca) || l.razao.toLowerCase().includes(busca))
+    .filter((l) => casaBusca(busca, l.nome, l.razao))
     .sort((a, b) => {
       if (ordem === "nome") return a.nome.localeCompare(b.nome, "pt-BR");
       if (ordem === "resultado") return dec(a.r.resultado).comparedTo(dec(b.r.resultado));
@@ -102,10 +103,7 @@ export default async function FinanceiroCarteira({ searchParams }: PageProps<"/e
             </option>
           ))}
         </Select>
-        <div className="relative w-full sm:w-56">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar empresa" className="pl-9" aria-label="Buscar empresa" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar empresa" className="w-full sm:w-56" />
         <Button type="submit" variante="contorno">
           Filtrar
         </Button>

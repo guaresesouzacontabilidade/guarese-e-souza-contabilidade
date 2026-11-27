@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download, Eye, Info, ReceiptText, Search, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
+import { Download, Eye, Info, ReceiptText, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { NovoRecibo, type EmpresaRecibo } from "@/components/recibos/novo-recibo";
 import { AssinarRecibo, CancelarRecibo, PublicarRecibo } from "@/components/recibos/acoes-recibo";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { parametro, termoBusca } from "@/lib/busca";
+import { aplicarBusca, parametro, termoBusca } from "@/lib/busca";
 import { hojeISO } from "@/lib/competencia";
 import { formatarMoeda, somar } from "@/lib/dinheiro";
 import { formatarCompetencia, formatarData, formatarDocumento } from "@/lib/formatos";
@@ -40,7 +41,7 @@ export default async function Recibos({ searchParams }: PageProps<"/escritorio/r
     .eq("ano", ano)
     .order("numero", { ascending: false })
     .limit(1000);
-  if (busca) consulta = consulta.ilike("pagador_nome", `%${busca}%`);
+  consulta = aplicarBusca(consulta, busca);
 
   const [{ data: lista, error }, empresas, { data: ultimos }, { data: anos }, { data: novo }, certificado] = await Promise.all([
     consulta,
@@ -147,10 +148,7 @@ export default async function Recibos({ searchParams }: PageProps<"/escritorio/r
             </option>
           ))}
         </Select>
-        <div className="relative w-full sm:w-64">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar pagador" className="pl-9" aria-label="Buscar pagador" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar pagador" className="w-full sm:w-64" />
         <Button type="submit" variante="contorno">
           Filtrar
         </Button>

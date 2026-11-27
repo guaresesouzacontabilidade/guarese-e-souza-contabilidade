@@ -25,6 +25,7 @@ import {
 import { FORMAS_PAGAMENTO_HOTEL, MEIOS_TRANSPORTE, MOTIVOS_VIAGEM, SETORES } from "@/lib/hotel/rotulos";
 import type { ResultadoAcao } from "@/lib/acoes";
 import { SeletorComprovante, enviarComprovantes, type ComprovanteEscolhido } from "./comprovantes";
+import { filtrarLista } from "@/lib/busca";
 
 /** Check-in: confirma os dados da viagem da ficha de registro. */
 export function DialogoCheckin({
@@ -507,12 +508,13 @@ export function LancarConsumo({
   const [busca, setBusca] = React.useState("");
   const [itens, setItens] = React.useState<{ produto: ProdutoConsumo; quantidade: string }[]>([]);
   const [pendente, iniciar] = React.useTransition();
-  const termo = busca.trim().toLowerCase();
   const grupos = [...new Set(produtos.map((p) => p.grupo).filter(Boolean))] as string[];
   const [grupo, setGrupo] = React.useState<string | null>(null);
-  const lista = produtos
-    .filter((p) => (!grupo || p.grupo === grupo) && (!termo || p.descricao.toLowerCase().includes(termo) || p.codigo.toLowerCase() === termo))
-    .slice(0, 24);
+  const lista = filtrarLista(
+    produtos.filter((p) => !grupo || p.grupo === grupo),
+    busca,
+    (p) => [p.descricao, p.codigo, p.grupo],
+  ).slice(0, 24);
   const total = itens.reduce((s, i) => s.plus(new Decimal(i.produto.valor_unitario ?? 0).times(lerValorBR(i.quantidade) ?? 0)), new Decimal(0));
 
   function somar(p: ProdutoConsumo, delta: number) {

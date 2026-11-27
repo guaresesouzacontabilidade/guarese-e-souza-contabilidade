@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EstadoVazio } from "@/components/ui/feedback";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { BotaoAtivarCadastro, BotaoTrazerFornecedores, DialogoCadastro, type CadastroTela } from "@/components/loja/cadastros";
@@ -15,6 +15,8 @@ import type { PapelCadastro } from "@/lib/gestao/cadastros";
 import { linkWhatsApp } from "@/lib/os/rotulos";
 import { formatarMoeda } from "@/lib/dinheiro";
 import { formatarCep, formatarData, formatarDocumento, formatarTelefone } from "@/lib/formatos";
+import { aplicarBusca } from "@/lib/busca";
+import { CampoBusca } from "@/components/ui/campo-busca";
 
 const POR_PAGINA = 50;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -59,13 +61,7 @@ export async function ListaCadastrosLoja({
     .order("nome")
     .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
   if (situacao !== "todos") q = q.eq("ativo", situacao === "ativos");
-  if (busca) {
-    const termo = busca.replace(/[%_,()*]/g, " ").trim();
-    const digitos = busca.replace(/\D/g, "");
-    const filtros = [`nome.ilike.%${termo}%`];
-    if (digitos.length >= 3) filtros.push(`documento.like.%${digitos}%`, `telefone.like.%${digitos}%`);
-    q = q.or(filtros.join(","));
-  }
+  q = aplicarBusca(q, busca);
   const { data, count } = await q;
   const linhas = (data ?? []) as unknown as Linha[];
   const nomes = NOMES[papel];
@@ -97,7 +93,7 @@ export async function ListaCadastrosLoja({
       <Card>
         <CardContent className="space-y-4 pt-5">
           <form className="flex flex-wrap items-end gap-2" role="search">
-            <Input name="q" defaultValue={busca} placeholder="Buscar por nome, CPF/CNPJ ou telefone" aria-label={`Buscar ${nomes.singular}`} className="w-full sm:w-80" />
+            <CampoBusca defaultValue={busca} placeholder="Buscar por nome, CPF/CNPJ ou telefone" rotulo={`Buscar ${nomes.singular}`} className="w-full sm:w-80" />
             <Select name="situacao" defaultValue={situacao} aria-label="Situação" className="w-full sm:w-40">
               <option value="ativos">Ativos</option>
               <option value="inativos">Inativos</option>

@@ -11,6 +11,7 @@ import { EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { formatarDocumento } from "@/lib/formatos";
 import { salvarCentroCusto, salvarContraparte, salvarProjeto } from "@/lib/financeiro/acoes-cadastros";
+import { filtrarLista } from "@/lib/busca";
 
 export { PlanoContas, type Categoria } from "./plano-contas";
 
@@ -38,11 +39,7 @@ const PAPEIS: Record<string, string> = {
 export function ListaContrapartes({ empresaId, contrapartes, podeEditar }: { empresaId: string; contrapartes: Contraparte[]; podeEditar: boolean }) {
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<Contraparte | "nova" | null>(null);
-  const filtradas = useMemo(() => {
-    const t = busca.trim().toLowerCase();
-    const dig = t.replace(/\D/g, "");
-    return contrapartes.filter((c) => !t || c.nome.toLowerCase().includes(t) || (dig.length >= 3 && c.documento?.includes(dig)));
-  }, [busca, contrapartes]);
+  const filtradas = useMemo(() => filtrarLista(contrapartes, busca, (c) => [c.nome, c.documento, c.telefone, c.email]), [busca, contrapartes]);
   const e = editando === "nova" ? null : editando;
   return (
     <div className="space-y-4">

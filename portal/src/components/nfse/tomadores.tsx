@@ -10,17 +10,14 @@ import { Campo, Input } from "@/components/ui/form";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { buscarTomador, excluirTomador, salvarTomador, type TomadorReceita, type TomadorSalvo } from "@/lib/nfse-emissao/acoes";
 import { formatarData, formatarDocumento, formatarTelefone, somenteDigitos } from "@/lib/formatos";
+import { filtrarLista } from "@/lib/busca";
 
 /** Lista dos tomadores salvos da empresa, com busca, cadastro, edição e exclusão. */
 export function TomadoresSalvos({ empresaId, tomadores }: { empresaId: string; tomadores: TomadorSalvo[] }) {
   const [busca, setBusca] = React.useState("");
   const [editando, setEditando] = React.useState<TomadorSalvo | null>(null);
   const [novo, setNovo] = React.useState(false);
-  const termo = busca.trim().toLowerCase();
-  const digitos = somenteDigitos(busca);
-  const lista = termo
-    ? tomadores.filter((t) => t.nome.toLowerCase().includes(termo) || (digitos.length >= 3 && t.documento.includes(digitos)) || (t.email ?? "").includes(termo))
-    : tomadores;
+  const lista = filtrarLista(tomadores, busca, (t) => [t.nome, t.documento, t.email]);
 
   return (
     <div className="space-y-4">

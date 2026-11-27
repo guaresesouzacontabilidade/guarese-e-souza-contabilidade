@@ -34,6 +34,7 @@ import { FormDestinatario, type Destinatario } from "@/components/nfe/cadastros"
 import { PainelBalanca, useBalanca } from "@/components/loja/balanca";
 import { MENSAGEM_LEITURA, lerEtiquetaBalanca, mesmoCodigo, pesoLiquido, pesoPeloValor, type ConfigEtiqueta } from "@/lib/gestao/balanca";
 import { useListaDoServidor } from "@/lib/use-lista-servidor";
+import { filtrarLista } from "@/lib/busca";
 
 export interface ProdutoPdv {
   id: string;
@@ -436,11 +437,8 @@ export function PontoDeVenda({
     setTimeout(() => buscaRef.current?.focus(), 50);
   }
 
-  const clientesFiltrados = buscaCliente.trim()
-    ? clientes
-        .filter((c) => c.nome.toLowerCase().includes(buscaCliente.trim().toLowerCase()) || (c.documento ?? "").includes(buscaCliente.replace(/\D/g, "") || "#"))
-        .slice(0, 6)
-    : [];
+  // Nome, CPF/CNPJ ou telefone, sem acento e com as palavras em qualquer ordem
+  const clientesFiltrados = buscaCliente.trim() ? filtrarLista(clientes, buscaCliente, (c) => [c.nome, c.documento, c.telefone]).slice(0, 6) : [];
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">

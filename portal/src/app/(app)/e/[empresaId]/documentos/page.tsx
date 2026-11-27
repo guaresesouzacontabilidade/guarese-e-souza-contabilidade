@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FolderOpen, Search, Upload } from "lucide-react";
+import { FolderOpen, Upload } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Paginacao, urlCom } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
-import { Checkbox, Input, Select } from "@/components/ui/form";
+import { Checkbox, Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { AbasLink } from "@/components/ui/abas";
 import { TabelaDocumentos, type LinhaDocumento } from "@/components/documentos/tabela-documentos";
 import { listaCompetencias, lerCompetencia } from "@/lib/competencia";
 import { STATUS_DOCUMENTO } from "@/lib/rotulos";
-import { parametro, termoBusca } from "@/lib/busca";
+import { aplicarBusca, parametro, termoBusca } from "@/lib/busca";
 
 export const metadata: Metadata = { title: "Documentos" };
 const POR_PAGINA = 30;
@@ -59,7 +60,7 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
   if (operacaoNfse) q = q.eq("categoria_codigo", "nfse").eq("fiscal.operacao", operacaoNfse).not("fiscal", "is", null);
   else if (categoria) q = q.eq("categoria_codigo", categoria);
   if (status && origem === "cliente") q = q.eq("status", status);
-  if (busca) q = q.or(`nome_original.ilike.%${busca}%,titulo.ilike.%${busca}%`);
+  q = aplicarBusca(q, busca);
   if (conferir) q = q.eq("requer_conferencia", true);
   if (!comZip) q = q.is("zip_origem_id", null);
 
@@ -132,10 +133,7 @@ export default async function PaginaDocumentos({ params, searchParams }: PagePro
       {/* Busca e botão na primeira linha; os filtros embaixo, com espaço para o texto inteiro */}
       <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="search">
         {origem === "escritorio" ? <input type="hidden" name="origem" value="escritorio" /> : null}
-        <div className="relative sm:col-span-2 lg:col-span-3">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar pelo nome do arquivo" className="pl-9" aria-label="Buscar documento" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar pelo nome do arquivo" rotulo="Buscar documento" className="sm:col-span-2 lg:col-span-3" />
         <Select name="competencia" defaultValue={competencia?.slice(0, 7) ?? ""} aria-label="Competência">
           <option value="">Todas as competências</option>
           {listaCompetencias(36, 1).map((c) => (

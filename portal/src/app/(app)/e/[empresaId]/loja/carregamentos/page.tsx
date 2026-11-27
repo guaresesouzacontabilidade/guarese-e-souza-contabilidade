@@ -14,6 +14,8 @@ import { STATUS_ORDEM, formatarKg, mostrarPlaca, type StatusOrdem } from "@/lib/
 import { formatarQuantidade } from "@/lib/gestao/rotulos";
 import { dec } from "@/lib/dinheiro";
 import { formatarData } from "@/lib/formatos";
+import { aplicarBusca } from "@/lib/busca";
+import { CampoBusca } from "@/components/ui/campo-busca";
 
 export const metadata: Metadata = { title: "Ordens de carregamento" };
 
@@ -47,12 +49,8 @@ export default async function PaginaCarregamentos({ params, searchParams }: Page
     .order("numero", { ascending: false })
     .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
   if (status) q = q.eq("status", status);
-  if (busca) {
-    const limpa = busca.replace(/[%_,()]/g, "");
-    q = /^\d+$/.test(busca)
-      ? q.eq("numero", Number(busca))
-      : q.or(`destinatario_nome.ilike.%${limpa}%,placa.ilike.%${limpa.toUpperCase().replace(/[^A-Z0-9]/g, "")}%`);
-  }
+  // Número curto é o número da ordem; o resto busca comprador, placa, motorista e transportadora
+  q = /^\d{1,6}$/.test(busca) ? q.eq("numero", Number(busca)) : aplicarBusca(q, busca);
 
   const [{ data: ordens, count }, { data: pendentes }, { data: periodo }] = await Promise.all([
     q,
@@ -126,7 +124,7 @@ export default async function PaginaCarregamentos({ params, searchParams }: Page
                 </option>
               ))}
             </Select>
-            <Input name="q" defaultValue={busca} placeholder="Número, comprador ou placa" className="w-full sm:w-64" aria-label="Buscar" />
+            <CampoBusca defaultValue={busca} placeholder="Número, comprador, placa ou motorista" rotulo="Buscar ordem" className="w-full sm:w-64" />
             <Button type="submit" variante="secundario">
               Filtrar
             </Button>

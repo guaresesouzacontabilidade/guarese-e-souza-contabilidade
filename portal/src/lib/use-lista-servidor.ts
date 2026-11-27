@@ -11,7 +11,8 @@ import * as React from "react";
 export function useListaDoServidor<T extends { id: string }>(doServidor: T[]): [T[], React.Dispatch<React.SetStateAction<T[]>>] {
   const [lista, setLista] = React.useState(doServidor);
   const [anterior, setAnterior] = React.useState(doServidor);
-  if (anterior !== doServidor) {
+  // Duas listas vazias são a mesma lista (evita laço quando a tela passa um [] novo a cada vez)
+  if (anterior !== doServidor && (anterior.length > 0 || doServidor.length > 0)) {
     const idsAnteriores = new Set(anterior.map((x) => x.id));
     const idsNovos = new Set(doServidor.map((x) => x.id));
     setAnterior(doServidor);

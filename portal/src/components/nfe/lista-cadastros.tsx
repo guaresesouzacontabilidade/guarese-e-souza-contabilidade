@@ -10,21 +10,12 @@ import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { FormDestinatario, FormTransportador, type Destinatario, type Transportador } from "./cadastros";
 import { INDICADOR_IE } from "@/lib/nfe-emissao/rotulos";
 import { formatarDocumento } from "@/lib/formatos";
-
-const semAcento = (t: string) =>
-  t
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
+import { filtrarLista } from "@/lib/busca";
 
 export function ClientesNfe({ empresaId, clientes }: { empresaId: string; clientes: Destinatario[] }) {
   const [editando, setEditando] = React.useState<Destinatario | "novo" | null>(null);
   const [busca, setBusca] = React.useState("");
-  const termo = semAcento(busca.trim());
-  const digitos = busca.replace(/\D/g, "");
-  const lista = termo
-    ? clientes.filter((c) => semAcento(c.nome).includes(termo) || (digitos.length >= 3 && (c.documento ?? "").includes(digitos)))
-    : clientes;
+  const lista = filtrarLista(clientes, busca, (c) => [c.nome, c.documento, c.telefone, c.email]);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">

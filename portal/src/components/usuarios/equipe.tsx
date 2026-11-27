@@ -27,6 +27,7 @@ import {
 import { LinkCompartilhavel } from "./convite";
 import { DialogPermissoes, type MembroLista } from "./lista-membros";
 import { SeletorPermissoes } from "./seletor-permissoes";
+import { filtrarLista } from "@/lib/busca";
 
 export function FormEditarUsuario({ usuarioId, tipo, cargo, proprio }: { usuarioId: string; tipo: string; cargo: string | null; proprio: boolean }) {
   const acao = editarUsuario.bind(null, usuarioId);
@@ -350,8 +351,7 @@ export function VincularEmpresas({ usuarioId, empresas }: { usuarioId: string; e
   const [marcadas, setMarcadas] = useState<Set<string>>(new Set());
   const [permissoes, setPermissoes] = useState<Set<Permissao>>(new Set(PERMISSOES_PADRAO.equipe));
   const acao = vincularEquipeEmpresas.bind(null, usuarioId);
-  const termo = busca.trim().toLowerCase();
-  const visiveis = empresas.filter((e) => !termo || e.nome.toLowerCase().includes(termo) || e.documento.includes(termo.replace(/\D/g, "") || "§"));
+  const visiveis = filtrarLista(empresas, busca, (e) => [e.nome, e.documento]);
 
   // Com o formulário aberto, ele continua montado mesmo que a lista esvazie
   // após vincular (senão a confirmação de sucesso não aparece).

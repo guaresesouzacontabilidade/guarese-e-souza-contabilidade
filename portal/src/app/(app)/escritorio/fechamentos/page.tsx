@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarCheck, CircleCheck, Clock, Lock, Search } from "lucide-react";
+import { CalendarCheck, CircleCheck, Clock, Lock } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { competenciaAtual, lerCompetencia, listaCompetencias, somarMeses, ultimoDiaDoMes } from "@/lib/competencia";
 import { formatarCompetencia, formatarDataHora } from "@/lib/formatos";
 import { ETAPAS_FECHAMENTO, STATUS_COMPETENCIA } from "@/lib/rotulos";
@@ -89,7 +90,7 @@ export default async function Fechamentos({ searchParams }: PageProps<"/escritor
     })
     .filter((l) => !situacao || l.status === situacao)
     .filter((l) => !responsavel || l.contadorId === responsavel)
-    .filter((l) => !busca || l.nome.toLowerCase().includes(busca) || l.razao.toLowerCase().includes(busca));
+    .filter((l) => casaBusca(busca, l.nome, l.razao));
 
   const todas = empresas.map((e) => porEmpresa.get(e.id)?.status ?? "aberta");
   const qtd = (st: string) => todas.filter((x) => x === st).length;
@@ -126,10 +127,7 @@ export default async function Fechamentos({ searchParams }: PageProps<"/escritor
             </option>
           ))}
         </Select>
-        <div className="relative w-full sm:w-56">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar empresa" className="pl-9" aria-label="Buscar empresa" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar empresa" className="w-full sm:w-56" />
         <Button type="submit" variante="contorno">
           Filtrar
         </Button>

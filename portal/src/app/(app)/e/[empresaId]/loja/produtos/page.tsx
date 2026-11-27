@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { casaBusca } from "@/lib/busca";
 import Link from "next/link";
 import { AlertTriangle, Boxes, ClipboardCheck, FileInput, FileSpreadsheet, PackageX, Tags, Warehouse } from "lucide-react";
 import { CabecalhoPagina, Indicador, urlCom } from "@/components/ui/pagina";
@@ -6,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui/table";
 import { LojaIndisponivel, NavegacaoLoja } from "@/components/loja/navegacao-loja";
 import { DialogoProduto, LancarEstoque } from "@/components/loja/produtos";
@@ -18,6 +19,7 @@ import { formatarQuantidade, secaoPeca, un } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { custoUnitario } from "@/lib/gestao/analise-estoque";
 import { custoReferencia, margemAlvo, margemReal } from "@/lib/gestao/precos";
+import { CampoBusca } from "@/components/ui/campo-busca";
 
 export const metadata: Metadata = { title: "Produtos e estoque" };
 
@@ -55,12 +57,12 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
     return { real, alvo, abaixo: alvo !== null && real !== null && real < alvo.valor - 0.05 };
   };
   const grupos = [...new Set(todos.map((p) => p.grupo).filter((g): g is string => Boolean(g)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
-  const q = typeof sp.q === "string" ? sp.q.trim().toLowerCase() : "";
+  const q = typeof sp.q === "string" ? sp.q.trim().slice(0, 80) : "";
   const grupo = typeof sp.grupo === "string" ? sp.grupo : "";
   const filtro = typeof sp.filtro === "string" ? sp.filtro : "";
   const lista = todos.filter(
     (p) =>
-      (!q || `${p.descricao} ${p.codigo} ${p.gtin ?? ""}`.toLowerCase().includes(q)) &&
+      casaBusca(q, p.descricao, p.codigo, p.gtin, p.grupo) &&
       (!grupo || p.grupo === grupo) &&
       (filtro === "baixo" ? estoqueBaixo(p) : filtro === "inativos" ? !p.ativo : filtro === "margem" ? p.ativo && Boolean(margemDe(p)?.abaixo) : p.ativo),
   );
@@ -140,7 +142,7 @@ export default async function PaginaProdutos({ params, searchParams }: PageProps
       <Card>
         <CardContent className="space-y-4 pt-5">
           <form className="flex flex-wrap items-end gap-2" action={base}>
-            <Input name="q" defaultValue={typeof sp.q === "string" ? sp.q : ""} placeholder="Buscar por nome, código ou código de barras" className="w-full sm:w-80" aria-label="Buscar produto" />
+            <CampoBusca defaultValue={typeof sp.q === "string" ? sp.q : ""} placeholder="Buscar por nome, código ou código de barras" rotulo="Buscar produto" className="w-full sm:w-80" />
             <Select name="grupo" defaultValue={grupo} className="w-full sm:w-48" aria-label="Grupo">
               <option value="">Todos os grupos</option>
               {grupos.map((g) => (

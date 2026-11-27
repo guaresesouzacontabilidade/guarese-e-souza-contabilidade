@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, Search } from "lucide-react";
+import { ArrowRight, BookOpenCheck } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { EditarObrigacao } from "@/components/obrigacoes/catalogo";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { competenciaAtual } from "@/lib/competencia";
 import { descreverPrazo, type RegraPrazo } from "@/lib/obrigacoes/regras";
 import { AREAS, ESFERAS, ETAPAS, PERIODICIDADES } from "@/lib/obrigacoes/rotulos";
@@ -36,7 +37,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/escritorio/
   const lista = (obrigacoes ?? [])
     .filter((o) => !esfera || o.esfera === esfera)
     .filter((o) => !area || o.area === area)
-    .filter((o) => !busca || `${o.nome} ${o.codigo} ${o.tributos.join(" ")}`.toLowerCase().includes(busca));
+    .filter((o) => casaBusca(busca, o.nome, o.codigo, o.tributos.join(" ")));
 
   const resumo = (obrigacaoId: string, periodicidade: string) => {
     const doItem = (regras ?? []).filter((r) => r.obrigacao_id === obrigacaoId);
@@ -80,10 +81,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/escritorio/
       </div>
 
       <form className="mb-4 flex flex-wrap items-end gap-2" role="search">
-        <div className="relative w-full sm:w-64">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar obrigação ou tributo" className="pl-9" aria-label="Buscar" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar obrigação ou tributo" rotulo="Buscar" className="w-full sm:w-64" />
         <Select name="esfera" defaultValue={esfera} aria-label="Esfera" className="w-full sm:w-48">
           <option value="">Todas as esferas</option>
           {ORDEM_ESFERA.map((e) => (

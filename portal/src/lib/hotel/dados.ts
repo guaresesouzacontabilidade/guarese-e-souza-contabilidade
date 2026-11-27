@@ -1,6 +1,7 @@
 import "server-only";
 import type { ContextoHotel } from "./contexto";
 import { ATIVAS, type Limpeza, type NaturezaExtra, type StatusReserva, type UnidadeExtra } from "./rotulos";
+import { aplicarBusca } from "@/lib/busca";
 
 type Supa = ContextoHotel["supabase"];
 
@@ -282,8 +283,7 @@ export async function listarReservas(
 ): Promise<{ reservas: ReservaResumo[]; total: number }> {
   let ids: string[] | null = null;
   if (filtro.busca) {
-    const termo = filtro.busca.replace(/[%,()]/g, " ").trim();
-    const { data: hs } = await supabase.from("hotel_hospedes").select("id").eq("empresa_id", empresaId).ilike("nome", `%${termo}%`).limit(200);
+    const { data: hs } = await aplicarBusca(supabase.from("hotel_hospedes").select("id").eq("empresa_id", empresaId), filtro.busca).limit(200);
     ids = (hs ?? []).map((h) => h.id);
     if (!ids.length) return { reservas: [], total: 0 };
   }

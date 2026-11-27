@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, ArrowDownAZ, Building2, Search } from "lucide-react";
+import { AlertTriangle, ArrowDownAZ, Building2 } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, urlCom } from "@/components/ui/pagina";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { hojeISO } from "@/lib/competencia";
 import { formatarData, formatarDocumento } from "@/lib/formatos";
 import { REGIMES } from "@/lib/rotulos";
@@ -54,7 +55,7 @@ export default async function EmpresasOperacional({ searchParams }: PageProps<"/
       if (situacao === "cadastro") return l.semMunicipio;
       return true;
     })
-    .filter((l) => !busca || `${l.razao_social} ${l.nome_fantasia ?? ""} ${l.documento}`.toLowerCase().includes(busca));
+    .filter((l) => casaBusca(busca, l.razao_social, l.nome_fantasia, l.documento));
 
   lista.sort((a, b) => {
     if (ordem === "fantasia") return comparar(a.nome_fantasia || a.razao_social, b.nome_fantasia || b.razao_social);
@@ -101,10 +102,7 @@ export default async function EmpresasOperacional({ searchParams }: PageProps<"/
       </div>
       <form className="mb-4 flex flex-wrap items-end gap-2" role="search">
         {ordem !== "razao" ? <input type="hidden" name="ordem" value={ordem} /> : null}
-        <div className="relative w-full sm:w-64">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar por nome ou CNPJ" className="pl-9" aria-label="Buscar empresa" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar por nome ou CNPJ" rotulo="Buscar empresa" className="w-full sm:w-64" />
         <Select name="regime" defaultValue={regime} aria-label="Regime" className="w-full sm:w-48">
           <option value="">Todos os regimes</option>
           {regimes.map((r) => (

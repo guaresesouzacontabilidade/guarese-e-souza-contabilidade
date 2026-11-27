@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Search, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { CabecalhoPagina } from "@/components/ui/pagina";
 import { Card, CardContent } from "@/components/ui/card";
 import { EstadoVazio } from "@/components/ui/feedback";
-import { Input } from "@/components/ui/form";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
@@ -15,6 +15,8 @@ import { hojeClinica } from "@/lib/veterinaria/contexto";
 import { diaLocal } from "@/lib/veterinaria/rotulos";
 import { formatarData, formatarTelefone } from "@/lib/formatos";
 import { idade } from "@/lib/fisioterapia/rotulos";
+import { aplicarBusca } from "@/lib/busca";
+import { CampoBusca } from "@/components/ui/campo-busca";
 
 export const metadata: Metadata = { title: "Pacientes da clínica" };
 
@@ -34,7 +36,7 @@ export default async function PaginaPacientesFisio({ params, searchParams }: Pag
     .eq("ativo", !inativos)
     .order("nome")
     .limit(300);
-  if (busca) q = /^\d[\d.\-]*$/.test(busca) ? q.ilike("cpf", `%${busca.replace(/\D/g, "")}%`) : q.ilike("nome", `%${busca}%`);
+  q = aplicarBusca(q, busca);
   const [{ data: pacientes }, { data: proximos }, { data: pacotes }] = await Promise.all([
     q,
     ctx.supabase
@@ -56,10 +58,7 @@ export default async function PaginaPacientesFisio({ params, searchParams }: Pag
     <>
       <CabecalhoPagina titulo="Pacientes" descricao="Cadastro, pacotes de sessões e próxima consulta. O prontuário fica na ficha de cada paciente." voltar={{ href: base, rotulo: "Painel da clínica" }} acoes={<DialogoPaciente empresaId={empresaId} />} />
       <form className="mb-4 flex flex-wrap gap-2" role="search">
-        <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="q" defaultValue={busca} placeholder="Nome ou CPF" className="pl-9" aria-label="Buscar paciente" />
-        </div>
+        <CampoBusca defaultValue={busca} placeholder="Nome, CPF ou telefone" rotulo="Buscar paciente" className="flex-1" />
         {inativos ? <input type="hidden" name="inativos" value="1" /> : null}
         <Button type="submit" variante="contorno">
           Buscar

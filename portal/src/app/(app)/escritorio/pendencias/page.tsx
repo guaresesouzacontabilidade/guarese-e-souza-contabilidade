@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { ListChecks, Search } from "lucide-react";
+import { ListChecks } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { QuadroCarteira, type LinhaCarteira } from "@/components/checklist/quadro-carteira";
 import { competenciaAtual, hojeISO, lerCompetencia, listaCompetencias, somarMeses } from "@/lib/competencia";
 import { formatarCompetencia } from "@/lib/formatos";
 import { REGIMES } from "@/lib/rotulos";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { buscarTudo } from "@/lib/supabase/paginar";
 
 export const metadata: Metadata = { title: "Pendências da carteira" };
@@ -102,7 +103,7 @@ export default async function PendenciasCarteira({ searchParams }: PageProps<"/e
   const filtradas = empresas
     .filter((e) => !responsavel || e.contador_responsavel_id === responsavel)
     .filter((e) => !regime || e.regime_tributario === regime)
-    .filter((e) => !busca || `${e.razao_social} ${e.nome_fantasia ?? ""}`.toLowerCase().includes(busca))
+    .filter((e) => casaBusca(busca, e.razao_social, e.nome_fantasia))
     .map((e) => porEmpresa.get(e.id)!)
     .filter((l) => {
       switch (situacao) {
@@ -142,10 +143,7 @@ export default async function PendenciasCarteira({ searchParams }: PageProps<"/e
         <Indicador rotulo="Itens a conferir" valor={aConferir} tom={aConferir ? "info" : "neutro"} />
       </div>
       <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_auto]" role="search">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar empresa" className="pl-9" aria-label="Buscar empresa" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar empresa" />
         <Select name="competencia" defaultValue={comp.slice(0, 7)} aria-label="Competência">
           {listaCompetencias(24, 1).map((c) => (
             <option key={c.valor} value={c.valor}>

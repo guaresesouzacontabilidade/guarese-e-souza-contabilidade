@@ -9,6 +9,7 @@ import { BotaoEnviar, FormularioAcao } from "@/components/ui/acao";
 import { formatarCpf } from "@/lib/formatos";
 import { informarOcupante } from "@/lib/hotel/acoes";
 import { TIPOS_DOCUMENTO } from "@/lib/hotel/rotulos";
+import { filtrarLista } from "@/lib/busca";
 
 export interface PessoaOpcao {
   id: string;
@@ -37,9 +38,7 @@ export function DialogoOcupante({
   const [aberto, setAberto] = React.useState(false);
   const [modo, setModo] = React.useState<"lista" | "novo">(pessoas.length ? "lista" : "novo");
   const [busca, setBusca] = React.useState("");
-  const termo = busca.trim().toLowerCase();
-  const digitos = termo.replace(/\D/g, "");
-  const filtradas = pessoas.filter((p) => !termo || p.nome.toLowerCase().includes(termo) || (digitos.length >= 3 && (p.cpf ?? "").includes(digitos))).slice(0, 100);
+  const filtradas = filtrarLista(pessoas, busca, (p) => [p.nome, p.cpf]).slice(0, 100);
   return (
     <Dialog open={aberto} onOpenChange={setAberto}>
       <DialogTrigger asChild>

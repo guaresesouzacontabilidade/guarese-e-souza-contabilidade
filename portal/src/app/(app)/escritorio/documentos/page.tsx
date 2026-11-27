@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileInput, Search } from "lucide-react";
+import { FileInput } from "lucide-react";
 import { exigirEquipe, obterEmpresasDoUsuario } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador, Paginacao, urlCom } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
-import { Checkbox, Input, Select } from "@/components/ui/form";
+import { Checkbox, Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { TabelaDocumentos, type LinhaDocumento } from "@/components/documentos/tabela-documentos";
 import { lerCompetencia, listaCompetencias } from "@/lib/competencia";
 import { STATUS_DOCUMENTO } from "@/lib/rotulos";
-import { parametro, termoBusca } from "@/lib/busca";
+import { aplicarBusca, parametro, termoBusca } from "@/lib/busca";
 
 export const metadata: Metadata = { title: "Documentos recebidos" };
 const POR_PAGINA = 50;
@@ -49,7 +50,7 @@ export default async function FilaDocumentos({ searchParams }: PageProps<"/escri
   if (empresa) q = q.eq("empresa_id", empresa);
   if (competencia) q = q.eq("competencia", competencia);
   if (categoria) q = q.eq("categoria_codigo", categoria);
-  if (busca) q = q.or(`nome_original.ilike.%${busca}%,titulo.ilike.%${busca}%`);
+  q = aplicarBusca(q, busca);
   if (conferir) q = q.eq("requer_conferencia", true);
   if (aposFechamento) q = q.eq("recebido_apos_fechamento", true).is("apos_fechamento_avaliado_em", null);
 
@@ -108,10 +109,7 @@ export default async function FilaDocumentos({ searchParams }: PageProps<"/escri
       </div>
       {/* Busca e botão na primeira linha; os quatro filtros embaixo, com espaço para o texto inteiro */}
       <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="search">
-        <div className="relative sm:col-span-2 lg:col-span-3">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Nome do arquivo" className="pl-9" aria-label="Buscar documento" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Nome do arquivo" rotulo="Buscar documento" className="sm:col-span-2 lg:col-span-3" />
         <Select name="empresa" defaultValue={empresa} aria-label="Empresa">
           <option value="">Todas as empresas</option>
           {empresas.map((e) => (

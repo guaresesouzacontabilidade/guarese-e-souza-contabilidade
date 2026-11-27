@@ -6,7 +6,7 @@ import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { falha, falhaValidacao, mensagemErro, sucesso, type ResultadoAcao } from "@/lib/acoes";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { termoBusca } from "@/lib/busca";
+import { aplicarBusca, termoBusca } from "@/lib/busca";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { diasEntre, somarDias } from "@/lib/competencia";
 import { dataObrigatoria, dataOpcional, textoOpcional, uuidOpcional, valorMonetario } from "@/lib/validacao";
@@ -229,7 +229,7 @@ export async function carregarCandidatos(
         .eq("tipo", tipo)
         .eq("status_revisao", "confirmado")
         .in("situacao", ["aberto", "parcial"]);
-      if (termo) q = q.or(`descricao.ilike.%${termo}%,numero_documento.ilike.%${termo}%`);
+      q = aplicarBusca(q, termo);
       return q.order("data_vencimento").order("id").range(de, ate);
     };
     const [lancs, sugeridos, baixas, transfs] = await Promise.all([

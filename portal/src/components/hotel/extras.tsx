@@ -131,6 +131,9 @@ function somarDias(dataIso: string, dias: number) {
   return d.toISOString().slice(0, 10);
 }
 
+/** Lista vazia fixa: um [] novo a cada tela faria a lista do servidor parecer nova sempre (laço infinito). */
+const SEM_EMPRESAS: EmpresaClienteHotel[] = [];
+
 /**
  * Lançar serviços extras: na conta do quarto de quem está hospedado, ou para
  * uma empresa (sem hóspede), que recebe um recibo numerado. A recepção escolhe
@@ -141,7 +144,7 @@ export function LancarExtras({
   empresaId,
   extras,
   hospedagens,
-  empresas: empresasIniciais = [],
+  empresas: empresasIniciais = SEM_EMPRESAS,
   reservaFixa,
   gerente,
   hoje,

@@ -39,6 +39,8 @@ import { criarClienteNavegador } from "@/lib/supabase/client";
 import { ConviteAvisos } from "@/components/notificacoes/avisos";
 import { avisosAtivosParaUsuario, renovarAvisos } from "@/components/notificacoes/aparelho";
 import { BORDAO_SISTEMA, NOME_SISTEMA } from "@/lib/marca/sistema";
+import { filtrarLista } from "@/lib/busca";
+import { BuscaGeral } from "./busca-geral";
 
 interface Props {
   usuario: { id: string; nome: string; email: string; tipo: "admin" | "equipe" | "cliente"; honorarios?: boolean };
@@ -124,6 +126,14 @@ export function AppShell({ usuario, empresas, logoUrl, naoLidas, chavePush, chil
         </Button>
         <SeletorEmpresa empresas={empresas} atual={empresaAtual} equipe={equipe} caminho={caminho} />
         <div className="ml-auto flex items-center gap-1">
+          <BuscaGeral
+            empresas={empresas}
+            empresaAtual={empresaAtual}
+            empresaNaUrl={Boolean(idNaUrl)}
+            equipe={equipe}
+            admin={usuario.tipo === "admin"}
+            honorarios={Boolean(usuario.honorarios)}
+          />
           <SinoNotificacoes naoLidasIniciais={naoLidas} usuarioId={usuario.id} chavePush={chavePush} />
           <AlternarTema />
           <MenuUsuario usuario={usuario} />
@@ -331,11 +341,8 @@ function SeletorEmpresa({
   const router = useRouter();
   const [busca, setBusca] = useState("");
   const [aberto, setAberto] = useState(false);
-  const filtradas = empresas.filter((e) => {
-    const t = busca.trim().toLowerCase();
-    if (!t) return true;
-    return e.nome.toLowerCase().includes(t) || e.documento.includes(t.replace(/\D/g, "") || "§");
-  });
+  // Nome ou CNPJ, sem acento e com as palavras em qualquer ordem
+  const filtradas = filtrarLista(empresas, busca, (e) => [e.nome, e.documento]);
 
   if (!equipe && empresas.length <= 1) {
     return atual ? (

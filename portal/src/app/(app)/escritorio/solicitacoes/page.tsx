@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ClipboardList, Search } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { EM_ABERTO, STATUS_SOLICITACAO } from "@/lib/solicitacoes/rotulos";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { hojeISO } from "@/lib/competencia";
 import { formatarData, formatarRelativo } from "@/lib/formatos";
 import { mensagemErro } from "@/lib/acoes";
@@ -46,7 +47,7 @@ export default async function SolicitacoesCarteira({ searchParams }: PageProps<"
       const e = x.empresa as unknown as { razao_social: string; nome_fantasia: string | null };
       return { ...x, nomeEmpresa: e.nome_fantasia ?? e.razao_social };
     })
-    .filter((x) => !busca || `${x.nomeEmpresa} ${x.titulo} ${x.numero}`.toLowerCase().includes(busca));
+    .filter((x) => casaBusca(busca, x.nomeEmpresa, x.titulo, x.numero));
   const semResponsavel = linhas.filter((x) => !x.responsavel_id && EM_ABERTO.includes(x.status)).length;
   const atrasadas = linhas.filter((x) => x.prazo && x.prazo < hoje && EM_ABERTO.includes(x.status)).length;
   const aguardando = linhas.filter((x) => x.status === "aguardando_cliente").length;
@@ -61,10 +62,7 @@ export default async function SolicitacoesCarteira({ searchParams }: PageProps<"
         <Indicador rotulo="Aguardando o cliente" valor={aguardando} tom={aguardando ? "info" : "neutro"} />
       </div>
       <form className="mb-4 flex flex-wrap gap-2" role="search">
-        <div className="relative min-w-48 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar empresa, número ou título" className="pl-9" aria-label="Buscar" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar empresa, número ou título" rotulo="Buscar" className="min-w-48 flex-1" />
         <Select name="situacao" defaultValue={situacao} aria-label="Situação">
           <option value="abertas">Em aberto</option>
           <option value="minhas">Minhas (em aberto)</option>

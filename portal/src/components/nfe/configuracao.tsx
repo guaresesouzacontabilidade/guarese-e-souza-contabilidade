@@ -34,6 +34,7 @@ import {
   TIPO_CONTRIBUICAO,
 } from "@/lib/nfe-emissao/rotulos";
 import { formatarCep } from "@/lib/formatos";
+import { filtrarLista } from "@/lib/busca";
 
 export interface ConfigNfe {
   ativa: boolean;
@@ -649,11 +650,9 @@ export function ProdutosNfe({ empresaId, produtos, operacoes, simples }: { empre
   const [alvo, setAlvo] = React.useState("");
   const opcoes = operacoesDeVenda(operacoes);
   const nomes = new Map(operacoes.map((o) => [o.id, o]));
-  const termo = busca.trim().toLowerCase();
-  const digitos = termo.replace(/\D/g, "");
-  const filtrados = termo
-    ? produtos.filter((p) => p.descricao.toLowerCase().includes(termo) || p.codigo.toLowerCase().includes(termo) || (digitos.length >= 2 && p.ncm.startsWith(digitos)))
-    : produtos;
+  // Nome, código ou o começo do NCM (ex.: 2309), sem acento e em qualquer ordem
+  const digitos = busca.trim().replace(/[.\s]/g, "");
+  const filtrados = /^\d{2,8}$/.test(digitos) ? produtos.filter((p) => p.ncm.startsWith(digitos) || p.codigo.includes(digitos)) : filtrarLista(produtos, busca, (p) => [p.descricao, p.codigo, p.ncm]);
   const todosMarcados = filtrados.length > 0 && filtrados.every((p) => marcados.has(p.id));
   const marcar = (id: string, sim: boolean) =>
     setMarcados((m) => {
@@ -754,7 +753,7 @@ export function ProdutosNfe({ empresaId, produtos, operacoes, simples }: { empre
               </TBody>
             </Table>
           </div>
-          {termo && !filtrados.length ? <p className="text-sm text-muted-foreground">Nenhum produto encontrado.</p> : null}
+          {busca.trim() && !filtrados.length ? <p className="text-sm text-muted-foreground">Nenhum produto encontrado.</p> : null}
         </>
       ) : (
         <EstadoVazio titulo="Nenhum produto" descricao="Cadastre o que a empresa vende (ex.: milho em grão, com NCM e peso da saca)." />

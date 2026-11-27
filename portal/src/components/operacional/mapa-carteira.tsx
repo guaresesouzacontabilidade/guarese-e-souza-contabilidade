@@ -23,6 +23,7 @@ import { formatarDocumento } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 import { BotaoAcaoEtapa, MarcacaoEtapa } from "./controles-etapa";
 import { CLASSE_MARCA_SITUACAO, CLASSE_PRAZO, CLASSE_SITUACAO, CLASSE_STATUS, IconeStatus } from "./visual";
+import { casaBusca } from "@/lib/busca";
 
 type Filtro = "todas" | SituacaoEmpresa;
 type Ordem = "urgencia" | "nome" | "responsavel";
@@ -95,13 +96,11 @@ export function MapaCarteira({ competencia, empresas, usuarioId }: { competencia
   const regimes = React.useMemo(() => [...new Set(empresas.map((e) => e.regime).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")), [empresas]);
   const minhas = empresas.filter((e) => e.responsavelId === usuarioId).length;
 
-  const termo = busca.trim().toLowerCase();
-  const digitos = termo.replace(/\D/g, "");
   const base = empresas.filter(
     (e) =>
       (responsavel === "todos" || (responsavel === "sem" ? !e.responsavelId : e.responsavelId === responsavel)) &&
       (regime === "todos" || e.regime === regime) &&
-      (!termo || e.nome.toLowerCase().includes(termo) || e.razaoSocial.toLowerCase().includes(termo) || (digitos.length >= 3 && e.documento.includes(digitos))),
+      casaBusca(busca, e.nome, e.razaoSocial, e.documento),
   );
   const linhas = base
     .filter((e) => filtro === "todas" || e.situacao === filtro)

@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Building2, Plus, Search } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Paginacao, urlCom } from "@/components/ui/pagina";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { EstadoVazio, Progresso } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { formatarDocumento } from "@/lib/formatos";
 import { REGIMES } from "@/lib/rotulos";
 import { competenciaAtual } from "@/lib/competencia";
+import { aplicarBusca } from "@/lib/busca";
 
 export const metadata: Metadata = { title: "Empresas" };
 const POR_PAGINA = 25;
@@ -29,10 +31,7 @@ export default async function PaginaEmpresas({ searchParams }: PageProps<"/escri
     .select("id, razao_social, nome_fantasia, documento, regime_tributario, ativa, demonstracao, servicos, contador:perfis!empresas_contador_responsavel_id_fkey(nome)", { count: "exact" })
     .order("razao_social")
     .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
-  if (busca) {
-    const digitos = busca.replace(/\D/g, "");
-    q = digitos.length >= 3 ? q.or(`razao_social.ilike.%${busca}%,nome_fantasia.ilike.%${busca}%,documento.ilike.%${digitos}%`) : q.or(`razao_social.ilike.%${busca}%,nome_fantasia.ilike.%${busca}%`);
-  }
+  q = aplicarBusca(q, busca);
   if (regime) q = q.eq("regime_tributario", regime);
   if (situacao === "ativas") q = q.eq("ativa", true);
   if (situacao === "inativas") q = q.eq("ativa", false);
@@ -70,10 +69,7 @@ export default async function PaginaEmpresas({ searchParams }: PageProps<"/escri
         }
       />
       <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5" role="search">
-        <div className="relative lg:col-span-2">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar por nome ou CNPJ" className="pl-9" aria-label="Buscar empresa" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar por nome ou CNPJ" rotulo="Buscar empresa" className="lg:col-span-2" />
         <Select name="regime" defaultValue={regime} aria-label="Regime tributário">
           <option value="">Todos os regimes</option>
           {Object.entries(REGIMES).map(([v, r]) => (

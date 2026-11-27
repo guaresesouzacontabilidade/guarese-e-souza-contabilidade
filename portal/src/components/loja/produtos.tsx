@@ -17,6 +17,7 @@ import { excluirProdutoLoja, lancarEstoque, registrarInventario, salvarProdutoLo
 import { UNIDADES_LOJA, formatarQuantidade, modoMedida, quantidadePorPecas, un } from "@/lib/gestao/rotulos";
 import { precoSugerido } from "@/lib/gestao/precos";
 import { classeUnidade, fatorDaNota, nomeUnidade, rendimentoSugerido, resumoConversao, temConversao } from "@/lib/gestao/conversao";
+import { filtrarLista } from "@/lib/busca";
 
 export interface ProdutoLoja {
   id: string;
@@ -547,7 +548,11 @@ export function Inventario({ empresaId, produtos }: { empresaId: string; produto
   const [obs, setObs] = React.useState("");
   const [filtro, setFiltro] = React.useState("");
   const [enviando, setEnviando] = React.useState(false);
-  const lista = produtos.filter((p) => p.controla_estoque && (!filtro || `${p.descricao} ${p.grupo ?? ""} ${p.codigo}`.toLowerCase().includes(filtro.toLowerCase())));
+  const lista = filtrarLista(
+    produtos.filter((p) => p.controla_estoque),
+    filtro,
+    (p) => [p.descricao, p.codigo, p.grupo, p.gtin],
+  );
   const preenchidos = Object.entries(contagem).filter(([, v]) => v.trim() !== "");
 
   async function salvar() {

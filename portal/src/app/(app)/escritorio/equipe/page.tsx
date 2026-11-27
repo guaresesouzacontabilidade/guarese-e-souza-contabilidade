@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Search, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Paginacao, urlCom } from "@/components/ui/pagina";
 import { AbasLink } from "@/components/ui/abas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { ConvidarUsuario } from "@/components/usuarios/convite";
 import { formatarDataHora, formatarRelativo } from "@/lib/formatos";
 import { ROTULO_PAPEL } from "@/lib/permissoes";
+import { aplicarBusca } from "@/lib/busca";
 
 export const metadata: Metadata = { title: "Equipe e permissões" };
 const POR_PAGINA = 30;
@@ -80,7 +82,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/escrito
       .order("nome")
       .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
     if (ids) q = q.in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-    if (busca) q = q.or(`nome.ilike.%${busca.replace(/[%,()]/g, " ")}%,email.ilike.%${busca.replace(/[%,()]/g, " ")}%`);
+    q = aplicarBusca(q, busca);
     if (situacao === "ativos") q = q.eq("ativo", true);
     if (situacao === "desativados") q = q.eq("ativo", false);
     const { data, count } = await q;
@@ -209,10 +211,7 @@ export default async function PaginaEquipe({ searchParams }: PageProps<"/escrito
         <>
           <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="search">
             <input type="hidden" name="aba" value="clientes" />
-            <div className="relative lg:col-span-2">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input name="busca" defaultValue={busca} placeholder="Buscar por nome ou e-mail" className="pl-9" aria-label="Buscar usuário" />
-            </div>
+            <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar por nome ou e-mail" rotulo="Buscar usuário" className="lg:col-span-2" />
             <Select name="empresa" defaultValue={empresaFiltro} aria-label="Empresa">
               <option value="">Todas as empresas</option>
               {(empresas ?? []).map((e) => (

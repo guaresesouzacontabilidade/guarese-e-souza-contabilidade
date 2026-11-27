@@ -313,3 +313,9 @@ A camada operacional (tarefas, regras, feriados e normas) roda inteiramente no b
 - **Link de confirmação**: código aleatório de 16 caracteres por horário; a página, sem login, mostra só o primeiro nome, o dia e a hora e os contatos da clínica, e não é indexada por buscadores. Vale até a hora do atendimento. A resposta (confirmou/desmarcou, com o motivo opcional) fica na agenda e no histórico (auditoria).
 - **Base legal**: execução do serviço contratado pelo paciente (lembrete e confirmação do próprio atendimento), com a autorização do canal registrada no cadastro e desativável a qualquer momento (desmarcar "aceita WhatsApp").
 
+
+## 27. Busca do portal (listas e busca geral)
+
+- **Onde roda**: no servidor do portal e no banco de dados. O que a pessoa digita é usado só para filtrar as listas e montar os resultados; **nada é enviado** a serviços externos nem a inteligência artificial, e a busca não é guardada.
+- **Quem acha o quê**: a busca usa o mesmo acesso da pessoa às telas e ao banco (RLS). Cada campo de busca é calculado da própria linha (nome, CPF/CNPJ, telefone, número, descrição), sem privilégio extra: quem não vê um cadastro, uma nota ou um documento não o acha pela busca. Na busca geral, cada tipo de resultado só aparece para quem tem a tela correspondente no menu, e cada cliente só acha os dados da própria empresa.
+- **Custo e margem**: a busca de produtos não usa as colunas de custo (que continuam fechadas para quem não tem "Ver custos e margens").

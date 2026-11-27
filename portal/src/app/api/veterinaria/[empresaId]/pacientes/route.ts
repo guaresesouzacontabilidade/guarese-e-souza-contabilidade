@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { obterEmpresasDoUsuario, sessaoApi } from "@/lib/auth/sessao";
+import { aplicarBusca, condicaoBusca } from "@/lib/busca";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -13,14 +14,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ empr
   if (!acesso || acesso.gestao_modalidade !== "veterinaria" || !acesso.permissoes.has("gestao.vender")) return new NextResponse("Acesso negado.", { status: 403 });
   const busca = (req.nextUrl.searchParams.get("busca") ?? "").slice(0, 60).trim();
   if (busca.length < 2) return NextResponse.json([]);
-  const termo = busca.replace(/[%,()*]/g, " ").trim();
-  const digitos = busca.replace(/\D/g, "");
-  // Tutores que batem pelo nome, CPF ou telefone
-  let qt = s.supabase.from("vet_tutores").select("id").eq("empresa_id", empresaId).limit(30);
-  qt = digitos.length >= 4 ? qt.or(`cpf.like.%${digitos}%,telefone.like.%${digitos}%,telefone2.like.%${digitos}%`) : qt.ilike("nome", `%${termo}%`);
-  const { data: tutores } = await qt;
+  const cond = condicaoBusca(busca);
+  if (!cond) return NextResponse.json([]);
+  // Tutores que batem pelo nome, CPF ou telefone (sem acento, palavras em qualquer ordem)
+  const { data: tutores } = await aplicarBusca(s.supabase.from("vet_tutores").select("id").eq("empresa_id", empresaId), busca).limit(30);
   const ids = (tutores ?? []).map((t) => t.id);
-  const filtros = [`nome.ilike.%${termo}%`, `microchip.ilike.%${termo.replace(/\s/g, "")}%`];
+  const filtros = [cond];
   if (ids.length) filtros.push(`tutor_id.in.(${ids.join(",")})`);
   const { data } = await s.supabase
     .from("vet_pacientes")

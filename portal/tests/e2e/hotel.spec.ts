@@ -416,6 +416,8 @@ test("dono: cadastra vários quartos de uma vez (faixa, pulando um número)", as
   await expect(page.getByText("4 quartos cadastrados (901 a 905).")).toBeVisible({ timeout: 30_000 });
   const { data } = await servico!.from("hotel_quartos").select("numero, andar, limpeza").eq("empresa_id", empresaId).like("numero", "9__").order("numero");
   expect(data).toEqual(["901", "902", "904", "905"].map((numero) => ({ numero, andar: "9º andar", limpeza: "limpo" })));
+  // Tira logo os quartos de teste: os próximos testes não podem hospedar ninguém neles (senão não dá para apagar)
+  await servico!.from("hotel_quartos").delete().eq("empresa_id", empresaId).like("numero", "9__");
 });
 
 test("planilhas dos serviços extras do dia e do mês (conta do quarto e empresas)", async ({ page }) => {

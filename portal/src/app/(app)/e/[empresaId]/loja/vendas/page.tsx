@@ -13,6 +13,8 @@ import { hojeLocal, obterContextoLoja } from "@/lib/gestao/contexto";
 import { FORMAS_PAGAMENTO, type FormaPagamento } from "@/lib/gestao/rotulos";
 import { dec, formatarMoeda } from "@/lib/dinheiro";
 import { formatarData } from "@/lib/formatos";
+import { aplicarBusca } from "@/lib/busca";
+import { CampoBusca } from "@/components/ui/campo-busca";
 
 export const metadata: Metadata = { title: "Vendas e orçamentos" };
 
@@ -50,7 +52,8 @@ export default async function PaginaVendas({ params, searchParams }: PageProps<"
     .order("numero", { ascending: false })
     .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
   if (status) q = q.eq("status", status);
-  if (busca) q = /^\d+$/.test(busca) ? q.eq("numero", Number(busca)) : q.ilike("cliente_nome", `%${busca.replace(/[%_]/g, "")}%`);
+  // Número curto é o número da venda; o resto busca cliente, CPF/CNPJ e telefone
+  q = /^\d{1,6}$/.test(busca) ? q.eq("numero", Number(busca)) : aplicarBusca(q, busca);
 
   const [{ data: vendas, count }, { data: periodo }] = await Promise.all([
     q,
@@ -128,7 +131,7 @@ export default async function PaginaVendas({ params, searchParams }: PageProps<"
                 </option>
               ))}
             </Select>
-            <Input name="q" defaultValue={busca} placeholder="Número ou cliente" className="w-full sm:w-56" aria-label="Buscar" />
+            <CampoBusca defaultValue={busca} placeholder="Número, cliente, CPF ou telefone" rotulo="Buscar venda" className="w-full sm:w-64" />
             <Button type="submit" variante="secundario">
               Filtrar
             </Button>

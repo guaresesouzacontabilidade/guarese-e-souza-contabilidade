@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, Search, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/form";
+
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { exigirHonorarios } from "@/lib/honorarios/acesso";
 import { SERVICOS_HONORARIOS, type ServicoHonorario } from "@/lib/honorarios/comum";
-import { termoBusca } from "@/lib/busca";
+import { casaBusca, termoBusca } from "@/lib/busca";
 import { buscarTudo } from "@/lib/supabase/paginar";
 import { formatarMoeda, somar } from "@/lib/dinheiro";
+import { CampoBusca } from "@/components/ui/campo-busca";
 
 export const metadata: Metadata = { title: "Clientes e valores" };
 
@@ -26,7 +27,7 @@ export default async function Fichas({ searchParams }: PageProps<"/escritorio/ho
     s.supabase.from("honorarios_fichas").select("*"),
   ]);
   const porEmpresa = new Map((fichas ?? []).map((f) => [f.empresa_id, f]));
-  const filtra = (e: { razao_social: string; nome_fantasia: string | null }) => !busca || `${e.razao_social} ${e.nome_fantasia ?? ""}`.toLowerCase().includes(busca);
+  const filtra = (e: { razao_social: string; nome_fantasia: string | null; documento?: string }) => casaBusca(busca, e.razao_social, e.nome_fantasia, e.documento);
   const comFicha = empresas.filter((e) => porEmpresa.has(e.id) && filtra(e));
   const semFicha = empresas.filter((e) => !porEmpresa.has(e.id) && filtra(e));
   const ativas = (fichas ?? []).filter((f) => f.situacao === "ativa");
@@ -44,9 +45,8 @@ export default async function Fichas({ searchParams }: PageProps<"/escritorio/ho
         <Indicador rotulo="Clientes com ficha ativa" valor={String(ativas.length)} />
         <Indicador rotulo="Empresas sem ficha" valor={String(empresas.length - porEmpresa.size)} tom={empresas.length - porEmpresa.size ? "alerta" : "neutro"} detalhe="não recebem cobrança mensal" />
       </div>
-      <form className="relative max-w-md" action="/escritorio/honorarios/fichas">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input name="busca" defaultValue={busca} placeholder="Buscar empresa" className="pl-9" aria-label="Buscar empresa" />
+      <form className="max-w-md" action="/escritorio/honorarios/fichas" role="search">
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar empresa" />
       </form>
 
       {comFicha.length ? (

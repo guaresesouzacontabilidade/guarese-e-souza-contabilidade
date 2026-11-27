@@ -15,6 +15,7 @@ import { diariasDaEstadia, type CategoriaPreco, type TarifaPeriodo } from "@/lib
 import { LIMPEZA, MEIOS_TRANSPORTE, MOTIVOS_VIAGEM, ORIGENS, diaMes, noites as contarNoites, somarDias, type Limpeza } from "@/lib/hotel/rotulos";
 import { CamposHospede } from "./hospede";
 import { DialogoEmpresaHotel } from "./extras";
+import { filtrarLista } from "@/lib/busca";
 
 export interface QuartoOpcao {
   id: string;
@@ -116,16 +117,15 @@ export function FormReserva({
   const totalPrevia = previa.reduce((s, x) => s + x.valor, 0);
   const valoresDiferentes = new Set(previa.map((x) => x.valor)).size > 1;
 
-  const termo = busca.trim().toLowerCase();
-  const digitos = termo.replace(/\D/g, "");
-  const filtrados = lista
-    .filter((h) => !termo || h.nome.toLowerCase().includes(termo) || (digitos.length >= 3 && ((h.cpf ?? "").includes(digitos) || (h.telefone ?? "").includes(digitos))))
-    .slice(0, 50);
+  const filtrados = filtrarLista(lista, busca, (h) => [h.nome, h.cpf, h.telefone]).slice(0, 50);
   const hSel = lista.find((h) => h.id === hospede);
   const reservaDeEmpresa = hSel?.tipo_pessoa === "PJ";
-  const termoAcomp = buscaAcomp.trim().toLowerCase();
-  const sugestoesAcomp = termoAcomp
-    ? lista.filter((h) => h.tipo_pessoa !== "PJ" && h.id !== hospede && !acomp.includes(h.id) && h.nome.toLowerCase().includes(termoAcomp)).slice(0, 6)
+  const sugestoesAcomp = buscaAcomp.trim()
+    ? filtrarLista(
+        lista.filter((h) => h.tipo_pessoa !== "PJ" && h.id !== hospede && !acomp.includes(h.id)),
+        buscaAcomp,
+        (h) => [h.nome, h.cpf],
+      ).slice(0, 6)
     : [];
 
   return (

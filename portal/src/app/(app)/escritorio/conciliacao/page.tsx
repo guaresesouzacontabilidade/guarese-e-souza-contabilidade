@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CircleCheck, GitCompareArrows, Inbox, Search, Sparkles } from "lucide-react";
+import { CircleCheck, GitCompareArrows, Inbox, Sparkles } from "lucide-react";
 import { exigirEquipe } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Indicador } from "@/components/ui/pagina";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { buscarTudo } from "@/lib/supabase/paginar";
-import { parametro, termoBusca } from "@/lib/busca";
+import { casaBusca, parametro, termoBusca } from "@/lib/busca";
 import { diasEntre, hojeISO } from "@/lib/competencia";
 import { dec, formatarMoeda, somar } from "@/lib/dinheiro";
 import { formatarData, formatarRelativo } from "@/lib/formatos";
@@ -58,7 +59,7 @@ export default async function ConciliacaoCarteira({ searchParams }: PageProps<"/
         ultimaImportacao: r?.ultima_importacao ?? null,
       };
     })
-    .filter((l) => !busca || l.nome.toLowerCase().includes(busca) || l.razao.toLowerCase().includes(busca))
+    .filter((l) => casaBusca(busca, l.nome, l.razao))
     .filter((l) => {
       if (situacao === "pendentes") return l.pendentes > 0;
       if (situacao === "sugestoes") return l.sugestoes > 0;
@@ -88,10 +89,7 @@ export default async function ConciliacaoCarteira({ searchParams }: PageProps<"/
       </div>
 
       <form className="mb-4 flex flex-wrap items-end gap-2" role="search">
-        <div className="relative w-full sm:w-72">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar empresa" className="pl-9" aria-label="Buscar empresa" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar empresa" className="w-full sm:w-72" />
         <Select name="situacao" defaultValue={situacao} aria-label="Situação" className="w-full sm:w-60">
           <option value="">Todas as empresas</option>
           <option value="pendentes">Com movimentações pendentes</option>

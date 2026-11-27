@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileCode2, Search } from "lucide-react";
+import { FileCode2 } from "lucide-react";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { CabecalhoPagina, Paginacao, urlCom } from "@/components/ui/pagina";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Alerta, EstadoVazio } from "@/components/ui/feedback";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { competenciaAtual, lerCompetencia, listaCompetencias, somarMeses } from "@/lib/competencia";
 import { formatarCompetencia, formatarData, formatarDocumento } from "@/lib/formatos";
 import { formatarMoeda, somar } from "@/lib/dinheiro";
-import { parametro, termoBusca } from "@/lib/busca";
+import { aplicarBusca, parametro, termoBusca } from "@/lib/busca";
 import { buscarTudo } from "@/lib/supabase/paginar";
 
 export const metadata: Metadata = { title: "Notas fiscais" };
@@ -38,10 +39,7 @@ export default async function NotasFiscais({ params, searchParams }: PageProps<"
     .order("data_emissao", { ascending: false })
     .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
   if (operacao) q = q.eq("operacao", operacao);
-  if (busca) {
-    const dig = busca.replace(/\D/g, "");
-    q = dig.length >= 3 ? q.or(`numero.ilike.%${dig}%,chave_acesso.ilike.%${dig}%,emitente_documento.ilike.%${dig}%,destinatario_documento.ilike.%${dig}%`) : q.or(`emitente_nome.ilike.%${busca}%,destinatario_nome.ilike.%${busca}%`);
-  }
+  q = aplicarBusca(q, busca);
   const [{ data, count }, todas] = await Promise.all([
     q,
     buscarTudo((de, ate) => ctx.supabase.from("documentos_fiscais").select("id, operacao, valor_total, cancelada_evento").eq("empresa_id", empresaId).eq("competencia", comp).range(de, ate)),
@@ -74,10 +72,7 @@ export default async function NotasFiscais({ params, searchParams }: PageProps<"
         como “sugeridos” até a revisão.
       </Alerta>
       <form className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]" role="search">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Número, chave, CNPJ ou nome" className="pl-9" aria-label="Buscar nota" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Número, chave, CNPJ ou nome" rotulo="Buscar nota" />
         <Select name="competencia" defaultValue={comp.slice(0, 7)} aria-label="Competência">
           {listaCompetencias(36, 1).map((c) => (
             <option key={c.valor} value={c.valor}>

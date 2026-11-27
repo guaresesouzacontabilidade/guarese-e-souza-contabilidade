@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HandCoins, Plus, Search } from "lucide-react";
+import { HandCoins, Plus } from "lucide-react";
 import { CabecalhoPagina, urlCom } from "@/components/ui/pagina";
 import { EstadoVazio } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form";
+import { Select } from "@/components/ui/form";
+import { CampoBusca } from "@/components/ui/campo-busca";
 import { Table, TBody, THead, Td, Th, Tr } from "@/components/ui/table";
 import { ListaParaConferir } from "@/components/honorarios/cobrancas";
 import { exigirHonorarios } from "@/lib/honorarios/acesso";
 import { numeroCobranca, situacaoExibida } from "@/lib/honorarios/comum";
-import { parametro, termoBusca } from "@/lib/busca";
+import { aplicarBusca, parametro, termoBusca } from "@/lib/busca";
 import { hojeISO, lerCompetencia, listaCompetencias, ultimoDiaDoMes } from "@/lib/competencia";
 import { formatarMoeda, somar } from "@/lib/dinheiro";
 import { formatarData } from "@/lib/formatos";
@@ -38,7 +39,7 @@ export default async function Cobrancas({ searchParams }: PageProps<"/escritorio
   if (filtro === "vencida") q = q.eq("situacao", "aberta").lt("vencimento", hoje);
   else if (filtro !== "todas") q = q.eq("situacao", filtro);
   if (mes) q = q.gte("vencimento", mes).lte("vencimento", ultimoDiaDoMes(mes));
-  if (busca) q = q.ilike("pagador_nome", `%${busca}%`);
+  q = aplicarBusca(q, busca);
   const { data } = await q;
   const linhas = (data ?? []) as Linha[];
   const base = "/escritorio/honorarios/cobrancas";
@@ -108,10 +109,7 @@ export default async function Cobrancas({ searchParams }: PageProps<"/escritorio
 
       <form className="flex flex-wrap items-end gap-2" action={base}>
         {filtro !== "todas" ? <input type="hidden" name="situacao" value={filtro} /> : null}
-        <div className="relative min-w-56 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input name="busca" defaultValue={busca} placeholder="Buscar cliente" className="pl-9" aria-label="Buscar cliente" />
-        </div>
+        <CampoBusca name="busca" defaultValue={busca} placeholder="Buscar cliente" className="min-w-56 flex-1" />
         <Select name="mes" defaultValue={mes?.slice(0, 7) ?? ""} aria-label="Mês do vencimento" className="w-48">
           <option value="">Todos os meses</option>
           {listaCompetencias(18, 2).map((m) => (

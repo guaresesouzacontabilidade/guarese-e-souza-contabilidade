@@ -91,6 +91,27 @@
   "texto": "No canto de baixo da tela, em todas as páginas, o botão Ajuda abre o suporte do portal. Escreva a dúvida do seu jeito (ex.: \"onde pago o boleto?\", \"como emito uma nota?\") ou toque numa das sugestões da tela em que você está. O suporte mostra a explicação do guia e o botão Ir para a tela certa — só das telas que você pode abrir. Se não resolver, Mandar esta dúvida ao escritório abre uma solicitação já com a pergunta escrita. Com o assistente de IA ligado pelo escritório, a resposta vem escrita pela IA, com base no guia (aparece o selo \"Assistente com IA\"); sem ele, aparece \"Busca no guia\". A conversa fica só nesta aba do navegador."
  },
  {
+  "id": "buscar-no-portal-busca-geral-topo-da-tela",
+  "publico": "todos",
+  "secao": "Buscar no portal",
+  "titulo": "Buscar no portal › Busca geral (topo da tela)",
+  "texto": "clique em Buscar… no topo (no celular, na lupa) ou aperte Ctrl+K (no Mac, ⌘K) ou a tecla /. Digite o que procura: o nome de uma tela (ex.: \"contas a pagar\", \"emitir nota\"), uma empresa (nome ou CNPJ) ou, dentro da empresa aberta, um cliente ou fornecedor, um produto, uma nota fiscal (número, nome ou CNPJ), uma venda, um documento, uma conta a pagar ou a receber, um hóspede, um paciente ou uma ordem de serviço. Use as setas e Enter para abrir, ou clique. Só aparece o que você tem permissão de ver: cada cliente acha apenas os dados da própria empresa. A equipe do escritório abre a empresa primeiro para achar os dados dela."
+ },
+ {
+  "id": "buscar-no-portal-busca-das-listas",
+  "publico": "todos",
+  "secao": "Buscar no portal",
+  "titulo": "Buscar no portal › Busca das listas",
+  "texto": "em todas as listas (clientes, fornecedores, produtos, notas, vendas, documentos, financeiro, empresas, hóspedes, pacientes...), os resultados aparecem enquanto você digita, sem precisar apertar Enter. O X limpa a busca."
+ },
+ {
+  "id": "buscar-no-portal-como-a-busca-entende-o-que-voce-digita",
+  "publico": "todos",
+  "secao": "Buscar no portal",
+  "titulo": "Buscar no portal › Como a busca entende o que você digita",
+  "texto": "(vale para todas): não importa acento nem letra maiúscula (\"joao\" acha \"João\"); as palavras podem vir em qualquer ordem e pela metade (\"silva joão\" acha \"João da Silva\"; \"tab pin\" acha \"Tábua de pinus\"); CPF, CNPJ, telefone e números são achados com ou sem pontos e traços (\"123.456.789-00\" ou \"12345678900\"). Nas vendas e ordens de serviço, um número curto (até 6 algarismos) busca o número da venda ou da OS."
+ },
+ {
   "id": "baixar-arquivos-no-celular",
   "publico": "todos",
   "secao": "Baixar arquivos no celular",
